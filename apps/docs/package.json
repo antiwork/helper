@@ -6,7 +6,9 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "postinstall": "fumadocs-mdx"
+    "postinstall": "fumadocs-mdx",
+    "generate-openapi": "node scripts/generate-docs.mjs",
+    "deploy": "npm run generate-openapi && next build"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
