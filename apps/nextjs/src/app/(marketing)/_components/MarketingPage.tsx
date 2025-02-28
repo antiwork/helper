@@ -52,7 +52,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
           </span>
         </Button>
       </Link>
-      <Link href="https://github.com/gumroad/helper" target="_blank">
+      <Link href="https://github.com/anti-work/helper" target="_blank">
         <Button variant="subtle">
           <span className="flex items-center">
             <GitHubIcon className="h-5 w-5 mr-2" />
