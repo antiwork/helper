@@ -19,9 +19,7 @@ describe("embeddingFaq", () => {
   it("generates and stores embedding for a FAQ", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { faq } = await faqsFactory.create(mailbox.id, {
-      question: "Test Question",
-      body: "Test Body",
-      reply: "Test Reply",
+      content: "Test Body",
       embedding: null,
     });
 
@@ -30,7 +28,7 @@ describe("embeddingFaq", () => {
 
     await embeddingFaq(faq.id);
 
-    expect(generateEmbedding).toHaveBeenCalledWith("Test Question\nTest Body\nTest Reply", "embedding-faq", {
+    expect(generateEmbedding).toHaveBeenCalledWith("Test Body", "embedding-faq", {
       skipCache: true,
     });
 

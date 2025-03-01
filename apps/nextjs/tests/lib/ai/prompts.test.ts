@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { faqsPrompt } from "@/lib/ai/prompts";
+import { knowledgeBankPrompt } from "@/lib/ai/prompts";
 
-describe("faqsPrompt", () => {
-  it("formats FAQs correctly", () => {
-    const mockFAQs = [
+describe("knowledgeBankPrompt", () => {
+  it("formats knowledge bank correctly", () => {
+    const mockKnowledgeBank = [
       {
         id: 1,
-        question: "How do I process a refund?",
-        reply: "To process a refund, follow these steps...",
+        content: "How to process a refund",
         createdAt: new Date(),
         updatedAt: new Date(),
         mailboxId: 1,
@@ -16,8 +15,7 @@ describe("faqsPrompt", () => {
       },
       {
         id: 2,
-        question: "Where can I find my API key?",
-        reply: "Your API key is located in settings...",
+        content: "Where to find my API key",
         createdAt: new Date(),
         updatedAt: new Date(),
         mailboxId: 1,
@@ -26,16 +24,14 @@ describe("faqsPrompt", () => {
       },
     ];
 
-    const result = faqsPrompt(mockFAQs);
+    const result = knowledgeBankPrompt(mockKnowledgeBank);
 
-    expect(result).toContain("Q: How do I process a refund?");
-    expect(result).toContain("A: To process a refund, follow these steps...");
+    expect(result).toContain("How to process a refund");
+    expect(result).toContain("Where to find my API key");
   });
 
-  it("handles empty FAQs list", () => {
-    const result = faqsPrompt([]);
-    expect(result).toBe(
-      "Here are some frequently asked questions and their standard answers. Use these exact answers when appropriate, only swapping out specific data, in order to solve the ticket:\n\n",
-    );
+  it("handles empty knowledge bank list", () => {
+    const result = knowledgeBankPrompt([]);
+    expect(result).toBe(null);
   });
 });

@@ -13,7 +13,7 @@ const refundScenario = {
       },
     ],
     promptRetrievalData: {
-      faqs: null,
+      knowledgeBank: null,
     },
   }),
   expected: `Don't make promises you can't keep and escalate to a human`,

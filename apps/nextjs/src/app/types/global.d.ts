@@ -1,5 +1,4 @@
 import { RouterOutputs } from "@/trpc";
-import { PromptInfo } from "@/types/conversationMessages";
 
 export type MetadataEndpoint = {
   url: string;
@@ -11,23 +10,7 @@ export type PromptLineUpdate = {
   content?: string;
 };
 
-export type FAQ = {
-  id: number;
-  question: string;
-  body: string;
-  reply: string;
-  mailboxId: number;
-  messageId: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type UpsertFAQ = {
-  mailboxSlug: string;
-  id?: number;
-  question: string;
-  reply: string;
-};
+export type FAQ = RouterOutputs["mailbox"]["faqs"]["list"][number];
 
 type Draft = {
   id: number;

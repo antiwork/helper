@@ -1,7 +1,7 @@
 import { Factuality } from "autoevals";
 import { evalite } from "evalite";
 import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/evals/support/chat";
-import { faqsPrompt } from "@/lib/ai/prompts";
+import { knowledgeBankPrompt } from "@/lib/ai/prompts";
 
 const REASONING_ENABLED = true;
 
@@ -28,11 +28,10 @@ evalite("Reasoning - Identify valid payout method", {
           },
         ],
         promptRetrievalData: {
-          faqs: faqsPrompt([
+          knowledgeBank: knowledgeBankPrompt([
             {
-              question: "Generic payment decline - Buyer",
-              reply:
-                "<p>Hi there,<br><br>Sorry about this!<br><br>I'm afraid, all I can see is a generic payment decline from your bank’s end.<br><br>Kindly use another form of payment to complete your purchase or contact your bank for more information.<br><br>Let me know if you need any further assistance.</p>",
+              content:
+                "If the user has a generic payment decline, ask them to use another form of payment to complete their purchase or contact their bank for more information.",
             },
           ]),
         },
@@ -57,15 +56,13 @@ evalite("Reasoning - Correct refund information", {
           },
         ],
         promptRetrievalData: {
-          faqs: faqsPrompt([
+          knowledgeBank: knowledgeBankPrompt([
             {
-              question: "When the refund is possible?",
-              reply:
+              content:
                 "Refunds are possible within 14 days of purchase. If you've already received the product, you can't get a refund. If you haven't received it yet, you can cancel your order and get a refund.",
             },
             {
-              question: "How to refund an order?",
-              reply:
+              content:
                 "To request a refund, please contact Gumroad support at support@gumroad.com. Provide your order number and a brief explanation of why you want a refund. We'll review your request and get back to you as soon as possible. In 7 days, if you don't get a response, please contact Gumroad support at support@gumroad.com.",
             },
           ]),
@@ -120,7 +117,8 @@ evalite("Reasoning - Fees and overdraft explanation", {
           },
         ],
         promptRetrievalData: {
-          faqs: "Q: What are common account fees? A: Monthly maintenance, overdraft, wire transfer fees.\nQ: How to avoid overdraft fees? A: Maintain minimum balance, enroll in overdraft protection.\nQ: What is overdraft protection? A: Links savings account to cover checking shortfalls.\nQ: How to dispute charges? A: Submit form within 60 days.\nQ: What are ATM fees? A: No fee at bank ATMs, $3 at others.",
+          knowledgeBank:
+            "Common account fees are: Monthly maintenance, overdraft, wire transfer fees.\nAvoid overdraft fees by maintaining minimum balance and enrolling in overdraft protection.\nQ: What is overdraft protection? A: Links savings account to cover checking shortfalls.\nTo dispute charges, submit form within 60 days.\nNo fee at bank ATMs, $3 at others.",
         },
         additionalPrompt: [
           "Check pending transactions",
@@ -163,11 +161,10 @@ evalite("Reasoning - Tool calling", {
           },
         ],
         promptRetrievalData: {
-          faqs: faqsPrompt([
+          knowledgeBank: knowledgeBankPrompt([
             {
-              question: "Generic payment decline - Buyer",
-              reply:
-                "<p>Hi there,<br><br>Sorry about this!<br><br>I'm afraid, all I can see is a generic payment decline from your bank’s end.<br><br>Kindly use another form of payment to complete your purchase or contact your bank for more information.<br><br>Let me know if you need any further assistance.</p>",
+              content:
+                "If the user has a generic payment decline, ask them to use another form of payment to complete their purchase or contact their bank for more information.",
             },
           ]),
         },

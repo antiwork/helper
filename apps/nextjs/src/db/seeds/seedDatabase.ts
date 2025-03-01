@@ -359,9 +359,7 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   });
 
   await faqsFactory.create(mailbox.id, {
-    question: "Account deletion request",
-    body: "How do I delete my account?",
-    reply: "Thank you for your request. We will process your request as soon as possible.",
+    content: "Deleting your account can be done from Settings > Account > Delete Account.",
   });
 
   await styleLinterFactory.create(mailbox.clerkOrganizationId, {

@@ -14,8 +14,7 @@ export const embeddingFaq = async (faqId: number): Promise<void> => {
     }),
   );
 
-  const content = `${faq.question}\n${faq.body}\n${faq.reply}`;
-  const embedding = await generateEmbedding(content, "embedding-faq", { skipCache: true });
+  const embedding = await generateEmbedding(faq.content, "embedding-faq", { skipCache: true });
 
   await db
     .update(faqs)

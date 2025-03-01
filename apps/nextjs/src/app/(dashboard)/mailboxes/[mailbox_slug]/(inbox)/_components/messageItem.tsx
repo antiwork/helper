@@ -4,7 +4,6 @@ import { useMemo, useState, type JSX } from "react";
 import type { AttachedFile, Conversation, Message as MessageType, Note as NoteType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
-import PinReplyAction from "./pinReplyAction";
 import "@/components/linkCta.css";
 import { ChatBubbleLeftIcon, EnvelopeIcon, PencilSquareIcon, UserIcon } from "@heroicons/react/16/solid";
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
@@ -246,9 +245,6 @@ const MessageItem = ({
                   <XCircleIcon className="h-4 w-4" />
                   <span>Message failed to send</span>
                 </div>
-              )}
-              {message.type === "message" && message.status !== "failed" && (
-                <PinReplyAction email={message} mailboxSlug={mailboxSlug} slug={conversation.slug} />
               )}
               {message.type === "message" && message.role === "ai_assistant" && (
                 <FlagAsBadAction message={message} conversationSlug={conversation.slug} mailboxSlug={mailboxSlug} />

@@ -5,7 +5,7 @@ import { conversations } from "@/db/schema/conversations";
 import { conversationsTopics } from "@/db/schema/conversationsTopics";
 import { websitePages, websites } from "@/db/schema/websites";
 import { generateEmbedding } from "@/lib/ai";
-import { faqsPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
+import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
 import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
@@ -14,7 +14,7 @@ import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
 const MAX_SIMILAR_CONVERSATIONS = 3;
-const MAX_SIMILAR_FAQS = 10;
+const MAX_SIMILAR_KNOWLEDGE_ITEMS = 10;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
 export const findSimilarConversations = async (
@@ -88,20 +88,22 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   return conversationPrompt;
 };
 
-export const findSimilarFAQs = async (query: string, mailbox: Mailbox): Promise<any> => {
+export const findSimilarInKnowledgeBank = async (query: string, mailbox: Mailbox) => {
   const queryEmbedding = await generateEmbedding(query, "embedding-query-similar-faqs");
   const similarity = sql<number>`1 - (${cosineDistance(faqs.embedding, queryEmbedding)})`;
   const similarFAQs = await db.query.faqs.findMany({
-    where: sql`${gt(similarity, SIMILARITY_THRESHOLD)} AND ${faqs.mailboxId} = ${mailbox.id}`,
+    where: and(
+      sql`${gt(similarity, SIMILARITY_THRESHOLD)} AND ${faqs.mailboxId} = ${mailbox.id}`,
+      eq(faqs.enabled, true),
+    ),
     columns: {
-      question: true,
-      reply: true,
+      content: true,
     },
     extras: {
       similarity: similarity.as("similarity"),
     },
     orderBy: (_faq, { desc }) => [desc(similarity)],
-    limit: MAX_SIMILAR_FAQS,
+    limit: MAX_SIMILAR_KNOWLEDGE_ITEMS,
   });
 
   return similarFAQs;
@@ -143,7 +145,7 @@ export const findSimilarWebsitePages = async (
 };
 
 export type PromptRetrievalData = {
-  faqs: string | null;
+  knowledgeBank: string | null;
   metadata: string | null;
   websitePages: string | null;
 };
@@ -153,13 +155,13 @@ export const fetchPromptRetrievalData = async (
   query: string,
   metadata: object | null,
 ): Promise<PromptRetrievalData> => {
-  const faqs = await findSimilarFAQs(query, mailbox);
+  const knowledgeBank = await findSimilarInKnowledgeBank(query, mailbox);
   const websitePages = await findSimilarWebsitePages(query, mailbox);
 
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;
 
   return {
-    faqs: faqs.length > 0 ? faqsPrompt(faqs) : null,
+    knowledgeBank: knowledgeBankPrompt(knowledgeBank),
     metadata: metadataText,
     websitePages: websitePages.length > 0 ? websitePagesPrompt(websitePages) : null,
   };

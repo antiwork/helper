@@ -56,14 +56,11 @@ Remember these important points:
 - Do not include HTML in your response. If you include any formatting, use Markdown syntax.
 `;
 
-export const faqsPrompt = (faqs: { question: string; reply: string }[]): string => {
-  const faqExamples = faqs
-    .map((faq) => {
-      return `Q: ${faq.question}\nA: ${faq.reply}`;
-    })
-    .join("\n\n");
+export const knowledgeBankPrompt = (entries: { content: string }[]) => {
+  if (entries.length === 0) return null;
 
-  return `Here are some frequently asked questions and their standard answers. Use these exact answers when appropriate, only swapping out specific data, in order to solve the ticket:\n\n${faqExamples}`;
+  const knowledgeEntries = entries.map((entry) => entry.content).join("\n\n");
+  return `Here is relevant knowledge from our knowledge bank. Use this information to inform your responses, adapting the content as needed while maintaining accuracy:\n\n${knowledgeEntries}`;
 };
 
 export const websitePagesPrompt = (

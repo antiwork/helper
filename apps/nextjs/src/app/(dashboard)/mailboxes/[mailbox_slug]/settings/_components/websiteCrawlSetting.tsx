@@ -163,10 +163,6 @@ const WebsiteCrawlSetting = () => {
                 </div>
               ))}
             </>
-          ) : websites.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              No websites added yet. Click the "Add Website" button below to get started.
-            </div>
           ) : (
             websites.map((website) => {
               const latestCrawl = website.latestCrawl;

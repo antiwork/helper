@@ -6,9 +6,7 @@ import { faqs } from "@/db/schema";
 export const faqsFactory = {
   create: async (mailboxId: number, overrides: Partial<typeof faqs.$inferInsert> = {}) => {
     const defaultValues = {
-      question: faker.lorem.sentence(),
-      body: faker.lorem.paragraph(),
-      reply: faker.lorem.paragraph(),
+      content: faker.lorem.paragraph(),
       mailboxId,
     };
 

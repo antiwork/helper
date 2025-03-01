@@ -10,7 +10,7 @@ import { Mailbox } from "@/lib/data/mailbox";
 import { fetchPromptRetrievalData, PromptRetrievalData as FetchPromptRetrievalData } from "@/lib/data/retrieval";
 
 type PromptRetrievalData = {
-  faqs?: string | null;
+  knowledgeBank?: string | null;
   metadata?: string | null;
 };
 

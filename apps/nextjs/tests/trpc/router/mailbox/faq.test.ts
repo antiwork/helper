@@ -21,9 +21,7 @@ describe("faqsRouter", () => {
       expect(faqs).toHaveLength(1);
       expect(faqs[0]).toMatchObject({
         id: faq.id,
-        question: faq.question,
-        reply: faq.reply,
-        messageId: null,
+        content: faq.content,
         mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
@@ -31,23 +29,20 @@ describe("faqsRouter", () => {
     });
   });
 
-  describe("upsert", () => {
+  describe("create", () => {
     it("creates a new FAQ", async () => {
       const { user, mailbox, organization } = await userFactory.createRootUser();
       const caller = createCaller(createTestTRPCContext(user, organization));
-      await caller.mailbox.faqs.upsert({
+      await caller.mailbox.faqs.create({
         mailboxSlug: mailbox.slug,
-        question: "Test Question",
-        reply: "Test Reply",
+        content: "Test Content",
       });
 
       const faqRow = await db.query.faqs.findFirst({
         where: eq(faqs.mailboxId, mailbox.id),
       });
       expect(faqRow).toMatchObject({
-        question: "Test Question",
-        reply: "Test Reply",
-        messageId: null,
+        content: "Test Content",
         mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
@@ -57,25 +52,24 @@ describe("faqsRouter", () => {
         data: { faqId: faqRow!.id },
       });
     });
+  });
 
+  describe("update", () => {
     it("updates a FAQ", async () => {
       const { user, mailbox, organization } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create(mailbox.id);
       const caller = createCaller(createTestTRPCContext(user, organization));
-      await caller.mailbox.faqs.upsert({
+      await caller.mailbox.faqs.update({
         mailboxSlug: mailbox.slug,
         id: faq.id,
-        question: "Updated Question",
-        reply: "Updated Reply",
+        content: "Updated Content",
       });
 
       const faqRow = await db.query.faqs.findFirst({
         where: eq(faqs.id, faq.id),
       });
       expect(faqRow).toMatchObject({
-        question: "Updated Question",
-        reply: "Updated Reply",
-        messageId: null,
+        content: "Updated Content",
         mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),

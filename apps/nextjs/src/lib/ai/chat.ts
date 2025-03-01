@@ -66,7 +66,7 @@ export const buildPromptMessages = async (
   email: string | null,
   query: string,
 ): Promise<CoreMessage[]> => {
-  const { faqs, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
+  const { knowledgeBank, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
 
   const prompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -78,8 +78,8 @@ export const buildPromptMessages = async (
     prompt.push(mailbox.responseGeneratorPrompt.join("\n"));
   }
   let systemPrompt = prompt.join("\n");
-  if (faqs) {
-    systemPrompt += `\n${faqs}`;
+  if (knowledgeBank) {
+    systemPrompt += `\n${knowledgeBank}`;
   }
   if (websitePages) {
     systemPrompt += `\n${websitePages}`;

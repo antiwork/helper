@@ -32,7 +32,7 @@ import WorkflowsSetting, { type Workflow } from "./automaticWorkflowsSetting";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
 import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
-import KnowledgeBaseSetting from "./knowledgeBaseSetting";
+import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
 import PromptSetting from "./promptSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
@@ -134,10 +134,10 @@ const Settings = ({
       ),
     },
     {
-      label: "Knowledge Base",
-      id: "knowledge-base",
+      label: "Knowledge",
+      id: "knowledge",
       icon: BookOpenIcon,
-      content: <KnowledgeBaseSetting />,
+      content: <KnowledgeSetting />,
     },
     {
       label: "Customers",

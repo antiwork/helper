@@ -123,14 +123,19 @@ export const generateDraftResponse = async (
   }
 
   const userPrompt = await getTextWithConversationSubject(lastUserEmail.conversation, lastUserEmail);
-  const { faqs, metadata: metadataPrompt } = await fetchPromptRetrievalData(mailbox, userPrompt, metadata);
+  const {
+    knowledgeBank,
+    websitePages,
+    metadata: metadataPrompt,
+  } = await fetchPromptRetrievalData(mailbox, userPrompt, metadata);
   const relevantPastConversations = await getPastConversationsPrompt(userPrompt, mailbox);
 
   const basePrompt = mailbox.responseGeneratorPrompt?.join("\n") || "";
   const systemPrompt = [
     SYSTEM_PROMPT_PREFIX,
     basePrompt,
-    faqs ? [faqs] : [],
+    knowledgeBank ? [knowledgeBank] : [],
+    websitePages ? [websitePages] : [],
     relevantPastConversations ? [relevantPastConversations] : [],
     metadataPrompt ? [metadataPrompt] : [],
     GLOBAL_RULES_SUFFIX,
@@ -151,7 +156,7 @@ export const generateDraftResponse = async (
       mailboxSlug: mailbox.slug,
     },
     shortenPromptBy: {
-      removeSystem: [relevantPastConversations, faqs, metadataPrompt],
+      removeSystem: [relevantPastConversations, knowledgeBank, metadataPrompt],
       truncateMessages: true,
     },
   });
@@ -169,7 +174,7 @@ export const generateDraftResponse = async (
     promptInfo: {
       past_conversations: relevantPastConversations,
       base_prompt: basePrompt,
-      pinned_replies: faqs,
+      pinned_replies: knowledgeBank,
       metadata: metadataPrompt,
       style_linter_examples: styleLinterExamples,
       unstyled_response: resultText,

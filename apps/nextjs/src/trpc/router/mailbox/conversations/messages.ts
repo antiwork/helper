@@ -1,11 +1,10 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, eq, exists, gte, inArray, isNotNull, isNull, lt, not, notInArray, or, sql } from "drizzle-orm";
+import { and, eq, exists, gte, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { faqs } from "@/db/schema/faqs";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
 import { findSimilarConversations } from "@/lib/data/retrieval";
@@ -88,44 +87,6 @@ export const messagesRouter = {
       });
       return { id };
     }),
-  setPinned: conversationProcedure
-    .input(z.object({ id: z.number(), isPinned: z.boolean() }))
-    .mutation(({ input, ctx }) =>
-      db.transaction(async (tx) => {
-        const message = await tx.query.conversationMessages.findFirst({
-          where: and(
-            eq(conversationMessages.conversationId, ctx.conversation.id),
-            eq(conversationMessages.id, input.id),
-            isNull(conversationMessages.deletedAt),
-          ),
-        });
-        if (!message) throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
-        await tx
-          .update(conversationMessages)
-          .set({ isPinned: input.isPinned })
-          .where(
-            and(eq(conversationMessages.conversationId, ctx.conversation.id), eq(conversationMessages.id, input.id)),
-          );
-        if (input.isPinned && !message.isPinned) {
-          const previousMessages = await tx.query.conversationMessages.findMany({
-            where: and(
-              eq(conversationMessages.conversationId, ctx.conversation.id),
-              lt(conversationMessages.id, input.id),
-              isNull(conversationMessages.deletedAt),
-              or(notInArray(conversationMessages.status, ["discarded", "draft"]), isNull(conversationMessages.status)),
-            ),
-            orderBy: conversationMessages.id,
-          });
-          await tx.insert(faqs).values({
-            mailboxId: ctx.mailbox.id,
-            messageId: message.id,
-            question: ctx.conversation.subject ?? "",
-            reply: message.body ?? "",
-            body: previousMessages.map((m) => `${m.role === "user" ? "Question" : "Answer"}: ${m.body}`).join("\n"),
-          });
-        }
-      }),
-    ),
   flagAsBad: conversationProcedure
     .input(
       z.object({

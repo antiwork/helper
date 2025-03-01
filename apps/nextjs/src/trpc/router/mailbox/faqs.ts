@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversationMessages, faqs } from "@/db/schema";
+import { faqs } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { mailboxProcedure } from "./procedure";
@@ -13,45 +13,58 @@ export const faqsRouter = {
     return await db
       .select({
         id: faqs.id,
-        body: faqs.body,
-        question: faqs.question,
-        reply: faqs.reply,
+        content: faqs.content,
+        enabled: faqs.enabled,
+        suggested: faqs.suggested,
+        suggestedReplacementForId: faqs.suggestedReplacementForId,
         mailboxId: faqs.mailboxId,
-        messageId: faqs.messageId,
         createdAt: faqs.createdAt,
         updatedAt: faqs.updatedAt,
       })
       .from(faqs)
       .where(eq(faqs.mailboxId, ctx.mailbox.id));
   }),
-  upsert: mailboxProcedure
+  create: mailboxProcedure
     .input(
       z.object({
-        id: z.number().optional(),
-        question: z.string(),
-        reply: z.string(),
+        content: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       return await db.transaction(async (tx) => {
-        const { mailboxSlug: _, id, ...values } = input;
+        const faq = await tx
+          .insert(faqs)
+          .values({ mailboxId: ctx.mailbox.id, content: input.content })
+          .returning()
+          .then(takeUniqueOrThrow);
 
-        const faq = id
-          ? await tx
-              .update(faqs)
-              .set(values)
-              .where(and(eq(faqs.id, id), eq(faqs.mailboxId, ctx.mailbox.id)))
-              .returning()
-              .then(takeUniqueOrThrow)
-          : await tx
-              .insert(faqs)
-              .values({
-                mailboxId: ctx.mailbox.id,
-                body: "",
-                ...values,
-              })
-              .returning()
-              .then(takeUniqueOrThrow);
+        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+
+        inngest.send({
+          name: "faqs/embedding.create",
+          data: { faqId: faq.id },
+        });
+
+        return faq;
+      });
+    }),
+  update: mailboxProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        content: z.string().optional(),
+        enabled: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await db.transaction(async (tx) => {
+        const faq = await tx
+          .update(faqs)
+          .set({ content: input.content, enabled: input.enabled, suggested: false })
+          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .returning()
+          .then(takeUniqueOrThrow);
+
         await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
 
         inngest.send({
@@ -74,13 +87,6 @@ export const faqsRouter = {
       }
 
       await tx.delete(faqs).where(eq(faqs.id, faq.id));
-      if (faq.messageId) {
-        await tx
-          .update(conversationMessages)
-          .set({ isPinned: false })
-          .where(eq(conversationMessages.id, faq.messageId));
-      }
-
       await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
     });
   }),

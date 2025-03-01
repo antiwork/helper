@@ -645,15 +645,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               id: number;
             };
           }>;
-          setPinned: import("@trpc/server").TRPCMutationProcedure<{
-            input: {
-              mailboxSlug: string;
-              conversationSlug: string;
-              id: number;
-              isPinned: boolean;
-            };
-            output: void;
-          }>;
           flagAsBad: import("@trpc/server").TRPCMutationProcedure<{
             input: {
               mailboxSlug: string;
@@ -854,32 +845,55 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
           output: {
             id: number;
-            body: string;
-            question: string;
-            reply: string;
+            content: string;
+            enabled: boolean;
+            suggested: boolean;
+            suggestedReplacementForId: number | null;
             mailboxId: number;
-            messageId: number | null;
             createdAt: Date;
             updatedAt: Date;
           }[];
         }>;
-        upsert: import("@trpc/server").TRPCMutationProcedure<{
+        create: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
-            question: string;
-            reply: string;
-            id?: number | undefined;
+            content: string;
           };
           output: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
             mailboxId: number;
-            question: string;
-            body: string;
-            reply: string;
-            messageId: number | null;
+            content: string;
             embedding: number[] | null;
+            enabled: boolean;
+            suggested: boolean;
+            suggestedReplacementForId: number | null;
+            messageId: number | null;
+            unused_question: string;
+            unused_body: string;
+          };
+        }>;
+        update: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+            content?: string | undefined;
+            enabled?: boolean | undefined;
+          };
+          output: {
+            id: number;
+            content: string;
+            mailboxId: number;
+            embedding: number[] | null;
+            enabled: boolean;
+            suggested: boolean;
+            suggestedReplacementForId: number | null;
+            messageId: number | null;
+            unused_question: string;
+            unused_body: string;
+            createdAt: Date;
+            updatedAt: Date;
           };
         }>;
         delete: import("@trpc/server").TRPCMutationProcedure<{
@@ -1060,9 +1074,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               id: number;
               slug: string;
               url: string;
+              enabled: boolean;
               requestMethod: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
               parameters: import("../db/schema").ToolParameter[] | null;
-              enabled: boolean;
               availableInChat: boolean;
             }[];
           }[];

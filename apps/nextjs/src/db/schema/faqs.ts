@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, pgTable, text, unique, vector } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, pgTable, text, unique, vector } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationMessages } from "./conversationMessages";
 import { mailboxes } from "./mailboxes";
@@ -9,12 +9,20 @@ export const faqs = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    question: text("question").notNull(),
-    body: text().notNull(),
-    reply: text().notNull(),
+    content: text("reply").notNull(),
     mailboxId: bigint({ mode: "number" }).notNull(),
-    messageId: bigint("message_id", { mode: "number" }),
     embedding: vector({ dimensions: 1536 }),
+    enabled: boolean().notNull().default(true),
+    suggested: boolean().notNull().default(false),
+    suggestedReplacementForId: bigint({ mode: "number" }),
+    messageId: bigint({ mode: "number" }),
+
+    unused_question: text("question")
+      .notNull()
+      .$default(() => ""),
+    unused_body: text("body")
+      .notNull()
+      .$default(() => ""),
   },
   (table) => {
     return {
