@@ -462,11 +462,11 @@ export const getLastAiGeneratedDraft = async (
 };
 
 export async function getTextWithConversationSubject(
-  conversation: { encryptedSubject: string | null; subject: string | null },
+  conversation: { subject: string | null },
   message: typeof conversationMessages.$inferSelect,
 ) {
   const cleanedUpText = await ensureCleanedUpText(message);
-  const subject = conversation.encryptedSubject ?? conversation.subject;
+  const subject = conversation.subject;
   return `${subject ? `${subject}\n\n` : ""}${cleanedUpText}`;
 }
 

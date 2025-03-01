@@ -133,7 +133,7 @@ export const generateAvailableTools = async (
 
   let prompt = `Conversation:\n
   Email From: ${conversation.emailFrom}\n
-  Subject: ${conversation.encryptedSubject ?? conversation.subject}\n
+  Subject: ${conversation.subject}\n
   ${metadataPrompt}`;
 
   if (isWithinTokenLimit(prompt, true)) {
