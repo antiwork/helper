@@ -431,7 +431,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
         <section className="py-6">
           <div className="w-[85vw] mx-auto p-6 text-center">
             <h2 className="font-sundry-narrow-bold text-4xl md:text-6xl 2xl:text-8xl font-bold text-secondary dark:text-primary">
-              Better-than-human responses
+              Better than human responses
             </h2>
           </div>
           <div
