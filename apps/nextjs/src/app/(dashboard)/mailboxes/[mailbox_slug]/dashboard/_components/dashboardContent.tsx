@@ -8,10 +8,8 @@ import { PageContent } from "@/components/pageContent";
 import { Panel } from "@/components/panel";
 import { cn } from "@/lib/utils";
 import { DashboardAlerts } from "./dashboardAlerts";
-import { EscalationsChart } from "./escalationsChart";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
-import { TopicsTable } from "./topicsTable";
 import { ViewSwitcher } from "./viewSwitcher";
 
 export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
@@ -58,10 +56,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
               onCustomDateChange={setCustomDate}
             />
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            <Panel title="Topics" className="h-[400px]">
-              <TopicsTable currentMailbox={currentMailbox} timeRange={timeRange} customDate={customDate} />
-            </Panel>
+          <div className="grid md:grid-cols-2 gap-6">
             <Panel className="h-[800px] md:h-[400px] md:col-span-2">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex flex-col">
@@ -76,9 +71,6 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
             </Panel>
             <Panel title="Reactions" className="h-[400px]">
               <ReactionsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
-            </Panel>
-            <Panel title="Escalations" className="md:col-span-2">
-              <EscalationsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
             </Panel>
           </div>
         </div>
