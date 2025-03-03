@@ -1,4 +1,5 @@
 import { KnownBlock } from "@slack/web-api";
+import { isWeekend } from "date-fns";
 import { and, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
@@ -11,6 +12,8 @@ export default inngest.createFunction(
   { id: "check-assigned-ticket-response-times" },
   { cron: "0 * * * *" }, // Run every hour
   async () => {
+    if (isWeekend(new Date())) return { success: true, skipped: "weekend" };
+
     const mailboxesList = await db.query.mailboxes.findMany({
       where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
     });
