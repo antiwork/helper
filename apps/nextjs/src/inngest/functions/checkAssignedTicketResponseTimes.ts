@@ -1,4 +1,5 @@
 import { KnownBlock } from "@slack/web-api";
+import { isWeekend } from "date-fns";
 import { and, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
@@ -65,11 +66,15 @@ export default inngest.createFunction(
         },
       ];
 
-      await postSlackMessage(mailbox.slackBotToken!, {
-        channel: mailbox.slackEscalationChannel!,
-        text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
-        blocks,
-      });
+      // Don't send alerts during weekends for Gumroad
+      const now = new Date();
+      if (!isWeekend(now) || mailbox.name !== "Gumroad") {
+        await postSlackMessage(mailbox.slackBotToken!, {
+          channel: mailbox.slackEscalationChannel!,
+          text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
+          blocks,
+        });
+      }
     }
 
     return { success: true };
