@@ -106,6 +106,8 @@
     "npm_lifecycle_event",
     "TURBO_TOKEN",
     "TURBO_TEAM",
-    "DRIZZLE_LOGGING"
+    "DRIZZLE_LOGGING",
+    "CLERK_INITIAL_ORGANIZATION_ID",
+    "CLERK_INITIAL_USER_IDS"
   ]
 }
