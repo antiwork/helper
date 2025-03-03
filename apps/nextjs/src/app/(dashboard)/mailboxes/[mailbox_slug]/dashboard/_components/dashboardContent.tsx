@@ -27,7 +27,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
 
   return (
     <div>
-      <div className="bg-mahogany-900 text-white px-4 flex items-center border-b border-white/20">
+      <div className="bg-sidebar text-white px-4 flex items-center border-b border-white/20">
         <div className="flex items-center gap-6">
           <div className="flex items-center">
             <div className="py-1">
@@ -42,7 +42,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
 
       <DashboardAlerts mailboxSlug={mailboxSlug} />
 
-      <PageContent className="bg-mahogany-900">
+      <PageContent className="bg-sidebar">
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
             <h3 className="scroll-m-20 text-4xl font-sundry-bold text-white tracking-tight">At a glance</h3>
