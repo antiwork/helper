@@ -40,12 +40,23 @@ export const env = createEnv({
     AWS_PRIVATE_STORAGE_BUCKET_NAME: z.string().min(1),
     DEMO_MAILBOX_SLUG: z.string().min(1),
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
-    ENCRYPT_COLUMN_SECRET: z.string().min(1),
+    ENCRYPT_COLUMN_SECRET: z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
     CLERK_SECRET_KEY: z.string().min(1),
     CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.string().min(1),
     CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().min(1),
+    CLERK_INITIAL_ORGANIZATION_ID: z
+      .string()
+      .regex(/^org_\w+$/)
+      .optional(),
+    CLERK_INITIAL_USER_IDS: z
+      .string()
+      .regex(/^user_\w+(?:,user_\w+)*$/)
+      .optional(),
     // Lets us consider our own org as having a paid subscription
-    ADDITIONAL_PAID_ORGANIZATION_IDS: z.string().regex(/^org_\w+(?:,org_\w+)*$/),
+    ADDITIONAL_PAID_ORGANIZATION_IDS: z
+      .string()
+      .regex(/^org_\w+(?:,org_\w+)*$/)
+      .optional(),
     JINA_API_TOKEN: z.string().min(1),
     LANGFUSE_SECRET_KEY: z.string().min(1),
     LANGFUSE_PUBLIC_KEY: z.string().min(1),

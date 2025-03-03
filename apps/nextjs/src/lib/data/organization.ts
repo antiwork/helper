@@ -9,7 +9,7 @@ import { subscriptions } from "@/db/schema";
 import { env } from "@/env";
 import { clerkClient, getClerkUserList } from "./user";
 
-export const ADDITIONAL_PAID_ORGANIZATION_IDS = env.ADDITIONAL_PAID_ORGANIZATION_IDS.split(",");
+export const ADDITIONAL_PAID_ORGANIZATION_IDS = env.ADDITIONAL_PAID_ORGANIZATION_IDS?.split(",") ?? [];
 
 export const getClerkOrganization = cache(async (organizationId: string) => {
   return await clerkClient.organizations.getOrganization({ organizationId });

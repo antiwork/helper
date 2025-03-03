@@ -18,6 +18,7 @@ import { htmlToText } from "html-to-text";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { env } from "@/env";
 import { indexMessage } from "@/inngest/functions/indexConversation";
 import { getClerkUser } from "@/lib/data/user";
 import {
@@ -56,7 +57,14 @@ const checkIfAllTablesAreEmpty = async () => {
   return true;
 };
 
+const INITIAL_ORGANIZATION_ID = env.CLERK_INITIAL_ORGANIZATION_ID;
+const INITIAL_USER_IDS = env.CLERK_INITIAL_USER_IDS?.split(",") ?? [];
+
 export const seedDatabase = async () => {
+  if (!INITIAL_ORGANIZATION_ID || !INITIAL_USER_IDS) {
+    throw new Error("CLERK_INITIAL_ORGANIZATION_ID and CLERK_INITIAL_USER_IDS must be set for seeds to run.");
+  }
+
   if (await checkIfAllTablesAreEmpty()) {
     console.log("All tables are empty. Starting seed process...");
     const {
@@ -65,11 +73,10 @@ export const seedDatabase = async () => {
       user: rootUser,
     } = await userFactory.createRootUser({
       userOverrides: {
-        // support@gumroad.com
-        id: "user_2oUheKAjO2XgDUPUS6yh97jdQsY",
+        id: INITIAL_USER_IDS[0],
       },
       organizationOverrides: {
-        id: "org_2ouZlsf6ArYQ7lUUJnSAAePseMD",
+        id: INITIAL_ORGANIZATION_ID,
       },
       mailboxOverrides: {
         name: "Gumroad",
@@ -80,15 +87,7 @@ export const seedDatabase = async () => {
       },
     });
 
-    const users = [rootUser].concat(
-      await Promise.all([
-        // user1 through user4@example.com
-        await getClerkUser("user_2oRynh8K3NZ8kXm0eYUMLbxJKgW")!,
-        await getClerkUser("user_2oRyngsnGqMPa57kOdkMNxBp2wE")!,
-        await getClerkUser("user_2oRynaqmzLrsA59FwRxlcmaWP8D")!,
-        await getClerkUser("user_2oUoGcZ4QrnFYJgAdN2zaDRpzFO")!,
-      ]),
-    );
+    const users = await Promise.all(INITIAL_USER_IDS.map(async (userId) => await getClerkUser(userId)!));
 
     await createSettingsPageRecords(mailbox);
 

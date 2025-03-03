@@ -38,10 +38,6 @@ const HeaderButton = ({ children, iconOnly }: { children: React.ReactNode; iconO
 };
 
 const LoginButtons = ({ githubStars }: { githubStars: number }) => {
-  const { data: isSignedIn } = api.isSignedIn.useQuery();
-  const mailboxHref = isSignedIn ? "/mailboxes" : "/login";
-  const buttonText = isSignedIn ? "Go to mailbox" : "Start with Helper";
-
   return (
     <div className="flex space-x-2">
       <Link href="https://docs.helper.ai" target="_blank">
@@ -59,14 +55,6 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
             {githubStars.toLocaleString()}
           </span>
         </Button>
-      </Link>
-      <Link href={mailboxHref}>
-        <HeaderButton>
-          <span className="flex items-center">
-            {buttonText}
-            <ArrowRightIcon className="h-5 w-5 ml-2 jiggle-animation" />
-          </span>
-        </HeaderButton>
       </Link>
     </div>
   );
@@ -367,8 +355,8 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   return (
     <div style={{ backgroundColor: "#3D0C11" }}>
       <header className="sticky top-0 z-50">
-        <nav className="flex items-center justify-between p-4 mx-4">
-          <div className="relative w-[100px] h-[32px]">
+        <nav className="flex flex-col md:flex-row items-center md:justify-between p-4 mx-4 space-y-4 md:space-y-0">
+          <div className="relative w-[100px] h-[32px] mx-auto md:mx-0">
             <Image
               src="/logo.svg"
               priority
@@ -386,7 +374,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               className={`absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100`}
             />
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 mx-auto md:mx-0">
             <LoginButtons githubStars={githubStars} />
           </div>
         </nav>
