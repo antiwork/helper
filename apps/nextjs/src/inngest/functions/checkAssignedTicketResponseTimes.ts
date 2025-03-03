@@ -66,9 +66,9 @@ export default inngest.createFunction(
         },
       ];
 
-      // Don't send alerts during weekends for Gumroad
+      // Don't send alerts during weekends
       const now = new Date();
-      if (!isWeekend(now) || mailbox.name !== "Gumroad") {
+      if (!isWeekend(now)) {
         await postSlackMessage(mailbox.slackBotToken!, {
           channel: mailbox.slackEscalationChannel!,
           text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
