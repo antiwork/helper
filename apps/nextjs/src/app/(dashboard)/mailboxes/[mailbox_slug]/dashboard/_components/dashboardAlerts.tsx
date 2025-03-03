@@ -88,6 +88,6 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
   ].filter(Boolean);
 
   return alerts.length > 0 ? (
-    <div className="flex overflow-x-auto snap-x snap-mandatory p-4 gap-2 md:snap-none bg-mahogany-900">{alerts}</div>
+    <div className="flex overflow-x-auto snap-x snap-mandatory p-4 gap-2 md:snap-none bg-sidebar">{alerts}</div>
   ) : null;
 };
