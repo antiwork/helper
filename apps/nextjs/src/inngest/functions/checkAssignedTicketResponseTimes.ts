@@ -12,6 +12,12 @@ export default inngest.createFunction(
   { id: "check-assigned-ticket-response-times" },
   { cron: "0 * * * *" }, // Run every hour
   async () => {
+    // Don't run checks during weekends
+    const now = new Date();
+    if (isWeekend(now)) {
+      return { success: true, skipped: "weekend" };
+    }
+
     const mailboxesList = await db.query.mailboxes.findMany({
       where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
     });
@@ -66,15 +72,11 @@ export default inngest.createFunction(
         },
       ];
 
-      // Don't send alerts during weekends
-      const now = new Date();
-      if (!isWeekend(now)) {
-        await postSlackMessage(mailbox.slackBotToken!, {
-          channel: mailbox.slackEscalationChannel!,
-          text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
-          blocks,
-        });
-      }
+      await postSlackMessage(mailbox.slackBotToken!, {
+        channel: mailbox.slackEscalationChannel!,
+        text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
+        blocks,
+      });
     }
 
     return { success: true };
