@@ -12,11 +12,7 @@ export default inngest.createFunction(
   { id: "check-assigned-ticket-response-times" },
   { cron: "0 * * * *" }, // Run every hour
   async () => {
-    // Don't run checks during weekends
-    const now = new Date();
-    if (isWeekend(now)) {
-      return { success: true, skipped: "weekend" };
-    }
+    if (isWeekend(new Date())) return { success: true, skipped: "weekend" };
 
     const mailboxesList = await db.query.mailboxes.findMany({
       where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
