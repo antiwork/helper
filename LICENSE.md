@@ -1,6 +1,6 @@
 # Helper Community License 1.0
 
-https://github.com/anti-work/helper/LICENSE.md
+https://github.com/anti-work/helper/blob/main/LICENSE.md
 
 ## Acceptance
 
