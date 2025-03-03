@@ -72,7 +72,7 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   Similar entries in knowledge bank:
   ${similarFAQs
     .map(
-      (faq) => `ID: ${faq.id} (similarity: ${faq.similarity.toFixed(2)})
+      (faq) => `Similarity: ${faq.similarity.toFixed(2)}
   Content: "${faq.content}"`,
     )
     .join("\n\n")}
@@ -83,7 +83,7 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
     mailbox,
-    queryType: "knowledge_bank_suggestion",
+    queryType: "reasoning",
     schema: suggestionResponseSchema,
   });
 
