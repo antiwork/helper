@@ -130,6 +130,12 @@ export const inngest = new Inngest({
           crawlId: z.number(),
         }),
       },
+      "messages/flagged.bad": {
+        data: z.object({
+          messageId: z.number(),
+          reason: z.string().nullable(),
+        }),
+      },
     })
     .fromUnion<NonZodEvents>(),
   middleware: [sentryMiddleware()],

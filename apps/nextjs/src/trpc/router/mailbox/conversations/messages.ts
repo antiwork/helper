@@ -5,6 +5,7 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
+import { inngest } from "@/inngest/client";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
 import { findSimilarConversations } from "@/lib/data/retrieval";
@@ -119,6 +120,15 @@ export const messagesRouter = {
           message: "Message not found or not part of this conversation",
         });
       }
+
+      // Trigger Inngest event for suggesting knowledge bank changes
+      await inngest.send({
+        name: "messages/flagged.bad",
+        data: {
+          messageId: id,
+          reason: reason || null,
+        },
+      });
     }),
   reactionCount: mailboxProcedure
     .input(
