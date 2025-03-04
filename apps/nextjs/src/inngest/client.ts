@@ -130,6 +130,12 @@ export const inngest = new Inngest({
           crawlId: z.number(),
         }),
       },
+      "conversations/check-resolution": {
+        data: z.object({
+          conversationId: z.number(),
+          messageId: z.number(),
+        }),
+      },
     })
     .fromUnion<NonZodEvents>(),
   middleware: [sentryMiddleware()],
