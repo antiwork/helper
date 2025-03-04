@@ -1,12 +1,11 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/reactionsChart";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/members/_components/peopleTable";
 import { PageContent } from "@/components/pageContent";
 import { Panel } from "@/components/panel";
-import { cn } from "@/lib/utils";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
@@ -56,7 +55,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
               onCustomDateChange={setCustomDate}
             />
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <Panel className="h-[800px] md:h-[400px] md:col-span-2">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex flex-col">
@@ -69,7 +68,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
                 </div>
               </div>
             </Panel>
-            <Panel title="Reactions" className="h-[400px]">
+            <Panel title="Reactions" className="h-[400px] md:-order-1">
               <ReactionsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
             </Panel>
           </div>

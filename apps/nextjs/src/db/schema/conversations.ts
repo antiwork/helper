@@ -23,7 +23,6 @@ export const conversations = pgTable(
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
-    resolutionType: text().$type<"explicit" | "inferred">(),
     assignedToId: integer(),
     assignedToClerkId: text(),
     summary: jsonb().$type<string[]>(),
