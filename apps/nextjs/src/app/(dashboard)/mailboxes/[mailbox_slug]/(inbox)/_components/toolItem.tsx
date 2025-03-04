@@ -96,7 +96,7 @@ const JsonView = ({ data, level = 0 }: { data: any; level?: number }) => {
     );
   }
 
-  if (typeof data === "object") {
+  if (data && typeof data === "object") {
     const entries = Object.entries(data);
 
     if (entries.length === 0) return <span>(empty)</span>;
