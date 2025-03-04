@@ -1114,6 +1114,18 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
         }>;
       };
+      topics: {
+        all: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: {
+            name: string;
+            id: number;
+            parentId: number | null;
+          }[];
+        }>;
+      };
       customers: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
