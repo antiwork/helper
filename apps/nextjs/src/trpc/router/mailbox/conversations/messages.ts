@@ -121,13 +121,9 @@ export const messagesRouter = {
         });
       }
 
-      // Trigger Inngest event for suggesting knowledge bank changes
       await inngest.send({
         name: "messages/flagged.bad",
-        data: {
-          messageId: id,
-          reason: reason || null,
-        },
+        data: { messageId: id, reason: reason || null },
       });
     }),
   reactionCount: mailboxProcedure
