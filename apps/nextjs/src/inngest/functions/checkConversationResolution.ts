@@ -1,4 +1,4 @@
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
@@ -42,18 +42,32 @@ const checkAIBasedResolution = async (conversationId: number) => {
   return { isResolved: isResolved === "true", reason };
 };
 
-export const checkConversationResolution = async (conversationId: number, messageId: number) => {
+const skipCheck = async (conversationId: number, messageId: number) => {
   const hasNewerMessages = await db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), gt(conversationMessages.id, messageId)),
   });
 
-  if (hasNewerMessages) return;
+  if (hasNewerMessages) return true;
 
-  const isAlreadyResolved = await db.query.conversationEvents.findFirst({
-    where: and(eq(conversationEvents.conversationId, conversationId), eq(conversationEvents.type, "resolved_by_ai")),
+  const skipDueToEvent = await db.query.conversationEvents.findFirst({
+    where: and(
+      eq(conversationEvents.conversationId, conversationId),
+      inArray(conversationEvents.type, ["resolved_by_ai", "request_human_support"]),
+    ),
   });
 
-  if (isAlreadyResolved) return;
+  if (skipDueToEvent) return true;
+
+  const hasHumanResponded = await db.query.conversationMessages.findFirst({
+    columns: { id: true },
+    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "staff")),
+  });
+
+  return !!hasHumanResponded;
+};
+
+export const checkConversationResolution = async (conversationId: number, messageId: number) => {
+  if (await skipCheck(conversationId, messageId)) return;
 
   const lastReaction = (
     await db.query.conversationMessages.findFirst({
