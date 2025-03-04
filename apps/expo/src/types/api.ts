@@ -766,18 +766,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             };
             output: void;
           }>;
-          count: import("@trpc/server").TRPCQueryProcedure<{
-            input: {
-              mailboxSlug: string;
-              period: "hourly" | "daily" | "monthly";
-              startDate: Date;
-            };
-            output: {
-              count: number;
-              timePeriod: string;
-              pending: boolean;
-            }[];
-          }>;
         };
         notes: {
           add: import("@trpc/server").TRPCMutationProcedure<{
@@ -1141,60 +1129,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             id: number;
             parentId: number | null;
           }[];
-        }>;
-        list: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            customDate?: Date | undefined;
-            timeRange?: "24h" | "7d" | "30d" | "1y" | undefined;
-          };
-          output: {
-            trend: {
-              previousCount: number;
-              percentageChange: number;
-              direction: "up" | "down" | "neutral";
-            };
-            id: number;
-            name: string;
-            count: number;
-          }[];
-        }>;
-        getDetails: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            topicId: number;
-            timeRange?: "24h" | "7d" | "30d" | "1y" | undefined;
-          };
-          output: {
-            subtopics:
-              | {
-                  trend: null;
-                  id: number;
-                  name: string;
-                  count: number;
-                }[]
-              | {
-                  trend: {
-                    previousCount: number;
-                    percentageChange: number;
-                    direction: "up" | "down" | "neutral";
-                  };
-                  id: number;
-                  name: string;
-                  count: number;
-                }[];
-            volumeData: {
-              date: string;
-              count: number;
-            }[];
-          };
-        }>;
-        getExampleQuestions: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            subtopicId: number;
-          };
-          output: string[];
         }>;
       };
       customers: {
