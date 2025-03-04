@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { api } from "@/trpc/react";
 
 export function TopicFilter({
   selectedTopics,
@@ -16,8 +17,9 @@ export function TopicFilter({
   const params = useParams<{ mailbox_slug: string }>();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  // Topics API has been removed, using empty array as fallback
-  const topics: { id: number; name: string; parentId: number | null }[] = [];
+  const { data: topics = [] } = api.mailbox.topics.all.useQuery({
+    mailboxSlug: params.mailbox_slug,
+  });
 
   const parentTopics = topics.filter((t) => !t.parentId);
   const subtopicsByParent = topics.reduce<Record<number, (typeof topics)[number][]>>((acc, topic) => {
