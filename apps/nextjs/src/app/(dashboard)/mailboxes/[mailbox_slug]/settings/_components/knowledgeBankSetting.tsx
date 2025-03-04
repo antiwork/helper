@@ -25,15 +25,16 @@ const KnowledgeBankSetting = () => {
     mailboxSlug: params.mailbox_slug,
   });
 
-  const filteredFaqs = faqs.filter(
-    (faq) => !faq.suggested && faq.content.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredFaqs = faqs.filter((faq) => faq.content.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const suggestedFaqs = filteredFaqs.filter((faq) => faq.suggested && faq.suggestedReplacementForId === null);
+  const withSuggestedReplacement = filteredFaqs.flatMap((faq) => {
+    const suggestedReplacement = faqs.find((f) => f.suggestedReplacementForId === faq.id);
+    return suggestedReplacement ? [{ ...faq, suggestedReplacement }] : [];
+  });
+  const otherEntries = filteredFaqs.filter(
+    (faq) => !faq.suggested && !withSuggestedReplacement.some((f) => f.id === faq.id),
   );
-
-  const suggestedFaqs = faqs.filter((faq) => faq.suggested && faq.suggestedReplacementForId === null);
-
-  const findSuggestedReplacement = (faqId: number) => {
-    return faqs.find((faq) => faq.suggested && faq.suggestedReplacementForId === faqId);
-  };
 
   const createMutation = api.mailbox.faqs.create.useMutation({
     onSuccess: () => {
@@ -128,15 +129,25 @@ const KnowledgeBankSetting = () => {
             ))}
           </>
         ) : (
-          filteredFaqs.map((faq) => (
-            <KnowledgeBankItem
-              key={faq.id}
-              faq={faq}
-              suggestedReplacement={findSuggestedReplacement(faq.id)}
-              onDelete={() => handleDeleteFaq(faq.id)}
-              mailboxSlug={params.mailbox_slug}
-            />
-          ))
+          <>
+            {withSuggestedReplacement.map((faq) => (
+              <KnowledgeBankItem
+                key={faq.id}
+                faq={faq}
+                suggestedReplacement={faq.suggestedReplacement}
+                onDelete={() => handleDeleteFaq(faq.id)}
+                mailboxSlug={params.mailbox_slug}
+              />
+            ))}
+            {otherEntries.map((faq) => (
+              <KnowledgeBankItem
+                key={faq.id}
+                faq={faq}
+                onDelete={() => handleDeleteFaq(faq.id)}
+                mailboxSlug={params.mailbox_slug}
+              />
+            ))}
+          </>
         )}
       </div>
       {showNewFaqForm ? (

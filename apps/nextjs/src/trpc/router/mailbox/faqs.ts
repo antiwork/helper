@@ -1,5 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
@@ -22,7 +22,8 @@ export const faqsRouter = {
         updatedAt: faqs.updatedAt,
       })
       .from(faqs)
-      .where(eq(faqs.mailboxId, ctx.mailbox.id));
+      .where(eq(faqs.mailboxId, ctx.mailbox.id))
+      .orderBy(desc(faqs.createdAt));
   }),
   create: mailboxProcedure
     .input(
