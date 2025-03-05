@@ -1,6 +1,6 @@
 import { KnownBlock } from "@slack/web-api";
 import { isWeekend } from "date-fns";
-import { and, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
@@ -15,7 +15,7 @@ export default inngest.createFunction(
     if (isWeekend(new Date())) return { success: true, skipped: "weekend" };
 
     const mailboxesList = await db.query.mailboxes.findMany({
-      where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
+      where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
     });
 
     if (!mailboxesList.length) return;
@@ -32,7 +32,7 @@ export default inngest.createFunction(
           and(
             eq(conversations.mailboxId, mailbox.id),
             isNotNull(conversations.assignedToClerkId),
-            inArray(conversations.status, ["open", "escalated"]),
+            eq(conversations.status, "open"),
             gt(
               sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
               24, // 24 hours threshold
@@ -69,7 +69,7 @@ export default inngest.createFunction(
       ];
 
       await postSlackMessage(mailbox.slackBotToken!, {
-        channel: mailbox.slackEscalationChannel!,
+        channel: mailbox.slackAlertChannel!,
         text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
         blocks,
       });

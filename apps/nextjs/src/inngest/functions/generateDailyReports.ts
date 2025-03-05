@@ -12,7 +12,7 @@ export const TIME_ZONE = "America/New_York";
 export async function generateDailyReports() {
   const mailboxesList = await db.query.mailboxes.findMany({
     columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
+    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
   });
 
   if (!mailboxesList.length) return;
@@ -35,7 +35,7 @@ export async function generateMailboxReport(mailboxId: number) {
   const mailbox = await db.query.mailboxes.findFirst({
     where: eq(mailboxes.id, mailboxId),
   });
-  if (!mailbox?.slackBotToken || !mailbox.slackEscalationChannel) return;
+  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
 
   const blocks: KnownBlock[] = [
     {
@@ -55,16 +55,7 @@ export async function generateMailboxReport(mailboxId: number) {
     conversations,
     and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "open")),
   );
-
-  const escalatedTicketCount = await db.$count(
-    conversations,
-    and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "escalated")),
-  );
-
-  let openCountMessage = `• Open tickets: ${openTicketCount + escalatedTicketCount}`;
-  if (escalatedTicketCount > 0) {
-    openCountMessage += ` (includes ${escalatedTicketCount} escalated)`;
-  }
+  const openCountMessage = `• Open tickets: ${openTicketCount}`;
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -132,7 +123,7 @@ export async function generateMailboxReport(mailboxId: number) {
   });
 
   await postSlackMessage(mailbox.slackBotToken, {
-    channel: mailbox.slackEscalationChannel,
+    channel: mailbox.slackAlertChannel,
     text: `Daily summary for ${mailbox.name}`,
     blocks,
   });

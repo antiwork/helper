@@ -1,4 +1,4 @@
-import { ArrowUturnUpIcon, BoltIcon, PaperAirplaneIcon } from "@heroicons/react/20/solid";
+import { ArrowUturnUpIcon, BoltIcon } from "@heroicons/react/20/solid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
@@ -160,7 +160,7 @@ export const MessageActions = () => {
       setInitialMessageObject({ content: "" });
       resetFiles([]);
       setStoredMessage("");
-      if ((conversation.status === "open" || conversation.status === "escalated") && close) {
+      if (conversation.status === "open" && close) {
         updateStatus("closed");
       }
       toast({

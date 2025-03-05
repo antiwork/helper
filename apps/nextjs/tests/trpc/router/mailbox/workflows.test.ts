@@ -37,19 +37,21 @@ describe("workflowsRouter", () => {
         actionValue: "closed",
       });
       const workflow2 = await workflowFactory.create(mailbox.id, { order: 0 });
-      const slackSettings = { slack_channel_id: "C12345", message: "Escalation message" };
       await workflowActionFactory.create(workflow2.id, {
-        actionType: "escalate_to_slack",
-        actionValue: JSON.stringify(slackSettings),
+        actionType: "change_helper_status",
+        actionValue: "open",
+      });
+      await workflowActionFactory.create(workflow2.id, {
+        actionType: "send_email",
+        actionValue: "Escalation message",
       });
       const caller = createCaller(createTestTRPCContext(user, organization));
       const workflows = await caller.mailbox.workflows.list({ mailboxSlug: mailbox.slug });
       expect(workflows).toHaveLength(2);
       expect(workflows[0]).toMatchObject({
         ...workflow2,
-        action: "reply_and_escalate_to_slack",
+        action: "reply_and_set_open",
         message: "Escalation message",
-        slackChannelId: "C12345",
       });
       expect(workflows[1]).toMatchObject({ ...workflow, action: "close_ticket" });
     });

@@ -22,7 +22,6 @@ import indexConversationMessage from "./indexConversation";
 import notifyVipMessage from "./notifyVipMessage";
 import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
-import postEscalationToSlack from "./postEscalationToSlack";
 import publishNewConversationEvent from "./publishNewConversationEvent";
 import refreshConversationDraft from "./refreshConversationDraft";
 import renewMailboxWatches from "./renewMailboxWatches";
@@ -47,7 +46,6 @@ export default [
   importRecentGmailThreads,
   importGmailThreads,
   renewMailboxWatches,
-  postEscalationToSlack,
   hardDeleteRecordsForNonPayingOrgs,
   generateWeeklyReports,
   generateMailboxWeeklyReport,

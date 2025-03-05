@@ -11,7 +11,6 @@ import { conversationEvents } from "@/db/schema/conversationEvents";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
-import { getActiveEscalation, resolveEscalation } from "@/lib/data/escalation";
 import { PlatformCustomer } from "@/lib/data/platformCustomer";
 import { getWorkflowInfo } from "@/lib/data/workflow";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
@@ -332,11 +331,6 @@ export const createReply = async (
     );
 
     await finishFileUpload({ fileSlugs, messageId: createdMessage.id }, tx);
-
-    const escalation = await getActiveEscalation(conversationId, tx);
-    if (escalation) {
-      await resolveEscalation({ escalation, user, email: true, closed: close }, tx);
-    }
 
     if (close && conversation.status !== "spam") {
       await updateConversation(conversationId, { set: { status: "closed" }, byUserId: user?.id ?? null }, tx);

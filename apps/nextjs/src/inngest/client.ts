@@ -86,11 +86,6 @@ export const inngest = new Inngest({
           conversationSlug: z.string(),
         }),
       },
-      "conversations/escalation.created": {
-        data: z.object({
-          escalationId: z.number(),
-        }),
-      },
       "conversations/assigned": {
         data: z.object({
           conversationId: z.number(),

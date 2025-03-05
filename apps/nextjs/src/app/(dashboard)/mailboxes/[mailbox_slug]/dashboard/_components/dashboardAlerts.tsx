@@ -1,4 +1,4 @@
-import { FlagIcon, StarIcon, UserIcon } from "@heroicons/react/24/outline";
+import { StarIcon, UserIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/trpc/react";
@@ -70,19 +70,6 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
           {data.vipOverdue} {data.vipOverdue === 1 ? "VIP has" : "VIPs have"} been waiting
         </strong>{" "}
         {formatHours(data.vipExpectedResponseHours ?? 0)}
-      </DashboardAlert>
-    ),
-    data.escalatedOverdue > 0 && (
-      <DashboardAlert
-        key="escalated"
-        icon={<FlagIcon className="h-5 w-5" />}
-        variant="warning"
-        href={`/mailboxes/${mailboxSlug}/escalated`}
-      >
-        <strong>
-          {data.escalatedOverdue} {data.escalatedOverdue === 1 ? "ticket has" : "tickets have"} been escalated
-        </strong>{" "}
-        for {formatHours(data.escalationExpectedResolutionHours ?? 0)}
       </DashboardAlert>
     ),
   ].filter(Boolean);

@@ -1,6 +1,5 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { escalationFactory } from "@tests/support/factories/escalations";
 import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { messageNotificationFactory } from "@tests/support/factories/messageNotifications";
@@ -16,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FREE_TRIAL_PERIOD_DAYS } from "@/auth/lib/account";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversations, escalations, files, mailboxes, messageNotifications, notes, workflows } from "@/db/schema";
+import { conversations, files, mailboxes, messageNotifications, notes, workflows } from "@/db/schema";
 import { conversationMessages } from "@/db/schema/conversationMessages";
 import { hardDeleteRecordsForNonPayingOrgs } from "@/inngest/functions/hardDeleteRecordsForNonPayingOrgs";
 import { getClerkOrganization } from "@/lib/data/organization";
@@ -44,7 +43,6 @@ const createEligibleOrganizationForConversationDeletion = async () => {
   const { conversation } = await conversationFactory.create(mailbox.id);
   const { message } = await conversationMessagesFactory.create(conversation.id);
   const { note } = await noteFactory.create(conversation.id);
-  const { escalation } = await escalationFactory.create(conversation.id);
   const { file } = await fileFactory.create(message.id);
   const workflow = await workflowFactory.create(mailbox.id);
   const { workflowRun } = await workflowRunFactory.create(workflow.id, conversation.id, message.id, mailbox.id);
@@ -62,7 +60,6 @@ const createEligibleOrganizationForConversationDeletion = async () => {
     conversation,
     message,
     note,
-    escalation,
     file,
     workflow,
     workflowRun,
@@ -85,7 +82,7 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
   });
 
   it("ignores organizations with a subscription record", async () => {
-    const { mailbox, organization, conversation, message, note, escalation, file, workflow } =
+    const { mailbox, organization, conversation, message, note, file, workflow } =
       await createEligibleOrganizationForConversationDeletion();
     await subscriptionFactory.create(organization.id);
 
@@ -97,13 +94,12 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
     expect(await exists(conversations, conversation.id)).toBe(true);
     expect(await exists(conversationMessages, message.id)).toBe(true);
     expect(await exists(notes, note.id)).toBe(true);
-    expect(await exists(escalations, escalation.id)).toBe(true);
     expect(await exists(files, file.id)).toBe(true);
     expect(await exists(workflows, workflow.id)).toBe(true);
   });
 
   it("ignores organizations whose free trial has not ended more than 30 days ago", async () => {
-    const { user, mailbox, organization, conversation, message, note, escalation, file, workflow } =
+    const { mailbox, organization, conversation, message, note, file, workflow } =
       await createEligibleOrganizationForConversationDeletion();
 
     vi.mocked(getClerkOrganization).mockResolvedValue({
@@ -119,7 +115,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
     expect(await exists(conversations, conversation.id)).toBe(true);
     expect(await exists(conversationMessages, message.id)).toBe(true);
     expect(await exists(notes, note.id)).toBe(true);
-    expect(await exists(escalations, escalation.id)).toBe(true);
     expect(await exists(files, file.id)).toBe(true);
     expect(await exists(workflows, workflow.id)).toBe(true);
   });
@@ -130,7 +125,7 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       timeout: 10000,
     },
     async () => {
-      const { mailbox, organization, conversation, message, note, escalation, file, workflow, messageNotification } =
+      const { mailbox, organization, conversation, message, note, file, workflow, messageNotification } =
         await createEligibleOrganizationForConversationDeletion();
 
       vi.mocked(getClerkOrganization).mockResolvedValue(organization);
@@ -157,7 +152,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       expect(await exists(conversations, conversation.id)).toBe(false);
       expect(await exists(conversationMessages, message.id)).toBe(false);
       expect(await exists(notes, note.id)).toBe(false);
-      expect(await exists(escalations, escalation.id)).toBe(false);
       expect(await exists(messageNotifications, messageNotification.id)).toBe(false);
 
       const updatedFile = await db.query.files
@@ -174,7 +168,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       expect(await exists(conversations, ineligibleOrganizationRecords.conversation.id)).toBe(true);
       expect(await exists(conversationMessages, ineligibleOrganizationRecords.message.id)).toBe(true);
       expect(await exists(notes, ineligibleOrganizationRecords.note.id)).toBe(true);
-      expect(await exists(escalations, ineligibleOrganizationRecords.escalation.id)).toBe(true);
     },
   );
 });

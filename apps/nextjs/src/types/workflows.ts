@@ -2,7 +2,7 @@ export const WorkflowActions = {
   CLOSE_TICKET: "close_ticket",
   MARK_SPAM: "mark_spam",
   REPLY_AND_CLOSE_TICKET: "reply_and_close_ticket",
-  REPLY_AND_ESCALATE_TO_SLACK: "reply_and_escalate_to_slack",
+  REPLY_AND_SET_OPEN: "reply_and_set_open",
   ASSIGN_USER: "assign_user",
   UNKNOWN: "unknown",
 } as const;

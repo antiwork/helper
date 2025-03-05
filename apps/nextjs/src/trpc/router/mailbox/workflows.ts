@@ -90,7 +90,7 @@ export const workflowsRouter = {
     )
     .query(async ({ ctx, input }) => {
       const relatedConversations = await getRelatedConversations(ctx.conversation.id, {
-        where: inArray(conversations.status, ["open", "escalated"]),
+        where: eq(conversations.status, "open"),
         whereMessages: eq(conversationMessages.role, "user"),
       });
       const matchingConversations = await getMatchingConversationsByPrompt(relatedConversations, input.prompt);

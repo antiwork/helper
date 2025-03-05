@@ -1,5 +1,4 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
-import { z } from "zod";
 import { assert, assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import {
@@ -20,10 +19,7 @@ import { getMailboxById } from "./mailbox";
 import { runWorkflowAction } from "./workflowAction";
 import { trackWorkflowRun } from "./workflowRun";
 
-const ACTIONS_WITH_MESSAGE: string[] = [
-  WorkflowActions.REPLY_AND_CLOSE_TICKET,
-  WorkflowActions.REPLY_AND_ESCALATE_TO_SLACK,
-];
+const ACTIONS_WITH_MESSAGE: string[] = [WorkflowActions.REPLY_AND_CLOSE_TICKET, WorkflowActions.REPLY_AND_SET_OPEN];
 
 export const getWorkflowInfo = async (object: typeof workflowRuns.$inferSelect) => {
   const actions = await db.select().from(workflowRunActions).where(eq(workflowRunActions.workflowRunId, object.id));
@@ -53,13 +49,6 @@ export const getWorkflowPrompt = (object: typeof workflowRuns.$inferSelect | Wor
   return assertDefined(object.workflowConditions[0]?.workflow_conditions[0]?.value);
 };
 
-const MESSAGE_MAX_LENGTH = 65535;
-
-export const EscalateToSlackActionValueSchema = z.object({
-  slack_channel_id: z.string().min(1),
-  message: z.string().min(1).max(MESSAGE_MAX_LENGTH),
-});
-
 type Action = typeof workflowRunActions.$inferSelect | typeof workflowActions.$inferSelect;
 
 export const getWorkflowAction = (actions: Action[]): WorkflowActionInfo => {
@@ -69,14 +58,6 @@ export const getWorkflowAction = (actions: Action[]): WorkflowActionInfo => {
       return { action: "mark_spam" };
     } else if (isCloseTicketAction(action)) {
       return { action: "close_ticket" };
-    } else if (isEscalateToSlackAction(action)) {
-      const parsedValue = JSON.parse(action.actionValue);
-      const slackActionValue = EscalateToSlackActionValueSchema.parse(parsedValue);
-      return {
-        action: "reply_and_escalate_to_slack",
-        message: slackActionValue.message,
-        slackChannelId: slackActionValue.slack_channel_id,
-      };
     } else if (isAssignUserAction(action)) {
       return {
         action: "assign_user",
@@ -98,6 +79,11 @@ export const getWorkflowAction = (actions: Action[]): WorkflowActionInfo => {
     if (isSendReplyOrSendAutoReplyAction && actions.some(isCloseTicketAction)) {
       return {
         action: "reply_and_close_ticket",
+        message,
+      };
+    } else if (isSendReplyOrSendAutoReplyAction && actions.some(isOpenTicketAction)) {
+      return {
+        action: "reply_and_set_open",
         message,
       };
     }
@@ -222,24 +208,18 @@ export async function updateOrCreateFreeformWorkflow(params: {
       });
     }
     const actions: (typeof workflowActions.$inferInsert)[] = [];
-    if (action === "close_ticket" || action === "mark_spam" || action == "reply_and_close_ticket") {
+    if (
+      action === "close_ticket" ||
+      action === "mark_spam" ||
+      action == "reply_and_close_ticket" ||
+      action == "reply_and_set_open"
+    ) {
       actions.push({
         workflowId: workflow.id,
         actionType: "change_helper_status",
-        actionValue: action === "mark_spam" ? "spam" : "closed",
+        actionValue: action === "reply_and_set_open" ? "open" : action === "mark_spam" ? "spam" : "closed",
       });
     }
-    if (action === "reply_and_escalate_to_slack")
-      actions.push({
-        workflowId: workflow.id,
-        actionType: "escalate_to_slack",
-        actionValue: JSON.stringify(
-          EscalateToSlackActionValueSchema.parse({
-            message: params.message,
-            slack_channel_id: params.slackChannelId,
-          }),
-        ),
-      });
     if (action === "reply_and_close_ticket") {
       if (params.autoReplyFromMetadata) {
         const metadataEndpoint = await tx.query.mailboxesMetadataApi.findFirst({
@@ -300,7 +280,7 @@ const isMarkSpamAction = (action: Action) =>
 const isCloseTicketAction = (action: Action) =>
   action.actionType === "change_helper_status" && action.actionValue === "closed";
 
-const isEscalateToSlackAction = (action: Action) => action.actionType === "escalate_to_slack";
+const isOpenTicketAction = (action: Action) => action.actionType === "change_status" && action.actionValue === "open";
 
 const isSendStaticReplyAction = (action: Action) => action.actionType === "send_email";
 

@@ -180,7 +180,7 @@ export const messagesRouter = {
           .findMany({
             where: and(
               eq(conversations.mailboxId, ctx.mailbox.id),
-              inArray(conversations.status, ["open", "escalated"]),
+              eq(conversations.status, "open"),
               gte(conversations.createdAt, input.startDate),
             ),
           })
