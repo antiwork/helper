@@ -29,11 +29,6 @@ function formatDuration(start: Date): string {
     parts.push(`${duration.minutes} ${duration.minutes === 1 ? "minute" : "minutes"}`);
   }
 
-  // If no parts, return a default value
-  if (parts.length === 0) {
-    return "less than a minute";
-  }
-
   return parts.join(" ");
 }
 
