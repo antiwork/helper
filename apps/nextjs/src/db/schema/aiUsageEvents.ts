@@ -22,6 +22,7 @@ export const aiUsageEvents = pgTable(
         | "chat_completion"
         | "reasoning"
         | "conversation_resolution"
+        | "suggest_knowledge_bank_changes"
       >(),
     inputTokensCount: integer().notNull(),
     outputTokensCount: integer().notNull(),

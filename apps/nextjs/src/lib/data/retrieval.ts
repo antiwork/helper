@@ -97,6 +97,7 @@ export const findSimilarInKnowledgeBank = async (query: string, mailbox: Mailbox
       eq(faqs.enabled, true),
     ),
     columns: {
+      id: true,
       content: true,
     },
     extras: {
