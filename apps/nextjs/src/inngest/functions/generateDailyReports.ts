@@ -61,6 +61,14 @@ export async function generateMailboxReport(mailboxId: number) {
     and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "escalated")),
   );
 
+  // Don't send the summary if there are 0 open tickets
+  if (openTicketCount + escalatedTicketCount === 0) {
+    return {
+      skipped: true,
+      reason: "No open tickets",
+    };
+  }
+
   let openCountMessage = `• Open tickets: ${openTicketCount + escalatedTicketCount}`;
   if (escalatedTicketCount > 0) {
     openCountMessage += ` (includes ${escalatedTicketCount} escalated)`;
