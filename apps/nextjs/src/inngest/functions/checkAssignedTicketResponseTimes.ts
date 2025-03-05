@@ -8,10 +8,6 @@ import { inngest } from "@/inngest/client";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { postSlackMessage } from "@/lib/slack/client";
 
-/**
- * Formats a duration into a human-readable string in the format "X days Y hours Z minutes"
- * Only includes non-zero values and handles singular/plural forms
- */
 function formatDuration(start: Date): string {
   const duration = intervalToDuration({ start, end: new Date() });
 
