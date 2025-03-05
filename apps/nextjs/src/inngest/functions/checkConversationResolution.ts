@@ -2,19 +2,21 @@ import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
+import { env } from "@/env";
 import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import { loadPreviousMessages } from "@/lib/ai/chat";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 
-const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was satisfactorily resolved.
+const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was resolved.
 
-Consider:
-1) Was the original issue clearly addressed?
-2) Did the customer confirm resolution or express satisfaction?
-3) Were there any unaddressed follow-up questions?
+Consider the conversation resolved by default unless there are clear signs it isn't. Only mark as unresolved if:
+1) The customer explicitly expresses dissatisfaction or frustration
+2) The response is completely unrelated to the customer's question
+3) The customer has a clear follow-up question that wasn't addressed at all
 
-Respond with 'true: [reason]' or 'false: [reason]' where [reason] is a brief explanation of your decision.`;
+Respond with 'true: [reason]' or 'false: [reason]' where [reason] is a brief explanation of your decision.
+Default to 'true' if uncertain.`;
 
 const checkAIBasedResolution = async (conversationId: number) => {
   const messages = await loadPreviousMessages(conversationId);
@@ -43,31 +45,32 @@ const checkAIBasedResolution = async (conversationId: number) => {
 };
 
 const skipCheck = async (conversationId: number, messageId: number) => {
-  const hasNewerMessages = await db.query.conversationMessages.findFirst({
+  const newerMessage = await db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), gt(conversationMessages.id, messageId)),
   });
 
-  if (hasNewerMessages) return true;
+  if (newerMessage) return `Has newer message: ${newerMessage.id}`;
 
-  const skipDueToEvent = await db.query.conversationEvents.findFirst({
+  const event = await db.query.conversationEvents.findFirst({
     where: and(
       eq(conversationEvents.conversationId, conversationId),
       inArray(conversationEvents.type, ["resolved_by_ai", "request_human_support"]),
     ),
   });
 
-  if (skipDueToEvent) return true;
+  if (event) return `Has event: ${event.type}`;
 
-  const hasHumanResponded = await db.query.conversationMessages.findFirst({
+  const humanResponse = await db.query.conversationMessages.findFirst({
     columns: { id: true },
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "staff")),
   });
 
-  return !!hasHumanResponded;
+  if (humanResponse) return `Has human response: ${humanResponse.id}`;
 };
 
 export const checkConversationResolution = async (conversationId: number, messageId: number) => {
-  if (await skipCheck(conversationId, messageId)) return;
+  const skipReason = await skipCheck(conversationId, messageId);
+  if (skipReason) return { skipped: true, reason: skipReason };
 
   const lastReaction = (
     await db.query.conversationMessages.findFirst({
@@ -111,7 +114,11 @@ export default inngest.createFunction(
   async ({ event, step }) => {
     const { conversationId, messageId } = event.data;
 
-    await step.sleepUntil("wait-24-hours", new Date(Date.now() + 24 * 60 * 60 * 1000));
+    if (env.NODE_ENV === "development") {
+      await step.sleepUntil("wait-5-minutes", new Date(Date.now() + 5 * 60 * 1000));
+    } else {
+      await step.sleepUntil("wait-24-hours", new Date(Date.now() + 24 * 60 * 60 * 1000));
+    }
 
     const result = await step.run("check-resolution", async () => {
       return await checkConversationResolution(conversationId, messageId);
