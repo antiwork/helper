@@ -1,20 +1,23 @@
 import { createHash } from "crypto";
 import { waitUntil } from "@vercel/functions";
 import { appendClientMessage, createDataStreamResponse, formatDataStreamPart, type Message } from "ai";
-import { eq } from "drizzle-orm";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
-import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
-import { createAssistantMessage, createUserMessage, generateAIResponse, lastAssistantMessage } from "@/lib/ai/chat";
+import { inngest } from "@/inngest/client";
+import {
+  createAssistantMessage,
+  createUserMessage,
+  generateAIResponse,
+  lastAssistantMessage,
+  loadPreviousMessages,
+} from "@/lib/ai/chat";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
-  getConversationById,
   getConversationBySlugAndMailbox,
   updateConversation,
 } from "@/lib/data/conversation";
-import { disableAIResponse, getMessages } from "@/lib/data/conversationMessage";
+import { disableAIResponse } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
@@ -76,29 +79,6 @@ function createTextResponse(text: string, messageId: string) {
       });
     },
   });
-}
-
-async function loadPreviousMessages(conversationId: number): Promise<Message[]> {
-  const conversation = assertDefined(await getConversationById(conversationId));
-  const mailbox = assertDefined(
-    await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, conversation.mailboxId),
-    }),
-  );
-
-  const conversationMessages = await getMessages(conversationId, mailbox);
-
-  return conversationMessages
-    .filter((message) => message.type === "message" && message.body)
-    .map((message) => {
-      const messageRecord = message as any; // Type assertion to handle union type
-      return {
-        id: messageRecord.id.toString(),
-        role:
-          messageRecord.role === "staff" || messageRecord.role === "ai_assistant" ? "assistant" : messageRecord.role,
-        content: messageRecord.body || "",
-      };
-    });
 }
 
 export function OPTIONS() {
@@ -234,6 +214,13 @@ export async function POST(request: Request) {
             traceId,
             reasoning,
           );
+          await inngest.send({
+            name: "conversations/check-resolution",
+            data: {
+              conversationId: conversation.id,
+              messageId: assistantMessage.id,
+            },
+          });
 
           dataStream.writeMessageAnnotation({
             id: assistantMessage.id.toString(),

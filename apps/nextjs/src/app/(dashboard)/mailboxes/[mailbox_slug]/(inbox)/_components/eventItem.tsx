@@ -1,6 +1,7 @@
 import {
   ArrowUturnLeftIcon,
   ArrowUturnUpIcon,
+  CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   ExclamationCircleIcon,
@@ -30,19 +31,27 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   if (!event.changes) return null;
 
-  const description = [
-    event.changes.status ? statusVerbs[event.changes.status] : null,
-    event.changes.assignedToUser !== undefined
-      ? event.changes.assignedToUser
-        ? `assigned to ${event.changes.assignedToUser}`
-        : "unassigned"
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" and ");
+  const description =
+    event.eventType === "resolved_by_ai"
+      ? "AI resolution"
+      : [
+          event.changes.status ? statusVerbs[event.changes.status] : null,
+          event.changes.assignedToUser !== undefined
+            ? event.changes.assignedToUser
+              ? `assigned to ${event.changes.assignedToUser}`
+              : "unassigned"
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" and ");
 
   const hasDetails = event.byUser || event.reason;
-  const Icon = event.changes.status ? statusIcons[event.changes.status] : UserIcon;
+  const Icon =
+    event.eventType === "resolved_by_ai"
+      ? CheckCircleIcon
+      : event.changes.status
+        ? statusIcons[event.changes.status]
+        : UserIcon;
 
   return (
     <div className="flex flex-col mx-auto">

@@ -3,6 +3,7 @@ import bulkAssignMissingTopics from "./bulkAssignMissingTopics";
 import bulkEmbeddingClosedConversations from "./bulkEmbeddingClosedConversations";
 import bulkUpdateConversations from "./bulkUpdateConversations";
 import checkAssignedTicketResponseTimes from "./checkAssignedTicketResponseTimes";
+import checkConversationResolution from "./checkConversationResolution";
 import checkVipResponseTimes from "./checkVipResponseTimes";
 import cleanupDanglingFiles from "./cleanupDanglingFiles";
 import crawlWebsite from "./crawlWebsite";
@@ -62,4 +63,5 @@ export default [
   checkVipResponseTimes,
   checkAssignedTicketResponseTimes,
   suggestKnowledgeBankChanges,
+  checkConversationResolution,
 ];
