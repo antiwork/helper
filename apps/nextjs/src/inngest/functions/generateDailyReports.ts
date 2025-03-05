@@ -64,10 +64,8 @@ export async function generateMailboxReport(mailboxId: number) {
   // Don't send the summary if there are 0 open tickets
   if (openTicketCount + escalatedTicketCount === 0) {
     return {
-      success: true,
-      openCountMessage: `• Open tickets: 0`,
-      avgReplyTimeMessage: null,
-      vipAvgReplyTimeMessage: null,
+      skipped: true,
+      reason: "No open tickets",
     };
   }
 
