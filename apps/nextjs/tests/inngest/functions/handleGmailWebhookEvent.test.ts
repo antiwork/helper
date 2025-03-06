@@ -504,7 +504,7 @@ describe("handleGmailWebhookEvent", () => {
       });
       expect(respondToEmail).not.toHaveBeenCalled();
     });
-    
+
     it("keeps conversation open when email is from a staff user (first message)", async () => {
       const { mailbox } = await setupGmailSupportEmail();
       const staffUser = userFactory.buildMockUser();
