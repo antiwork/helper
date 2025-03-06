@@ -1,6 +1,6 @@
 import { KnownBlock } from "@slack/web-api";
 import { intervalToDuration, isWeekend } from "date-fns";
-import { and, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
@@ -32,10 +32,18 @@ export default inngest.createFunction(
   { id: "check-assigned-ticket-response-times" },
   { cron: "0 * * * *" }, // Run every hour
   async () => {
+    // Default to hourly frequency
+    const frequency = "hourly";
+
     if (isWeekend(new Date())) return { success: true, skipped: "weekend" };
 
     const mailboxesList = await db.query.mailboxes.findMany({
-      where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
+      where: and(
+        isNotNull(mailboxes.slackBotToken),
+        or(isNotNull(mailboxes.slackEscalationChannel), isNotNull(mailboxes.ticketResponseAlertsChannel)),
+        eq(mailboxes.ticketResponseAlertsEnabled, true),
+        eq(mailboxes.ticketResponseAlertsFrequency, frequency),
+      ),
     });
 
     if (!mailboxesList.length) return;
@@ -74,24 +82,26 @@ export default inngest.createFunction(
             type: "mrkdwn",
             text: [
               `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
-              ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
+              ...overdueAssignedConversations.map((conversation) => {
                 const subject = conversation.subject;
-                const assigneeName =
-                  orgMembers.data.find((m) => m.publicUserData?.userId === conversation.assignedToClerkId)
-                    ?.publicUserData?.firstName || "Unknown";
+                const assignee = orgMembers.data.find(
+                  (m) => m.publicUserData?.userId === conversation.assignedToClerkId,
+                );
+                const assigneeId = assignee?.publicUserData?.userId || "";
+                const assigneeName = assignee?.publicUserData?.firstName || "Unknown";
                 const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${assigneeName}, ${timeSinceLastReply} since last reply)`;
+                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to <@${assigneeId}>, ${timeSinceLastReply} since last reply)`;
               }),
-              ...(overdueAssignedConversations.length > 10
-                ? [`(and ${overdueAssignedConversations.length - 10} more)`]
-                : []),
             ].join("\n"),
           },
         },
       ];
 
+      // Use the configured alerts channel or fall back to the escalation channel
+      const channel = mailbox.ticketResponseAlertsChannel || mailbox.slackEscalationChannel!;
+
       await postSlackMessage(mailbox.slackBotToken!, {
-        channel: mailbox.slackEscalationChannel!,
+        channel,
         text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
         blocks,
       });

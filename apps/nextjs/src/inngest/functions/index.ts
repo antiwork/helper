@@ -28,6 +28,7 @@ import publishNewConversationEvent from "./publishNewConversationEvent";
 import refreshConversationDraft from "./refreshConversationDraft";
 import renewMailboxWatches from "./renewMailboxWatches";
 import scheduledWebsiteCrawl from "./scheduledWebsiteCrawl";
+import scheduleTicketResponseAlerts from "./scheduleTicketResponseAlerts";
 import suggestKnowledgeBankChanges from "./suggestKnowledgeBankChanges";
 
 export default [
@@ -62,6 +63,7 @@ export default [
   generateMailboxDailyReport,
   checkVipResponseTimes,
   checkAssignedTicketResponseTimes,
+  scheduleTicketResponseAlerts,
   suggestKnowledgeBankChanges,
   checkConversationResolution,
 ];

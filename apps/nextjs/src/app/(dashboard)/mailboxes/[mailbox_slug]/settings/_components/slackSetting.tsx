@@ -16,6 +16,9 @@ export type SlackUpdates = {
   escalationChannel?: string | null;
   emailBody?: string | null;
   escalationExpectedResolutionHours?: number | null;
+  ticketResponseAlertsEnabled?: boolean;
+  ticketResponseAlertsFrequency?: "hourly" | "daily" | "weekly";
+  ticketResponseAlertsChannel?: string | null;
 };
 
 export const SlackChannels = ({
@@ -128,11 +131,14 @@ const SlackSetting = ({
   const { mutateAsync: disconnectSlack } = api.mailbox.slack.disconnect.useMutation();
   const [isSlackConnected, setSlackConnected] = useState(mailbox.slackConnected);
   const [resolutionHours, setResolutionHours] = useState(mailbox.escalationExpectedResolutionHours?.toString() ?? "");
+  const [ticketAlertsEnabled, setTicketAlertsEnabled] = useState(mailbox.ticketResponseAlertsEnabled ?? false);
+  const [ticketAlertsFrequency, setTicketAlertsFrequency] = useState(mailbox.ticketResponseAlertsFrequency ?? "hourly");
   const emailBodyMemoized = useMemo(
     () => ({ content: mailbox.escalationEmailBody ?? "" }),
     [mailbox.escalationEmailBody],
   );
   const channelUID = useId();
+  const ticketAlertsChannelUID = useId();
 
   useShowToastForSlackConnectStatus();
 
@@ -198,6 +204,69 @@ const SlackSetting = ({
               />
             </div>
           </div>
+          {/* Add new section for ticket response alerts configuration */}
+          <div className="mt-6 border-t pt-4">
+            <h3 className="text-lg font-medium">Ticket response alerts</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configure alerts for assigned tickets that haven't received a response within 24 hours.
+            </p>
+
+            <div className="flex items-center space-x-2 mb-4">
+              <input
+                type="checkbox"
+                id="ticketAlertsEnabled"
+                checked={ticketAlertsEnabled}
+                onChange={(e) => {
+                  const newValue = e.target.checked;
+                  setTicketAlertsEnabled(newValue);
+                  onChange({
+                    ticketResponseAlertsEnabled: newValue,
+                  });
+                }}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <Label htmlFor="ticketAlertsEnabled">Enable ticket response alerts</Label>
+            </div>
+
+            <div className="grid gap-1 mb-4">
+              <Label htmlFor="ticketAlertsFrequency">Alert frequency</Label>
+              <select
+                id="ticketAlertsFrequency"
+                value={ticketAlertsFrequency}
+                onChange={(e) => {
+                  const newValue = e.target.value as "hourly" | "daily" | "weekly";
+                  setTicketAlertsFrequency(newValue);
+                  onChange({
+                    ticketResponseAlertsFrequency: newValue,
+                  });
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!ticketAlertsEnabled}
+              >
+                <option value="hourly">Every hour</option>
+                <option value="daily">Every day</option>
+                <option value="weekly">Every week</option>
+              </select>
+            </div>
+
+            <div className="grid gap-1">
+              <Label htmlFor={ticketAlertsChannelUID}>Alert channel</Label>
+              <SlackChannels
+                id={ticketAlertsChannelUID}
+                selectedChannelId={mailbox.ticketResponseAlertsChannel ?? undefined}
+                mailbox={mailbox}
+                onChange={(changes) => {
+                  onChange({
+                    ticketResponseAlertsChannel: changes.escalationChannel,
+                  });
+                }}
+              />
+              <p className="mt-1 text-sm text-muted-foreground">
+                If not specified, alerts will be sent to the escalation channel
+              </p>
+            </div>
+          </div>
+
           <div className="mt-4">
             <Button
               variant="destructive_outlined"

@@ -31,6 +31,9 @@ const Page = async (props: { params: Promise<PageProps> }) => {
           slackEscalationChannel: pendingUpdates.slack.escalationChannel ?? undefined,
           escalationEmailBody: pendingUpdates.slack.emailBody ?? undefined,
           escalationExpectedResolutionHours: pendingUpdates.slack.escalationExpectedResolutionHours ?? undefined,
+          ticketResponseAlertsEnabled: pendingUpdates.slack.ticketResponseAlertsEnabled,
+          ticketResponseAlertsFrequency: pendingUpdates.slack.ticketResponseAlertsFrequency,
+          ticketResponseAlertsChannel: pendingUpdates.slack.ticketResponseAlertsChannel ?? undefined,
         });
       } catch (e) {
         throw new Error("Failed to update Slack settings");
