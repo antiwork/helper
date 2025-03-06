@@ -280,7 +280,8 @@ const isMarkSpamAction = (action: Action) =>
 const isCloseTicketAction = (action: Action) =>
   action.actionType === "change_helper_status" && action.actionValue === "closed";
 
-const isOpenTicketAction = (action: Action) => action.actionType === "change_status" && action.actionValue === "open";
+const isOpenTicketAction = (action: Action) =>
+  action.actionType === "change_helper_status" && action.actionValue === "open";
 
 const isSendStaticReplyAction = (action: Action) => action.actionType === "send_email";
 
