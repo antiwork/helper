@@ -241,8 +241,9 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         }
 
         const staffUser = await findUserByEmail(organizationId, parsedEmailFrom.address);
+        const isFirstMessage = isNewThread(gmailMessageId, threadId);
         const shouldClose =
-          !!staffUser ||
+          (!!staffUser && !isFirstMessage) ||
           labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
           (await matchesTransactionalEmailAddress(parsedEmailFrom.address));
         const conversationStatus = shouldClose ? "closed" : "open";
