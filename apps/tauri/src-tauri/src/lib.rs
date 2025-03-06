@@ -56,6 +56,7 @@ pub fn run() {
         .setup(|app| {
             let mut win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                 .title("Helper")
+                .disable_drag_drop_handler()
                 .inner_size(1200.0, 800.0);
 
             #[cfg(target_os = "macos")]
