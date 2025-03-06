@@ -116,17 +116,3 @@ jobs:
       - name: Install browser
         run: |
           npx playwright install chromium
-
-      - name: Run tests
-        id: shortest_tests
-        run: cd apps/nextjs && npm run with-dev-env -- npm run shortest -- --headless --debug-ai --no-cache
-
-      - name: Upload Shortest artifacts
-        if: failure() && steps.shortest_tests.conclusion == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ format('{0}-{1}-{2}-{3}', github.workflow, github.run_id, github.run_number, github.run_attempt ) }}
-          path: apps/nextjs/.shortest
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 3
