@@ -193,16 +193,16 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                 {trialInfo.subscriptionStatus !== "free_trial_expired" && (
                   <div className="flex flex-col gap-1">
                     <div className="flex gap-2 justify-between">
-                      <div className="text-sm">Auto-replies</div>
+                      <div className="text-sm">AI resolutions</div>
                       <div className="text-sm opacity-50">
-                        {trialInfo.automatedRepliesCount}/{trialInfo.automatedRepliesUsageLimit} sent
+                        {trialInfo.resolutionsCount}/{trialInfo.resolutionsLimit}
                       </div>
                     </div>
                     <div className="h-2 w-full rounded-full bg-sidebar-accent">
                       <div
                         className="h-2 rounded-full bg-sidebar-foreground"
                         style={{
-                          width: `${((trialInfo.automatedRepliesCount ?? 0) / (trialInfo.automatedRepliesUsageLimit ?? 1)) * 100}%`,
+                          width: `${((trialInfo.resolutionsCount ?? 0) / (trialInfo.resolutionsLimit ?? 1)) * 100}%`,
                         }}
                       ></div>
                     </div>

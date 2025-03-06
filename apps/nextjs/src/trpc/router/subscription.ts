@@ -4,7 +4,6 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { subscriptions } from "@/db/schema";
 import {
-  cancelStripeSubscription,
   createStripeCheckoutSessionUrl,
   createStripeCustomerPortalUrl,
   createStripeSubscription,
@@ -44,11 +43,6 @@ export const subscriptionRouter = {
     }
   }),
 
-  unsubscribe: mailboxProcedure.mutation(async ({ ctx }) => {
-    const { success, message } = await cancelStripeSubscription(ctx.mailbox.clerkOrganizationId);
-    return { success, message };
-  }),
-
   manage: mailboxProcedure.mutation(async ({ ctx }) => {
     const subscription = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.clerkOrganizationId, ctx.mailbox.clerkOrganizationId),
@@ -80,16 +74,19 @@ export const subscriptionRouter = {
     }
 
     const upcomingInvoice = await stripe.invoices.retrieveUpcoming({ customer: subscription.stripeCustomerId });
-    const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+    const line = upcomingInvoice.lines.data[0];
+    if (!line) return null;
 
-    const planName = stripeSubscription.items.data[0]?.price.nickname || "Helper Plan";
-    const aiResolutions = upcomingInvoice.lines.data[0]?.quantity || 0;
-    const nextBillingDate = new Date(stripeSubscription.current_period_end * 1000);
+    const unitAmount = line.price?.unit_amount || 0;
+    const aiResolutions = line.quantity || 0;
+    const currentPeriodStart = new Date(upcomingInvoice.period_start * 1000);
+    const currentPeriodEnd = new Date(upcomingInvoice.period_end * 1000);
 
     return {
-      planName,
+      unitAmount,
       aiResolutions,
-      nextBillingDate,
+      currentPeriodStart,
+      currentPeriodEnd,
     };
   }),
 } satisfies TRPCRouterRecord;

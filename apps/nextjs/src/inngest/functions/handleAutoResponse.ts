@@ -8,10 +8,11 @@ import { checkTokenCountAndSummarizeIfNeeded, createAssistantMessage, generateAI
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
+import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
 import { sendEmail } from "@/lib/resend/client";
 
-export const handleAutoResponse = async (messageId: number): Promise<void> => {
+export const handleAutoResponse = async (messageId: number) => {
   const message = await db.query.conversationMessages
     .findFirst({
       where: eq(conversationMessages.id, messageId),
@@ -27,6 +28,10 @@ export const handleAutoResponse = async (messageId: number): Promise<void> => {
 
   const widgetHost = message.conversation.mailbox.widgetHost;
   if (!widgetHost) throw new Error("Widget host is required for auto-response");
+
+  if ((await getCachedSubscriptionStatus(message.conversation.mailbox.clerkOrganizationId)) === "free_trial_expired") {
+    return { message: "Not sent, free trial expired" };
+  }
 
   const platformCustomer = assertDefined(
     await findOrCreatePlatformCustomerByEmail(message.conversation.mailboxId, assertDefined(message.emailFrom)),
@@ -85,6 +90,8 @@ export const handleAutoResponse = async (messageId: number): Promise<void> => {
 
     await updateConversation(message.conversationId, { set: { conversationProvider: "chat", status: "closed" } }, tx);
   });
+
+  return { message: `Auto response sent for message ${messageId}` };
 };
 
 export default inngest.createFunction(
@@ -93,8 +100,6 @@ export default inngest.createFunction(
   async ({ event, step }) => {
     const { messageId } = event.data;
 
-    await step.run("handle", async () => await handleAutoResponse(messageId));
-
-    return { message: `Auto response sent for message ${messageId}` };
+    return await step.run("handle", async () => await handleAutoResponse(messageId));
   },
 );

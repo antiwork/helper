@@ -26,6 +26,7 @@ import { api } from "@/trpc/react";
 import { AssigneeFilter } from "./_components/assigneeFilter";
 import { CustomerFilter } from "./_components/customerFilter";
 import { DateFilter } from "./_components/dateFilter";
+import { EventFilter } from "./_components/eventFilter";
 import { ReactionFilter } from "./_components/reactionFilter";
 import { ResponderFilter } from "./_components/responderFilter";
 import { StatusFilter } from "./_components/statusFilter";
@@ -47,6 +48,7 @@ export default function SearchPage() {
     topic: parseAsArrayOf(parseAsInteger),
     isVip: parseAsBoolean,
     reactionType: parseAsStringEnum(["thumbs-up", "thumbs-down"] as const),
+    events: parseAsArrayOf(parseAsStringEnum(["request_human_support", "resolved_by_ai"] as const)),
   });
   const debouncedSetSearchParams = useDebouncedCallback((newParams: Partial<typeof searchParams>) => {
     setSearchParams((params) => ({ ...params, ...newParams }));
@@ -73,6 +75,7 @@ export default function SearchPage() {
     topic: searchParams.topic ?? undefined,
     isVip: searchParams.isVip ?? undefined,
     reactionType: searchParams.reactionType ?? undefined,
+    events: searchParams.events ?? undefined,
   };
   const { data, isFetching, hasNextPage, fetchNextPage } = api.mailbox.conversations.list.useInfiniteQuery(
     { mailboxSlug: params.mailbox_slug, ...searchOptions },
@@ -216,6 +219,7 @@ export default function SearchPage() {
               reactionType={filterValues.reactionType}
               onChange={(reactionType) => updateFilter({ reactionType })}
             />
+            <EventFilter selectedEvents={filterValues.events ?? []} onChange={(events) => updateFilter({ events })} />
           </div>
         </div>
         <div className="w-1 lg:w-10" />

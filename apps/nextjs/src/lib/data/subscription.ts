@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import Stripe from "stripe";
-import { getBaseUrl, HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
+import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { gmailSupportEmails, subscriptions } from "@/db/schema";
 import { env } from "@/env";
@@ -76,39 +76,6 @@ export const createStripeSubscription = async (session: Stripe.Checkout.Session)
       target: [subscriptions.clerkOrganizationId],
       set: subscriptionInfo,
     });
-};
-
-export const cancelStripeSubscription = async (clerkOrganizationId: string) => {
-  const subscription = await db.query.subscriptions.findFirst({
-    where: eq(subscriptions.clerkOrganizationId, clerkOrganizationId),
-    columns: {
-      stripeSubscriptionId: true,
-    },
-  });
-  if (!subscription?.stripeSubscriptionId) return { success: false, message: "Subscription does not exist." };
-
-  try {
-    const stripeSubscription = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
-      cancel_at_period_end: true,
-    });
-
-    if (stripeSubscription.cancel_at_period_end) {
-      return {
-        success: true,
-        message: "Successfully unsubscribed. Your subscription will end after the current billing period.",
-      };
-    }
-    return {
-      success: false,
-      message: "Failed to unsubscribe. Please try again later.",
-    };
-  } catch (error) {
-    console.error("Error unsubscribing:", error);
-    return {
-      success: false,
-      message: `An error occurred while unsubscribing. Please contact ${HELPER_SUPPORT_EMAIL_FROM}`,
-    };
-  }
 };
 
 export const getCurrentBillingPeriodUsage = async (stripeCustomerId: string) => {

@@ -188,6 +188,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             sort?: unknown;
             search?: string | null | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+            events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
@@ -585,6 +586,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   sort?: unknown;
                   search?: string | null | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+                  events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
                   topic?: number[] | undefined;
                   limit?: number | undefined;
                   cursor?: string | null | undefined;
@@ -1121,18 +1123,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
         }>;
       };
-      topics: {
-        all: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            name: string;
-            id: number;
-            parentId: number | null;
-          }[];
-        }>;
-      };
       customers: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -1244,8 +1234,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           trialInfo: {
             freeTrialEndsAt: Date | null;
-            automatedRepliesCount: {} | null;
-            automatedRepliesUsageLimit: number;
+            resolutionsCount: {} | null;
+            resolutionsLimit: number;
             subscriptionStatus: import("../lib/data/organization").SubscriptionStatus;
           };
         };
@@ -1313,15 +1303,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           message: string;
         };
       }>;
-      unsubscribe: import("@trpc/server").TRPCMutationProcedure<{
-        input: {
-          mailboxSlug: string;
-        };
-        output: {
-          success: boolean;
-          message: string;
-        };
-      }>;
       manage: import("@trpc/server").TRPCMutationProcedure<{
         input: {
           mailboxSlug: string;
@@ -1335,9 +1316,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           mailboxSlug: string;
         };
         output: {
-          planName: string;
+          unitAmount: number;
           aiResolutions: number;
-          nextBillingDate: Date;
+          currentPeriodStart: Date;
+          currentPeriodEnd: Date;
         } | null;
       }>;
     };

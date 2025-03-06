@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { parseAsString, useQueryStates } from "nuqs";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
@@ -39,23 +40,6 @@ const Subscription = () => {
     },
   });
 
-  const { mutate: unsubscribe } = api.subscription.unsubscribe.useMutation({
-    onSuccess: (result) => {
-      if (result.success) {
-        refetch();
-        toast({
-          title: result.message,
-          variant: "success",
-        });
-      } else {
-        toast({
-          title: result.message,
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
   const { mutate: manageSubscription } = api.subscription.manage.useMutation({
     onSuccess: (data) => {
       window.location.href = data.url;
@@ -73,36 +57,31 @@ const Subscription = () => {
       {isLoading ? (
         <LoadingSpinner size="md" />
       ) : subscription ? (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Plan:</span>
-              <span>{subscription.planName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">AI Resolutions:</span>
-              <span>{subscription.aiResolutions}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Next billing date:</span>
-              <span>{subscription.nextBillingDate.toLocaleDateString()}</span>
-            </div>
+        <div className="flex flex-col gap-4 text-sm">
+          <div>
+            <h2 className="font-medium text-xl">Helper Subscription</h2>
+            <p className="text-muted-foreground">${(subscription.unitAmount / 100).toFixed(2)} per resolution</p>
           </div>
-          <div className="flex gap-2">
-            {subscription && (
-              <Button variant="outlined" onClick={() => manageSubscription({ mailboxSlug })}>
-                Manage subscription
-              </Button>
-            )}
-            <Button
-              variant="destructive_outlined"
-              onClick={() => {
-                if (confirm("Are you sure you want to cancel your subscription?")) {
-                  unsubscribe({ mailboxSlug });
-                }
-              }}
-            >
-              Cancel subscription
+          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+            <span className="font-medium">Current billing period</span>
+            <span>
+              {subscription.currentPeriodStart.toLocaleDateString()} -{" "}
+              {subscription.currentPeriodEnd.toLocaleDateString()}
+            </span>
+            <span className="font-medium">AI resolutions</span>
+            <span>
+              {subscription.aiResolutions}{" "}
+              <Link
+                href={`/mailboxes/${mailboxSlug}/search?events=resolved_by_ai`}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                (View)
+              </Link>
+            </span>
+          </div>
+          <div>
+            <Button variant="outlined" onClick={() => manageSubscription({ mailboxSlug })}>
+              Manage subscription
             </Button>
           </div>
         </div>
