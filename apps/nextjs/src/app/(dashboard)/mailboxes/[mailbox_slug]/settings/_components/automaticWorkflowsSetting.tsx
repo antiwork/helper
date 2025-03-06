@@ -2,6 +2,7 @@
 
 import { PlusCircleIcon, QuestionMarkCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import cx from "classnames";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
 import { SlackChannels } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/slackSetting";
@@ -23,7 +24,6 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { reorderWorkflows, saveWorkflow } from "@/serverActions/workflows";
 import { api } from "@/trpc/react";
 import { WorkflowAction, WorkflowActionInfo } from "@/types/workflows";
 
@@ -524,12 +524,26 @@ const WorkflowsSetting = ({
   handleDelete: (id: number) => Promise<string | null>;
   conversationSlug?: string;
 }) => {
+  const router = useRouter();
   const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
   const [showNewWorkflowForm, setShowNewWorkflowForm] = useState(false);
+  const { mutateAsync: saveWorkflowMutation } = api.serverActions.workflows.save.useMutation();
+  const { mutateAsync: reorderWorkflowsMutation } = api.serverActions.workflows.reorder.useMutation();
 
   const submitWorkflow = async ({ workflow: updatedWorkflow }: { workflow: EditableWorkflow }) => {
     try {
-      await saveWorkflow(mailboxSlug, updatedWorkflow);
+      await saveWorkflowMutation({ 
+        mailboxSlug,
+        workflow: {
+          id: updatedWorkflow.id?.toString(),
+          name: updatedWorkflow.name || "",
+          description: updatedWorkflow.prompt,
+          enabled: true,
+          conditions: [],
+          actions: []
+        }
+      });
+      router.refresh();
       toast({
         title: "Workflow saved!",
       });
@@ -553,7 +567,11 @@ const WorkflowsSetting = ({
     setWorkflowList(newList);
     if (newList.some((wf, i) => workflowList[i]?.id !== wf.id)) {
       try {
-        await reorderWorkflows(mailboxSlug, newIdOrder);
+        await reorderWorkflowsMutation({ 
+          mailboxSlug,
+          positions: newIdOrder 
+        });
+        router.refresh();
         toast({
           title: "Workflows reordered!",
         });

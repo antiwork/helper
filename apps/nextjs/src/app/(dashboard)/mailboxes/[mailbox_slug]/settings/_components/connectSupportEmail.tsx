@@ -1,14 +1,17 @@
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
 import type { SupportAccount } from "@/app/types/global";
 import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import { Button } from "@/components/ui/button";
-import { authorizeGmailAccount, disconnectSupportEmail } from "@/serverActions/support-email";
+import { api } from "@/trpc/react";
 
 const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccount }) => {
   const params = useParams();
+  const router = useRouter();
   const [error] = useQueryState("error");
+  const { mutateAsync: disconnectSupportEmailMutation } = api.serverActions.supportEmail.disconnect.useMutation();
+  const { mutateAsync: authorizeMutation } = api.serverActions.supportEmail.authorize.useMutation();
 
   const handleConnectOrDisconnect = async () => {
     if (supportAccount) {
@@ -16,10 +19,13 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
         confirm(
           "Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account.",
         )
-      )
-        await disconnectSupportEmail(params.mailbox_slug as string);
+      ) {
+        await disconnectSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
+        router.refresh();
+      }
     } else {
-      await authorizeGmailAccount(params.mailbox_slug as string);
+      await authorizeMutation({ mailboxSlug: params.mailbox_slug as string });
+      router.refresh();
     }
   };
 
