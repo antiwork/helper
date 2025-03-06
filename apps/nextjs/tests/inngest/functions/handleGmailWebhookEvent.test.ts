@@ -465,11 +465,19 @@ describe("handleGmailWebhookEvent", () => {
       expect(respondToEmail).toHaveBeenCalled();
     });
 
-    it("does not generate a response when email is from a staff user", async () => {
+    it("does not generate a response when email is from a staff user (non-first message)", async () => {
       const { mailbox } = await setupGmailSupportEmail();
       const user = userFactory.buildMockUser();
 
+      // Mock a history with multiple messages to simulate a non-first message
       mockHistories([
+        {
+          message: {
+            id: "previousMessageId",
+            threadId: "threadId",
+            labelIds: ["INBOX"],
+          },
+        },
         {
           message: {
             id: "threadId",
@@ -495,6 +503,39 @@ describe("handleGmailWebhookEvent", () => {
         status: "closed",
       });
       expect(respondToEmail).not.toHaveBeenCalled();
+    });
+    
+    it("keeps conversation open when email is from a staff user (first message)", async () => {
+      const { mailbox } = await setupGmailSupportEmail();
+      const staffUser = userFactory.buildMockUser();
+
+      // Mock a history with only one message to simulate a first message
+      mockHistories([
+        {
+          message: {
+            id: "threadId",
+            threadId: "threadId",
+            labelIds: ["INBOX"],
+          },
+        },
+      ]);
+      mockMessage({
+        raw: Buffer.from(
+          `From: ${assertDefined(staffUser.emailAddresses[0]).emailAddress}\r\nSubject: Test Email\r\nMessage-ID: <unique-message-id@example.com>\r\n\r\nThis is the email body`,
+        ).toString("base64url"),
+      });
+
+      vi.mocked(findUserByEmail).mockResolvedValueOnce(staffUser);
+
+      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+
+      const conversation = await db.query.conversations.findFirst({
+        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+      });
+      expect(conversation).toMatchObject({
+        status: "open",
+      });
+      expect(respondToEmail).toHaveBeenCalled();
     });
   });
 
