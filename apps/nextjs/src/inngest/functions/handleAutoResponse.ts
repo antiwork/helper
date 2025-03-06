@@ -56,6 +56,14 @@ export const handleAutoResponse = async (messageId: number): Promise<void> => {
   await db.transaction(async (tx) => {
     const assistantMessage = await createAssistantMessage(message.conversationId, message.id, aiResponse);
 
+    await inngest.send({
+      name: "conversations/check-resolution",
+      data: {
+        conversationId: message.conversationId,
+        messageId: assistantMessage.id,
+      },
+    });
+
     await createMessageNotification({
       messageId: assistantMessage.id,
       conversationId: message.conversationId,
