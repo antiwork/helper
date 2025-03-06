@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     message,
   });
 
-  if (conversation.subject === CHAT_CONVERSATION_SUBJECT && message) {
+  if (conversation.subject === CHAT_CONVERSATION_SUBJECT && messages.length > 1 && message) {
     waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
   }
 
@@ -114,8 +114,12 @@ export async function POST(request: Request) {
   }
 
   const isPromptConversation = conversation.source === "chat#prompt";
+  const isFirstMessage = messages.length === 1;
 
-  if ((await disableAIResponse(conversation.id, mailbox, platformCustomer)) && !isPromptConversation) {
+  if (
+    (await disableAIResponse(conversation.id, mailbox, platformCustomer)) &&
+    (!isPromptConversation || !isFirstMessage)
+  ) {
     await updateConversation(conversation.id, { set: { status: "open" } });
     if (
       messages.length === 1 ||
@@ -130,7 +134,6 @@ export async function POST(request: Request) {
 
   // Check if we have a cached response, if it's the first message
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
-  const isFirstMessage = messages.length == 1;
 
   if (isFirstMessage && isPromptConversation) {
     const cached: string | null = await redis.get(cacheKey);
