@@ -1,5 +1,6 @@
 "use client";
 
+import { PencilIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -130,17 +131,17 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
   ) : (
     <div className="flex items-center gap-4 py-4">
       <Switch checked={tool.enabled} onCheckedChange={handleToolToggle} disabled={updateToolMutation.isPending} />
-      <div className="flex-1 min-w-0 text-left">
-        <div
-          dir="rtl"
-          className="truncate text-sm hover:underline cursor-pointer"
-          onClick={() => setEditingTool({ ...tool })}
-        >
-          {tool.name}
+      <div
+        className="flex-1 min-w-0 text-left flex items-center cursor-pointer"
+        onClick={() => setEditingTool({ ...tool })}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="truncate text-sm">{tool.name}</div>
+          <div className="text-xs truncate text-muted-foreground">/{tool.path}</div>
         </div>
-        <div className="text-xs truncate text-muted-foreground">/{tool.path}</div>
+        <Badge variant="default">{tool.requestMethod}</Badge>
+        <PencilIcon className="h-4 w-4 ml-2 text-muted-foreground" />
       </div>
-      <Badge variant="default">{tool.requestMethod}</Badge>
     </div>
   );
 };
