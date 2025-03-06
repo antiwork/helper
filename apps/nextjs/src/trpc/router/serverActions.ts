@@ -156,7 +156,7 @@ export const serverActionsRouter = {
       }),
     authorize: mailboxProcedure
       .input(z.object({ mailboxSlug: z.string().optional() }))
-      .mutation(async ({ ctx }) => {
+      .mutation(({ ctx }) => {
         // This is a placeholder that will redirect to the Gmail authorization flow
         return { success: true };
       }),
