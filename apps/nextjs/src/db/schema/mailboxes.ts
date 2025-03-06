@@ -16,13 +16,11 @@ export const mailboxes = pgTable(
     responseGeneratorPrompt: jsonb().$type<string[]>(),
     clerkOrganizationId: text().notNull(),
     gmailSupportEmailId: bigint({ mode: "number" }),
-    slackEscalationChannel: text(),
+    slackAlertChannel: text("slack_escalation_channel"),
     slackBotToken: text(),
     slackBotUserId: text(),
     slackTeamId: text(),
     promptUpdatedAt: timestamp({ withTimezone: true, mode: "date" }).notNull(),
-    escalationEmailBody: text(),
-    escalationExpectedResolutionHours: integer(),
     widgetHMACSecret: varchar({ length: 255 }).notNull(),
     widgetDisplayMode: text().$type<"always" | "revenue_based" | "off">().notNull().default("off"),
     widgetDisplayMinValue: bigint({ mode: "number" }),
@@ -32,6 +30,9 @@ export const mailboxes = pgTable(
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
     disableAutoResponseForVips: boolean().notNull().default(false),
+
+    unused_escalationEmailBody: text("escalation_email_body"),
+    unused_escalationExpectedResolutionHours: integer("escalation_expected_resolution_hours"),
   },
   (table) => {
     return {

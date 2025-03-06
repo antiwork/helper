@@ -26,14 +26,14 @@ describe("generateWeeklyReports", () => {
     const { mailbox: mailboxWithSlack } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
 
     const { mailbox: mailboxWithoutSlack } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: null,
-        slackEscalationChannel: null,
+        slackAlertChannel: null,
       },
     });
 
@@ -58,7 +58,7 @@ describe("generateMailboxWeeklyReport", () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
 
@@ -71,7 +71,7 @@ describe("generateMailboxWeeklyReport", () => {
     const result = await generateMailboxReport({
       mailbox,
       slackBotToken: mailbox.slackBotToken!,
-      slackEscalationChannel: mailbox.slackEscalationChannel!,
+      slackAlertChannel: mailbox.slackAlertChannel!,
     });
 
     expect(postSlackMessage).toHaveBeenCalledWith(
@@ -116,7 +116,7 @@ describe("generateMailboxWeeklyReport", () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
 
@@ -125,7 +125,7 @@ describe("generateMailboxWeeklyReport", () => {
     const result = await generateMailboxReport({
       mailbox,
       slackBotToken: mailbox.slackBotToken!,
-      slackEscalationChannel: mailbox.slackEscalationChannel!,
+      slackAlertChannel: mailbox.slackAlertChannel!,
     });
 
     expect(postSlackMessage).not.toHaveBeenCalled();

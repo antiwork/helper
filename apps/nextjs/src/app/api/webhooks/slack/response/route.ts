@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, escalations } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import { verifySlackRequest } from "@/lib/slack/client";
 import { handleSlackAction } from "@/lib/slack/shared";
 
@@ -17,19 +17,6 @@ export const POST = async (request: Request) => {
 
   if (!messageTs) {
     return Response.json({ error: "Invalid payload" }, { status: 400 });
-  }
-
-  const escalation = await db.query.escalations.findFirst({ where: eq(escalations.slackMessageTs, messageTs) });
-  if (escalation) {
-    await handleSlackAction(
-      {
-        conversationId: escalation.conversationId,
-        slackChannel: escalation.slackChannel,
-        slackMessageTs: escalation.slackMessageTs,
-      },
-      payload,
-    );
-    return new Response(null, { status: 200 });
   }
 
   const message = await db.query.conversationMessages.findFirst({

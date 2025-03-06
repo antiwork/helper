@@ -5,7 +5,6 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ExclamationCircleIcon,
-  FlagIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
 import { upperFirst } from "lodash";
@@ -16,14 +15,12 @@ import HumanizedTime from "@/components/humanizedTime";
 const statusVerbs = {
   open: "opened",
   closed: "closed",
-  escalated: "escalated",
   spam: "marked as spam",
 };
 
 const statusIcons = {
   open: ArrowUturnUpIcon,
   closed: ArrowUturnLeftIcon,
-  escalated: FlagIcon,
   spam: ExclamationCircleIcon,
 };
 

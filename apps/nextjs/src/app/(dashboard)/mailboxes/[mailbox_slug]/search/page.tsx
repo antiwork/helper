@@ -1,7 +1,7 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, FlagIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -38,7 +38,7 @@ export default function SearchPage() {
 
   const [searchParams, setSearchParams] = useQueryStates({
     search: parseAsString,
-    status: parseAsArrayOf(parseAsStringEnum(["open", "closed", "escalated", "spam"] as const)),
+    status: parseAsArrayOf(parseAsStringEnum(["open", "closed", "spam"] as const)),
     assignee: parseAsArrayOf(parseAsString),
     createdAfter: parseAsString,
     createdBefore: parseAsString,
@@ -322,7 +322,6 @@ function SearchResultItem({
     open: InboxIcon,
     closed: CheckIcon,
     spam: ShieldExclamationIcon,
-    escalated: FlagIcon,
   }[status];
 
   let highlightedText = highlightKeywords(conversation.matchedMessageText?.replace(/\s+/g, " ") ?? "", searchTerms);
@@ -345,7 +344,6 @@ function SearchResultItem({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-sm font-medium truncate">{conversation.emailFrom}</h3>
-              {status === "escalated" && <Badge variant="default">Escalated</Badge>}
             </div>
             <div className="flex items-center gap-2">
               <TooltipProvider delayDuration={0}>

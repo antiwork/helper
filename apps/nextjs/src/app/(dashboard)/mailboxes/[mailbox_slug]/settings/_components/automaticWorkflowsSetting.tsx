@@ -4,7 +4,6 @@ import { PlusCircleIcon, QuestionMarkCircleIcon, TrashIcon } from "@heroicons/re
 import cx from "classnames";
 import { useEffect, useMemo, useState } from "react";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
-import { SlackChannels } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/slackSetting";
 import {
   AutomaticWorkflowItems,
   ReorderingHandle,
@@ -40,12 +39,12 @@ export const ACTION_TO_HUMANIZED_MAP: Record<WorkflowAction, string> = {
   close_ticket: "Close ticket",
   mark_spam: "Mark as spam",
   reply_and_close_ticket: "Reply and close ticket",
-  reply_and_escalate_to_slack: "Reply and escalate to Slack",
+  reply_and_set_open: "Reply and open ticket",
   assign_user: "Assign user",
   unknown: "(Deprecated workflow action)",
 };
 
-const ACTIONS_WITH_MESSAGE: WorkflowAction[] = ["reply_and_close_ticket", "reply_and_escalate_to_slack"];
+const ACTIONS_WITH_MESSAGE: WorkflowAction[] = ["reply_and_close_ticket", "reply_and_set_open"];
 
 const ACTIONS_WITH_AUTO_REPLY: WorkflowAction[] = ["reply_and_close_ticket"];
 
@@ -118,7 +117,6 @@ const WorkflowEditForm = ({
         return false;
       }
 
-      if (updatedWorkflow.action !== "reply_and_escalate_to_slack") updatedWorkflow.slackChannelId = undefined;
       if (!ACTIONS_WITH_AUTO_REPLY.includes(updatedWorkflow.action)) updatedWorkflow.autoReplyFromMetadata = false;
 
       const isStaticMessageAction =
@@ -135,12 +133,6 @@ const WorkflowEditForm = ({
         toast({
           variant: "destructive",
           title: "The message field cannot be empty",
-        });
-        return false;
-      } else if (updatedWorkflow.action === "reply_and_escalate_to_slack" && !updatedWorkflow.slackChannelId) {
-        toast({
-          variant: "destructive",
-          title: "Please specify a valid Slack channel",
         });
         return false;
       } else if (updatedWorkflow.action === "assign_user" && !updatedWorkflow.assignedUserId) {
@@ -235,17 +227,13 @@ const WorkflowEditForm = ({
                   label: ACTION_TO_HUMANIZED_MAP.reply_and_close_ticket,
                 },
                 {
+                  value: "reply_and_set_open",
+                  label: ACTION_TO_HUMANIZED_MAP.reply_and_set_open,
+                },
+                {
                   value: "assign_user",
                   label: ACTION_TO_HUMANIZED_MAP.assign_user,
                 },
-                ...(mailbox?.slackConnected
-                  ? [
-                      {
-                        value: "reply_and_escalate_to_slack",
-                        label: ACTION_TO_HUMANIZED_MAP.reply_and_escalate_to_slack,
-                      },
-                    ]
-                  : []),
               ].map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -301,22 +289,6 @@ const WorkflowEditForm = ({
                 </Label>
               </div>
             ) : null}
-          </div>
-        ) : null}
-        {selectedWorkflow.action === "reply_and_escalate_to_slack" ? (
-          <div className="grid gap-1">
-            <Label htmlFor="channel">Escalation channel</Label>
-            <SlackChannels
-              id="Workflow escalation channel"
-              selectedChannelId={selectedWorkflow.slackChannelId}
-              mailbox={mailbox}
-              onChange={({ escalationChannel }) =>
-                setSelectedWorkflow((workflow) => ({
-                  ...workflow,
-                  slackChannelId: escalationChannel || undefined,
-                }))
-              }
-            />
           </div>
         ) : null}
         {selectedWorkflow.action === "assign_user" ? (
