@@ -40,6 +40,8 @@ export default function Conversation({
   }, [conversationSlug]);
 
   const {
+    data,
+    setData,
     messages,
     input,
     handleInputChange,
@@ -133,6 +135,8 @@ export default function Conversation({
 
     if (!input.trim()) return;
 
+    setData(undefined);
+
     try {
       let currentSlug = conversationSlug;
       if (!currentSlug) {
@@ -167,7 +171,7 @@ export default function Conversation({
     };
   }, [token]);
 
-  const renderedMessages = messages.filter((message) => message.content?.length > 0);
+  const renderedMessages = messages;
   const lastMessage = messages[messages.length - 1];
   const showLoadingAnimation = isLoading && (lastMessage?.content?.length === 0 || lastMessage?.role !== "assistant");
 
@@ -178,6 +182,7 @@ export default function Conversation({
   return (
     <>
       <MessagesList
+        data={data ?? null}
         messages={renderedMessages as MessageWithReaction[]}
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
