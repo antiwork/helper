@@ -4,6 +4,7 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { formatDuration } from "@/inngest/functions/checkAssignedTicketResponseTimes";
 import { postSlackMessage } from "@/lib/slack/client";
 
 export default inngest.createFunction(
@@ -27,6 +28,7 @@ export default inngest.createFunction(
           name: platformCustomers.name,
           subject: conversations.subject,
           slug: conversations.slug,
+          lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
         })
         .from(conversations)
         .innerJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
@@ -59,7 +61,7 @@ export default inngest.createFunction(
                 .slice(0, 10)
                 .map(
                   (conversation) =>
-                    `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name})`,
+                    `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name}, ${formatDuration(conversation.lastUserEmailCreatedAt!)} since last reply)`,
                 ),
               ...(overdueVipConversations.length > 10 ? [`(and ${overdueVipConversations.length - 10} more)`] : []),
             ].join("\n"),

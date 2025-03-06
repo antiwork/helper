@@ -8,7 +8,7 @@ import { inngest } from "@/inngest/client";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { postSlackMessage } from "@/lib/slack/client";
 
-function formatDuration(start: Date): string {
+export function formatDuration(start: Date): string {
   const duration = intervalToDuration({ start, end: new Date() });
 
   const parts: string[] = [];
