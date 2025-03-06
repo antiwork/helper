@@ -1294,6 +1294,53 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
       }>;
     };
+    subscription: {
+      startCheckout: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          url: string;
+        };
+      }>;
+      subscribe: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+          sessionId: string;
+        };
+        output: {
+          success: boolean;
+          message: string;
+        };
+      }>;
+      unsubscribe: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          success: boolean;
+          message: string;
+        };
+      }>;
+      manage: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          url: string;
+        };
+      }>;
+      get: import("@trpc/server").TRPCQueryProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          planName: string;
+          aiResolutions: number;
+          nextBillingDate: Date;
+        } | null;
+      }>;
+    };
     isSignedIn: import("@trpc/server").TRPCQueryProcedure<{
       input: void;
       output: boolean;

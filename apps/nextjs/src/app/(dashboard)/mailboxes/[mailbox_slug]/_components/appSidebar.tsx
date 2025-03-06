@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 import { cn } from "@/lib/utils";
-import { subscribeToHelper } from "@/serverActions/subscription";
+import { api } from "@/trpc/react";
 import { CategoryNav } from "./categoryNav";
 import NativeAppModal, {
   isMac,
@@ -76,6 +76,12 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const { setState: setLayoutState } = useLayoutInfo();
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const router = useRouter();
+
+  const { mutate: startCheckout } = api.subscription.startCheckout.useMutation({
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+  });
 
   useEffect(() => {
     setShowUpgradePrompt(trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt && !getTauriPlatform());
@@ -202,7 +208,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                     </div>
                   </div>
                 )}
-                <Button variant="bright" size="sm" onClick={() => subscribeToHelper({ mailboxSlug })}>
+                <Button variant="bright" size="sm" onClick={() => startCheckout({ mailboxSlug })}>
                   Upgrade
                 </Button>
                 {trialInfo.subscriptionStatus === "free_trial_expired" ? (
