@@ -15,16 +15,17 @@ software to do everything you might do with the software
 that would otherwise infringe the licensor's copyright, but only
 as long as you meet all the conditions below.
 
-## Small Business
+## Small Business and Exempt Organizations
 
-You may use the software under this license only if your company has
-(1) less than 1 million USD (2024) total revenue in the prior
-tax year, and (2) less than 10 million USD (2024) GMV (Gross
-Merchandise Value). Adjust this revenue threshold for inflation according
+You may use the software under this license only if (1) your company has
+less than 1 million USD (2024) total revenue in the prior
+tax year, and less than 10 million USD (2024) GMV (Gross
+Merchandise Value), or (2) you are a non-profit organization or
+government entity. Adjust the revenue threshold for inflation according
 to the United States Bureau of Labor Statistics' consumer price
 index for all urban consumers, U.S. city average, for all items,
 not seasonally adjusted, 1982–1984=100 reference base. If you
-exceed either of these limits, your license ends.
+are a company and exceed either of the limits in (1), your license ends.
 You may contact the licensor to discuss an alternative license.
 
 ## Notices
@@ -43,7 +44,7 @@ with the software. For example:
 The licensor grants you a patent license for the software that
 covers patent claims the licensor can license, or becomes able
 to license, that you would infringe by using the software. This license
-is also subject to the Small Business limitation above.
+is also subject to the Small Business and Exempt Organizations limitation above.
 
 ## No Other Rights
 
