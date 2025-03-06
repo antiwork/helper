@@ -1,10 +1,31 @@
 import { KnownBlock } from "@slack/web-api";
+import { intervalToDuration } from "date-fns";
 import { and, desc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { postSlackMessage } from "@/lib/slack/client";
+
+function formatDuration(start: Date): string {
+  const duration = intervalToDuration({ start, end: new Date() });
+
+  const parts: string[] = [];
+
+  if (duration.days && duration.days > 0) {
+    parts.push(`${duration.days} ${duration.days === 1 ? "day" : "days"}`);
+  }
+
+  if (duration.hours && duration.hours > 0) {
+    parts.push(`${duration.hours} ${duration.hours === 1 ? "hour" : "hours"}`);
+  }
+
+  if (duration.minutes && duration.minutes > 0) {
+    parts.push(`${duration.minutes} ${duration.minutes === 1 ? "minute" : "minutes"}`);
+  }
+
+  return parts.join(" ");
+}
 
 export default inngest.createFunction(
   { id: "check-vip-response-times" },
@@ -27,6 +48,7 @@ export default inngest.createFunction(
           name: platformCustomers.name,
           subject: conversations.subject,
           slug: conversations.slug,
+          lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
         })
         .from(conversations)
         .innerJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
@@ -59,7 +81,7 @@ export default inngest.createFunction(
                 .slice(0, 10)
                 .map(
                   (conversation) =>
-                    `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name})`,
+                    `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name}, ${formatDuration(conversation.lastUserEmailCreatedAt!)} since last reply)`,
                 ),
               ...(overdueVipConversations.length > 10 ? [`(and ${overdueVipConversations.length - 10} more)`] : []),
             ].join("\n"),
