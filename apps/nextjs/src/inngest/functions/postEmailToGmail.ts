@@ -11,7 +11,6 @@ import {
   isFreeTrial,
   setPrivateMetadata,
 } from "@/lib/data/organization";
-import { billWorkflowReply, isBillable } from "@/lib/data/subscription";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertEmailToRaw } from "@/lib/gmail/lib";
 import { sendEmail } from "@/lib/resend/client";
@@ -31,7 +30,7 @@ const markFailed = async (emailId: number, conversationId: number, error: string
   return error;
 };
 
-export const trackAndBillWorkflowReply = async (emailId: number, mailboxSlug: string, organizationId: string) => {
+export const trackWorkflowReply = async (emailId: number, mailboxSlug: string, organizationId: string) => {
   const organization = await getClerkOrganization(organizationId);
   const updatedOrganization = await setPrivateMetadata(organizationId, {
     automatedRepliesCount: (organization.privateMetadata.automatedRepliesCount ?? 0) + 1,
@@ -55,9 +54,6 @@ export const trackAndBillWorkflowReply = async (emailId: number, mailboxSlug: st
       });
     }
     await setPrivateMetadata(organizationId, { automatedRepliesLimitExceededAt: new Date().toISOString() });
-  }
-  if (subscription && (await isBillable(subscription))) {
-    await billWorkflowReply(emailId, organizationId);
   }
 };
 
@@ -138,7 +134,7 @@ export const postEmailToGmail = async (emailId: number) => {
 
     if (email.role === "workflow") {
       try {
-        await trackAndBillWorkflowReply(
+        await trackWorkflowReply(
           emailId,
           email.conversation.mailbox.slug,
           email.conversation.mailbox.clerkOrganizationId,

@@ -13,7 +13,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import AutomatedRepliesLimitExceededEmail from "@/emails/automatedRepliesLimitExceeded";
-import { postEmailToGmail, trackAndBillWorkflowReply } from "@/inngest/functions/postEmailToGmail";
+import { postEmailToGmail, trackWorkflowReply } from "@/inngest/functions/postEmailToGmail";
 import { getClerkOrganization, getOrganizationAdminUsers, setPrivateMetadata } from "@/lib/data/organization";
 import { billWorkflowReply, isBillable } from "@/lib/data/subscription";
 import { getClerkUser } from "@/lib/data/user";
@@ -319,19 +319,19 @@ describe("trackAndBillWorkflowReply", () => {
       role: "workflow",
     });
 
-    await trackAndBillWorkflowReply(message.id, mailbox.slug, organization.id);
+    await trackWorkflowReply(message.id, mailbox.slug, organization.id);
     expect(billWorkflowReply).toHaveBeenCalledTimes(0);
     expect(isBillable).toHaveBeenCalledTimes(0);
 
     const { subscription } = await subscriptionFactory.create(organization.id);
     vi.mocked(isBillable).mockResolvedValue(false);
-    await trackAndBillWorkflowReply(message.id, mailbox.slug, organization.id);
+    await trackWorkflowReply(message.id, mailbox.slug, organization.id);
     expect(billWorkflowReply).toHaveBeenCalledTimes(0);
     expect(isBillable).toHaveBeenCalledWith(subscription);
     expect(isBillable).toHaveBeenCalledTimes(1);
 
     vi.mocked(isBillable).mockResolvedValue(true);
-    await trackAndBillWorkflowReply(message.id, mailbox.slug, organization.id);
+    await trackWorkflowReply(message.id, mailbox.slug, organization.id);
 
     expect(billWorkflowReply).toHaveBeenCalledTimes(1);
     expect(isBillable).toHaveBeenCalledTimes(2);
@@ -366,7 +366,7 @@ describe("trackAndBillWorkflowReply", () => {
       },
     });
 
-    await trackAndBillWorkflowReply(message.id, mailbox.slug, organization.id);
+    await trackWorkflowReply(message.id, mailbox.slug, organization.id);
     expect(setPrivateMetadata).toHaveBeenCalledWith(organization.id, {
       automatedRepliesCount: SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT,
     });

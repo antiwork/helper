@@ -14,7 +14,6 @@ export const MEMBERS_NAV_ITEM = "members";
 export const MAX_STYLE_LINTERS = 10;
 
 export const SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT = 100;
-export const SUBSCRIPTION_FLAT_FEE_USAGE_LIMIT = 1000;
 
 export const DEFAULT_CONVERSATIONS_PER_PAGE = 25;
 
