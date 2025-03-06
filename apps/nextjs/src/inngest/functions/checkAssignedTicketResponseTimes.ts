@@ -80,7 +80,7 @@ export default inngest.createFunction(
                   orgMembers.data.find((m) => m.publicUserData?.userId === conversation.assignedToClerkId)
                     ?.publicUserData?.firstName || "Unknown";
                 const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${assigneeName}, ${timeSinceLastReply} since last reply)`;
+                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to @${assigneeName}, ${timeSinceLastReply} since last reply)`;
               }),
               ...(overdueAssignedConversations.length > 10
                 ? [`(and ${overdueAssignedConversations.length - 10} more)`]
