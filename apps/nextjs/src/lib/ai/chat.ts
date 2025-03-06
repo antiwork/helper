@@ -14,13 +14,15 @@ import {
 } from "ai";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { conversationMessages, mailboxes } from "@/db/schema";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
-import { createConversationMessage } from "@/lib/data/conversationMessage";
+import { getConversationById } from "@/lib/data/conversation";
+import { createConversationMessage, getMessages } from "@/lib/data/conversationMessage";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { ReadPageToolConfig } from "@/sdk/types";
@@ -59,6 +61,29 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   });
 
   return summary;
+};
+
+export const loadPreviousMessages = async (conversationId: number): Promise<Message[]> => {
+  const conversation = assertDefined(await getConversationById(conversationId));
+  const mailbox = assertDefined(
+    await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.id, conversation.mailboxId),
+    }),
+  );
+
+  const conversationMessages = await getMessages(conversationId, mailbox);
+
+  return conversationMessages
+    .filter((message) => message.type === "message" && message.body)
+    .map((message) => {
+      const messageRecord = message as any; // Type assertion to handle union type
+      return {
+        id: messageRecord.id.toString(),
+        role:
+          messageRecord.role === "staff" || messageRecord.role === "ai_assistant" ? "assistant" : messageRecord.role,
+        content: messageRecord.body || "",
+      };
+    });
 };
 
 export const buildPromptMessages = async (

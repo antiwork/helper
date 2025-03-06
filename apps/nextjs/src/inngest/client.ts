@@ -125,6 +125,12 @@ export const inngest = new Inngest({
           crawlId: z.number(),
         }),
       },
+      "conversations/check-resolution": {
+        data: z.object({
+          conversationId: z.number(),
+          messageId: z.number(),
+        }),
+      },
       "messages/flagged.bad": {
         data: z.object({
           messageId: z.number(),

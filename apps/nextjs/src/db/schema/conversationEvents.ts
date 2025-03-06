@@ -9,7 +9,10 @@ export const conversationEvents = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     conversationId: bigint({ mode: "number" }).notNull(),
-    type: text().notNull().default("update").$type<"update" | "request_human_support" | "reasoning_toggled">(),
+    type: text()
+      .notNull()
+      .default("update")
+      .$type<"update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai">(),
     changes: jsonb()
       .$type<{
         status?: "open" | "closed" | "spam";

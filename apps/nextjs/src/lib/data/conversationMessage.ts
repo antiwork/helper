@@ -105,6 +105,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     where: and(eq(conversationEvents.conversationId, conversationId), ne(conversationEvents.type, "reasoning_toggled")),
     columns: {
       id: true,
+      type: true,
       createdAt: true,
       changes: true,
       byClerkUserId: true,
@@ -153,6 +154,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
           : event.changes.assignedToClerkId,
       },
       byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.fullName ?? null) : null,
+      eventType: event.type,
       type: "event" as const,
     })),
   );

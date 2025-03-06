@@ -55,6 +55,9 @@ export async function generateMailboxReport(mailboxId: number) {
     conversations,
     and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "open")),
   );
+
+  if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
+
   const openCountMessage = `• Open tickets: ${openTicketCount}`;
 
   const formatTime = (seconds: number) => {

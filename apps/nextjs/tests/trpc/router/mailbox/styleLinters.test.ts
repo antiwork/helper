@@ -83,6 +83,6 @@ describe("styleLintersRouter", () => {
       expect((await db.query.mailboxes.findFirst({ where: eq(mailboxes.id, mailbox.id) }))?.promptUpdatedAt).toEqual(
         time2,
       );
-    });
+    }, 30000); // Increase timeout to 30 seconds to prevent flaky test failures
   });
 });

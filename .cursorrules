@@ -1,6 +1,3 @@
 - Refer to app as Helper not Helper AI
-- TypeScript tests use vitest
-- Don't mock database queries in tests; use the factory functions in @tests/support/factories
-- When testing inngest functions, test the exported plain function not the inngest wrapper
-- Don't use "should" in test descriptions
+- We have existing TypeScript tests using vitest. Fix the existing tests if required, but don't add any new tests unless explicitly told to do so
 - Don't modify config files or package.json unless explicitly told to do so
