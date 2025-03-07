@@ -25,16 +25,6 @@ export default function Image() {
         }}
       >
         <img src={logoUrl} alt="Helper.ai" width={550} height={160} style={{ marginBottom: "20px" }} />
-        <h1
-          style={{
-            fontSize: "60px",
-            color: "white",
-            marginBottom: "20px",
-            textAlign: "center",
-          }}
-        >
-          Documentation
-        </h1>
       </div>
     ),
     {
