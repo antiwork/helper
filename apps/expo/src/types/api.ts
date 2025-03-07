@@ -337,6 +337,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
+                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -494,6 +495,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
+                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
                   type: "event";
                   id: number;
                   createdAt: Date;
