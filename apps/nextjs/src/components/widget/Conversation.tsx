@@ -171,7 +171,6 @@ export default function Conversation({
     };
   }, [token]);
 
-  const renderedMessages = messages;
   const lastMessage = messages[messages.length - 1];
   const showLoadingAnimation = isLoading && (lastMessage?.content?.length === 0 || lastMessage?.role !== "assistant");
 
@@ -183,7 +182,7 @@ export default function Conversation({
     <>
       <MessagesList
         data={data ?? null}
-        messages={renderedMessages as MessageWithReaction[]}
+        messages={messages as MessageWithReaction[]}
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         showLoadingAnimation={showLoadingAnimation}
