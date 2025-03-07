@@ -8,15 +8,15 @@ import { runAIQuery } from "@/lib/ai";
 import { loadPreviousMessages } from "@/lib/ai/chat";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 
-const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was resolved.
+const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was addressed.
 
-Consider the conversation resolved by default unless there are clear signs it isn't. Only mark as unresolved if:
-1) The customer explicitly expresses dissatisfaction or frustration
-2) The response is completely unrelated to the customer's question
-3) The customer has a clear follow-up question that wasn't addressed at all
+Respond with one of:
+- 'bad: [reason]' if the customer explicitly expresses dissatisfaction or frustration, or if the response is unrelated to the customer's question
+- 'ok: [reason]' otherwise
 
-Respond with 'true: [reason]' or 'false: [reason]' where [reason] is a brief explanation of your decision.
-Default to 'true' if uncertain.`;
+Where [reason] is a brief explanation of your decision.
+
+Just check if the assistant has provided information generally relevant to the customer's issue - it doesn't need to be an exact match.`;
 
 const checkAIBasedResolution = async (conversationId: number) => {
   const messages = await loadPreviousMessages(conversationId);
@@ -41,7 +41,7 @@ const checkAIBasedResolution = async (conversationId: number) => {
   });
 
   const [isResolved, reason] = aiResponse.trim().toLowerCase().split(": ");
-  return { isResolved: isResolved === "true", reason };
+  return { isResolved: isResolved !== "bad", reason };
 };
 
 const skipCheck = async (conversationId: number, messageId: number) => {
