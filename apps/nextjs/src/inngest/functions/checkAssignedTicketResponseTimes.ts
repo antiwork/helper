@@ -5,8 +5,8 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { getOrganizationMembers } from "@/lib/data/organization";
-import { postSlackMessage } from "@/lib/slack/client";
+import { getClerkUserList } from "@/lib/data/user";
+import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 function formatDuration(start: Date): string {
   const duration = intervalToDuration({ start, end: new Date() });
@@ -64,8 +64,9 @@ export default inngest.createFunction(
 
       if (!overdueAssignedConversations.length) continue;
 
-      // Get organization members to display assignee names
-      const orgMembers = await getOrganizationMembers(mailbox.clerkOrganizationId);
+      const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
+      const clerkUsers = await getClerkUserList(mailbox.clerkOrganizationId);
+      const clerkUsersById = new Map(clerkUsers.data.map((user) => [user.id, user]));
 
       const blocks: KnownBlock[] = [
         {
@@ -76,11 +77,12 @@ export default inngest.createFunction(
               `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
               ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
                 const subject = conversation.subject;
-                const assigneeName =
-                  orgMembers.data.find((m) => m.publicUserData?.userId === conversation.assignedToClerkId)
-                    ?.publicUserData?.firstName || "Unknown";
+                const assignee = clerkUsersById.get(conversation.assignedToClerkId!);
+                const assigneeEmail = assignee?.emailAddresses[0]?.emailAddress;
+                const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
+                const mention = slackUserId ? `<@${slackUserId}>` : assignee?.fullName || "Unknown";
                 const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to @${assigneeName}, ${timeSinceLastReply} since last reply)`;
+                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
               }),
               ...(overdueAssignedConversations.length > 10
                 ? [`(and ${overdueAssignedConversations.length - 10} more)`]
