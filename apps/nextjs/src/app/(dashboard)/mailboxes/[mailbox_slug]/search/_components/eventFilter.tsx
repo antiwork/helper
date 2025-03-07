@@ -1,4 +1,4 @@
-import { RocketLaunchIcon } from "@heroicons/react/24/outline";
+import { BellIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,8 +30,12 @@ export function EventFilter({ selectedEvents, onChange }: EventFilterProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={selectedEvents.length > 0 ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <RocketLaunchIcon className="h-4 w-4 mr-2" />
-          {selectedEvents.length > 0 ? `${selectedEvents.length} events` : "Events"}
+          <BellIcon className="h-4 w-4 mr-2" />
+          {selectedEvents.length === 1
+            ? EVENT_OPTIONS.find((event) => event.value === selectedEvents[0])?.label
+            : selectedEvents.length > 0
+              ? `${selectedEvents.length} events`
+              : "Events"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
