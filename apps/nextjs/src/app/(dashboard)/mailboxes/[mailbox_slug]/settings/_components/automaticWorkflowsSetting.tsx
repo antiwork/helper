@@ -504,17 +504,7 @@ const WorkflowsSetting = ({
 
   const submitWorkflow = async ({ workflow: updatedWorkflow }: { workflow: EditableWorkflow }) => {
     try {
-      await setWorkflowMutation({
-        mailboxSlug,
-        id: updatedWorkflow.id,
-        name: updatedWorkflow.name || "",
-        prompt: updatedWorkflow.prompt,
-        action: updatedWorkflow.action,
-        runOnReplies: updatedWorkflow.runOnReplies,
-        autoReplyFromMetadata: updatedWorkflow.autoReplyFromMetadata,
-        assignedUserId: updatedWorkflow.assignedUserId,
-        order: updatedWorkflow.order,
-      });
+      await setWorkflowMutation({ mailboxSlug, ...updatedWorkflow });
       router.refresh();
       toast({
         title: "Workflow saved!",

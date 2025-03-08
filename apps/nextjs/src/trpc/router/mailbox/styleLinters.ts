@@ -11,9 +11,14 @@ import { mailboxProcedure } from "./procedure";
 
 export const styleLintersRouter = {
   list: mailboxProcedure.query(async ({ ctx }) => {
-    return await db.query.styleLinters.findMany({
-      where: eq(styleLinters.clerkOrganizationId, ctx.mailbox.clerkOrganizationId),
-    });
+    return await db
+      .select({
+        id: styleLinters.id,
+        before: styleLinters.before,
+        after: styleLinters.after,
+      })
+      .from(styleLinters)
+      .where(eq(styleLinters.clerkOrganizationId, ctx.mailbox.clerkOrganizationId));
   }),
   upsert: mailboxProcedure
     .input(

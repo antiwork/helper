@@ -23,7 +23,7 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
         router.refresh();
       }
     } else {
-      router.push(`/api/connect/google?mailbox=${params.mailbox_slug}`);
+      location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`;
     }
   };
 

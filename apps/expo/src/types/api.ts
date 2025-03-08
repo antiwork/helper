@@ -153,9 +153,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
           output: {
             id: number;
-            clerkOrganizationId: string;
-            createdAt: Date;
-            updatedAt: Date;
             before: string;
             after: string;
           }[];
