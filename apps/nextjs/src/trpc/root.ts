@@ -1,8 +1,8 @@
 import { userRouter } from "@/trpc/router/user";
+import { billingRouter } from "./router/billing";
 import { gmailSupportEmailRouter } from "./router/gmailSupportEmail";
 import { mailboxRouter } from "./router/mailbox";
 import { organizationRouter } from "./router/organization";
-import { subscriptionRouter } from "./router/subscription";
 import { createTRPCRouter, publicProcedure } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -10,7 +10,7 @@ export const appRouter = createTRPCRouter({
   organization: organizationRouter,
   user: userRouter,
   gmailSupportEmail: gmailSupportEmailRouter,
-  subscription: subscriptionRouter,
+  billing: billingRouter,
   isSignedIn: publicProcedure.query(({ ctx }) => !!ctx.session?.userId),
   testing: publicProcedure.query(async ({ ctx }) => {
     console.log(ctx);

@@ -1284,7 +1284,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
       }>;
     };
-    subscription: {
+    billing: {
       startCheckout: import("@trpc/server").TRPCMutationProcedure<{
         input: {
           mailboxSlug: string;

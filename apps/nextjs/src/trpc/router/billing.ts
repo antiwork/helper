@@ -12,7 +12,7 @@ import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { stripe } from "@/lib/stripe/client";
 import { mailboxProcedure } from "./mailbox/procedure";
 
-export const subscriptionRouter = {
+export const billingRouter = {
   startCheckout: mailboxProcedure.mutation(async ({ ctx }) => {
     const stripeCheckoutSessionUrl = await createStripeCheckoutSessionUrl({
       gmailSupportEmailId: ctx.mailbox.gmailSupportEmailId,

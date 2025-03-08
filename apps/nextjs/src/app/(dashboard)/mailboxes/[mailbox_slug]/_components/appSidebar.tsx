@@ -77,7 +77,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const router = useRouter();
 
-  const { mutate: startCheckout } = api.subscription.startCheckout.useMutation({
+  const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
       window.location.href = data.url;
     },

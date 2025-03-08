@@ -15,8 +15,8 @@ const Subscription = () => {
     stripeSessionId: parseAsString,
   });
 
-  const { data: subscription, isLoading, refetch } = api.subscription.get.useQuery({ mailboxSlug });
-  const { mutate: handleSuccessfulSubscription } = api.subscription.subscribe.useMutation({
+  const { data: subscription, isLoading, refetch } = api.billing.get.useQuery({ mailboxSlug });
+  const { mutate: handleSuccessfulSubscription } = api.billing.subscribe.useMutation({
     onSuccess: (res) => {
       if (res.success) {
         setSearchParams({ stripeStatus: null, stripeSessionId: null });
@@ -34,13 +34,13 @@ const Subscription = () => {
     },
   });
 
-  const { mutate: subscribe } = api.subscription.startCheckout.useMutation({
+  const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
       window.location.href = data.url;
     },
   });
 
-  const { mutate: manageSubscription } = api.subscription.manage.useMutation({
+  const { mutate: manageSubscription } = api.billing.manage.useMutation({
     onSuccess: (data) => {
       window.location.href = data.url;
     },
@@ -86,7 +86,7 @@ const Subscription = () => {
           </div>
         </div>
       ) : (
-        <Button variant="subtle" onClick={() => subscribe({ mailboxSlug })}>
+        <Button variant="subtle" onClick={() => startCheckout({ mailboxSlug })}>
           Subscribe
         </Button>
       )}
