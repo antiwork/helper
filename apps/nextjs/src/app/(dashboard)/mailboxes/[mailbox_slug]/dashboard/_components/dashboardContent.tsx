@@ -7,6 +7,7 @@ import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/members/
 import { PageContent } from "@/components/pageContent";
 import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
+import { RealtimeEvents } from "./realtimeEvents";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
 import { ViewSwitcher } from "./viewSwitcher";
@@ -72,6 +73,9 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
               <ReactionsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
             </Panel>
           </div>
+
+          <h3 className="scroll-m-20 text-4xl font-sundry-bold text-white tracking-tight">What's happening?</h3>
+          <RealtimeEvents mailboxSlug={mailboxSlug} />
         </div>
       </PageContent>
     </div>
