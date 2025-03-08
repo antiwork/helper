@@ -7,7 +7,7 @@ import { mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { REPORT_HOUR, TIME_ZONE } from "@/inngest/functions/generateDailyReports";
 import { getMemberStats } from "@/lib/data/stats";
-import { listSlackUsers, postSlackMessage } from "@/lib/slack/client";
+import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 const formatDateRange = (start: Date, end: Date) => {
   return `Week of ${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
@@ -84,12 +84,7 @@ export async function generateMailboxReport({
     return "No stats found";
   }
 
-  const slackUsers = await listSlackUsers(slackBotToken).catch((error) => {
-    console.error("Failed to list Slack users", error);
-    return [];
-  });
-  const slackUsersByEmail = new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
-
+  const slackUsersByEmail = await getSlackUsersByEmail(slackBotToken);
   const tableData: { name: string; count: number; slackUserId?: string }[] = [];
 
   for (const member of stats) {
