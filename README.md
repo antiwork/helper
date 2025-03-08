@@ -71,7 +71,7 @@ _For other operating systems, see the [mkcert installation guide](https://github
 
 ```sh
 # Generate SSL certificates
-bin/generate_ssl_certs
+bin/generate_ssl_certificates
 ```
 
 3. Start the application:
