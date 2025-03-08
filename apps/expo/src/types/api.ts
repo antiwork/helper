@@ -153,9 +153,34 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
           output: {
             id: number;
+            clerkOrganizationId: string;
+            createdAt: Date;
+            updatedAt: Date;
             before: string;
             after: string;
           }[];
+        }>;
+        upsert: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            linter: {
+              before: string;
+              after: string;
+              id?: number | undefined;
+            };
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
+        delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+          };
+          output: {
+            success: boolean;
+          };
         }>;
         setEnabled: import("@trpc/server").TRPCMutationProcedure<{
           input: {
@@ -946,7 +971,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             mailboxSlug: string;
             positions: number[];
           };
-          output: void;
+          output: {
+            success: boolean;
+          };
         }>;
         listMatchingConversations: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -992,6 +1019,22 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             matchingSlugs: string[];
           };
           output: void;
+        }>;
+        save: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            workflow: {
+              name: string;
+              enabled: boolean;
+              conditions: any[];
+              actions: any[];
+              description?: string | undefined;
+              id?: string | undefined;
+            };
+          };
+          output: {
+            success: boolean;
+          };
         }>;
       };
       slack: {
@@ -1190,6 +1233,80 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
         }>;
       };
+      metadataEndpoint: {
+        create: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            url: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+        delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+        test: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+      };
+      promptLines: {
+        update: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            responseGeneratorPrompt: string[];
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
+      };
+      supportEmail: {
+        disconnect: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
+        authorize: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
+      };
     };
     organization: {
       createDefaultOrganization: import("@trpc/server").TRPCMutationProcedure<{
@@ -1252,147 +1369,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           message: string;
         };
       }>;
-    };
-    serverActions: {
-      metadataEndpoint: {
-        create: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            url: string;
-          };
-          output:
-            | {
-                success: boolean;
-                error: undefined;
-              }
-            | {
-                success: boolean;
-                error: string;
-              };
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output:
-            | {
-                success: boolean;
-                error: undefined;
-              }
-            | {
-                success: boolean;
-                error: string;
-              };
-        }>;
-        test: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output:
-            | {
-                success: boolean;
-                error: undefined;
-              }
-            | {
-                success: boolean;
-                error: string;
-              };
-        }>;
-      };
-      styleLinter: {
-        upsert: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            linter: {
-              before: string;
-              after: string;
-              id?: number | undefined;
-            };
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            id: number;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-      };
-      promptLines: {
-        update: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            responseGeneratorPrompt: string[];
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-      };
-      supportEmail: {
-        disconnect: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        authorize: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-      };
-      conversation: {
-        update: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            status?: "open" | "closed" | "escalated" | "spam" | undefined;
-            message?: string | null | undefined;
-            assignedToId?: string | null | undefined;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-      };
-      workflows: {
-        save: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            workflow: {
-              name: string;
-              enabled: boolean;
-              conditions: any[];
-              actions: any[];
-              description?: string | undefined;
-              id?: string | undefined;
-            };
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        reorder: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            positions: number[];
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-      };
     };
     isSignedIn: import("@trpc/server").TRPCQueryProcedure<{
       input: void;

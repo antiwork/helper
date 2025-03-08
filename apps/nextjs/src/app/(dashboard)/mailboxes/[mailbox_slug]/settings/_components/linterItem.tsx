@@ -17,7 +17,7 @@ type LinterItemProps = {
 const LinterItem = ({ mailboxSlug, linter, onDelete, onClickEdit }: LinterItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
-  const { mutateAsync: upsertStyleLinterMutation } = api.serverActions.styleLinter.upsert.useMutation();
+  const { mutateAsync: upsertStyleLinterMutation } = api.mailbox.styleLinters.upsert.useMutation();
 
   const handleStartEditing = () => {
     setIsEditing(true);

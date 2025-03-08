@@ -499,12 +499,12 @@ const WorkflowsSetting = ({
   const router = useRouter();
   const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
   const [showNewWorkflowForm, setShowNewWorkflowForm] = useState(false);
-  const { mutateAsync: saveWorkflowMutation } = api.serverActions.workflows.save.useMutation();
-  const { mutateAsync: reorderWorkflowsMutation } = api.serverActions.workflows.reorder.useMutation();
+  const { mutateAsync: saveWorkflowMutation } = api.mailbox.workflows.save.useMutation();
+  const { mutateAsync: reorderWorkflowsMutation } = api.mailbox.workflows.reorder.useMutation();
 
   const submitWorkflow = async ({ workflow: updatedWorkflow }: { workflow: EditableWorkflow }) => {
     try {
-      await saveWorkflowMutation({ 
+      await saveWorkflowMutation({
         mailboxSlug,
         workflow: {
           id: updatedWorkflow.id?.toString(),
@@ -512,8 +512,8 @@ const WorkflowsSetting = ({
           description: updatedWorkflow.prompt,
           enabled: true,
           conditions: [],
-          actions: []
-        }
+          actions: [],
+        },
       });
       router.refresh();
       toast({
@@ -539,9 +539,9 @@ const WorkflowsSetting = ({
     setWorkflowList(newList);
     if (newList.some((wf, i) => workflowList[i]?.id !== wf.id)) {
       try {
-        await reorderWorkflowsMutation({ 
+        await reorderWorkflowsMutation({
           mailboxSlug,
-          positions: newIdOrder 
+          positions: newIdOrder,
         });
         router.refresh();
         toast({

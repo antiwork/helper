@@ -32,11 +32,11 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
     content: "",
   });
 
-  const { mutateAsync: createEndpointMutation } = api.serverActions.metadataEndpoint.create.useMutation();
-  const { mutateAsync: deleteEndpointMutation } = api.serverActions.metadataEndpoint.delete.useMutation();
-  const { refetch: testEndpointQuery } = api.serverActions.metadataEndpoint.test.useQuery(
+  const { mutateAsync: createEndpointMutation } = api.mailbox.metadataEndpoint.create.useMutation();
+  const { mutateAsync: deleteEndpointMutation } = api.mailbox.metadataEndpoint.delete.useMutation();
+  const { refetch: testEndpointQuery } = api.mailbox.metadataEndpoint.test.useQuery(
     { mailboxSlug },
-    { enabled: false }
+    { enabled: false },
   );
 
   const testRequestTexts = {

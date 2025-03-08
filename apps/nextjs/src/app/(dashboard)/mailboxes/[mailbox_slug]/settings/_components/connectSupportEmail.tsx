@@ -10,8 +10,8 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
   const params = useParams();
   const router = useRouter();
   const [error] = useQueryState("error");
-  const { mutateAsync: disconnectSupportEmailMutation } = api.serverActions.supportEmail.disconnect.useMutation();
-  const { mutateAsync: authorizeMutation } = api.serverActions.supportEmail.authorize.useMutation();
+  const { mutateAsync: disconnectSupportEmailMutation } = api.mailbox.supportEmail.disconnect.useMutation();
+  const { mutateAsync: authorizeMutation } = api.mailbox.supportEmail.authorize.useMutation();
 
   const handleConnectOrDisconnect = async () => {
     if (supportAccount) {

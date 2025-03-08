@@ -20,7 +20,7 @@ type PromptSettingProps = {
 const PromptSetting = ({ mailboxSlug, promptLines, onChange, pendingUpdates }: PromptSettingProps) => {
   const { addNewRow, deleteNewRow, newRows, handleChange } = useSettings<PromptLineUpdate>(onChange, pendingUpdates);
   const router = useRouter();
-  const { mutateAsync: updatePromptLinesMutation } = api.serverActions.promptLines.update.useMutation();
+  const { mutateAsync: updatePromptLinesMutation } = api.mailbox.promptLines.update.useMutation();
 
   const deletePromptLine = async (idx: number) => {
     if (confirm("Are you sure you want to delete this prompt line?")) {

@@ -35,8 +35,8 @@ const StyleLinterSetting = ({ isLinterEnabled, linters }: StyleLinterSettingProp
   const [showModal, setShowModal] = useState(false);
   const [newLinter, setNewLinter] = useState<LinterUpdate>(emptyLinter);
 
-  const { mutateAsync: upsertStyleLinterMutation } = api.serverActions.styleLinter.upsert.useMutation();
-  const { mutateAsync: deleteStyleLinterMutation } = api.serverActions.styleLinter.delete.useMutation();
+  const { mutateAsync: upsertStyleLinterMutation } = api.mailbox.styleLinters.upsert.useMutation();
+  const { mutateAsync: deleteStyleLinterMutation } = api.mailbox.styleLinters.delete.useMutation();
 
   const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this style linter?")) {
