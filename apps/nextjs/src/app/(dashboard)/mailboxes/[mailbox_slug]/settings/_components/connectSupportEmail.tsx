@@ -10,8 +10,7 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
   const params = useParams();
   const router = useRouter();
   const [error] = useQueryState("error");
-  const { mutateAsync: disconnectSupportEmailMutation } = api.mailbox.supportEmail.disconnect.useMutation();
-  const { mutateAsync: authorizeMutation } = api.mailbox.supportEmail.authorize.useMutation();
+  const { mutateAsync: deleteSupportEmailMutation } = api.gmailSupportEmail.delete.useMutation();
 
   const handleConnectOrDisconnect = async () => {
     if (supportAccount) {
@@ -20,12 +19,11 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
           "Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account.",
         )
       ) {
-        await disconnectSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
+        await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
         router.refresh();
       }
     } else {
-      await authorizeMutation({ mailboxSlug: params.mailbox_slug as string });
-      router.refresh();
+      router.push(`/api/connect/google?mailbox=${params.mailbox_slug}`);
     }
   };
 

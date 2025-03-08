@@ -19,7 +19,6 @@ import {
 } from "@/lib/data/workflow";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { generateWorkflowPrompt } from "@/lib/workflowPromptGenerator";
-import { api } from "@/trpc/server";
 import { WorkflowActions } from "@/types/workflows";
 import { conversationProcedure } from "./conversations/procedure";
 import { mailboxProcedure } from "./procedure";
@@ -69,19 +68,18 @@ export const workflowsRouter = {
       .returning();
     if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
   }),
-  reorder: mailboxProcedure
-    .input(
-      z.object({
-        positions: z.array(z.number()),
-      }),
-    )
-    .mutation(async ({ ctx, input: { positions } }) => {
-      await api.mailbox.workflows.reorder({
-        mailboxSlug: ctx.mailbox.slug,
-        positions,
-      });
-      return { success: true };
-    }),
+  reorder: mailboxProcedure.input(z.object({ positions: z.array(z.number()) })).mutation(async ({ input, ctx }) => {
+    await db.transaction(async (tx) => {
+      await Promise.all(
+        input.positions.map((id, order) =>
+          tx
+            .update(workflows)
+            .set({ order })
+            .where(and(eq(workflows.mailboxId, ctx.mailbox.id), eq(workflows.id, id))),
+        ),
+      );
+    });
+  }),
   listMatchingConversations: conversationProcedure
     .input(
       z.object({
@@ -165,33 +163,5 @@ export const workflowsRouter = {
           captureExceptionAndThrowIfDevelopment(e);
         }
       }
-    }),
-  save: mailboxProcedure
-    .input(
-      z.object({
-        mailboxSlug: z.string().optional(),
-        workflow: z.object({
-          id: z.string().optional(),
-          name: z.string(),
-          description: z.string().optional(),
-          enabled: z.boolean(),
-          conditions: z.array(z.any()),
-          actions: z.array(z.any()),
-        }),
-      }),
-    )
-    .mutation(async ({ ctx, input: { workflow } }) => {
-      // Map the workflow object to the expected structure
-      await api.mailbox.workflows.set({
-        mailboxSlug: ctx.mailbox.slug,
-        id: workflow.id ? parseInt(workflow.id) : undefined,
-        name: workflow.name,
-        prompt: workflow.description || "",
-        action: "close_ticket", // Default action
-        order: 1,
-        runOnReplies: false,
-        autoReplyFromMetadata: false,
-      });
-      return { success: true };
     }),
 } satisfies TRPCRouterRecord;

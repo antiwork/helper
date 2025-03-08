@@ -16,10 +16,8 @@ import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
-import { promptLinesRouter } from "./promptLines";
 import { slackRouter } from "./slack";
 import { styleLintersRouter } from "./styleLinters";
-import { supportEmailRouter } from "./supportEmail";
 import { toolsRouter } from "./tools";
 import { topicsRouter } from "./topics";
 import { websitesRouter } from "./websites";
@@ -150,6 +148,4 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
-  promptLines: promptLinesRouter,
-  supportEmail: supportEmailRouter,
 } satisfies TRPCRouterRecord;

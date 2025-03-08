@@ -971,9 +971,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             mailboxSlug: string;
             positions: number[];
           };
-          output: {
-            success: boolean;
-          };
+          output: void;
         }>;
         listMatchingConversations: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -1019,22 +1017,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             matchingSlugs: string[];
           };
           output: void;
-        }>;
-        save: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            workflow: {
-              name: string;
-              enabled: boolean;
-              conditions: any[];
-              actions: any[];
-              description?: string | undefined;
-              id?: string | undefined;
-            };
-          };
-          output: {
-            success: boolean;
-          };
         }>;
       };
       slack: {
@@ -1276,35 +1258,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 success: boolean;
                 error: string;
               };
-        }>;
-      };
-      promptLines: {
-        update: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            responseGeneratorPrompt: string[];
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-      };
-      supportEmail: {
-        disconnect: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        authorize: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            success: boolean;
-          };
         }>;
       };
     };
