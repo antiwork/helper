@@ -3,7 +3,7 @@ import { mockInngest } from "@tests/support/inngestUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMailboxReport, generateWeeklyReports } from "@/inngest/functions/generateWeeklyReports";
 import { getMemberStats } from "@/lib/data/stats";
-import { listSlackUsers, postSlackMessage } from "@/lib/slack/client";
+import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 // Mock dependencies
 vi.mock("@/lib/data/stats", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/lib/data/stats", () => ({
 
 vi.mock("@/lib/slack/client", () => ({
   postSlackMessage: vi.fn(),
-  listSlackUsers: vi.fn(),
+  getSlackUsersByEmail: vi.fn(),
 }));
 
 const inngestMock = mockInngest();
@@ -26,14 +26,14 @@ describe("generateWeeklyReports", () => {
     const { mailbox: mailboxWithSlack } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
 
     const { mailbox: mailboxWithoutSlack } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: null,
-        slackEscalationChannel: null,
+        slackAlertChannel: null,
       },
     });
 
@@ -58,7 +58,7 @@ describe("generateMailboxWeeklyReport", () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
 
@@ -66,12 +66,12 @@ describe("generateMailboxWeeklyReport", () => {
       { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 5 },
     ]);
 
-    vi.mocked(listSlackUsers).mockResolvedValue([{ id: "SLACK123", profile: { email: "john@example.com" } }]);
+    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([["john@example.com", "SLACK123"]]));
 
     const result = await generateMailboxReport({
       mailbox,
       slackBotToken: mailbox.slackBotToken!,
-      slackEscalationChannel: mailbox.slackEscalationChannel!,
+      slackAlertChannel: mailbox.slackAlertChannel!,
     });
 
     expect(postSlackMessage).toHaveBeenCalledWith(
@@ -116,7 +116,7 @@ describe("generateMailboxWeeklyReport", () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
 
@@ -125,7 +125,7 @@ describe("generateMailboxWeeklyReport", () => {
     const result = await generateMailboxReport({
       mailbox,
       slackBotToken: mailbox.slackBotToken!,
-      slackEscalationChannel: mailbox.slackEscalationChannel!,
+      slackAlertChannel: mailbox.slackAlertChannel!,
     });
 
     expect(postSlackMessage).not.toHaveBeenCalled();

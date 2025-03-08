@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   const isAnonymous = authResult.session.isAnonymous;
   let { source } = await request.json();
-  source = isAnonymous ? "chat#visitor" : source;
+  source = isAnonymous && source !== "chat#prompt" ? "chat#visitor" : source;
 
   const isPrompt = source === "chat#prompt";
   let status = DEFAULT_INITIAL_STATUS;

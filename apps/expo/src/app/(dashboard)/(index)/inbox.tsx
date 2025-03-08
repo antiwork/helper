@@ -9,7 +9,7 @@ import { PaginationControls } from "../_components/paginationControls";
 
 export default function InboxScreen() {
   const { selectedMailbox } = useMailbox();
-  const [selectedTab, setSelectedTab] = useState<"conversations" | "mine" | "assigned" | "escalated">("conversations");
+  const [selectedTab, setSelectedTab] = useState<"conversations" | "mine" | "assigned">("mine");
   const [page, setPage] = useState(1);
 
   const { data, isLoading, refetch, isRefetching } = api.mailbox.conversations.list.useQuery(
@@ -29,10 +29,9 @@ export default function InboxScreen() {
   const totalPages = data?.total ? Math.ceil(data.total / 25) : 0;
 
   const tabs: { id: typeof selectedTab; label: string }[] = [
-    { id: "conversations", label: "Open" },
     { id: "mine", label: "Mine" },
+    { id: "conversations", label: "Open" },
     { id: "assigned", label: "Assigned" },
-    { id: "escalated", label: "Escalated" },
   ];
 
   return (

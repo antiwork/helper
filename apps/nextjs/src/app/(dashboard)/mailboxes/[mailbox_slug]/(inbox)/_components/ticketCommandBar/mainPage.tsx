@@ -3,7 +3,6 @@ import {
   ArrowUturnUpIcon,
   ChatBubbleLeftIcon,
   EnvelopeIcon,
-  FlagIcon,
   ListBulletIcon,
   PencilSquareIcon,
   PlayIcon,
@@ -13,7 +12,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { useMemo } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
-import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useToolExecution } from "@/hooks/useToolExecution";
 import { api } from "@/trpc/react";
@@ -42,28 +40,6 @@ export const useMainPage = ({
     { mailboxSlug, conversationSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
-
-  const { data: escalation } = api.mailbox.conversations.escalations.get.useQuery(
-    { conversationSlug, mailboxSlug },
-    { enabled: !!conversationSlug },
-  );
-  const { mutateAsync: escalateConversation } = api.mailbox.conversations.escalations.create.useMutation();
-
-  const handleEscalateToSlack = async () => {
-    try {
-      await escalateConversation({ conversationSlug, mailboxSlug });
-      toast({
-        title: "Escalation message will be sent on Slack shortly.",
-        variant: "success",
-      });
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Error escalating message",
-        variant: "destructive",
-      });
-    }
-  };
 
   useKeyboardShortcut("n", (e) => {
     e.preventDefault();
@@ -111,7 +87,7 @@ export const useMainPage = ({
                 <p className="text-sm text-muted-foreground">Set this conversation back to the open state.</p>
               </div>
             ),
-            hidden: conversation?.status === "open" || conversation?.status === "escalated",
+            hidden: conversation?.status === "open",
           },
           {
             id: "assign",
@@ -167,23 +143,6 @@ export const useMainPage = ({
                 </p>
               </div>
             ),
-          },
-          {
-            id: "escalate",
-            label: "Escalate to Slack",
-            icon: FlagIcon,
-            onSelect: () => {
-              void handleEscalateToSlack();
-            },
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Escalate to Slack</h3>
-                <p className="text-sm text-muted-foreground">
-                  Escalate this conversation to your team's Slack channel for additional attention.
-                </p>
-              </div>
-            ),
-            hidden: !conversation?.escalationEnabled || !!escalation,
           },
         ],
       },

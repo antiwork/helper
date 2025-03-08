@@ -1,4 +1,4 @@
-import type { Message } from "ai";
+import type { JSONValue, Message } from "ai";
 import cx from "classnames";
 import { useEffect } from "react";
 import HumanizedTime from "@/components/humanizedTime";
@@ -20,9 +20,11 @@ type Props = {
   conversationSlug: string | null;
   token: string | null;
   addToolResult: (options: { toolCallId: string; result: unknown }) => void;
+  data: JSONValue[] | null;
+  color: "black" | "gumroad-pink";
 };
 
-export default function Message({ message, conversationSlug, token, addToolResult }: Props) {
+export default function Message({ message, conversationSlug, token, addToolResult, data, color }: Props) {
   const { screenshot, setScreenshot } = useScreenshotStore();
 
   const idFromAnnotation =
@@ -32,11 +34,25 @@ export default function Message({ message, conversationSlug, token, addToolResul
     )?.id ?? null;
   const persistedId = idFromAnnotation ?? (!message.id.startsWith("client_") ? message.id : null);
 
-  const reasoningFromAnnotations =
+  let reasoning =
     message.annotations?.find(
       (annotation): annotation is { reasoning: { message: string; reasoningTimeSeconds: number } } =>
         typeof annotation === "object" && annotation !== null && "reasoning" in annotation,
     )?.reasoning ?? null;
+
+  if (!reasoning) {
+    const reasoningFromData = data
+      ?.flatMap((item) =>
+        item && typeof item === "object" && "reasoning" in item && typeof item.reasoning === "string"
+          ? [item.reasoning]
+          : [],
+      )
+      .join("");
+
+    if (reasoningFromData) {
+      reasoning = { message: reasoningFromData, reasoningTimeSeconds: 0 };
+    }
+  }
 
   const screenshotInvocation = message.toolInvocations?.find(
     (invocation) => invocation.toolName === "take_screenshot" && invocation.state !== "result",
@@ -73,8 +89,9 @@ export default function Message({ message, conversationSlug, token, addToolResul
           messageId={persistedId?.toString()}
           conversationSlug={conversationSlug}
           message={message}
-          reasoning={reasoningFromAnnotations}
+          reasoning={reasoning}
           token={token}
+          color={color}
         />
         {screenshotInvocation ? (
           <div key={screenshotInvocation.toolCallId} className="flex items-center gap-2 p-4 border-t border-black">

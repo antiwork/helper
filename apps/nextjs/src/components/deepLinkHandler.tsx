@@ -16,7 +16,7 @@ const useDeepLink = create<{
 
 if (getTauriPlatform()) {
   onOpenUrl(([url]) => {
-    if (url) useDeepLink.getState().setUrl(url);
+    if (url) useDeepLink.getState().setUrl(url.replace("antiwork-helper://", ""));
   });
 }
 

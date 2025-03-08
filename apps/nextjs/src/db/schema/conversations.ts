@@ -6,7 +6,6 @@ import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationEvents } from "./conversationEvents";
 import { conversationMessages } from "./conversationMessages";
-import { escalations } from "./escalations";
 import { platformCustomers } from "./platformCustomers";
 
 export const conversations = pgTable(
@@ -16,7 +15,7 @@ export const conversations = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     emailFrom: text(),
     subject: nativeEncryptedField("encrypted_subject"),
-    status: text().$type<"open" | "closed" | "escalated" | "spam">(),
+    status: text().$type<"open" | "closed" | "spam">(),
     mailboxId: bigint({ mode: "number" }).notNull(),
     emailFromName: text(),
     slug: randomSlugField("slug"),
@@ -61,7 +60,6 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [mailboxes.id],
   }),
   messages: many(conversationMessages),
-  escalations: many(escalations),
   platformCustomer: one(platformCustomers, {
     fields: [conversations.emailFrom],
     references: [platformCustomers.email],

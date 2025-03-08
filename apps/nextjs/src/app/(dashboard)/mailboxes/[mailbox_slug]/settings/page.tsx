@@ -28,9 +28,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
       try {
         await api.mailbox.update({
           mailboxSlug: params.mailbox_slug,
-          slackEscalationChannel: pendingUpdates.slack.escalationChannel ?? undefined,
-          escalationEmailBody: pendingUpdates.slack.emailBody ?? undefined,
-          escalationExpectedResolutionHours: pendingUpdates.slack.escalationExpectedResolutionHours ?? undefined,
+          slackAlertChannel: pendingUpdates.slack.alertChannel ?? undefined,
         });
       } catch (e) {
         throw new Error("Failed to update Slack settings");

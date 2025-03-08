@@ -48,7 +48,7 @@ describe("conversationsRouter", () => {
       const { user, organization } = await userFactory.createRootUser();
       const { mailbox } = await mailboxFactory.create(organization.id, {
         slackBotToken: "slackBotToken",
-        slackEscalationChannel: "slackEscalationChannel",
+        slackAlertChannel: "slackAlertChannel",
       });
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { conversation: assignedConversation } = await conversationFactory.create(mailbox.id, {

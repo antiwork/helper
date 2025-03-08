@@ -1,14 +1,13 @@
 import "server-only";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { conversations, escalations, mailboxes, mailboxesMetadataApi, subscriptions } from "@/db/schema";
+import { mailboxes, mailboxesMetadataApi, subscriptions } from "@/db/schema";
 import { env } from "@/env";
 import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
-import { defaultEmailBody } from "./escalation";
 import { getClerkOrganization } from "./organization";
 
 export const getMailboxById = cache(async (id: number): Promise<Mailbox | null> => {
@@ -75,10 +74,7 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
     slackConnectUrl: getSlackConnectUrl(mailbox.slug),
-    slackEscalationChannel: mailbox.slackEscalationChannel,
-    escalationEmailBody: mailbox.escalationEmailBody,
-    escalationEmailBodyPlaceholder: defaultEmailBody(mailbox, false),
-    escalationExpectedResolutionHours: mailbox.escalationExpectedResolutionHours,
+    slackAlertChannel: mailbox.slackAlertChannel,
     responseGeneratorPrompt: mailbox.responseGeneratorPrompt ?? [],
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: subscription ?? null,
@@ -113,31 +109,15 @@ export const disconnectSlack = async (mailboxId: number): Promise<void> => {
     captureExceptionAndLogIfDevelopment(error, { level: "info" });
   }
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(mailboxes)
-      .set({
-        slackTeamId: null,
-        slackBotUserId: null,
-        slackBotToken: null,
-        slackEscalationChannel: null,
-      })
-      .where(eq(mailboxes.id, mailboxId));
-
-    const now = new Date();
-    await tx
-      .update(escalations)
-      .set({ resolvedAt: now })
-      .where(
-        and(
-          inArray(
-            escalations.conversationId,
-            db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailboxId)),
-          ),
-          isNull(escalations.resolvedAt),
-        ),
-      );
-  });
+  await db
+    .update(mailboxes)
+    .set({
+      slackTeamId: null,
+      slackBotUserId: null,
+      slackBotToken: null,
+      slackAlertChannel: null,
+    })
+    .where(eq(mailboxes.id, mailboxId));
 };
 
 export const getResponseGeneratorPromptText = (responseGeneratorPrompt: string[]): string => {

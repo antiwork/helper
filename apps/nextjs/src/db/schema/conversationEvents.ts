@@ -15,7 +15,7 @@ export const conversationEvents = pgTable(
       .$type<"update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai">(),
     changes: jsonb()
       .$type<{
-        status?: "open" | "closed" | "escalated" | "spam";
+        status?: "open" | "closed" | "spam";
         assignedToClerkId?: string | null;
         isVisible?: boolean;
       }>()

@@ -465,10 +465,11 @@ describe("handleGmailWebhookEvent", () => {
       expect(respondToEmail).toHaveBeenCalled();
     });
 
-    it("does not generate a response when email is from a staff user", async () => {
+    it("keeps conversation open when email is from a staff user (first message)", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const user = userFactory.buildMockUser();
+      const staffUser = userFactory.buildMockUser();
 
+      // Mock a history with only one message to simulate a first message
       mockHistories([
         {
           message: {
@@ -480,11 +481,11 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage({
         raw: Buffer.from(
-          `From: ${assertDefined(user.emailAddresses[0]).emailAddress}\r\nSubject: Test Email\r\nMessage-ID: <unique-message-id@example.com>\r\n\r\nThis is the email body`,
+          `From: ${assertDefined(staffUser.emailAddresses[0]).emailAddress}\r\nSubject: Test Email\r\nMessage-ID: <unique-message-id@example.com>\r\n\r\nThis is the email body`,
         ).toString("base64url"),
       });
 
-      vi.mocked(findUserByEmail).mockResolvedValueOnce(user);
+      vi.mocked(findUserByEmail).mockResolvedValueOnce(staffUser);
 
       await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
 
@@ -492,9 +493,9 @@ describe("handleGmailWebhookEvent", () => {
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
-        status: "closed",
+        status: "open",
       });
-      expect(respondToEmail).not.toHaveBeenCalled();
+      expect(respondToEmail).toHaveBeenCalled();
     });
   });
 

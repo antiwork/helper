@@ -25,7 +25,7 @@ describe("notifySlackAssignment", () => {
     const { user, mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
     const user2 = userFactory.buildMockUser();
@@ -83,7 +83,7 @@ describe("notifySlackAssignment", () => {
     const { user, mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
     const user2 = userFactory.buildMockUser();
@@ -154,7 +154,7 @@ describe("notifySlackAssignment", () => {
       assignedById: user2.id,
     });
 
-    expect(result).toBe("Not posted, mailbox not linked to Slack or missing escalation channel");
+    expect(result).toBe("Not posted, mailbox not linked to Slack or missing alert channel");
     expect(postSlackDM).not.toHaveBeenCalled();
     expect(postSlackMessage).not.toHaveBeenCalled();
   });
@@ -163,7 +163,7 @@ describe("notifySlackAssignment", () => {
     const { user, mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
-        slackEscalationChannel: "channel-id",
+        slackAlertChannel: "channel-id",
       },
     });
     const { conversation } = await conversationFactory.create(mailbox.id, {
