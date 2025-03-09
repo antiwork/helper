@@ -110,7 +110,7 @@ export async function POST(request: Request) {
 
   if (conversation.subject === CHAT_CONVERSATION_SUBJECT && (!isPromptConversation || !isFirstMessage) && message) {
     waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
-  } else if (isPromptConversation) {
+  } else if (conversation.subject === CHAT_CONVERSATION_SUBJECT && isPromptConversation) {
     waitUntil(db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)));
   }
 
