@@ -162,6 +162,8 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
     limit: 20,
   });
 
+  if (messages.length === 0) return [];
+
   const earliestMessageTimestamp = new Date(Math.min(...messages.map((message) => message.createdAt.getTime())));
 
   const messageEvents = messages.map((message) => ({
@@ -251,6 +253,6 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
   }));
 
   return [...messageEvents, ...reactionEvents, ...humanSupportRequestEvents].toSorted(
-    (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
   );
 };

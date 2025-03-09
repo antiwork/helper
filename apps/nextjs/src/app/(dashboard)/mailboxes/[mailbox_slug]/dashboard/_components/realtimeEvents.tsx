@@ -10,6 +10,8 @@ import {
 import { BotIcon } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +67,7 @@ const EXAMPLE_EVENTS: Event[] = [
 ];
 
 export function RealtimeEvents({ mailboxSlug }: Props) {
-  const { data: events } = api.mailbox.latestEvents.useQuery({ mailboxSlug });
+  const { ref: loadMoreRef, inView } = useInView();
 
   // useEffect(() => {
   //   const timer = setInterval(() => {
@@ -85,9 +87,27 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
   //   setEvents((prev) => [newEvent, ...prev].slice(0, 12)); // Keep last 12 events
   // });
 
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = api.mailbox.latestEvents.useInfiniteQuery(
+    { mailboxSlug },
+    {
+      getNextPageParam: (lastPage) => {
+        if (!lastPage?.length) return undefined;
+        return lastPage[lastPage.length - 1]?.timestamp;
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const allEvents = data?.pages.flat() ?? [];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {events?.map((event) => (
+      {allEvents.map((event) => (
         <motion.div key={event.id} layout>
           <Panel className="p-0">
             <Link
@@ -113,7 +133,11 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
                     <div>${(Number(event.value) / 100).toFixed(2)}</div>
                   </div>
                 )}
-                <Badge variant={event.type === "bad_reply" ? "destructive" : "bright"}>
+                <Badge
+                  variant={
+                    event.type === "bad_reply" ? "destructive" : event.type === "good_reply" ? "success" : "bright"
+                  }
+                >
                   <HumanizedTime time={event.timestamp} format="long" />
                 </Badge>
               </div>
@@ -155,11 +179,14 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
           </Panel>
         </motion.div>
       ))}
-      {events?.length === 0 && (
+      {allEvents.length === 0 && (
         <Panel className="col-span-full text-center py-8 text-muted-foreground">
           No conversations yet. They will appear here in real-time.
         </Panel>
       )}
+      <div ref={loadMoreRef} className="col-span-full flex justify-center p-4">
+        {isFetchingNextPage && <div className="text-muted-foreground">Loading more events...</div>}
+      </div>
     </div>
   );
 }
