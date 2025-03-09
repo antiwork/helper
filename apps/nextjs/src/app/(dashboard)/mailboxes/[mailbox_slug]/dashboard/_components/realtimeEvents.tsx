@@ -1,4 +1,5 @@
 import {
+  ChatBubbleLeftIcon,
   CurrencyDollarIcon,
   EnvelopeIcon,
   FlagIcon,
@@ -6,13 +7,14 @@ import {
   HandThumbUpIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
+import { BotIcon } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
 
 type Event = {
   id: string;
@@ -63,17 +65,17 @@ const EXAMPLE_EVENTS: Event[] = [
 ];
 
 export function RealtimeEvents({ mailboxSlug }: Props) {
-  const [events, setEvents] = useState<Event[]>(EXAMPLE_EVENTS);
+  const { data: events } = api.mailbox.latestEvents.useQuery({ mailboxSlug });
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setEvents((prev) => [
-        { ...EXAMPLE_EVENTS[Math.floor(Math.random() * EXAMPLE_EVENTS.length)]!, id: Date.now().toString() },
-        ...prev,
-      ]);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
+  // useEffect(() => {
+  //   const timer = setInterval(() => {
+  //     setEvents((prev) => [
+  //       { ...EXAMPLE_EVENTS[Math.floor(Math.random() * EXAMPLE_EVENTS.length)]!, id: Date.now().toString() },
+  //       ...prev,
+  //     ]);
+  //   }, 10000);
+  //   return () => clearInterval(timer);
+  // }, []);
   // Listen to new events from Ably
   // useAblyEvent(`${mailboxSlug}:realtime-events`, "new.event", (message) => {
   //   const newEvent = {
@@ -85,21 +87,21 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {events.map((event) => (
+      {events?.map((event) => (
         <motion.div key={event.id} layout>
           <Panel className="p-0">
             <Link
               href={`/mailboxes/${mailboxSlug}/conversations?id=${event.id}`}
               className={cn(
                 "flex flex-col p-5 transition-colors hover:bg-muted",
-                event.value > 50 && "bg-bright/10 hover:bg-bright/20",
+                event.isVip && "bg-bright/10 hover:bg-bright/20",
                 event.type === "bad_reply" && "bg-destructive/10 hover:bg-destructive/20",
                 event.type === "good_reply" && "bg-success/10 hover:bg-success/20",
               )}
             >
               <div className="flex gap-3 mb-2 text-muted-foreground">
-                <div className="flex-1 text-sm">test@example.com</div>
-                {event.value > 50 && (
+                <div className="flex-1 text-sm">{event.emailFrom ?? "Anonymous"}</div>
+                {event.isVip && (
                   <div className="flex items-center gap-1 text-xs">
                     <StarIcon className="w-4 h-4 text-bright" />
                     VIP
@@ -108,7 +110,7 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
                 {event.value != null && (
                   <div className="flex items-center gap-1 text-xs">
                     <CurrencyDollarIcon className="w-4 h-4 text-success" />
-                    <div>${event.value.toFixed(2)}</div>
+                    <div>${(Number(event.value) / 100).toFixed(2)}</div>
                   </div>
                 )}
                 <Badge variant={event.type === "bad_reply" ? "destructive" : "bright"}>
@@ -121,29 +123,39 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
               {event.type === "bad_reply" ? (
                 <div className="mt-6 flex items-center gap-2 text-destructive text-sm">
                   <HandThumbDownIcon className="w-4 h-4" />
-                  Bad reply
+                  <span className="flex-1 truncate">Bad reply &mdash; {event.description}</span>
                 </div>
               ) : event.type === "good_reply" ? (
                 <div className="mt-6 flex items-center gap-2 text-success text-sm">
                   <HandThumbUpIcon className="w-4 h-4" />
                   Good reply
                 </div>
-              ) : event.type === "message" ? (
+              ) : event.type === "email" ? (
                 <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
                   <EnvelopeIcon className="w-4 h-4" />
-                  Message
+                  <div className="flex-1 truncate">{event.description}</div>
+                </div>
+              ) : event.type === "chat" ? (
+                <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
+                  <ChatBubbleLeftIcon className="w-4 h-4" />
+                  <div className="flex-1 truncate">{event.description}</div>
+                </div>
+              ) : event.type === "ai_reply" ? (
+                <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
+                  <BotIcon strokeWidth={1.5} className="w-4 h-4" />
+                  <div className="flex-1 truncate">{event.description}</div>
                 </div>
               ) : (
                 <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
-                  <FlagIcon className="w-4 h-4" />
-                  Request human support
+                  <FlagIcon className="w-4 h-4 text-bright" />
+                  Human support requested
                 </div>
               )}
             </Link>
           </Panel>
         </motion.div>
       ))}
-      {events.length === 0 && (
+      {events?.length === 0 && (
         <Panel className="col-span-full text-center py-8 text-muted-foreground">
           No conversations yet. They will appear here in real-time.
         </Panel>
