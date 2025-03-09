@@ -16,6 +16,7 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useUndoneEmailStore } from "./conversation";
 import { useConversationListContext } from "./conversationListContext";
+import { GitHubIssueButton } from "./githubIssueButton";
 import { useConversationsListInput } from "./shared/queries";
 import { TicketCommandBar } from "./ticketCommandBar";
 
@@ -266,6 +267,14 @@ export const MessageActions = () => {
                     ⌘K
                   </kbd>
                 </Button>
+                {conversation && (
+                  <GitHubIssueButton
+                    mailboxSlug={mailboxSlug}
+                    conversationSlug={conversation.slug}
+                    conversationSubject={conversation.subject || ""}
+                    conversationSummary={conversation.summary}
+                  />
+                )}
               </>
             ))}
         </div>
