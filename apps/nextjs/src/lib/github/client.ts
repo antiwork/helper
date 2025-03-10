@@ -36,7 +36,7 @@ export const getGitHubAccessToken = async (
   const data = await response.json();
 
   if (data.error) {
-    throw new Error(data.error_description || "Failed to get GitHub access token");
+    throw data.error_description ? new Error(data.error_description) : new Error("GitHub authentication failed");
   }
 
   // Get the user's username
@@ -76,18 +76,13 @@ export const checkRepositoryIssuesEnabled = async ({
 }): Promise<boolean> => {
   const octokit = new Octokit({ auth: accessToken });
 
-  try {
-    // Get repository details to check if issues are enabled
-    const { data } = await octokit.repos.get({
-      owner,
-      repo,
-    });
+  // Get repository details to check if issues are enabled
+  const { data } = await octokit.repos.get({
+    owner,
+    repo,
+  });
 
-    return data.has_issues === true;
-  } catch (error) {
-    console.error("Error checking repository issues status:", error);
-    throw new Error("Failed to check if issues are enabled for this repository");
-  }
+  return data.has_issues;
 };
 
 export const listRepositoryIssues = async ({
@@ -105,27 +100,22 @@ export const listRepositoryIssues = async ({
 }) => {
   const octokit = new Octokit({ auth: accessToken });
 
-  try {
-    const { data } = await octokit.issues.listForRepo({
-      owner,
-      repo,
-      state,
-      per_page,
-      sort: "updated",
-      direction: "desc",
-    });
+  const { data } = await octokit.issues.listForRepo({
+    owner,
+    repo,
+    state,
+    per_page,
+    sort: "updated",
+    direction: "desc",
+  });
 
-    return data.map((issue) => ({
-      number: issue.number,
-      title: issue.title,
-      state: issue.state,
-      url: issue.html_url,
-      updatedAt: issue.updated_at,
-    }));
-  } catch (error) {
-    console.error("Error listing repository issues:", error);
-    throw new Error("Failed to list issues for this repository");
-  }
+  return data.map((issue) => ({
+    number: issue.number,
+    title: issue.title,
+    state: issue.state,
+    url: issue.html_url,
+    updatedAt: issue.updated_at,
+  }));
 };
 
 export const createGitHubIssue = async ({
