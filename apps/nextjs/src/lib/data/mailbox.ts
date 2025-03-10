@@ -1,18 +1,10 @@
 import "server-only";
-import { and, desc, eq, gte, inArray, isNotNull, isNull, lt } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import {
-  conversationEvents,
-  conversationMessages,
-  conversations,
-  mailboxes,
-  mailboxesMetadataApi,
-  subscriptions,
-} from "@/db/schema";
+import { mailboxes, mailboxesMetadataApi, subscriptions } from "@/db/schema";
 import { env } from "@/env";
-import { determineVipStatus } from "@/lib/data/platformCustomer";
 import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
@@ -130,129 +122,4 @@ export const disconnectSlack = async (mailboxId: number): Promise<void> => {
 
 export const getResponseGeneratorPromptText = (responseGeneratorPrompt: string[]): string => {
   return responseGeneratorPrompt.join("\n");
-};
-
-export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
-  const messages = await db.query.conversationMessages.findMany({
-    columns: {
-      id: true,
-      createdAt: true,
-      role: true,
-      clerkUserId: true,
-      cleanedUpText: true,
-      emailTo: true,
-    },
-    with: {
-      conversation: {
-        columns: { subject: true, emailFrom: true, slug: true },
-        with: {
-          platformCustomer: { columns: { value: true } },
-        },
-      },
-    },
-    where: and(
-      inArray(
-        conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-      ),
-      inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
-      before ? lt(conversationMessages.createdAt, before) : undefined,
-    ),
-    orderBy: desc(conversationMessages.createdAt),
-    limit: 20,
-  });
-
-  if (messages.length === 0) return [];
-
-  const earliestMessageTimestamp = new Date(Math.min(...messages.map((message) => message.createdAt.getTime())));
-
-  const messageEvents = messages.map((message) => ({
-    type: message.role === "ai_assistant" ? "ai_reply" : message.emailTo ? ("email" as const) : ("chat" as const),
-    id: `${message.id}-message`,
-    conversationSlug: message.conversation.slug,
-    emailFrom: message.conversation.emailFrom,
-    title: message.conversation.subject,
-    value: message.conversation.platformCustomer?.value ?? null,
-    isVip: determineVipStatus(message.conversation.platformCustomer?.value ?? null, mailbox.vipThreshold),
-    description: message.cleanedUpText,
-    timestamp: message.createdAt,
-  }));
-
-  const reactions = await db.query.conversationMessages.findMany({
-    columns: {
-      id: true,
-      reactionType: true,
-      reactionFeedback: true,
-      reactionCreatedAt: true,
-    },
-    with: {
-      conversation: {
-        columns: { subject: true, emailFrom: true, slug: true },
-        with: {
-          platformCustomer: { columns: { value: true } },
-        },
-      },
-    },
-    where: and(
-      inArray(
-        conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-      ),
-      isNotNull(conversationMessages.reactionType),
-      isNotNull(conversationMessages.reactionCreatedAt),
-      gte(conversationMessages.reactionCreatedAt, earliestMessageTimestamp),
-      before ? lt(conversationMessages.reactionCreatedAt, before) : undefined,
-    ),
-    orderBy: desc(conversationMessages.reactionCreatedAt),
-    limit: 20,
-  });
-
-  const reactionEvents = reactions.map((message) => ({
-    type: message.reactionType === "thumbs-up" ? ("good_reply" as const) : ("bad_reply" as const),
-    id: `${message.id}-reaction`,
-    conversationSlug: message.conversation.slug,
-    emailFrom: message.conversation.emailFrom,
-    title: message.conversation.subject,
-    value: message.conversation.platformCustomer?.value ?? null,
-    isVip: determineVipStatus(message.conversation.platformCustomer?.value ?? null, mailbox.vipThreshold),
-    description: message.reactionFeedback,
-    timestamp: message.reactionCreatedAt!,
-  }));
-
-  const humanSupportRequests = await db.query.conversationEvents.findMany({
-    where: and(
-      inArray(
-        conversationEvents.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-      ),
-      eq(conversationEvents.type, "request_human_support"),
-      gte(conversationEvents.createdAt, earliestMessageTimestamp),
-      before ? lt(conversationEvents.createdAt, before) : undefined,
-    ),
-    with: {
-      conversation: {
-        columns: { subject: true, emailFrom: true, slug: true },
-        with: {
-          platformCustomer: { columns: { value: true } },
-        },
-      },
-    },
-    orderBy: desc(conversationEvents.createdAt),
-    limit: 20,
-  });
-
-  const humanSupportRequestEvents = humanSupportRequests.map((request) => ({
-    type: "human_support_request" as const,
-    id: `${request.id}-human-support-request`,
-    conversationSlug: request.conversation.slug,
-    emailFrom: request.conversation.emailFrom,
-    title: request.conversation.subject,
-    value: request.conversation.platformCustomer?.value ?? null,
-    isVip: determineVipStatus(request.conversation.platformCustomer?.value ?? null, mailbox.vipThreshold),
-    timestamp: request.createdAt,
-  }));
-
-  return [...messageEvents, ...reactionEvents, ...humanSupportRequestEvents].toSorted(
-    (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-  );
 };
