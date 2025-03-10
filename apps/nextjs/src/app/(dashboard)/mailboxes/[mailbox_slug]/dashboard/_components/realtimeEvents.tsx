@@ -15,6 +15,8 @@ import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
+import { dashboardChannelId } from "@/lib/ably/channels";
+import { useAblyEvent } from "@/lib/ably/hooks";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -69,24 +71,6 @@ const EXAMPLE_EVENTS: Event[] = [
 export function RealtimeEvents({ mailboxSlug }: Props) {
   const { ref: loadMoreRef, inView } = useInView();
 
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setEvents((prev) => [
-  //       { ...EXAMPLE_EVENTS[Math.floor(Math.random() * EXAMPLE_EVENTS.length)]!, id: Date.now().toString() },
-  //       ...prev,
-  //     ]);
-  //   }, 10000);
-  //   return () => clearInterval(timer);
-  // }, []);
-  // Listen to new events from Ably
-  // useAblyEvent(`${mailboxSlug}:realtime-events`, "new.event", (message) => {
-  //   const newEvent = {
-  //     ...message.data,
-  //     timestamp: new Date(message.data.timestamp),
-  //   };
-  //   setEvents((prev) => [newEvent, ...prev].slice(0, 12)); // Keep last 12 events
-  // });
-
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = api.mailbox.latestEvents.useInfiniteQuery(
     { mailboxSlug },
     {
@@ -102,6 +86,18 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const utils = api.useUtils();
+  useAblyEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
+    utils.mailbox.latestEvents.setInfiniteData({ mailboxSlug }, (data) => {
+      const firstPage = data?.pages[0];
+      if (!firstPage) return data;
+      return {
+        ...data,
+        pages: [[message.data, ...firstPage], ...data.pages.slice(1)],
+      };
+    });
+  });
 
   const allEvents = data?.pages.flat() ?? [];
 
