@@ -489,9 +489,6 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             >
               {conversation.status === "closed" ? (
                 <>
-                  <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-xs   font-medium text-muted-foreground mr-1">
-                    Closed
-                  </span>
                   <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
                 </>
               ) : (
