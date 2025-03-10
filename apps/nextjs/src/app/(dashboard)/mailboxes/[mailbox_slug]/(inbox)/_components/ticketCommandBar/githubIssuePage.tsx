@@ -32,7 +32,7 @@ interface GitHubIssue {
 }
 
 export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
-  const { mailboxSlug, conversationSlug, refetch: refetchConversation } = useConversationContext();
+  const { mailboxSlug, conversationSlug, data: conversation, refetch: refetchConversation } = useConversationContext();
 
   const [isCreating, setIsCreating] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
@@ -41,11 +41,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [selectedIssueNumber, setSelectedIssueNumber] = useState<number | null>(null);
-
-  const { data: conversation } = api.mailbox.conversations.get.useQuery(
-    { mailboxSlug, conversationSlug },
-    { staleTime: 10000 },
-  );
 
   const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
 
