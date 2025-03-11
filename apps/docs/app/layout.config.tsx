@@ -2,7 +2,7 @@ import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import Image from 'next/image';
 
 export const baseOptions: BaseLayoutProps = {
-  githubUrl: 'https://github.com/anti-work/helper',
+  githubUrl: 'https://github.com/antiwork/helper',
   nav: {
     title: (
       <>
