@@ -6,7 +6,6 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
 import { bodyWithSignature, createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
-import { getActiveEscalation, resolveEscalation } from "@/lib/data/escalation";
 import { addNote } from "@/lib/data/note";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findUserViaSlack, getClerkUser } from "@/lib/data/user";
@@ -81,10 +80,6 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
       await openRespondModal(message, conversation, user, payload.trigger_id);
     } else if (action === "close") {
       await db.transaction(async (tx) => {
-        const escalation = await getActiveEscalation(conversation.id, tx);
-        if (escalation) {
-          await resolveEscalation({ escalation, user, closed: true }, tx);
-        }
         await updateConversation(
           conversation.id,
           { set: { status: "closed" }, byUserId: user?.id ?? null, message: "Resolved via Slack" },
@@ -107,7 +102,6 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
       if (!selectedUser) throw new Error(`User not found: ${selectedUserId}`);
 
       await db.transaction(async (tx) => {
-        const escalation = await getActiveEscalation(conversation.id, tx);
         await updateConversation(
           conversation.id,
           {
@@ -117,9 +111,6 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
           },
           tx,
         );
-        if (escalation) {
-          await resolveEscalation({ escalation, user, assignedTo: selectedUser }, tx);
-        }
       });
     } else {
       const reply = payload.view.state.values.reply.message.value;

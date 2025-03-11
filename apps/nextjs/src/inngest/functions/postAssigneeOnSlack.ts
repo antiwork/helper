@@ -20,8 +20,8 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
   );
   const assignedBy = assignEvent.assignedById ? await getClerkUser(assignEvent.assignedById) : null;
 
-  if (!conversation.mailbox.slackBotToken || !conversation.mailbox.slackEscalationChannel) {
-    return "Not posted, mailbox not linked to Slack or missing escalation channel";
+  if (!conversation.mailbox.slackBotToken || !conversation.mailbox.slackAlertChannel) {
+    return "Not posted, mailbox not linked to Slack or missing alert channel";
   }
 
   const assignee = conversation.assignedToClerkId ? await getClerkUser(conversation.assignedToClerkId) : null;
@@ -63,7 +63,7 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
     await postSlackMessage(conversation.mailbox.slackBotToken, {
       text: heading,
       mrkdwn: true,
-      channel: conversation.mailbox.slackEscalationChannel,
+      channel: conversation.mailbox.slackAlertChannel,
       attachments,
     });
   }

@@ -8,7 +8,6 @@ import {
   conversationMessages,
   conversations,
   conversationsTopics,
-  escalations,
   faqs,
   files,
   mailboxes,
@@ -73,11 +72,6 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
     const mailboxConversations = db
       .$with("mailbox_conversations")
       .as(db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)));
-
-    await db
-      .with(mailboxConversations)
-      .delete(escalations)
-      .where(inArray(escalations.conversationId, sql`(SELECT id FROM ${mailboxConversations})`));
 
     const mailboxMessages = db
       .$with("mailbox_messages")

@@ -1,12 +1,12 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, FlagIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
+import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { highlightKeywords } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/highlightKeywords";
 import { AssignedToLabel } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/list";
@@ -26,10 +26,10 @@ import { api } from "@/trpc/react";
 import { AssigneeFilter } from "./_components/assigneeFilter";
 import { CustomerFilter } from "./_components/customerFilter";
 import { DateFilter } from "./_components/dateFilter";
+import { EventFilter } from "./_components/eventFilter";
 import { ReactionFilter } from "./_components/reactionFilter";
 import { ResponderFilter } from "./_components/responderFilter";
 import { StatusFilter } from "./_components/statusFilter";
-import { TopicFilter } from "./_components/topicFilter";
 import { VipFilter } from "./_components/vipFilter";
 
 export default function SearchPage() {
@@ -38,15 +38,15 @@ export default function SearchPage() {
 
   const [searchParams, setSearchParams] = useQueryStates({
     search: parseAsString,
-    status: parseAsArrayOf(parseAsStringEnum(["open", "closed", "escalated", "spam"] as const)),
+    status: parseAsArrayOf(parseAsStringEnum(["open", "closed", "spam"] as const)),
     assignee: parseAsArrayOf(parseAsString),
     createdAfter: parseAsString,
     createdBefore: parseAsString,
     repliedBy: parseAsArrayOf(parseAsString),
     customer: parseAsArrayOf(parseAsString),
-    topic: parseAsArrayOf(parseAsInteger),
     isVip: parseAsBoolean,
     reactionType: parseAsStringEnum(["thumbs-up", "thumbs-down"] as const),
+    events: parseAsArrayOf(parseAsStringEnum(["request_human_support", "resolved_by_ai"] as const)),
   });
   const debouncedSetSearchParams = useDebouncedCallback((newParams: Partial<typeof searchParams>) => {
     setSearchParams((params) => ({ ...params, ...newParams }));
@@ -70,9 +70,9 @@ export default function SearchPage() {
     createdBefore: searchParams.createdBefore ?? undefined,
     repliedBy: searchParams.repliedBy ?? undefined,
     customer: searchParams.customer ?? undefined,
-    topic: searchParams.topic ?? undefined,
     isVip: searchParams.isVip ?? undefined,
     reactionType: searchParams.reactionType ?? undefined,
+    events: searchParams.events ?? undefined,
   };
   const { data, isFetching, hasNextPage, fetchNextPage } = api.mailbox.conversations.list.useInfiniteQuery(
     { mailboxSlug: params.mailbox_slug, ...searchOptions },
@@ -207,15 +207,12 @@ export default function SearchPage() {
               selectedCustomers={filterValues.customer ?? []}
               onChange={(customers) => updateFilter({ customer: customers })}
             />
-            <TopicFilter
-              selectedTopics={filterValues.topic ?? []}
-              onChange={(topics) => updateFilter({ topic: topics })}
-            />
             <VipFilter isVip={filterValues.isVip ?? undefined} onChange={(isVip) => updateFilter({ isVip })} />
             <ReactionFilter
               reactionType={filterValues.reactionType}
               onChange={(reactionType) => updateFilter({ reactionType })}
             />
+            <EventFilter selectedEvents={filterValues.events ?? []} onChange={(events) => updateFilter({ events })} />
           </div>
         </div>
         <div className="w-1 lg:w-10" />
@@ -322,7 +319,6 @@ function SearchResultItem({
     open: InboxIcon,
     closed: CheckIcon,
     spam: ShieldExclamationIcon,
-    escalated: FlagIcon,
   }[status];
 
   let highlightedText = highlightKeywords(conversation.matchedMessageText?.replace(/\s+/g, " ") ?? "", searchTerms);
@@ -345,7 +341,6 @@ function SearchResultItem({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-sm font-medium truncate">{conversation.emailFrom}</h3>
-              {status === "escalated" && <Badge variant="default">Escalated</Badge>}
             </div>
             <div className="flex items-center gap-2">
               <TooltipProvider delayDuration={0}>

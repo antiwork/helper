@@ -1,9 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import SlackSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/icons/slack.svg";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
 import { toast } from "@/components/hooks/use-toast";
-import TipTapEditor from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +12,7 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
 export type SlackUpdates = {
-  escalationChannel?: string | null;
-  emailBody?: string | null;
-  escalationExpectedResolutionHours?: number | null;
+  alertChannel?: string | null;
 };
 
 export const SlackChannels = ({
@@ -30,7 +27,7 @@ export const SlackChannels = ({
   onChange: (changes: SlackUpdates) => void;
 }) => {
   const utils = api.useUtils();
-  const [escalationChannelName, setEscalationChannelName] = useState("");
+  const [alertChannelName, setAlertChannelName] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [channels, setChannels] = useState<{ id: string; name: string }[]>([]);
 
@@ -57,16 +54,16 @@ export const SlackChannels = ({
   useEffect(() => {
     const channel = channels.find(({ id }) => id === selectedChannelId);
     if (channel) {
-      setEscalationChannelName(`#${channel.name}`);
+      setAlertChannelName(`#${channel.name}`);
     }
   }, [channels, selectedChannelId]);
 
-  const setEscalationChannel = (name: string) => {
-    setEscalationChannelName(name);
+  const setAlertChannel = (name: string) => {
+    setAlertChannelName(name);
 
     if (name === "" || name === "#") {
       setIsValid(true);
-      onChange({ escalationChannel: null });
+      onChange({ alertChannel: null });
       return;
     }
 
@@ -74,7 +71,7 @@ export const SlackChannels = ({
 
     if (channel?.id) {
       setIsValid(true);
-      onChange({ escalationChannel: channel.id });
+      onChange({ alertChannel: channel.id });
     } else {
       setIsValid(false);
     }
@@ -90,16 +87,16 @@ export const SlackChannels = ({
         list={datalistId}
         disabled={!channels.length}
         placeholder={channels.length ? "" : "Loading channels..."}
-        value={escalationChannelName}
-        onChange={(e) => setEscalationChannel(e.target.value)}
+        value={alertChannelName}
+        onChange={(e) => setAlertChannel(e.target.value)}
         onFocus={() => {
-          if (escalationChannelName === "") {
-            setEscalationChannelName("#");
+          if (alertChannelName === "") {
+            setAlertChannelName("#");
           }
         }}
         onBlur={() => {
-          if (escalationChannelName === "#") {
-            setEscalationChannelName("");
+          if (alertChannelName === "#") {
+            setAlertChannelName("");
           }
           if (!isValid) {
             toast({
@@ -127,11 +124,6 @@ const SlackSetting = ({
 }) => {
   const { mutateAsync: disconnectSlack } = api.mailbox.slack.disconnect.useMutation();
   const [isSlackConnected, setSlackConnected] = useState(mailbox.slackConnected);
-  const [resolutionHours, setResolutionHours] = useState(mailbox.escalationExpectedResolutionHours?.toString() ?? "");
-  const emailBodyMemoized = useMemo(
-    () => ({ content: mailbox.escalationEmailBody ?? "" }),
-    [mailbox.escalationEmailBody],
-  );
   const channelUID = useId();
 
   useShowToastForSlackConnectStatus();
@@ -153,50 +145,20 @@ const SlackSetting = ({
   };
 
   return (
-    <SectionWrapper
-      title="Slack Integration"
-      description="Escalate messages to your team and respond without leaving Slack."
-    >
+    <SectionWrapper title="Slack Integration" description="Notify your team and respond without leaving Slack.">
       {isSlackConnected ? (
         <>
           <div className="grid gap-1">
-            <Label htmlFor={channelUID}>Escalation channel</Label>
+            <Label htmlFor={channelUID}>Alert channel</Label>
             <SlackChannels
               id={channelUID}
-              selectedChannelId={mailbox.slackEscalationChannel ?? undefined}
+              selectedChannelId={mailbox.slackAlertChannel ?? undefined}
               mailbox={mailbox}
               onChange={onChange}
             />
-          </div>
-          <div className="grid gap-1 mt-4">
-            <Label htmlFor="expectedResolutionHours">Expected resolution time (hours)</Label>
-            <Input
-              id="expectedResolutionHours"
-              type="number"
-              min="0"
-              step="0.5"
-              value={resolutionHours}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setResolutionHours(newValue);
-                onChange({
-                  escalationExpectedResolutionHours: newValue ? parseFloat(newValue) : null,
-                });
-              }}
-            />
             <p className="mt-1 text-sm text-muted-foreground">
-              A dashboard alert will be shown when escalations are not resolved within this timeframe
+              Daily reports and notifications will be sent to this channel.
             </p>
-          </div>
-          <div className="relative grid mt-4">
-            <Label>Automatic reply when escalated</Label>
-            <div className="min-h-[10rem]">
-              <TipTapEditor
-                defaultContent={emailBodyMemoized}
-                onUpdate={(emailBody, isEmpty) => onChange({ emailBody: isEmpty ? null : emailBody })}
-                placeholder={mailbox.escalationEmailBodyPlaceholder}
-              />
-            </div>
           </div>
           <div className="mt-4">
             <Button

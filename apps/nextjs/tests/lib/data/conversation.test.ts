@@ -1,12 +1,11 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { escalationFactory } from "@tests/support/factories/escalations";
 import { userFactory } from "@tests/support/factories/users";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversations, escalations, gmailSupportEmails } from "@/db/schema";
+import { conversations, gmailSupportEmails } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/ably/channels";
 import { publishToAbly } from "@/lib/ably/client";
@@ -184,32 +183,24 @@ describe("updateConversation", () => {
     });
   });
 
-  it("resolves active escalation and sends embedding event when status changes to closed", async () => {
+  it("sends embedding event when status changes to closed", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
-    const { escalation } = await escalationFactory.create(conversation.id);
 
     await updateConversation(conversation.id, { set: { status: "closed" } });
 
-    expect(await db.query.escalations.findFirst({ where: eq(escalations.id, escalation.id) })).toMatchObject({
-      resolvedAt: expect.any(Date),
-    });
     expect(inngest.send).toHaveBeenCalledWith({
       name: "conversations/embedding.create",
       data: { conversationSlug: conversation.slug },
     });
   });
 
-  it("does not resolve escalation or send embedding event when status is not changed to closed", async () => {
+  it("does not send embedding event when status is not changed to closed", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
-    const { escalation } = await escalationFactory.create(conversation.id);
 
     await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
-    expect(await db.query.escalations.findFirst({ where: eq(escalations.id, escalation.id) })).toMatchObject({
-      resolvedAt: null,
-    });
     expect(inngest.send).not.toHaveBeenCalled();
   });
 });

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type Status = "open" | "escalated" | "spam" | "closed";
+type Status = "open" | "spam" | "closed";
 
 export function StatusFilter({
   selectedStatuses,
@@ -26,7 +26,7 @@ export function StatusFilter({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        {(["open", "escalated", "closed", "spam"] as const).map((status) => (
+        {(["open", "closed", "spam"] as const).map((status) => (
           <DropdownMenuCheckboxItem
             key={status}
             onSelect={(e) => e.preventDefault()}

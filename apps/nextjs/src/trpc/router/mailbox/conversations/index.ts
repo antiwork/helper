@@ -1,11 +1,11 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, count, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, escalations, files, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
@@ -15,7 +15,6 @@ import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { mailboxProcedure } from "../procedure";
-import { escalationsRouter } from "./escalations";
 import { filesRouter } from "./files";
 import { messagesRouter } from "./messages";
 import { notesRouter } from "./notes";
@@ -101,12 +100,12 @@ export const conversationsRouter = {
   update: conversationProcedure
     .input(
       z.object({
-        status: z.optional(z.enum(["open", "closed", "spam", "escalated"])),
-        assignedToId: z.optional(z.string().nullable()),
-        message: z.optional(z.string().nullable()),
+        status: z.enum(["open", "closed", "spam"]).optional(),
+        assignedToId: z.string().nullable().optional(),
+        message: z.string().nullable().optional(),
       }),
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       if (input.assignedToId) {
         const members = await getOrganizationMembers(ctx.session.orgId);
         if (!members.data.some((m) => m.publicUserData?.userId === input.assignedToId)) {
@@ -181,7 +180,6 @@ export const conversationsRouter = {
   messages: messagesRouter,
   files: filesRouter,
   tools: toolsRouter,
-  escalations: escalationsRouter,
   notes: notesRouter,
   findSimilar: conversationProcedure.query(async ({ ctx }) => {
     let conversation = ctx.conversation;
@@ -217,7 +215,7 @@ export const conversationsRouter = {
   alertCounts: mailboxProcedure.query(async ({ ctx }) => {
     const now = new Date();
 
-    const [conversation, assignedToMe, escalatedOverdue, vipOverdue] = await Promise.all([
+    const [conversation, assignedToMe, vipOverdue] = await Promise.all([
       db.query.conversations.findFirst({
         columns: { id: true },
         where: and(eq(conversations.mailboxId, ctx.mailbox.id)),
@@ -227,25 +225,9 @@ export const conversationsRouter = {
         and(
           eq(conversations.mailboxId, ctx.mailbox.id),
           eq(conversations.assignedToClerkId, ctx.session.userId),
-          inArray(conversations.status, ["open", "escalated"]),
+          eq(conversations.status, "open"),
         ),
       ),
-      ctx.mailbox.escalationExpectedResolutionHours
-        ? db
-            .select({ count: count() })
-            .from(escalations)
-            .leftJoin(conversations, eq(escalations.conversationId, conversations.id))
-            .where(
-              and(
-                eq(conversations.mailboxId, ctx.mailbox.id),
-                isNull(escalations.resolvedAt),
-                gt(
-                  escalations.createdAt,
-                  new Date(now.getTime() - ctx.mailbox.escalationExpectedResolutionHours * 60 * 60 * 1000),
-                ),
-              ),
-            )
-        : [],
       ctx.mailbox.vipThreshold && ctx.mailbox.vipExpectedResponseHours
         ? db
             .select({ count: count() })
@@ -274,8 +256,6 @@ export const conversationsRouter = {
     return {
       hasConversations: !!conversation,
       assignedToMe,
-      escalatedOverdue: escalatedOverdue[0]?.count ?? 0,
-      escalationExpectedResolutionHours: ctx.mailbox.escalationExpectedResolutionHours,
       vipOverdue: vipOverdue[0]?.count ?? 0,
       vipExpectedResponseHours: ctx.mailbox.vipExpectedResponseHours,
     };

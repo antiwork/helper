@@ -131,7 +131,7 @@ const CustomerSetting = ({ mailbox, onChange }: CustomerSettingProps) => {
                     id="vipChannel"
                     selectedChannelId={mailbox.vipChannelId ?? undefined}
                     mailbox={mailbox}
-                    onChange={(changes) => updateSettings({ vipChannelId: changes.escalationChannel })}
+                    onChange={(changes) => updateSettings({ vipChannelId: changes.alertChannel })}
                   />
                 ) : (
                   <Alert>

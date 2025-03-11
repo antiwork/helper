@@ -1,10 +1,12 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
 import {
   ArrowPathIcon,
   ArrowRightIcon,
   BookOpenIcon,
   HandThumbDownIcon,
+  InboxIcon,
   PaperAirplaneIcon,
   StarIcon,
   TrashIcon,
@@ -38,6 +40,8 @@ const HeaderButton = ({ children, iconOnly }: { children: React.ReactNode; iconO
 };
 
 const LoginButtons = ({ githubStars }: { githubStars: number }) => {
+  const { isSignedIn } = useUser();
+
   return (
     <div className="flex space-x-2">
       <Link href="https://docs.helper.ai" target="_blank">
@@ -56,6 +60,16 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
           </span>
         </Button>
       </Link>
+      {isSignedIn && (
+        <Link href="/mailboxes">
+          <Button variant="subtle">
+            <span className="flex items-center">
+              <InboxIcon className="h-5 w-5 mr-2" />
+              Go to mailbox
+            </span>
+          </Button>
+        </Link>
+      )}
     </div>
   );
 };

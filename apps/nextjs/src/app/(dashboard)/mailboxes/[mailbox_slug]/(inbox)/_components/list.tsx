@@ -37,7 +37,7 @@ type ListItemProps = {
   variant: "desktop" | "mobile";
 };
 
-type StatusOption = "open" | "closed" | "escalated" | "spam";
+type StatusOption = "open" | "closed" | "spam";
 type SortOption = "oldest" | "newest" | "highest_value";
 
 const SearchBar = ({
@@ -132,28 +132,19 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useConversationListContext();
   const category =
-    useParams<{ category: "conversations" | "mine" | "assigned" | "unassigned" | "escalated" | undefined }>()
-      .category || "conversations";
+    useParams<{ category: "conversations" | "mine" | "assigned" | "unassigned" | undefined }>().category ||
+    "conversations";
 
   const conversations = conversationListData?.conversations ?? [];
   const total = conversationListData?.total ?? 0;
   const { data: countData } = api.mailbox.countByStatus.useQuery({ mailboxSlug: input.mailboxSlug });
   const status = countData
-    ? (["open", "escalated", "closed", "spam"] as const)
-        .map((status) => {
-          const result = {
-            status,
-            count: countData[category][status] ?? 0,
-          };
-          if (status === "open") result.count += countData[category].escalated ?? 0;
-          return result;
-        })
-        .filter(
-          (c) =>
-            c.count > 0 ||
-            (c.status === "escalated" && category === "escalated") ||
-            (c.status === "open" && category !== "escalated"),
-        )
+    ? (["open", "closed", "spam"] as const)
+        .map((status) => ({
+          status,
+          count: countData[category][status] ?? 0,
+        }))
+        .filter((c) => c.count > 0 || c.status === "open")
     : [];
   const defaultSort = conversationListData?.defaultSort;
 
@@ -248,9 +239,6 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
 
       switch (input.category) {
         case "conversations":
-          break;
-        case "escalated":
-          if (newConversation.status !== "escalated") return data;
           break;
         case "assigned":
           if (!newConversation.assignedToClerkId) return data;

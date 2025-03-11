@@ -2,7 +2,6 @@ import { User } from "@clerk/nextjs/server";
 import { conversationEventsFactory } from "@tests/support/factories/conversationEvents";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { escalationFactory } from "@tests/support/factories/escalations";
 import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
@@ -16,7 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { assert } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, escalations, files } from "@/db/schema";
+import { conversationMessages, files } from "@/db/schema";
 import { getConversationById } from "@/lib/data/conversation";
 import {
   createConversationMessage,
@@ -494,18 +493,6 @@ describe("createReply", () => {
       body: "Test message",
       emailCc: ["cc@example.com"],
       emailBcc: ["bcc@example.com"],
-    });
-  });
-
-  it("resolves an active escalation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-    const { escalation } = await escalationFactory.create(conversation.id);
-
-    await createReply({ conversationId: conversation.id, message: "Test message", user });
-
-    expect(await db.query.escalations.findFirst({ where: eq(escalations.id, escalation.id) })).toMatchObject({
-      resolvedAt: expect.any(Date),
     });
   });
 

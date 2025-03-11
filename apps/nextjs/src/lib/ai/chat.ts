@@ -191,15 +191,19 @@ const generateReasoning = async ({
     });
 
     let text = "";
+    let finished = false;
     for await (const textPart of textStream) {
       text += textPart;
       if (textPart === "</think>") {
+        finished = true;
         dataStream?.writeData({
           event: "reasoningFinished",
           data: {
             id: traceId,
           },
         });
+      } else if (!textPart.includes("<think>") && !finished) {
+        dataStream?.writeData({ reasoning: textPart });
       }
     }
 

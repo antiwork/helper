@@ -27,12 +27,12 @@ interface ConversationItemProps {
   summary?: string | string[] | null;
   createdAt: Date;
   similarity?: number;
-  status: "open" | "closed" | "escalated" | "spam" | null;
+  status: "open" | "closed" | "spam" | null;
   mailboxSlug: string;
   navigateToConversation: (slug: string) => void;
   removeConversation: () => void;
   updateConversation: (
-    params: { mailboxSlug: string; conversationSlug: string; status: "open" | "closed" | "escalated" | "spam" },
+    params: { mailboxSlug: string; conversationSlug: string; status: "open" | "closed" | "spam" },
     options: { onSuccess: () => void; onError: () => void },
   ) => void;
 }
@@ -104,11 +104,6 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
 
-  const { data: escalation } = api.mailbox.conversations.escalations.get.useQuery({
-    conversationSlug: conversation.slug,
-    mailboxSlug,
-  });
-
   const { data: customerConversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery(
     { mailboxSlug, customer: [conversation.emailFrom ?? ""] },
     { enabled: !!conversation.emailFrom && previousExpanded },
@@ -132,20 +127,6 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
           </div>
           <span className="text-muted-foreground">Assignee</span>
           <AssignPopoverButton initialAssignedToClerkId={conversation.assignedToClerkId} />
-          {escalation && (
-            <>
-              <span className="text-muted-foreground">Escalation</span>
-              <div>
-                {escalation.slackUrl ? (
-                  <a href={escalation.slackUrl} target="_blank" rel="noopener noreferrer">
-                    View on Slack
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">Processing ...</span>
-                )}
-              </div>
-            </>
-          )}
         </div>
       </div>
 

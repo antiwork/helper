@@ -3,7 +3,7 @@ import { bigint, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversations } from "./conversations";
 
-export const escalations = pgTable(
+export const unused_escalations = pgTable(
   "conversations_escalation",
   {
     ...withTimestamps,
@@ -23,9 +23,9 @@ export const escalations = pgTable(
   },
 );
 
-export const escalationsRelations = relations(escalations, ({ one }) => ({
+export const escalationsRelations = relations(unused_escalations, ({ one }) => ({
   conversation: one(conversations, {
-    fields: [escalations.conversationId],
+    fields: [unused_escalations.conversationId],
     references: [conversations.id],
   }),
 }));

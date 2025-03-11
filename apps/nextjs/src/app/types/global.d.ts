@@ -33,11 +33,6 @@ export type ConversationEvent = Extract<Conversation["messages"][number], { type
 
 export type AttachedFile = Message["files"][number];
 
-export type Escalation = {
-  slackUrl: string | null;
-  isProcessing: boolean;
-};
-
 export type ConversationListItem = RouterOutputs["mailbox"]["conversations"]["list"]["conversations"][number];
 
 export type Pagination = {
@@ -45,14 +40,6 @@ export type Pagination = {
   previous_page: number | null;
   page_number: number;
   total_pages: number;
-};
-
-export type ConversationStatusNumbers = {
-  open: number;
-  closed: number;
-  spam: number;
-  escalated: number;
-  assigned: number;
 };
 
 export type Linter = {

@@ -1,11 +1,9 @@
-import { conversationFactory } from "@tests/support/factories/conversations";
-import { escalationFactory } from "@tests/support/factories/escalations";
 import { userFactory } from "@tests/support/factories/users";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
-import { escalations, mailboxes } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
 import { env } from "@/env";
 import { disconnectSlack, getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
@@ -36,18 +34,7 @@ test("getMailboxInfo", async () => {
     metadataEndpoint: null,
     slackConnected: false,
     slackConnectUrl: expect.any(String),
-    slackEscalationChannel: null,
-    escalationEmailBody: null,
-    escalationEmailBodyPlaceholder: [
-      "Hey there,",
-      "Thank you for reporting this issue. Really sorry you ran into this!",
-      "We are looking into it now and will get back to you soon about a solution.",
-      "Let me know if you need any further help!",
-      "",
-      "Best,",
-      `${mailbox.name} Support`,
-    ].join("\n"),
-    escalationExpectedResolutionHours: null,
+    slackAlertChannel: null,
     responseGeneratorPrompt: [],
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: null,
@@ -73,20 +60,15 @@ test("getMailboxInfo", async () => {
 });
 
 describe("disconnectSlack", () => {
-  it("removes Slack-related data and resolves escalations", async () => {
+  it("removes Slack-related data", async () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackTeamId: "T12345",
         slackBotUserId: "U12345",
         slackBotToken: "xoxb-12345",
-        slackEscalationChannel: "C12345",
+        slackAlertChannel: "C12345",
       },
     });
-
-    const { conversation: conversation1 } = await conversationFactory.create(mailbox.id);
-    const { escalation: escalation1 } = await escalationFactory.create(conversation1.id);
-    const { conversation: conversation2 } = await conversationFactory.create(mailbox.id);
-    const { escalation: escalation2 } = await escalationFactory.create(conversation2.id);
 
     await disconnectSlack(mailbox.id);
 
@@ -100,18 +82,8 @@ describe("disconnectSlack", () => {
       slackTeamId: null,
       slackBotUserId: null,
       slackBotToken: null,
-      slackEscalationChannel: null,
+      slackAlertChannel: null,
     });
-
-    const updatedEscalation1 = await db.query.escalations.findFirst({
-      where: eq(escalations.id, escalation1.id),
-    });
-    expect(updatedEscalation1?.resolvedAt).not.toBeNull();
-
-    const updatedEscalation2 = await db.query.escalations.findFirst({
-      where: eq(escalations.id, escalation2.id),
-    });
-    expect(updatedEscalation2?.resolvedAt).not.toBeNull();
   });
 
   it("silently continues if the Slack API call fails", async () => {
@@ -120,7 +92,7 @@ describe("disconnectSlack", () => {
         slackTeamId: "T12345",
         slackBotUserId: "U12345",
         slackBotToken: "xoxb-12345",
-        slackEscalationChannel: "C12345",
+        slackAlertChannel: "C12345",
       },
     });
 
@@ -140,7 +112,7 @@ describe("disconnectSlack", () => {
       slackTeamId: null,
       slackBotUserId: null,
       slackBotToken: null,
-      slackEscalationChannel: null,
+      slackAlertChannel: null,
     });
   });
 
@@ -150,7 +122,7 @@ describe("disconnectSlack", () => {
         slackTeamId: null,
         slackBotUserId: null,
         slackBotToken: null,
-        slackEscalationChannel: null,
+        slackAlertChannel: null,
       },
     });
 

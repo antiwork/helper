@@ -1,10 +1,10 @@
 import "server-only";
 import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
-import { isEqual } from "lodash";
 import { z } from "zod";
 import { DEFAULT_CONVERSATIONS_PER_PAGE } from "@/components/constants";
 import { db } from "@/db/client";
 import {
+  conversationEvents,
   conversationMessages,
   conversations,
   conversationsTopics,
@@ -20,9 +20,9 @@ export const searchSchema = z.object({
   cursor: z.string().nullish(),
   limit: z.number().min(1).max(100).default(DEFAULT_CONVERSATIONS_PER_PAGE),
   sort: z.enum(["newest", "oldest", "highest_value"]).catch("oldest").nullish(),
-  category: z.enum(["conversations", "escalated", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
+  category: z.enum(["conversations", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
   search: z.string().nullish(),
-  status: z.array(z.enum(["open", "closed", "spam", "escalated"]).catch("open")).nullish(),
+  status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),
   assignee: z.array(z.string()).optional(),
   createdAfter: z.string().datetime().optional(),
   createdBefore: z.string().datetime().optional(),
@@ -31,6 +31,7 @@ export const searchSchema = z.object({
   topic: z.array(z.number()).optional(),
   isVip: z.boolean().optional(),
   reactionType: z.enum(["thumbs-up", "thumbs-down"]).optional(),
+  events: z.array(z.enum(["request_human_support", "resolved_by_ai"])).optional(),
 });
 
 export const searchConversations = async (
@@ -39,16 +40,13 @@ export const searchConversations = async (
   currentUserId: string,
 ) => {
   if (filters.category && !filters.search && !filters.status?.length) {
-    filters.status = filters.category === "escalated" ? ["escalated"] : ["open"];
+    filters.status = ["open"];
   }
   if (filters.category === "mine") {
     filters.assignee = [currentUserId];
   }
   if (filters.category === "unassigned") {
     filters.assignee = [];
-  }
-  if (filters.category && isEqual(filters.status, ["open"])) {
-    filters.status = ["open", "escalated"];
   }
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id) : [];
@@ -102,6 +100,21 @@ export const searchConversations = async (
                   eq(conversationMessages.conversationId, conversations.id),
                   eq(conversationMessages.reactionType, filters.reactionType),
                   isNull(conversationMessages.deletedAt),
+                ),
+              ),
+          ),
+        }
+      : {}),
+    ...(filters.events?.length
+      ? {
+          events: exists(
+            db
+              .select()
+              .from(conversationEvents)
+              .where(
+                and(
+                  eq(conversationEvents.conversationId, conversations.id),
+                  inArray(conversationEvents.type, filters.events),
                 ),
               ),
           ),

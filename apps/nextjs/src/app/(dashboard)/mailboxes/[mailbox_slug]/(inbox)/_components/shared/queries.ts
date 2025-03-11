@@ -4,10 +4,10 @@ import { parseAsStringEnum, useQueryStates } from "nuqs";
 export const useConversationsListInput = () => {
   const params = useParams<{
     mailbox_slug: string;
-    category: "conversations" | "escalated" | "assigned" | "unassigned" | "mine";
+    category: "conversations" | "assigned" | "unassigned" | "mine";
   }>();
   const [searchParams, setSearchParams] = useQueryStates({
-    status: parseAsStringEnum(["open", "closed", "escalated", "spam"] as const),
+    status: parseAsStringEnum(["open", "closed", "spam"] as const),
     sort: parseAsStringEnum(["oldest", "newest", "highest_value"] as const),
   });
 

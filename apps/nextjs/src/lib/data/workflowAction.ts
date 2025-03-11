@@ -5,7 +5,6 @@ import { generateResponseWithPrompt } from "../ai/generateResponseWithPrompt";
 import { getMetadata, timestamp } from "../metadataApiClient";
 import { updateConversation, updateConversationStatus } from "./conversation";
 import { createReply } from "./conversationMessage";
-import { createEscalation } from "./escalation";
 import { addNote } from "./note";
 import { canSendAutomatedReplies, getClerkOrganization } from "./organization";
 
@@ -97,10 +96,6 @@ export const runWorkflowAction = async (
     }
     case "change_helper_status": {
       await updateConversationStatus(conversation, action.actionValue);
-      break;
-    }
-    case "escalate_to_slack": {
-      await createEscalation(conversation, mailbox);
       break;
     }
     case "assign_user": {

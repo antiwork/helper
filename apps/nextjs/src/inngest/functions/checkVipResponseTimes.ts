@@ -1,5 +1,5 @@
 import { KnownBlock } from "@slack/web-api";
-import { and, desc, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes, platformCustomers } from "@/db/schema";
@@ -36,7 +36,7 @@ export default inngest.createFunction(
           and(
             eq(conversations.mailboxId, mailbox.id),
             isNull(conversations.assignedToClerkId),
-            inArray(conversations.status, ["open", "escalated"]),
+            eq(conversations.status, "open"),
             gt(
               sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
               mailbox.vipExpectedResponseHours!,

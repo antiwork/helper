@@ -169,18 +169,6 @@ describe("runWorkflowAction", () => {
     });
   });
 
-  describe("actionType is 'escalate_to_slack'", () => {
-    it("creates an escalation", async () => {
-      const action = await workflowActionFactory.create(workflow.id, {
-        actionType: "escalate_to_slack",
-        actionValue: "escalate details",
-      });
-
-      const result = await runWorkflowAction(action, message);
-      expect(result).toBe(true);
-    });
-  });
-
   describe("actionType is 'assign_user'", () => {
     it("assigns the conversation to a user", async () => {
       const userId = "test-user-id";

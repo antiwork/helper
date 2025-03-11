@@ -24,7 +24,6 @@ import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
-import { getActiveEscalation, resolveEscalation } from "./escalation";
 import { getMailboxById } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
 import { evaluateWorkflowCondition } from "./workflowCondition";
@@ -115,9 +114,6 @@ export const updateConversation = async (
     });
   }
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
-    const escalation = await getActiveEscalation(updatedConversation.id, tx);
-    if (escalation) await resolveEscalation({ escalation, user: null, closed: true }, tx);
-
     await updateVipMessageOnClose(updatedConversation.id, byUserId);
 
     await inngest.send({
@@ -188,7 +184,6 @@ export const serializeConversation = (
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
     assignedToClerkId: conversation.assignedToClerkId,
-    escalationEnabled: !!(mailbox.slackBotToken && mailbox.slackEscalationChannel),
     platformCustomer: platformCustomer
       ? {
           ...platformCustomer,
