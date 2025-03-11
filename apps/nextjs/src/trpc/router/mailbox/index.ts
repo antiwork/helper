@@ -15,7 +15,6 @@ import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
-import { githubConversationsRouter } from "./githubConversationsRouter";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
@@ -142,10 +141,7 @@ export const mailboxRouter = {
       return await getMemberStats(ctx.mailbox, { startDate, endDate: now });
     }),
   styleLinters: styleLintersRouter,
-  conversations: {
-    ...githubConversationsRouter,
-    ...conversationsRouter,
-  },
+  conversations: conversationsRouter,
   faqs: faqsRouter,
   workflows: workflowsRouter,
   slack: slackRouter,

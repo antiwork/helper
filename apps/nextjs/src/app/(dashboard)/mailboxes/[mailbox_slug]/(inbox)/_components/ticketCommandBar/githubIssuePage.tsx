@@ -44,14 +44,15 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
   const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
 
-  const { mutateAsync: createIssue } = (api.mailbox.conversations as any).createGitHubIssue.useMutation();
-  const { mutateAsync: linkIssue } = (api.mailbox.conversations as any).linkExistingGitHubIssue.useMutation();
-  const { mutateAsync: updateIssueState } = (api.mailbox.conversations as any).updateGitHubIssueState.useMutation();
+  const { mutateAsync: createIssue } = api.mailbox.conversations.github.createGitHubIssue.useMutation();
+  const { mutateAsync: linkIssue } = api.mailbox.conversations.github.linkExistingGitHubIssue.useMutation();
+  const { mutateAsync: updateIssueState } = api.mailbox.conversations.github.updateGitHubIssueState.useMutation();
 
-  const { data: issues, isLoading: isLoadingIssues } = (api.mailbox.conversations as any).listRepositoryIssues.useQuery(
+  const { data: issues, isLoading: isLoadingIssues } = api.mailbox.conversations.github.listRepositoryIssues.useQuery(
     {
       state: "open",
       mailboxSlug,
+      conversationSlug,
     },
     {
       enabled: activeTab === "link",
