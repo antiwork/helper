@@ -1,8 +1,9 @@
-import { ExternalLinkIcon } from "lucide-react";
+import { Check, ExternalLinkIcon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [selectedIssueNumber, setSelectedIssueNumber] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
 
@@ -196,6 +198,13 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
     }
   };
 
+  // Filter issues based on search term
+  const filteredIssues =
+    issues?.filter(
+      (issue: GitHubIssue) =>
+        issue.title.toLowerCase().includes(searchTerm.toLowerCase()) || issue.number.toString().includes(searchTerm),
+    ) || [];
+
   // Only show if GitHub is connected and a repo is configured
   if (!mailbox?.githubConnected || !mailbox.githubRepoOwner || !mailbox.githubRepoName) {
     return (
@@ -291,22 +300,36 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
             </div>
           ) : issues && issues.length > 0 ? (
             <div className="space-y-2">
-              <Label htmlFor="issue">Select an issue</Label>
-              <Select
-                value={selectedIssueNumber?.toString()}
-                onValueChange={(value) => setSelectedIssueNumber(Number(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an issue" />
-                </SelectTrigger>
-                <SelectContent>
-                  {issues.map((issue: GitHubIssue) => (
-                    <SelectItem key={issue.number} value={issue.number.toString()}>
-                      #{issue.number} - {issue.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="issue">Search and select an issue</Label>
+              <Command className="rounded-lg border">
+                <div className="flex items-center border-b px-3">
+                  <CommandInput
+                    placeholder="Search issues..."
+                    value={searchTerm}
+                    onValueChange={setSearchTerm}
+                    className="h-9"
+                  />
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  <CommandEmpty>No issues found</CommandEmpty>
+                  <CommandGroup>
+                    {filteredIssues.map((issue: GitHubIssue) => (
+                      <CommandItem
+                        key={issue.number}
+                        onSelect={() => setSelectedIssueNumber(issue.number)}
+                        className="flex items-center"
+                      >
+                        <Check
+                          className={`mr-2 h-4 w-4 ${selectedIssueNumber === issue.number ? "opacity-100" : "opacity-0"}`}
+                        />
+                        <span>
+                          #{issue.number} - {issue.title}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </div>
+              </Command>
             </div>
           ) : (
             <div className="text-center py-4 text-muted-foreground">No open issues found in the repository.</div>
