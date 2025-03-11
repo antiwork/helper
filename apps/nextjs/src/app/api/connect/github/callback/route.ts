@@ -28,13 +28,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
     }
 
-    const { accessToken, username } = await getGitHubAccessToken(code);
+    const { accessToken } = await getGitHubAccessToken(code);
 
     await db
       .update(mailboxes)
       .set({
         githubAccessToken: accessToken,
-        githubUsername: username,
       })
       .where(eq(mailboxes.id, mailbox.id));
 

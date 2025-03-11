@@ -17,7 +17,6 @@ export const getGitHubAccessToken = async (
   code: string,
 ): Promise<{
   accessToken: string;
-  username: string;
 }> => {
   const response = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
@@ -39,13 +38,10 @@ export const getGitHubAccessToken = async (
     throw data.error_description ? new Error(data.error_description) : new Error("GitHub authentication failed");
   }
 
-  // Get the user's username
   const octokit = new Octokit({ auth: data.access_token });
-  const userResponse = await octokit.users.getAuthenticated();
 
   return {
     accessToken: data.access_token,
-    username: userResponse.data.login,
   };
 };
 
