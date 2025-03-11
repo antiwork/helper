@@ -34,9 +34,6 @@ interface GitHubIssue {
 export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
   const { mailboxSlug, conversationSlug, data: conversation, refetch: refetchConversation } = useConversationContext();
 
-  const [isCreating, setIsCreating] = useState(false);
-  const [isLinking, setIsLinking] = useState(false);
-  const [isUpdatingState, setIsUpdatingState] = useState(false);
   const [activeTab, setActiveTab] = useState("create");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -44,9 +41,12 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
   const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
 
-  const { mutateAsync: createIssue } = api.mailbox.conversations.github.createGitHubIssue.useMutation();
-  const { mutateAsync: linkIssue } = api.mailbox.conversations.github.linkExistingGitHubIssue.useMutation();
-  const { mutateAsync: updateIssueState } = api.mailbox.conversations.github.updateGitHubIssueState.useMutation();
+  const { mutateAsync: createIssue, isPending: isCreating } =
+    api.mailbox.conversations.github.createGitHubIssue.useMutation();
+  const { mutateAsync: linkIssue, isPending: isLinking } =
+    api.mailbox.conversations.github.linkExistingGitHubIssue.useMutation();
+  const { mutateAsync: updateIssueState, isPending: isUpdatingState } =
+    api.mailbox.conversations.github.updateGitHubIssueState.useMutation();
 
   const { data: issues, isLoading: isLoadingIssues } = api.mailbox.conversations.github.listRepositoryIssues.useQuery(
     {
@@ -95,7 +95,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
       return;
     }
 
-    setIsCreating(true);
     try {
       const result = await createIssue({
         mailboxSlug,
@@ -124,8 +123,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -139,7 +136,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
       return;
     }
 
-    setIsLinking(true);
     try {
       const result = await linkIssue({
         mailboxSlug,
@@ -167,13 +163,10 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-    } finally {
-      setIsLinking(false);
     }
   };
 
   const handleUpdateIssueState = async (newState: "open" | "closed") => {
-    setIsUpdatingState(true);
     try {
       await updateIssueState({
         mailboxSlug,
@@ -200,8 +193,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-    } finally {
-      setIsUpdatingState(false);
     }
   };
 
