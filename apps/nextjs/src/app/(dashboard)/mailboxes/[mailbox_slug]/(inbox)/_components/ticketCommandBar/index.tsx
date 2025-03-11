@@ -126,7 +126,7 @@ export function TicketCommandBar({
         }
         break;
       case "ArrowLeft":
-        if (page === "previous-replies" || page === "assignees" || page === "github-issue") {
+        if (page === "previous-replies" || page === "assignees") {
           e.preventDefault();
           setPage("main");
         }
@@ -138,7 +138,7 @@ export function TicketCommandBar({
         }
         break;
       case "Escape":
-        if (page === "previous-replies" || page === "assignees" || page === "github-issue") {
+        if (page === "previous-replies" || page === "assignees") {
           setPage("main");
         } else {
           onOpenChange(false);
