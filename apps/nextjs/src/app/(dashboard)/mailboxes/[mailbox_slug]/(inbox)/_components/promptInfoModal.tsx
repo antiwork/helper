@@ -7,8 +7,6 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 
-
-
 const textStyles = "responsive-break-words prose max-w-none text-sm";
 
 const PromptItem = ({

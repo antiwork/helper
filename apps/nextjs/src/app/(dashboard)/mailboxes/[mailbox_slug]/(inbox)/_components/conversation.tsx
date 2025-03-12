@@ -52,7 +52,6 @@ import ConversationSidebar from "./conversationSidebar";
 import { MessageActions } from "./messageActions";
 import { useConversationsListInput } from "./shared/queries";
 
-
 export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
   messages: ((Message | Note | ConversationEvent) & { isNew?: boolean })[];
 };

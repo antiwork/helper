@@ -7,7 +7,6 @@ import { ToolMetadata } from "@/db/schema";
 import { ConversationWithNewMessages } from "./conversation";
 import { ToolItem } from "./toolItem";
 
-
 export const MessageThread = ({
   conversation,
   onPreviewAttachment,
