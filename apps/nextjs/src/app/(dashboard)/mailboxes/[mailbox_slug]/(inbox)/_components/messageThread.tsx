@@ -11,7 +11,6 @@ import { ToolItem } from "./toolItem";
 export const MessageThread = ({
   conversation,
   onPreviewAttachment,
-
   onDoubleClickWhiteSpace,
   mailboxSlug,
 }: {

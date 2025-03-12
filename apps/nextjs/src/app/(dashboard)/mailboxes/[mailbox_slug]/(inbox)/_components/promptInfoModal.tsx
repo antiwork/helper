@@ -7,16 +7,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 
-// Workflow type definition moved inline since automaticWorkflowsSetting was removed
-type Workflow = {
-  id?: number;
-  name: string;
-  prompt: string;
-  action: string;
-  message: string;
-  runOnReplies: boolean;
-  autoReplyFromMetadata?: boolean;
-};
+
 
 const textStyles = "responsive-break-words prose max-w-none text-sm";
 
@@ -48,7 +39,7 @@ const PromptItem = ({
 const MODAL_HEIGHT = "h-[calc(100vh-8rem)]";
 const MAX_MODAL_HEIGHT = "max-h-[calc(100vh-8rem)]";
 
-const WorkflowInfo = ({ workflow }: { workflow: Workflow }) => (
+const WorkflowInfo = ({ workflow }: { workflow: any }) => (
   <>
     {workflow.prompt && <PromptItem title="If" content={workflow.prompt} />}
     {workflow.action && <PromptItem title="Then" content={workflow.action} />}
@@ -57,7 +48,7 @@ const WorkflowInfo = ({ workflow }: { workflow: Workflow }) => (
   </>
 );
 
-const PromptInfoModal = ({ entity }: { entity: Workflow }) => {
+const PromptInfoModal = ({ entity }: { entity: any }) => {
   const responseTitle = "Response";
   const [copied, setCopied] = useState(false);
   const resetCopied = useDebouncedCallback(() => setCopied(false), 2000);
