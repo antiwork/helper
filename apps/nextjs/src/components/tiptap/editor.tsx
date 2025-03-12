@@ -23,7 +23,7 @@ type TipTapEditorProps = {
   defaultContent: Record<string, string>;
   onUpdate: (text: string, isEmpty: boolean) => void;
   onModEnter?: () => void;
-  onCommandK?: () => void;
+  onSlashKey?: () => void;
   customToolbar?: () => React.ReactNode;
   enableImageUpload?: boolean;
   enableFileUpload?: boolean;
@@ -68,7 +68,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
       defaultContent,
       onUpdate,
       onModEnter,
-      onCommandK,
+      onSlashKey,
       autoFocus,
       customToolbar,
       enableImageUpload,
@@ -100,11 +100,15 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
       ],
       editorProps: {
         handleKeyDown: (view, event) => {
-          // Handle Cmd+K/Ctrl+K
-          if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-            event.preventDefault();
-            onCommandK?.();
-            return true;
+          // Handle slash key to focus command bar
+          if (event.key === "/") {
+            const { $from } = view.state.selection;
+            const isStartOfLine = $from.parentOffset === 0;
+            if (isStartOfLine) {
+              event.preventDefault();
+              onSlashKey?.();
+              return true;
+            }
           }
           return false;
         },

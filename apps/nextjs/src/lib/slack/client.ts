@@ -235,3 +235,11 @@ export const listSlackUsers = async (token: string) => {
 
   return data.members;
 };
+
+export const getSlackUsersByEmail = async (token: string) => {
+  const slackUsers = await listSlackUsers(token).catch((error) => {
+    console.error("Failed to list Slack users", error);
+    return [];
+  });
+  return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
+};

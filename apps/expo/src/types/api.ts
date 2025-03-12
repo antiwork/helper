@@ -164,6 +164,28 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             after: string;
           }[];
         }>;
+        upsert: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            linter: {
+              before: string;
+              after: string;
+              id?: number | undefined;
+            };
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
+        delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
         setEnabled: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
@@ -180,6 +202,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             sort?: unknown;
             search?: string | null | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+            events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
@@ -574,6 +597,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   sort?: unknown;
                   search?: string | null | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+                  events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
                   topic?: number[] | undefined;
                   limit?: number | undefined;
                   cursor?: string | null | undefined;
@@ -1087,18 +1111,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
         }>;
       };
-      topics: {
-        all: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            name: string;
-            id: number;
-            parentId: number | null;
-          }[];
-        }>;
-      };
       customers: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -1197,6 +1209,51 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
         }>;
       };
+      metadataEndpoint: {
+        create: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            url: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+        delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+        test: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+      };
     };
     organization: {
       createDefaultOrganization: import("@trpc/server").TRPCMutationProcedure<{
@@ -1210,8 +1267,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           trialInfo: {
             freeTrialEndsAt: Date | null;
-            automatedRepliesCount: {} | null;
-            automatedRepliesUsageLimit: number;
+            resolutionsCount: {} | null;
+            resolutionsLimit: number;
             subscriptionStatus: import("../lib/data/organization").SubscriptionStatus;
           };
         };
@@ -1258,6 +1315,45 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           message: string;
         };
+      }>;
+    };
+    billing: {
+      startCheckout: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          url: string;
+        };
+      }>;
+      subscribe: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+          sessionId: string;
+        };
+        output: {
+          success: boolean;
+          message: string;
+        };
+      }>;
+      manage: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          url: string;
+        };
+      }>;
+      get: import("@trpc/server").TRPCQueryProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          unitAmount: number;
+          aiResolutions: number;
+          currentPeriodStart: Date;
+          currentPeriodEnd: Date;
+        } | null;
       }>;
     };
     isSignedIn: import("@trpc/server").TRPCQueryProcedure<{

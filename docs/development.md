@@ -16,7 +16,7 @@ Then, create a local Certificate Authority and generate SSL certificates for the
 
 ```sh
 # Generate SSL certificates
-bin/generate_ssl_certs
+bin/generate_ssl_certificates
 ```
 
 Run the application and access it at [helperai.dev](https://helperai.dev):

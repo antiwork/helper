@@ -15,11 +15,11 @@ import { protectedProcedure } from "@/trpc/trpc";
 import { conversationsRouter } from "./conversations";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
+import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
 import { styleLintersRouter } from "./styleLinters";
 import { toolsRouter } from "./tools";
-import { topicsRouter } from "./topics";
 import { websitesRouter } from "./websites";
 import { workflowsRouter } from "./workflows";
 
@@ -147,7 +147,7 @@ export const mailboxRouter = {
   workflows: workflowsRouter,
   slack: slackRouter,
   tools: toolsRouter,
-  topics: topicsRouter,
   customers: customersRouter,
   websites: websitesRouter,
+  metadataEndpoint: metadataEndpointRouter,
 } satisfies TRPCRouterRecord;
