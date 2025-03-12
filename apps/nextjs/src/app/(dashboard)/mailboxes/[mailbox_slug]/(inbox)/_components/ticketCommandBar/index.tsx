@@ -31,7 +31,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "tools">("main");
-  const pageRef = useRef<"main" | "previous-replies" | "assignees" | "notes" | "tools">("main");
+  const pageRef = useRef<string>("main");
   const { user: currentUser } = useUser();
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -39,10 +39,6 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     refetchOnMount: false,
   });
   const { assignTicket } = useAssignTicket();
-
-  useEffect(() => {
-    pageRef.current = page;
-  }, [page]);
 
   const [isLoadingPreviousReplies, setIsLoadingPreviousReplies] = useState(false);
   const { data: previousReplies, refetch: refetchPreviousReplies } =
@@ -104,6 +100,10 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     }))
     .filter((group) => group.items.length > 0);
   const visibleItems = visibleGroups.flatMap((group) => group.items);
+
+  useEffect(() => {
+    pageRef.current = `${page}-${toolsPage.selectedTool ? toolsPage.selectedTool.slug : "none"}`;
+  }, [page, toolsPage.selectedTool]);
 
   // Reset selection when dialog opens/closes or page changes
   useEffect(() => {
@@ -203,11 +203,11 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     }
   };
 
-  return page === "notes" ? (
+  return open && page === "notes" ? (
     <FormPage onOpenChange={onOpenChange}>
       <NotesPage onOpenChange={onOpenChange} />
     </FormPage>
-  ) : page === "tools" && toolsPage.selectedTool ? (
+  ) : open && page === "tools" && toolsPage.selectedTool ? (
     <FormPage onOpenChange={onOpenChange}>
       <ToolForm tool={toolsPage.selectedTool} onOpenChange={onOpenChange} />
     </FormPage>
@@ -260,7 +260,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
 
 const FormPage = ({ onOpenChange, children }: { onOpenChange: (open: boolean) => void; children: React.ReactNode }) => {
   return (
-    <div className="relative bg-background rounded">
+    <div className="flex-1 min-h-0 overflow-auto relative bg-background rounded">
       <Button variant="ghost" iconOnly className="absolute top-2 right-2" onClick={() => onOpenChange(false)}>
         <XMarkIcon className="w-4 h-4" />
       </Button>
