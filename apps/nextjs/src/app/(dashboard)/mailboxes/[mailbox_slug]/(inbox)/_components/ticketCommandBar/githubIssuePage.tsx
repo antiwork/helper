@@ -4,14 +4,6 @@ import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -208,26 +200,22 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
   // Only show if GitHub is connected and a repo is configured
   if (!mailbox?.githubConnected || !mailbox.githubRepoOwner || !mailbox.githubRepoName) {
     return (
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>GitHub Repository Not Configured</DialogTitle>
-          <DialogDescription>
-            Please configure a GitHub repository in the mailbox settings to use this feature.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+      <div className="flex-1 flex flex-col p-4">
+        <h3 className="font-medium mb-4">GitHub Repository Not Configured</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Please configure a GitHub repository in the mailbox settings to use this feature.
+        </p>
+        <div className="flex justify-end">
           <Button onClick={() => onOpenChange(false)}>Close</Button>
-        </DialogFooter>
-      </DialogContent>
+        </div>
+      </div>
     );
   }
 
   return (
-    <DialogContent className="sm:max-w-[600px]">
-      <DialogHeader>
-        <DialogTitle>GitHub Issue</DialogTitle>
-        <DialogDescription>Manage GitHub issues for this conversation.</DialogDescription>
-      </DialogHeader>
+    <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+      <h3 className="font-medium mb-4">GitHub Issue</h3>
+      <p className="text-sm text-muted-foreground mb-4">Manage GitHub issues for this conversation.</p>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className={`grid w-full ${hasLinkedIssue ? "grid-cols-3" : "grid-cols-2"}`}>
@@ -257,15 +245,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
                   <Button onClick={() => handleUpdateIssueState("open")} disabled={isUpdatingState} className="w-full">
                     {isUpdatingState ? <LoadingSpinner size="sm" /> : "Reopen Issue"}
                   </Button>
-                ) : (
-                  <Button
-                    onClick={() => handleUpdateIssueState("closed")}
-                    disabled={isUpdatingState}
-                    className="w-full"
-                  >
-                    {isUpdatingState ? <LoadingSpinner size="sm" /> : "Close Issue"}
-                  </Button>
-                )}
+                ) : null}
               </div>
             </div>
           </TabsContent>
@@ -286,11 +266,11 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
               className="resize-none"
             />
           </div>
-          <DialogFooter>
+          <div className="flex justify-end">
             <Button onClick={handleCreateIssue} disabled={isCreating}>
               {isCreating ? <LoadingSpinner size="sm" /> : "Create Issue"}
             </Button>
-          </DialogFooter>
+          </div>
         </TabsContent>
 
         <TabsContent value="link" className="space-y-4 mt-4">
@@ -334,13 +314,13 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
           ) : (
             <div className="text-center py-4 text-muted-foreground">No open issues found in the repository.</div>
           )}
-          <DialogFooter>
+          <div className="flex justify-end mt-4">
             <Button onClick={handleLinkIssue} disabled={isLinking || !selectedIssueNumber}>
               {isLinking ? <LoadingSpinner size="sm" /> : "Link Issue"}
             </Button>
-          </DialogFooter>
+          </div>
         </TabsContent>
       </Tabs>
-    </DialogContent>
+    </div>
   );
 };
