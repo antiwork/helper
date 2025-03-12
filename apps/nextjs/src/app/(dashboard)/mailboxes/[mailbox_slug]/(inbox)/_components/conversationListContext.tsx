@@ -19,6 +19,7 @@ export type ConversationListContextType = {
   minimize: () => void;
   moveToNextConversation: () => void;
   removeConversation: () => void;
+  removeConversationKeepActive: () => void;
   navigateToConversation: (conversationSlug: string) => void;
 };
 
@@ -73,6 +74,25 @@ export const ConversationListContextProvider = ({
     utils.mailbox.countByStatus.invalidate();
   }, 1000);
 
+  const removeConversationKeepActive = () => {
+    const updatedTotal = lastPage ? lastPage.total - 1 : 0;
+
+    debouncedInvalidate();
+    if (currentConversationSlug) {
+      utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
+        if (!data) return data;
+        return {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            conversations: page.conversations.filter((c) => c.slug !== currentConversationSlug),
+            total: updatedTotal,
+          })),
+        };
+      });
+    }
+  };
+
   const removeConversation = () => {
     const updatedTotal = lastPage ? lastPage.total - 1 : 0;
 
@@ -114,6 +134,7 @@ export const ConversationListContextProvider = ({
       minimize: () => setId(null),
       moveToNextConversation,
       removeConversation,
+      removeConversationKeepActive,
       navigateToConversation: setId,
     }),
     [input.mailboxSlug, currentConversationSlug, conversations, lastPage, isPending, isFetchingNextPage, hasNextPage],
