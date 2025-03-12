@@ -13,15 +13,17 @@ import { AblyProvider, ChannelProvider } from "ably/react";
 import { BotIcon } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import { getGlobalAblyClient } from "@/components/ablyClient";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { dashboardChannelId } from "@/lib/ably/channels";
 import { useAblyEvent } from "@/lib/ably/hooks";
 import { cn } from "@/lib/utils";
+import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
 const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
@@ -44,17 +46,23 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const utils = api.useUtils();
-  useAblyEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
-    console.log("ably event", message.data);
 
+  const newEventsRef = useRef<RouterOutputs["mailbox"]["latestEvents"]>([]);
+  const addNewEvents = useDebouncedCallback(() => {
     utils.mailbox.latestEvents.setInfiniteData({ mailboxSlug }, (data) => {
       const firstPage = data?.pages[0];
-      if (!firstPage || firstPage.map((event) => event.id).includes(message.data.id)) return data;
+      if (!firstPage) return data;
+      const eventsToAdd = newEventsRef.current.filter((event) => !firstPage.some((e) => e.id === event.id));
       return {
         ...data,
-        pages: [[message.data, ...firstPage], ...data.pages.slice(1)],
+        pages: [[...eventsToAdd, ...firstPage], ...data.pages.slice(1)],
       };
     });
+  }, 5000);
+
+  useAblyEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
+    newEventsRef.current = [...newEventsRef.current, message.data];
+    addNewEvents();
   });
 
   const allEvents = data?.pages.flat() ?? [];
