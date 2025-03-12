@@ -12,13 +12,13 @@ import {
 } from "@heroicons/react/24/outline";
 import { useMemo } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useToolExecution } from "@/hooks/useToolExecution";
 import { api } from "@/trpc/react";
 import { CommandGroup } from "./types";
 
 type MainPageProps = {
-  onGenerateDraft: () => void;
   onOpenChange: (open: boolean) => void;
   setPage: (page: "main" | "previous-replies" | "assignees" | "notes" | "tools") => void;
   setSelectedItemId: (id: string | null) => void;
@@ -26,13 +26,21 @@ type MainPageProps = {
 };
 
 export const useMainPage = ({
-  onGenerateDraft,
   onOpenChange,
   setPage,
   setSelectedItemId,
   onToggleCc,
 }: MainPageProps): CommandGroup[] => {
-  const { data: conversation, updateStatus, mailboxSlug, conversationSlug, refetch } = useConversationContext();
+  const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
+
+  const { mutate: generateDraft } = api.mailbox.conversations.refreshDraft.useMutation({
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error generating draft",
+      });
+    },
+  });
 
   const { handleToolExecution } = useToolExecution();
 
@@ -154,7 +162,13 @@ export const useMainPage = ({
             label: "Generate draft",
             icon: SparklesIcon,
             onSelect: () => {
-              onGenerateDraft();
+              if (conversation?.slug) {
+                generateDraft({ mailboxSlug, conversationSlug: conversation.slug });
+                toast({
+                  title: "Generating draft...",
+                  variant: "success",
+                });
+              }
               onOpenChange(false);
             },
             preview: (
@@ -258,7 +272,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onGenerateDraft, onOpenChange, conversation, tools?.recommended, onToggleCc],
+    [onOpenChange, conversation, tools?.recommended, onToggleCc],
   );
 
   return mainCommandGroups;

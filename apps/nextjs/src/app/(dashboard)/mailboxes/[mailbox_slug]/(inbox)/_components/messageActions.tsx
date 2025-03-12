@@ -1,7 +1,6 @@
-import { ArrowUturnUpIcon, BoltIcon } from "@heroicons/react/20/solid";
+import { ArrowUturnUpIcon } from "@heroicons/react/20/solid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
-import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
@@ -42,24 +41,6 @@ export const MessageActions = () => {
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
-  const { state: layoutState } = useLayoutInfo();
-  const [showCommandBar, setShowCommandBar] = useState(false);
-  const [showCc, setShowCc] = useState(false);
-
-  const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
-
-  const { mutate: refreshDraft } = api.mailbox.conversations.refreshDraft.useMutation({
-    onMutate: () => {
-      setRefreshingDraft(true);
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error generating draft",
-      });
-      setRefreshingDraft(false);
-    },
-  });
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -222,60 +203,30 @@ export const MessageActions = () => {
     }
   };
 
-  // Handle Cmd+K / Ctrl+K shortcut
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setShowCommandBar(true);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const actionButtons = (
     <>
-      <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-background/80 backdrop-blur">
-        {/* Desktop view */}
-        <div className="hidden md:flex items-center gap-2">
-          {(conversation?.status ?? searchParams.status) !== "spam" &&
-            ((conversation?.status ?? searchParams.status) === "closed" ? (
-              <Button variant="outlined" onClick={() => updateStatus("open")}>
-                <ArrowUturnUpIcon className="mr-2 h-4 w-4" />
-                Reopen
+      <div className="flex items-center gap-4">
+        {(conversation?.status ?? searchParams.status) !== "spam" &&
+          ((conversation?.status ?? searchParams.status) === "closed" ? (
+            <Button variant="outlined" onClick={() => updateStatus("open")}>
+              <ArrowUturnUpIcon className="mr-2 h-4 w-4" />
+              Reopen
+            </Button>
+          ) : (
+            <>
+              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
+                {sending ? "Replying..." : "Reply and close"}
+                {!sending && <span className="sr-only">(R)</span>}
               </Button>
-            ) : (
-              <>
-                <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
-                  {sending ? "Replying..." : "Reply and close"}
-                  {!sending && <span className="sr-only">(R)</span>}
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => handleSend({ assign: false, close: false })}
-                  disabled={sendDisabled}
-                >
-                  Reply
-                </Button>
-                <Button variant="ghost" onClick={() => setShowCommandBar(true)}>
-                  <BoltIcon className="mr-2 h-4 w-4" />
-                  Actions
-                  <kbd className="ml-2 hidden md:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-                    ⌘K
-                  </kbd>
-                </Button>
-              </>
-            ))}
-        </div>
-        {/* Mobile view */}
-        <div className="md:hidden">
-          <Button variant="outlined" onClick={() => setShowCommandBar(true)}>
-            <BoltIcon className="mr-2 h-4 w-4" />
-            Actions
-          </Button>
-        </div>
+              <Button
+                variant="outlined"
+                onClick={() => handleSend({ assign: false, close: false })}
+                disabled={sendDisabled}
+              >
+                Reply
+              </Button>
+            </>
+          ))}
       </div>
     </>
   );
@@ -284,8 +235,6 @@ export const MessageActions = () => {
     setDraftedEmail((email) => ({ ...email, ...changes, modified: true }));
     setStoredMessage(changes.message);
   };
-
-  const [refreshingDraft, setRefreshingDraft] = useState(false);
 
   const handleInsertReply = (content: string) => {
     setDraftedEmail((prev) => ({
@@ -301,42 +250,15 @@ export const MessageActions = () => {
   const editorRef = useRef<TipTapEditorRef>(null);
 
   return (
-    <div className="flex flex-col h-full pt-3">
-      <div className="flex-grow overflow-auto mt-2">
-        <EmailEditorComponent
-          ref={editorRef}
-          onSend={() => handleSend({ assign: false })}
-          actionButtons={actionButtons}
-          draftedEmail={draftedEmail}
-          initialMessage={initialMessageObject}
-          updateEmail={updateDraftedEmail}
-          setShowCommandBar={setShowCommandBar}
-          showCc={showCc}
-        />
-      </div>
-      <div className="flex-shrink-0 mt-3">
-        <div className="flex flex-wrap justify-between gap-2">
-          <div className="flex items-center gap-2" />
-        </div>
-      </div>
-
-      <TicketCommandBar
-        open={showCommandBar}
-        onOpenChange={setShowCommandBar}
-        onGenerateDraft={() => {
-          if (conversation?.slug) {
-            refreshDraft({ mailboxSlug, conversationSlug: conversation.slug });
-            toast({
-              title: "Generating draft...",
-              variant: "success",
-            });
-          }
-        }}
-        onInsertReply={handleInsertReply}
-        showCc={showCc}
-        onToggleCc={onToggleCc}
-      />
-    </div>
+    <EmailEditorComponent
+      ref={editorRef}
+      onSend={() => handleSend({ assign: false })}
+      actionButtons={actionButtons}
+      draftedEmail={draftedEmail}
+      initialMessage={initialMessageObject}
+      updateEmail={updateDraftedEmail}
+      handleInsertReply={handleInsertReply}
+    />
   );
 };
 
@@ -348,12 +270,16 @@ const EmailEditorComponent = React.forwardRef<
     actionButtons: React.ReactNode;
     onSend: () => void;
     updateEmail: (changes: Partial<DraftedEmail>) => void;
-    setShowCommandBar: (show: boolean) => void;
-    showCc: boolean;
+    handleInsertReply: (content: string) => void;
   }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, setShowCommandBar, showCc }, ref) => {
+>(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
+  const [showCommandBar, setShowCommandBar] = useState(false);
+  const [showCc, setShowCc] = useState(false);
   const ccRef = useRef<HTMLInputElement>(null);
   const bccRef = useRef<HTMLInputElement>(null);
+  const commandInputRef = useRef<HTMLInputElement>(null);
+
+  const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
 
   useEffect(() => {
     if (showCc) {
@@ -362,40 +288,50 @@ const EmailEditorComponent = React.forwardRef<
   }, [showCc]);
 
   return (
-    <div className="flex flex-col h-full">
-      {showCc ? (
-        <div className="flex-shrink-0 flex flex-col gap-2 mb-2">
-          <LabeledInput
-            ref={ccRef}
-            name="CC"
-            value={draftedEmail.cc}
-            onChange={(cc) => updateEmail({ cc })}
-            onModEnter={() => {}}
-          />
-          <LabeledInput
-            ref={bccRef}
-            name="BCC"
-            value={draftedEmail.bcc}
-            onChange={(bcc) => updateEmail({ bcc })}
-            onModEnter={() => {}}
-          />
-        </div>
-      ) : null}
-      <div className="flex-grow overflow-auto relative">
-        <TipTapEditor
-          ref={ref}
-          ariaLabel="Conversation editor"
-          defaultContent={initialMessage}
-          editable={true}
-          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
-          onModEnter={onSend}
-          onCommandK={() => setShowCommandBar(true)}
-          enableImageUpload
-          enableFileUpload
-          className="pb-20"
-        />
-        {actionButtons}
-      </div>
+    <div className="flex flex-col h-full pt-4">
+      <TicketCommandBar
+        open={showCommandBar}
+        onOpenChange={setShowCommandBar}
+        onInsertReply={handleInsertReply}
+        onToggleCc={onToggleCc}
+        inputRef={commandInputRef}
+      />
+      {!showCommandBar && (
+        <>
+          {showCc ? (
+            <div className="flex-shrink-0 flex flex-col gap-2 mb-2">
+              <LabeledInput
+                ref={ccRef}
+                name="CC"
+                value={draftedEmail.cc}
+                onChange={(cc) => updateEmail({ cc })}
+                onModEnter={() => {}}
+              />
+              <LabeledInput
+                ref={bccRef}
+                name="BCC"
+                value={draftedEmail.bcc}
+                onChange={(bcc) => updateEmail({ bcc })}
+                onModEnter={() => {}}
+              />
+            </div>
+          ) : null}
+          <div className="flex-grow overflow-auto relative my-2 md:my-4">
+            <TipTapEditor
+              ref={ref}
+              ariaLabel="Conversation editor"
+              defaultContent={initialMessage}
+              editable={true}
+              onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
+              onModEnter={onSend}
+              onSlashKey={() => commandInputRef.current?.focus()}
+              enableImageUpload
+              enableFileUpload
+            />
+          </div>
+          {actionButtons}
+        </>
+      )}
     </div>
   );
 });
