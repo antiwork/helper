@@ -23,11 +23,12 @@ type TicketCommandBarProps = {
   onOpenChange: (open: boolean) => void;
   onInsertReply: (content: string) => void;
   onToggleCc: () => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc }: TicketCommandBarProps) {
+export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc, inputRef }: TicketCommandBarProps) {
   const { conversationSlug, mailboxSlug } = useConversationContext();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "tools">("main");

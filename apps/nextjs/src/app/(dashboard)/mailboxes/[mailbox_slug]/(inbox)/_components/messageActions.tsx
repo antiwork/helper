@@ -277,6 +277,7 @@ const EmailEditorComponent = React.forwardRef<
   const [showCc, setShowCc] = useState(false);
   const ccRef = useRef<HTMLInputElement>(null);
   const bccRef = useRef<HTMLInputElement>(null);
+  const commandInputRef = useRef<HTMLInputElement>(null);
 
   const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
 
@@ -293,6 +294,7 @@ const EmailEditorComponent = React.forwardRef<
         onOpenChange={setShowCommandBar}
         onInsertReply={handleInsertReply}
         onToggleCc={onToggleCc}
+        inputRef={commandInputRef}
       />
       {!showCommandBar && (
         <>
@@ -322,7 +324,7 @@ const EmailEditorComponent = React.forwardRef<
               editable={true}
               onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
               onModEnter={onSend}
-              onCommandK={() => setShowCommandBar(true)}
+              onSlashKey={() => commandInputRef.current?.focus()}
               enableImageUpload
               enableFileUpload
             />
