@@ -22,7 +22,6 @@ import {
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
 import { MessageThread } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/messageThread";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/previewModal";
-import PromptInfoModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/promptInfoModal";
 import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/viewers";
 import type {
   AttachedFile,
