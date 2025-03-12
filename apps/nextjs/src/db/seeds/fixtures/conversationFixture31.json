@@ -22,18 +22,6 @@
           "conversationId": 31
         },
         {
-          "id": 157,
-          "role": "workflow",
-          "body": "Hi there,<br>\n            <br>\n            Thanks for reporting this issue. Here are some resources that might help:<br>\n            <br>\n            <strong>API Documentation:</strong><br>\n            - <a href=\"https://api.example.com/docs/rate-limits\">Rate Limiting Guide</a><br>\n            - <a href=\"https://api.example.com/docs/bulk-operations\">Bulk Operations Best Practices</a><br>\n            <br>\n            <strong>Common Solutions:</strong><br>\n            - Implement exponential backoff<br>\n            - Use our batch processing endpoints<br>\n            - Check our status page for any ongoing issues<br>\n            <br>\n            <strong>Monitoring Tools:</strong><br>\n            - <a href=\"https://api.example.com/dashboard\">API Dashboard</a><br>\n            - <a href=\"https://api.example.com/usage\">Usage Analytics</a><br>\n            <br>\n            For faster resolution, please provide:<br>\n            - Sample request/response logs<br>\n            - Your implementation's retry strategy<br>\n            - Batch sizes being used<br>\n            <br>\n            Our technical team will investigate this further.\n        ",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 31
-        },
-        {
           "id": 158,
           "role": "user",
           "body": "Thanks for the quick response. Here are the additional details:\n\nSample error response:\n```\n{\n  \"error\": \"rate_limit_exceeded\",\n  \"message\": \"Too many requests\",\n  \"retry_after\": 65\n}\n```\n\nWe're using exponential backoff with:\n- Base delay: 2 seconds\n- Max delay: 60 seconds\n- Max retries: 5\n\nBatch size: 1000 records per request\n\nWe've checked the status page and don't see any incidents. The issue seems specific to the bulk import endpoint.",
