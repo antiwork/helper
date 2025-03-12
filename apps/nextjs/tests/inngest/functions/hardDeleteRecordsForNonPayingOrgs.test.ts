@@ -7,7 +7,6 @@ import { noteFactory } from "@tests/support/factories/notes";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { subscriptionFactory } from "@tests/support/factories/subscriptions";
 import { userFactory } from "@tests/support/factories/users";
-// Workflow factories removed
 import { subDays } from "date-fns";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -43,7 +42,6 @@ const createEligibleOrganizationForConversationDeletion = async () => {
   const { message } = await conversationMessagesFactory.create(conversation.id);
   const { note } = await noteFactory.create(conversation.id);
   const { file } = await fileFactory.create(message.id);
-  // Workflow creation removed
   const { platformCustomer } = await platformCustomerFactory.create(mailbox.id);
   const { messageNotification } = await messageNotificationFactory.create(
     message.id,
@@ -59,7 +57,6 @@ const createEligibleOrganizationForConversationDeletion = async () => {
     message,
     note,
     file,
-    // workflow and workflowRun removed
     messageNotification,
   };
 };
@@ -92,7 +89,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
     expect(await exists(conversationMessages, message.id)).toBe(true);
     expect(await exists(notes, note.id)).toBe(true);
     expect(await exists(files, file.id)).toBe(true);
-    // Workflow check removed
   });
 
   it("ignores organizations whose free trial has not ended more than 30 days ago", async () => {
@@ -113,7 +109,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
     expect(await exists(conversationMessages, message.id)).toBe(true);
     expect(await exists(notes, note.id)).toBe(true);
     expect(await exists(files, file.id)).toBe(true);
-    // Workflow check removed
   });
 
   it(
@@ -141,7 +136,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       await hardDeleteRecordsForNonPayingOrgs();
 
       expect(await exists(mailboxes, mailbox.id)).toBe(true);
-      // Workflow check removed
       expect(await exists(mailboxes, secondMailbox.id)).toBe(true);
 
       expect(await exists(conversations, secondMailboxConversation.id)).toBe(false);
@@ -159,7 +153,6 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       expect(updatedFile?.messageId).toBeNull();
 
       expect(await exists(mailboxes, ineligibleOrganizationRecords.mailbox.id)).toBe(true);
-      // Workflow check removed
       expect(await exists(conversations, ineligibleOrganizationRecords.conversation.id)).toBe(true);
       expect(await exists(conversationMessages, ineligibleOrganizationRecords.message.id)).toBe(true);
       expect(await exists(conversations, ineligibleOrganizationRecords.conversation.id)).toBe(true);

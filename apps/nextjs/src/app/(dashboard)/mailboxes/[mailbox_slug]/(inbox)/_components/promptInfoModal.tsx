@@ -37,8 +37,6 @@ const PromptItem = ({
 const MODAL_HEIGHT = "h-[calc(100vh-8rem)]";
 const MAX_MODAL_HEIGHT = "max-h-[calc(100vh-8rem)]";
 
-// WorkflowInfo component removed as part of workflow feature removal
-
 const PromptInfoModal = ({ entity }: { entity: any }) => {
   const responseTitle = "Response";
   const [copied, setCopied] = useState(false);

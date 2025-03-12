@@ -10,7 +10,6 @@ import { platformCustomerFactory } from "@tests/support/factories/platformCustom
 import { styleLinterFactory } from "@tests/support/factories/styleLinters";
 import { toolsFactory } from "@tests/support/factories/tools";
 import { userFactory } from "@tests/support/factories/users";
-// Workflow factories removed
 import { addDays, addHours, subDays, subHours } from "date-fns";
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
@@ -321,8 +320,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
     authenticationMethod: "bearer_token",
     authenticationToken: gumroadDevToken,
   });
-
-  // Workflow creation code removed
 
   await faqsFactory.create(mailbox.id, {
     content: "Deleting your account can be done from Settings > Account > Delete Account.",

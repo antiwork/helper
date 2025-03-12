@@ -37,8 +37,6 @@ vi.mock("@/lib/emailSearchService/searchEmailsByKeywords", () => ({
   searchEmailsByKeywords: vi.fn(),
 }));
 
-// Workflow mocks removed
-
 vi.mock("@/inngest/client", () => ({
   inngest: {
     send: vi.fn(),

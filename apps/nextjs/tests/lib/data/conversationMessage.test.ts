@@ -6,7 +6,6 @@ import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
-// Workflow factories removed
 import { mockInngest } from "@tests/support/inngestUtils";
 import { addSeconds } from "date-fns";
 import { and, eq } from "drizzle-orm";
@@ -27,7 +26,6 @@ import {
 import { getClerkUserList } from "@/lib/data/user";
 import { getSlackPermalink } from "@/lib/slack/client";
 
-// Workflow mocks removed
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
 }));

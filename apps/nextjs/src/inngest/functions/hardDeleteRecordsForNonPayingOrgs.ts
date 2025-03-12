@@ -108,8 +108,6 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
       .delete(notes)
       .where(inArray(notes.conversationId, sql`(SELECT id FROM ${mailboxConversations})`));
 
-    // Workflow deletion code removed
-
     await db
       .with(mailboxConversations)
       .delete(messageNotifications)
