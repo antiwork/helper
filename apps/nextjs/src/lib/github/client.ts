@@ -45,6 +45,21 @@ export const getGitHubAccessToken = async (
   };
 };
 
+export const revokeGitHubToken = async (token: string): Promise<void> => {
+  const octokit = new Octokit({
+    auth: `Basic ${Buffer.from(`${env.GITHUB_CLIENT_ID}:${env.GITHUB_CLIENT_SECRET}`).toString("base64")}`,
+  });
+
+  try {
+    await octokit.rest.apps.deleteToken({
+      client_id: env.GITHUB_CLIENT_ID,
+      access_token: token,
+    });
+  } catch (error) {
+    throw new Error(`Failed to revoke GitHub token: ${(error as Error).message}`);
+  }
+};
+
 export const listUserRepositories = async (accessToken: string) => {
   const octokit = new Octokit({ auth: accessToken });
   const response = await octokit.repos.listForAuthenticatedUser({
