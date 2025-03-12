@@ -74,7 +74,7 @@ export const ConversationListContextProvider = ({
     utils.mailbox.countByStatus.invalidate();
   }, 1000);
 
-  const removeConversationKeepActive = () => {
+  const removeConversationFromList = () => {
     const updatedTotal = lastPage ? lastPage.total - 1 : 0;
 
     debouncedInvalidate();
@@ -93,23 +93,12 @@ export const ConversationListContextProvider = ({
     }
   };
 
-  const removeConversation = () => {
-    const updatedTotal = lastPage ? lastPage.total - 1 : 0;
+  const removeConversationKeepActive = () => {
+    removeConversationFromList();
+  };
 
-    debouncedInvalidate();
-    if (currentConversationSlug) {
-      utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
-        if (!data) return data;
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            conversations: page.conversations.filter((c) => c.slug !== currentConversationSlug),
-            total: updatedTotal,
-          })),
-        };
-      });
-    }
+  const removeConversation = () => {
+    removeConversationFromList();
     moveToNextConversation();
   };
 
