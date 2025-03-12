@@ -8,7 +8,6 @@ Helper.ai is an AI-powered customer support tool that helps businesses automate 
 
 - **Email Integration:**  Connects to Gmail accounts to fetch and process customer support emails.
 - **AI-Driven Responses:**  Generates draft responses to customer emails using AI, leveraging past conversations, FAQs, and other context.
-- **Workflow Automation:** Automates tasks such as closing tickets, marking as spam, escalating to Slack, and assigning users based on customizable rules.
 - **Chat Widget:**  Provides a customizable chat widget that can be embedded on websites to allow customers to directly interact with the AI assistant.
 - **Analytics and Reporting:**  Offers dashboards and reports to track key metrics like response times, customer satisfaction, and agent performance.
 
