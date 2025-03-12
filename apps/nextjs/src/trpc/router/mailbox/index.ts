@@ -20,7 +20,6 @@ import { slackRouter } from "./slack";
 import { styleLintersRouter } from "./styleLinters";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
-import { workflowsRouter } from "./workflows";
 
 export { mailboxProcedure };
 
@@ -140,7 +139,7 @@ export const mailboxRouter = {
   styleLinters: styleLintersRouter,
   conversations: conversationsRouter,
   faqs: faqsRouter,
-  workflows: workflowsRouter,
+
   slack: slackRouter,
   tools: toolsRouter,
   customers: customersRouter,

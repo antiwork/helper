@@ -3,13 +3,20 @@ import "./promptInfo.css";
 import { useState } from "react";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { PlaintextContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/renderMessageBody";
-import {
-  ACTION_TO_HUMANIZED_MAP,
-  type Workflow,
-} from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/automaticWorkflowsSetting";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+
+// Workflow type definition moved inline since automaticWorkflowsSetting was removed
+type Workflow = {
+  id?: number;
+  name: string;
+  prompt: string;
+  action: string;
+  message: string;
+  runOnReplies: boolean;
+  autoReplyFromMetadata?: boolean;
+};
 
 const textStyles = "responsive-break-words prose max-w-none text-sm";
 
@@ -44,7 +51,7 @@ const MAX_MODAL_HEIGHT = "max-h-[calc(100vh-8rem)]";
 const WorkflowInfo = ({ workflow }: { workflow: Workflow }) => (
   <>
     {workflow.prompt && <PromptItem title="If" content={workflow.prompt} />}
-    {workflow.action && <PromptItem title="Then" content={ACTION_TO_HUMANIZED_MAP[workflow.action]} />}
+    {workflow.action && <PromptItem title="Then" content={workflow.action} />}
     {workflow.message && <PromptItem title="Message" content={workflow.message} asHtml />}
     <PromptItem title="Also run on follow-up replies" content={workflow.runOnReplies ? "True" : "False"} />
   </>

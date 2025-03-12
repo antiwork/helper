@@ -1,14 +1,12 @@
-import { and, asc, count, eq, isNull, ne } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, WorkflowConditionField, WorkflowConditionOperator, workflows } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { disableAIResponse, ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata } from "@/lib/data/retrieval";
-import { executeWorkflowActions, getWorkflowPrompt } from "@/lib/data/workflow";
-import { evaluateWorkflowCondition } from "@/lib/data/workflowCondition";
 
 export const respondToEmail = async (messageId: number) => {
   const email = await db.query.conversationMessages
@@ -25,19 +23,6 @@ export const respondToEmail = async (messageId: number) => {
                 id: true,
                 name: true,
                 disableAutoResponseForVips: true,
-              },
-              with: {
-                wfs: {
-                  where: isNull(workflows.deletedAt),
-                  orderBy: [asc(workflows.order), asc(workflows.id)],
-                  with: {
-                    groups: {
-                      with: {
-                        conds: true,
-                      },
-                    },
-                  },
-                },
               },
             },
           },
@@ -77,36 +62,13 @@ export const respondToEmail = async (messageId: number) => {
     return;
   }
 
-  const { count: messageCount } = await db
-    .select({ count: count() })
-    .from(conversationMessages)
-    .where(and(eq(conversationMessages.conversationId, email.conversationId), ne(conversationMessages.status, "draft")))
-    .then(takeUniqueOrThrow);
-  const isFollowUp = messageCount > 1;
-
-  const workflowRecords = isFollowUp
-    ? email.conversation.mailbox.wfs.filter((workflow) => workflow.runOnReplies)
-    : email.conversation.mailbox.wfs;
-  for (const workflow of workflowRecords) {
-    const prompt = getWorkflowPrompt(workflow);
-    const condition = {
-      operator: WorkflowConditionOperator.PASSES_AI_CONDITIONAL_FOR,
-      field: WorkflowConditionField.FULL_EMAIL_CONTEXT,
-      value: prompt,
-    };
-    if (await evaluateWorkflowCondition(condition, email)) {
-      await executeWorkflowActions(workflow, email);
-      return;
-    }
-  }
-
   const emailText = (await getTextWithConversationSubject(email.conversation, email)).trim();
   if (emailText.length === 0) {
     return;
   }
 
   const { mailbox } = email.conversation;
-  const shouldAutoRespond = mailbox.autoRespondEmailToChat && mailbox.widgetHost && !isFollowUp;
+  const shouldAutoRespond = mailbox.autoRespondEmailToChat && mailbox.widgetHost;
 
   if (shouldAutoRespond) {
     await inngest.send({
