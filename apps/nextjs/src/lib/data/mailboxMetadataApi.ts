@@ -2,8 +2,6 @@ import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
-import { workflowActions } from "@/db/schema/workflowActions";
-import { workflows } from "@/db/schema/workflows";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
 import { DataError } from "./dataError";
 import { getMailboxBySlug } from "./mailbox";
@@ -56,22 +54,6 @@ export const deleteMailboxMetadataApiByMailboxSlug = async (mailboxSlug: string)
   const { mailbox, metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
   if (!metadataApi) {
     throw new DataError("Mailbox does not have a metadata endpoint");
-  }
-
-  const workflowReferencingMetadataEndpoint = await db
-    .select({ id: workflows.id })
-    .from(workflows)
-    .innerJoin(workflowActions, eq(workflows.id, workflowActions.workflowId))
-    .where(
-      and(
-        eq(workflows.mailboxId, mailbox.id),
-        eq(workflowActions.actionType, "send_auto_reply_from_metadata"),
-        isNull(workflows.deletedAt),
-      ),
-    )
-    .limit(1);
-  if (workflowReferencingMetadataEndpoint.length) {
-    throw new DataError("Cannot delete a metadata endpoint that is referenced inside of a workflow");
   }
 
   await db.delete(mailboxesMetadataApi).where(eq(mailboxesMetadataApi.id, metadataApi.id));

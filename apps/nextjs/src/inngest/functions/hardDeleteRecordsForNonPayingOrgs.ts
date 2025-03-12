@@ -15,8 +15,6 @@ import {
   notes,
   subscriptions,
   topics,
-  workflowRunActions,
-  workflowRuns,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { ADDITIONAL_PAID_ORGANIZATION_IDS, getClerkOrganization } from "@/lib/data/organization";
@@ -110,19 +108,7 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
       .delete(notes)
       .where(inArray(notes.conversationId, sql`(SELECT id FROM ${mailboxConversations})`));
 
-    const mailboxWorkflowRuns = db
-      .$with("mailbox_workflow_runs")
-      .as(db.select({ id: workflowRuns.id }).from(workflowRuns).where(eq(workflowRuns.mailboxId, mailbox.id)));
-
-    await db
-      .with(mailboxWorkflowRuns)
-      .delete(workflowRunActions)
-      .where(inArray(workflowRunActions.workflowRunId, sql`(SELECT id FROM ${mailboxWorkflowRuns})`));
-
-    await db
-      .with(mailboxWorkflowRuns)
-      .delete(workflowRuns)
-      .where(inArray(workflowRuns.id, sql`(SELECT id FROM ${mailboxWorkflowRuns})`));
+    // Workflow deletion code removed
 
     await db
       .with(mailboxConversations)

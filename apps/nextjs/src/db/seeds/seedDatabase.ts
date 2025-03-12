@@ -10,8 +10,7 @@ import { platformCustomerFactory } from "@tests/support/factories/platformCustom
 import { styleLinterFactory } from "@tests/support/factories/styleLinters";
 import { toolsFactory } from "@tests/support/factories/tools";
 import { userFactory } from "@tests/support/factories/users";
-import { workflowActionFactory } from "@tests/support/factories/workflowActions";
-import { workflowFactory } from "@tests/support/factories/workflows";
+// Workflow factories removed
 import { addDays, addHours, subDays, subHours } from "date-fns";
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
@@ -175,7 +174,7 @@ type ConversationDetail = {
 
 type MessageDetail = {
   id: number;
-  role: "user" | "staff" | "workflow";
+  role: "user" | "staff";
   body: string;
   emailTo: string | null;
   emailFrom: string | null;
@@ -323,30 +322,7 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
     authenticationToken: gumroadDevToken,
   });
 
-  const accountDeletionRequestWorkflow = await workflowFactory.create(mailbox.id, {
-    name: "Account deletion request",
-    workflowType: "freeform",
-    runOnReplies: false,
-    autoReplyFromMetadata: false,
-  });
-  await workflowActionFactory.create(accountDeletionRequestWorkflow.id, {
-    actionType: "send_email",
-    actionValue: "Thank you for your request. We will process your request as soon as possible.",
-  });
-  await workflowActionFactory.create(accountDeletionRequestWorkflow.id, {
-    actionType: "change_helper_status",
-    actionValue: "closed",
-  });
-  const thanksAutoReplyWorkflow = await workflowFactory.create(mailbox.id, {
-    name: "Thanks auto reply",
-    workflowType: "freeform",
-    runOnReplies: true,
-    autoReplyFromMetadata: false,
-  });
-  await workflowActionFactory.create(thanksAutoReplyWorkflow.id, {
-    actionType: "change_helper_status",
-    actionValue: "spam",
-  });
+  // Workflow creation code removed
 
   await faqsFactory.create(mailbox.id, {
     content: "Deleting your account can be done from Settings > Account > Delete Account.",

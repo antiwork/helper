@@ -6,13 +6,12 @@ import DOMPurify from "isomorphic-dompurify";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, DRAFT_STATUSES, files, mailboxes, workflowRuns } from "@/db/schema";
+import { conversationMessages, DRAFT_STATUSES, files, mailboxes } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
 import { PlatformCustomer } from "@/lib/data/platformCustomer";
-import { getWorkflowInfo } from "@/lib/data/workflow";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { createPresignedDownloadUrl } from "@/s3/utils";
@@ -117,17 +116,9 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     (await getClerkUserList(mailbox.clerkOrganizationId)).data.map((user) => [user.id, user]),
   );
 
-  const workflowRunsData = await db.select().from(workflowRuns).where(eq(workflowRuns.conversationId, conversationId));
-  const workflowRunsMap = new Map(workflowRunsData.map((wr) => [wr.messageId, wr]));
-
   const messageInfos = await Promise.all(
     messages.map((message) =>
-      serializeMessage(
-        message,
-        mailbox,
-        (message.clerkUserId && membersById[message.clerkUserId]) || null,
-        workflowRunsMap,
-      ),
+      serializeMessage(message, mailbox, (message.clerkUserId && membersById[message.clerkUserId]) || null),
     ),
   );
 
@@ -195,12 +186,7 @@ export const serializeMessage = async (
   },
   mailbox: typeof mailboxes.$inferSelect,
   user: User | null,
-  workflowRunsMap?: Map<number, typeof workflowRuns.$inferSelect>,
 ) => {
-  const workflowRun = workflowRunsMap
-    ? workflowRunsMap.get(message.id)
-    : (await db.select().from(workflowRuns).where(eq(workflowRuns.messageId, message.id)))[0];
-
   const messageFiles =
     message.files ??
     (await db.query.files.findMany({ where: and(eq(files.messageId, message.id), eq(files.isPublic, false)) }));
@@ -217,8 +203,6 @@ export const serializeMessage = async (
           orderBy: [desc(conversationMessages.createdAt)],
         })
       : null;
-
-  const workflowRunData = workflowRun ? await getWorkflowInfo(workflowRun) : null;
 
   const filesData = await serializeFiles(messageFiles);
 
@@ -245,7 +229,7 @@ export const serializeMessage = async (
       mailbox.slackBotToken && message.slackChannel && message.slackMessageTs
         ? await getSlackPermalink(mailbox.slackBotToken, message.slackChannel, message.slackMessageTs)
         : null,
-    workflowRun: workflowRunData,
+    workflowRun: null,
     draft: draftEmail ? serializeResponseAiDraft(draftEmail, mailbox) : null,
     files: filesData.flatMap((f) => (f.isInline ? [] : [f])),
     metadata: message.metadata,
@@ -300,7 +284,7 @@ export const createReply = async (
     fileSlugs?: string[];
     close?: boolean;
     slack?: { channel: string; messageTs: string } | null;
-    role?: "user" | "staff" | "workflow" | null;
+    role?: "user" | "staff" | null;
     responseToId?: number | null;
     shouldAutoAssign?: boolean;
   },
