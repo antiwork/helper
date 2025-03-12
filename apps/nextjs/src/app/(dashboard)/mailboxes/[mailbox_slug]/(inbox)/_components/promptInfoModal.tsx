@@ -37,14 +37,7 @@ const PromptItem = ({
 const MODAL_HEIGHT = "h-[calc(100vh-8rem)]";
 const MAX_MODAL_HEIGHT = "max-h-[calc(100vh-8rem)]";
 
-const WorkflowInfo = ({ workflow }: { workflow: any }) => (
-  <>
-    {workflow.prompt && <PromptItem title="If" content={workflow.prompt} />}
-    {workflow.action && <PromptItem title="Then" content={workflow.action} />}
-    {workflow.message && <PromptItem title="Message" content={workflow.message} asHtml />}
-    <PromptItem title="Also run on follow-up replies" content={workflow.runOnReplies ? "True" : "False"} />
-  </>
-);
+// WorkflowInfo component removed as part of workflow feature removal
 
 const PromptInfoModal = ({ entity }: { entity: any }) => {
   const responseTitle = "Response";
@@ -93,7 +86,7 @@ const PromptInfoModal = ({ entity }: { entity: any }) => {
         </div>
       </div>
       <div className={`scrollbar-container mt-6 flex flex-col gap-6 overflow-y-auto pb-6 ${MAX_MODAL_HEIGHT}`}>
-        <WorkflowInfo workflow={entity} />
+        <div className="text-muted-foreground">Workflow feature has been removed.</div>
       </div>
     </div>
   );

@@ -33,8 +33,6 @@ export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
 export const MAX_RELATED_CONVERSATIONS_COUNT = 3;
 
-const WORKFLOW_MATCH_CHECKS = 6;
-
 export const createConversation = async (conversation: NewConversation): Promise<typeof conversations.$inferSelect> => {
   try {
     const conversationValues = {
