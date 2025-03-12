@@ -98,7 +98,7 @@ describe("mailboxRouter", () => {
       });
     });
 
-    it("updates escalation settings", async () => {
+    it("updates slack settings", async () => {
       const { user, mailbox, organization } = await userFactory.createRootUser();
       vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
@@ -107,8 +107,7 @@ describe("mailboxRouter", () => {
       const promptUpdatedAtBefore = mailbox.promptUpdatedAt;
 
       const updateData = {
-        slackEscalationChannel: "#another-channel",
-        escalationEmailBody: "Another escalation email body",
+        slackAlertChannel: "#another-channel",
       };
 
       await caller.mailbox.update({ mailboxSlug: mailbox.slug, ...updateData });

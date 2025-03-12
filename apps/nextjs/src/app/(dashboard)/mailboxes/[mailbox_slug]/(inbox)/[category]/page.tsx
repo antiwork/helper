@@ -4,7 +4,7 @@ import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { api } from "@/trpc/server";
 
 type PageProps = {
-  category: "conversations" | "escalated" | "mine" | "assigned";
+  category: "conversations" | "mine" | "assigned";
   mailbox_slug: string;
 };
 const Page = async (props: {

@@ -42,18 +42,19 @@ describe("getWorkflowInfo for workflow run records", () => {
     });
   });
 
-  it("returns correct workflow info for reply_and_escalate_to_slack action", async () => {
+  it("returns correct workflow info for reply_and_set_open action", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const workflow = await workflowFactory.create(mailbox.id);
     const { conversation } = await conversationFactory.create(mailbox.id);
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { workflowRun } = await workflowRunFactory.create(workflow.id, conversation.id, message.id, mailbox.id);
     await workflowRunActionFactory.create(workflowRun.id, {
-      actionType: "escalate_to_slack",
-      actionValue: JSON.stringify({
-        slack_channel_id: "C12345",
-        message: "Escalation message",
-      }),
+      actionType: "change_helper_status",
+      actionValue: "open",
+    });
+    await workflowRunActionFactory.create(workflowRun.id, {
+      actionType: "send_email",
+      actionValue: "Escalation message",
     });
 
     const result = await getWorkflowInfo(workflowRun);
@@ -62,8 +63,7 @@ describe("getWorkflowInfo for workflow run records", () => {
     expect(result).toEqual({
       id: workflow.id,
       prompt: "test prompt",
-      action: "reply_and_escalate_to_slack",
-      slackChannelId: "C12345",
+      action: "reply_and_set_open",
       message: "Escalation message",
       runOnReplies: run_on_replies,
       autoReplyFromMetadata: auto_reply_from_metadata,

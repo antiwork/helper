@@ -14,11 +14,11 @@ import { protectedProcedure } from "@/trpc/trpc";
 import { conversationsRouter } from "./conversations";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
+import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
 import { styleLintersRouter } from "./styleLinters";
 import { toolsRouter } from "./tools";
-import { topicsRouter } from "./topics";
 import { websitesRouter } from "./websites";
 import { workflowsRouter } from "./workflows";
 
@@ -76,17 +76,15 @@ export const mailboxRouter = {
       return {
         open: result.find((c) => c.status === "open")?.count ?? 0,
         closed: result.find((c) => c.status === "closed")?.count ?? 0,
-        escalated: result.find((c) => c.status === "escalated")?.count ?? 0,
         spam: result.find((c) => c.status === "spam")?.count ?? 0,
       };
     };
 
-    const [all, mine, assigned, unassigned, escalated] = await Promise.all([
+    const [all, mine, assigned, unassigned] = await Promise.all([
       countByStatus(),
       countByStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
       countByStatus(isNotNull(conversations.assignedToClerkId)),
       countByStatus(isNull(conversations.assignedToClerkId)),
-      countByStatus(eq(conversations.status, "escalated")),
     ]);
 
     return {
@@ -94,7 +92,6 @@ export const mailboxRouter = {
       mine,
       assigned,
       unassigned,
-      escalated,
     };
   }),
 
@@ -104,9 +101,7 @@ export const mailboxRouter = {
   update: mailboxProcedure
     .input(
       z.object({
-        slackEscalationChannel: z.string().optional(),
-        escalationEmailBody: z.string().optional(),
-        escalationExpectedResolutionHours: z.number().optional(),
+        slackAlertChannel: z.string().optional(),
         responseGeneratorPrompt: z.array(z.string()).optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
         widgetDisplayMinValue: z.number().optional(),
@@ -148,7 +143,7 @@ export const mailboxRouter = {
   workflows: workflowsRouter,
   slack: slackRouter,
   tools: toolsRouter,
-  topics: topicsRouter,
   customers: customersRouter,
   websites: websitesRouter,
+  metadataEndpoint: metadataEndpointRouter,
 } satisfies TRPCRouterRecord;

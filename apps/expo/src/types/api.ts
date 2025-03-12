@@ -61,31 +61,21 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           conversations: {
             open: number;
             closed: number;
-            escalated: number;
             spam: number;
           };
           mine: {
             open: number;
             closed: number;
-            escalated: number;
             spam: number;
           };
           assigned: {
             open: number;
             closed: number;
-            escalated: number;
             spam: number;
           };
           unassigned: {
             open: number;
             closed: number;
-            escalated: number;
-            spam: number;
-          };
-          escalated: {
-            open: number;
-            closed: number;
-            escalated: number;
             spam: number;
           };
         };
@@ -108,10 +98,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           } | null;
           slackConnected: boolean;
           slackConnectUrl: string;
-          slackEscalationChannel: string | null;
-          escalationEmailBody: string | null;
-          escalationEmailBodyPlaceholder: string;
-          escalationExpectedResolutionHours: number | null;
+          slackAlertChannel: string | null;
           responseGeneratorPrompt: string[];
           clerkOrganizationId: string;
           subscription: {
@@ -134,9 +121,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         input: {
           mailboxSlug: string;
           responseGeneratorPrompt?: string[] | undefined;
-          slackEscalationChannel?: string | undefined;
-          escalationEmailBody?: string | undefined;
-          escalationExpectedResolutionHours?: number | undefined;
+          slackAlertChannel?: string | undefined;
           widgetDisplayMode?: "always" | "revenue_based" | "off" | undefined;
           widgetDisplayMinValue?: number | undefined;
           autoRespondEmailToChat?: boolean | undefined;
@@ -172,6 +157,28 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             after: string;
           }[];
         }>;
+        upsert: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            linter: {
+              before: string;
+              after: string;
+              id?: number | undefined;
+            };
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
+        delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+          };
+          output: {
+            success: boolean;
+          };
+        }>;
         setEnabled: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
@@ -188,6 +195,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             sort?: unknown;
             search?: string | null | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+            events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
@@ -204,7 +212,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               matchedMessageText: string | null;
               id: number;
               slug: string;
-              status: "open" | "closed" | "escalated" | "spam" | null;
+              status: "open" | "closed" | "spam" | null;
               emailFrom: string | null;
               subject: string;
               conversationProvider: "gmail" | "helpscout" | "chat" | null;
@@ -213,7 +221,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               closedAt: Date | null;
               lastUserEmailCreatedAt: Date | null;
               assignedToClerkId: string | null;
-              escalationEnabled: boolean;
               platformCustomer: {
                 isVip: boolean;
                 value: string | null;
@@ -348,11 +355,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   isNew: boolean;
                   changes: {
                     assignedToUser: string | null | undefined;
-                    status?: "open" | "closed" | "escalated" | "spam" | undefined;
+                    status?: "open" | "closed" | "spam" | undefined;
                     assignedToClerkId?: string | null | undefined;
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
+                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -363,7 +371,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             cc: string;
             id: number;
             slug: string;
-            status: "open" | "closed" | "escalated" | "spam" | null;
+            status: "open" | "closed" | "spam" | null;
             emailFrom: string | null;
             subject: string;
             conversationProvider: "gmail" | "helpscout" | "chat" | null;
@@ -372,7 +380,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             closedAt: Date | null;
             lastUserEmailCreatedAt: Date | null;
             assignedToClerkId: string | null;
-            escalationEnabled: boolean;
             platformCustomer: {
               isVip: boolean;
               value: string | null;
@@ -506,11 +513,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   isNew: boolean;
                   changes: {
                     assignedToUser: string | null | undefined;
-                    status?: "open" | "closed" | "escalated" | "spam" | undefined;
+                    status?: "open" | "closed" | "spam" | undefined;
                     assignedToClerkId?: string | null | undefined;
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
+                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -521,7 +529,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             cc: string;
             id: number;
             slug: string;
-            status: "open" | "closed" | "escalated" | "spam" | null;
+            status: "open" | "closed" | "spam" | null;
             emailFrom: string | null;
             subject: string;
             conversationProvider: "gmail" | "helpscout" | "chat" | null;
@@ -530,7 +538,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             closedAt: Date | null;
             lastUserEmailCreatedAt: Date | null;
             assignedToClerkId: string | null;
-            escalationEnabled: boolean;
             platformCustomer: {
               isVip: boolean;
               value: string | null;
@@ -566,7 +573,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           input: {
             mailboxSlug: string;
             conversationSlug: string;
-            status?: "open" | "closed" | "escalated" | "spam" | undefined;
+            status?: "open" | "closed" | "spam" | undefined;
             message?: string | null | undefined;
             assignedToId?: string | null | undefined;
           };
@@ -583,6 +590,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   sort?: unknown;
                   search?: string | null | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+                  events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
                   topic?: number[] | undefined;
                   limit?: number | undefined;
                   cursor?: string | null | undefined;
@@ -748,25 +756,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 };
           }>;
         };
-        escalations: {
-          get: import("@trpc/server").TRPCQueryProcedure<{
-            input: {
-              mailboxSlug: string;
-              conversationSlug: string;
-            };
-            output: {
-              slackUrl: string | null;
-              isProcessing: boolean;
-            } | null;
-          }>;
-          create: import("@trpc/server").TRPCMutationProcedure<{
-            input: {
-              mailboxSlug: string;
-              conversationSlug: string;
-            };
-            output: void;
-          }>;
-        };
         notes: {
           add: import("@trpc/server").TRPCMutationProcedure<{
             input: {
@@ -789,7 +778,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             conversations: {
               id: number;
               slug: string;
-              status: "open" | "closed" | "escalated" | "spam" | null;
+              status: "open" | "closed" | "spam" | null;
               emailFrom: string | null;
               subject: string;
               conversationProvider: "gmail" | "helpscout" | "chat" | null;
@@ -798,7 +787,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               closedAt: Date | null;
               lastUserEmailCreatedAt: Date | null;
               assignedToClerkId: string | null;
-              escalationEnabled: boolean;
               platformCustomer: {
                 isVip: boolean;
                 value: string | null;
@@ -824,8 +812,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           output: {
             hasConversations: boolean;
             assignedToMe: number;
-            escalatedOverdue: number;
-            escalationExpectedResolutionHours: any;
             vipOverdue: number;
             vipExpectedResponseHours: any;
           };
@@ -930,7 +916,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 | "change_status"
                 | "change_helper_status"
                 | "add_note"
-                | "escalate_to_slack"
                 | "assign_user";
               actionValue: string;
             }[];
@@ -964,7 +949,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               | "close_ticket"
               | "mark_spam"
               | "reply_and_close_ticket"
-              | "reply_and_escalate_to_slack";
+              | "reply_and_set_open";
             message?: string | null | undefined;
             name?: string | undefined;
             id?: number | undefined;
@@ -1021,7 +1006,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 | "close_ticket"
                 | "mark_spam"
                 | "reply_and_close_ticket"
-                | "reply_and_escalate_to_slack";
+                | "reply_and_set_open";
               message?: string | null | undefined;
               name?: string | undefined;
               id?: number | undefined;
@@ -1117,18 +1102,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           output: {
             success: boolean;
           };
-        }>;
-      };
-      topics: {
-        all: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            name: string;
-            id: number;
-            parentId: number | null;
-          }[];
         }>;
       };
       customers: {
@@ -1229,6 +1202,51 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
         }>;
       };
+      metadataEndpoint: {
+        create: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            url: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+        delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+        test: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                success: boolean;
+                error: undefined;
+              }
+            | {
+                success: boolean;
+                error: string;
+              };
+        }>;
+      };
     };
     organization: {
       createDefaultOrganization: import("@trpc/server").TRPCMutationProcedure<{
@@ -1242,8 +1260,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           trialInfo: {
             freeTrialEndsAt: Date | null;
-            automatedRepliesCount: {} | null;
-            automatedRepliesUsageLimit: number;
+            resolutionsCount: {} | null;
+            resolutionsLimit: number;
             subscriptionStatus: import("../lib/data/organization").SubscriptionStatus;
           };
         };
@@ -1290,6 +1308,45 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           message: string;
         };
+      }>;
+    };
+    billing: {
+      startCheckout: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          url: string;
+        };
+      }>;
+      subscribe: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+          sessionId: string;
+        };
+        output: {
+          success: boolean;
+          message: string;
+        };
+      }>;
+      manage: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          url: string;
+        };
+      }>;
+      get: import("@trpc/server").TRPCQueryProcedure<{
+        input: {
+          mailboxSlug: string;
+        };
+        output: {
+          unitAmount: number;
+          aiResolutions: number;
+          currentPeriodStart: Date;
+          currentPeriodEnd: Date;
+        } | null;
       }>;
     };
     isSignedIn: import("@trpc/server").TRPCQueryProcedure<{

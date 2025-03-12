@@ -20,8 +20,13 @@ export type ConversationContextType = {
 const ConversationContext = createContext<ConversationContextType | null>(null);
 
 export const ConversationContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const { mailboxSlug, currentConversationSlug, removeConversation, navigateToConversation } =
-    useConversationListContext();
+  const {
+    mailboxSlug,
+    currentConversationSlug,
+    removeConversation,
+    removeConversationKeepActive,
+    navigateToConversation,
+  } = useConversationListContext();
   const conversationSlug = assertDefined(
     currentConversationSlug,
     "ConversationContext can only be used when currentConversationSlug is defined",
@@ -52,7 +57,11 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
       try {
         const previousStatus = data?.status;
         update({ status });
-        removeConversation();
+        if (status === "open") {
+          removeConversationKeepActive();
+        } else {
+          removeConversation();
+        }
         if (status === "spam") {
           toast({
             title: "Marked as spam",

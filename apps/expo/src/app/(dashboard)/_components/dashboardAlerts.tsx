@@ -112,17 +112,6 @@ export function DashboardAlerts({ mailboxSlug }: { mailboxSlug: string }) {
           href: { pathname: "/conversations", params: { category: "all", mailboxSlug } } satisfies Href,
         }
       : null,
-    data.escalatedOverdue > 0
-      ? {
-          key: "escalated",
-          icon: ExclamationCircleIcon,
-          variant: "warning" as const,
-          children: `${data.escalatedOverdue} ${
-            data.escalatedOverdue === 1 ? "ticket has" : "tickets have"
-          } been escalated for ${formatHours(data.escalationExpectedResolutionHours ?? 0)}`,
-          href: { pathname: "/conversations", params: { category: "escalated", mailboxSlug } } satisfies Href,
-        }
-      : null,
   ].flatMap((alert) => (alert ? [alert] : []));
 
   if (alerts.length === 0) {

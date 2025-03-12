@@ -105,13 +105,11 @@ export const parseMessagesWithMocks = (input: string) => {
     responseGeneratorPrompt: [...(additionalPrompt ?? [])],
     clerkOrganizationId: "test_org",
     gmailSupportEmailId: null,
-    slackEscalationChannel: null,
+    slackAlertChannel: null,
     slackBotToken: null,
     slackBotUserId: null,
     slackTeamId: null,
     promptUpdatedAt: new Date(),
-    escalationEmailBody: null,
-    escalationExpectedResolutionHours: null,
     widgetHMACSecret: "test_secret",
     widgetDisplayMode: "off",
     widgetDisplayMinValue: null,
@@ -123,6 +121,8 @@ export const parseMessagesWithMocks = (input: string) => {
     disableAutoResponseForVips: false,
     createdAt: new Date(),
     updatedAt: new Date(),
+    unused_escalationEmailBody: null,
+    unused_escalationExpectedResolutionHours: null,
   };
 
   return { messages, mailbox };

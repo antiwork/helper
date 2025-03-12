@@ -36,12 +36,7 @@ function FilteredConversations({
 
   useEffect(() => {
     navigation.setOptions({
-      title:
-        category === "mine"
-          ? "Assigned to me"
-          : category === "escalations"
-            ? "Escalated Conversations"
-            : "Conversations",
+      title: category === "mine" ? "Assigned to me" : "Conversations",
     });
   }, [navigation, category, topicId]);
 

@@ -16,7 +16,6 @@ export const workflowActions = pgTable(
         | "change_status"
         | "change_helper_status"
         | "add_note"
-        | "escalate_to_slack"
         | "assign_user"
       >(),
     actionValue: text().notNull(),

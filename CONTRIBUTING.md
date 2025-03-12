@@ -7,7 +7,7 @@ Thanks for your interest in contributing! This document will help you get starte
 1. Set up the repository
 
 ```bash
-git clone https://github.com/anti-work/helper.git
+git clone https://github.com/antiwork/helper.git
 ```
 
 2. Set up your development environment
@@ -100,7 +100,7 @@ feat(cli): Add mobile testing support
 
 - Check existing discussions/issues/PRs before creating new ones
 - Start a discussion for questions or ideas
-- Open an [issue](https://github.com/anti-work/helper/issues) for bugs or problems
+- Open an [issue](https://github.com/antiwork/helper/issues) for bugs or problems
 
 ## License
 

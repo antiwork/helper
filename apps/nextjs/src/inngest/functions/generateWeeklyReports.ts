@@ -7,7 +7,7 @@ import { mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { REPORT_HOUR, TIME_ZONE } from "@/inngest/functions/generateDailyReports";
 import { getMemberStats } from "@/lib/data/stats";
-import { listSlackUsers, postSlackMessage } from "@/lib/slack/client";
+import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 const formatDateRange = (start: Date, end: Date) => {
   return `Week of ${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
@@ -16,7 +16,7 @@ const formatDateRange = (start: Date, end: Date) => {
 export async function generateWeeklyReports() {
   const mailboxesList = await db.query.mailboxes.findMany({
     columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackEscalationChannel)),
+    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
   });
 
   if (!mailboxesList.length) return;
@@ -48,14 +48,14 @@ export const generateMailboxWeeklyReport = inngest.createFunction(
 
     // drizzle doesn't appear to do any type narrowing, even though we've filtered for non-null values
     // @see https://github.com/drizzle-team/drizzle-orm/issues/2956
-    if (!mailbox.slackBotToken || !mailbox.slackEscalationChannel) {
+    if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
       return;
     }
 
     const result = await generateMailboxReport({
       mailbox,
       slackBotToken: mailbox.slackBotToken,
-      slackEscalationChannel: mailbox.slackEscalationChannel,
+      slackAlertChannel: mailbox.slackAlertChannel,
     });
 
     return result;
@@ -65,11 +65,11 @@ export const generateMailboxWeeklyReport = inngest.createFunction(
 export async function generateMailboxReport({
   mailbox,
   slackBotToken,
-  slackEscalationChannel,
+  slackAlertChannel,
 }: {
   mailbox: typeof mailboxes.$inferSelect;
   slackBotToken: string;
-  slackEscalationChannel: string;
+  slackAlertChannel: string;
 }) {
   const now = toZonedTime(new Date(), TIME_ZONE);
   const lastWeekStart = subWeeks(startOfWeek(now, { weekStartsOn: 0 }), 1);
@@ -84,12 +84,7 @@ export async function generateMailboxReport({
     return "No stats found";
   }
 
-  const slackUsers = await listSlackUsers(slackBotToken).catch((error) => {
-    console.error("Failed to list Slack users", error);
-    return [];
-  });
-  const slackUsersByEmail = new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
-
+  const slackUsersByEmail = await getSlackUsersByEmail(slackBotToken);
   const tableData: { name: string; count: number; slackUserId?: string }[] = [];
 
   for (const member of stats) {
@@ -186,7 +181,7 @@ export async function generateMailboxReport({
   }
 
   await postSlackMessage(slackBotToken, {
-    channel: slackEscalationChannel,
+    channel: slackAlertChannel,
     text: formatDateRange(lastWeekStart, lastWeekEnd),
     blocks,
   });

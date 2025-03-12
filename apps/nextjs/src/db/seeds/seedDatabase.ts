@@ -25,7 +25,6 @@ import {
   conversationMessages,
   conversations,
   conversationsTopics,
-  escalations,
   mailboxes,
   mailboxesMetadataApi,
   topics,
@@ -168,7 +167,7 @@ export const seedDatabase = async () => {
 type ConversationDetail = {
   subject: string;
   emailFrom: string;
-  status: "open" | "closed" | "escalated" | "spam" | null;
+  status: "open" | "closed" | "spam" | null;
   emailFromName: string;
   conversationProvider: "gmail" | "helpscout" | "chat" | null;
   isClosed: boolean;
@@ -279,14 +278,6 @@ const generateSeedsFromFixtures = async (mailboxId: number) => {
           mailboxId,
           createdAt: conversation.createdAt,
         });
-
-        if (fixtureIndex % 3 === 0) {
-          await db.insert(escalations).values({
-            conversationId: conversation.id,
-            createdAt: addHours(conversation.createdAt, 1),
-            resolvedAt: fixtureIndex % 6 === 0 ? addHours(conversation.createdAt, 2) : null,
-          });
-        }
       }),
   );
 };
