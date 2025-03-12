@@ -52,8 +52,6 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
       try {
         const previousStatus = data?.status;
         update({ status });
-        // Only remove the conversation from the list when marking as closed or spam
-        // When reopening (setting to "open"), keep the conversation selected
         if (status !== "open") {
           removeConversation();
         }
