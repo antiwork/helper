@@ -106,7 +106,7 @@ export default function Page() {
       <div
         className={cx(
           "flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]",
-          { "font-mabry": isGumroadTheme },
+          // Removed "font-mabry" class for Gumroad theme to use system fonts
           { "bg-gumroad-bg": isGumroadTheme, "bg-white": !isGumroadTheme },
         )}
       >

@@ -149,7 +149,7 @@
 .helper-widget-toggle-button.gumroad-theme {
   background-color: #f4f4ef;
   color: #000000;
-  font-family: "Mabry Pro", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   font-weight: 500;
   box-shadow: -2px 2px 0 0 #000000;
   right: -3px;
@@ -341,7 +341,7 @@
 .notification-bubble.gumroad-theme {
   background-color: #f4f4ef;
   box-shadow: -2px 2px 0 0 #000000;
-  font-family: "Mabry Pro", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
 .notification-bubble.gumroad-theme .close-button {

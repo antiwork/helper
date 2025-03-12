@@ -153,7 +153,8 @@ const config: Config = {
         "sundry-bold": ["var(--font-sundry-bold)", "sans-serif"],
         "sundry-narrow-medium": ["var(--font-sundry-narrow-medium)", "sans-serif"],
         "sundry-narrow-bold": ["var(--font-sundry-narrow-bold)", "sans-serif"],
-        mabry: ["Mabry Pro", "sans-serif"],
+        // Removed Mabry font in favor of system fonts
+        mabry: ["-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "'Roboto'", "'Oxygen'", "'Ubuntu'", "'Cantarell'", "'Fira Sans'", "'Droid Sans'", "'Helvetica Neue'", "sans-serif"],
         regular: ["var(--font-sundry-regular)", "sans-serif"],
         medium: ["var(--font-sundry-medium)", "sans-serif"],
         bold: ["var(--font-sundry-bold)", "sans-serif"],
