@@ -330,15 +330,6 @@ export const getRelatedConversations = async (
   return relatedConversations;
 };
 
-export const getMatchingConversationsByPrompt = (
-  conversations: Conversation[],
-  prompt: string,
-): Promise<Conversation[]> => {
-  // This function previously used workflow conditions to match conversations
-  // Since workflows have been removed, we'll return an empty array
-  return Promise.resolve([]);
-};
-
 export const generateConversationSubject = async (
   conversationId: number,
   messages: Message[],

@@ -271,20 +271,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   from: string | null;
                   isPinned: boolean;
                   slackUrl: string | null;
-                  workflowRun: {
-                    action: import("../types/workflows").WorkflowAction;
-                    message?: string | null | undefined;
-                    slackChannelId?: string | undefined;
-                    assignedUserId?: string | undefined;
-                    runOnReplies: boolean;
-                    autoReplyFromMetadata: boolean;
-                    name: string;
-                    order: number;
-                    description: string;
-                    workflow_type: string;
-                    id: number;
-                    prompt: string;
-                  } | null;
                   draft: {
                     id: number;
                     responseToId: number;
@@ -429,20 +415,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   from: string | null;
                   isPinned: boolean;
                   slackUrl: string | null;
-                  workflowRun: {
-                    action: import("../types/workflows").WorkflowAction;
-                    message?: string | null | undefined;
-                    slackChannelId?: string | undefined;
-                    assignedUserId?: string | undefined;
-                    runOnReplies: boolean;
-                    autoReplyFromMetadata: boolean;
-                    name: string;
-                    order: number;
-                    description: string;
-                    workflow_type: string;
-                    id: number;
-                    prompt: string;
-                  } | null;
                   draft: {
                     id: number;
                     responseToId: number;
@@ -879,141 +851,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           input: {
             mailboxSlug: string;
             id: number;
-          };
-          output: void;
-        }>;
-      };
-      workflows: {
-        list: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            action: import("../types/workflows").WorkflowAction;
-            message?: string | null | undefined;
-            slackChannelId?: string | undefined;
-            assignedUserId?: string | undefined;
-            prompt: string;
-            description: string;
-            name: string;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            mailboxId: number;
-            deletedAt: Date | null;
-            order: number;
-            workflowType: "default" | "freeform";
-            runOnReplies: boolean;
-            autoReplyFromMetadata: boolean;
-            workflowActions: {
-              id: number;
-              createdAt: Date;
-              updatedAt: Date;
-              workflowId: number;
-              actionType:
-                | "send_email"
-                | "send_auto_reply_from_metadata"
-                | "change_status"
-                | "change_helper_status"
-                | "add_note"
-                | "assign_user";
-              actionValue: string;
-            }[];
-            groups: {
-              id: number;
-              createdAt: Date;
-              updatedAt: Date;
-              workflowId: number;
-              conds: {
-                value: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                field: import("../db/schema").WorkflowConditionFieldType;
-                operator: import("../db/schema").WorkflowConditionOperatorType;
-                workflowConditionGroupId: number;
-              }[];
-            }[];
-          }[];
-        }>;
-        set: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            order: number;
-            runOnReplies: boolean;
-            autoReplyFromMetadata: boolean;
-            prompt: string;
-            action:
-              | "unknown"
-              | "assign_user"
-              | "close_ticket"
-              | "mark_spam"
-              | "reply_and_close_ticket"
-              | "reply_and_set_open";
-            message?: string | null | undefined;
-            name?: string | undefined;
-            id?: number | undefined;
-            slackChannelId?: string | null | undefined;
-            assignedUserId?: string | null | undefined;
-          };
-          output: void;
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            id: number;
-          };
-          output: void;
-        }>;
-        reorder: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            positions: number[];
-          };
-          output: void;
-        }>;
-        listMatchingConversations: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            prompt: string;
-          };
-          output: {
-            conversations: import("../app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/automaticWorkflowsSetting").MatchingConversation[];
-          };
-        }>;
-        generateWorkflowPrompt: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-          };
-          output: {
-            prompt: string;
-          };
-        }>;
-        answerWithWorkflow: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            workflow: {
-              order: number;
-              runOnReplies: boolean;
-              autoReplyFromMetadata: boolean;
-              prompt: string;
-              action:
-                | "unknown"
-                | "assign_user"
-                | "close_ticket"
-                | "mark_spam"
-                | "reply_and_close_ticket"
-                | "reply_and_set_open";
-              message?: string | null | undefined;
-              name?: string | undefined;
-              id?: number | undefined;
-              slackChannelId?: string | null | undefined;
-              assignedUserId?: string | null | undefined;
-            };
-            matchingSlugs: string[];
           };
           output: void;
         }>;

@@ -229,7 +229,6 @@ export const serializeMessage = async (
       mailbox.slackBotToken && message.slackChannel && message.slackMessageTs
         ? await getSlackPermalink(mailbox.slackBotToken, message.slackChannel, message.slackMessageTs)
         : null,
-    workflowRun: null,
     draft: draftEmail ? serializeResponseAiDraft(draftEmail, mailbox) : null,
     files: filesData.flatMap((f) => (f.isInline ? [] : [f])),
     metadata: message.metadata,

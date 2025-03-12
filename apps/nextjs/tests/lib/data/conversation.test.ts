@@ -15,7 +15,6 @@ import {
   getConversationById,
   getConversationBySlug,
   getConversationBySlugAndMailbox,
-  getMatchingConversationsByPrompt,
   getNonSupportParticipants,
   getRelatedConversations,
   MAX_RELATED_CONVERSATIONS_COUNT,
@@ -395,35 +394,5 @@ describe("getRelatedConversations", () => {
   it("returns an empty array when conversation ID is not found", async () => {
     const result = await getRelatedConversations(999999);
     expect(result).toHaveLength(0);
-  });
-});
-
-describe("getMatchingConversationsByPrompt", () => {
-  const createConversationsWithMessages = async (mailboxId: number, count: number) => {
-    const subjects = Array.from({ length: count }, (_, i) => `Subject ${i + 1}`);
-    const messages = Array.from({ length: count }, (_, i) => `Message ${i + 1}`);
-
-    const conversations = await Promise.all(
-      subjects.map(async (subject) => {
-        const { conversation } = await conversationFactory.create(mailboxId, { subject });
-        return conversation;
-      }),
-    );
-
-    await Promise.all(
-      conversations.map((conversation, index) =>
-        conversationMessagesFactory.create(conversation.id, { role: "user", cleanedUpText: messages[index] }),
-      ),
-    );
-    return conversations;
-  };
-
-  it("returns an empty array since workflows have been removed", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const mockConversations = await createConversationsWithMessages(mailbox.id, 3);
-
-    const prompt = "reset my password";
-    const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
-    expect(result).toEqual([]);
   });
 });

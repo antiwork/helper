@@ -275,17 +275,6 @@ describe("getMessages", () => {
     });
   });
 
-  it("does not include workflow run data since workflows have been removed", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-    const { message } = await conversationMessagesFactory.create(conversation.id);
-
-    const result = await getMessages(conversation.id, mailbox);
-
-    assert(result[0]?.type === "message");
-    expect(result[0].workflowRun).toBeNull();
-  });
-
   it("generates Slack links", async () => {
     const { organization } = await userFactory.createRootUser();
     const { mailbox } = await mailboxFactory.create(organization.id, { slackBotToken: "test-token" });

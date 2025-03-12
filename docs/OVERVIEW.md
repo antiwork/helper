@@ -77,7 +77,7 @@ The database layer is built using Drizzle ORM, providing type-safe database inte
 ### Schema Organization
 
 - **Location:** All database schemas reside in `apps/nextjs/src/db/schema/`
-- **Structure:** Each domain entity has its own schema file (e.g., `mailboxes.ts`, `conversations.ts`, `workflows.ts`)
+- **Structure:** Each domain entity has its own schema file (e.g., `mailboxes.ts`, `conversations.ts`, `platformCustomers.ts`)
 - **Centralization:** All schemas are exported from a central `index.ts` file for easy access
 
 ### Schema Features
