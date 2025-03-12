@@ -1,4 +1,5 @@
 import { truncateDb } from "@tests/support/setupDatabase";
+import { patchTestDatabase } from "@tests/support/patchTestDatabase";
 import { afterAll, beforeAll, beforeEach, inject, vi } from "vitest";
 
 beforeAll(() => {
@@ -45,4 +46,7 @@ afterAll(() => {
   vi.resetAllMocks();
 });
 
-beforeEach(async () => await truncateDb());
+beforeEach(async () => {
+  await truncateDb();
+  await patchTestDatabase();
+});
