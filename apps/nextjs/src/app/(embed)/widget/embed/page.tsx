@@ -104,10 +104,10 @@ export default function Page() {
   return (
     <QueryClientProvider client={queryClient}>
       <div
-        className={cx(
-          "flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]",
-          { "bg-gumroad-bg": isGumroadTheme, "bg-white": !isGumroadTheme },
-        )}
+        className={cx("flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
+          "bg-gumroad-bg": isGumroadTheme,
+          "bg-white": !isGumroadTheme,
+        })}
       >
         <Header
           config={config}
