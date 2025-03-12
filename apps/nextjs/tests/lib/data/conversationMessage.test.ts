@@ -6,8 +6,7 @@ import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
-import { workflowRunFactory } from "@tests/support/factories/workflowRuns";
-import { workflowFactory } from "@tests/support/factories/workflows";
+// Workflow factories removed
 import { mockInngest } from "@tests/support/inngestUtils";
 import { addSeconds } from "date-fns";
 import { and, eq } from "drizzle-orm";
@@ -26,12 +25,9 @@ import {
   serializeResponseAiDraft,
 } from "@/lib/data/conversationMessage";
 import { getClerkUserList } from "@/lib/data/user";
-import { getWorkflowInfo } from "@/lib/data/workflow";
 import { getSlackPermalink } from "@/lib/slack/client";
 
-vi.mock("@/lib/data/workflow", () => ({
-  getWorkflowInfo: vi.fn().mockResolvedValue(null),
-}));
+// Workflow mocks removed
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
 }));
@@ -281,39 +277,15 @@ describe("getMessages", () => {
     });
   });
 
-  it("includes workflow run data if available", async () => {
+  it("does not include workflow run data since workflows have been removed", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
     const { message } = await conversationMessagesFactory.create(conversation.id);
-    const workflow = await workflowFactory.create(mailbox.id);
-    await workflowRunFactory.create(workflow.id, conversation.id, message.id, mailbox.id);
-
-    vi.mocked(getWorkflowInfo).mockResolvedValueOnce({
-      autoReplyFromMetadata: false,
-      action: "close_ticket",
-      order: 0,
-      description: "Test Workflow",
-      name: "Test Workflow",
-      workflow_type: "auto",
-      runOnReplies: false,
-      id: 1,
-      prompt: "",
-    });
 
     const result = await getMessages(conversation.id, mailbox);
 
     assert(result[0]?.type === "message");
-    expect(result[0].workflowRun).toEqual({
-      autoReplyFromMetadata: false,
-      action: "close_ticket",
-      order: 0,
-      description: "Test Workflow",
-      name: "Test Workflow",
-      workflow_type: "auto",
-      runOnReplies: false,
-      id: 1,
-      prompt: "",
-    });
+    expect(result[0].workflowRun).toBeNull();
   });
 
   it("generates Slack links", async () => {

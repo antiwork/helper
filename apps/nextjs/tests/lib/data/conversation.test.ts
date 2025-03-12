@@ -22,7 +22,6 @@ import {
   updateConversation,
 } from "@/lib/data/conversation";
 import { getClerkOrganization } from "@/lib/data/organization";
-import { evaluateWorkflowCondition } from "@/lib/data/workflowCondition";
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
 
 vi.mock("@/components/constants", () => ({
@@ -38,9 +37,7 @@ vi.mock("@/lib/emailSearchService/searchEmailsByKeywords", () => ({
   searchEmailsByKeywords: vi.fn(),
 }));
 
-vi.mock("@/lib/data/workflowCondition", () => ({
-  evaluateWorkflowCondition: vi.fn(),
-}));
+// Workflow mocks removed
 
 vi.mock("@/inngest/client", () => ({
   inngest: {
@@ -423,44 +420,12 @@ describe("getMatchingConversationsByPrompt", () => {
     return conversations;
   };
 
-  it("returns matching conversations", async () => {
+  it("returns an empty array since workflows have been removed", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const mockConversations = await createConversationsWithMessages(mailbox.id, 3);
-
-    vi.mocked(evaluateWorkflowCondition).mockResolvedValueOnce(true);
-
-    const prompt = "reset my password";
-    const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
-    expect(result).toEqual(expect.arrayContaining([mockConversations[0]]));
-  });
-
-  it("returns an empty array when there is not matched conversations", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const mockConversations = await createConversationsWithMessages(mailbox.id, 3);
-
-    vi.mocked(evaluateWorkflowCondition).mockResolvedValue(false);
 
     const prompt = "reset my password";
     const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
     expect(result).toEqual([]);
-  });
-
-  it("returns the maximum number of matching conversations", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const mockConversations = await createConversationsWithMessages(mailbox.id, 4);
-
-    const prompt = "reset my password";
-
-    vi.mocked(evaluateWorkflowCondition).mockResolvedValue(true);
-
-    const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
-    expect(result).toHaveLength(MAX_RELATED_CONVERSATIONS_COUNT);
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: mockConversations[0]?.id }),
-        expect.objectContaining({ id: mockConversations[1]?.id }),
-        expect.objectContaining({ id: mockConversations[2]?.id }),
-      ]),
-    );
   });
 });
