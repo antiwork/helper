@@ -7,14 +7,6 @@ import { ToolMetadata } from "@/db/schema";
 import { ConversationWithNewMessages } from "./conversation";
 import { ToolItem } from "./toolItem";
 
-// WorkflowAction type moved inline since workflows.ts was removed
-type WorkflowAction =
-  | "close_ticket"
-  | "mark_spam"
-  | "reply_and_close_ticket"
-  | "reply_and_set_open"
-  | "assign_user"
-  | "unknown";
 
 export const MessageThread = ({
   conversation,
