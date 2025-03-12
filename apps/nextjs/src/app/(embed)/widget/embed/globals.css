@@ -1,21 +1,3 @@
-@font-face {
-  font-family: "Mabry Pro";
-  src:
-    url("https://assets.website-files.com/618da08965b16e150f4dcd59/618da0e60be74d08c15b0606_MabryPro-Regular.woff2")
-      format("woff2"),
-    url("https://assets.website-files.com/618da08965b16e150f4dcd59/618da0e6fd4847587798919c_MabryPro-Regular.eot")
-      format("embedded-opentype"),
-    url("https://assets.website-files.com/618da08965b16e150f4dcd59/618da0e69d0280193bb7cbad_MabryPro-Regular.woff")
-      format("woff"),
-    url("https://assets.website-files.com/618da08965b16e150f4dcd59/618da0e680cb7a4b32240ed8_MabryPro-Regular.ttf")
-      format("truetype"),
-    url("https://assets.website-files.com/618da08965b16e150f4dcd59/618da0e6a3cedbd962a03e70_MabryPro-Regular.svg")
-      format("svg");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 .bg-widget {
   background-color: #f4f4f0;
 }
