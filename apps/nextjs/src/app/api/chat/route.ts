@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     message,
   });
 
-  const isPromptConversation = conversation.source === "chat#prompt";
+  const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;
 
   if (conversation.subject === CHAT_CONVERSATION_SUBJECT && (!isPromptConversation || !isFirstMessage) && message) {

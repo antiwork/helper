@@ -17,9 +17,9 @@ export async function POST(request: Request) {
 
   const isAnonymous = authResult.session.isAnonymous;
   let { source } = await request.json();
-  source = isAnonymous && source !== "chat#prompt" ? "chat#visitor" : source;
-
   const isPrompt = source === "chat#prompt";
+  const isVisitor = isAnonymous && source !== "chat#prompt";
+  source = "chat";
   let status = DEFAULT_INITIAL_STATUS;
 
   if (isAnonymous && authResult.session.email) {
@@ -36,6 +36,8 @@ export async function POST(request: Request) {
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",
     source,
+    isPrompt,
+    isVisitor,
   });
 
   return corsResponse({ conversationSlug: newConversation.slug });

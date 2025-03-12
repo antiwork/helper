@@ -37,7 +37,7 @@ export const MessageThread = ({
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-1 flex-col gap-8 pb-4" onDoubleClick={handleDoubleClickWhitespace}>
-        {conversation.source == "chat#prompt" && (
+        {conversation.isPrompt && (
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
             <QuestionMarkCircleIcon className="h-4 w-4 text-muted-foreground" />
             <span>Started this conversation from a prompt</span>
