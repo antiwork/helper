@@ -1,12 +1,12 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/reactionsChart";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/members/_components/peopleTable";
 import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
-import { RealtimeEvents } from "./realtimeEvents";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
 import { ViewSwitcher } from "./viewSwitcher";
@@ -17,6 +17,8 @@ type Props = {
   mailboxSlug: string;
   currentMailbox: { name: string; slug: string };
 };
+
+const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false });
 
 export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");

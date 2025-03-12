@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ChatBubbleLeftIcon,
   CurrencyDollarIcon,
@@ -7,11 +9,13 @@ import {
   HandThumbUpIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
+import { AblyProvider, ChannelProvider } from "ably/react";
 import { BotIcon } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
+import { getGlobalAblyClient } from "@/components/ablyClient";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
@@ -20,55 +24,7 @@ import { useAblyEvent } from "@/lib/ably/hooks";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
-type Event = {
-  id: string;
-  type: "message" | "good_reply" | "bad_reply" | "request_human_support";
-  title: string;
-  description: string;
-  value: number;
-  timestamp: Date;
-};
-
-type Props = {
-  mailboxSlug: string;
-};
-
-const EXAMPLE_EVENTS: Event[] = [
-  {
-    id: "1",
-    type: "message",
-    title: "New support ticket",
-    description: "Customer reported an issue with login",
-    value: 100,
-    timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-  },
-  {
-    id: "2",
-    type: "good_reply",
-    title: "Email sent",
-    description: "Response sent to customer inquiry",
-    value: 5,
-    timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-  },
-  {
-    id: "3",
-    type: "bad_reply",
-    title: "Email sent",
-    description: "Response sent to customer inquiry",
-    value: 0,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-  },
-  {
-    id: "4",
-    type: "request_human_support",
-    title: "Request human support",
-    description: "Customer requested human support",
-    value: 0,
-    timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 minutes ago
-  },
-];
-
-export function RealtimeEvents({ mailboxSlug }: Props) {
+const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
   const { ref: loadMoreRef, inView } = useInView();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = api.mailbox.latestEvents.useInfiniteQuery(
@@ -89,9 +45,11 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
 
   const utils = api.useUtils();
   useAblyEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
+    console.log("ably event", message.data);
+
     utils.mailbox.latestEvents.setInfiniteData({ mailboxSlug }, (data) => {
       const firstPage = data?.pages[0];
-      if (!firstPage) return data;
+      if (!firstPage || firstPage.map((event) => event.id).includes(message.data.id)) return data;
       return {
         ...data,
         pages: [[message.data, ...firstPage], ...data.pages.slice(1)],
@@ -143,7 +101,9 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
               {event.type === "bad_reply" ? (
                 <div className="mt-6 flex items-center gap-2 text-destructive text-sm">
                   <HandThumbDownIcon className="w-4 h-4" />
-                  <span className="flex-1 truncate">Bad reply &mdash; {event.description}</span>
+                  <span className="flex-1 truncate">
+                    Bad reply {event.description ? <>&mdash; {event.description}</> : null}
+                  </span>
                 </div>
               ) : event.type === "good_reply" ? (
                 <div className="mt-6 flex items-center gap-2 text-success text-sm">
@@ -185,4 +145,16 @@ export function RealtimeEvents({ mailboxSlug }: Props) {
       </div>
     </div>
   );
-}
+};
+
+const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
+  return (
+    <AblyProvider client={getGlobalAblyClient(mailboxSlug)}>
+      <ChannelProvider channelName={dashboardChannelId(mailboxSlug)}>
+        <RealtimeEventsContent mailboxSlug={mailboxSlug} />
+      </ChannelProvider>
+    </AblyProvider>
+  );
+};
+
+export default RealtimeEvents;

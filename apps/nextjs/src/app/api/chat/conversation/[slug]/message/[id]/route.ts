@@ -96,7 +96,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         reactionCreatedAt: new Date(),
       })
       .where(eq(conversationMessages.id, messageId));
-    waitUntil(publishEvent(slug, messageId));
+    waitUntil(publishEvent(messageId));
     return Response.json({ reaction });
   }
 
@@ -109,7 +109,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         reactionCreatedAt: null,
       })
       .where(eq(conversationMessages.id, messageId));
-    waitUntil(publishEvent(slug, messageId));
     return Response.json({ reaction: null });
   }
 
@@ -121,13 +120,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       reactionCreatedAt: new Date(),
     })
     .where(eq(conversationMessages.id, messageId));
-  waitUntil(publishEvent(slug, messageId));
+  waitUntil(publishEvent(messageId));
   waitUntil(langfuse.flushAsync());
 
   return Response.json({ reaction });
 }
 
-const publishEvent = async (mailboxSlug: string, messageId: number) => {
+const publishEvent = async (messageId: number) => {
   const message = assertDefined(
     await db.query.conversationMessages.findFirst({
       columns: {
@@ -149,8 +148,14 @@ const publishEvent = async (mailboxSlug: string, messageId: number) => {
     }),
   );
 
+  console.log("publishEvent", {
+    channel: dashboardChannelId(message.conversation.mailbox.slug),
+    event: "event",
+    data: createReactionEventPayload(message, message.conversation.mailbox),
+  });
+
   await publishToAbly({
-    channel: dashboardChannelId(mailboxSlug),
+    channel: dashboardChannelId(message.conversation.mailbox.slug),
     event: "event",
     data: createReactionEventPayload(message, message.conversation.mailbox),
   });
