@@ -52,16 +52,6 @@ import ConversationSidebar from "./conversationSidebar";
 import { MessageActions } from "./messageActions";
 import { useConversationsListInput } from "./shared/queries";
 
-// Workflow type definition moved inline since automaticWorkflowsSetting was removed
-type Workflow = {
-  id?: number;
-  name: string;
-  prompt: string;
-  action: string;
-  message: string;
-  runOnReplies: boolean;
-  autoReplyFromMetadata?: boolean;
-};
 
 export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
   messages: ((Message | Note | ConversationEvent) & { isNew?: boolean })[];
