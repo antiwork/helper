@@ -16,6 +16,7 @@ import {
 } from "@/lib/ai/chat";
 import {
   CHAT_CONVERSATION_SUBJECT,
+  Conversation,
   generateConversationSubject,
   getConversationBySlugAndMailbox,
   updateConversation,
@@ -108,9 +109,12 @@ export async function POST(request: Request) {
   const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;
 
-  if (conversation.subject === CHAT_CONVERSATION_SUBJECT && (!isPromptConversation || !isFirstMessage) && message) {
+  if (
+    (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||
+    (isPromptConversation && !isFirstMessage && conversation.subject === messages[0]?.content)
+  ) {
     waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
-  } else if (conversation.subject === CHAT_CONVERSATION_SUBJECT && isPromptConversation) {
+  } else if (isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) {
     waitUntil(db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)));
   }
 
@@ -269,3 +273,20 @@ export async function POST(request: Request) {
     },
   });
 }
+
+const subjectOptions = (conversation: Conversation, isFirstMessage: boolean, message: Message) => {
+  if (conversation.isPrompt) {
+    if (isFirstMessage) return { subject: message.content };
+    if (!isFirstMessage && conversation.subject === message.content) return { generate: true };
+  } else if (isFirstMessage) {
+    return { generate: true };
+  }
+
+  if (conversation.subject !== CHAT_CONVERSATION_SUBJECT) {
+    return false;
+  }
+
+  if (conversation.isPrompt && isFirstMessage) {
+    return false;
+  }
+};
