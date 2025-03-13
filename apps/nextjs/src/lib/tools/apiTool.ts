@@ -189,7 +189,7 @@ export const generateAvailableTools = async (conversation: Conversation, mailbox
     });
 
     similarPrompt = Object.entries(counts)
-      .map(([action, count]) => (count > 0 ? `${action} (${count})` : ""))
+      .map(([action, count]) => (count > 0 ? `${action} (${count} times)` : ""))
       .filter(Boolean)
       .join("\n");
   }
@@ -201,7 +201,9 @@ export const generateAvailableTools = async (conversation: Conversation, mailbox
     prompt += `\nMessages: ${relevantMessages.join("\n")}`;
   }
 
-  prompt += `\nActions performed on similar conversations:\n${similarPrompt}`;
+  if (similarPrompt) {
+    prompt += `\nActions performed on similar conversations:\n${similarPrompt}`;
+  }
 
   const { toolCalls } = await generateText({
     model: openai(GPT_4O_MINI_MODEL),

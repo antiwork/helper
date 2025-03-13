@@ -1,7 +1,10 @@
 import { Fragment } from "react";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { formatParameter } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/toolItem";
+import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useAssignTicket";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToolExecution } from "@/hooks/useToolExecution";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 
@@ -14,6 +17,10 @@ export function RecommendedTools({
   orgMembers: RouterOutputs["organization"]["getMembers"] | null;
   className?: string;
 }) {
+  const { updateStatus } = useConversationContext();
+  const { assignTicket } = useAssignTicket();
+  const { handleToolExecution } = useToolExecution();
+
   if (!tools || tools.length === 0) return null;
 
   return (
@@ -23,13 +30,25 @@ export function RecommendedTools({
         switch (t.type) {
           case "close":
             return (
-              <Button key={`${t.type}-${index}`} variant="subtle" size="sm" className="h-7">
+              <Button
+                key={`${t.type}-${index}`}
+                variant="subtle"
+                size="sm"
+                className="h-7"
+                onClick={() => updateStatus("closed")}
+              >
                 Close
               </Button>
             );
           case "spam":
             return (
-              <Button key={`${t.type}-${index}`} variant="subtle" size="sm" className="h-7">
+              <Button
+                key={`${t.type}-${index}`}
+                variant="subtle"
+                size="sm"
+                className="h-7"
+                onClick={() => updateStatus("spam")}
+              >
                 Spam
               </Button>
             );
@@ -42,17 +61,27 @@ export function RecommendedTools({
                 </span>
               );
             return (
-              <Button key={`${t.type}-${index}`} variant="subtle" size="sm" className="h-7">
+              <Button
+                key={`${t.type}-${index}`}
+                variant="subtle"
+                size="sm"
+                className="h-7"
+                onClick={() => assignTicket(assignee)}
+              >
                 Assign to {assignee.displayName}
               </Button>
             );
           case "tool":
-            if (!t.tool) return null;
             return (
               <TooltipProvider key={`${t.type}-${index}`} delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="subtle" size="sm" className="h-7">
+                    <Button
+                      variant="subtle"
+                      size="sm"
+                      className="h-7"
+                      onClick={() => handleToolExecution(t.tool.slug, t.tool.name, t.tool.parameters)}
+                    >
                       {t.tool.name}
                     </Button>
                   </TooltipTrigger>
