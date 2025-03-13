@@ -1,1 +1,0 @@
-ALTER TABLE "conversations_conversation" ADD COLUMN "recommended_actions" jsonb;

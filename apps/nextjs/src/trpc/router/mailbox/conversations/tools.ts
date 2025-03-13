@@ -15,7 +15,7 @@ export const toolsRouter = {
       where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),
     });
 
-    const recommended = (conversation.recommendedActions ?? []).map((action) => {
+    const suggested = (conversation.suggestedActions ?? []).map((action) => {
       switch (action.type) {
         case "close":
           return { type: "close" as const };
@@ -42,7 +42,7 @@ export const toolsRouter = {
     });
 
     return {
-      recommended,
+      suggested,
       all: mailboxTools.map((tool) => ({
         name: tool.name,
         slug: tool.slug,

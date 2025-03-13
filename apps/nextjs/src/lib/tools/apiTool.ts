@@ -117,7 +117,7 @@ export const callToolApi = async (
   };
 };
 
-export const generateAvailableTools = async (conversation: Conversation, mailbox: Mailbox, mailboxTools: Tool[]) => {
+export const generateSuggestedActions = async (conversation: Conversation, mailbox: Mailbox, mailboxTools: Tool[]) => {
   const messages: ConversationMessage[] = await db.query.conversationMessages.findMany({
     where: and(
       eq(conversationMessages.conversationId, conversation.id),

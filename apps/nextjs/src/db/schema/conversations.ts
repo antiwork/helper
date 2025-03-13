@@ -28,7 +28,7 @@ export const conversations = pgTable(
     embedding: vector({ dimensions: 1536 }),
     embeddingText: text(),
     source: text().$type<"email" | "chat" | "chat#prompt">(),
-    recommendedActions: jsonb().$type<
+    suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }
         | { type: "assign"; clerkUserId: string }

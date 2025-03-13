@@ -722,7 +722,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               conversationSlug: string;
             };
             output: {
-              recommended: any;
+              suggested: any;
               all: {
                 name: string;
                 slug: string;

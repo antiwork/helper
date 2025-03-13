@@ -25,8 +25,8 @@ export default inngest.createFunction(
     });
 
     if ("status" in conversation && conversation.status === "open") {
-      await step.sendEvent("update-recommended-actions", {
-        name: "conversations/update-recommended-actions",
+      await step.sendEvent("update-suggested-actions", {
+        name: "conversations/update-suggested-actions",
         data: { conversationId: conversation.id },
       });
     }

@@ -9,7 +9,7 @@ import { db } from "@/db/client";
 import { conversationMessages, MessageRole } from "@/db/schema/conversationMessages";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata } from "@/lib/data/retrieval";
-import { buildAITools, callToolApi, generateAvailableTools, ToolApiError } from "@/lib/tools/apiTool";
+import { buildAITools, callToolApi, generateSuggestedActions, ToolApiError } from "@/lib/tools/apiTool";
 
 vi.mock("ai", () => ({
   generateEmbedding: vi.fn(),
@@ -287,7 +287,7 @@ describe("apiTools", () => {
     });
   });
 
-  describe("generateAvailableTools", () => {
+  describe("generateSuggestedActions", () => {
     it("generates available tools based on conversation context", async () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
@@ -306,7 +306,7 @@ describe("apiTools", () => {
         toolCalls: [{ toolName: "test-tool", args: { param1: "value1" } }],
       } as any);
 
-      const result = await generateAvailableTools(conversation, mailbox, [tool]);
+      const result = await generateSuggestedActions(conversation, mailbox, [tool]);
 
       expect(result).toHaveLength(1);
       expect(result[0]?.toolName).toBe("test-tool");
@@ -346,7 +346,7 @@ describe("apiTools", () => {
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
       });
 
-      await generateAvailableTools(conversation, mailbox, [tool]);
+      await generateSuggestedActions(conversation, mailbox, [tool]);
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -386,7 +386,7 @@ describe("apiTools", () => {
         slug: "test-tool",
       });
 
-      await generateAvailableTools(conversation, mailbox, [tool]);
+      await generateSuggestedActions(conversation, mailbox, [tool]);
 
       // Should include first message and last 3 messages when token limit allows
       expect(generateText).toHaveBeenCalledWith(

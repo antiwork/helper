@@ -221,7 +221,7 @@ export const useMainPage = ({
             {
               heading: "Tools",
               items: [
-                ...tools.recommended
+                ...tools.suggested
                   .flatMap((t) => (t.type === "tool" ? [t.tool] : []))
                   .map((tool) => ({
                     id: `tool-${tool.slug}-${JSON.stringify(tool.parameters)}`,
@@ -274,7 +274,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.recommended, onToggleCc],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc],
   );
 
   return mainCommandGroups;

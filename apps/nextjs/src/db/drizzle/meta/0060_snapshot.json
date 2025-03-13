@@ -1,5 +1,5 @@
 {
-  "id": "5a593df7-9b18-451e-9709-055a2236bc72",
+  "id": "ceca67e7-c916-4492-8994-39a876b554f6",
   "prevId": "64fa72d7-19bd-482f-a589-23a433f22919",
   "version": "7",
   "dialect": "postgresql",
@@ -838,8 +838,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "recommended_actions": {
-          "name": "recommended_actions",
+        "suggested_actions": {
+          "name": "suggested_actions",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false

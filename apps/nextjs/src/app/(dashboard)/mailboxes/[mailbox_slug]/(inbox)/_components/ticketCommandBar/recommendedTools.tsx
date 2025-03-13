@@ -13,7 +13,7 @@ export function RecommendedTools({
   orgMembers,
   className,
 }: {
-  tools: RouterOutputs["mailbox"]["conversations"]["tools"]["list"]["recommended"] | null;
+  tools: RouterOutputs["mailbox"]["conversations"]["tools"]["list"]["suggested"] | null;
   orgMembers: RouterOutputs["organization"]["getMembers"] | null;
   className?: string;
 }) {

@@ -244,7 +244,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
       </div>
       <RecommendedTools
         className={open ? "hidden" : undefined}
-        tools={tools?.recommended ?? null}
+        tools={tools?.suggested ?? null}
         orgMembers={orgMembers ?? null}
       />
       <Command

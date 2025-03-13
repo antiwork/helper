@@ -6,11 +6,11 @@ import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { getConversationById } from "@/lib/data/conversation";
 import { getMailboxById } from "@/lib/data/mailbox";
-import { generateAvailableTools } from "@/lib/tools/apiTool";
+import { generateSuggestedActions } from "@/lib/tools/apiTool";
 
 export default inngest.createFunction(
-  { id: "update-conversation-recommended-actions", concurrency: 10 },
-  { event: "conversations/update-recommended-actions" },
+  { id: "update-suggested-actions", concurrency: 10 },
+  { event: "conversations/update-suggested-actions" },
   async ({ event, step }) => {
     const { conversationId } = event.data;
 
@@ -21,12 +21,12 @@ export default inngest.createFunction(
       const mailboxTools = await db.query.tools.findMany({
         where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),
       });
-      const toolCalls = await generateAvailableTools(conversation, mailbox, mailboxTools);
+      const toolCalls = await generateSuggestedActions(conversation, mailbox, mailboxTools);
 
       const result = await db
         .update(conversations)
         .set({
-          recommendedActions: toolCalls.map(({ toolName, args }) => {
+          suggestedActions: toolCalls.map(({ toolName, args }) => {
             switch (toolName) {
               case "close":
                 return { type: "close" };
@@ -43,7 +43,7 @@ export default inngest.createFunction(
         .returning()
         .then(takeUniqueOrThrow);
 
-      return result.recommendedActions;
+      return result.suggestedActions;
     });
   },
 );
