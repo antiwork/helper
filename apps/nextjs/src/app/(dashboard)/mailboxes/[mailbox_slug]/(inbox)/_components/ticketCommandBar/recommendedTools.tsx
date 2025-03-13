@@ -25,7 +25,7 @@ export function RecommendedTools({
 
   return (
     <div className={cn("flex items-center gap-3 px-3 py-2 bg-background border border-t-0 rounded-b-sm", className)}>
-      <span className="text-xs text-muted-foreground font-medium">Recommended</span>
+      <span className="text-xs text-muted-foreground font-medium">Suggested</span>
       {tools.map((t, index) => {
         switch (t.type) {
           case "close":

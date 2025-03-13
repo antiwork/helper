@@ -29,13 +29,15 @@ export const conversations = pgTable(
     embeddingText: text(),
     source: text().$type<"email" | "chat" | "chat#prompt">(),
     recommendedActions: jsonb().$type<
-      | { type: "close" | "spam" }
-      | { type: "assign"; clerkUserId: string }
-      | {
-          type: "tool";
-          slug: string;
-          parameters: Record<string, any>;
-        }[]
+      (
+        | { type: "close" | "spam" }
+        | { type: "assign"; clerkUserId: string }
+        | {
+            type: "tool";
+            slug: string;
+            parameters: Record<string, any>;
+          }
+      )[]
     >(),
   },
   (table) => {

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { tools } from "@/db/schema/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
-import { callToolApi, generateAvailableTools, ToolApiError } from "@/lib/tools/apiTool";
+import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
 import { conversationProcedure } from "./procedure";
 
 export const toolsRouter = {
@@ -15,24 +15,41 @@ export const toolsRouter = {
       where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),
     });
 
-    try {
-      const toolsAvailable = await generateAvailableTools(conversation, mailbox, mailboxTools);
-      return {
-        recommended: toolsAvailable,
-        all: mailboxTools.map((tool) => ({
-          name: tool.name,
-          slug: tool.slug,
-          description: tool.description,
-          parameterTypes: tool.parameters ?? [],
-        })),
-      };
-    } catch (error) {
-      captureExceptionAndLogIfDevelopment(error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Error listing available tools",
-      });
-    }
+    const recommended = (conversation.recommendedActions ?? []).map((action) => {
+      switch (action.type) {
+        case "close":
+          return { type: "close" as const };
+        case "spam":
+          return { type: "spam" as const };
+        case "assign":
+          return { type: "assign" as const, clerkUserId: action.clerkUserId };
+        case "tool":
+          const { slug, parameters } = action;
+          const tool = mailboxTools.find((t) => t.slug === slug);
+          if (!tool) {
+            throw new Error(`Tool not found: ${slug}`);
+          }
+          return {
+            type: "tool" as const,
+            tool: {
+              name: tool.name,
+              slug: tool.slug,
+              description: tool.description,
+              parameters,
+            },
+          };
+      }
+    });
+
+    return {
+      recommended,
+      all: mailboxTools.map((tool) => ({
+        name: tool.name,
+        slug: tool.slug,
+        description: tool.description,
+        parameterTypes: tool.parameters ?? [],
+      })),
+    };
   }),
 
   run: conversationProcedure

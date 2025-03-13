@@ -195,31 +195,7 @@ export const generateAvailableTools = async (conversation: Conversation, mailbox
     },
   });
 
-  return toolCalls.map((toolCall) => {
-    switch (toolCall.toolName) {
-      case "close":
-        return { type: "close" as const };
-      case "spam":
-        return { type: "spam" as const };
-      case "assign":
-        return { type: "assign" as const, clerkUserId: toolCall.args.userId };
-      default:
-        const { toolName, args } = toolCall as any;
-        const tool = mailboxTools.find((t) => t.slug === toolName);
-        if (!tool) {
-          throw new Error(`Tool not found: ${toolName}`);
-        }
-        return {
-          type: "tool" as const,
-          tool: {
-            name: tool.name,
-            slug: tool.slug,
-            description: tool.description,
-            parameters: args,
-          } satisfies ToolAvailableResult,
-        };
-    }
-  });
+  return toolCalls;
 };
 
 const createHeaders = (tool: Tool) => {

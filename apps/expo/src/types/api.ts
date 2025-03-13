@@ -722,33 +722,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               conversationSlug: string;
             };
             output: {
-              recommended: (
-                | {
-                    type: "close";
-                    clerkUserId?: undefined;
-                    tool?: undefined;
-                  }
-                | {
-                    type: "spam";
-                    clerkUserId?: undefined;
-                    tool?: undefined;
-                  }
-                | {
-                    type: "assign";
-                    clerkUserId: string;
-                    tool?: undefined;
-                  }
-                | {
-                    type: "tool";
-                    tool: {
-                      name: string;
-                      slug: string;
-                      description: string;
-                      parameters: any;
-                    };
-                    clerkUserId?: undefined;
-                  }
-              )[];
+              recommended: any;
               all: {
                 name: string;
                 slug: string;
