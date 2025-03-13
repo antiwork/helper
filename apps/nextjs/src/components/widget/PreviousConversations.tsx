@@ -24,10 +24,10 @@ function ConversationSkeleton() {
   return (
     <div className="w-full rounded-lg border border-gray-200 bg-white p-4">
       <div className="flex items-center justify-between">
-        <div className="h-4 w-1/2 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded bg-gray-100" />
-        <div className="h-3 w-16 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded bg-gray-100" />
+        <div className="h-4 w-1/2 animate-skeleton rounded bg-gray-100" />
+        <div className="h-3 w-16 animate-skeleton rounded bg-gray-100" />
       </div>
-      <div className="mt-2 h-8 w-3/4 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded bg-gray-100" />
+      <div className="mt-2 h-8 w-3/4 animate-skeleton rounded bg-gray-100" />
     </div>
   );
 }
