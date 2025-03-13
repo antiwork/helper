@@ -145,54 +145,9 @@ export const generateAvailableTools = async (conversation: Conversation, mailbox
   Subject: ${conversation.subject}\n
   ${metadataPrompt}`;
 
-  let similarPrompt = "";
-  const similarConversations =
-    (conversation.embeddingText && (await findSimilarConversations(conversation.embeddingText, mailbox, 3))) || [];
-  if (similarConversations.length > 0) {
-    const actions = await db.query.conversationEvents.findMany({
-      where: and(
-        inArray(
-          conversationEvents.conversationId,
-          similarConversations.map((c) => c.id),
-        ),
-        eq(conversationEvents.type, "update"),
-        isNotNull(conversationEvents.byClerkUserId),
-      ),
-      orderBy: (events, { asc }) => [asc(events.createdAt)],
-      limit: 50,
-    });
-    const counts: Record<string, number> = {
-      "Close the conversation": actions.filter((a) => a.changes.status === "closed").length,
-      "Mark as spam": actions.filter((a) => a.changes.status === "spam").length,
-    };
-    actions.forEach(({ changes: { assignedToClerkId: id } }) => {
-      if (!id) return;
-      counts[`Assigned to user ID ${id}`] = (counts[`Assigned to user ID ${id}`] ?? 0) + 1;
-    });
-
-    const toolsUsed = await db.query.conversationMessages.findMany({
-      where: and(
-        inArray(
-          conversationMessages.conversationId,
-          similarConversations.map((c) => c.id),
-        ),
-        eq(conversationMessages.role, "tool"),
-        isNotNull(conversationMessages.clerkUserId),
-      ),
-      orderBy: (messages, { asc }) => [asc(messages.createdAt)],
-      limit: 50,
-    });
-
-    toolsUsed.forEach((message) => {
-      const metadata = message.metadata as ToolMetadata;
-      counts[`Ran tool ${metadata.tool.slug}`] = (counts[`Ran tool ${metadata.tool.slug}`] ?? 0) + 1;
-    });
-
-    similarPrompt = Object.entries(counts)
-      .map(([action, count]) => (count > 0 ? `${action} (${count} times)` : ""))
-      .filter(Boolean)
-      .join("\n");
-  }
+  const similarPrompt = conversation.embeddingText
+    ? await buildSimilarConversationActionsPrompt(conversation.embeddingText, mailbox)
+    : "";
 
   if (isWithinTokenLimit(prompt + similarPrompt, true)) {
     prompt += `\nMessages: ${messagesText}`;
@@ -352,4 +307,58 @@ const validateParameters = (tool: Tool, params: Record<string, any>) => {
     }
     throw error;
   }
+};
+
+const buildSimilarConversationActionsPrompt = async (embeddingText: string, mailbox: Mailbox): Promise<string> => {
+  const similarConversations = (await findSimilarConversations(embeddingText, mailbox, 10)) || [];
+
+  if (similarConversations.length === 0) {
+    return "";
+  }
+
+  const actions = await db.query.conversationEvents.findMany({
+    where: and(
+      inArray(
+        conversationEvents.conversationId,
+        similarConversations.map((c) => c.id),
+      ),
+      eq(conversationEvents.type, "update"),
+      isNotNull(conversationEvents.byClerkUserId),
+    ),
+    orderBy: (events, { asc }) => [asc(events.createdAt)],
+    limit: 50,
+  });
+
+  const counts: Record<string, number> = {
+    "Close the conversation": actions.filter((a) => a.changes.status === "closed").length,
+    "Mark as spam": actions.filter((a) => a.changes.status === "spam").length,
+  };
+
+  actions.forEach(({ changes: { assignedToClerkId: id } }) => {
+    if (!id) return;
+    counts[`Assigned to user ID ${id}`] = (counts[`Assigned to user ID ${id}`] ?? 0) + 1;
+  });
+
+  const toolsUsed = await db.query.conversationMessages.findMany({
+    where: and(
+      inArray(
+        conversationMessages.conversationId,
+        similarConversations.map((c) => c.id),
+      ),
+      eq(conversationMessages.role, "tool"),
+      isNotNull(conversationMessages.clerkUserId),
+    ),
+    orderBy: (messages, { asc }) => [asc(messages.createdAt)],
+    limit: 50,
+  });
+
+  toolsUsed.forEach((message) => {
+    const metadata = message.metadata as ToolMetadata;
+    counts[`Ran tool ${metadata.tool.slug}`] = (counts[`Ran tool ${metadata.tool.slug}`] ?? 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .map(([action, count]) => (count > 0 ? `${action} (${count} times)` : ""))
+    .filter(Boolean)
+    .join("\n");
 };
