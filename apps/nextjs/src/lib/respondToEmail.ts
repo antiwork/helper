@@ -62,13 +62,20 @@ export const respondToEmail = async (messageId: number) => {
     return;
   }
 
+  const { count: messageCount } = await db
+    .select({ count: count() })
+    .from(conversationMessages)
+    .where(and(eq(conversationMessages.conversationId, email.conversationId), ne(conversationMessages.status, "draft")))
+    .then(takeUniqueOrThrow);
+  const isFollowUp = messageCount > 1;
+
   const emailText = (await getTextWithConversationSubject(email.conversation, email)).trim();
   if (emailText.length === 0) {
     return;
   }
 
   const { mailbox } = email.conversation;
-  const shouldAutoRespond = mailbox.autoRespondEmailToChat && mailbox.widgetHost;
+  const shouldAutoRespond = mailbox.autoRespondEmailToChat && mailbox.widgetHost && !isFollowUp;
 
   if (shouldAutoRespond) {
     await inngest.send({
