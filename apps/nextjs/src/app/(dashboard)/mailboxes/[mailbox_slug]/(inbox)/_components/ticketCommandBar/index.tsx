@@ -15,7 +15,7 @@ import { CommandList } from "./commandList";
 import { useMainPage } from "./mainPage";
 import { NotesPage } from "./notesPage";
 import { usePreviousRepliesPage } from "./previousRepliesPage";
-import { RecommendedTools } from "./recommendedTools";
+import { SuggestedActions } from "./suggestedActions";
 import { ToolForm } from "./toolForm";
 import { useToolsPage } from "./toolsPage";
 
@@ -242,7 +242,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           onKeyDown={handleKeyDown}
         />
       </div>
-      <RecommendedTools
+      <SuggestedActions
         className={open ? "hidden" : undefined}
         tools={tools?.suggested ?? null}
         orgMembers={orgMembers ?? null}

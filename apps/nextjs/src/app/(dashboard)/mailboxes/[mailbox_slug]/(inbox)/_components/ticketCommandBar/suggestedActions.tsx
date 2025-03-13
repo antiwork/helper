@@ -8,7 +8,7 @@ import { useToolExecution } from "@/hooks/useToolExecution";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 
-export function RecommendedTools({
+export function SuggestedActions({
   tools,
   orgMembers,
   className,
