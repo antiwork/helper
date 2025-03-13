@@ -1,3 +1,4 @@
+import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import { CommandGroup as CmdGroup, CommandList as CmdList, CommandEmpty, CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { CommandGroup } from "./types";
@@ -26,25 +27,21 @@ export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect,
       <CommandEmpty>No results found.</CommandEmpty>
       {groups.map((group) => (
         <CmdGroup key={group.heading} heading={group.heading}>
-          {group.items
-            .filter((item) => !item.hidden)
-            .map((item) => (
-              <CommandItem
-                key={item.id}
-                value={item.id}
-                onSelect={() => onSelect(item.id)}
-                onMouseEnter={() => onMouseEnter(item.id)}
-                className={cn("flex items-center gap-2 cursor-pointer")}
-              >
-                {item.icon && <item.icon className="h-4 w-4" />}
-                <span>{item.label}</span>
-                {item.shortcut && (
-                  <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                    {item.shortcut}
-                  </kbd>
-                )}
-              </CommandItem>
-            ))}
+          {group.items.map((item) => (
+            <CommandItem
+              key={item.id}
+              value={item.id}
+              onSelect={() => onSelect(item.id)}
+              onMouseEnter={() => onMouseEnter(item.id)}
+              className={cn("flex items-center gap-2 cursor-pointer")}
+            >
+              {item.icon && <item.icon className="h-4 w-4" />}
+              <span>{item.label}</span>
+              {item.shortcut && (
+                <KeyboardShortcut className="ml-auto pointer-events-none opacity-100">{item.shortcut}</KeyboardShortcut>
+              )}
+            </CommandItem>
+          ))}
         </CmdGroup>
       ))}
     </CmdList>

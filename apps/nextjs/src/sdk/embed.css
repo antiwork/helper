@@ -149,8 +149,6 @@
 .helper-widget-toggle-button.gumroad-theme {
   background-color: #f4f4ef;
   color: #000000;
-  font-family: "Mabry Pro", sans-serif;
-  font-weight: 500;
   box-shadow: -2px 2px 0 0 #000000;
   right: -3px;
   transition:
@@ -341,7 +339,6 @@
 .notification-bubble.gumroad-theme {
   background-color: #f4f4ef;
   box-shadow: -2px 2px 0 0 #000000;
-  font-family: "Mabry Pro", sans-serif;
 }
 
 .notification-bubble.gumroad-theme .close-button {
