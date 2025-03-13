@@ -1,13 +1,13 @@
 import { generateText } from "ai";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { conversationEvents, conversationMessages, ToolMetadata } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
 import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { fetchMetadata } from "@/lib/data/retrieval";
+import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
 import { cleanUpTextForAI, GPT_4O_MINI_MODEL, isWithinTokenLimit } from "../ai/core";
 import type { Conversation } from "../data/conversation";
 import type { Mailbox } from "../data/mailbox";
@@ -29,8 +29,13 @@ export type ToolAvailableResult = {
   parameters: Record<string, any>;
 };
 
-const LIST_AVAILABLE_TOOLS_SYSTEM_PROMPT =
-  "Based on the user's conversation and the provided metadata, suggest appropriate functions and their parameters, even if the conversation looks like it's already resolved. Return all possible functions, even if they are more than 5.";
+const LIST_AVAILABLE_TOOLS_SYSTEM_PROMPT = `
+Based on the user's conversation and the provided metadata, suggest appropriate functions and their parameters, even if the conversation looks like it's already resolved.
+
+- Return all possible functions, even if they are more than 5.
+- Return functions in priority order based on whether they look relevant to the message content and whether they were performed on similar conversations.
+- If you recommend "close", do not recommend "spam" and vice versa.
+`;
 
 export const buildAITools = (tools: Tool[]) => {
   const aiTools = tools.reduce<Record<string, any>>((acc, tool) => {
@@ -44,7 +49,12 @@ export const buildAITools = (tools: Tool[]) => {
   return aiTools;
 };
 
-export const callToolApi = async (conversation: Conversation, tool: Tool, params: Record<string, any>) => {
+export const callToolApi = async (
+  conversation: Conversation,
+  tool: Tool,
+  params: Record<string, any>,
+  clerkUserId?: string,
+) => {
   validateParameters(tool, params);
 
   const headers = createHeaders(tool);
@@ -62,6 +72,7 @@ export const callToolApi = async (conversation: Conversation, tool: Tool, params
         error instanceof Error ? (error.cause instanceof Error ? error.cause.message : error.message) : "Unknown error",
       parameters: params,
       userMessage: "The API returned an error",
+      clerkUserId,
     });
     return {
       success: false,
@@ -82,6 +93,7 @@ export const callToolApi = async (conversation: Conversation, tool: Tool, params
       error: { status: response.status, statusText: response.statusText, body: responseBody },
       parameters: params,
       userMessage: "The API returned an error",
+      clerkUserId,
     });
     return {
       success: false,
@@ -96,6 +108,7 @@ export const callToolApi = async (conversation: Conversation, tool: Tool, params
     data,
     parameters: params,
     userMessage: "Tool executed successfully.",
+    clerkUserId,
   });
 
   return {
@@ -104,11 +117,7 @@ export const callToolApi = async (conversation: Conversation, tool: Tool, params
   };
 };
 
-export const generateAvailableTools = async (
-  conversation: Conversation,
-  mailbox: Mailbox,
-  mailboxTools: Tool[],
-): Promise<ToolAvailableResult[]> => {
+export const generateAvailableTools = async (conversation: Conversation, mailbox: Mailbox, mailboxTools: Tool[]) => {
   const messages: ConversationMessage[] = await db.query.conversationMessages.findMany({
     where: and(
       eq(conversationMessages.conversationId, conversation.id),
@@ -136,16 +145,87 @@ export const generateAvailableTools = async (
   Subject: ${conversation.subject}\n
   ${metadataPrompt}`;
 
-  if (isWithinTokenLimit(prompt, true)) {
+  let similarPrompt = "";
+  const similarConversations =
+    (conversation.embeddingText && (await findSimilarConversations(conversation.embeddingText, mailbox, 3))) || [];
+  if (similarConversations.length > 0) {
+    const actions = await db.query.conversationEvents.findMany({
+      where: and(
+        inArray(
+          conversationEvents.conversationId,
+          similarConversations.map((c) => c.id),
+        ),
+        eq(conversationEvents.type, "update"),
+        isNotNull(conversationEvents.byClerkUserId),
+      ),
+      orderBy: (events, { asc }) => [asc(events.createdAt)],
+      limit: 50,
+    });
+    const counts: Record<string, number> = {
+      "Close the conversation": actions.filter((a) => a.changes.status === "closed").length,
+      "Mark as spam": actions.filter((a) => a.changes.status === "spam").length,
+    };
+    actions.forEach(({ changes: { assignedToClerkId: id } }) => {
+      if (!id) return;
+      counts[`Assigned to user ID ${id}`] = (counts[`Assigned to user ID ${id}`] ?? 0) + 1;
+    });
+
+    const toolsUsed = await db.query.conversationMessages.findMany({
+      where: and(
+        inArray(
+          conversationMessages.conversationId,
+          similarConversations.map((c) => c.id),
+        ),
+        eq(conversationMessages.role, "tool"),
+        isNotNull(conversationMessages.clerkUserId),
+      ),
+      orderBy: (messages, { asc }) => [asc(messages.createdAt)],
+      limit: 50,
+    });
+
+    toolsUsed.forEach((message) => {
+      const metadata = message.metadata as ToolMetadata;
+      counts[`Ran tool ${metadata.tool.slug}`] = (counts[`Ran tool ${metadata.tool.slug}`] ?? 0) + 1;
+    });
+
+    similarPrompt = Object.entries(counts)
+      .map(([action, count]) => (count > 0 ? `${action} (${count})` : ""))
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  if (isWithinTokenLimit(prompt + similarPrompt, true)) {
+    prompt += `\nMessages: ${messagesText}`;
+  } else {
     const relevantMessages = [formattedMessages[0], ...formattedMessages.slice(-3)];
     prompt += `\nMessages: ${relevantMessages.join("\n")}`;
-  } else {
-    prompt += `\nMessages: ${messagesText}`;
   }
+
+  prompt += `\nActions performed on similar conversations:\n${similarPrompt}`;
 
   const { toolCalls } = await generateText({
     model: openai(GPT_4O_MINI_MODEL),
-    tools: buildAITools(mailboxTools),
+    tools: {
+      close: {
+        description: "Close the conversation",
+        parameters: z.object({}),
+        execute: async () => {},
+      },
+      spam: {
+        description: "Mark the conversation as spam",
+        parameters: z.object({}),
+        execute: async () => {},
+      },
+      assign: {
+        description:
+          "Assign the conversation to a user. The ID must start with 'user_'. Do not use this tool if no user IDs of assigned similar conversations exist.",
+        parameters: z.object({
+          userId: z.string(),
+        }),
+        execute: async () => {},
+      },
+      ...buildAITools(mailboxTools),
+    },
     temperature: 0.5,
     maxTokens: 1000,
     system: LIST_AVAILABLE_TOOLS_SYSTEM_PROMPT,
@@ -159,17 +239,29 @@ export const generateAvailableTools = async (
   });
 
   return toolCalls.map((toolCall) => {
-    const tool = mailboxTools.find((t) => t.slug === toolCall.toolName);
-    if (!tool) {
-      throw new Error(`Tool not found: ${toolCall.toolName}`);
+    switch (toolCall.toolName) {
+      case "close":
+        return { type: "close" as const };
+      case "spam":
+        return { type: "spam" as const };
+      case "assign":
+        return { type: "assign" as const, clerkUserId: toolCall.args.userId };
+      default:
+        const { toolName, args } = toolCall as any;
+        const tool = mailboxTools.find((t) => t.slug === toolName);
+        if (!tool) {
+          throw new Error(`Tool not found: ${toolName}`);
+        }
+        return {
+          type: "tool" as const,
+          tool: {
+            name: tool.name,
+            slug: tool.slug,
+            description: tool.description,
+            parameters: args,
+          } satisfies ToolAvailableResult,
+        };
     }
-
-    return {
-      name: tool.name,
-      slug: tool.slug,
-      description: tool.description,
-      parameters: toolCall.args,
-    };
   });
 };
 

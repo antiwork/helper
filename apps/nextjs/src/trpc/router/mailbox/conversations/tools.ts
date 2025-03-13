@@ -15,10 +15,6 @@ export const toolsRouter = {
       where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),
     });
 
-    if (mailboxTools.length === 0) {
-      return { recommended: [], all: [] };
-    }
-
     try {
       const toolsAvailable = await generateAvailableTools(conversation, mailbox, mailboxTools);
       return {

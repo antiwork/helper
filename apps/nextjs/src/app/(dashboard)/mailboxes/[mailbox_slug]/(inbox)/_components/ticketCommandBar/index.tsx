@@ -15,6 +15,7 @@ import { CommandList } from "./commandList";
 import { useMainPage } from "./mainPage";
 import { NotesPage } from "./notesPage";
 import { usePreviousRepliesPage } from "./previousRepliesPage";
+import { RecommendedTools } from "./recommendedTools";
 import { ToolForm } from "./toolForm";
 import { useToolsPage } from "./toolsPage";
 
@@ -39,6 +40,10 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+  const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
+    { mailboxSlug, conversationSlug },
+    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
+  );
   const { assignTicket } = useAssignTicket();
 
   const [isLoadingPreviousReplies, setIsLoadingPreviousReplies] = useState(false);
@@ -220,7 +225,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           placeholder={
             page === "main" ? "Type a command..." : page === "tools" ? "Search tools..." : "Search previous replies..."
           }
-          className={cn("rounded-sm", open && "rounded-b-none")}
+          className="rounded-sm rounded-b-none"
           iconsPrefix={<KeyboardShortcut>/</KeyboardShortcut>}
           onFocus={() => onOpenChange(true)}
           onBlur={() => {
@@ -237,6 +242,11 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           onKeyDown={handleKeyDown}
         />
       </div>
+      <RecommendedTools
+        className={open ? "hidden" : undefined}
+        tools={tools?.recommended ?? null}
+        orgMembers={orgMembers ?? null}
+      />
       <Command
         loop
         value={selectedItemId || ""}
