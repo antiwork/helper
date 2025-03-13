@@ -309,8 +309,8 @@ describe("apiTools", () => {
       const result = await generateAvailableTools(conversation, mailbox, [tool]);
 
       expect(result).toHaveLength(1);
-      expect(result[0]?.slug).toBe("test-tool");
-      expect(result[0]?.parameters).toEqual({ param1: "value1" });
+      expect(result[0]?.toolName).toBe("test-tool");
+      expect(result[0]?.args).toEqual({ param1: "value1" });
     });
 
     it("includes metadata in tool generation when available", async () => {
