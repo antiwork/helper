@@ -148,12 +148,6 @@ const publishEvent = async (messageId: number) => {
     }),
   );
 
-  console.log("publishEvent", {
-    channel: dashboardChannelId(message.conversation.mailbox.slug),
-    event: "event",
-    data: createReactionEventPayload(message, message.conversation.mailbox),
-  });
-
   await publishToAbly({
     channel: dashboardChannelId(message.conversation.mailbox.slug),
     event: "event",
