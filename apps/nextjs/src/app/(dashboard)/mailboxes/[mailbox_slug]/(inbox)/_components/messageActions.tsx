@@ -326,7 +326,7 @@ const EmailEditorComponent = React.forwardRef<
           enableFileUpload
         />
       </div>
-      {actionButtons}
+      <div className={showCommandBar ? "hidden" : ""}>{actionButtons}</div>
     </div>
   );
 });
