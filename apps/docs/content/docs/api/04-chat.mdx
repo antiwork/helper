@@ -198,7 +198,7 @@ async function createConversation(token) {
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify({
-      source: 'chat#prompt'
+      isPrompt: false
     })
   });
   

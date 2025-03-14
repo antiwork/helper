@@ -260,6 +260,8 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
               closedAt: conversationStatus === "closed" ? new Date() : null,
               conversationProvider: "gmail",
               source: "email",
+              isPrompt: false,
+              isVisitor: false,
             })
             .returning({ id: conversations.id, slug: conversations.slug, status: conversations.status })
             .then(takeUniqueOrThrow);
