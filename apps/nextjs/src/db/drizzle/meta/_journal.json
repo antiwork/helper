@@ -421,13 +421,6 @@
       "when": 1740863096002,
       "tag": "0059_known_viper",
       "breakpoints": true
-    },
-    {
-      "idx": 60,
-      "version": "7",
-      "when": 1741907385810,
-      "tag": "0060_clear_spyke",
-      "breakpoints": true
     }
   ]
 }
