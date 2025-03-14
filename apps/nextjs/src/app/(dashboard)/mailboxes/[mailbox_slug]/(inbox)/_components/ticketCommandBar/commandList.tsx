@@ -38,7 +38,9 @@ export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect,
               {item.icon && <item.icon className="h-4 w-4" />}
               <span>{item.label}</span>
               {item.shortcut && (
-                <KeyboardShortcut className="ml-auto pointer-events-none opacity-100">{item.shortcut}</KeyboardShortcut>
+                <KeyboardShortcut className="ml-auto pointer-events-none text-muted-foreground">
+                  {item.shortcut}
+                </KeyboardShortcut>
               )}
             </CommandItem>
           ))}

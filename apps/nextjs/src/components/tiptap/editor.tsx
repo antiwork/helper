@@ -81,6 +81,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
     ref,
   ) => {
     const [isMacOS, setIsMacOS] = React.useState(false);
+    const [toolbarOpen, setToolbarOpen] = React.useState(true);
 
     const updateContent = useRefToLatest((editor: Editor) => {
       const serializedContent = editor.getHTML();
@@ -232,13 +233,16 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
     return (
       <div
         className={cn(
-          "relative grid grid-rows-[max-content] h-full rounded border border-border bg-background min-h-[200px]",
+          "relative flex flex-col h-full rounded border border-border bg-background",
+          toolbarOpen && "pb-14",
           className,
         )}
         aria-label={ariaLabel}
       >
         <Toolbar
           {...{
+            open: toolbarOpen,
+            setOpen: setToolbarOpen,
             editor,
             uploadFileAttachments,
             uploadInlineImages,
@@ -281,7 +285,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
               appendTo: editorContentContainerRef.current,
             }}
             shouldShow={({ editor }) => editor.state.selection.content().size > 0 && !editor.isActive("image")}
-            className="rounded border border-border bg-muted p-2 text-xs text-muted-foreground"
+            className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
           >
             Hint: Paste URL to create link
           </BubbleMenu>

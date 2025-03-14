@@ -1,10 +1,12 @@
 import { ArrowUturnUpIcon } from "@heroicons/react/20/solid";
+import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
+import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
@@ -217,7 +219,9 @@ export const MessageActions = () => {
             <>
               <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
                 {sending ? "Replying..." : "Reply and close"}
-                {!sending && <span className="sr-only">(R)</span>}
+                {!sending && isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
+                )}
               </Button>
               <Button
                 variant="outlined"
@@ -317,6 +321,7 @@ const EmailEditorComponent = React.forwardRef<
         <TipTapEditor
           ref={ref}
           ariaLabel="Conversation editor"
+          placeholder="Type your reply here..."
           defaultContent={initialMessage}
           editable={true}
           onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
