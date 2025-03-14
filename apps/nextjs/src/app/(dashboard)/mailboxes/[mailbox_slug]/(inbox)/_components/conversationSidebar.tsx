@@ -141,7 +141,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             >
               {conversation.customerMetadata?.name || conversation.emailFrom}
             </span>
-            {conversation.customerMetadata?.isVip && <Badge variant="yellow">VIP</Badge>}
+            {conversation.customerMetadata?.isVip && <Badge variant="bright">VIP</Badge>}
             {conversation.customerMetadata?.value && conversation.customerMetadata.value > 0 && (
               <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
                 <CurrencyDollarIcon className="h-4 w-4" />
