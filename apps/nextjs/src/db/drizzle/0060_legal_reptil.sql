@@ -1,0 +1,2 @@
+ALTER TABLE "conversations_conversation" ADD COLUMN "is_prompt" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "conversations_conversation" ADD COLUMN "is_visitor" boolean DEFAULT false NOT NULL;

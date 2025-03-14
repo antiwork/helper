@@ -146,6 +146,13 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           replyCount: number;
         }[];
       }>;
+      latestEvents: import("@trpc/server").TRPCQueryProcedure<{
+        input: {
+          mailboxSlug: string;
+          cursor?: Date | undefined;
+        };
+        output: any;
+      }>;
       styleLinters: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -233,7 +240,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat" | "chat#prompt";
+              source: "email" | "chat";
+              isPrompt: boolean;
+              isVisitor: boolean;
               embeddingText: string | null;
             }[];
             total: number;
@@ -392,7 +401,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat" | "chat#prompt";
+            source: "email" | "chat";
+            isPrompt: boolean;
+            isVisitor: boolean;
             embeddingText: string | null;
           }[];
         }>;
@@ -550,7 +561,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat" | "chat#prompt";
+            source: "email" | "chat";
+            isPrompt: boolean;
+            isVisitor: boolean;
             embeddingText: string | null;
           };
         }>;
@@ -799,7 +812,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat" | "chat#prompt";
+              source: "email" | "chat";
+              isPrompt: boolean;
+              isVisitor: boolean;
               embeddingText: string | null;
             }[];
             similarityMap: Record<string, number> | undefined;

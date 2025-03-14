@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { nativeEncryptedField } from "../lib/encryptedField";
 import { randomSlugField } from "../lib/random-slug-field";
@@ -27,7 +27,9 @@ export const conversations = pgTable(
     summary: jsonb().$type<string[]>(),
     embedding: vector({ dimensions: 1536 }),
     embeddingText: text(),
-    source: text().$type<"email" | "chat" | "chat#prompt">(),
+    source: text().$type<"email" | "chat">(),
+    isPrompt: boolean().notNull().default(false),
+    isVisitor: boolean().notNull().default(false),
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }

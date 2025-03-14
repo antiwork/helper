@@ -1,10 +1,10 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/reactionsChart";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/members/_components/peopleTable";
-import { PageContent } from "@/components/pageContent";
 import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
@@ -18,12 +18,14 @@ type Props = {
   currentMailbox: { name: string; slug: string };
 };
 
+const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false });
+
 export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<Date>();
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <div className="bg-sidebar text-white px-4 flex items-center border-b border-white/20">
         <div className="flex items-center gap-6">
           <div className="flex items-center">
@@ -37,12 +39,12 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
         </div>
       </div>
 
-      <DashboardAlerts mailboxSlug={mailboxSlug} />
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <DashboardAlerts mailboxSlug={mailboxSlug} />
 
-      <PageContent className="bg-sidebar">
-        <div className="flex flex-col gap-4">
+        <div className="p-4 flex flex-col gap-4 bg-sidebar">
           <div className="flex justify-between items-center">
-            <h3 className="scroll-m-20 text-4xl font-sundry-bold text-white tracking-tight">At a glance</h3>
+            <h3 className="scroll-m-20 text-3xl font-sundry-narrow-bold text-white tracking-tight">At a glance</h3>
             <TimeRangeSelector
               value={timeRange}
               onValueChange={(value) => {
@@ -72,8 +74,13 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
               <ReactionsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
             </Panel>
           </div>
+
+          <h3 className="mt-6 scroll-m-20 text-3xl font-sundry-narrow-bold text-white tracking-tight">
+            What's happening?
+          </h3>
+          <RealtimeEvents mailboxSlug={mailboxSlug} />
         </div>
-      </PageContent>
+      </div>
     </div>
   );
 }

@@ -224,7 +224,7 @@ const ConversationContent = () => {
           <Badge variant="dark">Help Scout</Badge>
         )}
         {conversationInfo?.customerMetadata?.isVip && (
-          <Badge variant="yellow" className="no-underline">
+          <Badge variant="bright" className="no-underline">
             VIP
           </Badge>
         )}

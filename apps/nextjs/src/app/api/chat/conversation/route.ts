@@ -15,14 +15,11 @@ export async function POST(request: Request) {
     return corsResponse({ error: authResult.error }, { status: 401 });
   }
 
-  const isAnonymous = authResult.session.isAnonymous;
-  let { source } = await request.json();
-  source = isAnonymous && source !== "chat#prompt" ? "chat#visitor" : source;
-
-  const isPrompt = source === "chat#prompt";
+  const { isPrompt } = await request.json();
+  const isVisitor = authResult.session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
 
-  if (isAnonymous && authResult.session.email) {
+  if (isVisitor && authResult.session.email) {
     const platformCustomer = await getPlatformCustomer(authResult.mailbox.id, authResult.session.email);
     if (platformCustomer?.isVip && !isPrompt) {
       status = VIP_INITIAL_STATUS;
@@ -30,12 +27,14 @@ export async function POST(request: Request) {
   }
 
   const newConversation = await createConversation({
-    emailFrom: isAnonymous || !authResult.session.email ? null : authResult.session.email,
+    emailFrom: isVisitor || !authResult.session.email ? null : authResult.session.email,
     mailboxId: authResult.mailbox.id,
     subject: CHAT_CONVERSATION_SUBJECT,
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",
-    source,
+    source: "chat",
+    isPrompt,
+    isVisitor,
   });
 
   return corsResponse({ conversationSlug: newConversation.slug });
