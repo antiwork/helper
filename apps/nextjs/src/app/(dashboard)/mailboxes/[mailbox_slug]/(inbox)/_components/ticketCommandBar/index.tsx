@@ -1,9 +1,14 @@
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useAssignTicket";
-import { Command, CommandInput } from "@/components/ui/command";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { KeyboardShortcut } from "@/components/keyboardShortcut";
+import { Button } from "@/components/ui/button";
+import { Command } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useAssigneesPage } from "./assigneesPage";
 import { CommandList } from "./commandList";
@@ -17,26 +22,20 @@ import { useToolsPage } from "./toolsPage";
 type TicketCommandBarProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onGenerateDraft: () => void;
   onInsertReply: (content: string) => void;
-  showCc: boolean;
   onToggleCc: () => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 };
 
-export function TicketCommandBar({
-  open,
-  onOpenChange,
-  onGenerateDraft,
-  onInsertReply,
-  showCc,
-  onToggleCc,
-}: TicketCommandBarProps) {
+export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc, inputRef }: TicketCommandBarProps) {
   const { conversationSlug, mailboxSlug } = useConversationContext();
+  const internalInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "tools" | "github-issue">(
     "main",
   );
+  const pageRef = useRef<string>("main");
   const { user: currentUser } = useUser();
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -58,102 +57,7 @@ export function TicketCommandBar({
       },
     );
 
-  // Reset selection when dialog opens/closes or page changes
-  useEffect(() => {
-    setSelectedItemId(null);
-    setInputValue("");
-
-    if (page === "previous-replies") {
-      setIsLoadingPreviousReplies(true);
-      void refetchPreviousReplies().finally(() => {
-        setIsLoadingPreviousReplies(false);
-      });
-    }
-
-    if (!open) {
-      // Wait for the close animation
-      setTimeout(() => {
-        setPage("main");
-        toolsPage.clearSelectedTool();
-      }, 500);
-    }
-  }, [open, page, refetchPreviousReplies]);
-
-  const handleSelect = (itemId: string) => {
-    const allItems = currentGroups.flatMap((group) => group.items).filter((item) => !item.hidden);
-    const selectedItem = allItems.find((item) => item.id === itemId);
-
-    if (selectedItem?.id === "previous-replies") {
-      setPage("previous-replies");
-      setSelectedItemId(null);
-    } else if (selectedItem?.id === "assign") {
-      setPage("assignees");
-      setSelectedItemId(null);
-    } else if (selectedItem?.id === "add-note") {
-      setPage("notes");
-      setSelectedItemId(null);
-    } else if (selectedItem?.id === "github-issue") {
-      setPage("github-issue");
-      setSelectedItemId(null);
-    } else {
-      selectedItem?.onSelect();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    const allItems = currentGroups.flatMap((group) => group.items).filter((item) => !item.hidden);
-    const currentIndex = allItems.findIndex((item) => item.id === selectedItemId);
-
-    const updateSelection = (newIndex: number) => {
-      e.preventDefault();
-      const newId = allItems[newIndex]?.id ?? null;
-      setSelectedItemId(newId);
-    };
-
-    switch (e.key) {
-      case "ArrowDown":
-        if (currentIndex === -1) {
-          updateSelection(0);
-        } else {
-          updateSelection((currentIndex + 1) % allItems.length);
-        }
-        break;
-      case "ArrowUp":
-        if (currentIndex === -1) {
-          updateSelection(allItems.length - 1);
-        } else {
-          updateSelection((currentIndex - 1 + allItems.length) % allItems.length);
-        }
-        break;
-      case "ArrowLeft":
-        if (page === "previous-replies" || page === "assignees") {
-          e.preventDefault();
-          setPage("main");
-        }
-        break;
-      case "Enter":
-        if (selectedItemId) {
-          e.preventDefault();
-          handleSelect(selectedItemId);
-        }
-        break;
-      case "Escape":
-        if (page === "previous-replies" || page === "assignees") {
-          setPage("main");
-        } else {
-          onOpenChange(false);
-        }
-        break;
-      case "Backspace":
-        if ((page === "previous-replies" || page === "assignees" || page === "github-issue") && !inputValue) {
-          setPage("main");
-        }
-        break;
-    }
-  };
-
   const mainPageGroups = useMainPage({
-    onGenerateDraft,
     onOpenChange,
     setPage,
     setSelectedItemId,
@@ -195,87 +99,185 @@ export function TicketCommandBar({
     }
   })();
 
-  const selectedItem = currentGroups
-    .flatMap((group) => group.items)
-    .filter((item) => !item.hidden)
-    .find((item) => item.id === selectedItemId);
+  const visibleGroups = currentGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.hidden && item.label.toLowerCase().includes(inputValue.toLowerCase())),
+    }))
+    .filter((group) => group.items.length > 0);
+  const visibleItems = visibleGroups.flatMap((group) => group.items);
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent className="gap-0 p-0 shadow-2xl shadow-black max-w-[1100px] md:h-[600px] h-screen flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] duration-200 focus:outline-none">
-        <DialogTitle className="sr-only">Ticket Command Bar</DialogTitle>
-        <DialogDescription className="sr-only">
-          Command bar for ticket actions and management. Use arrow keys to navigate, enter to select, and escape to
-          close.
-        </DialogDescription>
-        {page === "notes" ? (
-          <NotesPage onOpenChange={onOpenChange} />
-        ) : page === "tools" && toolsPage.selectedTool ? (
-          <ToolForm tool={toolsPage.selectedTool} onOpenChange={onOpenChange} />
-        ) : page === "github-issue" ? (
-          <GitHubIssuePage onOpenChange={onOpenChange} />
-        ) : (
-          <>
-            <Command
-              loop
-              value={selectedItemId || ""}
-              onValueChange={setSelectedItemId}
-              className="flex-1 flex flex-col overflow-hidden [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
-              filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
-            >
-              <CommandInput
-                placeholder={
-                  page === "main"
-                    ? "Type a command or search actions..."
-                    : page === "tools"
-                      ? "Search tools..."
-                      : "Search previous replies..."
-                }
-                value={inputValue}
-                onValueChange={setInputValue}
-                onKeyDown={handleKeyDown}
-              />
-              <div className="flex-1 grid md:grid-cols-3 grid-cols-1 overflow-hidden">
-                <div className="flex-1 flex-col min-h-0">
-                  <CommandList
-                    isLoading={isLoadingPreviousReplies}
-                    page={page}
-                    groups={currentGroups}
-                    selectedItemId={selectedItemId}
-                    onSelect={handleSelect}
-                    onMouseEnter={setSelectedItemId}
-                  />
-                </div>
-                <div className="col-span-2 border-l overflow-y-auto md:block hidden">
-                  {selectedItem?.preview ?? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      <p>Select an item to see more details</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Command>
-            <div className="flex-shrink-0 border-t border-border p-2 text-xs text-muted-foreground flex items-center justify-center gap-3">
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded border bg-muted">↑↓</kbd>
-                <span>to navigate</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded border bg-muted">⏎</kbd>
-                <span>to select</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded border bg-muted">←</kbd>
-                <span>{page === "previous-replies" ? "Move to parent" : "Move back"}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded border bg-muted">Esc</kbd>
-                <span>to close</span>
-              </div>
-            </div>
-          </>
+  useEffect(() => {
+    pageRef.current = `${page}-${toolsPage.selectedTool ? toolsPage.selectedTool.slug : "none"}`;
+  }, [page, toolsPage.selectedTool]);
+
+  // Reset selection when dialog opens/closes or page changes
+  useEffect(() => {
+    setSelectedItemId(visibleItems[0]?.id ?? null);
+    setInputValue("");
+
+    if (page === "previous-replies") {
+      setIsLoadingPreviousReplies(true);
+      void refetchPreviousReplies().finally(() => {
+        setIsLoadingPreviousReplies(false);
+      });
+    }
+
+    if (!open) {
+      // Wait for the close animation
+      setTimeout(() => {
+        setPage("main");
+        toolsPage.clearSelectedTool();
+      }, 500);
+    }
+  }, [open, page, refetchPreviousReplies]);
+
+  useEffect(() => {
+    setSelectedItemId(visibleItems[0]?.id ?? null);
+  }, [inputValue]);
+
+  useKeyboardShortcut("/", (e) => {
+    e.preventDefault();
+    inputRef.current?.focus();
+  });
+
+  const handleSelect = (itemId: string) => {
+    const selectedItem = visibleItems.find((item) => item.id === itemId);
+
+    if (selectedItem?.id === "previous-replies") {
+      setPage("previous-replies");
+      setSelectedItemId(null);
+    } else if (selectedItem?.id === "assign") {
+      setPage("assignees");
+      setSelectedItemId(null);
+    } else if (selectedItem?.id === "add-note") {
+      setPage("notes");
+      setSelectedItemId(null);
+    } else if (selectedItem?.id === "github-issue") {
+      setPage("github-issue");
+      setSelectedItemId(null);
+    } else {
+      selectedItem?.onSelect();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const currentIndex = visibleItems.findIndex((item) => item.id === selectedItemId);
+
+    const updateSelection = (newIndex: number) => {
+      e.preventDefault();
+      const newId = visibleItems[newIndex]?.id ?? null;
+      setSelectedItemId(newId);
+    };
+
+    switch (e.key) {
+      case "ArrowDown":
+        if (currentIndex === -1) {
+          updateSelection(0);
+        } else {
+          updateSelection((currentIndex + 1) % visibleItems.length);
+        }
+        break;
+      case "ArrowUp":
+        if (currentIndex === -1) {
+          updateSelection(visibleItems.length - 1);
+        } else {
+          updateSelection((currentIndex - 1 + visibleItems.length) % visibleItems.length);
+        }
+        break;
+      case "ArrowLeft":
+        if (page === "previous-replies" || page === "assignees") {
+          e.preventDefault();
+          setPage("main");
+        }
+        break;
+      case "Enter":
+        if (selectedItemId) {
+          e.preventDefault();
+          handleSelect(selectedItemId);
+        }
+        break;
+      case "Escape":
+        if (page === "previous-replies" || page === "assignees") {
+          setPage("main");
+        } else {
+          onOpenChange(false);
+        }
+        break;
+      case "Backspace":
+        if ((page === "previous-replies" || page === "assignees") && !inputValue) {
+          setPage("main");
+        }
+        break;
+    }
+  };
+
+  return open && page === "notes" ? (
+    <FormPage onOpenChange={onOpenChange}>
+      <NotesPage onOpenChange={onOpenChange} />
+    </FormPage>
+  ) : open && page === "tools" && toolsPage.selectedTool ? (
+    <FormPage onOpenChange={onOpenChange}>
+      <ToolForm tool={toolsPage.selectedTool} onOpenChange={onOpenChange} />
+    </FormPage>
+  ) : open && page === "github-issue" ? (
+    <FormPage onOpenChange={onOpenChange}>
+      <GitHubIssuePage onOpenChange={onOpenChange} />
+    </FormPage>
+  ) : (
+    <>
+      <div>
+        <Input
+          ref={inputRef}
+          placeholder={
+            page === "main" ? "Type a command..." : page === "tools" ? "Search tools..." : "Search previous replies..."
+          }
+          className={cn("rounded-sm", open && "rounded-b-none")}
+          iconsPrefix={<KeyboardShortcut>/</KeyboardShortcut>}
+          onFocus={() => onOpenChange(true)}
+          onBlur={() => {
+            const oldPage = pageRef.current;
+
+            // Changing page blurs the input temporarily, so wait and see if the blur was because of the page change
+            setTimeout(() => {
+              if (pageRef.current === oldPage) onOpenChange(false);
+              else inputRef.current?.focus();
+            }, 100);
+          }}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+      <Command
+        loop
+        value={selectedItemId || ""}
+        onValueChange={setSelectedItemId}
+        className={cn(
+          "rounded-t-none flex-1 flex flex-col overflow-auto [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
+          !open && "hidden",
         )}
-      </DialogContent>
-    </Dialog>
+      >
+        <CommandList
+          isLoading={isLoadingPreviousReplies}
+          page={page}
+          groups={visibleGroups}
+          selectedItemId={selectedItemId}
+          onSelect={handleSelect}
+          onMouseEnter={setSelectedItemId}
+        />
+      </Command>
+    </>
   );
 }
+
+const FormPage = ({ onOpenChange, children }: { onOpenChange: (open: boolean) => void; children: React.ReactNode }) => {
+  return (
+    <div className="flex-1 min-h-0 overflow-auto relative bg-background rounded">
+      <Button variant="ghost" iconOnly className="absolute top-2 right-2" onClick={() => onOpenChange(false)}>
+        <XMarkIcon className="w-4 h-4" />
+      </Button>
+      {children}
+    </div>
+  );
+};

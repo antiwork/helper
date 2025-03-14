@@ -2,7 +2,7 @@ import { cache } from "react";
 import { MarketingPage } from "./_components/MarketingPage";
 
 async function getGitHubStars() {
-  const response = await fetch("https://api.github.com/repos/anti-work/helper", {
+  const response = await fetch("https://api.github.com/repos/antiwork/helper", {
     next: { revalidate: 3600 }, // Cache for 1 hour
   });
 

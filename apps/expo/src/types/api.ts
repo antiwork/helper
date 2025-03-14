@@ -205,9 +205,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
             limit?: number | undefined;
-            assignee?: string[] | undefined;
             cursor?: string | null | undefined;
             category?: unknown;
+            assignee?: string[] | undefined;
             createdAfter?: string | undefined;
             createdBefore?: string | undefined;
             repliedBy?: string[] | undefined;
@@ -612,9 +612,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
                   topic?: number[] | undefined;
                   limit?: number | undefined;
-                  assignee?: string[] | undefined;
                   cursor?: string | null | undefined;
                   category?: unknown;
+                  assignee?: string[] | undefined;
                   createdAfter?: string | undefined;
                   createdBefore?: string | undefined;
                   repliedBy?: string[] | undefined;
@@ -788,6 +788,58 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             };
           }>;
         };
+        github: {
+          createGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              body: string;
+              title: string;
+            };
+            output: {
+              issueNumber: number;
+              issueUrl: string;
+              issueId: number;
+            };
+          }>;
+          updateGitHubIssueState: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              state: "open" | "closed";
+            };
+            output: {
+              state: string;
+              issueUrl: string;
+              issueNumber: any;
+            };
+          }>;
+          linkExistingGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              issueNumber: number;
+            };
+            output: {
+              issueNumber: number;
+              issueUrl: string;
+            };
+          }>;
+          listRepositoryIssues: import("@trpc/server").TRPCQueryProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              state?: "open" | "closed" | "all" | undefined;
+            };
+            output: {
+              number: number;
+              title: string;
+              state: string;
+              url: string;
+              updatedAt: string;
+            }[];
+          }>;
+        };
         findSimilar: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
@@ -838,55 +890,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             vipOverdue: number;
             vipExpectedResponseHours: any;
           };
-        }>;
-        createGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            body: string;
-            conversationSlug: string;
-            title: string;
-          };
-          output: {
-            issueNumber: number;
-            issueUrl: string;
-            issueId: number;
-          };
-        }>;
-        updateGitHubIssueState: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            state: "open" | "closed";
-          };
-          output: {
-            state: string;
-            issueUrl: string;
-            issueNumber: number;
-          };
-        }>;
-        linkExistingGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            issueNumber: number;
-          };
-          output: {
-            issueNumber: number;
-            issueUrl: string;
-          };
-        }>;
-        listRepositoryIssues: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            state?: "open" | "closed" | "all" | undefined;
-          };
-          output: {
-            number: number;
-            title: string;
-            state: string;
-            url: string;
-            updatedAt: string;
-          }[];
         }>;
       };
       faqs: {
