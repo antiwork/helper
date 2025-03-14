@@ -21,24 +21,11 @@ export default inngest.createFunction(
       const mailboxTools = await db.query.tools.findMany({
         where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),
       });
-      const toolCalls = await generateSuggestedActions(conversation, mailbox, mailboxTools);
+      const suggestedActions = await generateSuggestedActions(conversation, mailbox, mailboxTools);
 
       const result = await db
         .update(conversations)
-        .set({
-          suggestedActions: toolCalls.map(({ toolName, args }) => {
-            switch (toolName) {
-              case "close":
-                return { type: "close" };
-              case "spam":
-                return { type: "spam" };
-              case "assign":
-                return { type: "assign", clerkUserId: args.userId };
-              default:
-                return { type: "tool", slug: toolName, parameters: args };
-            }
-          }),
-        })
+        .set({ suggestedActions })
         .where(eq(conversations.id, conversationId))
         .returning()
         .then(takeUniqueOrThrow);

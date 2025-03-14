@@ -2,7 +2,7 @@ import { generateText } from "ai";
 import { and, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversationEvents, conversationMessages, ToolMetadata } from "@/db/schema";
+import { conversationEvents, conversationMessages, conversations, ToolMetadata } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
 import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
@@ -195,7 +195,18 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
     },
   });
 
-  return toolCalls;
+  return toolCalls.map(({ toolName, args }) => {
+    switch (toolName) {
+      case "close":
+        return { type: "close" };
+      case "spam":
+        return { type: "spam" };
+      case "assign":
+        return { type: "assign", clerkUserId: args.userId };
+      default:
+        return { type: "tool", slug: toolName, parameters: args };
+    }
+  }) satisfies (typeof conversations.$inferInsert)["suggestedActions"];
 };
 
 const createHeaders = (tool: Tool) => {
