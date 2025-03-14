@@ -421,6 +421,20 @@
       "when": 1740863096002,
       "tag": "0059_known_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1741940412430,
+      "tag": "0060_broken_ogun",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1741947039034,
+      "tag": "0061_unique_hardball",
+      "breakpoints": true
     }
   ]
 }

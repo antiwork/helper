@@ -33,6 +33,8 @@ export const mailboxRouter = {
         id: true,
         name: true,
         slug: true,
+        autoCloseEnabled: true,
+        autoCloseDaysOfInactivity: true,
       },
     });
 
@@ -96,6 +98,8 @@ export const mailboxRouter = {
   }),
 
   get: mailboxProcedure.query(async ({ ctx }) => {
+    const mailbox = await getMailboxInfo(ctx.mailbox);
+    console.log("mailbox", mailbox);
     return await getMailboxInfo(ctx.mailbox);
   }),
   update: mailboxProcedure
@@ -111,6 +115,8 @@ export const mailboxRouter = {
         vipChannelId: z.string().optional(),
         vipExpectedResponseHours: z.number().optional(),
         disableAutoResponseForVips: z.boolean().optional(),
+        autoCloseEnabled: z.boolean().optional(),
+        autoCloseDaysOfInactivity: z.number().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

@@ -28,6 +28,7 @@ import { getTauriPlatform } from "@/components/useNativePlatform";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { SidebarInfo } from "../../_components/getSidebarInfo";
+import AutoCloseSetting, { AutoCloseUpdates } from "./autoCloseSetting";
 import WorkflowsSetting, { type Workflow } from "./automaticWorkflowsSetting";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
@@ -51,6 +52,7 @@ export type PendingUpdates = {
     widgetHost?: string;
   };
   customer?: CustomerUpdates;
+  autoClose?: AutoCloseUpdates;
 };
 
 type SettingsProps = {
@@ -107,7 +109,8 @@ const Settings = ({
     Boolean(pendingUpdates.promptLines?.length) ||
     Boolean(pendingUpdates.slack) ||
     Boolean(pendingUpdates.widget) ||
-    Boolean(pendingUpdates.customer);
+    Boolean(pendingUpdates.customer) ||
+    Boolean(pendingUpdates.autoClose);
 
   const handleSignOut = async () => {
     try {
@@ -118,6 +121,14 @@ const Settings = ({
         title: "Failed to sign out",
       });
     }
+  };
+
+  const handleAutoCloseUpdate = async (updates: AutoCloseUpdates) => {
+    setPendingUpdates((prev) => ({
+      ...prev,
+      autoClose: updates,
+    }));
+    await handleUpdateSettings();
   };
 
   const items = [
@@ -198,13 +209,14 @@ const Settings = ({
           <MetadataEndpointSetting metadataEndpoint={mailbox.metadataEndpoint} />
           <SlackSetting
             mailbox={mailbox}
-            onChange={(slackChanges) =>
-              setPendingUpdates({
-                ...pendingUpdates,
-                slack: { ...pendingUpdates.slack, ...slackChanges },
-              })
-            }
+            onChange={(slackUpdates) => {
+              setPendingUpdates((prev) => ({
+                ...prev,
+                slack: slackUpdates,
+              }));
+            }}
           />
+          <AutoCloseSetting mailbox={mailbox} onUpdate={handleAutoCloseUpdate} />
           <ConnectSupportEmail supportAccount={supportAccount} />
         </>
       ),

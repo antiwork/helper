@@ -51,6 +51,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           name: string;
           id: number;
           slug: string;
+          autoCloseEnabled: boolean;
+          autoCloseDaysOfInactivity: number;
         }[];
       }>;
       countByStatus: import("@trpc/server").TRPCQueryProcedure<{
@@ -115,6 +117,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipChannelId: string | null;
           vipExpectedResponseHours: number | null;
           disableAutoResponseForVips: boolean;
+          autoCloseEnabled: boolean;
+          autoCloseDaysOfInactivity: number;
         };
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
@@ -130,6 +134,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipChannelId?: string | undefined;
           vipExpectedResponseHours?: number | undefined;
           disableAutoResponseForVips?: boolean | undefined;
+          autoCloseEnabled?: boolean | undefined;
+          autoCloseDaysOfInactivity?: number | undefined;
         };
         output: void;
       }>;

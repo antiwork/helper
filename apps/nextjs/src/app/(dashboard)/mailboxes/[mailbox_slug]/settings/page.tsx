@@ -24,6 +24,8 @@ const Page = async (props: { params: Promise<PageProps> }) => {
   const handleUpdateSettings = async (pendingUpdates: PendingUpdates) => {
     "use server";
 
+    console.log("pendingUpdates", pendingUpdates);
+
     if (pendingUpdates.slack) {
       try {
         await api.mailbox.update({
@@ -65,13 +67,29 @@ const Page = async (props: { params: Promise<PageProps> }) => {
     }
 
     if (pendingUpdates.customer) {
-      await api.mailbox.update({
-        mailboxSlug: params.mailbox_slug,
-        vipThreshold: pendingUpdates.customer.vipThreshold ? Number(pendingUpdates.customer.vipThreshold) : undefined,
-        vipChannelId: pendingUpdates.customer.vipChannelId ?? undefined,
-        vipExpectedResponseHours: pendingUpdates.customer.vipExpectedResponseHours ?? undefined,
-        disableAutoResponseForVips: pendingUpdates.customer.disableAutoResponseForVips ?? false,
-      });
+      try {
+        await api.mailbox.update({
+          mailboxSlug: params.mailbox_slug,
+          vipThreshold: pendingUpdates.customer.vipThreshold ? Number(pendingUpdates.customer.vipThreshold) : undefined,
+          vipChannelId: pendingUpdates.customer.vipChannelId ?? undefined,
+          vipExpectedResponseHours: pendingUpdates.customer.vipExpectedResponseHours ?? undefined,
+          disableAutoResponseForVips: pendingUpdates.customer.disableAutoResponseForVips ?? false,
+        });
+      } catch (e) {
+        throw new Error("Failed to update customer settings");
+      }
+    }
+
+    if (pendingUpdates.autoClose) {
+      try {
+        await api.mailbox.update({
+          mailboxSlug: params.mailbox_slug,
+          autoCloseEnabled: pendingUpdates.autoClose.autoCloseEnabled,
+          autoCloseDaysOfInactivity: pendingUpdates.autoClose.autoCloseDaysOfInactivity,
+        });
+      } catch (e) {
+        throw new Error("Failed to update auto-close settings");
+      }
     }
 
     revalidatePath(settingsPath);
