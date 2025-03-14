@@ -1,4 +1,4 @@
-import { Check, ExternalLinkIcon, SearchIcon } from "lucide-react";
+import { Check, ExternalLinkIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
@@ -54,12 +53,8 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
     },
   );
 
-  const conversationWithGitHub = conversation as any;
-  const hasLinkedIssue = conversationWithGitHub?.githubIssueNumber && conversationWithGitHub?.githubIssueUrl;
-  const issueNumber = hasLinkedIssue ? conversationWithGitHub.githubIssueNumber : null;
-  const issueUrl = hasLinkedIssue ? conversationWithGitHub.githubIssueUrl : null;
-  const issueState = conversationWithGitHub?.githubIssueState || "open";
-  const isIssueClosed = issueState === "closed";
+  const issueNumber = conversation?.githubIssueNumber ?? null;
+  const issueUrl = conversation?.githubIssueUrl ?? null;
 
   // Set initial values when conversation data is loaded
   useEffect(() => {
@@ -73,11 +68,11 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
             : "",
       );
 
-      if (hasLinkedIssue) {
+      if (issueNumber) {
         setActiveTab("view");
       }
     }
-  }, [conversation, hasLinkedIssue]);
+  }, [conversation, issueNumber]);
 
   const handleCreateIssue = async () => {
     if (!mailbox?.githubConnected || !mailbox.githubRepoOwner || !mailbox.githubRepoName) {
@@ -214,23 +209,19 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
   return (
     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-      <h3 className="font-medium mb-4">GitHub Issue</h3>
-      <p className="text-sm text-muted-foreground mb-4">Manage GitHub issues for this conversation.</p>
-
+      <h3 className="font-medium mb-4">Link GitHub Issue</h3>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid w-full ${hasLinkedIssue ? "grid-cols-3" : "grid-cols-2"}`}>
-          {hasLinkedIssue && <TabsTrigger value="view">View Linked Issue</TabsTrigger>}
+        <TabsList className={`grid w-full ${issueNumber ? "grid-cols-3" : "grid-cols-2"}`}>
+          {issueNumber && <TabsTrigger value="view">View Linked Issue</TabsTrigger>}
           <TabsTrigger value="create">Create New Issue</TabsTrigger>
           <TabsTrigger value="link">Link Existing Issue</TabsTrigger>
         </TabsList>
 
-        {hasLinkedIssue && (
+        {issueNumber && issueUrl && (
           <TabsContent value="view" className="space-y-4 mt-4">
             <div className="p-4 border rounded-md">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">
-                  Issue #{issueNumber} - {isIssueClosed ? "Closed" : "Open"}
-                </h3>
+                <h3 className="font-medium">Issue #{issueNumber}</h3>
                 <a
                   href={issueUrl}
                   target="_blank"
@@ -239,13 +230,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
                 >
                   View on GitHub <ExternalLinkIcon className="h-3 w-3 ml-1" />
                 </a>
-              </div>
-              <div className="space-y-2">
-                {isIssueClosed ? (
-                  <Button onClick={() => handleUpdateIssueState("open")} disabled={isUpdatingState} className="w-full">
-                    {isUpdatingState ? <LoadingSpinner size="sm" /> : "Reopen Issue"}
-                  </Button>
-                ) : null}
               </div>
             </div>
           </TabsContent>
@@ -262,7 +246,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
               id="body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              rows={10}
+              rows={3}
               className="resize-none"
             />
           </div>

@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { useRouter } from "next/navigation";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
 import GitHubSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/icons/github.svg";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
@@ -90,26 +91,26 @@ const GitHubSetting = ({
   const { mutateAsync: disconnectGitHub } = api.mailbox.github.disconnect.useMutation();
   const [isGitHubConnected, setGitHubConnected] = useState(mailbox.githubConnected);
   const repoUID = useId();
+  const [githubConnectResult, setGithubConnectResult] = useQueryState(
+    "githubConnectResult",
+    parseAsStringEnum(["success", "error"] as const),
+  );
 
-  // Check for GitHub connection status from URL
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const githubConnectResult = params.get("githubConnectResult");
-
     if (githubConnectResult === "success") {
       toast({
         title: "GitHub connected successfully",
         variant: "success",
       });
-      // Use Next.js router to update the URL
-      router.push(`${window.location.pathname}?tab=integrations`);
+      setGithubConnectResult(null);
     } else if (githubConnectResult === "error") {
       toast({
         title: "Failed to connect GitHub",
         variant: "destructive",
       });
+      setGithubConnectResult(null);
     }
-  }, [router]);
+  }, [githubConnectResult, router, setGithubConnectResult]);
 
   const onDisconnectGitHub = async () => {
     try {

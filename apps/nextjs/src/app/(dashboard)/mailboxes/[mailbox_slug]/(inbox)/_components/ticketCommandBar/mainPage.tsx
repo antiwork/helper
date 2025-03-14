@@ -162,7 +162,7 @@ export const useMainPage = ({
           },
           {
             id: "github-issue",
-            label: "GitHub Issue",
+            label: conversation?.githubIssueNumber ? "Manage GitHub Issue" : "Link GitHub Issue",
             icon: GitHubSvg,
             onSelect: () => {
               setPage("github-issue");

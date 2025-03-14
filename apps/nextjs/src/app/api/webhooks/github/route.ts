@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, mailboxes } from "@/db/schema";
+import { conversations } from "@/db/schema";
 import { env } from "@/env";
 import { createReply } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
@@ -29,12 +29,12 @@ export async function POST(request: Request) {
     const data = JSON.parse(payload);
     const event = request.headers.get("x-github-event");
 
-    if (event === "issues" && (data.action === "closed" || data.action === "reopened" || data.action === "opened")) {
+    if (event === "issues" && (data.action === "closed" || data.action === "reopened")) {
       const issueNumber = data.issue.number;
       const repoFullName = data.repository.full_name;
       const [repoOwner, repoName] = repoFullName.split("/");
 
-      const conversation = await db.query.conversations.findFirst({
+      const linkedConversations = await db.query.conversations.findMany({
         where: and(
           eq(conversations.githubIssueNumber, issueNumber),
           eq(conversations.githubRepoOwner, repoOwner),
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         ),
       });
 
-      if (conversation) {
+      for (const conversation of linkedConversations) {
         if (data.action === "closed") {
           await db.update(conversations).set({ status: "closed" }).where(eq(conversations.id, conversation.id));
 
@@ -55,34 +55,16 @@ export async function POST(request: Request) {
             close: true,
           });
 
-          const issueUrl = data.issue.html_url;
           await addNote({
             conversationId: conversation.id,
-            message: `GitHub issue [#${issueNumber}](${issueUrl}) has been closed.`,
+            message: `GitHub issue [#${issueNumber}](${data.issue.html_url}) has been closed.`,
             user: null,
           });
-
-          await db.insert(conversationMessages).values({
+        } else if (data.action === "reopened") {
+          await addNote({
             conversationId: conversation.id,
-            body: `GitHub issue #${issueNumber} has been closed.`,
-            role: "workflow",
-            isPerfect: true,
-            isFlaggedAsBad: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-        } else if (data.action === "reopened" || data.action === "opened") {
-          await db.update(conversations).set({ status: "open" }).where(eq(conversations.id, conversation.id));
-
-          const actionText = data.action === "reopened" ? "reopened" : "opened";
-          await db.insert(conversationMessages).values({
-            conversationId: conversation.id,
-            body: `GitHub issue #${issueNumber} has been ${actionText}.`,
-            role: "workflow",
-            isPerfect: true,
-            isFlaggedAsBad: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            message: `GitHub issue [#${issueNumber}](${data.issue.html_url}) has been reopened.`,
+            user: null,
           });
         }
       }
