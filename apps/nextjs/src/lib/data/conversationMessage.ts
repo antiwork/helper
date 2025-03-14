@@ -495,6 +495,7 @@ export const createToolEvent = async ({
   error,
   parameters,
   userMessage,
+  clerkUserId,
   tx = db,
 }: {
   conversationId: number;
@@ -503,6 +504,7 @@ export const createToolEvent = async ({
   error?: any;
   parameters: Record<string, any>;
   userMessage: string;
+  clerkUserId?: string;
   tx?: Transaction | typeof db;
 }) => {
   const message = await tx.insert(conversationMessages).values({
@@ -526,6 +528,7 @@ export const createToolEvent = async ({
     isPerfect: false,
     isFlaggedAsBad: false,
     status: "sent",
+    clerkUserId,
   });
 
   return message;

@@ -28,6 +28,7 @@ import refreshConversationDraft from "./refreshConversationDraft";
 import renewMailboxWatches from "./renewMailboxWatches";
 import scheduledWebsiteCrawl from "./scheduledWebsiteCrawl";
 import suggestKnowledgeBankChanges from "./suggestKnowledgeBankChanges";
+import updateSuggestedActions from "./updateSuggestedActions";
 
 export default [
   postAssigneeOnSlack,
@@ -62,4 +63,5 @@ export default [
   checkAssignedTicketResponseTimes,
   suggestKnowledgeBankChanges,
   checkConversationResolution,
+  updateSuggestedActions,
 ];

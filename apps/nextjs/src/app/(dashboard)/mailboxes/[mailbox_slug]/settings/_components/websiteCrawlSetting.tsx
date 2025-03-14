@@ -156,10 +156,10 @@ const WebsiteCrawlSetting = () => {
               {Array.from({ length: 2 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 py-4">
                   <div className="grow space-y-2">
-                    <div className="h-4 w-32 rounded bg-secondary animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
-                    <div className="h-4 w-48 rounded bg-secondary animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
+                    <div className="h-4 w-32 rounded bg-secondary animate-skeleton" />
+                    <div className="h-4 w-48 rounded bg-secondary animate-skeleton" />
                   </div>
-                  <div className="h-6 w-16 rounded bg-secondary animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
+                  <div className="h-6 w-16 rounded bg-secondary animate-skeleton" />
                 </div>
               ))}
             </>
