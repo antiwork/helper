@@ -5,7 +5,7 @@ import { CommandGroup } from "./types";
 
 type CommandListProps = {
   isLoading: boolean;
-  page: "main" | "previous-replies" | "assignees" | "notes" | "tools";
+  page: "main" | "previous-replies" | "assignees" | "notes" | "tools" | "github-issue";
   groups: CommandGroup[];
   selectedItemId: string | null;
   onSelect: (id: string) => void;
