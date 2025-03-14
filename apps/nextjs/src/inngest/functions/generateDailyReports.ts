@@ -109,7 +109,10 @@ export async function generateMailboxReport(mailboxId: number) {
           eq(conversationMessages.role, "staff"),
           gt(conversationMessages.createdAt, startTime),
           lt(conversationMessages.createdAt, endTime),
-          gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, (mailbox.vipThreshold ?? 0) * 100),
+          gt(
+            sql`COALESCE((${platformCustomers.value}->>'recent')::numeric, 0) >= ${(mailbox.vipThreshold ?? 0) * 100} OR COALESCE((${platformCustomers.value}->>'lifetime')::numeric, 0) >= ${mailbox.vipThreshold ?? 0}`,
+            0,
+          ),
         ),
       );
     vipAvgReplyTimeMessage = vipReplyTimeResult?.average

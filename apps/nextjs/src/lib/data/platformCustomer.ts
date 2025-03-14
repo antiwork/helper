@@ -5,7 +5,7 @@ import { getMailboxById } from "./mailbox";
 
 type CustomerMetadata = {
   name?: string | null;
-  value?: number | null;
+  value?: { recent?: number; lifetime?: number } | null;
   links?: Record<string, string> | null;
 };
 
@@ -13,9 +13,14 @@ export type PlatformCustomer = typeof platformCustomers.$inferSelect & {
   isVip: boolean;
 };
 
-export const determineVipStatus = (customerValue: number | null, vipThreshold: number | null) => {
-  if (!customerValue || !vipThreshold) return false;
-  return customerValue / 100 >= vipThreshold;
+export const determineVipStatus = (
+  customerValue: { recent?: number; lifetime?: number } | null,
+  vipThreshold: number | null,
+) => {
+  if (!vipThreshold) return false;
+  if (customerValue?.recent && customerValue.recent / 100 >= vipThreshold) return true;
+  if (customerValue?.lifetime && customerValue.lifetime >= vipThreshold) return true;
+  return false;
 };
 
 export const getPlatformCustomer = async (mailboxId: number, email: string): Promise<PlatformCustomer | null> => {
@@ -30,7 +35,10 @@ export const getPlatformCustomer = async (mailboxId: number, email: string): Pro
 
   return {
     ...customer,
-    isVip: determineVipStatus(customer.value as number | null, mailbox?.vipThreshold ?? null),
+    isVip: determineVipStatus(
+      customer.value as { recent?: number; lifetime?: number } | null,
+      mailbox?.vipThreshold ?? null,
+    ),
   };
 };
 
@@ -89,6 +97,9 @@ export const findOrCreatePlatformCustomerByEmail = async (
 
   return {
     ...customer,
-    isVip: determineVipStatus(customer.value as number | null, mailbox?.vipThreshold ?? null),
+    isVip: determineVipStatus(
+      customer.value as { recent?: number; lifetime?: number } | null,
+      mailbox?.vipThreshold ?? null,
+    ),
   };
 };

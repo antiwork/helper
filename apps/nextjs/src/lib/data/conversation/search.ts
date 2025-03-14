@@ -58,7 +58,9 @@ export const searchConversations = async (
     ...(filters.category === "assigned" ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
     ...(filters.category === "unassigned" ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
     ...(filters.isVip && mailbox.vipThreshold
-      ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
+      ? {
+          isVip: sql`COALESCE((${platformCustomers.value}->>'recent')::numeric, 0) >= ${mailbox.vipThreshold * 100} OR COALESCE((${platformCustomers.value}->>'lifetime')::numeric, 0) >= ${mailbox.vipThreshold ?? 0}`,
+        }
       : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
@@ -140,7 +142,7 @@ export const searchConversations = async (
   const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
   const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox(mailbox));
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
-    orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
+    orderBy.unshift(sql`COALESCE((${platformCustomers.value}->>'recent')::numeric, 0) DESC NULLS LAST`);
   }
 
   const list = await db

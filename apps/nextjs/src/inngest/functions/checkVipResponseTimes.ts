@@ -41,7 +41,10 @@ export default inngest.createFunction(
               sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
               mailbox.vipExpectedResponseHours!,
             ),
-            gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, (mailbox.vipThreshold ?? 0) * 100),
+            gt(
+              sql`COALESCE((${platformCustomers.value}->>'recent')::numeric, 0) >= ${(mailbox.vipThreshold ?? 0) * 100} OR COALESCE((${platformCustomers.value}->>'lifetime')::numeric, 0) >= ${mailbox.vipThreshold ?? 0}`,
+              0,
+            ),
           ),
         )
         .orderBy(desc(conversations.lastUserEmailCreatedAt));

@@ -539,11 +539,11 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
                   "shrink-0 text-right font-sundry-regular",
                   variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
                 )}
-                title={`Value: ${conversation.platformCustomer.value}`}
+                title={`Value: ${conversation.platformCustomer.value?.recent ? `Recent: ${conversation.platformCustomer.value.recent}` : ""} ${conversation.platformCustomer.value?.lifetime ? `Lifetime: ${conversation.platformCustomer.value.lifetime}` : ""}`}
               >
                 <div className="flex items-center gap-1 text-xs">
                   <CurrencyDollarIcon className="h-3 w-3" />
-                  {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                  {formatCurrency(conversation.platformCustomer.value?.recent || 0)}
                 </div>
               </div>
             ) : null}

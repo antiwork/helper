@@ -11,7 +11,7 @@ export const platformCustomers = pgTable(
     mailboxId: bigint({ mode: "number" }).notNull(),
     email: varchar({ length: 255 }).notNull(),
     name: varchar(),
-    value: numeric({ precision: 12, scale: 2 }),
+    value: jsonb().$type<{ recent?: number; lifetime?: number }>(),
     links: jsonb().$type<Record<string, string>>(),
   },
   (table) => {

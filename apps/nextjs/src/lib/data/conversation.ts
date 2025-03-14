@@ -187,7 +187,10 @@ export const serializeConversation = (
     platformCustomer: platformCustomer
       ? {
           ...platformCustomer,
-          isVip: determineVipStatus(parseInt(platformCustomer.value ?? "0", 10), mailbox.vipThreshold ?? null),
+          isVip: determineVipStatus(
+            platformCustomer.value as { recent?: number; lifetime?: number } | null,
+            mailbox.vipThreshold ?? null,
+          ),
         }
       : null,
     summary: conversation.summary,
@@ -209,7 +212,7 @@ export const serializeConversationWithMessages = async (
     customerMetadata: platformCustomer
       ? {
           name: platformCustomer.name,
-          value: platformCustomer.value ? parseFloat(platformCustomer.value) : null,
+          value: platformCustomer.value ? platformCustomer.value : null,
           links: platformCustomer.links,
           isVip: platformCustomer.isVip,
         }
