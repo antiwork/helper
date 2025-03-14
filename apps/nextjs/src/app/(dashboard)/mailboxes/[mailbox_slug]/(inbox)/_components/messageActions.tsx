@@ -10,6 +10,7 @@ import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { cn } from "@/lib/utils";
 import type { DraftedEmail } from "@/serverActions/messages";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -296,42 +297,36 @@ const EmailEditorComponent = React.forwardRef<
         onToggleCc={onToggleCc}
         inputRef={commandInputRef}
       />
-      {!showCommandBar && (
-        <>
-          {showCc ? (
-            <div className="flex-shrink-0 flex flex-col gap-2 mb-2">
-              <LabeledInput
-                ref={ccRef}
-                name="CC"
-                value={draftedEmail.cc}
-                onChange={(cc) => updateEmail({ cc })}
-                onModEnter={() => {}}
-              />
-              <LabeledInput
-                ref={bccRef}
-                name="BCC"
-                value={draftedEmail.bcc}
-                onChange={(bcc) => updateEmail({ bcc })}
-                onModEnter={() => {}}
-              />
-            </div>
-          ) : null}
-          <div className="flex-grow overflow-auto relative my-2 md:my-4">
-            <TipTapEditor
-              ref={ref}
-              ariaLabel="Conversation editor"
-              defaultContent={initialMessage}
-              editable={true}
-              onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
-              onModEnter={onSend}
-              onSlashKey={() => commandInputRef.current?.focus()}
-              enableImageUpload
-              enableFileUpload
-            />
-          </div>
-          {actionButtons}
-        </>
-      )}
+      <div className={cn("flex-shrink-0 flex flex-col gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
+        <LabeledInput
+          ref={ccRef}
+          name="CC"
+          value={draftedEmail.cc}
+          onChange={(cc) => updateEmail({ cc })}
+          onModEnter={() => {}}
+        />
+        <LabeledInput
+          ref={bccRef}
+          name="BCC"
+          value={draftedEmail.bcc}
+          onChange={(bcc) => updateEmail({ bcc })}
+          onModEnter={() => {}}
+        />
+      </div>
+      <div className={cn("flex-grow overflow-auto relative my-2 md:my-4", showCommandBar && "hidden")}>
+        <TipTapEditor
+          ref={ref}
+          ariaLabel="Conversation editor"
+          defaultContent={initialMessage}
+          editable={true}
+          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
+          onModEnter={onSend}
+          onSlashKey={() => commandInputRef.current?.focus()}
+          enableImageUpload
+          enableFileUpload
+        />
+      </div>
+      {actionButtons}
     </div>
   );
 });
