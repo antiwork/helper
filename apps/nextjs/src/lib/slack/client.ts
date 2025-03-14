@@ -9,6 +9,7 @@ import {
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/env";
+import { clerkClient } from "@/lib/data/user";
 import { SLACK_REDIRECT_URI } from "./constants";
 
 export const getSlackPermalink = async (token: string, channel: string, ts: string) => {
@@ -22,10 +23,15 @@ export const getSlackPermalink = async (token: string, channel: string, ts: stri
   }
 };
 
-export const getSlackUser = async (token: string, user_id: string) => {
-  const client = new WebClient(token);
-  const response = await client.users.info({ user: user_id });
-  return response.user ?? null;
+export const getSlackUser = async (token: string, slackUserId: string) => {
+  try {
+    const client = new WebClient(token);
+    const response = await client.users.info({ user: slackUserId });
+    return response.user;
+  } catch (error) {
+    console.error("Error getting Slack user:", error);
+    return null;
+  }
 };
 
 export const getSlackTeam = async (token: string) => {
@@ -242,4 +248,38 @@ export const getSlackUsersByEmail = async (token: string) => {
     return [];
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
+};
+
+export const findUserViaSlack = async (
+  organizationId: string,
+  token: string,
+  slackUserId: string,
+): Promise<{ id: string; fullName: string } | null> => {
+  try {
+    const client = new WebClient(token);
+    const userInfo = await client.users.info({ user: slackUserId });
+
+    if (!userInfo.ok || !userInfo.user?.profile?.email) {
+      return null;
+    }
+
+    const email = userInfo.user.profile.email;
+
+    // Find the user in Clerk by email
+    const { data } = await clerkClient.users.getUserList({
+      emailAddress: [email],
+      organizationId: [organizationId],
+    });
+
+    const user = data[0];
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+    };
+  } catch (error) {
+    console.error("Error finding user via Slack:", error);
+    return null;
+  }
 };

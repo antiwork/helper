@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { verifySlackRequest } from "@/lib/slack/client";
-import { handleSlackCommand } from "@/lib/slack/commands";
+import { handleSlackCommand } from "@/lib/slack/commands/index";
 
 export const POST = async (request: Request) => {
   const body = await request.text();
