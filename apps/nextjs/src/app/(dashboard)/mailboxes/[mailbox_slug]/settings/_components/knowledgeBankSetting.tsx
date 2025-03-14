@@ -101,7 +101,7 @@ const KnowledgeBankSetting = () => {
         <Accordion type="single" collapsible>
           <AccordionItem value="suggested">
             <AccordionTrigger className="hover:no-underline">
-              <Badge variant="yellow">
+              <Badge variant="bright">
                 {suggestedFaqs.length} suggested {suggestedFaqs.length === 1 ? "entry" : "entries"}
               </Badge>
             </AccordionTrigger>

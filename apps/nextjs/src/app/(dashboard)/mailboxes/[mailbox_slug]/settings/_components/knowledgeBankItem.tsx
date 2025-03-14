@@ -183,7 +183,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
               {truncate(faq?.content, { length: 125 })}
             </ReactMarkdown>
             {suggestedReplacement && (
-              <Badge variant="yellow" className="mt-1 shrink-0">
+              <Badge variant="bright" className="mt-1 shrink-0">
                 Suggested Edit
               </Badge>
             )}

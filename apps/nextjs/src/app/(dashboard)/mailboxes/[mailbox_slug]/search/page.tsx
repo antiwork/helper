@@ -370,7 +370,7 @@ function SearchResultItem({
                 assignedToClerkId={conversation.assignedToClerkId}
               />
             )}
-            {conversation.platformCustomer?.isVip && <Badge variant="yellow">VIP</Badge>}
+            {conversation.platformCustomer?.isVip && <Badge variant="bright">VIP</Badge>}
             {conversation.platformCustomer?.value && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CurrencyDollarIcon className="h-3 w-3" />
