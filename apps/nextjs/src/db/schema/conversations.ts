@@ -30,6 +30,17 @@ export const conversations = pgTable(
     source: text().$type<"email" | "chat">(),
     isPrompt: boolean().notNull().default(false),
     isVisitor: boolean().notNull().default(false),
+    suggestedActions: jsonb().$type<
+      (
+        | { type: "close" | "spam" }
+        | { type: "assign"; clerkUserId: string }
+        | {
+            type: "tool";
+            slug: string;
+            parameters: Record<string, any>;
+          }
+      )[]
+    >(),
   },
   (table) => {
     return {
