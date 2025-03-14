@@ -19,28 +19,28 @@ Creates a new conversation and returns a conversation slug that can be used in s
 
 ### Headers
 
-| Header | Value | Description |
-|--------|-------|-------------|
+| Header          | Value            | Description                                 |
+| --------------- | ---------------- | ------------------------------------------- |
 | `Authorization` | `Bearer <token>` | Session token obtained from the Session API |
 
 ### Request Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `source` | string | No | Source of the conversation. Defaults to `chat#visitor` for anonymous sessions. Use `chat#prompt` for programmatic conversation creation. |
+| Parameter  | Type    | Required | Description                                                                                                                                                   |
+| ---------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isPrompt` | boolean | No       | Set to true if the conversation is starting from a fixed prompt rather than a message typed by the customer, e.g. a link with a data-helper-prompt attribute. |
 
 ### Example Request Body
 
 ```json
 {
-  "source": "chat#prompt"
+  "isPrompt": true
 }
 ```
 
 ### Response
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field              | Type   | Description                                     |
+| ------------------ | ------ | ----------------------------------------------- |
 | `conversationSlug` | string | Unique identifier for the created conversation. |
 
 ### Example Response
@@ -53,10 +53,10 @@ Creates a new conversation and returns a conversation slug that can be used in s
 
 ### Error Responses
 
-| Status Code | Error | Description |
-|-------------|-------|-------------|
-| 401 | `Authentication error` | The session token is invalid or expired. |
-| 404 | `Mailbox not found` | The mailbox specified in the session doesn't exist. |
+| Status Code | Error                  | Description                                         |
+| ----------- | ---------------------- | --------------------------------------------------- |
+| 401         | `Authentication error` | The session token is invalid or expired.            |
+| 404         | `Mailbox not found`    | The mailbox specified in the session doesn't exist. |
 
 ## Conversation Behavior
 
@@ -64,21 +64,13 @@ Creates a new conversation and returns a conversation slug that can be used in s
 
 New conversations have different initial statuses based on various factors:
 
-- For `chat#prompt` sources, conversations are created with a `closed` status
+- For `isPrompt` sources, conversations are created with a `closed` status
 - For authenticated users who are identified as VIPs, conversations start with an `open` status
 - For all other conversations, the default status is `closed`
 
-### Source Types
-
-The `source` parameter determines how the conversation is treated:
-
-- `chat#visitor`: Default for anonymous sessions, indicates a conversation initiated by a website visitor
-- `chat#prompt`: Used for programmatic conversation creation, usually for pre-defined scenarios
-- Custom values can also be provided to track different types of conversations
-
 ### Subjects
 
-By default, conversations start with a generic subject. Helper will automatically generate a more specific subject based on the conversation content. For `chat#prompt` conversations, the subject is particularly important as it helps organize and categorize the conversation.
+By default, conversations start with a generic subject. Helper will automatically generate a more specific subject based on the conversation content. For `isPrompt` conversations the subject is initially set to the prompt content, and then generated if the customer follows up.
 
 ## Programming Patterns
 
@@ -86,15 +78,13 @@ By default, conversations start with a generic subject. Helper will automaticall
 
 ```javascript
 // After obtaining a session token
-const response = await fetch('https://helper.ai/api/chat/conversation', {
-  method: 'POST',
+const response = await fetch("https://helper.ai/api/chat/conversation", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionToken}`
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${sessionToken}`,
   },
-  body: JSON.stringify({
-    source: 'chat#prompt'
-  })
+  body: JSON.stringify({ isPrompt: false }),
 });
 
 const { conversationSlug } = await response.json();
@@ -106,22 +96,20 @@ You can create a conversation and immediately add context by creating the conver
 
 ```javascript
 // Create the conversation
-const convResponse = await fetch('https://helper.ai/api/chat/conversation', {
-  method: 'POST',
+const convResponse = await fetch("https://helper.ai/api/chat/conversation", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionToken}`
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${sessionToken}`,
   },
-  body: JSON.stringify({
-    source: 'chat#prompt'
-  })
+  body: JSON.stringify({ isPrompt: false }),
 });
 
 const { conversationSlug } = await convResponse.json();
 
 // Now send an initial message with the Chat API
 // See the Chat API documentation for details
-``` 
+```
 
 ## API References
 
@@ -129,4 +117,4 @@ For complete API specifications, refer to these API reference pages:
 
 - [Create Session API Reference](/api-reference/create-session) - Authenticate and create a session token
 - [Create Conversation API Reference](/api-reference/create-conversation) - Start a new conversation
-- [Send Message API Reference](/api-reference/send-message) - Exchange messages within a conversation 
+- [Send Message API Reference](/api-reference/send-message) - Exchange messages within a conversation

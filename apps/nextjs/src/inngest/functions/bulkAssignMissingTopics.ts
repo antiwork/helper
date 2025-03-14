@@ -17,7 +17,7 @@ export const findAndAssignMissingTopics = async () => {
     .where(
       and(
         isNull(conversationsTopics.id),
-        not(eq(conversations.source, "chat#prompt")),
+        not(eq(conversations.isPrompt, true)),
         not(eq(conversations.status, "spam")),
         eq(conversations.mailboxId, GUMROAD_MAILBOX_ID),
       ),

@@ -33,6 +33,8 @@ type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
 type NewConversation = Omit<typeof conversations.$inferInsert, OptionalConversationAttributes | "source"> &
   Partial<Pick<typeof conversations.$inferInsert, OptionalConversationAttributes>> & {
     source: NonNullable<(typeof conversations.$inferInsert)["source"]>;
+    isPrompt?: boolean;
+    isVisitor?: boolean;
   };
 
 export type Conversation = typeof conversations.$inferSelect;
@@ -192,6 +194,8 @@ export const serializeConversation = (
       : null,
     summary: conversation.summary,
     source: conversation.source ?? "email",
+    isPrompt: conversation.isPrompt ?? false,
+    isVisitor: conversation.isVisitor ?? false,
     embeddingText: conversation.embeddingText,
   };
 };

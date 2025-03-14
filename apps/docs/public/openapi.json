@@ -25,9 +25,7 @@
         "summary": "Create Session",
         "description": "Creates a new authentication session for Helper",
         "operationId": "createSession",
-        "tags": [
-          "Session"
-        ],
+        "tags": ["Session"],
         "requestBody": {
           "required": true,
           "content": {
@@ -144,9 +142,7 @@
         "summary": "Create Conversation",
         "description": "Creates a new conversation in Helper",
         "operationId": "createConversation",
-        "tags": [
-          "Conversation"
-        ],
+        "tags": ["Conversation"],
         "security": [
           {
             "bearerAuth": []
@@ -160,7 +156,7 @@
                 "$ref": "#/components/schemas/ConversationRequest"
               },
               "example": {
-                "source": "chat#prompt"
+                "isPrompt": true
               }
             }
           }
@@ -213,9 +209,7 @@
         "summary": "Send Message",
         "description": "Sends a message to Helper and receives a streaming response",
         "operationId": "sendMessage",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "bearerAuth": []
@@ -326,10 +320,7 @@
     "schemas": {
       "SessionRequest": {
         "type": "object",
-        "required": [
-          "mailboxSlug",
-          "currentURL"
-        ],
+        "required": ["mailboxSlug", "currentURL"],
         "properties": {
           "email": {
             "type": "string",
@@ -397,11 +388,7 @@
       },
       "SessionResponse": {
         "type": "object",
-        "required": [
-          "valid",
-          "token",
-          "showWidget"
-        ],
+        "required": ["valid", "token", "showWidget"],
         "properties": {
           "valid": {
             "type": "boolean",
@@ -436,22 +423,16 @@
       "ConversationRequest": {
         "type": "object",
         "properties": {
-          "source": {
-            "type": "string",
-            "description": "Source of the conversation",
-            "enum": [
-              "chat#visitor",
-              "chat#prompt"
-            ],
-            "example": "chat#prompt"
+          "isPrompt": {
+            "type": "boolean",
+            "description": "Whether the conversation is starting from a fixed prompt",
+            "example": true
           }
         }
       },
       "ConversationResponse": {
         "type": "object",
-        "required": [
-          "conversationSlug"
-        ],
+        "required": ["conversationSlug"],
         "properties": {
           "conversationSlug": {
             "type": "string",
@@ -462,10 +443,7 @@
       },
       "ChatRequest": {
         "type": "object",
-        "required": [
-          "message",
-          "conversationSlug"
-        ],
+        "required": ["message", "conversationSlug"],
         "properties": {
           "message": {
             "$ref": "#/components/schemas/Message",
@@ -480,18 +458,12 @@
       },
       "Message": {
         "type": "object",
-        "required": [
-          "role",
-          "content"
-        ],
+        "required": ["role", "content"],
         "properties": {
           "role": {
             "type": "string",
             "description": "Role of the message sender",
-            "enum": [
-              "user",
-              "assistant"
-            ],
+            "enum": ["user", "assistant"],
             "example": "user"
           },
           "content": {
@@ -508,9 +480,7 @@
       },
       "ErrorResponse": {
         "type": "object",
-        "required": [
-          "error"
-        ],
+        "required": ["error"],
         "properties": {
           "error": {
             "type": "string",
@@ -521,4 +491,4 @@
       }
     }
   }
-} 
+}

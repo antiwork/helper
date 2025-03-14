@@ -21,6 +21,8 @@ export const conversationFactory = {
         createdAt: faker.date.past(),
         updatedAt: faker.date.recent(),
         lastUserEmailCreatedAt: faker.date.recent(),
+        isPrompt: false,
+        isVisitor: false,
         ...overrides,
       })
       .returning();
