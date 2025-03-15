@@ -17,19 +17,48 @@ export const findUserByEmail = async (organizationId: string, email: string) => 
 };
 
 export const findUserViaSlack = async (organizationId: string, token: string, slackUserId: string) => {
-  const allUsers = await getClerkUserList(organizationId);
+  console.log("findUserViaSlack called with:", { organizationId, slackUserId });
 
-  const matchingUser = allUsers.data.find((user) =>
-    user.externalAccounts.some((account) => account.externalId === slackUserId),
-  );
-  if (matchingUser) return matchingUser;
+  try {
+    console.log("Getting all users from Clerk for organization");
+    const allUsers = await getClerkUserList(organizationId);
+    console.log(`Found ${allUsers.data.length} users in organization`);
 
-  const slackUser = await getSlackUser(token, slackUserId);
-  return (
-    allUsers.data.find((user) =>
+    console.log("Looking for user with matching external Slack account ID");
+    const matchingUser = allUsers.data.find((user) =>
+      user.externalAccounts.some((account) => account.externalId === slackUserId),
+    );
+
+    if (matchingUser) {
+      console.log("Found user with matching external Slack account:", matchingUser.id);
+      return matchingUser;
+    }
+
+    console.log("No user found with matching external account, trying to match by email");
+    console.log("Getting Slack user info");
+    const slackUser = await getSlackUser(token, slackUserId);
+    console.log("Slack user info:", slackUser?.profile?.email ? { email: slackUser.profile.email } : "No email found");
+
+    if (!slackUser?.profile?.email) {
+      console.log("No email found in Slack user profile");
+      return null;
+    }
+
+    const userByEmail = allUsers.data.find((user) =>
       user.emailAddresses.some((address) => address.emailAddress === slackUser?.profile?.email),
-    ) ?? null
-  );
+    );
+
+    if (userByEmail) {
+      console.log("Found user with matching email:", userByEmail.id);
+    } else {
+      console.log("No user found with matching email");
+    }
+
+    return userByEmail ?? null;
+  } catch (error) {
+    console.error("Error in findUserViaSlack:", error);
+    return null;
+  }
 };
 
 export const getOAuthAccessToken = async (clerkUserId: string, provider: "oauth_google" | "oauth_slack") => {
