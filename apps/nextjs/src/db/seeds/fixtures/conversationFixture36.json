@@ -20,18 +20,6 @@
           },
           "status": null,
           "conversationId": 36
-        },
-        {
-          "id": 185,
-          "role": "workflow",
-          "body": "Hi there,<br>\n            <br>\n            Thanks for reaching out! Here are some quick links that might help:<br>\n            <br>\n            <strong>Download Your Purchase:</strong><br>\n            1. Visit our <a href=\"https://designtools.example.com/account/downloads\">Downloads Page</a><br>\n            2. Log in with your email<br>\n            3. Find your purchase in the library<br>\n            <br>\n            <strong>License Recovery:</strong><br>\n            - Use our <a href=\"https://designtools.example.com/license-lookup\">License Lookup Tool</a><br>\n            - Enter your email or license key<br>\n            <br>\n            <strong>Installation Help:</strong><br>\n            - Check our <a href=\"https://designtools.example.com/docs/installation\">Installation Guide</a><br>\n            - View <a href=\"https://designtools.example.com/docs/system-requirements\">System Requirements</a><br>\n            <br>\n            If you need further assistance, please provide:<br>\n            - Your license key<br>\n            - Operating system version<br>\n            - Any error messages you're seeing<br>\n            <br>\n            We're here to help!\n        ",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 36
         }
       ],
       "conversation": {

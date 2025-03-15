@@ -166,8 +166,8 @@ const CustomerSetting = ({ mailbox, onChange }: CustomerSettingProps) => {
                   <div>
                     <Label className="cursor-pointer">Disable AI auto-responses for VIP customers</Label>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      When enabled, VIP customers will receive only human responses. AI Chat messages and workflows will
-                      not be triggered.
+                      When enabled, VIP customers will receive only human responses. AI Chat messages will not be
+                      triggered.
                     </p>
                   </div>
                 </div>

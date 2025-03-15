@@ -15,8 +15,6 @@ import {
   notes,
   subscriptions,
   topics,
-  workflowRunActions,
-  workflowRuns,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { ADDITIONAL_PAID_ORGANIZATION_IDS, getClerkOrganization } from "@/lib/data/organization";
@@ -29,7 +27,7 @@ const getRelationsReferencingConversationRecords = () => {
   return relationsReferencingConversationRecords;
 };
 
-const EXPECTED_RELATION_COUNT = 12;
+const EXPECTED_RELATION_COUNT = 10;
 export const hardDeleteRecordsForNonPayingOrgs = async () => {
   // When this assert fails, please manually consider whether
   // this code needs to be updated. For example, if a new table is
@@ -109,20 +107,6 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
       .with(mailboxConversations)
       .delete(notes)
       .where(inArray(notes.conversationId, sql`(SELECT id FROM ${mailboxConversations})`));
-
-    const mailboxWorkflowRuns = db
-      .$with("mailbox_workflow_runs")
-      .as(db.select({ id: workflowRuns.id }).from(workflowRuns).where(eq(workflowRuns.mailboxId, mailbox.id)));
-
-    await db
-      .with(mailboxWorkflowRuns)
-      .delete(workflowRunActions)
-      .where(inArray(workflowRunActions.workflowRunId, sql`(SELECT id FROM ${mailboxWorkflowRuns})`));
-
-    await db
-      .with(mailboxWorkflowRuns)
-      .delete(workflowRuns)
-      .where(inArray(workflowRuns.id, sql`(SELECT id FROM ${mailboxWorkflowRuns})`));
 
     await db
       .with(mailboxConversations)

@@ -15,18 +15,6 @@
           "conversationId": 8
         },
         {
-          "id": 68,
-          "role": "workflow",
-          "body": "Hi there,<br>\n            <br>\n            Thank you for your purchase! Here are some quick links that might help:<br>\n            <br>\n            <strong>Installation Guide:</strong> Check our detailed installation instructions for different Lightroom versions <a href=\"https://phototools.example.com/docs/installation\">here</a>.<br>\n            <br>\n            <strong>System Requirements:</strong> Verify your system meets the requirements <a href=\"https://phototools.example.com/docs/requirements\">here</a>.<br>\n            <br>\n            <strong>Common Issues:</strong> Browse our troubleshooting guide <a href=\"https://phototools.example.com/docs/troubleshooting\">here</a>.<br>\n            <br>\n            <strong>Need a refund?</strong> Visit our <a href=\"https://phototools.example.com/refund-policy\">refund policy page</a>.<br>\n            <br>\n            If you still need assistance, please reply to this email with:<br>\n            - Your Lightroom version<br>\n            - Operating system<br>\n            - Steps you've tried so far<br>\n            <br>\n            We'll help you get this resolved quickly!\n        ",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 8
-        },
-        {
           "id": 69,
           "role": "user",
           "body": "Hi,<br><br>Thanks for the quick response. I've already checked the installation guide and my system meets all requirements. I'm using:<br><br>- Lightroom v12.5<br>- macOS Sonoma 14.2.1<br>- I've tried both the automatic installer and manual installation methods<br><br>The error message says: 'Plugin not compatible with this version of Lightroom'<br><br>Can you help?<br><br>Thanks,<br>Michael",

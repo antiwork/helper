@@ -21,10 +21,6 @@ vi.mock("@/lib/resend/client", () => ({
 vi.mock("@/emails/automatedRepliesLimitExceeded", () => ({
   default: vi.fn().mockReturnValue("Mock component"),
 }));
-vi.mock("@/lib/data/subscription", () => ({
-  billWorkflowReply: vi.fn(),
-  isBillable: vi.fn(),
-}));
 vi.mock("@/lib/stripe/client");
 vi.mock("@/lib/data/user", () => ({
   getClerkUser: vi.fn(),

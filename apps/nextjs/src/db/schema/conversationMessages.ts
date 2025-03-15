@@ -7,7 +7,6 @@ import { withTimestamps } from "../lib/with-timestamps";
 import { conversations } from "./conversations";
 import { files } from "./files";
 import { messageNotifications } from "./messageNotifications";
-import { workflowRuns } from "./workflowRuns";
 
 export type ToolMetadata = {
   tool: {
@@ -24,7 +23,7 @@ export type ToolMetadata = {
 };
 
 type MessageStatus = "queueing" | "sent" | "failed" | "draft" | "discarded";
-export type MessageRole = "user" | "staff" | "ai_assistant" | "workflow" | "tool";
+export type MessageRole = "user" | "staff" | "ai_assistant" | "tool";
 type MessageMetadata<T extends MessageRole> = T extends "tool"
   ? ToolMetadata
   : Partial<CustomerInfo> & Record<string, unknown> & { reasoning?: string | null };
@@ -106,6 +105,6 @@ export const conversationMessageRelations = relations(conversationMessages, ({ o
     references: [conversations.id],
   }),
   files: many(files),
-  workflowRuns: many(workflowRuns),
+
   notifications: many(messageNotifications),
 }));

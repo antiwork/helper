@@ -49,12 +49,3 @@ export const ReorderingHandle = ({ className }: { className?: string }) => (
     <DragSvg className="h-4 w-4 cursor-move" />
   </div>
 );
-
-export const AutomaticWorkflowItems = React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement>>(
-  ({ children }, ref) => (
-    <div ref={ref} className="mb-4 divide-y divide-border [&>:not(:first-child)]:pt-2">
-      {children}
-    </div>
-  ),
-);
-AutomaticWorkflowItems.displayName = "AutomaticWorkflowItems";

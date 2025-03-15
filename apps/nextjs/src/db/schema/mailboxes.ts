@@ -4,7 +4,6 @@ import { withTimestamps } from "../lib/with-timestamps";
 import { faqs } from "./faqs";
 import { gmailSupportEmails } from "./gmailSupportEmails";
 import { mailboxesMetadataApi } from "./mailboxesMetadataApi";
-import { workflows } from "./workflows";
 
 export const mailboxes = pgTable(
   "mailboxes_mailbox",
@@ -51,7 +50,4 @@ export const mailboxesRelations = relations(mailboxes, ({ one, many }) => ({
     references: [gmailSupportEmails.id],
   }),
   faqs: many(faqs),
-  // Short relation name to avoid Postgres max identifier length
-  // https://github.com/drizzle-team/drizzle-orm/issues/2066
-  wfs: many(workflows),
 }));

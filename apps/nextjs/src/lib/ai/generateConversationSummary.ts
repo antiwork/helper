@@ -37,7 +37,7 @@ export const generateConversationSummary = async (conversationId: number, { forc
     where: and(
       eq(conversationMessages.conversationId, conversation.id),
       isNull(conversationMessages.deletedAt),
-      inArray(conversationMessages.role, ["user", "staff", "workflow", "ai_assistant"]),
+      inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
       eq(conversationMessages.status, "sent"),
     ),
     orderBy: asc(conversationMessages.createdAt),

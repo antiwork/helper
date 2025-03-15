@@ -15,14 +15,12 @@ import {
   getConversationById,
   getConversationBySlug,
   getConversationBySlugAndMailbox,
-  getMatchingConversationsByPrompt,
   getNonSupportParticipants,
   getRelatedConversations,
   MAX_RELATED_CONVERSATIONS_COUNT,
   updateConversation,
 } from "@/lib/data/conversation";
 import { getClerkOrganization } from "@/lib/data/organization";
-import { evaluateWorkflowCondition } from "@/lib/data/workflowCondition";
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
 
 vi.mock("@/components/constants", () => ({
@@ -36,10 +34,6 @@ vi.mock("@/lib/data/conversation", async (importOriginal) => ({
 
 vi.mock("@/lib/emailSearchService/searchEmailsByKeywords", () => ({
   searchEmailsByKeywords: vi.fn(),
-}));
-
-vi.mock("@/lib/data/workflowCondition", () => ({
-  evaluateWorkflowCondition: vi.fn(),
 }));
 
 vi.mock("@/inngest/client", () => ({
@@ -400,67 +394,5 @@ describe("getRelatedConversations", () => {
   it("returns an empty array when conversation ID is not found", async () => {
     const result = await getRelatedConversations(999999);
     expect(result).toHaveLength(0);
-  });
-});
-
-describe("getMatchingConversationsByPrompt", () => {
-  const createConversationsWithMessages = async (mailboxId: number, count: number) => {
-    const subjects = Array.from({ length: count }, (_, i) => `Subject ${i + 1}`);
-    const messages = Array.from({ length: count }, (_, i) => `Message ${i + 1}`);
-
-    const conversations = await Promise.all(
-      subjects.map(async (subject) => {
-        const { conversation } = await conversationFactory.create(mailboxId, { subject });
-        return conversation;
-      }),
-    );
-
-    await Promise.all(
-      conversations.map((conversation, index) =>
-        conversationMessagesFactory.create(conversation.id, { role: "user", cleanedUpText: messages[index] }),
-      ),
-    );
-    return conversations;
-  };
-
-  it("returns matching conversations", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const mockConversations = await createConversationsWithMessages(mailbox.id, 3);
-
-    vi.mocked(evaluateWorkflowCondition).mockResolvedValueOnce(true);
-
-    const prompt = "reset my password";
-    const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
-    expect(result).toEqual(expect.arrayContaining([mockConversations[0]]));
-  });
-
-  it("returns an empty array when there is not matched conversations", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const mockConversations = await createConversationsWithMessages(mailbox.id, 3);
-
-    vi.mocked(evaluateWorkflowCondition).mockResolvedValue(false);
-
-    const prompt = "reset my password";
-    const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
-    expect(result).toEqual([]);
-  });
-
-  it("returns the maximum number of matching conversations", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const mockConversations = await createConversationsWithMessages(mailbox.id, 4);
-
-    const prompt = "reset my password";
-
-    vi.mocked(evaluateWorkflowCondition).mockResolvedValue(true);
-
-    const result = await getMatchingConversationsByPrompt(mockConversations, prompt);
-    expect(result).toHaveLength(MAX_RELATED_CONVERSATIONS_COUNT);
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: mockConversations[0]?.id }),
-        expect.objectContaining({ id: mockConversations[1]?.id }),
-        expect.objectContaining({ id: mockConversations[2]?.id }),
-      ]),
-    );
   });
 });
