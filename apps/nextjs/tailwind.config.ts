@@ -222,6 +222,7 @@ const config: Config = {
         bounce: "bounce .75s ease-in infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        skeleton: "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite",
       },
       borderRadius: {
         lg: "var(--radius)",
