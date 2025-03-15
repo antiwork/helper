@@ -81,7 +81,16 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
     ref,
   ) => {
     const [isMacOS, setIsMacOS] = React.useState(false);
-    const [toolbarOpen, setToolbarOpen] = React.useState(true);
+    const [toolbarOpen, setToolbarOpen] = React.useState(() => {
+      if (typeof window !== "undefined") {
+        return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
+      }
+      return true;
+    });
+
+    useEffect(() => {
+      localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
+    }, [toolbarOpen]);
 
     const updateContent = useRefToLatest((editor: Editor) => {
       const serializedContent = editor.getHTML();
