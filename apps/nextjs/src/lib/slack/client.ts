@@ -25,8 +25,15 @@ export const getSlackPermalink = async (token: string, channel: string, ts: stri
 
 export const getSlackUser = async (token: string, slackUserId: string) => {
   try {
+    console.log(`getSlackUser: Fetching info for Slack user ID ${slackUserId}`);
     const client = new WebClient(token);
     const response = await client.users.info({ user: slackUserId });
+    console.log(
+      "getSlackUser: Response received:",
+      response.ok
+        ? { ok: true, hasUser: !!response.user, hasEmail: !!response.user?.profile?.email }
+        : { ok: false, error: response.error },
+    );
     return response.user;
   } catch (error) {
     console.error("Error getting Slack user:", error);
@@ -65,19 +72,39 @@ export const postSlackMessage = async (
     ephemeralUserId?: string;
   },
 ) => {
+  console.log("postSlackMessage called with:", {
+    tokenLength: token?.length || 0,
+    ephemeralUserId,
+    channel: options.channel,
+    hasText: !!options.text,
+  });
+
   const client = new WebClient(token);
   const postMessage = async () => {
     if (ephemeralUserId) {
+      console.log("Sending ephemeral message to user:", ephemeralUserId);
       const response = await client.chat.postEphemeral({
         ...options,
         user: ephemeralUserId,
       } as ChatPostEphemeralArguments);
+      console.log("Ephemeral message response:", {
+        ok: response.ok,
+        error: response.error,
+        hasMessageTs: !!response.message_ts,
+      });
       if (!response.message_ts) {
         throw new Error(`Failed to post Slack message: ${response.error}`);
       }
       return response.message_ts;
     }
+
+    console.log("Sending regular message to channel:", options.channel);
     const response = await client.chat.postMessage(options);
+    console.log("Regular message response:", {
+      ok: response.ok,
+      error: response.error,
+      hasMessageTs: !!response.message?.ts,
+    });
     if (!response.message?.ts) {
       throw new Error(`Failed to post Slack message: ${response.error}`);
     }
@@ -85,13 +112,22 @@ export const postSlackMessage = async (
   };
 
   const addBotToSlackChannel = async () => {
-    await client.conversations.join({ channel: options.channel });
+    console.log("Attempting to add bot to channel:", options.channel);
+    try {
+      await client.conversations.join({ channel: options.channel });
+      console.log("Successfully added bot to channel");
+    } catch (error) {
+      console.error("Error adding bot to channel:", error);
+      throw error;
+    }
   };
 
   try {
     return await postMessage();
   } catch (error) {
+    console.error("Error posting Slack message:", error);
     if (error instanceof Error && error.message.includes("not_in_channel")) {
+      console.log("Bot not in channel, attempting to join");
       await addBotToSlackChannel();
       return await postMessage();
     }
