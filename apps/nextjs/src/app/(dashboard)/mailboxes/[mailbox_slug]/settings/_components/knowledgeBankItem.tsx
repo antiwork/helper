@@ -94,7 +94,7 @@ type KnowledgeBankItemProps = {
 
 const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }: KnowledgeBankItemProps) => {
   const [editingContent, setEditingContent] = useState<string | null>(
-    suggestedReplacement ? suggestedReplacement.content : null
+    suggestedReplacement ? suggestedReplacement.content : null,
   );
 
   const utils = api.useUtils();

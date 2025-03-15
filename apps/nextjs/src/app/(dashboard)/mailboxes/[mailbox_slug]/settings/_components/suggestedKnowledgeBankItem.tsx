@@ -16,7 +16,7 @@ type SuggestedKnowledgeBankItemProps = {
 const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBankItemProps) => {
   const [editingContent, setEditingContent] = useState<string>(faq.content);
   const utils = api.useUtils();
-  
+
   const updateFaq = api.mailbox.faqs.update.useMutation({
     onSuccess: () => {
       utils.mailbox.faqs.list.invalidate();
