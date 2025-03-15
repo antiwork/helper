@@ -60,7 +60,7 @@ const Subscription = () => {
         <div className="flex flex-col gap-4 text-sm">
           <div>
             <h2 className="font-medium text-xl">Helper Subscription</h2>
-            <p className="text-muted-foreground">20¢ per resolution</p>
+            <p className="text-muted-foreground">${(subscription.unitAmount / 100).toFixed(2)} per resolution</p>
           </div>
           <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
             <span className="font-medium">Current billing period</span>
