@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --check . --ignore-path ./.gitignore --ignore-path ./.prettierignore",
     "build:ios": "npx eas-cli build --platform ios",
     "build:android": "npx eas-cli build --platform android",
