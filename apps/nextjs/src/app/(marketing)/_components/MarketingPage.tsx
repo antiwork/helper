@@ -513,7 +513,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               Simple, transparent, usage-based pricing
             </h2>
             <div className="text-2xl md:text-3xl text-primary mb-8">
-              <span className="font-bold">$0.99</span> per resolution
+              <span className="font-bold">20¢</span> per resolution
             </div>
 
             <div className="max-w-2xl mx-auto grid md:grid-cols-2 gap-8 text-left mb-12">
