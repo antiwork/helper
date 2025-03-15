@@ -24,7 +24,6 @@ export function ConversationList({
   onLoadMore,
   hasMore = false,
   isLoadingMore = false,
-  totalCount = 0,
 }: {
   conversations?: RouterOutputs["mailbox"]["conversations"]["list"]["conversations"];
   onRefresh?: () => void;
@@ -34,7 +33,6 @@ export function ConversationList({
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
-  totalCount?: number;
 }) {
   const { data: members } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -152,14 +150,6 @@ export function ConversationList({
           ) : null
         }
       />
-      {visibleConversations.length > 0 && (
-        <View className="px-4 py-2 border-t border-border">
-          <Text className="text-sm text-muted-foreground text-center">
-            Showing {visibleConversations.length} of {totalCount} conversations
-            {hasMore && " (scroll for more)"}
-          </Text>
-        </View>
-      )}
     </View>
   );
 }

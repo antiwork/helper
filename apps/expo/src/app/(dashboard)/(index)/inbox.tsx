@@ -26,9 +26,7 @@ export default function InboxScreen() {
       },
     );
 
-  // Flatten the pages of conversations
   const conversations = data?.pages.flatMap((page) => page.conversations) || [];
-  const totalItems = data?.pages[0]?.total || 0;
 
   const tabs: { id: typeof selectedTab; label: string }[] = [
     { id: "mine", label: "Mine" },
@@ -71,7 +69,6 @@ export default function InboxScreen() {
         onLoadMore={handleLoadMore}
         hasMore={!!hasNextPage}
         isLoadingMore={isFetchingNextPage}
-        totalCount={totalItems}
       />
     </SafeAreaView>
   );
