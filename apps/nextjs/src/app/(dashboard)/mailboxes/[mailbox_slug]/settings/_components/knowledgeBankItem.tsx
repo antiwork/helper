@@ -93,9 +93,7 @@ type KnowledgeBankItemProps = {
 };
 
 const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }: KnowledgeBankItemProps) => {
-  const [editingContent, setEditingContent] = useState<string | null>(
-    suggestedReplacement ? suggestedReplacement.content : null,
-  );
+  const [editingContent, setEditingContent] = useState<string | null>(null);
 
   const utils = api.useUtils();
   const updateMutation = api.mailbox.faqs.update.useMutation({
