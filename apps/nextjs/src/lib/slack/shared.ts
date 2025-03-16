@@ -3,9 +3,11 @@ import { KnownBlock } from "@slack/web-api";
 import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversations } from "@/db/schema";
+import { conversations, faqs } from "@/db/schema";
+import { inngest } from "@/inngest/client";
 import { updateConversation } from "@/lib/data/conversation";
 import { bodyWithSignature, createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
+import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { addNote } from "@/lib/data/note";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findUserViaSlack, getClerkUser } from "@/lib/data/user";
@@ -32,6 +34,33 @@ export const getActionButtons = (): KnownBlock => ({
       type: "button",
       text: { type: "plain_text", text: "Close" },
       action_id: "close",
+    },
+  ],
+});
+
+export const getSuggestedEditButtons = (faqId: number): KnownBlock => ({
+  type: "actions",
+  block_id: `suggested_edit_actions_${faqId}`,
+  elements: [
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Approve" },
+      action_id: "approve_suggested_edit",
+      value: faqId.toString(),
+      style: "primary",
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Reject" },
+      action_id: "reject_suggested_edit",
+      value: faqId.toString(),
+      style: "danger",
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Tweak & Approve" },
+      action_id: "tweak_suggested_edit",
+      value: faqId.toString(),
     },
   ],
 });
@@ -86,6 +115,25 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
           tx,
         );
       });
+    } else if (action === "approve_suggested_edit") {
+      const faqId = Number(payload.actions[0].value);
+      await approveSuggestedEdit(faqId, user);
+      await postSlackMessage(conversation.mailbox.slackBotToken, {
+        ephemeralUserId: payload.user.id,
+        channel: message.slackChannel,
+        text: "_Suggested edit approved successfully._",
+      });
+    } else if (action === "reject_suggested_edit") {
+      const faqId = Number(payload.actions[0].value);
+      await rejectSuggestedEdit(faqId, user);
+      await postSlackMessage(conversation.mailbox.slackBotToken, {
+        ephemeralUserId: payload.user.id,
+        channel: message.slackChannel,
+        text: "_Suggested edit rejected._",
+      });
+    } else if (action === "tweak_suggested_edit") {
+      const faqId = Number(payload.actions[0].value);
+      await openTweakSuggestedEditModal(message, faqId, conversation, payload.trigger_id);
     }
   } else if (payload.type === "view_submission") {
     const user = await findUserViaSlack(
@@ -111,6 +159,36 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
           },
           tx,
         );
+      });
+    } else if (payload.view.callback_id === "tweak_suggested_edit") {
+      const { faqId } = JSON.parse(payload.view.private_metadata);
+      const content = payload.view.state.values.content.content.value;
+
+      if (!content) {
+        return;
+      }
+
+      const faq = await db.query.faqs.findFirst({
+        where: eq(faqs.id, faqId),
+      });
+
+      if (!faq) throw new Error(`FAQ not found: ${faqId}`);
+
+      await db.transaction(async (tx) => {
+        await tx.update(faqs).set({ content, enabled: true, suggested: false }).where(eq(faqs.id, faqId));
+
+        await resetMailboxPromptUpdatedAt(tx, faq.mailboxId);
+
+        inngest.send({
+          name: "faqs/embedding.create",
+          data: { faqId },
+        });
+      });
+
+      await postSlackMessage(conversation.mailbox.slackBotToken, {
+        ephemeralUserId: payload.user.id,
+        channel: message.slackChannel,
+        text: "_Suggested edit tweaked and approved successfully._",
       });
     } else {
       const reply = payload.view.state.values.reply.message.value;
@@ -247,6 +325,85 @@ const openRespondModal = async (
           ],
         },
       ],
+    },
+  });
+};
+
+const approveSuggestedEdit = async (faqId: number, user: User) => {
+  const faq = await db.query.faqs.findFirst({
+    where: eq(faqs.id, faqId),
+  });
+
+  if (!faq) throw new Error(`FAQ not found: ${faqId}`);
+
+  await db.transaction(async (tx) => {
+    await tx.update(faqs).set({ enabled: true, suggested: false }).where(eq(faqs.id, faqId));
+
+    await resetMailboxPromptUpdatedAt(tx, faq.mailboxId);
+
+    inngest.send({
+      name: "faqs/embedding.create",
+      data: { faqId },
+    });
+  });
+};
+
+const rejectSuggestedEdit = async (faqId: number, user: User) => {
+  const faq = await db.query.faqs.findFirst({
+    where: eq(faqs.id, faqId),
+  });
+
+  if (!faq) throw new Error(`FAQ not found: ${faqId}`);
+
+  await db.transaction(async (tx) => {
+    await tx.delete(faqs).where(eq(faqs.id, faqId));
+    await resetMailboxPromptUpdatedAt(tx, faq.mailboxId);
+  });
+};
+
+const openTweakSuggestedEditModal = async (
+  message: SlackMessage,
+  faqId: number,
+  conversation: typeof conversations.$inferSelect & {
+    mailbox: {
+      clerkOrganizationId: string;
+      slackBotToken: string | null;
+    };
+  },
+  triggerId: string,
+) => {
+  const faq = await db.query.faqs.findFirst({
+    where: eq(faqs.id, faqId),
+  });
+
+  if (!faq) throw new Error(`FAQ not found: ${faqId}`);
+
+  await openSlackModal({
+    token: assertDefined(conversation.mailbox.slackBotToken),
+    triggerId,
+    title: "Tweak Suggested Edit",
+    view: {
+      type: "modal",
+      callback_id: "tweak_suggested_edit",
+      private_metadata: JSON.stringify({ faqId, slackMessageTs: message.slackMessageTs }),
+      blocks: [
+        {
+          type: "input",
+          block_id: "content",
+          label: { type: "plain_text", text: "Edit Content" },
+          element: {
+            type: "plain_text_input",
+            initial_value: faq.content,
+            multiline: true,
+            focus_on_load: true,
+            action_id: "content",
+          },
+        },
+      ],
+      submit: {
+        type: "plain_text",
+        text: "Approve",
+      },
     },
   });
 };

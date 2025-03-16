@@ -20,6 +20,7 @@ import hardDeleteRecordsForNonPayingOrgs from "./hardDeleteRecordsForNonPayingOr
 import importGmailThreads from "./importGmailThreads";
 import importRecentGmailThreads from "./importRecentGmailThreads";
 import indexConversationMessage from "./indexConversation";
+import notifySuggestedEdit from "./notifySuggestedEdit";
 import notifyVipMessage from "./notifyVipMessage";
 import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
@@ -64,4 +65,5 @@ export default [
   suggestKnowledgeBankChanges,
   checkConversationResolution,
   updateSuggestedActions,
+  notifySuggestedEdit,
 ];
