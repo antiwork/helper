@@ -29,6 +29,7 @@ export const env = createEnv({
     SLACK_CLIENT_ID: z.string().min(1),
     SLACK_CLIENT_SECRET: z.string().min(1),
     SLACK_SIGNING_SECRET: z.string().min(1),
+    SLACK_BOT_TOKEN: z.string().min(1),
     STRIPE_PRICE_ID: z.string().min(1),
     STRIPE_WEBHOOK_SECRET: z.string().min(1),
     STRIPE_SECRET_KEY: z.string().min(1),
@@ -67,6 +68,7 @@ export const env = createEnv({
     FIRECRAWL_API_KEY: z.string().min(1),
     PROXY_URL: z.string().url().optional(),
     PROXY_SECRET_KEY: z.string().min(1).optional(),
+    GEMINI_API_KEY: z.string().min(1),
   },
 
   /**
