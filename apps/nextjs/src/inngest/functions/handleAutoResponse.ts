@@ -10,6 +10,29 @@ import { updateConversation } from "@/lib/data/conversation";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { sendEmail } from "@/lib/resend/client";
 
+const getResponseText = async (response: Response): Promise<string> => {
+  const reader = assertDefined(response.body).getReader();
+
+  let aiResponse = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = new TextDecoder().decode(value);
+    const lines = chunk.split("\n").filter((line) => line.trim().startsWith("data: "));
+    for (const line of lines) {
+      try {
+        const json = JSON.parse(line.substring(6));
+        if (json.type === "text" && json.value) aiResponse += json.value;
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    }
+  }
+
+  return aiResponse;
+};
+
 export const handleAutoResponse = async (messageId: number) => {
   const message = await db.query.conversationMessages
     .findFirst({
@@ -40,24 +63,7 @@ export const handleAutoResponse = async (messageId: number) => {
     readPageTool: null,
   });
 
-  const reader = assertDefined(response.body).getReader();
-
-  let aiResponse = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = new TextDecoder().decode(value);
-    const lines = chunk.split("\n").filter((line) => line.trim().startsWith("data: "));
-    for (const line of lines) {
-      try {
-        const json = JSON.parse(line.substring(6));
-        if (json.type === "text" && json.value) aiResponse += json.value;
-      } catch (e) {
-        // Skip invalid JSON
-      }
-    }
-  }
+  const aiResponse = await getResponseText(response);
 
   console.log(aiResponse);
 
