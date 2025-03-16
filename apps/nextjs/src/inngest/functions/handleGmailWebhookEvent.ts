@@ -242,11 +242,10 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
 
         const staffUser = await findUserByEmail(organizationId, parsedEmailFrom.address);
         const isFirstMessage = isNewThread(gmailMessageId, threadId);
-        const shouldClose =
+        const shouldIgnore =
           (!!staffUser && !isFirstMessage) ||
           labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
           (await matchesTransactionalEmailAddress(parsedEmailFrom.address));
-        const conversationStatus = shouldClose ? "closed" : "open";
 
         const createNewConversation = async () => {
           return await db
@@ -256,8 +255,8 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
               emailFrom: parsedEmailFrom.address,
               emailFromName: parsedEmailFrom.name,
               subject: parsedEmail.subject,
-              status: conversationStatus,
-              closedAt: conversationStatus === "closed" ? new Date() : null,
+              status: shouldIgnore ? "closed" : "open",
+              closedAt: shouldIgnore ? new Date() : null,
               conversationProvider: "gmail",
               source: "email",
               isPrompt: false,
@@ -288,7 +287,9 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
           // (since we likely dropped the initial email).
           conversation = previousEmail?.conversation ?? (await createNewConversation());
         }
-        if (!conversation) throw new NonRetriableError("Failed to get or create conversation");
+        if (conversation.status === "closed" && !shouldIgnore) {
+          await updateConversation(conversation.id, { set: { status: "open" } });
+        }
 
         const newEmail = await createMessageAndProcessAttachments(
           mailboxId,
@@ -299,10 +300,9 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
           staffUser,
         );
 
-        if (!shouldClose) {
-          if (conversation.status === "closed" && conversationStatus === "open") {
-            await db.update(conversations).set({ status: "open" }).where(eq(conversations.id, conversation.id));
-          }
+        if (!shouldIgnore) {
+          // TODO: make sure respondToEmail sets to open correctly
+          // TODO: make this a job?
           await respondToEmail(newEmail.id);
           results.push(`Created and responded to message ${newEmail.id}`);
           continue;

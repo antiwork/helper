@@ -7,6 +7,7 @@ import { inngest } from "@/inngest/client";
 import { checkTokenCountAndSummarizeIfNeeded, createAssistantMessage, generateAIResponse } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
+import { disableAIResponse } from "@/lib/data/conversationMessage";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
@@ -26,9 +27,6 @@ export const handleAutoResponse = async (messageId: number) => {
     })
     .then(assertDefined);
 
-  const widgetHost = message.conversation.mailbox.widgetHost;
-  if (!widgetHost) throw new Error("Widget host is required for auto-response");
-
   if ((await getCachedSubscriptionStatus(message.conversation.mailbox.clerkOrganizationId)) === "free_trial_expired") {
     return { message: "Not sent, free trial expired" };
   }
@@ -36,6 +34,10 @@ export const handleAutoResponse = async (messageId: number) => {
   const platformCustomer = assertDefined(
     await findOrCreatePlatformCustomerByEmail(message.conversation.mailboxId, assertDefined(message.emailFrom)),
   );
+
+  if (await disableAIResponse(message.conversationId, message.conversation.mailbox, platformCustomer)) {
+    return { message: "Not sent, AI response skipped" };
+  }
 
   const messageText = cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "");
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
@@ -82,9 +84,9 @@ export const handleAutoResponse = async (messageId: number) => {
       to: assertDefined(message.emailFrom),
       subject: `Re: ${message.conversation.subject ?? "(no subject)"}`,
       react: AutoReplyEmail({
+        content: aiResponse,
         companyName: message.conversation.mailbox.name,
-        widgetHost,
-        emailSubject: message.conversation.subject ?? "(no subject)",
+        widgetHost: message.conversation.mailbox.widgetHost,
       }),
     });
 
