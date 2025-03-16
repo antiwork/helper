@@ -89,14 +89,17 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   });
 
   if (suggestion.action === "create_entry") {
-    const newFaqs = await db.insert(faqs).values({
-      content: suggestion.content || "",
-      mailboxId: mailbox.id,
-      suggested: true,
-      enabled: false,
-      messageId: message.id,
-    }).returning();
-    
+    const newFaqs = await db
+      .insert(faqs)
+      .values({
+        content: suggestion.content || "",
+        mailboxId: mailbox.id,
+        suggested: true,
+        enabled: false,
+        messageId: message.id,
+      })
+      .returning();
+
     const newFaq = newFaqs[0];
     if (newFaq) {
       // Trigger notification for new suggested edit
@@ -120,15 +123,18 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
         })
         .where(eq(faqs.id, suggestion.faqIdToReplace));
     } else {
-      const newFaqs = await db.insert(faqs).values({
-        content: suggestion.content || "",
-        mailboxId: mailbox.id,
-        suggested: true,
-        enabled: false,
-        suggestedReplacementForId: suggestion.action === "update_entry" ? suggestion.faqIdToReplace : null,
-        messageId: message.id,
-      }).returning();
-      
+      const newFaqs = await db
+        .insert(faqs)
+        .values({
+          content: suggestion.content || "",
+          mailboxId: mailbox.id,
+          suggested: true,
+          enabled: false,
+          suggestedReplacementForId: suggestion.action === "update_entry" ? suggestion.faqIdToReplace : null,
+          messageId: message.id,
+        })
+        .returning();
+
       const newFaq = newFaqs[0];
       if (newFaq) {
         // Trigger notification for new suggested edit
