@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { nativeEncryptedField } from "../lib/encryptedField";
 import { randomSlugField } from "../lib/random-slug-field";
@@ -32,6 +32,19 @@ export const conversations = pgTable(
     githubIssueUrl: text(),
     githubRepoOwner: text(),
     githubRepoName: text(),
+    isPrompt: boolean().notNull().default(false),
+    isVisitor: boolean().notNull().default(false),
+    suggestedActions: jsonb().$type<
+      (
+        | { type: "close" | "spam" }
+        | { type: "assign"; clerkUserId: string }
+        | {
+            type: "tool";
+            slug: string;
+            parameters: Record<string, any>;
+          }
+      )[]
+    >(),
   },
   (table) => {
     return {

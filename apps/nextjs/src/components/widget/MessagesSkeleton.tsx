@@ -13,9 +13,9 @@ export default function MessagesSkeleton() {
               )}
             >
               <div className="space-y-2">
-                <div className="h-4 w-64 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded bg-gray-100" />
-                <div className="h-4 w-48 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded bg-gray-100" />
-                <div className="h-4 w-56 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded bg-gray-100" />
+                <div className="h-4 w-64 animate-skeleton rounded bg-gray-100" />
+                <div className="h-4 w-48 animate-skeleton rounded bg-gray-100" />
+                <div className="h-4 w-56 animate-skeleton rounded bg-gray-100" />
               </div>
             </div>
           </div>

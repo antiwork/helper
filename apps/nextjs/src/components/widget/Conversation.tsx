@@ -140,7 +140,7 @@ export default function Conversation({
     try {
       let currentSlug = conversationSlug;
       if (!currentSlug) {
-        currentSlug = await createConversation("chat");
+        currentSlug = await createConversation({ isPrompt: false });
       }
 
       if (currentSlug) {
@@ -155,7 +155,7 @@ export default function Conversation({
     if (!token) return;
 
     const handleDataChange = async (message: unknown) => {
-      const slug = await createConversation("chat#prompt");
+      const slug = await createConversation({ isPrompt: true });
       setMessages([]);
       setConversationSlug(slug);
       append({ role: "user", content: message as string }, { body: { conversationSlug: slug } });

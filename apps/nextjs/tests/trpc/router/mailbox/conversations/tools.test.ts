@@ -3,20 +3,10 @@ import { toolsFactory } from "@tests/support/factories/tools";
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { callToolApi, generateAvailableTools, ToolApiError } from "@/lib/tools/apiTool";
+import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/tools/apiTool", () => ({
-  generateAvailableTools: vi.fn().mockResolvedValue([
-    {
-      name: "Test Tool",
-      slug: "test-tool",
-      description: "A test tool",
-      parameters: {
-        test: { type: "string" },
-      },
-    },
-  ]),
   callToolApi: vi.fn().mockResolvedValue({
     success: true,
     message: "Tool executed successfully",
@@ -35,7 +25,17 @@ describe("toolsRouter", () => {
   describe("list", () => {
     it("returns available tools for a conversation", async () => {
       const { user, mailbox, organization } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create(mailbox.id, {
+        suggestedActions: [
+          {
+            type: "tool",
+            slug: "test-tool",
+            parameters: {
+              test: "params",
+            },
+          },
+        ],
+      });
       const { tool } = await toolsFactory.create({
         mailboxId: mailbox.id,
         slug: "test-tool",
@@ -50,24 +50,19 @@ describe("toolsRouter", () => {
         conversationSlug: conversation.slug,
       });
 
-      expect(generateAvailableTools).toHaveBeenCalledWith(
-        expect.objectContaining({ id: conversation.id }),
-        expect.objectContaining({ id: mailbox.id }),
-        expect.arrayContaining([expect.objectContaining({ id: tool.id })]),
-      );
-
-      expect(result.recommended).toEqual([
+      expect(result.suggested).toEqual([
         {
-          name: "Test Tool",
-          slug: "test-tool",
-          description: "A test tool",
-          parameters: {
-            test: { type: "string" },
+          type: "tool",
+          tool: {
+            name: "Test Tool",
+            slug: "test-tool",
+            description: "A test tool",
+            parameters: {
+              test: "params",
+            },
           },
         },
       ]);
-
-      expect(result.recommended[0]?.parameters).not.toHaveProperty("authenticationToken");
     });
   });
 

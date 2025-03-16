@@ -153,6 +153,13 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           replyCount: number;
         }[];
       }>;
+      latestEvents: import("@trpc/server").TRPCQueryProcedure<{
+        input: {
+          mailboxSlug: string;
+          cursor?: Date | undefined;
+        };
+        output: any;
+      }>;
       styleLinters: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -240,7 +247,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat" | "chat#prompt";
+              source: "email" | "chat";
+              isPrompt: boolean;
+              isVisitor: boolean;
               embeddingText: string | null;
               githubIssueNumber: number | null;
               githubIssueUrl: string | null;
@@ -403,7 +412,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat" | "chat#prompt";
+            source: "email" | "chat";
+            isPrompt: boolean;
+            isVisitor: boolean;
             embeddingText: string | null;
             githubIssueNumber: number | null;
             githubIssueUrl: string | null;
@@ -565,7 +576,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat" | "chat#prompt";
+            source: "email" | "chat";
+            isPrompt: boolean;
+            isVisitor: boolean;
             embeddingText: string | null;
             githubIssueNumber: number | null;
             githubIssueUrl: string | null;
@@ -741,7 +754,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               conversationSlug: string;
             };
             output: {
-              recommended: import("../lib/tools/apiTool").ToolAvailableResult[];
+              suggested: any;
               all: {
                 name: string;
                 slug: string;
@@ -870,7 +883,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat" | "chat#prompt";
+              source: "email" | "chat";
+              isPrompt: boolean;
+              isVisitor: boolean;
               embeddingText: string | null;
               githubIssueNumber: number | null;
               githubIssueUrl: string | null;

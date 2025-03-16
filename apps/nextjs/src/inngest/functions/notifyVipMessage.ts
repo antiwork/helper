@@ -33,7 +33,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
   const conversation = assertDefinedOrRaiseNonRetriableError(message.conversation);
   const { mailbox } = conversation;
 
-  if (conversation.source == "chat#prompt") {
+  if (conversation.isPrompt) {
     return "Not posted, prompt conversation";
   }
 

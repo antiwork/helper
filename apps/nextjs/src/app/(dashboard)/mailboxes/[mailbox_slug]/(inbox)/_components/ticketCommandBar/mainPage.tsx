@@ -252,41 +252,43 @@ export const useMainPage = ({
           },
         ],
       },
-      ...(tools && (tools.recommended.length > 0 || tools.all.length > 0)
+      ...(tools && tools.all.length > 0
         ? [
             {
               heading: "Tools",
               items: [
-                ...tools.recommended.map((tool) => ({
-                  id: `tool-${tool.slug}-${JSON.stringify(tool.parameters)}`,
-                  label: tool.name,
-                  icon: PlayIcon,
-                  onSelect: () => {
-                    void handleToolExecution(tool.slug, tool.name, tool.parameters);
-                    onOpenChange(false);
-                  },
-                  preview: (
-                    <div className="p-4">
-                      <h3 className="font-medium mb-2">{tool.name}</h3>
-                      <p className="text-sm text-muted-foreground">{tool.description}</p>
-                      {tool.parameters && Object.keys(tool.parameters).length > 0 && (
-                        <div className="mt-4">
-                          <h4 className="font-medium mb-1">Parameters</h4>
-                          <div className="text-sm text-muted-foreground">
-                            {Object.entries(tool.parameters).map(([name, value]) => (
-                              <div key={name} className="flex gap-1">
-                                <span>{name}:</span>
-                                <span className="truncate font-mono" title={JSON.stringify(value)}>
-                                  {JSON.stringify(value)}
-                                </span>
-                              </div>
-                            ))}
+                ...tools.suggested
+                  .flatMap((t) => (t.type === "tool" ? [t.tool] : []))
+                  .map((tool) => ({
+                    id: `tool-${tool.slug}-${JSON.stringify(tool.parameters)}`,
+                    label: tool.name,
+                    icon: PlayIcon,
+                    onSelect: () => {
+                      void handleToolExecution(tool.slug, tool.name, tool.parameters);
+                      onOpenChange(false);
+                    },
+                    preview: (
+                      <div className="p-4">
+                        <h3 className="font-medium mb-2">{tool.name}</h3>
+                        <p className="text-sm text-muted-foreground">{tool.description}</p>
+                        {tool.parameters && Object.keys(tool.parameters).length > 0 && (
+                          <div className="mt-4">
+                            <h4 className="font-medium mb-1">Parameters</h4>
+                            <div className="text-sm text-muted-foreground">
+                              {Object.entries(tool.parameters).map(([name, value]) => (
+                                <div key={name} className="flex gap-1">
+                                  <span>{name}:</span>
+                                  <span className="truncate font-mono" title={JSON.stringify(value)}>
+                                    {JSON.stringify(value)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ),
-                })),
+                        )}
+                      </div>
+                    ),
+                  })),
                 {
                   id: "all-tools",
                   label: "All tools",
@@ -309,7 +311,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.recommended, onToggleCc, isGitHubConnected],
+    [onOpenChange, conversation, tools?.recommended, tools?.suggested, onToggleCc, isGitHubConnected],
   );
 
   return mainCommandGroups;
