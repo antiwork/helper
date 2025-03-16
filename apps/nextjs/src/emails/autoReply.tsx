@@ -6,11 +6,12 @@ type Props = {
   content: string;
   widgetHost: string | null;
   companyName: string;
+  hasPlatformCustomer: boolean;
 };
 
 const baseUrl = getBaseUrl();
 
-const AutoReplyEmail = ({ content, companyName, widgetHost }: Props) => (
+const AutoReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer }: Props) => (
   <Html>
     <Tailwind config={tailwindConfig}>
       <Head />
@@ -27,7 +28,7 @@ const AutoReplyEmail = ({ content, companyName, widgetHost }: Props) => (
           </Text>
           <Text className="text-neutral-700 text-sm my-6">
             To continue the conversation, reply to this email
-            {widgetHost && (
+            {widgetHost && hasPlatformCustomer && (
               <>
                 {" or "}
                 <Link href={widgetHost} target="_blank" className="text-blue-700 text-sm underline block mb-4">

@@ -18,10 +18,7 @@ export const respondToEmail = async (messageId: number) => {
               columns: {
                 slug: true,
                 autoRespondEmailToChat: true,
-                widgetHost: true,
                 id: true,
-                name: true,
-                disableAutoResponseForVips: true,
               },
             },
           },
@@ -60,7 +57,6 @@ export const respondToEmail = async (messageId: number) => {
 
   const { mailbox } = email.conversation;
 
-  // TODO: only link to widget if widgetHost is set
   if (mailbox.autoRespondEmailToChat) {
     await inngest.send({
       name: "conversations/auto-response.create",

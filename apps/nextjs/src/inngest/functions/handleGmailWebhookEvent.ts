@@ -166,21 +166,15 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
   const gmailSupportEmail = await db.query.gmailSupportEmails.findFirst({
     where: eq(gmailSupportEmails.email, data.emailAddress),
     with: {
-      mailboxes: {
-        columns: {
-          id: true,
-          clerkOrganizationId: true,
-        },
-      },
+      mailboxes: true,
     },
   });
-  const mailboxId = gmailSupportEmail?.mailboxes[0]?.id;
-  const organizationId = gmailSupportEmail?.mailboxes[0]?.clerkOrganizationId;
-  if (!(gmailSupportEmail && mailboxId && organizationId)) {
+  const mailbox = gmailSupportEmail?.mailboxes[0];
+  if (!mailbox) {
     return `Gmail support email record not found for ${data.emailAddress}`;
   }
   Sentry.setContext("gmailSupportEmail info", {
-    mailboxId,
+    mailboxId: mailbox.id,
     gmailSupportEmailId: gmailSupportEmail.id,
     gmailSupportEmailHistoryId: gmailSupportEmail.historyId,
     dataEmailAddress: data.emailAddress,
@@ -240,7 +234,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
           continue;
         }
 
-        const staffUser = await findUserByEmail(organizationId, parsedEmailFrom.address);
+        const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
         const isFirstMessage = isNewThread(gmailMessageId, threadId);
         const shouldIgnore =
           (!!staffUser && !isFirstMessage) ||
@@ -251,12 +245,12 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
           return await db
             .insert(conversations)
             .values({
-              mailboxId,
+              mailboxId: mailbox.id,
               emailFrom: parsedEmailFrom.address,
               emailFromName: parsedEmailFrom.name,
               subject: parsedEmail.subject,
-              status: shouldIgnore ? "closed" : "open",
-              closedAt: shouldIgnore ? new Date() : null,
+              status: shouldIgnore || mailbox.autoRespondEmailToChat ? "closed" : "open",
+              closedAt: shouldIgnore || mailbox.autoRespondEmailToChat ? new Date() : null,
               conversationProvider: "gmail",
               source: "email",
               isPrompt: false,
@@ -292,7 +286,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         }
 
         const newEmail = await createMessageAndProcessAttachments(
-          mailboxId,
+          mailbox.id,
           parsedEmail,
           gmailMessageId,
           threadId,
