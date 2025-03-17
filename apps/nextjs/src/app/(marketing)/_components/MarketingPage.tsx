@@ -16,7 +16,7 @@ import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useHelper } from "@helperai/react";
 import { Button } from "@/components/ui/button";
@@ -97,7 +97,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                   <textarea
                     id="customerMessage"
                     name="customerMessage"
-                    rows={3}
+                    rows={4}
                     className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
                     placeholder="Enter customer message here"
                     defaultValue={`Hi! That's a great question. When you un-publish your product, it simply removes the product from the public view.`}
@@ -118,7 +118,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                   <textarea
                     id="helperResponse"
                     name="helperResponse"
-                    rows={3}
+                    rows={5}
                     className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
                     placeholder="Enter Helper response here"
                     defaultValue={`Hello, That's a great question. yes, your customers will still be able to read and open the ebook from their email even if you un publish it. Let me know how else I can assist today.`}
@@ -251,6 +251,42 @@ Please reply with this information. We'll review your request within 1-2 busines
           </div>
         </div>
       );
+    case "analytics":
+      return (
+        <div className="p-6">
+          <div className="max-w-xl flex-grow">
+            <div className="flex flex-col gap-4">
+              <div className="h-32 bg-muted rounded-lg flex items-center justify-center">
+                <div className="w-3/4 h-16 bg-secondary rounded-md flex items-center justify-center">
+                  <div className="w-2/3 h-8 bg-primary/10 rounded" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="h-16 bg-muted rounded-lg" />
+                <div className="h-16 bg-muted rounded-lg" />
+                <div className="h-16 bg-muted rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    case "integrations":
+      return (
+        <div className="p-6">
+          <div className="max-w-xl flex-grow">
+            <div className="grid grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-2 p-4 rounded-lg border border-border">
+                  <div className="w-8 h-8 rounded-full bg-muted" />
+                  <div className="flex-grow">
+                    <div className="h-4 w-20 bg-muted rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
     default:
       return null;
   }
@@ -258,63 +294,12 @@ Please reply with this information. We'll review your request within 1-2 busines
 
 export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   const { sendPrompt } = useHelper();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollContentRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [cardWidth, setCardWidth] = useState(0);
-  const [scrollPosition, setScrollPosition] = useState(0);
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
   const isDesktop = useMediaQuery({ minWidth: 1024 });
 
-  useEffect(() => {
-    const updateCardWidth = () => {
-      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-      const minCardWidth = 300;
-      const maxCardWidth = 600;
-      const calculatedWidth = Math.min(Math.max(vw * (isDesktop ? 0.8 : 0.9), minCardWidth), maxCardWidth);
-      setCardWidth(calculatedWidth);
-    };
-
-    updateCardWidth();
-    window.addEventListener("resize", updateCardWidth);
-    return () => window.removeEventListener("resize", updateCardWidth);
-  }, [isDesktop]);
-
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    const scrollContent = scrollContentRef.current;
-    if (scrollContainer && scrollContent && cardWidth > 0 && isDesktop) {
-      let animationFrameId: number;
-
-      const scroll = () => {
-        if (!isHovered) {
-          setScrollPosition((prev) => {
-            const newPosition = (prev + 0.5) % (cardWidth * 8);
-            scrollContainer.scrollLeft = newPosition;
-            return newPosition;
-          });
-        }
-        animationFrameId = requestAnimationFrame(scroll);
-      };
-
-      animationFrameId = requestAnimationFrame(scroll);
-
-      return () => {
-        cancelAnimationFrame(animationFrameId);
-      };
-    }
-  }, [isHovered, cardWidth, isDesktop]);
-
-  useEffect(() => {
-    document.documentElement.style.overflowX = "hidden";
-    return () => {
-      document.documentElement.style.overflowX = "";
-    };
-  }, []);
-
   const cardTypes = useMemo(() => {
-    return ["styleLinter", "autoDraft", "pinnedReplies", "promptConfig"];
+    return ["styleLinter", "autoDraft", "pinnedReplies", "promptConfig", "analytics", "integrations"];
   }, []);
 
   const generateRandomColors = useCallback(() => {
@@ -436,74 +421,70 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               Better-than-human responses
             </h2>
           </div>
-          <div
-            ref={scrollContainerRef}
-            className={`w-full ${isDesktop ? "overflow-x-hidden" : "overflow-x-auto"} overflow-y-hidden scrollbar-hide`}
-            onMouseEnter={() => isDesktop && setIsHovered(true)}
-            onMouseLeave={() => isDesktop && setIsHovered(false)}
-          >
-            <div
-              ref={scrollContentRef}
-              className="flex"
-              style={{
-                width: `${cardWidth * 16}px`,
-                transform: isDesktop ? "none" : `translateX(-${scrollPosition}px)`,
-                transition: isDesktop ? "none" : "transform 0.5s ease-out",
-              }}
-            >
-              {[...Array(16)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-shrink-0 bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden"
-                  style={{
-                    width: `${cardWidth - (isDesktop ? 32 : 16)}px`,
-                    maxWidth: "568px",
-                    minWidth: "350px",
-                    height: "700px",
-                    margin: isDesktop ? "1rem" : "0.5rem",
-                  }}
-                >
-                  <div className="flex-1 overflow-y-auto">
-                    <CardContent type={cardTypes[i % 4] || ""} />
-                  </div>
-
-                  <div className="flex-1 bg-secondary p-8 overflow-y-auto">
-                    <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                      {i % 4 === 0 && (
-                        <>
-                          Craft authentic replies in your brand&apos;s voice with
-                          <span className="underline-offset">&nbsp;style linter</span>
-                        </>
-                      )}
-                      {i % 4 === 1 && (
-                        <>
-                          Goodbye writer&apos;s block, hello
-                          <span className="underline-offset">&nbsp;auto-generated drafts</span>
-                        </>
-                      )}
-                      {i % 4 === 2 && (
-                        <>
-                          Your best replies become the new standard with
-                          <span className="underline-offset">&nbsp;FAQs</span>
-                        </>
-                      )}
-                      {i % 4 === 3 && (
-                        <>
-                          Set the rules and Helper will follow your lead with
-                          <span className="underline-offset">&nbsp;prompt configuration</span>
-                        </>
-                      )}
-                    </h3>
-                    <p className="text-md text-muted-foreground">
-                      {i % 4 === 0 && "Human touch, robot efficiency"}
-                      {i % 4 === 1 && "All you have to do is click send."}
-                      {i % 4 === 2 && "Pin your best and watch Helper learn"}
-                      {i % 4 === 3 && "Responses that fit your needs."}
-                    </p>
-                  </div>
+          <div className="w-[85vw] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cardTypes.map((type, i) => (
+              <div
+                key={i}
+                className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden"
+                style={{
+                  minWidth: "350px",
+                  height: "fit-content"
+                }}
+              >
+                <div className="flex-1">
+                  <CardContent type={type} />
                 </div>
-              ))}
-            </div>
+
+                <div className="bg-secondary p-8">
+                  <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                    {i % 6 === 0 && (
+                      <>
+                        Craft authentic replies in your brand&apos;s voice with
+                        <span className="underline-offset">&nbsp;style linter</span>
+                      </>
+                    )}
+                    {i % 6 === 1 && (
+                      <>
+                        Goodbye writer&apos;s block, hello
+                        <span className="underline-offset">&nbsp;auto-generated drafts</span>
+                      </>
+                    )}
+                    {i % 6 === 2 && (
+                      <>
+                        Your best replies become the new standard with
+                        <span className="underline-offset">&nbsp;FAQs</span>
+                      </>
+                    )}
+                    {i % 6 === 3 && (
+                      <>
+                        Set the rules and Helper will follow your lead with
+                        <span className="underline-offset">&nbsp;prompt configuration</span>
+                      </>
+                    )}
+                    {i % 6 === 4 && (
+                      <>
+                        Track your team&apos;s performance with
+                        <span className="underline-offset">&nbsp;detailed analytics</span>
+                      </>
+                    )}
+                    {i % 6 === 5 && (
+                      <>
+                        Connect with your favorite tools using
+                        <span className="underline-offset">&nbsp;integrations</span>
+                      </>
+                    )}
+                  </h3>
+                  <p className="text-md text-muted-foreground">
+                    {i % 6 === 0 && "Human touch, robot efficiency"}
+                    {i % 6 === 1 && "All you have to do is click send."}
+                    {i % 6 === 2 && "Pin your best and watch Helper learn"}
+                    {i % 6 === 3 && "Responses that fit your needs."}
+                    {i % 6 === 4 && "Data-driven support decisions"}
+                    {i % 6 === 5 && "Seamless workflow automation"}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
