@@ -30,7 +30,7 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
   return (
     <div className="flex flex-col gap-2 border border-bright rounded-lg p-4">
       <div className="flex-1 w-full text-left text-sm">
-        <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3} />
+        <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Button
