@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, faqs } from "@/db/schema";
+import { handleKnowledgeBankSlackAction } from "@/lib/data/knowledge";
 import { verifySlackRequest } from "@/lib/slack/client";
-import { handleKnowledgeBankSlackAction, handleMessageSlackAction } from "@/lib/slack/shared";
+import { handleMessageSlackAction } from "@/lib/slack/shared";
 
 export const POST = async (request: Request) => {
   const body = await request.text();
