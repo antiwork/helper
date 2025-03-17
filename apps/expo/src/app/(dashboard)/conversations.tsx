@@ -4,54 +4,63 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { api } from "@/utils/api";
 import { ConversationList } from "./_components/conversationList";
-import { PaginationControls } from "./_components/paginationControls";
 
 function FilteredConversations({
   mailboxSlug,
   category,
   startDate,
   now,
-  topicId,
 }: {
   mailboxSlug: string;
   category?: string;
   startDate: Date;
   now: Date;
-  topicId?: string;
 }) {
   const navigation = useNavigation();
-  const [page, setPage] = useState(1);
 
-  const { data, refetch, isRefetching, isLoading } = api.mailbox.conversations.list.useQuery({
-    mailboxSlug,
-    category,
-    createdAfter: startDate.toISOString(),
-    createdBefore: now.toISOString(),
-    sort: null,
-    search: null,
-    status: null,
-    topic: topicId ? [topicId] : undefined,
-    page,
-  });
+  const { data, refetch, isRefetching, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    api.mailbox.conversations.list.useInfiniteQuery(
+      {
+        mailboxSlug,
+        category,
+        createdAfter: startDate.toISOString(),
+        createdBefore: now.toISOString(),
+        sort: null,
+        search: null,
+        status: null,
+        limit: 25,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
   useEffect(() => {
     navigation.setOptions({
       title: category === "mine" ? "Assigned to me" : "Conversations",
     });
-  }, [navigation, category, topicId]);
+  }, [navigation, category]);
 
-  const totalPages = data?.total ? Math.ceil(data.total / 25) : 0;
+  const conversations = data?.pages.flatMap((page) => page.conversations) || [];
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   return (
     <>
       <ConversationList
-        conversations={data?.conversations}
+        conversations={conversations}
         onRefresh={refetch}
         isRefreshing={isRefetching}
         isLoading={isLoading}
         mailboxSlug={mailboxSlug}
+        onLoadMore={handleLoadMore}
+        hasMore={!!hasNextPage}
+        isLoadingMore={isFetchingNextPage}
       />
-      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
     </>
   );
 }
@@ -59,7 +68,6 @@ function FilteredConversations({
 function ReactionConversations({ mailboxSlug, startDate, now }: { mailboxSlug: string; startDate: Date; now: Date }) {
   const navigation = useNavigation();
   const [reactionType, setReactionType] = useState<"thumbs-up" | "thumbs-down">("thumbs-up");
-  const [page, setPage] = useState(1);
 
   useEffect(() => {
     navigation.setOptions({
@@ -67,19 +75,31 @@ function ReactionConversations({ mailboxSlug, startDate, now }: { mailboxSlug: s
     });
   }, [navigation]);
 
-  const { data, refetch, isRefetching } = api.mailbox.conversations.list.useQuery({
-    mailboxSlug,
-    createdAfter: startDate.toISOString(),
-    createdBefore: now.toISOString(),
-    reactionType,
-    category: null,
-    sort: null,
-    search: null,
-    status: null,
-    page,
-  });
+  const { data, refetch, isRefetching, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    api.mailbox.conversations.list.useInfiniteQuery(
+      {
+        mailboxSlug,
+        createdAfter: startDate.toISOString(),
+        createdBefore: now.toISOString(),
+        reactionType,
+        category: null,
+        sort: null,
+        search: null,
+        status: null,
+        limit: 25,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
-  const totalPages = data?.total ? Math.ceil(data.total / 25) : 0;
+  const conversations = data?.pages.flatMap((page) => page.conversations) || [];
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -106,21 +126,23 @@ function ReactionConversations({ mailboxSlug, startDate, now }: { mailboxSlug: s
         </TouchableOpacity>
       </View>
       <ConversationList
-        conversations={data?.conversations}
+        conversations={conversations}
         onRefresh={refetch}
         isRefreshing={isRefetching}
+        isLoading={isLoading}
         mailboxSlug={mailboxSlug}
+        onLoadMore={handleLoadMore}
+        hasMore={!!hasNextPage}
+        isLoadingMore={isFetchingNextPage}
       />
-      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
     </View>
   );
 }
 
 export default function ConversationsByCategory() {
-  const { category, mailboxSlug, topicId } = useLocalSearchParams<{
+  const { category, mailboxSlug } = useLocalSearchParams<{
     mailboxSlug: string;
     category?: string;
-    topicId?: string;
   }>();
 
   const now = useMemo(() => new Date(), []);
@@ -131,13 +153,7 @@ export default function ConversationsByCategory() {
       {category === "reactions" ? (
         <ReactionConversations mailboxSlug={mailboxSlug} startDate={startDate} now={now} />
       ) : (
-        <FilteredConversations
-          mailboxSlug={mailboxSlug}
-          category={category}
-          startDate={startDate}
-          now={now}
-          topicId={topicId}
-        />
+        <FilteredConversations mailboxSlug={mailboxSlug} category={category} startDate={startDate} now={now} />
       )}
     </View>
   );
