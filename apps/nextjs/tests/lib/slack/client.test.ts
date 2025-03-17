@@ -189,7 +189,13 @@ describe("Slack client", () => {
         },
       });
 
-      await slackClient.updateSlackMessage({ token: mockToken, channel: mockChannel, ts: mockTs, attachments: [], blocks: [] });
+      await slackClient.updateSlackMessage({
+        token: mockToken,
+        channel: mockChannel,
+        ts: mockTs,
+        attachments: [],
+        blocks: [],
+      });
       expect(mockUpdate).toHaveBeenCalledWith({ channel: mockChannel, ts: mockTs, attachments: [], blocks: [] });
     });
   });
