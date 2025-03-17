@@ -142,11 +142,6 @@ export const inngest = new Inngest({
           reason: z.string().nullable(),
         }),
       },
-      "faqs/suggested.created": {
-        data: z.object({
-          faqId: z.number(),
-        }),
-      },
       "conversations/human-support-requested": {
         data: z.object({
           mailboxSlug: z.string(),
