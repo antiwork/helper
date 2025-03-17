@@ -1,9 +1,10 @@
 "use client";
 
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import ReactMarkdown from "react-markdown";
+import { useState } from "react";
 import type { FAQ } from "@/app/types/global";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
 type SuggestedKnowledgeBankItemProps = {
@@ -12,6 +13,7 @@ type SuggestedKnowledgeBankItemProps = {
 };
 
 const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBankItemProps) => {
+  const [content, setContent] = useState(faq.content);
   const utils = api.useUtils();
   const acceptFaq = api.mailbox.faqs.accept.useMutation({
     onSuccess: () => {
@@ -26,9 +28,9 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
   });
 
   return (
-    <div className="flex flex-col gap-4 border border-bright rounded-lg p-4">
+    <div className="flex flex-col gap-2 border border-bright rounded-lg p-4">
       <div className="flex-1 w-full text-left text-sm">
-        <ReactMarkdown className="prose prose-sm">{faq?.content}</ReactMarkdown>
+        <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Button
@@ -41,7 +43,7 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
         </Button>
         <Button
           variant="bright"
-          onClick={() => acceptFaq.mutate({ mailboxSlug, id: faq.id })}
+          onClick={() => acceptFaq.mutate({ mailboxSlug, id: faq.id, content })}
           disabled={acceptFaq.isPending}
         >
           <CheckIcon className="h-4 w-4 mr-1" />
