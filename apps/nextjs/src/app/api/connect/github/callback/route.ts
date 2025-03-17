@@ -1,11 +1,11 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { listRepositories } from "@/lib/github/client";
+import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { getAuthorizedMailbox } from "@/trpc";
 
 export async function GET(request: NextRequest) {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=success`);
   } catch (error) {
-    Sentry.captureException(error);
+    captureExceptionAndThrowIfDevelopment(error);
     return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
   }
 }

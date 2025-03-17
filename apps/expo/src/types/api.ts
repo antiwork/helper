@@ -786,18 +786,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               issueId: number;
             };
           }>;
-          updateGitHubIssueState: import("@trpc/server").TRPCMutationProcedure<{
-            input: {
-              mailboxSlug: string;
-              conversationSlug: string;
-              state: "open" | "closed";
-            };
-            output: {
-              state: string;
-              issueUrl: string;
-              issueNumber: any;
-            };
-          }>;
           linkExistingGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
             input: {
               mailboxSlug: string;

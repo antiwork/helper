@@ -1,10 +1,16 @@
+import crypto from "crypto";
 import { App } from "octokit";
 import { env } from "@/env";
+
+const privateKeyPkcs8 = crypto.createPrivateKey(env.GITHUB_PRIVATE_KEY).export({
+  type: "pkcs8",
+  format: "pem",
+}) as string;
 
 export const getGitHubInstallUrl = () => `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`;
 
 export const getOctokit = (installationId: string) => {
-  const app = new App({ appId: env.GITHUB_APP_ID, privateKey: env.GITHUB_PRIVATE_KEY });
+  const app = new App({ appId: env.GITHUB_APP_ID, privateKey: privateKeyPkcs8 });
   return app.getInstallationOctokit(Number(installationId));
 };
 
@@ -96,33 +102,6 @@ export const createGitHubIssue = async ({
     issueNumber: response.data.number,
     issueUrl: response.data.html_url,
     issueId: response.data.id,
-  };
-};
-
-export const updateGitHubIssueState = async ({
-  installationId,
-  owner,
-  repo,
-  issueNumber,
-  state,
-}: {
-  installationId: string;
-  owner: string;
-  repo: string;
-  issueNumber: number;
-  state: "open" | "closed";
-}) => {
-  const octokit = await getOctokit(installationId);
-  const response = await octokit.rest.issues.update({
-    owner,
-    repo,
-    issue_number: issueNumber,
-    state,
-  });
-
-  return {
-    state: response.data.state,
-    issueUrl: response.data.html_url,
   };
 };
 

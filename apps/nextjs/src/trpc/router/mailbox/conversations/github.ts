@@ -1,9 +1,12 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
-import { createGitHubIssue, getGitHubIssue, listRepositoryIssues, updateGitHubIssueState } from "@/lib/github/client";
+import { conversations } from "@/db/schema";
+import { addNote } from "@/lib/data/note";
+import { createGitHubIssue, getGitHubIssue, listRepositoryIssues } from "@/lib/github/client";
 import { conversationProcedure } from "./procedure";
 
 export const githubRouter = {
@@ -28,7 +31,7 @@ export const githubRouter = {
           owner: ctx.mailbox.githubRepoOwner,
           repo: ctx.mailbox.githubRepoName,
           title: input.title,
-          body: input.body,
+          body: `${input.body}\n\n*Created from [${ctx.conversation.subject}](${getBaseUrl()}/mailboxes/${ctx.mailbox.slug}/conversations?id=${ctx.conversation.id})*`,
         });
 
         await db
@@ -41,14 +44,10 @@ export const githubRouter = {
           })
           .where(eq(conversations.id, ctx.conversation.id));
 
-        await db.insert(conversationMessages).values({
+        await addNote({
           conversationId: ctx.conversation.id,
-          body: `Created GitHub issue #${issueNumber}: ${input.title}\n\n${issueUrl}`,
-          role: "workflow" as const,
-          isPerfect: true,
-          isFlaggedAsBad: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          message: `Created GitHub issue [#${issueNumber}](${issueUrl})`,
+          user: await currentUser(),
         });
 
         return {
@@ -60,71 +59,6 @@ export const githubRouter = {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error instanceof Error ? error.message : "Failed to create GitHub issue",
-        });
-      }
-    }),
-
-  updateGitHubIssueState: conversationProcedure
-    .input(
-      z.object({
-        state: z.enum(["open", "closed"]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (
-        !ctx.conversation.githubIssueNumber ||
-        !ctx.conversation.githubRepoOwner ||
-        !ctx.conversation.githubRepoName
-      ) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "No GitHub issue is linked to this conversation",
-        });
-      }
-
-      if (!ctx.mailbox.githubInstallationId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "GitHub is not configured for this mailbox",
-        });
-      }
-
-      try {
-        const result = await updateGitHubIssueState({
-          installationId: ctx.mailbox.githubInstallationId,
-          owner: ctx.conversation.githubRepoOwner,
-          repo: ctx.conversation.githubRepoName,
-          issueNumber: ctx.conversation.githubIssueNumber,
-          state: input.state,
-        });
-
-        const actionText = input.state === "open" ? "reopened" : "closed";
-        await db.insert(conversationMessages).values({
-          conversationId: ctx.conversation.id,
-          body: `GitHub issue #${ctx.conversation.githubIssueNumber} has been ${actionText}.`,
-          role: "workflow" as const,
-          isPerfect: true,
-          isFlaggedAsBad: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-
-        await db
-          .update(conversations)
-          .set({
-            status: input.state === "open" ? "open" : "closed",
-          })
-          .where(eq(conversations.id, ctx.conversation.id));
-
-        return {
-          state: result.state,
-          issueUrl: result.issueUrl,
-          issueNumber: ctx.conversation.githubIssueNumber,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to update GitHub issue state",
         });
       }
     }),
@@ -161,14 +95,10 @@ export const githubRouter = {
           })
           .where(eq(conversations.id, ctx.conversation.id));
 
-        await db.insert(conversationMessages).values({
+        await addNote({
           conversationId: ctx.conversation.id,
-          body: `Linked to GitHub issue #${issue.number}: ${issue.title}\n\n${issue.url}`,
-          role: "workflow" as const,
-          isPerfect: true,
-          isFlaggedAsBad: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          message: `Linked to GitHub issue [#${issue.number}](${issue.url})`,
+          user: await currentUser(),
         });
 
         return {

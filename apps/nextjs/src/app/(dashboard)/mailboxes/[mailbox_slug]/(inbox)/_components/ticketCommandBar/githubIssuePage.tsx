@@ -38,8 +38,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
     api.mailbox.conversations.github.createGitHubIssue.useMutation();
   const { mutateAsync: linkIssue, isPending: isLinking } =
     api.mailbox.conversations.github.linkExistingGitHubIssue.useMutation();
-  const { mutateAsync: updateIssueState, isPending: isUpdatingState } =
-    api.mailbox.conversations.github.updateGitHubIssueState.useMutation();
 
   const { data: issues, isLoading: isLoadingIssues } = api.mailbox.conversations.github.listRepositoryIssues.useQuery(
     {
@@ -155,36 +153,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
     }
   };
 
-  const handleUpdateIssueState = async (newState: "open" | "closed") => {
-    try {
-      await updateIssueState({
-        mailboxSlug,
-        conversationSlug,
-        state: newState,
-      });
-
-      toast({
-        title: `GitHub issue ${newState === "open" ? "reopened" : "closed"}`,
-        description: `Issue #${issueNumber} has been ${newState === "open" ? "reopened" : "closed"}.`,
-        variant: "success",
-      });
-
-      if (newState === "closed") {
-        onOpenChange(false);
-      }
-
-      setTimeout(() => {
-        refetchConversation();
-      }, 500);
-    } catch (error) {
-      toast({
-        title: `Failed to ${newState === "open" ? "reopen" : "close"} GitHub issue`,
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Filter issues based on search term
   const filteredIssues =
     issues?.filter(
@@ -220,13 +188,13 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         {issueNumber && issueUrl && (
           <TabsContent value="view" className="space-y-4 mt-4">
             <div className="p-4 border rounded-md">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between">
                 <h3 className="font-medium">Issue #{issueNumber}</h3>
                 <a
                   href={issueUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-sm text-blue-500 hover:underline"
+                  className="flex items-center text-sm hover:underline"
                 >
                   View on GitHub <ExternalLinkIcon className="h-3 w-3 ml-1" />
                 </a>

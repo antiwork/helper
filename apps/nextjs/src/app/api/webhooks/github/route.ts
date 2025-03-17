@@ -51,7 +51,7 @@ export async function POST(request: Request) {
             message:
               "Hi, our team has resolved the issue so this should work now. Please let us know if you continue having problems.",
             user: null,
-            role: "workflow",
+            role: "staff",
             close: true,
           });
 
