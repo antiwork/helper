@@ -11,7 +11,7 @@ vi.mock("@/lib/slack/client", () => ({
 }));
 
 vi.mock("@/lib/slack/shared", () => ({
-  handleSlackAction: vi.fn(),
+  handleMessageSlackAction: vi.fn(),
 }));
 
 describe("POST /api/webhooks/slack/response", () => {

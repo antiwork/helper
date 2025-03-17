@@ -53,5 +53,5 @@ export const POST = async (request: Request) => {
     return new Response(null, { status: 200 });
   }
 
-  return Response.json({ error: "Linked record not found" }, { status: 404 });
+  return Response.json({ error: "Message not found" }, { status: 404 });
 };
