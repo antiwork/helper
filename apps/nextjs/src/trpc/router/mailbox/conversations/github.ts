@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
@@ -15,7 +15,7 @@ export const githubRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.mailbox.githubAccessToken || !ctx.mailbox.githubRepoOwner || !ctx.mailbox.githubRepoName) {
+      if (!ctx.mailbox.githubInstallationId || !ctx.mailbox.githubRepoOwner || !ctx.mailbox.githubRepoName) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not configured for this mailbox",
@@ -24,7 +24,7 @@ export const githubRouter = {
 
       try {
         const { issueNumber, issueUrl, issueId } = await createGitHubIssue({
-          accessToken: ctx.mailbox.githubAccessToken,
+          installationId: ctx.mailbox.githubInstallationId,
           owner: ctx.mailbox.githubRepoOwner,
           repo: ctx.mailbox.githubRepoName,
           title: input.title,
@@ -82,7 +82,7 @@ export const githubRouter = {
         });
       }
 
-      if (!ctx.mailbox.githubAccessToken) {
+      if (!ctx.mailbox.githubInstallationId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not configured for this mailbox",
@@ -91,7 +91,7 @@ export const githubRouter = {
 
       try {
         const result = await updateGitHubIssueState({
-          accessToken: ctx.mailbox.githubAccessToken,
+          installationId: ctx.mailbox.githubInstallationId,
           owner: ctx.conversation.githubRepoOwner,
           repo: ctx.conversation.githubRepoName,
           issueNumber: ctx.conversation.githubIssueNumber,
@@ -136,7 +136,7 @@ export const githubRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.mailbox.githubAccessToken || !ctx.mailbox.githubRepoOwner || !ctx.mailbox.githubRepoName) {
+      if (!ctx.mailbox.githubInstallationId || !ctx.mailbox.githubRepoOwner || !ctx.mailbox.githubRepoName) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not configured for this mailbox",
@@ -145,7 +145,7 @@ export const githubRouter = {
 
       try {
         const issue = await getGitHubIssue({
-          accessToken: ctx.mailbox.githubAccessToken,
+          installationId: ctx.mailbox.githubInstallationId,
           owner: ctx.mailbox.githubRepoOwner,
           repo: ctx.mailbox.githubRepoName,
           issueNumber: input.issueNumber,
@@ -190,7 +190,7 @@ export const githubRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.mailbox.githubAccessToken || !ctx.mailbox.githubRepoOwner || !ctx.mailbox.githubRepoName) {
+      if (!ctx.mailbox.githubInstallationId || !ctx.mailbox.githubRepoOwner || !ctx.mailbox.githubRepoName) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not configured for this mailbox",
@@ -199,7 +199,7 @@ export const githubRouter = {
 
       try {
         return await listRepositoryIssues({
-          accessToken: ctx.mailbox.githubAccessToken,
+          installationId: ctx.mailbox.githubInstallationId,
           owner: ctx.mailbox.githubRepoOwner,
           repo: ctx.mailbox.githubRepoName,
           state: input.state,

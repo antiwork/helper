@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
 import { mailboxes, mailboxesMetadataApi, subscriptions } from "@/db/schema";
 import { env } from "@/env";
-import { getGitHubConnectUrl, revokeGitHubToken } from "@/lib/github/client";
+import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
@@ -76,9 +76,8 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     slackConnected: !!mailbox.slackBotToken,
     slackConnectUrl: getSlackConnectUrl(mailbox.slug),
     slackAlertChannel: mailbox.slackAlertChannel,
-    githubConnected: !!mailbox.githubAccessToken,
-    githubConnectUrl: getGitHubConnectUrl(mailbox.slug),
-    githubUsername: mailbox.githubUsername,
+    githubConnected: !!mailbox.githubInstallationId,
+    githubConnectUrl: getGitHubInstallUrl(),
     githubRepoOwner: mailbox.githubRepoOwner,
     githubRepoName: mailbox.githubRepoName,
     responseGeneratorPrompt: mailbox.responseGeneratorPrompt ?? [],
@@ -127,51 +126,24 @@ export const disconnectSlack = async (mailboxId: number): Promise<void> => {
 };
 
 export const disconnectGitHub = async (mailboxId: number): Promise<void> => {
-  try {
-    const mailbox = await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, mailboxId),
-      columns: {
-        githubAccessToken: true,
-      },
-    });
-
-    if (mailbox?.githubAccessToken) {
-      try {
-        await revokeGitHubToken(mailbox.githubAccessToken);
-      } catch (error) {
-        // Likely indicates that the token was already revoked or is invalid
-        captureExceptionAndLogIfDevelopment(error, { level: "info" });
-      }
-    }
-
-    await db
-      .update(mailboxes)
-      .set({
-        githubAccessToken: null,
-        githubUsername: null,
-        githubRepoOwner: null,
-        githubRepoName: null,
-      })
-      .where(eq(mailboxes.id, mailboxId));
-  } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
-    throw error;
-  }
+  await db
+    .update(mailboxes)
+    .set({
+      githubInstallationId: null,
+      githubRepoOwner: null,
+      githubRepoName: null,
+    })
+    .where(eq(mailboxes.id, mailboxId));
 };
 
 export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, repoName: string): Promise<void> => {
-  try {
-    await db
-      .update(mailboxes)
-      .set({
-        githubRepoOwner: repoOwner,
-        githubRepoName: repoName,
-      })
-      .where(eq(mailboxes.id, mailboxId));
-  } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
-    throw error;
-  }
+  await db
+    .update(mailboxes)
+    .set({
+      githubRepoOwner: repoOwner,
+      githubRepoName: repoName,
+    })
+    .where(eq(mailboxes.id, mailboxId));
 };
 
 export const getResponseGeneratorPromptText = (responseGeneratorPrompt: string[]): string => {
