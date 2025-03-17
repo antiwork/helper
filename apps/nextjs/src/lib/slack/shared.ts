@@ -1,6 +1,7 @@
 import { User } from "@clerk/nextjs/server";
-import { KnownBlock } from "@slack/web-api";
+import { KnownBlock, MessageAttachment } from "@slack/web-api";
 import { eq } from "drizzle-orm";
+import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations, faqs } from "@/db/schema";
@@ -11,7 +12,7 @@ import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { addNote } from "@/lib/data/note";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findUserViaSlack, getClerkUser } from "@/lib/data/user";
-import { openSlackModal, postSlackMessage } from "@/lib/slack/client";
+import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slack/client";
 
 export const OPEN_ATTACHMENT_COLOR = "#EF4444";
 export const RESOLVED_ATTACHMENT_COLOR = "#22C55E";
@@ -117,20 +118,22 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
       });
     } else if (action === "approve_suggested_edit") {
       const faqId = Number(payload.actions[0].value);
-      await approveSuggestedEdit(faqId, user);
-      await postSlackMessage(conversation.mailbox.slackBotToken, {
-        ephemeralUserId: payload.user.id,
-        channel: message.slackChannel,
-        text: "_Suggested edit approved successfully._",
-      });
+      await approveSuggestedEdit(
+        faqId,
+        user,
+        message.slackChannel,
+        message.slackMessageTs,
+        conversation.mailbox.slackBotToken,
+      );
     } else if (action === "reject_suggested_edit") {
       const faqId = Number(payload.actions[0].value);
-      await rejectSuggestedEdit(faqId, user);
-      await postSlackMessage(conversation.mailbox.slackBotToken, {
-        ephemeralUserId: payload.user.id,
-        channel: message.slackChannel,
-        text: "_Suggested edit rejected._",
-      });
+      await rejectSuggestedEdit(
+        faqId,
+        user,
+        message.slackChannel,
+        message.slackMessageTs,
+        conversation.mailbox.slackBotToken,
+      );
     } else if (action === "tweak_suggested_edit") {
       const faqId = Number(payload.actions[0].value);
       await openTweakSuggestedEditModal(message, faqId, conversation, payload.trigger_id);
@@ -161,7 +164,7 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
         );
       });
     } else if (payload.view.callback_id === "tweak_suggested_edit") {
-      const { faqId } = JSON.parse(payload.view.private_metadata);
+      const { faqId, slackMessageTs } = JSON.parse(payload.view.private_metadata);
       const content = payload.view.state.values.content.content.value;
 
       if (!content) {
@@ -170,6 +173,7 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
 
       const faq = await db.query.faqs.findFirst({
         where: eq(faqs.id, faqId),
+        with: { mailbox: true },
       });
 
       if (!faq) throw new Error(`FAQ not found: ${faqId}`);
@@ -185,11 +189,17 @@ export const handleSlackAction = async (message: SlackMessage, payload: any) => 
         });
       });
 
-      await postSlackMessage(conversation.mailbox.slackBotToken, {
-        ephemeralUserId: payload.user.id,
-        channel: message.slackChannel,
-        text: "_Suggested edit tweaked and approved successfully._",
-      });
+      // Update the Slack message if available
+      if (message.slackChannel && slackMessageTs && conversation.mailbox.slackBotToken) {
+        const attachments = createUpdatedSuggestedEditAttachments(faq, "tweaked", user?.fullName ?? null);
+
+        await updateSlackMessage({
+          token: conversation.mailbox.slackBotToken,
+          channel: message.slackChannel,
+          ts: slackMessageTs,
+          attachments,
+        });
+      }
     } else {
       const reply = payload.view.state.values.reply.message.value;
       const sendingMethod = payload.view.state.values.escalation_actions.sending_method.selected_option.value;
@@ -329,9 +339,16 @@ const openRespondModal = async (
   });
 };
 
-const approveSuggestedEdit = async (faqId: number, user: User) => {
+const approveSuggestedEdit = async (
+  faqId: number,
+  user: User,
+  slackChannel: string | null,
+  slackMessageTs: string | null,
+  slackBotToken: string | null,
+) => {
   const faq = await db.query.faqs.findFirst({
     where: eq(faqs.id, faqId),
+    with: { mailbox: true },
   });
 
   if (!faq) throw new Error(`FAQ not found: ${faqId}`);
@@ -346,11 +363,30 @@ const approveSuggestedEdit = async (faqId: number, user: User) => {
       data: { faqId },
     });
   });
+
+  // Update the Slack message if available
+  if (slackChannel && slackMessageTs && slackBotToken) {
+    const attachments = createUpdatedSuggestedEditAttachments(faq, "approved", user?.fullName ?? null);
+
+    await updateSlackMessage({
+      token: slackBotToken,
+      channel: slackChannel,
+      ts: slackMessageTs,
+      attachments,
+    });
+  }
 };
 
-const rejectSuggestedEdit = async (faqId: number, user: User) => {
+const rejectSuggestedEdit = async (
+  faqId: number,
+  user: User,
+  slackChannel: string | null,
+  slackMessageTs: string | null,
+  slackBotToken: string | null,
+) => {
   const faq = await db.query.faqs.findFirst({
     where: eq(faqs.id, faqId),
+    with: { mailbox: true },
   });
 
   if (!faq) throw new Error(`FAQ not found: ${faqId}`);
@@ -359,6 +395,18 @@ const rejectSuggestedEdit = async (faqId: number, user: User) => {
     await tx.delete(faqs).where(eq(faqs.id, faqId));
     await resetMailboxPromptUpdatedAt(tx, faq.mailboxId);
   });
+
+  // Update the Slack message if available
+  if (slackChannel && slackMessageTs && slackBotToken) {
+    const attachments = createUpdatedSuggestedEditAttachments(faq, "rejected", user?.fullName ?? null);
+
+    await updateSlackMessage({
+      token: slackBotToken,
+      channel: slackChannel,
+      ts: slackMessageTs,
+      attachments,
+    });
+  }
 };
 
 const openTweakSuggestedEditModal = async (
@@ -406,4 +454,47 @@ const openTweakSuggestedEditModal = async (
       },
     },
   });
+};
+
+const createUpdatedSuggestedEditAttachments = (
+  faq: typeof faqs.$inferSelect & {
+    mailbox?: {
+      slug: string;
+    };
+  },
+  action: "approved" | "rejected" | "tweaked",
+  userName: string | null,
+): MessageAttachment[] => {
+  const actionText = action === "approved" ? "approved" : action === "rejected" ? "rejected" : "tweaked and approved";
+
+  return [
+    {
+      color: action === "rejected" ? "#EF4444" : "#22C55E",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*Suggested Content:*\n${faq.content}`,
+          },
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `<${getBaseUrl()}/mailboxes/${faq.mailbox?.slug}/settings?tab=knowledge|View in Helper>`,
+          },
+        },
+        {
+          type: "context",
+          elements: [
+            {
+              type: "mrkdwn",
+              text: `_Suggested edit ${actionText}${userName ? ` by ${userName}` : ""}_`,
+            },
+          ],
+        },
+      ],
+    },
+  ];
 };
