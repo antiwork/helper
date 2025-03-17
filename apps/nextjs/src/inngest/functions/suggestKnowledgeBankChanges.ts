@@ -51,7 +51,7 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   2. create_entry - Create a new entry in the knowledge bank. Choose this if the flagged issue is an entirely new problem that is not closely related to any existing entries.
   3. update_entry - Update an existing entry in the knowledge bank. Choose this if an existing entry is close to the flagged issue but appears to have missing or incorrect information.
   
-  If you choose create_entry or update_entry, provide the content for the new or updated entry.
+  If you choose create_entry or update_entry, provide the content for the new or updated entry. This should be only the bare information, without extra pleasantries or canned phrases. Use Markdown for any formatting.
   If you choose update_entry, specify which existing entry should be replaced by its ID.
   
   Respond with a JSON object with these fields:
@@ -146,35 +146,35 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
     return "Not posted, mailbox not linked to Slack or missing alert channel";
   }
 
-  const heading = `_New suggested edit for the knowledge bank_`;
-  const attachments = [
-    {
-      color: "#EF4444",
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Suggested Content:*\n${faq.content}`,
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `<${getBaseUrl()}/mailboxes/${mailbox.slug}/settings?tab=knowledge|View in Helper>`,
-          },
-        },
-        getSuggestedEditButtons(faq.id),
-      ],
-    },
-  ];
+  let originalContent = "";
+  if (faq.suggestedReplacementForId) {
+    const replacementFaq = await db.query.faqs.findFirst({
+      where: eq(faqs.id, faq.suggestedReplacementForId),
+    });
+    originalContent = replacementFaq?.content ?? "";
+  }
 
   const messageTs = await postSlackMessage(mailbox.slackBotToken, {
-    text: heading,
-    mrkdwn: true,
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: originalContent
+            ? `💡 New suggested edit for the knowledge bank\n\n*Suggested content:*\n${faq.content}\n\n*This will overwrite the current entry:*\n${originalContent}`
+            : `💡 New suggested addition to the knowledge bank\n\n*Suggested content:*\n${faq.content}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `<${getBaseUrl()}/mailboxes/${mailbox.slug}/settings?tab=knowledge|View knowledge bank>`,
+        },
+      },
+      getSuggestedEditButtons(faq.id),
+    ],
     channel: mailbox.slackAlertChannel,
-    attachments,
   });
 
   await db

@@ -1,5 +1,5 @@
 import { User } from "@clerk/nextjs/server";
-import { KnownBlock, MessageAttachment } from "@slack/web-api";
+import { KnownBlock } from "@slack/web-api";
 import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
@@ -329,7 +329,10 @@ const approveSuggestedEdit = async (
   content?: string,
 ) => {
   await db.transaction(async (tx) => {
-    await tx.update(faqs).set({ enabled: true, suggested: false, content }).where(eq(faqs.id, knowledge.id));
+    await tx
+      .update(faqs)
+      .set({ enabled: true, suggested: false, content: content || undefined })
+      .where(eq(faqs.id, knowledge.id));
     await resetMailboxPromptUpdatedAt(tx, mailbox.id);
     inngest.send({
       name: "faqs/embedding.create",
@@ -337,12 +340,17 @@ const approveSuggestedEdit = async (
     });
   });
 
-  const attachments = suggestedEditAttachments(knowledge, mailbox.slug, "approved", user?.fullName ?? null);
+  const blocks = suggestedEditAttachments(
+    knowledge,
+    mailbox.slug,
+    content ? "tweaked" : "approved",
+    user?.fullName ?? null,
+  );
   await updateSlackMessage({
     token: assertDefined(mailbox.slackBotToken),
     channel: assertDefined(knowledge.slackChannel),
     ts: assertDefined(knowledge.slackMessageTs),
-    attachments,
+    blocks,
   });
 };
 
@@ -356,12 +364,12 @@ const rejectSuggestedEdit = async (
     await resetMailboxPromptUpdatedAt(tx, mailbox.id);
   });
 
-  const attachments = suggestedEditAttachments(knowledge, mailbox.slug, "rejected", user?.fullName ?? null);
+  const blocks = suggestedEditAttachments(knowledge, mailbox.slug, "rejected", user?.fullName ?? null);
   await updateSlackMessage({
     token: assertDefined(mailbox.slackBotToken),
     channel: assertDefined(knowledge.slackChannel),
     ts: assertDefined(knowledge.slackMessageTs),
-    attachments,
+    blocks,
   });
 };
 
@@ -405,35 +413,30 @@ const suggestedEditAttachments = (
   mailboxSlug: string,
   action: "approved" | "rejected" | "tweaked",
   userName: string | null,
-): MessageAttachment[] => {
+): KnownBlock[] => {
   const actionText = action === "approved" ? "approved" : action === "rejected" ? "rejected" : "tweaked and approved";
 
   return [
     {
-      color: action === "rejected" ? "#EF4444" : "#22C55E",
-      blocks: [
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Suggested Content:*\n${faq.content}`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View in Helper>`,
+      },
+    },
+    {
+      type: "context",
+      elements: [
         {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `*Suggested Content:*\n${faq.content}`,
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View in Helper>`,
-          },
-        },
-        {
-          type: "context",
-          elements: [
-            {
-              type: "mrkdwn",
-              text: `_Suggested edit ${actionText}${userName ? ` by ${userName}` : ""}_`,
-            },
-          ],
+          type: "mrkdwn",
+          text: `_Suggested edit ${actionText}${userName ? ` by ${userName}` : ""}_`,
         },
       ],
     },
