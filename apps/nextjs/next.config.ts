@@ -147,32 +147,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      {
-        source: "/help.gumroad.com",
-        destination: "/help.gumroad.com/index.html",
-      },
-      {
-        source: "/help.gumroad.com/:path*",
-        destination: "/help.gumroad.com/:path*",
-      },
-      {
-        source: "/help.gumroad.com/article/:id-:title",
-        destination: "/help.gumroad.com/article/:id-:title.html",
-      },
-      {
-        source: "/customers.gumroad.com",
-        destination: "/customers.gumroad.com/index.html",
-      },
-      {
-        source: "/customers.gumroad.com/:path*",
-        destination: "/customers.gumroad.com/:path*",
-      },
-      {
-        source: "/customers.gumroad.com/article/:id-:title",
-        destination: "/customers.gumroad.com/article/:id-:title.html",
-      },
-    ];
+    return [];
   },
 };
 
