@@ -10,7 +10,7 @@ import { getClerkUser } from "@/lib/data/user";
 import { postSlackMessage } from "@/lib/slack/client";
 import {
   getActionButtons,
-  handleSlackAction,
+  handleMessageSlackAction,
   OPEN_ATTACHMENT_COLOR,
   RESOLVED_ATTACHMENT_COLOR,
 } from "@/lib/slack/shared";
@@ -112,7 +112,7 @@ const createMessageBlocks = ({
 };
 
 export const handleVipMessageAction = async (conversation: typeof conversations.$inferSelect, payload: any) => {
-  await handleSlackAction(
+  await handleMessageSlackAction(
     {
       conversationId: conversation.id,
       slackChannel: payload.channel.id,

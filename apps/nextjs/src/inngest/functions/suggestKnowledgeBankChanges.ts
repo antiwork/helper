@@ -170,12 +170,17 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
     },
   ];
 
-  await postSlackMessage(mailbox.slackBotToken, {
+  const messageTs = await postSlackMessage(mailbox.slackBotToken, {
     text: heading,
     mrkdwn: true,
     channel: mailbox.slackAlertChannel,
     attachments,
   });
+
+  await db
+    .update(faqs)
+    .set({ slackChannel: mailbox.slackAlertChannel, slackMessageTs: messageTs })
+    .where(eq(faqs.id, faq.id));
 };
 
 export default inngest.createFunction(
