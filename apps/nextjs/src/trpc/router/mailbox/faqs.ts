@@ -91,4 +91,105 @@ export const faqsRouter = {
       await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
     });
   }),
+  accept: mailboxProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        mailboxSlug: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await db.transaction(async (tx) => {
+        const [faq] = await tx
+          .select()
+          .from(faqs)
+          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .limit(1);
+
+        if (!faq) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
+        }
+
+        await tx.update(faqs).set({ enabled: true, suggested: false }).where(eq(faqs.id, input.id));
+
+        // If this is a replacement suggestion, delete the original entry
+        if (faq.suggestedReplacementForId) {
+          await tx.delete(faqs).where(eq(faqs.id, faq.suggestedReplacementForId));
+        }
+
+        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+
+        inngest.send({
+          name: "faqs/embedding.create",
+          data: { faqId: faq.id },
+        });
+
+        return faq;
+      });
+    }),
+  reject: mailboxProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        mailboxSlug: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await db.transaction(async (tx) => {
+        const [faq] = await tx
+          .select()
+          .from(faqs)
+          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .limit(1);
+
+        if (!faq) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
+        }
+
+        await tx.delete(faqs).where(eq(faqs.id, input.id));
+        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+
+        return faq;
+      });
+    }),
+  tweak: mailboxProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        content: z.string(),
+        mailboxSlug: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await db.transaction(async (tx) => {
+        const [faq] = await tx
+          .select()
+          .from(faqs)
+          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .limit(1);
+
+        if (!faq) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
+        }
+
+        await tx
+          .update(faqs)
+          .set({ content: input.content, enabled: true, suggested: false })
+          .where(eq(faqs.id, input.id));
+
+        // If this is a replacement suggestion, delete the original entry
+        if (faq.suggestedReplacementForId) {
+          await tx.delete(faqs).where(eq(faqs.id, faq.suggestedReplacementForId));
+        }
+
+        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+
+        inngest.send({
+          name: "faqs/embedding.create",
+          data: { faqId: faq.id },
+        });
+
+        return faq;
+      });
+    }),
 } satisfies TRPCRouterRecord;

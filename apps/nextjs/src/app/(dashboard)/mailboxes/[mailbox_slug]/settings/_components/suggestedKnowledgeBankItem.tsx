@@ -13,13 +13,13 @@ type SuggestedKnowledgeBankItemProps = {
 
 const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBankItemProps) => {
   const utils = api.useUtils();
-  const updateFaq = api.mailbox.faqs.update.useMutation({
+  const acceptFaq = api.mailbox.faqs.accept.useMutation({
     onSuccess: () => {
       utils.mailbox.faqs.list.invalidate();
     },
   });
 
-  const deleteFaq = api.mailbox.faqs.delete.useMutation({
+  const rejectFaq = api.mailbox.faqs.reject.useMutation({
     onSuccess: () => {
       utils.mailbox.faqs.list.invalidate();
     },
@@ -33,16 +33,16 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
       <div className="grid grid-cols-2 gap-2">
         <Button
           variant="subtle"
-          onClick={() => deleteFaq.mutate({ mailboxSlug, id: faq.id })}
-          disabled={deleteFaq.isPending}
+          onClick={() => rejectFaq.mutate({ mailboxSlug, id: faq.id })}
+          disabled={rejectFaq.isPending}
         >
           <XMarkIcon className="h-4 w-4 mr-1" />
           Reject
         </Button>
         <Button
           variant="bright"
-          onClick={() => updateFaq.mutate({ mailboxSlug, id: faq.id, enabled: true })}
-          disabled={updateFaq.isPending}
+          onClick={() => acceptFaq.mutate({ mailboxSlug, id: faq.id })}
+          disabled={acceptFaq.isPending}
         >
           <CheckIcon className="h-4 w-4 mr-1" />
           Accept

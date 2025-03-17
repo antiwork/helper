@@ -408,7 +408,7 @@ const openTweakSuggestedEditModal = async (
   });
 };
 
-const suggestedEditAttachments = (
+export const suggestedEditAttachments = (
   faq: typeof faqs.$inferSelect,
   mailboxSlug: string,
   action: "approved" | "rejected" | "tweaked",

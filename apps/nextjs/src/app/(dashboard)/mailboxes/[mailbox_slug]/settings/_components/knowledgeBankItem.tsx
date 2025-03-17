@@ -119,18 +119,24 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       setEditingContent(null);
       return;
     }
-    await updateMutation.mutateAsync({
-      content: editingContent,
-      mailboxSlug,
-      id: faq.id,
-    });
 
     if (suggestedReplacement) {
-      await deleteMutation.mutateAsync({
+      // Use the tweak procedure for suggested replacements
+      await api.mailbox.faqs.tweak.mutateAsync({
+        content: editingContent,
         mailboxSlug,
         id: suggestedReplacement.id,
       });
+    } else {
+      // Use the regular update for normal edits
+      await updateMutation.mutateAsync({
+        content: editingContent,
+        mailboxSlug,
+        id: faq.id,
+      });
     }
+
+    setEditingContent(null);
   };
 
   const handleStartEditing = () => {
@@ -149,7 +155,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
           onCancel={() => {
             setEditingContent(null);
             if (suggestedReplacement) {
-              deleteMutation.mutateAsync({
+              api.mailbox.faqs.reject.mutateAsync({
                 mailboxSlug,
                 id: suggestedReplacement.id,
               });
