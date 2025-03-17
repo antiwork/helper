@@ -1,16 +1,20 @@
 import crypto from "crypto";
+import { memoize } from "lodash";
 import { App } from "octokit";
 import { env } from "@/env";
 
-const privateKeyPkcs8 = crypto.createPrivateKey(env.GITHUB_PRIVATE_KEY).export({
-  type: "pkcs8",
-  format: "pem",
-}) as string;
+const privateKeyPkcs8 = memoize(
+  () =>
+    crypto.createPrivateKey(env.GITHUB_PRIVATE_KEY).export({
+      type: "pkcs8",
+      format: "pem",
+    }) as string,
+);
 
 export const getGitHubInstallUrl = () => `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`;
 
 export const getOctokit = (installationId: string) => {
-  const app = new App({ appId: env.GITHUB_APP_ID, privateKey: privateKeyPkcs8 });
+  const app = new App({ appId: env.GITHUB_APP_ID, privateKey: privateKeyPkcs8() });
   return app.getInstallationOctokit(Number(installationId));
 };
 
