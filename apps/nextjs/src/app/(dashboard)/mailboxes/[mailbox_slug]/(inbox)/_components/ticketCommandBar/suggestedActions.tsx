@@ -24,9 +24,11 @@ export function SuggestedActions({
   if (tools?.length === 0) return null;
 
   return (
-    <div className={cn("flex items-center border border-t-0 rounded-b-sm bg-background", className)}>
-      <span className="flex-shrink-0 px-3 py-2 text-xs font-medium text-muted-foreground">Suggested</span>
-      <div className="flex items-center gap-3 overflow-x-auto py-2 pr-3">
+    <div
+      className={cn("flex items-center border border-t-0 rounded-b-sm bg-background w-full overflow-hidden", className)}
+    >
+      <span className="flex-shrink-0 px-3 py-2 text-xs text-muted-foreground font-medium">Suggested</span>
+      <div className="flex items-center gap-3 overflow-x-auto py-2 pr-3 min-w-0 w-full">
         {tools?.map((t, index) => {
           switch (t.type) {
             case "close":
@@ -35,7 +37,7 @@ export function SuggestedActions({
                   key={`${t.type}-${index}`}
                   variant="subtle"
                   size="sm"
-                  className="h-7 whitespace-nowrap"
+                  className="flex-shrink-0 h-7 whitespace-nowrap"
                   onClick={() => updateStatus("closed")}
                 >
                   Close
@@ -47,7 +49,7 @@ export function SuggestedActions({
                   key={`${t.type}-${index}`}
                   variant="subtle"
                   size="sm"
-                  className="h-7 whitespace-nowrap"
+                  className="flex-shrink-0 h-7 whitespace-nowrap"
                   onClick={() => updateStatus("spam")}
                 >
                   Spam
@@ -57,7 +59,7 @@ export function SuggestedActions({
               const assignee = orgMembers?.find((m) => m.id === t.clerkUserId);
               if (!assignee)
                 return (
-                  <span key={`${t.type}-${index}`} className="text-xs text-muted-foreground">
+                  <span key={`${t.type}-${index}`} className="flex-shrink-0 text-xs text-muted-foreground">
                     Assign to {t.clerkUserId}
                   </span>
                 );
@@ -66,7 +68,7 @@ export function SuggestedActions({
                   key={`${t.type}-${index}`}
                   variant="subtle"
                   size="sm"
-                  className="h-7 whitespace-nowrap"
+                  className="flex-shrink-0 h-7 whitespace-nowrap"
                   onClick={() => assignTicket(assignee)}
                 >
                   Assign to {assignee.displayName}
@@ -80,7 +82,7 @@ export function SuggestedActions({
                       <Button
                         variant="subtle"
                         size="sm"
-                        className="h-7 whitespace-nowrap"
+                        className="flex-shrink-0 h-7 whitespace-nowrap"
                         onClick={() => handleToolExecution(t.tool.slug, t.tool.name, t.tool.parameters)}
                       >
                         {t.tool.name}
@@ -109,8 +111,8 @@ export function SuggestedActions({
         })}
         {!tools && (
           <>
-            <div className="rounded-sm h-7 w-24 bg-muted animate-skeleton" />
-            <div className="rounded-sm h-7 w-24 bg-muted animate-skeleton" />
+            <div className="flex-shrink-0 rounded-sm h-7 w-24 bg-muted animate-skeleton" />
+            <div className="flex-shrink-0 rounded-sm h-7 w-24 bg-muted animate-skeleton" />
           </>
         )}
       </div>
