@@ -24,7 +24,7 @@ export function SuggestedActions({
   if (tools?.length === 0) return null;
 
   return (
-    <div className={cn("flex items-center gap-3 px-3 py-2 bg-background border border-t-0 rounded-b-sm", className)}>
+    <div className={cn("flex items-center gap-3 px-3 py-2 bg-background border border-t-0 rounded-b-sm overflow-x-auto", className)}>
       <span className="text-xs text-muted-foreground font-medium">Suggested</span>
       {tools?.map((t, index) => {
         switch (t.type) {
@@ -34,7 +34,7 @@ export function SuggestedActions({
                 key={`${t.type}-${index}`}
                 variant="subtle"
                 size="sm"
-                className="h-7"
+                className="h-7 whitespace-nowrap"
                 onClick={() => updateStatus("closed")}
               >
                 Close
@@ -46,7 +46,7 @@ export function SuggestedActions({
                 key={`${t.type}-${index}`}
                 variant="subtle"
                 size="sm"
-                className="h-7"
+                className="h-7 whitespace-nowrap"
                 onClick={() => updateStatus("spam")}
               >
                 Spam
@@ -65,7 +65,7 @@ export function SuggestedActions({
                 key={`${t.type}-${index}`}
                 variant="subtle"
                 size="sm"
-                className="h-7"
+                className="h-7 whitespace-nowrap"
                 onClick={() => assignTicket(assignee)}
               >
                 Assign to {assignee.displayName}
@@ -79,7 +79,7 @@ export function SuggestedActions({
                     <Button
                       variant="subtle"
                       size="sm"
-                      className="h-7"
+                      className="h-7 whitespace-nowrap"
                       onClick={() => handleToolExecution(t.tool.slug, t.tool.name, t.tool.parameters)}
                     >
                       {t.tool.name}
