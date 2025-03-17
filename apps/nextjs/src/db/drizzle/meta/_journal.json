@@ -435,6 +435,13 @@
       "when": 1741992207027,
       "tag": "0061_tranquil_mystique",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1742216293617,
+      "tag": "0062_pale_gateway",
+      "breakpoints": true
     }
   ]
 }
