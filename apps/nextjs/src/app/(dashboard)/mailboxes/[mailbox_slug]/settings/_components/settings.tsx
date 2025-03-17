@@ -28,7 +28,6 @@ import { getTauriPlatform } from "@/components/useNativePlatform";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { SidebarInfo } from "../../_components/getSidebarInfo";
-import WorkflowsSetting, { type Workflow } from "./automaticWorkflowsSetting";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
 import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
@@ -57,24 +56,13 @@ type SettingsProps = {
   children?: React.ReactElement<any> | React.ReactElement<any>[];
   onUpdateSettings: (pendingUpdates: PendingUpdates) => Promise<void>;
   mailbox: RouterOutputs["mailbox"]["get"];
-  handleDeleteWorkflow: (id: number) => Promise<string | null>;
   linters: Linter[];
   supportAccount?: SupportAccount;
-  workflows: Workflow[];
   subscription: SubscriptionType | null;
   sidebarInfo: SidebarInfo;
 };
 
-const Settings = ({
-  onUpdateSettings,
-  mailbox,
-  handleDeleteWorkflow,
-  linters,
-  supportAccount,
-  subscription,
-  workflows,
-  sidebarInfo,
-}: SettingsProps) => {
+const Settings = ({ onUpdateSettings, mailbox, linters, supportAccount, subscription, sidebarInfo }: SettingsProps) => {
   const { signOut } = useClerk();
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -121,14 +109,6 @@ const Settings = ({
   };
 
   const items = [
-    {
-      label: "Workflows",
-      id: "workflows",
-      icon: BoltIcon,
-      content: (
-        <WorkflowsSetting mailboxSlug={mailbox.slug} workflows={workflows} handleDelete={handleDeleteWorkflow} />
-      ),
-    },
     {
       label: "Knowledge",
       id: "knowledge",

@@ -13,8 +13,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
   const mailboxPath = `/mailboxes/${params.mailbox_slug}` as const;
   const settingsPath = `${mailboxPath}/settings` as const;
 
-  const [workflowsData, supportAccount, mailboxData, lintersData, sidebarInfo] = await Promise.all([
-    api.mailbox.workflows.list({ mailboxSlug: params.mailbox_slug }),
+  const [supportAccount, mailboxData, lintersData, sidebarInfo] = await Promise.all([
     api.gmailSupportEmail.get({ mailboxSlug: params.mailbox_slug }),
     api.mailbox.get({ mailboxSlug: params.mailbox_slug }),
     api.mailbox.styleLinters.list({ mailboxSlug: params.mailbox_slug }),
@@ -77,23 +76,12 @@ const Page = async (props: { params: Promise<PageProps> }) => {
     revalidatePath(settingsPath);
   };
 
-  const deleteWorkflow = async (id: number) => {
-    "use server";
-
-    await api.mailbox.workflows.delete({ mailboxSlug: params.mailbox_slug, id });
-
-    revalidatePath(settingsPath);
-    return null;
-  };
-
   return (
     <PageContainer>
       <title>Settings</title>
       <Settings
         mailbox={mailboxData}
         linters={lintersData}
-        workflows={workflowsData}
-        handleDeleteWorkflow={deleteWorkflow}
         onUpdateSettings={handleUpdateSettings}
         supportAccount={supportAccount ?? undefined}
         subscription={mailboxData.subscription}

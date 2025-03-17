@@ -525,7 +525,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                     "In-app live chat",
                     "Human handoff",
                     "Magical auto-assign",
-                    "Intelligent workflows",
+                    "AI-powered responses",
                   ].map((feature) => (
                     <li key={feature} className="flex items-center text-muted-foreground">
                       <svg
