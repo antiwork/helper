@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -5,6 +6,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { approveSuggestedEdit, rejectSuggestedEdit } from "@/lib/data/knowledge";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { mailboxProcedure } from "./procedure";
 
@@ -66,6 +68,13 @@ export const faqsRouter = {
           .returning()
           .then(takeUniqueOrThrow);
 
+        if (faq.suggested) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cannot update suggested FAQ, use accept or reject instead",
+          });
+        }
+
         await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
 
         inngest.send({
@@ -95,37 +104,22 @@ export const faqsRouter = {
     .input(
       z.object({
         id: z.number(),
-        mailboxSlug: z.string(),
+        content: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await db.transaction(async (tx) => {
-        const [faq] = await tx
-          .select()
-          .from(faqs)
-          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
-          .limit(1);
-
-        if (!faq) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
-        }
-
-        await tx.update(faqs).set({ enabled: true, suggested: false }).where(eq(faqs.id, input.id));
-
-        // If this is a replacement suggestion, delete the original entry
-        if (faq.suggestedReplacementForId) {
-          await tx.delete(faqs).where(eq(faqs.id, faq.suggestedReplacementForId));
-        }
-
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
-
-        inngest.send({
-          name: "faqs/embedding.create",
-          data: { faqId: faq.id },
-        });
-
-        return faq;
+      const knowledge = await db.query.faqs.findFirst({
+        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
+        with: {
+          mailbox: true,
+        },
       });
+
+      if (!knowledge) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Knowledge entry not found" });
+      }
+
+      await approveSuggestedEdit(knowledge, ctx.mailbox, await currentUser(), input.content);
     }),
   reject: mailboxProcedure
     .input(
@@ -135,61 +129,17 @@ export const faqsRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await db.transaction(async (tx) => {
-        const [faq] = await tx
-          .select()
-          .from(faqs)
-          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
-          .limit(1);
-
-        if (!faq) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
-        }
-
-        await tx.delete(faqs).where(eq(faqs.id, input.id));
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
-
-        return faq;
+      const knowledge = await db.query.faqs.findFirst({
+        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
+        with: {
+          mailbox: true,
+        },
       });
-    }),
-  tweak: mailboxProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        content: z.string(),
-        mailboxSlug: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      return await db.transaction(async (tx) => {
-        const [faq] = await tx
-          .select()
-          .from(faqs)
-          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
-          .limit(1);
 
-        if (!faq) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
-        }
+      if (!knowledge) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Knowledge entry not found" });
+      }
 
-        await tx
-          .update(faqs)
-          .set({ content: input.content, enabled: true, suggested: false })
-          .where(eq(faqs.id, input.id));
-
-        // If this is a replacement suggestion, delete the original entry
-        if (faq.suggestedReplacementForId) {
-          await tx.delete(faqs).where(eq(faqs.id, faq.suggestedReplacementForId));
-        }
-
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
-
-        inngest.send({
-          name: "faqs/embedding.create",
-          data: { faqId: faq.id },
-        });
-
-        return faq;
-      });
+      await rejectSuggestedEdit(knowledge, ctx.mailbox, await currentUser());
     }),
 } satisfies TRPCRouterRecord;

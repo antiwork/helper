@@ -5,14 +5,13 @@ import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations, faqs, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { updateConversation } from "@/lib/data/conversation";
 import { bodyWithSignature, createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
-import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
+import { approveSuggestedEdit, rejectSuggestedEdit } from "@/lib/data/knowledge";
 import { addNote } from "@/lib/data/note";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findUserViaSlack, getClerkUser } from "@/lib/data/user";
-import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slack/client";
+import { openSlackModal, postSlackMessage } from "@/lib/slack/client";
 
 export const OPEN_ATTACHMENT_COLOR = "#EF4444";
 export const RESOLVED_ATTACHMENT_COLOR = "#22C55E";
@@ -322,57 +321,6 @@ const openRespondModal = async (
   });
 };
 
-const approveSuggestedEdit = async (
-  knowledge: typeof faqs.$inferSelect,
-  mailbox: typeof mailboxes.$inferSelect,
-  user: User | null,
-  content?: string,
-) => {
-  await db.transaction(async (tx) => {
-    await tx
-      .update(faqs)
-      .set({ enabled: true, suggested: false, content: content || undefined })
-      .where(eq(faqs.id, knowledge.id));
-    await resetMailboxPromptUpdatedAt(tx, mailbox.id);
-    inngest.send({
-      name: "faqs/embedding.create",
-      data: { faqId: knowledge.id },
-    });
-  });
-
-  const blocks = suggestedEditAttachments(
-    knowledge,
-    mailbox.slug,
-    content ? "tweaked" : "approved",
-    user?.fullName ?? null,
-  );
-  await updateSlackMessage({
-    token: assertDefined(mailbox.slackBotToken),
-    channel: assertDefined(knowledge.slackChannel),
-    ts: assertDefined(knowledge.slackMessageTs),
-    blocks,
-  });
-};
-
-const rejectSuggestedEdit = async (
-  knowledge: typeof faqs.$inferSelect,
-  mailbox: typeof mailboxes.$inferSelect,
-  user: User | null,
-) => {
-  await db.transaction(async (tx) => {
-    await tx.delete(faqs).where(eq(faqs.id, knowledge.id));
-    await resetMailboxPromptUpdatedAt(tx, mailbox.id);
-  });
-
-  const blocks = suggestedEditAttachments(knowledge, mailbox.slug, "rejected", user?.fullName ?? null);
-  await updateSlackMessage({
-    token: assertDefined(mailbox.slackBotToken),
-    channel: assertDefined(knowledge.slackChannel),
-    ts: assertDefined(knowledge.slackMessageTs),
-    blocks,
-  });
-};
-
 const openTweakSuggestedEditModal = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
@@ -408,37 +356,28 @@ const openTweakSuggestedEditModal = async (
   });
 };
 
-export const suggestedEditAttachments = (
+export const suggestionResolvedBlocks = (
   faq: typeof faqs.$inferSelect,
   mailboxSlug: string,
-  action: "approved" | "rejected" | "tweaked",
+  action: "approved" | "rejected",
   userName: string | null,
 ): KnownBlock[] => {
-  const actionText = action === "approved" ? "approved" : action === "rejected" ? "rejected" : "tweaked and approved";
+  const actionText = action === "approved" ? "✅ Suggested edit approved" : "❌ Suggested edit rejected";
 
   return [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Suggested Content:*\n${faq.content}`,
+        text: `${actionText}${userName ? `by ${userName}` : ""}\n\n*Content*:\n${faq.content}`,
       },
     },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View in Helper>`,
+        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View knowledge bank>`,
       },
-    },
-    {
-      type: "context",
-      elements: [
-        {
-          type: "mrkdwn",
-          text: `_Suggested edit ${actionText}${userName ? ` by ${userName}` : ""}_`,
-        },
-      ],
     },
   ];
 };

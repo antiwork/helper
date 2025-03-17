@@ -897,6 +897,21 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
           output: void;
         }>;
+        accept: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+            content?: string | undefined;
+          };
+          output: void;
+        }>;
+        reject: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+          };
+          output: void;
+        }>;
       };
       workflows: {
         list: import("@trpc/server").TRPCQueryProcedure<{

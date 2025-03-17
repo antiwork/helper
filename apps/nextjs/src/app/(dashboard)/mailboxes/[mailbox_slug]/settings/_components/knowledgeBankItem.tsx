@@ -108,34 +108,45 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
     },
   });
 
-  const deleteMutation = api.mailbox.faqs.delete.useMutation({
-    onSuccess: () => {
+  const acceptMutation = api.mailbox.faqs.accept.useMutation({
+    onSuccess: (_, { mailboxSlug }) => {
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+    },
+    onError: () => {
+      toast({ title: "Error updating knowledge", variant: "destructive" });
+    },
+  });
+
+  const rejectMutation = api.mailbox.faqs.reject.useMutation({
+    onSuccess: (_, { mailboxSlug }) => {
+      utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+    },
+    onError: () => {
+      toast({ title: "Error updating knowledge", variant: "destructive" });
     },
   });
 
   const handleUpdateFaq = async () => {
+    if (suggestedReplacement) {
+      await acceptMutation.mutateAsync({
+        mailboxSlug,
+        id: suggestedReplacement.id,
+        content: editingContent ?? undefined,
+      });
+      setEditingContent(null);
+      return;
+    }
+
     if (!editingContent || faq.content === editingContent) {
       setEditingContent(null);
       return;
     }
 
-    if (suggestedReplacement) {
-      // Use the tweak procedure for suggested replacements
-      await api.mailbox.faqs.tweak.mutateAsync({
-        content: editingContent,
-        mailboxSlug,
-        id: suggestedReplacement.id,
-      });
-    } else {
-      // Use the regular update for normal edits
-      await updateMutation.mutateAsync({
-        content: editingContent,
-        mailboxSlug,
-        id: faq.id,
-      });
-    }
-
+    await updateMutation.mutateAsync({
+      content: editingContent,
+      mailboxSlug,
+      id: faq.id,
+    });
     setEditingContent(null);
   };
 
@@ -155,10 +166,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
           onCancel={() => {
             setEditingContent(null);
             if (suggestedReplacement) {
-              api.mailbox.faqs.reject.mutateAsync({
-                mailboxSlug,
-                id: suggestedReplacement.id,
-              });
+              rejectMutation.mutateAsync({ mailboxSlug, id: suggestedReplacement.id });
             }
           }}
           isLoading={updateMutation.isPending}
