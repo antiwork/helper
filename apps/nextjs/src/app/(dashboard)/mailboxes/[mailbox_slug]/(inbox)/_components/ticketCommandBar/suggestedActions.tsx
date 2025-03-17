@@ -25,7 +25,7 @@ export function SuggestedActions({
 
   return (
     <div className={cn("flex items-center border border-t-0 rounded-b-sm bg-background", className)}>
-      <span className="flex-shrink-0 px-3 py-2 text-xs text-muted-foreground font-medium">Suggested</span>
+      <span className="flex-shrink-0 px-3 py-2 text-xs font-medium text-muted-foreground">Suggested</span>
       <div className="flex items-center gap-3 overflow-x-auto py-2 pr-3">
         {tools?.map((t, index) => {
           switch (t.type) {
