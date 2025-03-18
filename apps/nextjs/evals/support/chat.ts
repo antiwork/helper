@@ -121,8 +121,14 @@ export const parseMessagesWithMocks = (input: string) => {
     disableAutoResponseForVips: false,
     createdAt: new Date(),
     updatedAt: new Date(),
+    githubInstallationId: null,
+    githubRepoOwner: null,
+    githubRepoName: null,
     unused_escalationEmailBody: null,
     unused_escalationExpectedResolutionHours: null,
+    onboardingMetadata: {
+      completed: true,
+    },
   };
 
   return { messages, mailbox };

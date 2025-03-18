@@ -21,12 +21,18 @@ export function ConversationList({
   isRefreshing = false,
   isLoading = false,
   mailboxSlug,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
 }: {
   conversations?: RouterOutputs["mailbox"]["conversations"]["list"]["conversations"];
   onRefresh?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
   mailboxSlug: string;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }) {
   const { data: members } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -101,6 +107,16 @@ export function ConversationList({
     );
   };
 
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+
+    return (
+      <View className="py-4">
+        <ActivityIndicator size="small" />
+      </View>
+    );
+  };
+
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -109,14 +125,32 @@ export function ConversationList({
     );
   }
 
+  const handleEndReached = () => {
+    if (hasMore && !isLoadingMore && onLoadMore) {
+      onLoadMore();
+    }
+  };
+
   return (
-    <FlatList
-      data={visibleConversations}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id.toString()}
-      className="flex-1"
-      refreshControl={onRefresh ? <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} /> : undefined}
-    />
+    <View className="flex-1">
+      <FlatList
+        data={visibleConversations}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        className="flex-1"
+        refreshControl={onRefresh ? <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} /> : undefined}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={
+          !isLoading ? (
+            <View className="py-8 items-center">
+              <Text className="text-muted-foreground">No conversations found</Text>
+            </View>
+          ) : null
+        }
+      />
+    </View>
   );
 }
 

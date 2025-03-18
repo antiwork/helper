@@ -18,15 +18,6 @@ vi.mock("@/lib/ai/tools", () => ({
   buildTools: vi.fn().mockImplementation(() => ({})),
 }));
 
-vi.mock("@/lib/data/workflow", () => ({
-  executeWorkflowActions: vi.fn().mockResolvedValue(true),
-  getWorkflowPrompt: vi.fn().mockResolvedValue("prompt"),
-}));
-
-vi.mock("@/lib/data/workflowCondition", () => ({
-  evaluateWorkflowCondition: vi.fn(),
-}));
-
 vi.mock("@/lib/data/organization", () => ({
   getClerkOrganization: vi.fn(),
 }));

@@ -31,7 +31,7 @@ const MessageItem = ({
   conversation,
   message,
   onViewDraftedReply,
-  onViewWorkflowRun,
+
   onPreviewAttachment,
 }: {
   mailboxSlug: string;
@@ -39,7 +39,6 @@ const MessageItem = ({
   message: (MessageType | NoteType) & { isNew?: boolean };
   onPreviewAttachment?: (index: number) => void;
   onViewDraftedReply?: () => void;
-  onViewWorkflowRun?: () => void;
 }) => {
   const userMessage = message.role === "user";
   const rightAlignedMessage = !userMessage || message.type === "note";
@@ -62,7 +61,7 @@ const MessageItem = ({
       ) : (
         <Bot className="h-3 w-3" />
       )}
-      {message.role === "workflow" ? "Workflow" : message.from ? message.from : "Assistant"}
+      {message.from ? message.from : "Assistant"}
     </span>,
   );
   if (message.type === "message" && message.emailTo)
@@ -228,14 +227,6 @@ const MessageItem = ({
                     &nbsp;·{" "}
                     <button className="cursor-pointer underline" onClick={onViewDraftedReply}>
                       View drafted reply
-                    </button>
-                  </span>
-                )}
-                {onViewWorkflowRun && (
-                  <span>
-                    &nbsp;·{" "}
-                    <button className="cursor-pointer underline" onClick={onViewWorkflowRun}>
-                      View workflow run
                     </button>
                   </span>
                 )}

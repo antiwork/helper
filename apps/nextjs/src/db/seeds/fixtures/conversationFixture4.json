@@ -15,18 +15,6 @@
           "conversationId": 4
         },
         {
-          "id": 12,
-          "role": "workflow",
-          "body": "Hi there,<br>\n            <br>\n            We noticed your account has been locked. Here are some common reasons this might happen:<br>\n            <ol>\n                <li>Multiple login attempts from unusual locations</li>\n                <li>Suspicious file sharing patterns</li>\n                <li>Potential compromise of account credentials</li>\n            </ol>\n            For your security, we recommend:<br>\n            <ul>\n                <li>Reviewing your recent account activity</li>\n                <li>Updating your password</li>\n                <li>Enabling two-factor authentication</li>\n            </ul>\n            If you need immediate assistance, please reply to this email and we'll help you regain access to your account.<br>\n        ",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 4
-        },
-        {
           "id": 13,
           "role": "user",
           "body": "Hello,<br>I understand the security concerns, but I really need access to my files. I have an important client presentation tomorrow morning.<br><br>I'm happy to change my password and enable two-factor authentication, but I need to regain access first. Could you please help me with this?<br><br>Best regards,<br>Sarah",

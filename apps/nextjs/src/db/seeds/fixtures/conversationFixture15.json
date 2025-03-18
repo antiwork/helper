@@ -21,18 +21,6 @@
           "conversationId": 15
         },
         {
-          "id": 102,
-          "role": "workflow",
-          "body": "Hi there,<br><br>We understand your concern about the account lock. Here's some information about our security measures:<br><br>1. Accounts may be temporarily locked if we detect:<br>• Multiple failed login attempts<br>• Access from unusual locations<br>• Sudden changes in usage patterns<br>• Potential security breaches<br><br>2. To restore access, please:<br>• Verify your identity using the security questions<br>• Update your password<br>• Enable two-factor authentication if not already active<br><br>For more information, please see our:<br>• <a href=\"https://help.example.com/security\">Security Guidelines</a><br>• <a href=\"https://help.example.com/account-recovery\">Account Recovery Process</a><br><br>If you need immediate assistance, please reply with:<br>1. Your account verification code (sent to your backup email)<br>2. A description of your recent account activity<br>3. Any error messages you've encountered",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 15
-        },
-        {
           "id": 103,
           "role": "user",
           "body": "Hi,<br><br>Thanks for the quick response. My verification code is 847591. I was traveling for business yesterday and accessed my account from the airport and hotel, which might explain the unusual locations. I haven't noticed any unauthorized activity on my account.<br><br>I've already updated my password through the recovery link, but I still can't log in. Can you please help?<br><br>Best regards,<br>Thomas",

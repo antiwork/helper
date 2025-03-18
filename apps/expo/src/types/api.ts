@@ -99,6 +99,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           slackConnected: boolean;
           slackConnectUrl: string;
           slackAlertChannel: string | null;
+          githubConnected: boolean;
+          githubConnectUrl: string;
+          githubRepoOwner: string | null;
+          githubRepoName: string | null;
           responseGeneratorPrompt: string[];
           clerkOrganizationId: string;
           subscription: {
@@ -122,6 +126,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           mailboxSlug: string;
           responseGeneratorPrompt?: string[] | undefined;
           slackAlertChannel?: string | undefined;
+          githubRepoOwner?: string | undefined;
+          githubRepoName?: string | undefined;
           widgetDisplayMode?: "always" | "revenue_based" | "off" | undefined;
           widgetDisplayMinValue?: number | undefined;
           autoRespondEmailToChat?: boolean | undefined;
@@ -240,10 +246,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat";
+              source: "email" | "chat" | "chat#prompt";
               isPrompt: boolean;
               isVisitor: boolean;
               embeddingText: string | null;
+              githubIssueNumber: number | null;
+              githubIssueUrl: string | null;
+              githubRepoOwner: string | null;
+              githubRepoName: string | null;
             }[];
             total: number;
             defaultSort: "oldest" | "highest_value";
@@ -280,20 +290,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   from: string | null;
                   isPinned: boolean;
                   slackUrl: string | null;
-                  workflowRun: {
-                    action: import("../types/workflows").WorkflowAction;
-                    message?: string | null | undefined;
-                    slackChannelId?: string | undefined;
-                    assignedUserId?: string | undefined;
-                    runOnReplies: boolean;
-                    autoReplyFromMetadata: boolean;
-                    name: string;
-                    order: number;
-                    description: string;
-                    workflow_type: string;
-                    id: number;
-                    prompt: string;
-                  } | null;
                   draft: {
                     id: number;
                     responseToId: number;
@@ -401,10 +397,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat";
+            source: "email" | "chat" | "chat#prompt";
             isPrompt: boolean;
             isVisitor: boolean;
             embeddingText: string | null;
+            githubIssueNumber: number | null;
+            githubIssueUrl: string | null;
+            githubRepoOwner: string | null;
+            githubRepoName: string | null;
           }[];
         }>;
         get: import("@trpc/server").TRPCQueryProcedure<{
@@ -440,20 +440,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   from: string | null;
                   isPinned: boolean;
                   slackUrl: string | null;
-                  workflowRun: {
-                    action: import("../types/workflows").WorkflowAction;
-                    message?: string | null | undefined;
-                    slackChannelId?: string | undefined;
-                    assignedUserId?: string | undefined;
-                    runOnReplies: boolean;
-                    autoReplyFromMetadata: boolean;
-                    name: string;
-                    order: number;
-                    description: string;
-                    workflow_type: string;
-                    id: number;
-                    prompt: string;
-                  } | null;
                   draft: {
                     id: number;
                     responseToId: number;
@@ -561,10 +547,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat";
+            source: "email" | "chat" | "chat#prompt";
             isPrompt: boolean;
             isVisitor: boolean;
             embeddingText: string | null;
+            githubIssueNumber: number | null;
+            githubIssueUrl: string | null;
+            githubRepoOwner: string | null;
+            githubRepoName: string | null;
           };
         }>;
         create: import("@trpc/server").TRPCMutationProcedure<{
@@ -782,6 +772,46 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             };
           }>;
         };
+        github: {
+          createGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              body: string;
+              title: string;
+            };
+            output: {
+              issueNumber: number;
+              issueUrl: string;
+              issueId: number;
+            };
+          }>;
+          linkExistingGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              issueNumber: number;
+            };
+            output: {
+              issueNumber: number;
+              issueUrl: string;
+            };
+          }>;
+          listRepositoryIssues: import("@trpc/server").TRPCQueryProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              state?: "open" | "closed" | "all" | undefined;
+            };
+            output: {
+              number: number;
+              title: string;
+              state: string;
+              url: string;
+              updatedAt: string;
+            }[];
+          }>;
+        };
         findSimilar: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
@@ -812,10 +842,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat";
+              source: "email" | "chat" | "chat#prompt";
               isPrompt: boolean;
               isVisitor: boolean;
               embeddingText: string | null;
+              githubIssueNumber: number | null;
+              githubIssueUrl: string | null;
+              githubRepoOwner: string | null;
+              githubRepoName: string | null;
             }[];
             similarityMap: Record<string, number> | undefined;
           } | null;
@@ -898,141 +932,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           output: void;
         }>;
       };
-      workflows: {
-        list: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            action: import("../types/workflows").WorkflowAction;
-            message?: string | null | undefined;
-            slackChannelId?: string | undefined;
-            assignedUserId?: string | undefined;
-            prompt: string;
-            description: string;
-            name: string;
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            mailboxId: number;
-            deletedAt: Date | null;
-            order: number;
-            workflowType: "default" | "freeform";
-            runOnReplies: boolean;
-            autoReplyFromMetadata: boolean;
-            workflowActions: {
-              id: number;
-              createdAt: Date;
-              updatedAt: Date;
-              workflowId: number;
-              actionType:
-                | "send_email"
-                | "send_auto_reply_from_metadata"
-                | "change_status"
-                | "change_helper_status"
-                | "add_note"
-                | "assign_user";
-              actionValue: string;
-            }[];
-            groups: {
-              id: number;
-              createdAt: Date;
-              updatedAt: Date;
-              workflowId: number;
-              conds: {
-                value: string;
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                field: import("../db/schema").WorkflowConditionFieldType;
-                operator: import("../db/schema").WorkflowConditionOperatorType;
-                workflowConditionGroupId: number;
-              }[];
-            }[];
-          }[];
-        }>;
-        set: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            order: number;
-            runOnReplies: boolean;
-            autoReplyFromMetadata: boolean;
-            prompt: string;
-            action:
-              | "unknown"
-              | "assign_user"
-              | "close_ticket"
-              | "mark_spam"
-              | "reply_and_close_ticket"
-              | "reply_and_set_open";
-            message?: string | null | undefined;
-            name?: string | undefined;
-            id?: number | undefined;
-            slackChannelId?: string | null | undefined;
-            assignedUserId?: string | null | undefined;
-          };
-          output: void;
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            id: number;
-          };
-          output: void;
-        }>;
-        reorder: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            positions: number[];
-          };
-          output: void;
-        }>;
-        listMatchingConversations: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            prompt: string;
-          };
-          output: {
-            conversations: import("../app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/automaticWorkflowsSetting").MatchingConversation[];
-          };
-        }>;
-        generateWorkflowPrompt: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-          };
-          output: {
-            prompt: string;
-          };
-        }>;
-        answerWithWorkflow: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            conversationSlug: string;
-            workflow: {
-              order: number;
-              runOnReplies: boolean;
-              autoReplyFromMetadata: boolean;
-              prompt: string;
-              action:
-                | "unknown"
-                | "assign_user"
-                | "close_ticket"
-                | "mark_spam"
-                | "reply_and_close_ticket"
-                | "reply_and_set_open";
-              message?: string | null | undefined;
-              name?: string | undefined;
-              id?: number | undefined;
-              slackChannelId?: string | null | undefined;
-              assignedUserId?: string | null | undefined;
-            };
-            matchingSlugs: string[];
-          };
-          output: void;
-        }>;
-      };
       slack: {
         channels: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -1046,6 +945,34 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         disconnect: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
+          };
+          output: void;
+        }>;
+      };
+      github: {
+        repositories: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: {
+            id: number;
+            name: string;
+            fullName: string;
+            owner: string;
+            private: boolean;
+          }[];
+        }>;
+        disconnect: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: void;
+        }>;
+        updateRepo: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            repoOwner: string;
+            repoName: string;
           };
           output: void;
         }>;

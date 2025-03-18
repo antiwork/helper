@@ -73,7 +73,7 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
         <motion.div key={event.id} layout>
           <Panel className="p-0">
             <Link
-              href={`/mailboxes/${mailboxSlug}/conversations?id=${event.id}`}
+              href={`/mailboxes/${mailboxSlug}/conversations?id=${event.conversationSlug}`}
               className={cn(
                 "flex flex-col p-5 transition-colors hover:bg-muted",
                 event.isVip && "bg-bright/10 hover:bg-bright/20",
