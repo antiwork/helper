@@ -1,19 +1,19 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { disconnectGitHub, updateGitHubRepo } from "@/lib/data/mailbox";
-import { checkRepositoryIssuesEnabled, listUserRepositories } from "@/lib/github/client";
+import { checkRepositoryIssuesEnabled, listRepositories } from "@/lib/github/client";
 import { mailboxProcedure } from "./procedure";
 
 export const githubRouter = {
   repositories: mailboxProcedure.query(async ({ ctx }) => {
-    if (!ctx.mailbox.githubAccessToken) {
+    if (!ctx.mailbox.githubInstallationId) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message: "GitHub is not connected to this mailbox",
       });
     }
 
-    const repositories = await listUserRepositories(ctx.mailbox.githubAccessToken);
+    const repositories = await listRepositories(ctx.mailbox.githubInstallationId);
     return repositories;
   }),
   disconnect: mailboxProcedure.mutation(async ({ ctx }) => {
@@ -27,17 +27,16 @@ export const githubRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.mailbox.githubAccessToken) {
+      if (!ctx.mailbox.githubInstallationId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "GitHub is not connected to this mailbox",
         });
       }
 
-      // Check if issues are enabled for this repository
       try {
         const issuesEnabled = await checkRepositoryIssuesEnabled({
-          accessToken: ctx.mailbox.githubAccessToken,
+          installationId: ctx.mailbox.githubInstallationId,
           owner: input.repoOwner,
           repo: input.repoName,
         });

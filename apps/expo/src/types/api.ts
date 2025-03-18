@@ -101,7 +101,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           slackAlertChannel: string | null;
           githubConnected: boolean;
           githubConnectUrl: string;
-          githubUsername: string | null;
           githubRepoOwner: string | null;
           githubRepoName: string | null;
           responseGeneratorPrompt: string[];
@@ -247,7 +246,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat";
+              source: "email" | "chat" | "chat#prompt";
               isPrompt: boolean;
               isVisitor: boolean;
               embeddingText: string | null;
@@ -398,7 +397,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat";
+            source: "email" | "chat" | "chat#prompt";
             isPrompt: boolean;
             isVisitor: boolean;
             embeddingText: string | null;
@@ -548,7 +547,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat";
+            source: "email" | "chat" | "chat#prompt";
             isPrompt: boolean;
             isVisitor: boolean;
             embeddingText: string | null;
@@ -787,18 +786,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               issueId: number;
             };
           }>;
-          updateGitHubIssueState: import("@trpc/server").TRPCMutationProcedure<{
-            input: {
-              mailboxSlug: string;
-              conversationSlug: string;
-              state: "open" | "closed";
-            };
-            output: {
-              state: string;
-              issueUrl: string;
-              issueNumber: any;
-            };
-          }>;
           linkExistingGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
             input: {
               mailboxSlug: string;
@@ -855,7 +842,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat";
+              source: "email" | "chat" | "chat#prompt";
               isPrompt: boolean;
               isVisitor: boolean;
               embeddingText: string | null;

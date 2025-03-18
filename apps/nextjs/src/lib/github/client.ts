@@ -1,73 +1,31 @@
-import { Octokit } from "@octokit/rest";
+import crypto from "crypto";
+import { memoize } from "lodash";
+import { App } from "octokit";
 import { env } from "@/env";
-import { GITHUB_REDIRECT_URI } from "./constants";
 
-export const getGitHubConnectUrl = (mailboxSlug: string): string => {
-  const params = new URLSearchParams({
-    client_id: env.GITHUB_CLIENT_ID,
-    redirect_uri: GITHUB_REDIRECT_URI,
-    scope: "repo user",
-    state: JSON.stringify({ mailbox_slug: mailboxSlug }),
-  });
+const privateKeyPkcs8 = memoize(
+  () =>
+    crypto.createPrivateKey(env.GITHUB_PRIVATE_KEY).export({
+      type: "pkcs8",
+      format: "pem",
+    }) as string,
+);
 
-  return `https://github.com/login/oauth/authorize?${params.toString()}`;
+export const getGitHubInstallUrl = () => `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`;
+
+export const getOctokit = (installationId: string) => {
+  const app = new App({ appId: env.GITHUB_APP_ID, privateKey: privateKeyPkcs8() });
+  return app.getInstallationOctokit(Number(installationId));
 };
 
-export const getGitHubAccessToken = async (
-  code: string,
-): Promise<{
-  accessToken: string;
-}> => {
-  const response = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      client_id: env.GITHUB_CLIENT_ID,
-      client_secret: env.GITHUB_CLIENT_SECRET,
-      code,
-      redirect_uri: GITHUB_REDIRECT_URI,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw data.error_description ? new Error(data.error_description) : new Error("GitHub authentication failed");
-  }
-
-  const octokit = new Octokit({ auth: data.access_token });
-
-  return {
-    accessToken: data.access_token,
-  };
-};
-
-export const revokeGitHubToken = async (token: string): Promise<void> => {
-  const octokit = new Octokit({
-    auth: `Basic ${Buffer.from(`${env.GITHUB_CLIENT_ID}:${env.GITHUB_CLIENT_SECRET}`).toString("base64")}`,
-  });
-
-  try {
-    await octokit.rest.apps.deleteToken({
-      client_id: env.GITHUB_CLIENT_ID,
-      access_token: token,
-    });
-  } catch (error) {
-    throw new Error(`Failed to revoke GitHub token: ${(error as Error).message}`);
-  }
-};
-
-export const listUserRepositories = async (accessToken: string) => {
-  const octokit = new Octokit({ auth: accessToken });
-  const response = await octokit.repos.listForAuthenticatedUser({
+export const listRepositories = async (installationId: string) => {
+  const octokit = await getOctokit(installationId);
+  const repos = await octokit.rest.apps.listReposAccessibleToInstallation({
     sort: "updated",
     per_page: 100,
   });
 
-  return response.data.map((repo) => ({
+  return repos.data.repositories.map((repo) => ({
     id: repo.id,
     name: repo.name,
     fullName: repo.full_name,
@@ -77,41 +35,35 @@ export const listUserRepositories = async (accessToken: string) => {
 };
 
 export const checkRepositoryIssuesEnabled = async ({
-  accessToken,
+  installationId,
   owner,
   repo,
 }: {
-  accessToken: string;
+  installationId: string;
   owner: string;
   repo: string;
 }): Promise<boolean> => {
-  const octokit = new Octokit({ auth: accessToken });
-
-  // Get repository details to check if issues are enabled
-  const { data } = await octokit.repos.get({
-    owner,
-    repo,
-  });
-
+  const octokit = await getOctokit(installationId);
+  const { data } = await octokit.rest.repos.get({ owner, repo });
   return data.has_issues;
 };
 
 export const listRepositoryIssues = async ({
-  accessToken,
+  installationId,
   owner,
   repo,
   state = "open",
   per_page = 100,
 }: {
-  accessToken: string;
+  installationId: string;
   owner: string;
   repo: string;
   state?: "open" | "closed" | "all";
   per_page?: number;
 }) => {
-  const octokit = new Octokit({ auth: accessToken });
+  const octokit = await getOctokit(installationId);
 
-  const { data } = await octokit.issues.listForRepo({
+  const { data } = await octokit.rest.issues.listForRepo({
     owner,
     repo,
     state,
@@ -130,20 +82,20 @@ export const listRepositoryIssues = async ({
 };
 
 export const createGitHubIssue = async ({
-  accessToken,
+  installationId,
   owner,
   repo,
   title,
   body,
 }: {
-  accessToken: string;
+  installationId: string;
   owner: string;
   repo: string;
   title: string;
   body: string;
 }) => {
-  const octokit = new Octokit({ auth: accessToken });
-  const response = await octokit.issues.create({
+  const octokit = await getOctokit(installationId);
+  const response = await octokit.rest.issues.create({
     owner,
     repo,
     title,
@@ -157,46 +109,19 @@ export const createGitHubIssue = async ({
   };
 };
 
-export const updateGitHubIssueState = async ({
-  accessToken,
-  owner,
-  repo,
-  issueNumber,
-  state,
-}: {
-  accessToken: string;
-  owner: string;
-  repo: string;
-  issueNumber: number;
-  state: "open" | "closed";
-}) => {
-  const octokit = new Octokit({ auth: accessToken });
-  const response = await octokit.issues.update({
-    owner,
-    repo,
-    issue_number: issueNumber,
-    state,
-  });
-
-  return {
-    state: response.data.state,
-    issueUrl: response.data.html_url,
-  };
-};
-
 export const getGitHubIssue = async ({
-  accessToken,
+  installationId,
   owner,
   repo,
   issueNumber,
 }: {
-  accessToken: string;
+  installationId: string;
   owner: string;
   repo: string;
   issueNumber: number;
 }) => {
-  const octokit = new Octokit({ auth: accessToken });
-  const response = await octokit.issues.get({
+  const octokit = await getOctokit(installationId);
+  const response = await octokit.rest.issues.get({
     owner,
     repo,
     issue_number: issueNumber,

@@ -311,7 +311,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.recommended, tools?.suggested, onToggleCc, isGitHubConnected],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected],
   );
 
   return mainCommandGroups;

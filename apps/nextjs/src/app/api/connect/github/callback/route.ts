@@ -1,45 +1,41 @@
-import { auth } from "@clerk/nextjs/server";
-import * as Sentry from "@sentry/nextjs";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { getGitHubAccessToken } from "@/lib/github/client";
+import { listRepositories } from "@/lib/github/client";
+import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { getAuthorizedMailbox } from "@/trpc";
 
 export async function GET(request: NextRequest) {
-  const state = JSON.parse(request.nextUrl.searchParams.get("state") || "{}");
-  const code = request.nextUrl.searchParams.get("code");
-  const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${state.mailbox_slug}/settings`);
+  const installationId = request.nextUrl.searchParams.get("installation_id");
 
-  if (!code) {
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
-  }
+  const user = await currentUser();
+  if (!user) return NextResponse.redirect(`${getBaseUrl()}/login`);
+  if (typeof user.unsafeMetadata.lastMailboxSlug !== "string")
+    return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
 
   const session = await auth();
-  if (!session?.userId || !session.orgId) {
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
-  }
+  if (!session.orgId) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
+
+  const mailbox = await getAuthorizedMailbox(session.orgId, user.unsafeMetadata.lastMailboxSlug);
+  if (!mailbox) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
+
+  const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);
+
+  if (!installationId) return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
 
   try {
-    const mailbox = await getAuthorizedMailbox(session.orgId, state.mailbox_slug);
-    if (!mailbox) {
+    if ((await listRepositories(installationId)).length === 0) {
       return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
     }
 
-    const { accessToken } = await getGitHubAccessToken(code);
-
-    await db
-      .update(mailboxes)
-      .set({
-        githubAccessToken: accessToken,
-      })
-      .where(eq(mailboxes.id, mailbox.id));
+    await db.update(mailboxes).set({ githubInstallationId: installationId }).where(eq(mailboxes.id, mailbox.id));
 
     return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=success`);
   } catch (error) {
-    Sentry.captureException(error);
+    captureExceptionAndThrowIfDevelopment(error);
     return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
   }
 }
