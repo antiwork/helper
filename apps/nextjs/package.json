@@ -104,6 +104,7 @@
     "ably": "^2.4.1",
     "ai": "^4.1.41",
     "autoprefixer": "10.4.19",
+    "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { and, count, eq, inArray, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
@@ -120,6 +120,48 @@ export const mailboxRouter = {
       const mailboxId = ctx.mailbox.id;
       const updates = input.responseGeneratorPrompt ? { ...input, promptUpdatedAt: new Date() } : input;
       await db.update(mailboxes).set(updates).where(eq(mailboxes.id, mailboxId));
+    }),
+
+  completeOnboardingStep: mailboxProcedure
+    .input(
+      z.object({
+        stepId: z.enum(["website", "email", "widget"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const mailboxId = ctx.mailbox.id;
+      const mailbox = await getMailboxById(mailboxId);
+      if (!mailbox) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const onboardingMetadata = mailbox.onboardingMetadata || { completed: false };
+      let updatedMetadata;
+
+      // Update the specific step
+      switch (input.stepId) {
+        case "website":
+          updatedMetadata = { ...onboardingMetadata, websiteConnected: true };
+          break;
+        case "email":
+          updatedMetadata = { ...onboardingMetadata, emailConnected: true };
+          break;
+        case "widget":
+          updatedMetadata = { ...onboardingMetadata, widgetAdded: true };
+          break;
+      }
+
+      // Check if all steps are completed
+      const allStepsCompleted =
+        updatedMetadata.websiteConnected && updatedMetadata.emailConnected && updatedMetadata.widgetAdded;
+
+      // Update the overall completion status if all steps are done
+      if (allStepsCompleted) {
+        updatedMetadata.completed = true;
+      }
+
+      // Update the database
+      await db.update(mailboxes).set({ onboardingMetadata: updatedMetadata }).where(eq(mailboxes.id, mailboxId));
+
+      return { success: true };
     }),
   members: mailboxProcedure
     .input(

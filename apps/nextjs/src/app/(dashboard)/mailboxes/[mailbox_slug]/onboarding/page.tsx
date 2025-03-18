@@ -1,0 +1,21 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { api } from "@/trpc/server";
+import { OnboardingStatus } from "./_components/OnboardingStatus";
+
+export default async function OnboardingPage({ params }: { params: { mailbox_slug: string } }) {
+  const session = await auth();
+  if (!session.userId) return redirect("/login");
+
+  const mailbox = await api.mailbox.get({ mailboxSlug: params.mailbox_slug });
+
+  if (!mailbox) {
+    return redirect("/mailboxes");
+  }
+
+  return (
+    <div className="container mx-auto py-8">
+      <OnboardingStatus mailboxSlug={params.mailbox_slug} mailbox={mailbox} />
+    </div>
+  );
+}

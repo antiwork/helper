@@ -11,7 +11,7 @@ import {
 } from "@clerk/nextjs";
 import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { ChevronsUpDown, ChevronUp, Download, Settings, X } from "lucide-react";
+import { ChevronsUpDown, ChevronUp, Clipboard, Download, Settings, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -77,6 +77,12 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const router = useRouter();
 
+  // Fetch mailbox data for onboarding status
+  const { data: mailboxData } = api.mailbox.get.useQuery({ mailboxSlug }, { enabled: !!mailboxSlug });
+
+  // Check if onboarding is completed
+  const onboardingCompleted = mailboxData?.onboardingMetadata?.completed ?? true;
+
   const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
       window.location.href = data.url;
@@ -102,6 +108,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
 
   const isSettings = pathname.endsWith("/settings");
   const isInbox = pathname.includes("/conversations");
+  const isDashboard = pathname.includes("/dashboard");
   const isWeb = !nativePlatform;
   const isDesktopWeb = isWeb && typeof navigator !== "undefined" && !/Android|iPhone|iPad/i.test(navigator.userAgent);
   const isMobileWeb = isWeb && typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -167,6 +174,17 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
               <span className="font-sundry-narrow-medium">Inbox</span>
             </Link>
             <Link
+              href={`/mailboxes/${mailboxSlug}/dashboard`}
+              className={cn(
+                "flex h-10 items-center gap-2 px-2 rounded-lg transition-colors",
+                "text-sidebar-foreground hover:bg-sidebar-accent",
+                isDashboard && "bg-sidebar-accent",
+              )}
+            >
+              <ChartBarIcon className="h-4 w-4" />
+              <span className="font-sundry-narrow-medium">Dashboard</span>
+            </Link>
+            <Link
               href={`/mailboxes/${mailboxSlug}/settings`}
               className={cn(
                 "flex h-10 items-center gap-2 px-2 rounded-lg transition-colors",
@@ -187,6 +205,35 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          {!onboardingCompleted && (
+            <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+              <div className="flex flex-col gap-2 rounded-lg bg-sidebar-accent p-3 text-center">
+                <div className="flex gap-2 justify-between mb-1">
+                  <div className="text-sm">Onboarding</div>
+                  <div className="text-sm opacity-50">
+                    {mailboxData?.onboardingMetadata?.websiteConnected ? "2/3" : "1/3"} Steps
+                  </div>
+                </div>
+                <div className="h-2 w-full rounded-full bg-sidebar-accent mb-2">
+                  <div
+                    className="h-2 rounded-full bg-sidebar-foreground"
+                    style={{
+                      width: mailboxData?.onboardingMetadata?.websiteConnected
+                        ? mailboxData?.onboardingMetadata?.emailConnected
+                          ? "66%"
+                          : "33%"
+                        : "0%",
+                    }}
+                  />
+                </div>
+                <Button variant="bright" size="sm" onClick={() => router.push(`/mailboxes/${mailboxSlug}/onboarding`)}>
+                  <Clipboard className="h-4 w-4 mr-2" />
+                  Continue Setup
+                </Button>
+                <div className="text-xs mt-1">Complete setup to get the most from Helper</div>
+              </div>
+            </SidebarMenuItem>
+          )}
           {showUpgradePrompt && (
             <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
               <div className="flex flex-col gap-2 rounded-lg bg-sidebar-accent p-3 text-center">
@@ -224,7 +271,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
               </div>
             </SidebarMenuItem>
           )}
-          {isDesktopWeb && user && !user.unsafeMetadata?.desktopAppPromptDismissed && (
+          {isDesktopWeb && user && !user.unsafeMetadata?.desktopAppPromptDismissed && onboardingCompleted && (
             <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
               <div className="flex flex-col rounded-lg bg-sidebar-accent p-3">
                 <div className="flex items-center justify-between mb-2">
