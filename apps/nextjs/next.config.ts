@@ -146,9 +146,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return [];
-  },
 };
 
 export default process.env.VERCEL_ENV === "production"
