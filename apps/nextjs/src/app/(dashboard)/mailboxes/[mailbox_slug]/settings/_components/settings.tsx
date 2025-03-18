@@ -31,6 +31,7 @@ import { SidebarInfo } from "../../_components/getSidebarInfo";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
 import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
+import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
 import PromptSetting from "./promptSetting";
@@ -42,6 +43,7 @@ import ToolSetting from "./toolSetting";
 
 export type PendingUpdates = {
   slack?: SlackUpdates;
+  github?: GitHubUpdates;
   promptLines?: PromptLineUpdate[];
   widget?: {
     displayMode: (typeof mailboxes.$inferSelect)["widgetDisplayMode"];
@@ -94,6 +96,7 @@ const Settings = ({ onUpdateSettings, mailbox, linters, supportAccount, subscrip
   const hasPendingUpdates =
     Boolean(pendingUpdates.promptLines?.length) ||
     Boolean(pendingUpdates.slack) ||
+    Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
     Boolean(pendingUpdates.customer);
 
@@ -182,6 +185,15 @@ const Settings = ({ onUpdateSettings, mailbox, linters, supportAccount, subscrip
               setPendingUpdates({
                 ...pendingUpdates,
                 slack: { ...pendingUpdates.slack, ...slackChanges },
+              })
+            }
+          />
+          <GitHubSetting
+            mailbox={mailbox}
+            onChange={(githubChanges) =>
+              setPendingUpdates({
+                ...pendingUpdates,
+                github: { ...pendingUpdates.github, ...githubChanges },
               })
             }
           />
