@@ -11,6 +11,8 @@ import {
   StarIcon,
   TrashIcon,
   UserIcon,
+  CurrencyDollarIcon,
+  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -22,6 +24,8 @@ import { useHelper } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { api } from "@/trpc/react";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -273,17 +277,28 @@ Please reply with this information. We'll review your request within 1-2 busines
     case "integrations":
       return (
         <div className="p-6">
-          <div className="max-w-xl flex-grow">
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-2 p-4 rounded-lg border border-border">
-                  <div className="w-8 h-8 rounded-full bg-muted" />
-                  <div className="flex-grow">
-                    <div className="h-4 w-20 bg-muted rounded" />
+          <div className="max-w-xl flex-grow space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-4 border border-border rounded-lg bg-background">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <EnvelopeIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <div className="text-lg">I didn't get paid.</div>
+                  </div>
+                  <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                    <span className="text-muted-foreground">Status</span>
+                    <div>
+                      <Badge className="bg-amber-50 text-amber-900 border-amber-200">OPEN</Badge>
+                    </div>
+                    <span className="text-muted-foreground">Assignee</span>
+                    <div className="flex items-center gap-2">
+                      <Avatar fallback="JD" size="sm" className="bg-amber-400" />
+                      <span>John Davis</span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -421,11 +436,11 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               Better-than-human responses
             </h2>
           </div>
-          <div className="w-[85vw] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="w-[85vw] mx-auto columns-1 md:columns-2 lg:columns-3 gap-6">
             {cardTypes.map((type, i) => (
               <div
                 key={i}
-                className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden"
+                className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden break-inside-avoid mb-6"
                 style={{
                   minWidth: "350px",
                   height: "fit-content"
@@ -463,14 +478,14 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                     )}
                     {i % 6 === 4 && (
                       <>
-                        Track your team&apos;s performance with
-                        <span className="underline-offset">&nbsp;detailed analytics</span>
+                        End the support scavenger hunt with
+                        <span className="underline-offset">&nbsp;in-app chat</span>
                       </>
                     )}
                     {i % 6 === 5 && (
                       <>
-                        Connect with your favorite tools using
-                        <span className="underline-offset">&nbsp;integrations</span>
+                        Save time triaging with 
+                        <span className="underline-offset">&nbsp;auto-assign</span>
                       </>
                     )}
                   </h3>
@@ -479,8 +494,8 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                     {i % 6 === 1 && "All you have to do is click send."}
                     {i % 6 === 2 && "Pin your best and watch Helper learn"}
                     {i % 6 === 3 && "Responses that fit your needs."}
-                    {i % 6 === 4 && "Data-driven support decisions"}
-                    {i % 6 === 5 && "Seamless workflow automation"}
+                    {i % 6 === 4 && "Zero tab-switching required"}
+                    {i % 6 === 5 && "Your AI matchmaker for customer questions"}
                   </p>
                 </div>
               </div>
