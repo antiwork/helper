@@ -31,7 +31,7 @@ export const githubRouter = {
           owner: ctx.mailbox.githubRepoOwner,
           repo: ctx.mailbox.githubRepoName,
           title: input.title,
-          body: `${input.body}\n\n*Created from [${ctx.conversation.subject}](${getBaseUrl()}/mailboxes/${ctx.mailbox.slug}/conversations?id=${ctx.conversation.id})*`,
+          body: `${input.body}\n\n*Created from [${ctx.conversation.subject}](${getBaseUrl()}/mailboxes/${ctx.mailbox.slug}/conversations?id=${ctx.conversation.slug})*`,
         });
 
         await db
