@@ -1,5 +1,5 @@
 {
-  "id": "853832db-fcf1-4f7f-94a9-3522725f99a2",
+  "id": "36b6fafc-b755-4a5e-b47f-ffd61aeacf04",
   "prevId": "68b5070e-bea0-4043-be17-24ac0c582065",
   "version": "7",
   "dialect": "postgresql",
@@ -834,6 +834,30 @@
         },
         "source": {
           "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_issue_number": {
+          "name": "github_issue_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_issue_url": {
+          "name": "github_issue_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_owner": {
+          "name": "github_repo_owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_name": {
+          "name": "github_repo_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1797,6 +1821,24 @@
         },
         "slack_team_id": {
           "name": "slack_team_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_installation_id": {
+          "name": "github_installation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_owner": {
+          "name": "github_repo_owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_name": {
+          "name": "github_repo_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false

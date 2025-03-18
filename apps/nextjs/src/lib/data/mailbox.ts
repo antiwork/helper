@@ -5,6 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
 import { mailboxes, mailboxesMetadataApi, subscriptions } from "@/db/schema";
 import { env } from "@/env";
+import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
@@ -75,6 +76,10 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     slackConnected: !!mailbox.slackBotToken,
     slackConnectUrl: getSlackConnectUrl(mailbox.slug),
     slackAlertChannel: mailbox.slackAlertChannel,
+    githubConnected: !!mailbox.githubInstallationId,
+    githubConnectUrl: getGitHubInstallUrl(),
+    githubRepoOwner: mailbox.githubRepoOwner,
+    githubRepoName: mailbox.githubRepoName,
     responseGeneratorPrompt: mailbox.responseGeneratorPrompt ?? [],
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: subscription ?? null,
@@ -116,6 +121,27 @@ export const disconnectSlack = async (mailboxId: number): Promise<void> => {
       slackBotUserId: null,
       slackBotToken: null,
       slackAlertChannel: null,
+    })
+    .where(eq(mailboxes.id, mailboxId));
+};
+
+export const disconnectGitHub = async (mailboxId: number): Promise<void> => {
+  await db
+    .update(mailboxes)
+    .set({
+      githubInstallationId: null,
+      githubRepoOwner: null,
+      githubRepoName: null,
+    })
+    .where(eq(mailboxes.id, mailboxId));
+};
+
+export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, repoName: string): Promise<void> => {
+  await db
+    .update(mailboxes)
+    .set({
+      githubRepoOwner: repoOwner,
+      githubRepoName: repoName,
     })
     .where(eq(mailboxes.id, mailboxId));
 };
