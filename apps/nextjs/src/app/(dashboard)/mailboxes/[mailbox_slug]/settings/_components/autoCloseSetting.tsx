@@ -15,13 +15,8 @@ export type AutoCloseUpdates = {
   autoCloseDaysOfInactivity: number;
 };
 
-type ExtendedMailbox = RouterOutputs["mailbox"]["get"] & {
-  autoCloseEnabled?: boolean;
-  autoCloseDaysOfInactivity?: number;
-};
-
 type AutoCloseSettingProps = {
-  mailbox: ExtendedMailbox;
+  mailbox: RouterOutputs["mailbox"]["get"];
   onUpdate: (updates: AutoCloseUpdates) => Promise<void>;
 };
 
