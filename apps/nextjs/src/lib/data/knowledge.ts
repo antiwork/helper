@@ -156,7 +156,7 @@ const suggestionResolvedBlocks = (
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `${actionText}${userName ? `by ${userName}` : ""}\n\n*Content*:\n${faq.content}`,
+        text: `${actionText}${userName ? ` by ${userName}` : ""}\n\n*Content*:\n${faq.content}`,
       },
     },
     {
