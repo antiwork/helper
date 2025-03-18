@@ -96,8 +96,7 @@ async function closeInactiveConversations(mailboxId?: number) {
  */
 const scheduledAutoClose = inngest.createFunction(
   { id: "scheduled-auto-close-inactive-conversations" },
-  // TODO: Change to daily at midnight
-  { cron: "0 0 * * *" }, // Run daily at midnight
+  { cron: "0 0 * * *" },
   async () => {
     return await closeInactiveConversations();
   },
