@@ -6,7 +6,6 @@ import { mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 
 export async function POST(req: NextRequest) {
-  // Check if user is authenticated and is an admin
   const user = await currentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,7 +14,6 @@ export async function POST(req: NextRequest) {
   try {
     const { mailboxId } = await req.json();
 
-    // If mailboxId is provided, verify it exists and has auto-close enabled
     if (mailboxId) {
       const mailbox = await db.query.mailboxes.findFirst({
         where: eq(mailboxes.id, mailboxId),
@@ -24,8 +22,6 @@ export async function POST(req: NextRequest) {
           autoCloseEnabled: true,
         },
       });
-
-      console.log(mailbox);
 
       if (!mailbox) {
         return NextResponse.json({ error: "Mailbox not found" }, { status: 404 });
@@ -36,7 +32,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Trigger the auto-close job
     await inngest.send({
       name: "conversations/auto-close.check",
       data: {
