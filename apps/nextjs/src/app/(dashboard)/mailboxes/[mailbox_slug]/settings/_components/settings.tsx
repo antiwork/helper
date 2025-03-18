@@ -216,7 +216,16 @@ const Settings = ({
               }));
             }}
           />
-          <AutoCloseSetting mailbox={mailbox} onUpdate={handleAutoCloseUpdate} />
+          <AutoCloseSetting
+            mailbox={mailbox}
+            onChange={(autoCloseUpdates) => {
+              setPendingUpdates((prev) => ({
+                ...prev,
+                autoClose: autoCloseUpdates,
+              }));
+            }}
+            onSave={handleUpdateSettings}
+          />
           <ConnectSupportEmail supportAccount={supportAccount} />
         </>
       ),

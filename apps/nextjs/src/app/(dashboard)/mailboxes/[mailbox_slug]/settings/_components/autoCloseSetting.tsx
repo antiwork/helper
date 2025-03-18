@@ -17,16 +17,21 @@ export type AutoCloseUpdates = {
 
 type AutoCloseSettingProps = {
   mailbox: RouterOutputs["mailbox"]["get"];
-  onUpdate: (updates: AutoCloseUpdates) => Promise<void>;
+  onChange: (changes?: AutoCloseUpdates) => void;
+  onSave: () => Promise<void>;
 };
 
-export default function AutoCloseSetting({ mailbox, onUpdate }: AutoCloseSettingProps) {
+export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoCloseSettingProps) {
   const [isEnabled, setIsEnabled] = useState(mailbox.autoCloseEnabled || false);
   const [daysOfInactivity, setDaysOfInactivity] = useState(mailbox.autoCloseDaysOfInactivity || 14);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRunningNow, setIsRunningNow] = useState(false);
 
   const handleToggle = (checked: boolean) => {
+    onChange({
+      autoCloseEnabled: checked,
+      autoCloseDaysOfInactivity: daysOfInactivity,
+    });
     setIsEnabled(checked);
   };
 
@@ -40,10 +45,7 @@ export default function AutoCloseSetting({ mailbox, onUpdate }: AutoCloseSetting
   const handleSave = async () => {
     setIsUpdating(true);
     try {
-      await onUpdate({
-        autoCloseEnabled: isEnabled,
-        autoCloseDaysOfInactivity: daysOfInactivity,
-      });
+      await onSave();
       toast({
         title: "Settings updated",
         description: "Auto-close settings have been updated successfully.",
