@@ -37,6 +37,12 @@ async function closeInactiveConversations(mailboxId?: number) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
 
+    console.log("--------------------------------");
+    console.log("cutoffDate", cutoffDate);
+    console.log("mailbox.id", mailbox.id);
+    console.log("mailbox.name", mailbox.name);
+    console.log("--------------------------------");
+
     // Find open conversations with no activity since the cutoff date
     const conversationsToClose = await db.query.conversations.findMany({
       where: and(
@@ -104,11 +110,14 @@ async function closeInactiveConversations(mailboxId?: number) {
  */
 const scheduledAutoClose = inngest.createFunction(
   { id: "scheduled-auto-close-inactive-conversations" },
-  { cron: "0 0 * * *" }, // Run daily at midnight
+  // TODO: Change to daily at midnight
+  { cron: "* * * * *" }, // Run daily at midnight
   async () => {
     return await closeInactiveConversations();
   },
 );
+
+closeInactiveConversations();
 
 /**
  * API-triggered auto-close function
