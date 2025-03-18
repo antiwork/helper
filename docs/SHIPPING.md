@@ -151,3 +151,56 @@ for (const message of messages) {
 ```
 
 This is a high-level overview.  Specific implementation details may vary, but this should provide a solid starting point for building the auto-assign feature.
+
+## Widget Configuration
+
+The Helper widget can be embedded on your website to provide customer support. The widget is initialized with a configuration object that controls its behavior.
+
+### Widget Configuration Options
+
+```typescript
+type HelperWidgetConfig = {
+  title?: string;                // Custom title for the widget
+  email?: string;                // User's email for authentication
+  email_hash?: string;           // Hash for email verification
+  mailbox_slug: string;          // Required: Mailbox identifier
+  timestamp?: number;            // Timestamp for authentication
+  customer_metadata?: {          // Optional customer data
+    name?: string | null;
+    value?: number | null;
+    links?: Record<string, string> | null;
+  } | null;
+  icon_color?: string | null;    // Custom color for the widget icon
+  experimental_read_page?: boolean; // Enable experimental page reading
+  show_toggle_button?: boolean;  // Control toggle button visibility
+};
+```
+
+### Toggle Button Visibility
+
+The `show_toggle_button` option allows you to control the visibility of the toggle button during widget initialization, overriding the session/mailbox configuration:
+
+- `true`: Always show the toggle button when the widget is hidden, regardless of the server-side setting
+- `false`: Never show the toggle button, regardless of the server-side setting
+- `undefined` or not provided (default): Use the server-side setting to determine toggle button visibility
+
+Example usage:
+
+```javascript
+// Initialize widget with toggle button always visible
+HelperWidget.init({
+  mailbox_slug: "your-mailbox",
+  show_toggle_button: true
+});
+
+// Initialize widget with toggle button always hidden
+HelperWidget.init({
+  mailbox_slug: "your-mailbox",
+  show_toggle_button: false
+});
+
+// Use server-side configuration (default behavior)
+HelperWidget.init({
+  mailbox_slug: "your-mailbox"
+});
+```
