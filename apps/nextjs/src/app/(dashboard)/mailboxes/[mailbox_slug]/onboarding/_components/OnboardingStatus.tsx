@@ -4,6 +4,7 @@ import { inferRouterOutputs } from "@trpc/server";
 import { CheckCircle, ChevronDown, ChevronUp, Globe, Mail, Maximize, MessageSquare, Minimize, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
   const [loading, setLoading] = useState(false);
   const [expandedStep, setExpandedStep] = useState<string | null>("website");
   const [websiteUrl, setWebsiteUrl] = useState("https://google.com");
+  const [debouncedWebsiteUrl] = useDebounce(websiteUrl, 1000);
   const [docsUrl, setDocsUrl] = useState("");
   const [loadingWebsite, setLoadingWebsite] = useState(false);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -41,21 +43,21 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
   const onboardingSteps: OnboardingStep[] = [
     {
       id: "website",
-      title: "Connect Website",
+      title: "Add knowledge from your website",
       description: "Connect your website and import documentation",
       icon: <Globe className="h-5 w-5" />,
       completed: mailbox.onboardingMetadata?.websiteConnected ?? false,
     },
     {
       id: "email",
-      title: "Connect Email",
+      title: "Connect email",
       description: "Connect your email to receive notifications",
       icon: <Mail className="h-5 w-5" />,
       completed: mailbox.onboardingMetadata?.emailConnected ?? false,
     },
     {
       id: "widget",
-      title: "Add Live-Chat Widget",
+      title: "Add live-chat widget",
       description: "Add the live-chat widget to your website",
       icon: <MessageSquare className="h-5 w-5" />,
       completed: mailbox.onboardingMetadata?.widgetAdded ?? false,
@@ -85,22 +87,24 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
     }
   };
 
-  const handleRunDemo = () => {
-    // Implement demo functionality
-    console.log("Running demo");
-  };
-
   const handleGoToInbox = () => {
     router.push(`/mailboxes/${mailboxSlug}/conversations`);
   };
 
+  // Load website when the debounced URL changes
+  useEffect(() => {
+    if (expandedStep === "website" && debouncedWebsiteUrl) {
+      handleLoadWebsite();
+    }
+  }, [expandedStep, debouncedWebsiteUrl]);
+
   const handleLoadWebsite = () => {
-    if (!websiteUrl) return;
+    if (!debouncedWebsiteUrl) return;
 
     setLoadingWebsite(true);
 
     // Ensure URL has protocol
-    let urlToLoad = websiteUrl;
+    let urlToLoad = debouncedWebsiteUrl;
     if (!/^https?:\/\//i.test(urlToLoad)) {
       urlToLoad = `https://${urlToLoad}`;
       setWebsiteUrl(urlToLoad);
@@ -122,19 +126,13 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
     }
   };
 
-  // Load website when expanded
-  useEffect(() => {
-    if (expandedStep === "website" && websiteUrl && !frameRef.current?.src) {
-      handleLoadWebsite();
-    }
-  }, [expandedStep, websiteUrl]);
-
   return (
     <div className="max-w-7xl mx-auto py-8">
-      <div className="text-center mb-8">
-        <Button variant="default" className="bg-yellow-400 hover:bg-yellow-500 text-black" onClick={handleRunDemo}>
-          Run Demo
-        </Button>
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">Set up your Helper workspace</h1>
+        <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
+          Complete these three steps to power your assistant. Helper extracts knowledge from your website, then uses email and chat to communicate with your customers.
+        </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -174,26 +172,12 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                   {step.id === "website" && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Website / app URL</label>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="https://your-website.com"
-                            value={websiteUrl}
-                            onChange={(e) => setWebsiteUrl(e.target.value)}
-                          />
-                          <Button
-                            variant="outlined"
-                            className="px-3"
-                            onClick={handleLoadWebsite}
-                            disabled={loadingWebsite}
-                          >
-                            {loadingWebsite ? (
-                              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <Globe className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
+                        <label className="block text-sm font-medium mb-1">Website URL</label>
+                        <Input
+                          placeholder="https://your-website.com"
+                          value={websiteUrl}
+                          onChange={(e) => setWebsiteUrl(e.target.value)}
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1">Documentation URL</label>
