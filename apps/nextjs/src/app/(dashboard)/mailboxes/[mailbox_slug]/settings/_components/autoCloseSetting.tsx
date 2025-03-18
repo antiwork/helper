@@ -26,8 +26,6 @@ type AutoCloseSettingProps = {
 };
 
 export default function AutoCloseSetting({ mailbox, onUpdate }: AutoCloseSettingProps) {
-  const router = useRouter();
-  console.log("mailbox", mailbox);
   const [isEnabled, setIsEnabled] = useState(mailbox.autoCloseEnabled || false);
   const [daysOfInactivity, setDaysOfInactivity] = useState(mailbox.autoCloseDaysOfInactivity || 14);
   const [isUpdating, setIsUpdating] = useState(false);
