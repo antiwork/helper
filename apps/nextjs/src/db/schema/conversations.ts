@@ -27,7 +27,11 @@ export const conversations = pgTable(
     summary: jsonb().$type<string[]>(),
     embedding: vector({ dimensions: 1536 }),
     embeddingText: text(),
-    source: text().$type<"email" | "chat">(),
+    source: text().$type<"email" | "chat" | "chat#prompt">(),
+    githubIssueNumber: integer(),
+    githubIssueUrl: text(),
+    githubRepoOwner: text(),
+    githubRepoName: text(),
     isPrompt: boolean().notNull().default(false),
     isVisitor: boolean().notNull().default(false),
     suggestedActions: jsonb().$type<

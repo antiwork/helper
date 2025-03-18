@@ -16,11 +16,12 @@ import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useToolExecution } from "@/hooks/useToolExecution";
 import { api } from "@/trpc/react";
+import GitHubSvg from "../../_components/icons/github.svg";
 import { CommandGroup } from "./types";
 
 type MainPageProps = {
   onOpenChange: (open: boolean) => void;
-  setPage: (page: "main" | "previous-replies" | "assignees" | "notes" | "tools") => void;
+  setPage: (page: "main" | "previous-replies" | "assignees" | "notes" | "tools" | "github-issue") => void;
   setSelectedItemId: (id: string | null) => void;
   onToggleCc: () => void;
 };
@@ -48,6 +49,13 @@ export const useMainPage = ({
     { mailboxSlug, conversationSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
+
+  const { data: mailbox } = api.mailbox.get.useQuery(
+    { mailboxSlug },
+    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!mailboxSlug },
+  );
+
+  const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
 
   useKeyboardShortcut("n", (e) => {
     e.preventDefault();
@@ -151,6 +159,34 @@ export const useMainPage = ({
                 </p>
               </div>
             ),
+          },
+          {
+            id: "github-issue",
+            label: conversation?.githubIssueNumber ? "Manage GitHub Issue" : "Link GitHub Issue",
+            icon: GitHubSvg,
+            onSelect: () => {
+              setPage("github-issue");
+              setSelectedItemId(null);
+            },
+            shortcut: "G",
+            preview: (
+              <div className="p-4">
+                <h3 className="font-medium mb-2">GitHub Issue</h3>
+                {(conversation as any)?.githubIssueNumber ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      This conversation is linked to GitHub issue #{(conversation as any).githubIssueNumber}.
+                    </p>
+                    <p className="text-sm text-muted-foreground">You can view the issue details, close or reopen it.</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Create a new GitHub issue or link an existing one to this conversation.
+                  </p>
+                )}
+              </div>
+            ),
+            hidden: !isGitHubConnected,
           },
         ],
       },
@@ -267,6 +303,7 @@ export const useMainPage = ({
                   ),
                   onSelect: () => {
                     setPage("tools");
+                    setSelectedItemId(null);
                   },
                 },
               ],
@@ -274,7 +311,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc],
+    [onOpenChange, conversation, tools?.recommended, tools?.suggested, onToggleCc, isGitHubConnected],
   );
 
   return mainCommandGroups;
