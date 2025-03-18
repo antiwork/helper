@@ -5,7 +5,6 @@ export type AIRole = "assistant" | "user" | "tool";
 export const HELPER_TO_AI_ROLES_MAPPING: Record<MessageRole, AIRole> = {
   user: "user",
   staff: "assistant",
-  workflow: "assistant",
   ai_assistant: "assistant",
   tool: "tool",
 };

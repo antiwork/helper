@@ -5,34 +5,40 @@ import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { ConversationList } from "../_components/conversationList";
 import { Header } from "../_components/header";
-import { PaginationControls } from "../_components/paginationControls";
 
 export default function InboxScreen() {
   const { selectedMailbox } = useMailbox();
   const [selectedTab, setSelectedTab] = useState<"conversations" | "mine" | "assigned">("mine");
-  const [page, setPage] = useState(1);
 
-  const { data, isLoading, refetch, isRefetching } = api.mailbox.conversations.list.useQuery(
-    {
-      mailboxSlug: selectedMailbox?.slug ?? "",
-      category: selectedTab,
-      sort: null,
-      search: null,
-      status: null,
-      page,
-    },
-    {
-      enabled: !!selectedMailbox?.slug,
-    },
-  );
+  const { data, isLoading, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    api.mailbox.conversations.list.useInfiniteQuery(
+      {
+        mailboxSlug: selectedMailbox?.slug ?? "",
+        category: selectedTab,
+        sort: null,
+        search: null,
+        status: null,
+        limit: 25,
+      },
+      {
+        enabled: !!selectedMailbox?.slug,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
-  const totalPages = data?.total ? Math.ceil(data.total / 25) : 0;
+  const conversations = data?.pages.flatMap((page) => page.conversations) || [];
 
   const tabs: { id: typeof selectedTab; label: string }[] = [
     { id: "mine", label: "Mine" },
     { id: "conversations", label: "Open" },
     { id: "assigned", label: "Assigned" },
   ];
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
@@ -55,13 +61,15 @@ export default function InboxScreen() {
         ))}
       </View>
       <ConversationList
-        conversations={data?.conversations}
+        conversations={conversations}
         onRefresh={refetch}
         isRefreshing={isRefetching}
         isLoading={isLoading}
         mailboxSlug={selectedMailbox?.slug ?? ""}
+        onLoadMore={handleLoadMore}
+        hasMore={!!hasNextPage}
+        isLoadingMore={isFetchingNextPage}
       />
-      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
     </SafeAreaView>
   );
 }

@@ -24,89 +24,93 @@ export function SuggestedActions({
   if (tools?.length === 0) return null;
 
   return (
-    <div className={cn("flex items-center gap-3 px-3 py-2 bg-background border border-t-0 rounded-b-sm", className)}>
-      <span className="text-xs text-muted-foreground font-medium">Suggested</span>
-      {tools?.map((t, index) => {
-        switch (t.type) {
-          case "close":
-            return (
-              <Button
-                key={`${t.type}-${index}`}
-                variant="subtle"
-                size="sm"
-                className="h-7"
-                onClick={() => updateStatus("closed")}
-              >
-                Close
-              </Button>
-            );
-          case "spam":
-            return (
-              <Button
-                key={`${t.type}-${index}`}
-                variant="subtle"
-                size="sm"
-                className="h-7"
-                onClick={() => updateStatus("spam")}
-              >
-                Spam
-              </Button>
-            );
-          case "assign":
-            const assignee = orgMembers?.find((m) => m.id === t.clerkUserId);
-            if (!assignee) return null;
-            return (
-              <Button
-                key={`${t.type}-${index}`}
-                variant="subtle"
-                size="sm"
-                className="h-7"
-                onClick={() => assignTicket(assignee)}
-              >
-                Assign to {assignee.displayName}
-              </Button>
-            );
-          case "tool":
-            return (
-              <TooltipProvider key={`${t.type}-${index}`} delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="subtle"
-                      size="sm"
-                      className="h-7"
-                      onClick={() => handleToolExecution(t.tool.slug, t.tool.name, t.tool.parameters)}
-                    >
-                      {t.tool.name}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent variant="light">
-                    <p className="mb-2">{t.tool.description}</p>
-                    <div className="font-medium">Parameters</div>
-                    <div className="grid grid-cols-[auto_1fr] gap-1">
-                      {Object.entries(t.tool.parameters ?? {}).map(([name, value]) => (
-                        <Fragment key={name}>
-                          <span>{formatParameter(name)}:</span>
-                          <span className="truncate font-mono" title={JSON.stringify(value)}>
-                            {JSON.stringify(value)}
-                          </span>
-                        </Fragment>
-                      ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            );
-          default:
-            return null;
-        }
-      })}
-      {!tools && (
-        <>
-          <div className="rounded-sm h-7 w-24 bg-muted animate-skeleton" />
-          <div className="rounded-sm h-7 w-24 bg-muted animate-skeleton" />
-        </>
-      )}
+    <div
+      className={cn("flex items-center border border-t-0 rounded-b-sm bg-background w-full overflow-hidden", className)}
+    >
+      <span className="flex-shrink-0 px-3 py-2 text-xs text-muted-foreground font-medium">Suggested</span>
+      <div className="flex items-center gap-3 overflow-x-auto py-2 pr-3 min-w-0 w-full">
+        {tools?.map((t, index) => {
+          switch (t.type) {
+            case "close":
+              return (
+                <Button
+                  key={`${t.type}-${index}`}
+                  variant="subtle"
+                  size="sm"
+                  className="flex-shrink-0 h-7 whitespace-nowrap"
+                  onClick={() => updateStatus("closed")}
+                >
+                  Close
+                </Button>
+              );
+            case "spam":
+              return (
+                <Button
+                  key={`${t.type}-${index}`}
+                  variant="subtle"
+                  size="sm"
+                  className="flex-shrink-0 h-7 whitespace-nowrap"
+                  onClick={() => updateStatus("spam")}
+                >
+                  Spam
+                </Button>
+              );
+            case "assign":
+              const assignee = orgMembers?.find((m) => m.id === t.clerkUserId);
+              if (!assignee) return null;
+              return (
+                <Button
+                  key={`${t.type}-${index}`}
+                  variant="subtle"
+                  size="sm"
+                  className="flex-shrink-0 h-7 whitespace-nowrap"
+                  onClick={() => assignTicket(assignee)}
+                >
+                  Assign to {assignee.displayName}
+                </Button>
+              );
+            case "tool":
+              return (
+                <TooltipProvider key={`${t.type}-${index}`} delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        className="flex-shrink-0 h-7 whitespace-nowrap"
+                        onClick={() => handleToolExecution(t.tool.slug, t.tool.name, t.tool.parameters)}
+                      >
+                        {t.tool.name}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent variant="light">
+                      <p className="mb-2">{t.tool.description}</p>
+                      <div className="font-medium">Parameters</div>
+                      <div className="grid grid-cols-[auto_1fr] gap-1">
+                        {Object.entries(t.tool.parameters ?? {}).map(([name, value]) => (
+                          <Fragment key={name}>
+                            <span>{formatParameter(name)}:</span>
+                            <span className="truncate font-mono" title={JSON.stringify(value)}>
+                              {JSON.stringify(value)}
+                            </span>
+                          </Fragment>
+                        ))}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            default:
+              return null;
+          }
+        })}
+        {!tools && (
+          <>
+            <div className="flex-shrink-0 rounded-sm h-7 w-24 bg-muted animate-skeleton" />
+            <div className="flex-shrink-0 rounded-sm h-7 w-24 bg-muted animate-skeleton" />
+          </>
+        )}
+      </div>
     </div>
   );
 }

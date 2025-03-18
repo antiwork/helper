@@ -108,7 +108,6 @@ const ConversationsModal = ({
                   mailboxSlug={mailboxSlug}
                   conversation={selectedConversationData}
                   onPreviewAttachment={() => {}}
-                  onViewWorkflowRun={() => {}}
                   onDoubleClickWhiteSpace={() => {}}
                 />
               ) : (

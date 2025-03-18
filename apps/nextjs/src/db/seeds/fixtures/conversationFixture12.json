@@ -19,18 +19,6 @@
           "conversationId": 12
         },
         {
-          "id": 83,
-          "role": "workflow",
-          "body": "Hi there,<br><br>Thanks for reaching out about our API integration. Here are some resources that might help:<br><br>• <strong>API Documentation:</strong> <a href=\"https://docs.example.com/api\">Complete API Reference</a><br><br>• <strong>CORS Configuration:</strong> <a href=\"https://docs.example.com/api/cors\">CORS Setup Guide</a><br><br>• <strong>Common Issues:</strong> <a href=\"https://docs.example.com/api/troubleshooting\">Troubleshooting Guide</a><br><br>• <strong>Sample Code:</strong> <a href=\"https://github.com/example/api-examples\">GitHub Repository</a><br><br>If you're still experiencing issues, please provide:<br>1. Your API request headers<br>2. The full error message<br>3. Your implementation code (if possible)<br><br>Our technical team will help you resolve this quickly!",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 12
-        },
-        {
           "id": 84,
           "role": "user",
           "body": "Here's my request header:<br><br>Authorization: Bearer sk_test_abc123<br>Content-Type: application/json<br>Origin: https://myapp.com<br><br>The error I'm getting is:<br>Access to fetch at 'https://api.example.com/v1/data' from origin 'https://myapp.com' has been blocked by CORS policy",

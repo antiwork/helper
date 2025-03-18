@@ -17,18 +17,6 @@
           },
           "status": null,
           "conversationId": 25
-        },
-        {
-          "id": 153,
-          "role": "workflow",
-          "body": "Hey there,<br>\n            <br>\n            Since you've made a recent purchase, here are a few links that may help solve things right away:<br>\n            <br>\n            If you're&nbsp;<strong>looking for a refund</strong>&nbsp;or&nbsp;<strong>have a product-specific question</strong>, you can contact the creator directly by replying to your emailed receipt. If you never got a receipt, please check your spam folder, or send it again by filling out the form <a href=\"https://gumroad.com/charge\">here</a>.<br>\n            <br>\n            <strong>Need an invoice</strong>? <a href=\"https://customers.gumroad.com/article/194-i-need-an-invoice\">I need an Invoice</a><br>\n            <br>\n            <strong>Need to&nbsp;cancel a membership/subscription</strong>? <a href=\"https://customers.gumroad.com/article/192-how-do-i-cancel-my-membership\">How to Cancel a Membership</a><br>\n            <br>\n            Want to <a href=\"https://customers.gumroad.com/article/209-how-do-i-combine-two-accounts\">transfer a purchase</a> to a different email address or account? Just let us know&nbsp;<strong>both the current and desired email addresses</strong>.<br>\n            <br>\n            Many other questions may be answered in our <a href=\"https://customers.gumroad.com/\">Customer Help Center</a><br>\n            <br>\n            If you still need help, no worries! Just reply to this email and let us know, and we'll get to your request ASAP. Thanks!\n        ",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 25
         }
       ],
       "conversation": {

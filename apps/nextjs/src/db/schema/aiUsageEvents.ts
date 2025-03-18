@@ -13,10 +13,7 @@ export const aiUsageEvents = pgTable(
       .notNull()
       .$type<
         | "response_generator"
-        | "freeform_workflow"
-        | "workflow_name_generator"
         | "conversation_summary"
-        | "workflow_prompt_generator"
         | "email_keywords_extractor"
         | "read_page_tool"
         | "chat_completion"

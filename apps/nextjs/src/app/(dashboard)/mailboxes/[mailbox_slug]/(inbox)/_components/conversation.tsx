@@ -22,9 +22,7 @@ import {
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
 import { MessageThread } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/messageThread";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/previewModal";
-import PromptInfoModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/promptInfoModal";
 import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/viewers";
-import type { Workflow } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/automaticWorkflowsSetting";
 import type {
   AttachedFile,
   ConversationEvent,
@@ -236,7 +234,6 @@ const ConversationContent = () => {
 
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
-  const [promptModalEntity, setPromptModalEntity] = useState<Workflow | null>(null);
 
   const { scrollRef, contentRef, scrollToBottom } = useStickToBottom({
     initial: "instant",
@@ -386,9 +383,6 @@ const ConversationContent = () => {
                             setPreviewFileIndex(currentIndex);
                             setPreviewFiles(message.files);
                           }}
-                          onViewWorkflowRun={(message) => {
-                            setPromptModalEntity(message.workflowRun);
-                          }}
                           onDoubleClickWhiteSpace={() =>
                             setLayoutState((state) => ({ ...state, listHidden: !state.listHidden }))
                           }
@@ -412,21 +406,6 @@ const ConversationContent = () => {
               <MessageActions />
             </div>
           </ResizablePanel>
-          {promptModalEntity && (
-            <Dialog
-              open={!!promptModalEntity}
-              onOpenChange={(isOpen) => {
-                if (!isOpen) setPromptModalEntity(null);
-              }}
-            >
-              <DialogContent className="w-full max-w-[72rem]">
-                <DialogHeader>
-                  <DialogTitle>Automatic Workflow Triggered</DialogTitle>
-                </DialogHeader>
-                <PromptInfoModal entity={promptModalEntity} />
-              </DialogContent>
-            </Dialog>
-          )}
         </ResizablePanelGroup>
       </ResizablePanel>
 

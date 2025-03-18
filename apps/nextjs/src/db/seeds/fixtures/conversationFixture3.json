@@ -13,18 +13,6 @@
           "metadata": {},
           "status": null,
           "conversationId": 3
-        },
-        {
-          "id": 7,
-          "role": "workflow",
-          "body": "Hi there,<br>\n            <br>\n            As a valued course participant, here are some quick resources that might help:<br>\n            <br>\n            If you're experiencing <strong>technical difficulties</strong> or want to request a <strong>refund</strong>, you can access our support portal through your course dashboard. For immediate assistance with video playback, please try clearing your browser cache or using our recommended browser settings.<br>\n            <br>\n            <strong>Need your invoice</strong>? <a href=\"https://techacademy.example.com/billing\">Access your billing history here</a><br>\n            <br>\n            <strong>Want to pause or cancel your subscription</strong>? <a href=\"https://techacademy.example.com/account/subscription\">Manage your subscription settings</a><br>\n            <br>\n            Need to <a href=\"https://techacademy.example.com/account/transfer\">transfer your course</a> to a different email? Just provide us with both your current and new email addresses.<br>\n            <br>\n            Check out our <a href=\"https://techacademy.example.com/help\">Student Help Center</a> for more solutions<br>\n            <br>\n            Still stuck? Just reply to this message and our technical team will assist you right away!\n        ",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 3
         }
       ],
       "conversation": {
