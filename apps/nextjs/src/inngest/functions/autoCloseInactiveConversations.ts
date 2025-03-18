@@ -7,12 +7,10 @@ import { inngest } from "@/inngest/client";
  * Common function to auto-close inactive conversations
  */
 async function closeInactiveConversations(mailboxId?: number) {
-  // Get all mailboxes with auto-close enabled or a specific mailbox if provided
   const mailboxesQuery = mailboxId
     ? and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true))
     : eq(mailboxes.autoCloseEnabled, true);
 
-  // Get all mailboxes with auto-close enabled
   const enabledMailboxes = await db.query.mailboxes.findMany({
     where: mailboxesQuery,
     columns: {
@@ -29,21 +27,12 @@ async function closeInactiveConversations(mailboxId?: number) {
 
   let totalClosed = 0;
 
-  // Process each mailbox
   for (const mailbox of enabledMailboxes) {
     const daysOfInactivity = mailbox.autoCloseDaysOfInactivity || 14; // Default to 14 days if not set
 
-    // Calculate the cutoff date based on days of inactivity
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
 
-    console.log("--------------------------------");
-    console.log("cutoffDate", cutoffDate);
-    console.log("mailbox.id", mailbox.id);
-    console.log("mailbox.name", mailbox.name);
-    console.log("--------------------------------");
-
-    // Find open conversations with no activity since the cutoff date
     const conversationsToClose = await db.query.conversations.findMany({
       where: and(
         eq(conversations.mailboxId, mailbox.id),
@@ -63,10 +52,8 @@ async function closeInactiveConversations(mailboxId?: number) {
 
     console.info(`Found ${conversationsToClose.length} inactive conversations to close for mailbox ${mailbox.name}`);
 
-    // Close the conversations
     const now = new Date();
 
-    // Update conversations to closed status
     await db
       .update(conversations)
       .set({
@@ -82,7 +69,6 @@ async function closeInactiveConversations(mailboxId?: number) {
         ),
       );
 
-    // Create conversation events for each closed conversation
     for (const conversation of conversationsToClose) {
       await db.insert(conversationEvents).values({
         conversationId: conversation.id,
@@ -111,13 +97,11 @@ async function closeInactiveConversations(mailboxId?: number) {
 const scheduledAutoClose = inngest.createFunction(
   { id: "scheduled-auto-close-inactive-conversations" },
   // TODO: Change to daily at midnight
-  { cron: "* * * * *" }, // Run daily at midnight
+  { cron: "0 0 * * *" }, // Run daily at midnight
   async () => {
     return await closeInactiveConversations();
   },
 );
-
-closeInactiveConversations();
 
 /**
  * API-triggered auto-close function
