@@ -32,9 +32,11 @@
     "date-fns": "^4.1.0",
     "expo": "^52.0.18",
     "expo-apple-authentication": "~7.1.2",
+    "expo-clipboard": "^7.0.1",
     "expo-constants": "~17.0.3",
     "expo-crypto": "^14.0.1",
     "expo-font": "~13.0.1",
+    "expo-insights": "~0.8.2",
     "expo-linear-gradient": "~14.0.2",
     "expo-linking": "~7.0.3",
     "expo-navigation-bar": "~4.0.7",
@@ -44,6 +46,7 @@
     "expo-splash-screen": "~0.29.18",
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.6",
+    "expo-updates": "~0.26.13",
     "expo-web-browser": "~14.0.1",
     "lodash-es": "^4.17.21",
     "nativewind": "^4.1.23",
@@ -61,9 +64,7 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.14",
-    "victory-native": "^41.16.0",
-    "expo-updates": "~0.26.13",
-    "expo-insights": "~0.8.2"
+    "victory-native": "^41.16.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
