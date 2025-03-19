@@ -30,7 +30,7 @@ import { createConversationMessage, disableAIResponse, getMessages } from "@/lib
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
-import { getPlatformCustomer } from "@/lib/data/platformCustomer";
+import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
 import { ReadPageToolConfig } from "@/sdk/types";
@@ -410,13 +410,16 @@ export const createAssistantMessage = (
   conversationId: number,
   userMessageId: number,
   text: string,
-  traceId: string | null = null,
-  reasoning: string | null = null,
+  options?: {
+    traceId?: string | null;
+    reasoning?: string | null;
+    sendEmail?: boolean;
+  },
 ) => {
   return createConversationMessage({
     conversationId,
     responseToId: userMessageId,
-    status: "sent",
+    status: options?.sendEmail ? "queueing" : "sent",
     body: text,
     cleanedUpText: text,
     role: "ai_assistant",
@@ -424,8 +427,8 @@ export const createAssistantMessage = (
     isPinned: false,
     isFlaggedAsBad: false,
     metadata: {
-      trace_id: traceId,
-      reasoning,
+      trace_id: options?.traceId,
+      reasoning: options?.reasoning,
     },
   });
 };
@@ -446,18 +449,27 @@ export const respondWithAI = async ({
   conversation,
   mailbox,
   userEmail,
+  sendEmail,
   message,
   messageId,
   readPageTool,
-  onRequestHumanSupport,
+  onResponse,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
   userEmail: string | null;
+  sendEmail: boolean;
   message: Message;
   messageId: number;
   readPageTool: ReadPageToolConfig | null;
-  onRequestHumanSupport?: (messages: Message[]) => void | Promise<void>;
+  onResponse?: (result: {
+    text: string;
+    messages: Message[];
+    platformCustomer: PlatformCustomer | null;
+    isPromptConversation: boolean;
+    isFirstMessage: boolean;
+    humanSupportRequested: boolean;
+  }) => void | Promise<void>;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id);
   const messages = appendClientMessage({
@@ -471,13 +483,27 @@ export const respondWithAI = async ({
   const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;
 
-  const result = (response: Response) => ({
-    response,
-    messages,
-    isPromptConversation,
-    isFirstMessage,
-    platformCustomer,
-  });
+  const handleAssistantMessage = async (
+    text: string,
+    humanSupportRequested: boolean,
+    traceId: string | null = null,
+    reasoning: string | null = null,
+  ) => {
+    const assistantMessage = await createAssistantMessage(conversation.id, messageId, text, {
+      traceId,
+      reasoning,
+      sendEmail,
+    });
+    onResponse?.({
+      text,
+      messages,
+      platformCustomer,
+      isPromptConversation,
+      isFirstMessage,
+      humanSupportRequested,
+    });
+    return assistantMessage;
+  };
 
   if (
     (await disableAIResponse(conversation.id, mailbox, platformCustomer)) &&
@@ -489,102 +515,93 @@ export const respondWithAI = async ({
       (isPromptConversation && messages.filter((message) => message.role === "user").length === 2)
     ) {
       const message = "Our support team will respond to your message shortly. Thank you for your patience.";
-      const assistantMessage = await createAssistantMessage(conversation.id, messageId, message);
-      return result(createTextResponse(message, assistantMessage.id.toString()));
+      const assistantMessage = await handleAssistantMessage(message, false);
+      return createTextResponse(message, assistantMessage.id.toString());
     }
-    return result(createTextResponse("", Date.now().toString()));
+    return createTextResponse("", Date.now().toString());
   }
 
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
   if (isFirstMessage && isPromptConversation) {
     const cached: string | null = await redis.get(cacheKey);
     if (cached != null) {
-      const assistantMessage = await createAssistantMessage(conversation.id, messageId, cached);
-      return result(createTextResponse(cached, assistantMessage.id.toString()));
+      const assistantMessage = await handleAssistantMessage(cached, false);
+      return createTextResponse(cached, assistantMessage.id.toString());
     }
   }
 
   if ((await getCachedSubscriptionStatus(mailbox.clerkOrganizationId)) === "free_trial_expired") {
-    return result(
-      createTextResponse("Free trial expired. Please upgrade to continue using Helper.", Date.now().toString()),
-    );
+    return createTextResponse("Free trial expired. Please upgrade to continue using Helper.", Date.now().toString());
   }
 
   await addScreenshotResult(messages, conversation, messageId);
 
-  return result(
-    createDataStreamResponse({
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-      },
-      execute: async (dataStream) => {
-        const result = await generateAIResponse({
-          messages,
-          mailbox,
-          conversationId: conversation.id,
-          email: userEmail,
-          readPageTool,
-          addReasoning: true,
-          dataStream,
-          async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata }) {
-            const hasSensitiveToolCall = steps.some((step: any) =>
-              step.toolCalls.some((toolCall: any) => toolCall.toolName.includes("fetch_user_information")),
-            );
+  return createDataStreamResponse({
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+    },
+    execute: async (dataStream) => {
+      const result = await generateAIResponse({
+        messages,
+        mailbox,
+        conversationId: conversation.id,
+        email: userEmail,
+        readPageTool,
+        addReasoning: true,
+        dataStream,
+        async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata }) {
+          const hasSensitiveToolCall = steps.some((step: any) =>
+            step.toolCalls.some((toolCall: any) => toolCall.toolName.includes("fetch_user_information")),
+          );
 
-            const hasRequestHumanSupportCall = steps.some((step: any) =>
-              step.toolCalls.some((toolCall: any) => toolCall.toolName === "request_human_support"),
-            );
+          const hasRequestHumanSupportCall = steps.some((step: any) =>
+            step.toolCalls.some((toolCall: any) => toolCall.toolName === "request_human_support"),
+          );
 
-            if (finishReason !== "stop" && finishReason !== "tool-calls") return;
+          if (finishReason !== "stop" && finishReason !== "tool-calls") return;
 
-            const reasoning = experimental_providerMetadata?.reasoning;
-            const responseText = hasRequestHumanSupportCall
-              ? "_Escalated to a human! You will be contacted soon by email._"
-              : text;
-            const assistantMessage = await createAssistantMessage(
-              conversation.id,
-              messageId,
-              responseText,
-              traceId,
-              reasoning,
-            );
-            await inngest.send({
-              name: "conversations/check-resolution",
-              data: {
-                conversationId: conversation.id,
-                messageId: assistantMessage.id,
-              },
-            });
+          const reasoning = experimental_providerMetadata?.reasoning;
+          const responseText = hasRequestHumanSupportCall
+            ? "_Escalated to a human! You will be contacted soon by email._"
+            : text;
+          const assistantMessage = await handleAssistantMessage(
+            responseText,
+            hasRequestHumanSupportCall,
+            traceId,
+            reasoning,
+          );
+          await inngest.send({
+            name: "conversations/check-resolution",
+            data: {
+              conversationId: conversation.id,
+              messageId: assistantMessage.id,
+            },
+          });
 
-            dataStream.writeMessageAnnotation({
-              id: assistantMessage.id.toString(),
-              traceId,
-            });
+          dataStream.writeMessageAnnotation({
+            id: assistantMessage.id.toString(),
+            traceId,
+          });
 
-            if (finishReason === "stop" && isFirstMessage && !hasSensitiveToolCall && !hasRequestHumanSupportCall) {
-              await redis.set(cacheKey, responseText, { ex: 60 * 60 * 24 });
-            }
+          if (finishReason === "stop" && isFirstMessage && !hasSensitiveToolCall && !hasRequestHumanSupportCall) {
+            await redis.set(cacheKey, responseText, { ex: 60 * 60 * 24 });
+          }
+        },
+      });
 
-            if (hasRequestHumanSupportCall) {
-              await onRequestHumanSupport?.(messages);
-            }
-          },
-        });
+      // consume the stream to ensure it runs to completion & triggers onFinish
+      // even when the client response is aborted
+      result.consumeStream();
 
-        // consume the stream to ensure it runs to completion & triggers onFinish
-        // even when the client response is aborted
-        result.consumeStream();
-
-        result.mergeIntoDataStream(dataStream);
-      },
-      onError(error) {
-        captureExceptionAndLogIfDevelopment(error);
-        return "Error generating AI response";
-      },
-    }),
-  );
+      result.mergeIntoDataStream(dataStream);
+    },
+    onError(error) {
+      captureExceptionAndLogIfDevelopment(error);
+      return "Error generating AI response";
+    },
+  });
 };
 
 const createTextResponse = (text: string, messageId: string) => {

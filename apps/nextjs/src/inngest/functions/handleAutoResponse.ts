@@ -10,29 +10,6 @@ import { updateConversation } from "@/lib/data/conversation";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { sendEmail } from "@/lib/resend/client";
 
-const getResponseText = async (response: Response): Promise<string> => {
-  const reader = assertDefined(response.body).getReader();
-
-  let aiResponse = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = new TextDecoder().decode(value);
-    const lines = chunk.split("\n").filter((line) => line.trim().startsWith("data: "));
-    for (const line of lines) {
-      try {
-        const json = JSON.parse(line.substring(6));
-        if (json.type === "text" && json.value) aiResponse += json.value;
-      } catch (e) {
-        // Skip invalid JSON
-      }
-    }
-  }
-
-  return aiResponse;
-};
-
 export const handleAutoResponse = async (messageId: number) => {
   const message = await db.query.conversationMessages
     .findFirst({
@@ -50,7 +27,7 @@ export const handleAutoResponse = async (messageId: number) => {
   const messageText = cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "");
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
 
-  const { response, platformCustomer } = await respondWithAI({
+  await respondWithAI({
     conversation: message.conversation,
     mailbox: message.conversation.mailbox,
     userEmail: message.emailFrom,
@@ -61,36 +38,38 @@ export const handleAutoResponse = async (messageId: number) => {
     },
     messageId: message.id,
     readPageTool: null,
-  });
+    sendEmail: true,
+    onResponse: async ({ text, platformCustomer }) => {
+      await db.transaction(async (tx) => {
+        if (platformCustomer) {
+          await createMessageNotification({
+            messageId: message.id,
+            conversationId: message.conversationId,
+            platformCustomerId: platformCustomer.id,
+            notificationText: `You have a new reply for ${message.conversation.subject ?? "(no subject)"}`,
+            tx,
+          });
+        }
 
-  const aiResponse = await getResponseText(response);
+        await sendEmail({
+          from: "Helper <no-reply@helper.ai>",
+          to: assertDefined(message.emailFrom),
+          subject: `Re: ${message.conversation.subject ?? "(no subject)"}`,
+          react: AutoReplyEmail({
+            content: text,
+            companyName: message.conversation.mailbox.name,
+            widgetHost: message.conversation.mailbox.widgetHost,
+            hasPlatformCustomer: !!platformCustomer,
+          }),
+        });
 
-  console.log(aiResponse);
-
-  await db.transaction(async (tx) => {
-    if (platformCustomer) {
-      await createMessageNotification({
-        messageId: message.id,
-        conversationId: message.conversationId,
-        platformCustomerId: platformCustomer.id,
-        notificationText: `You have a new reply for ${message.conversation.subject ?? "(no subject)"}`,
-        tx,
+        await updateConversation(
+          message.conversationId,
+          { set: { conversationProvider: "chat", status: "closed" } },
+          tx,
+        );
       });
-    }
-
-    await sendEmail({
-      from: "Helper <no-reply@helper.ai>",
-      to: assertDefined(message.emailFrom),
-      subject: `Re: ${message.conversation.subject ?? "(no subject)"}`,
-      react: AutoReplyEmail({
-        content: aiResponse,
-        companyName: message.conversation.mailbox.name,
-        widgetHost: message.conversation.mailbox.widgetHost,
-        hasPlatformCustomer: !!platformCustomer,
-      }),
-    });
-
-    await updateConversation(message.conversationId, { set: { conversationProvider: "chat", status: "closed" } }, tx);
+    },
   });
 
   return { message: `Auto response sent for message ${messageId}` };

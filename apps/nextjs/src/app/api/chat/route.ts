@@ -61,26 +61,26 @@ export async function POST(request: Request) {
   const userEmail = session.isAnonymous ? null : session.email || null;
   const userMessage = await createUserMessage(conversation.id, userEmail, message.content);
 
-  const { response, messages, isPromptConversation, isFirstMessage } = await respondWithAI({
+  return await respondWithAI({
     conversation,
     mailbox,
     userEmail,
     message,
     messageId: userMessage.id,
     readPageTool,
-    onRequestHumanSupport: (messages) => {
-      waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
+    sendEmail: false,
+    onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
+      if (
+        (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||
+        (isPromptConversation && !isFirstMessage && conversation.subject === messages[0]?.content) ||
+        humanSupportRequested
+      ) {
+        waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
+      } else if (isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) {
+        waitUntil(
+          db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)),
+        );
+      }
     },
   });
-
-  if (
-    (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||
-    (isPromptConversation && !isFirstMessage && conversation.subject === messages[0]?.content)
-  ) {
-    waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
-  } else if (isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) {
-    waitUntil(db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)));
-  }
-
-  return response;
 }
