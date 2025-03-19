@@ -238,7 +238,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
             page === "main" ? "Type a command..." : page === "tools" ? "Search tools..." : "Search previous replies..."
           }
           className="rounded-sm rounded-b-none"
-          iconsPrefix={<KeyboardShortcut>/</KeyboardShortcut>}
+          iconsPrefix={<KeyboardShortcut className="text-muted-foreground">/</KeyboardShortcut>}
           onFocus={() => onOpenChange(true)}
           onBlur={() => {
             const oldPage = pageRef.current;

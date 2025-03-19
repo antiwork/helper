@@ -33,6 +33,7 @@ class HelperWidget {
   private hasBeenOpened = false;
   private sessionToken: string | null = null;
   private showWidget = false;
+  private showToggleButton: boolean | null = null;
 
   private messageQueue: any[] = [];
   private observer: MutationObserver | null = null;
@@ -44,6 +45,7 @@ class HelperWidget {
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
+    this.showToggleButton = config.show_toggle_button ?? null;
   }
 
   private async setup(): Promise<void> {
@@ -367,6 +369,8 @@ class HelperWidget {
   }
 
   private createToggleButton(): void {
+    // Skip creating the toggle button if explicitly disabled
+    if (this.showToggleButton === false) return;
     if (this.toggleButton) return;
 
     this.toggleButton = document.createElement("button");
@@ -450,7 +454,11 @@ class HelperWidget {
       this.updateAllToggleElements();
 
       // Show the toggle button when the widget is hidden (only if it has been opened before)
-      if (this.hasBeenOpened && this.toggleButton && !this.showWidget) {
+      if (
+        this.hasBeenOpened &&
+        this.toggleButton &&
+        (this.showToggleButton === true || (this.showToggleButton === null && !this.showWidget))
+      ) {
         this.toggleButton.classList.add("visible");
       }
     }

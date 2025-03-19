@@ -11,6 +11,7 @@ export type HelperWidgetConfig = {
   } | null;
   icon_color?: string | null;
   experimental_read_page?: boolean;
+  show_toggle_button?: boolean;
 };
 
 export type ReadPageToolConfig = {

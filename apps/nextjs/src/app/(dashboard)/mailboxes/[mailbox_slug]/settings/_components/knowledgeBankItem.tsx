@@ -108,29 +108,46 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
     },
   });
 
-  const deleteMutation = api.mailbox.faqs.delete.useMutation({
-    onSuccess: () => {
+  const acceptMutation = api.mailbox.faqs.accept.useMutation({
+    onSuccess: (_, { mailboxSlug }) => {
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+    },
+    onError: () => {
+      toast({ title: "Error updating knowledge", variant: "destructive" });
+    },
+  });
+
+  const rejectMutation = api.mailbox.faqs.reject.useMutation({
+    onSuccess: (_, { mailboxSlug }) => {
+      utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+    },
+    onError: () => {
+      toast({ title: "Error updating knowledge", variant: "destructive" });
     },
   });
 
   const handleUpdateFaq = async () => {
+    if (suggestedReplacement) {
+      await acceptMutation.mutateAsync({
+        mailboxSlug,
+        id: suggestedReplacement.id,
+        content: editingContent ?? undefined,
+      });
+      setEditingContent(null);
+      return;
+    }
+
     if (!editingContent || faq.content === editingContent) {
       setEditingContent(null);
       return;
     }
+
     await updateMutation.mutateAsync({
       content: editingContent,
       mailboxSlug,
       id: faq.id,
     });
-
-    if (suggestedReplacement) {
-      await deleteMutation.mutateAsync({
-        mailboxSlug,
-        id: suggestedReplacement.id,
-      });
-    }
+    setEditingContent(null);
   };
 
   const handleStartEditing = () => {
@@ -149,10 +166,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
           onCancel={() => {
             setEditingContent(null);
             if (suggestedReplacement) {
-              deleteMutation.mutateAsync({
-                mailboxSlug,
-                id: suggestedReplacement.id,
-              });
+              rejectMutation.mutateAsync({ mailboxSlug, id: suggestedReplacement.id });
             }
           }}
           isLoading={updateMutation.isPending}
