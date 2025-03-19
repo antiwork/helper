@@ -1,7 +1,7 @@
 "use client";
 
 import { inferRouterOutputs } from "@trpc/server";
-import { CheckCircle, ChevronDown, ChevronUp, Globe, Mail, Maximize, MessageSquare, Minimize, X } from "lucide-react";
+import { BookOpen, CheckCircle, ChevronDown, ChevronUp, Globe, Mail, Maximize, MessageSquare, Minimize, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
@@ -43,24 +43,17 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
   const onboardingSteps: OnboardingStep[] = [
     {
       id: "website",
-      title: "Add knowledge from your website",
-      description: "Connect your website and import documentation",
-      icon: <Globe className="h-5 w-5" />,
+      title: "1. Add knowledge from your website",
+      description: "Connect your website and import documentation to build Helper's knowledge base",
+      icon: <BookOpen className="h-5 w-5" />,
       completed: mailbox.onboardingMetadata?.websiteConnected ?? false,
     },
     {
-      id: "email",
-      title: "Connect email",
-      description: "Connect your email to receive notifications",
-      icon: <Mail className="h-5 w-5" />,
-      completed: mailbox.onboardingMetadata?.emailConnected ?? false,
-    },
-    {
-      id: "widget",
-      title: "Add live-chat widget",
-      description: "Add the live-chat widget to your website",
+      id: "communication",
+      title: "2. Choose how to communicate",
+      description: "Select at least one channel to communicate with your customers",
       icon: <MessageSquare className="h-5 w-5" />,
-      completed: mailbox.onboardingMetadata?.widgetAdded ?? false,
+      completed: (mailbox.onboardingMetadata?.emailConnected || mailbox.onboardingMetadata?.widgetAdded) ?? false,
     },
   ];
 
@@ -114,12 +107,10 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
     if (frameRef.current) {
       frameRef.current.src = `/api/proxy?url=${encodeURIComponent(urlToLoad)}&mailboxSlug=${encodeURIComponent(mailboxSlug)}`;
 
-      // Add event listener to detect when the iframe has loaded
       frameRef.current.onload = () => {
         setLoadingWebsite(false);
       };
 
-      // Set a timeout in case the iframe fails to load
       setTimeout(() => {
         setLoadingWebsite(false);
       }, 10000);
@@ -129,15 +120,15 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
   return (
     <div className="max-w-7xl mx-auto py-8">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">Set up your Helper workspace</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">Set up your Helper </h1>
         <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
-          Complete these three steps to power your assistant. Helper extracts knowledge from your website, then uses email and chat to communicate with your customers.
+          Complete these tasks to create your AI-powered assistant
         </p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left side - Steps */}
-        <div className="lg:w-2/5 space-y-4">
+        <div className="lg:w-1/3 space-y-4">
           {onboardingSteps.map((step) => (
             <Card key={step.id} className={cn(step.completed && "border-green-400 bg-green-50")}>
               <CardHeader className="p-4 cursor-pointer" onClick={() => toggleStep(step.id)}>
@@ -145,7 +136,7 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
-                        "flex items-center justify-center rounded-full w-8 h-8",
+                        "flex items-center justify-center rounded-full w-8 h-8 p-2",
                         step.completed ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground",
                       )}
                     >
@@ -190,43 +181,67 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                       <Button
                         variant="default"
                         className="bg-primary w-full mt-2"
-                        onClick={() => handleCompleteStep(step.id)}
+                        onClick={() => handleCompleteStep("website")}
                         disabled={loading || step.completed}
                       >
-                        Connect Website & Import Docs
+                        Turn Website & Docs into AI Knowledge
                       </Button>
                     </div>
                   )}
 
-                  {step.id === "email" && (
-                    <div>
-                      <p className="mb-4">Connect your email to receive notifications when new conversations arrive.</p>
-                      <Button
-                        variant="default"
-                        className="w-full"
-                        onClick={() => handleCompleteStep(step.id)}
-                        disabled={loading || step.completed}
-                      >
-                        <Mail className="h-4 w-4 mr-2" />
-                        Connect Email
-                      </Button>
-                    </div>
-                  )}
+                  {step.id === "communication" && (
+                    <div className="space-y-6">
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-5 w-5 text-blue-500" />
+                          <h3 className="font-medium">Email Communication</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Connect your support email (Gmail account supported) to receive and respond to customer inquiries.
+                        </p>
+                        <Button
+                          variant="default"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                          onClick={() => handleCompleteStep("email")}
+                          disabled={loading || mailbox.onboardingMetadata?.emailConnected}
+                        >
+                          {mailbox.onboardingMetadata?.emailConnected ? (
+                            <span className="flex items-center justify-center">
+                              <CheckCircle className="h-4 w-4 mr-2" /> Email Connected
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center">
+                              <Mail className="h-4 w-4 mr-2" /> Connect Support Email
+                            </span>
+                          )}
+                        </Button>
+                      </div>
 
-                  {step.id === "widget" && (
-                    <div>
-                      <p className="mb-4">
-                        Add the live-chat widget to your website to allow your users to get immediate help.
-                      </p>
-                      <Button
-                        variant="default"
-                        className="w-full"
-                        onClick={() => handleCompleteStep(step.id)}
-                        disabled={loading || step.completed}
-                      >
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Add Live-Chat Widget
-                      </Button>
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5 text-purple-500" />
+                          <h3 className="font-medium">Live Chat Widget</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Add the live-chat widget to your website to allow your users to get immediate help.
+                        </p>
+                        <Button
+                          variant="default"
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium"
+                          onClick={() => handleCompleteStep("widget")}
+                          disabled={loading || mailbox.onboardingMetadata?.widgetAdded}
+                        >
+                          {mailbox.onboardingMetadata?.widgetAdded ? (
+                            <span className="flex items-center justify-center">
+                              <CheckCircle className="h-4 w-4 mr-2" /> Widget Added
+                            </span>
+                          ) : (
+                            <span className="flex items-center justify-center">
+                              <MessageSquare className="h-4 w-4 mr-2" /> Add Live-Chat Widget
+                            </span>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -243,7 +258,7 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
         </div>
 
         {/* Right side - Fake Browser */}
-        <div className="lg:w-3/5">
+        <div className="lg:w-2/3">
           <div className="rounded-lg overflow-hidden border border-gray-200 shadow-md">
             {/* Browser Header */}
             <div className="bg-gray-100 p-2 border-b border-gray-200">
@@ -271,7 +286,12 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                   </div>
                 </div>
               )}
-              <iframe ref={frameRef} className="w-full h-full border-0" title="Website Preview with Helper Widget" />
+              <iframe
+                ref={frameRef}
+                className="w-full h-full border-0"
+                title="Website Preview with Helper Widget"
+                sandbox="allow-same-origin allow-scripts allow-forms"
+              />
             </div>
           </div>
         </div>
