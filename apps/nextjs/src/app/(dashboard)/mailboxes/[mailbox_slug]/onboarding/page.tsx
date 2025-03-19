@@ -20,7 +20,7 @@ export default async function OnboardingPage(props: PageProps) {
 
   return (
     <div className="container mx-auto py-8">
-      <OnboardingStatus mailboxSlug={params.mailbox_slug} mailbox={mailbox} />
+      <OnboardingStatus mailboxSlug={params.mailbox_slug} />
     </div>
   );
 }

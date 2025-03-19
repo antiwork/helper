@@ -7,9 +7,9 @@ import { mailboxesMetadataApi } from "./mailboxesMetadataApi";
 
 type OnboardingMetadata = {
   completed: boolean;
-  websiteConnected?: boolean;
-  emailConnected?: boolean;
-  widgetAdded?: boolean;
+  emailConnectedAt?: Date;
+  widgetAddedAt?: Date;
+  knowledgeAddedAt?: Date;
 };
 
 export const mailboxes = pgTable(

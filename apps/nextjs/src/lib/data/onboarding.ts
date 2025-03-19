@@ -20,18 +20,18 @@ export async function completeOnboardingStep(mailboxId: number, stepId: Onboardi
 
   switch (stepId) {
     case "website":
-      updatedMetadata = { ...onboardingMetadata, websiteConnected: true };
+      updatedMetadata = { ...onboardingMetadata, knowledgeAddedAt: new Date() };
       break;
     case "email":
-      updatedMetadata = { ...onboardingMetadata, emailConnected: true };
+      updatedMetadata = { ...onboardingMetadata, emailConnectedAt: new Date() };
       break;
     case "widget":
-      updatedMetadata = { ...onboardingMetadata, widgetAdded: true };
+      updatedMetadata = { ...onboardingMetadata, widgetAddedAt: new Date() };
       break;
   }
 
   const allStepsCompleted =
-    updatedMetadata.websiteConnected && updatedMetadata.emailConnected && updatedMetadata.widgetAdded;
+    updatedMetadata.knowledgeAddedAt && (updatedMetadata.emailConnectedAt || updatedMetadata.widgetAddedAt);
 
   if (allStepsCompleted) {
     updatedMetadata.completed = true;
