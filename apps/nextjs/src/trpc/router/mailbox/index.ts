@@ -9,6 +9,7 @@ import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getMailboxInfo } from "@/lib/data/mailbox";
+import { completeOnboardingStep, OnboardingStepSchema } from "@/lib/data/onboarding";
 import { getClerkOrganization } from "@/lib/data/organization";
 import { getMemberStats } from "@/lib/data/stats";
 import { protectedProcedure } from "@/trpc/trpc";
@@ -125,43 +126,11 @@ export const mailboxRouter = {
   completeOnboardingStep: mailboxProcedure
     .input(
       z.object({
-        stepId: z.enum(["website", "email", "widget"]),
+        stepId: OnboardingStepSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const mailboxId = ctx.mailbox.id;
-      const mailbox = await getMailboxById(mailboxId);
-      if (!mailbox) throw new TRPCError({ code: "NOT_FOUND" });
-
-      const onboardingMetadata = mailbox.onboardingMetadata || { completed: false };
-      let updatedMetadata;
-
-      // Update the specific step
-      switch (input.stepId) {
-        case "website":
-          updatedMetadata = { ...onboardingMetadata, websiteConnected: true };
-          break;
-        case "email":
-          updatedMetadata = { ...onboardingMetadata, emailConnected: true };
-          break;
-        case "widget":
-          updatedMetadata = { ...onboardingMetadata, widgetAdded: true };
-          break;
-      }
-
-      // Check if all steps are completed
-      const allStepsCompleted =
-        updatedMetadata.websiteConnected && updatedMetadata.emailConnected && updatedMetadata.widgetAdded;
-
-      // Update the overall completion status if all steps are done
-      if (allStepsCompleted) {
-        updatedMetadata.completed = true;
-      }
-
-      // Update the database
-      await db.update(mailboxes).set({ onboardingMetadata: updatedMetadata }).where(eq(mailboxes.id, mailboxId));
-
-      return { success: true };
+      return await completeOnboardingStep(ctx.mailbox.id, input.stepId);
     }),
   members: mailboxProcedure
     .input(

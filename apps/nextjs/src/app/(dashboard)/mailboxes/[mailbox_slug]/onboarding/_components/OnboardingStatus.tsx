@@ -1,7 +1,7 @@
 "use client";
 
 import { inferRouterOutputs } from "@trpc/server";
-import { BookOpen, CheckCircle, ChevronDown, ChevronUp, Globe, Mail, Maximize, MessageSquare, Minimize, X } from "lucide-react";
+import { BookOpen, CheckCircle, ChevronDown, ChevronUp, Mail, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
@@ -19,7 +19,6 @@ type OnboardingStatusProps = {
   mailbox: RouterOutputs["mailbox"]["get"];
 };
 
-// Define types for onboarding steps
 type OnboardingStep = {
   id: string;
   title: string;
@@ -37,20 +36,19 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
   const [docsUrl, setDocsUrl] = useState("");
   const [loadingWebsite, setLoadingWebsite] = useState(false);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const completeOnboardingStepMutation = api.mailbox.completeOnboardingStep.useMutation();
 
-  // This would ideally come from the backend, but for now we'll mock it
-  // In a real implementation, these would be stored in the onboardingMetadata
   const onboardingSteps: OnboardingStep[] = [
     {
       id: "website",
-      title: "1. Add knowledge from your website",
+      title: "Add knowledge from your website",
       description: "Connect your website and import documentation to build Helper's knowledge base",
       icon: <BookOpen className="h-5 w-5" />,
       completed: mailbox.onboardingMetadata?.websiteConnected ?? false,
     },
     {
       id: "communication",
-      title: "2. Choose how to communicate",
+      title: "Connect Helper to your email or website",
       description: "Select at least one channel to communicate with your customers",
       icon: <MessageSquare className="h-5 w-5" />,
       completed: (mailbox.onboardingMetadata?.emailConnected || mailbox.onboardingMetadata?.widgetAdded) ?? false,
@@ -65,14 +63,13 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
     setExpandedStep(expandedStep === stepId ? null : stepId);
   };
 
-  const handleCompleteStep = async (stepId: string) => {
+  const handleCompleteStep = (stepId: string) => {
     setLoading(true);
     try {
-      // Call the TRPC endpoint to update the onboarding metadata
-      await api.mailbox.completeOnboardingStep.mutate({
+      completeOnboardingStepMutation.mutate({
+        mailboxSlug,
         stepId: stepId as "website" | "email" | "widget",
       });
-      router.refresh();
     } catch (error) {
       console.error(`Failed to complete onboarding step ${stepId}:`, error);
     } finally {
@@ -80,11 +77,14 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
     }
   };
 
+  const handleConnectEmail = () => {
+    location.href = `/api/connect/google?mailbox=${mailboxSlug}&redirect=/mailboxes/${mailboxSlug}/onboarding`;
+  };
+
   const handleGoToInbox = () => {
     router.push(`/mailboxes/${mailboxSlug}/conversations`);
   };
 
-  // Load website when the debounced URL changes
   useEffect(() => {
     if (expandedStep === "website" && debouncedWebsiteUrl) {
       handleLoadWebsite();
@@ -96,14 +96,12 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
 
     setLoadingWebsite(true);
 
-    // Ensure URL has protocol
     let urlToLoad = debouncedWebsiteUrl;
     if (!/^https?:\/\//i.test(urlToLoad)) {
       urlToLoad = `https://${urlToLoad}`;
       setWebsiteUrl(urlToLoad);
     }
 
-    // Set the src of the iframe to our proxy endpoint with mailbox parameters
     if (frameRef.current) {
       frameRef.current.src = `/api/proxy?url=${encodeURIComponent(urlToLoad)}&mailboxSlug=${encodeURIComponent(mailboxSlug)}`;
 
@@ -127,10 +125,9 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Left side - Steps */}
-        <div className="lg:w-1/3 space-y-4">
+        <div className="lg:w-2/5 space-y-4">
           {onboardingSteps.map((step) => (
-            <Card key={step.id} className={cn(step.completed && "border-green-400 bg-green-50")}>
+            <Card key={step.id} className={cn(step.completed ? "border-green-200 border-opacity-70" : "")}>
               <CardHeader className="p-4 cursor-pointer" onClick={() => toggleStep(step.id)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -143,14 +140,7 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                       {step.completed ? <CheckCircle className="h-5 w-5" /> : step.icon}
                     </div>
                     <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {step.title}
-                        {step.completed && (
-                          <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                            Completed
-                          </span>
-                        )}
-                      </CardTitle>
+                      <CardTitle className="text-lg flex items-center gap-2">{step.title}</CardTitle>
                       <CardDescription className="text-sm">{step.description}</CardDescription>
                     </div>
                   </div>
@@ -184,7 +174,7 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                         onClick={() => handleCompleteStep("website")}
                         disabled={loading || step.completed}
                       >
-                        Turn Website & Docs into AI Knowledge
+                        Turn into AI knowledge
                       </Button>
                     </div>
                   )}
@@ -197,12 +187,13 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
                           <h3 className="font-medium">Email Communication</h3>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Connect your support email (Gmail account supported) to receive and respond to customer inquiries.
+                          Connect your support email (Gmail account supported) to receive and respond to customer
+                          inquiries.
                         </p>
                         <Button
                           variant="default"
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                          onClick={() => handleCompleteStep("email")}
+                          onClick={handleConnectEmail}
                           disabled={loading || mailbox.onboardingMetadata?.emailConnected}
                         >
                           {mailbox.onboardingMetadata?.emailConnected ? (
@@ -257,10 +248,8 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
           </div>
         </div>
 
-        {/* Right side - Fake Browser */}
-        <div className="lg:w-2/3">
-          <div className="rounded-lg overflow-hidden border border-gray-200 shadow-md">
-            {/* Browser Header */}
+        <div className="lg:w-3/5">
+          <div className="rounded-lg overflow-hidden border border-gray-200 border-opacity-40 shadow-md">
             <div className="bg-gray-100 p-2 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex space-x-2">
@@ -276,7 +265,6 @@ export function OnboardingStatus({ mailboxSlug, mailbox }: OnboardingStatusProps
               </div>
             </div>
 
-            {/* Browser Content */}
             <div className="bg-white h-[600px] relative">
               {loadingWebsite && (
                 <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
