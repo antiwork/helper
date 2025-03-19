@@ -11,8 +11,6 @@ import {
   StarIcon,
   TrashIcon,
   UserIcon,
-  CurrencyDollarIcon,
-  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -24,8 +22,6 @@ import { useHelper } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { api } from "@/trpc/react";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -264,8 +260,6 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   const { sendPrompt } = useHelper();
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
-  const { nativePlatform } = useNativePlatform();
-  const router = useRouter();
 
   const generateRandomColors = useCallback(() => {
     const generateRandomColor = () =>
@@ -307,6 +301,9 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
 
     return () => window.removeEventListener("resize", setVH);
   }, []);
+
+  const { nativePlatform } = useNativePlatform();
+  const router = useRouter();
 
   if (nativePlatform) {
     router.push("/login");
