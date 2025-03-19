@@ -40,4 +40,4 @@ export async function completeOnboardingStep(mailboxId: number, stepId: Onboardi
   await db.update(mailboxes).set({ onboardingMetadata: updatedMetadata }).where(eq(mailboxes.id, mailbox.id));
 
   return { success: true };
-} 
+}
