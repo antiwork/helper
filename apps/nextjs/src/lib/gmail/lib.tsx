@@ -6,7 +6,6 @@ import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, mailboxes } from "@/db/schema";
 import AIReplyEmail from "@/emails/aiReply";
-import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { getFileStream } from "@/s3/utils";
 
 export const convertConversationMessageToRaw = async (
@@ -41,16 +40,7 @@ export const convertConversationMessageToRaw = async (
   let text;
 
   if (email.role === "ai_assistant") {
-    let platformCustomer = null;
-    if (email.emailFrom) platformCustomer = await getPlatformCustomer(email.conversation.mailbox.id, email.emailFrom);
-    const reactEmail = (
-      <AIReplyEmail
-        content={email.body ?? ""}
-        companyName={email.conversation.mailbox.name}
-        widgetHost={email.conversation.mailbox.widgetHost}
-        hasPlatformCustomer={!!platformCustomer}
-      />
-    );
+    const reactEmail = <AIReplyEmail content={email.body ?? ""} />;
     html = await render(reactEmail);
     text = await render(reactEmail, { plainText: true });
   } else {

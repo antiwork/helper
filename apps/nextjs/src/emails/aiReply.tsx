@@ -1,17 +1,14 @@
 import { Body, Head, Hr, Html, Img, Link, Markdown, Preview, Tailwind, Text } from "@react-email/components";
+import { getBaseUrl } from "@/components/constants";
 import tailwindConfig from "../../tailwind.config";
 
 type Props = {
   content: string;
-  widgetHost: string | null;
-  companyName: string;
-  hasPlatformCustomer: boolean;
 };
 
-// const baseUrl = getBaseUrl();
-const baseUrl = "https://helper.ai";
+const baseUrl = getBaseUrl();
 
-const AIReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer }: Props) => (
+const AIReplyEmail = ({ content }: Props) => (
   <Html>
     <Tailwind config={tailwindConfig}>
       <Head />
