@@ -11,7 +11,7 @@ type Props = {
 // const baseUrl = getBaseUrl();
 const baseUrl = "https://helper.ai";
 
-const AutoReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer }: Props) => (
+const AIReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer }: Props) => (
   <Html>
     <Tailwind config={tailwindConfig}>
       <Head />
@@ -20,22 +20,12 @@ const AutoReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer 
         <div className="text-sm mb-6">
           <Markdown>{content}</Markdown>
         </div>
-        <Text className="text-sm text-neutral-700 my-6">
-          To continue the conversation, reply to this email
-          {widgetHost && hasPlatformCustomer && (
-            <>
-              {" or "}
-              <Link href={widgetHost} target="_blank" className="text-blue-700 underline">
-                click here
-              </Link>{" "}
-              and open the notification message for our live chat
-            </>
-          )}
-          .
+        <Text className="text-sm opacity-60">
+          This response was created by our AI support agent. Need human support? Let us know in your reply.
         </Text>
-        <Hr className="mx-0 w-16" />
-        <Text className="text-neutral-500 text-xs leading-[22px] mt-3 mb-6">
-          Powered by{" "}
+        <Hr className="mx-0 my-6 w-16" />
+        <Text className="text-xs leading-[22px] mt-3 mb-6">
+          <span className="opacity-60">Powered by</span>
           <Link
             href={`${baseUrl}?utm_source=auto-reply-email&utm_medium=email`}
             target="_blank"
@@ -54,7 +44,7 @@ const AutoReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer 
   </Html>
 );
 
-AutoReplyEmail.PreviewProps = {
+AIReplyEmail.PreviewProps = {
   content:
     "Reasons you might want to use Gumroad are:\n\n- Gumroad makes it easy to sell digital products.\n- Gumroad makes it easy to sell physical products.\n- Gumroad makes it easy to sell services.",
   companyName: "Gumroad",
@@ -62,4 +52,4 @@ AutoReplyEmail.PreviewProps = {
   hasPlatformCustomer: true,
 } as Props;
 
-export default AutoReplyEmail;
+export default AIReplyEmail;

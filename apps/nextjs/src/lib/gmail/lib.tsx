@@ -5,7 +5,7 @@ import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, mailboxes } from "@/db/schema";
-import AutoReplyEmail from "@/emails/autoReply";
+import AIReplyEmail from "@/emails/aiReply";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { getFileStream } from "@/s3/utils";
 
@@ -44,7 +44,7 @@ export const convertConversationMessageToRaw = async (
     let platformCustomer = null;
     if (email.emailFrom) platformCustomer = await getPlatformCustomer(email.conversation.mailbox.id, email.emailFrom);
     const reactEmail = (
-      <AutoReplyEmail
+      <AIReplyEmail
         content={email.body ?? ""}
         companyName={email.conversation.mailbox.name}
         widgetHost={email.conversation.mailbox.widgetHost}
