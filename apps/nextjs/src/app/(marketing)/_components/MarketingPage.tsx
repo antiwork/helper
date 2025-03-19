@@ -101,7 +101,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                   <textarea
                     id="customerMessage"
                     name="customerMessage"
-                    rows={4}
+                    rows={2}
                     className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
                     placeholder="Enter customer message here"
                     defaultValue={`Hi! That's a great question. When you un-publish your product, it simply removes the product from the public view.`}
@@ -122,7 +122,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                   <textarea
                     id="helperResponse"
                     name="helperResponse"
-                    rows={5}
+                    rows={3}
                     className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
                     placeholder="Enter Helper response here"
                     defaultValue={`Hello, That's a great question. yes, your customers will still be able to read and open the ebook from their email even if you un publish it. Let me know how else I can assist today.`}
@@ -314,7 +314,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   const isDesktop = useMediaQuery({ minWidth: 1024 });
 
   const cardTypes = useMemo(() => {
-    return ["styleLinter", "autoDraft", "pinnedReplies", "promptConfig", "analytics", "integrations"];
+    return ["styleLinter", "autoDraft", "pinnedReplies", "promptConfig"];
   }, []);
 
   const generateRandomColors = useCallback(() => {
@@ -431,18 +431,24 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
         </section>
 
         <section className="py-6">
-          <div className="w-[85vw] mx-auto p-6 text-center">
+        <div className="w-[85vw] mx-auto p-6 text-center">
             <h2 className="font-sundry-narrow-bold text-4xl md:text-6xl 2xl:text-8xl font-bold text-secondary dark:text-primary">
               Better-than-human responses
             </h2>
           </div>
-          <div className="w-[85vw] mx-auto columns-1 md:columns-2 lg:columns-3 gap-6">
+          <div 
+            className="w-[85vw] max-w-7xl mx-auto md:px-8"
+            style={{
+              columnCount: isDesktop ? 2 : 1,
+              columnGap: '1.5rem'
+            }}
+          >
             {cardTypes.map((type, i) => (
               <div
                 key={i}
-                className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden break-inside-avoid mb-6"
+                className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid"
                 style={{
-                  minWidth: "350px",
+                  
                   height: "fit-content"
                 }}
               >
@@ -452,50 +458,36 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
 
                 <div className="bg-secondary p-8">
                   <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                    {i % 6 === 0 && (
+                    {i === 0 && (
                       <>
                         Craft authentic replies in your brand&apos;s voice with
                         <span className="underline-offset">&nbsp;style linter</span>
                       </>
                     )}
-                    {i % 6 === 1 && (
+                    {i === 1 && (
                       <>
                         Goodbye writer&apos;s block, hello
                         <span className="underline-offset">&nbsp;auto-generated drafts</span>
                       </>
                     )}
-                    {i % 6 === 2 && (
+                    {i === 2 && (
                       <>
                         Your best replies become the new standard with
                         <span className="underline-offset">&nbsp;FAQs</span>
                       </>
                     )}
-                    {i % 6 === 3 && (
+                    {i === 3 && (
                       <>
                         Set the rules and Helper will follow your lead with
                         <span className="underline-offset">&nbsp;prompt configuration</span>
                       </>
                     )}
-                    {i % 6 === 4 && (
-                      <>
-                        End the support scavenger hunt with
-                        <span className="underline-offset">&nbsp;in-app chat</span>
-                      </>
-                    )}
-                    {i % 6 === 5 && (
-                      <>
-                        Save time triaging with 
-                        <span className="underline-offset">&nbsp;auto-assign</span>
-                      </>
-                    )}
                   </h3>
                   <p className="text-md text-muted-foreground">
-                    {i % 6 === 0 && "Human touch, robot efficiency"}
-                    {i % 6 === 1 && "All you have to do is click send."}
-                    {i % 6 === 2 && "Pin your best and watch Helper learn"}
-                    {i % 6 === 3 && "Responses that fit your needs."}
-                    {i % 6 === 4 && "Zero tab-switching required"}
-                    {i % 6 === 5 && "Your AI matchmaker for customer questions"}
+                    {i === 0 && "Human touch, robot efficiency"}
+                    {i === 1 && "All you have to do is click send."}
+                    {i === 2 && "Pin your best and watch Helper learn"}
+                    {i === 3 && "Responses that fit your needs."}
                   </p>
                 </div>
               </div>
