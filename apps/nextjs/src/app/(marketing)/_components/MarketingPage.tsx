@@ -255,53 +255,6 @@ Please reply with this information. We'll review your request within 1-2 busines
           </div>
         </div>
       );
-    case "analytics":
-      return (
-        <div className="p-6">
-          <div className="max-w-xl flex-grow">
-            <div className="flex flex-col gap-4">
-              <div className="h-32 bg-muted rounded-lg flex items-center justify-center">
-                <div className="w-3/4 h-16 bg-secondary rounded-md flex items-center justify-center">
-                  <div className="w-2/3 h-8 bg-primary/10 rounded" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="h-16 bg-muted rounded-lg" />
-                <div className="h-16 bg-muted rounded-lg" />
-                <div className="h-16 bg-muted rounded-lg" />
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    case "integrations":
-      return (
-        <div className="p-6">
-          <div className="max-w-xl flex-grow space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-4 border border-border rounded-lg bg-background">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-start gap-3">
-                    <EnvelopeIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    <div className="text-lg">I didn't get paid.</div>
-                  </div>
-                  <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                    <span className="text-muted-foreground">Status</span>
-                    <div>
-                      <Badge className="bg-amber-50 text-amber-900 border-amber-200">OPEN</Badge>
-                    </div>
-                    <span className="text-muted-foreground">Assignee</span>
-                    <div className="flex items-center gap-2">
-                      <Avatar fallback="JD" size="sm" className="bg-amber-400" />
-                      <span>John Davis</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
     default:
       return null;
   }
@@ -311,6 +264,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   const { sendPrompt } = useHelper();
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
+  const [isMounted, setIsMounted] = useState(false);
   const isDesktop = useMediaQuery({ minWidth: 1024 });
 
   const cardTypes = useMemo(() => {
@@ -356,6 +310,10 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
     window.addEventListener("resize", setVH);
 
     return () => window.removeEventListener("resize", setVH);
+  }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
   const { nativePlatform } = useNativePlatform();
@@ -431,7 +389,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
         </section>
 
         <section className="py-6">
-        <div className="w-[85vw] mx-auto p-6 text-center">
+          <div className="w-[85vw] mx-auto p-6 text-center">
             <h2 className="font-sundry-narrow-bold text-4xl md:text-6xl 2xl:text-8xl font-bold text-secondary dark:text-primary">
               Better-than-human responses
             </h2>
@@ -439,7 +397,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
           <div 
             className="w-[85vw] max-w-7xl mx-auto md:px-8"
             style={{
-              columnCount: isDesktop ? 2 : 1,
+              columnCount: (!isMounted || isDesktop) ? 2 : 1,
               columnGap: '1.5rem'
             }}
           >
@@ -447,10 +405,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               <div
                 key={i}
                 className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid"
-                style={{
-                  
-                  height: "fit-content"
-                }}
+                style={{ height: "fit-content" }}
               >
                 <div className="flex-1">
                   <CardContent type={type} />
