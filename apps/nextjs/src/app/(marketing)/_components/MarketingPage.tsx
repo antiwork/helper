@@ -264,12 +264,8 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   const { sendPrompt } = useHelper();
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
-  const [isMounted, setIsMounted] = useState(false);
-  const isDesktop = useMediaQuery({ minWidth: 1024 });
-
-  const cardTypes = useMemo(() => {
-    return ["styleLinter", "autoDraft", "pinnedReplies", "promptConfig"];
-  }, []);
+  const { nativePlatform } = useNativePlatform();
+  const router = useRouter();
 
   const generateRandomColors = useCallback(() => {
     const generateRandomColor = () =>
@@ -311,13 +307,6 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
 
     return () => window.removeEventListener("resize", setVH);
   }, []);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const { nativePlatform } = useNativePlatform();
-  const router = useRouter();
 
   if (nativePlatform) {
     router.push("/login");
@@ -394,59 +383,58 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               Better-than-human responses
             </h2>
           </div>
-          <div 
-            className="w-[85vw] max-w-7xl mx-auto md:px-8"
-            style={{
-              columnCount: (!isMounted || isDesktop) ? 2 : 1,
-              columnGap: '1.5rem'
-            }}
-          >
-            {cardTypes.map((type, i) => (
-              <div
-                key={i}
-                className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid"
-                style={{ height: "fit-content" }}
-              >
-                <div className="flex-1">
-                  <CardContent type={type} />
-                </div>
-
-                <div className="bg-secondary p-8">
-                  <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                    {i === 0 && (
-                      <>
-                        Craft authentic replies in your brand&apos;s voice with
-                        <span className="underline-offset">&nbsp;style linter</span>
-                      </>
-                    )}
-                    {i === 1 && (
-                      <>
-                        Goodbye writer&apos;s block, hello
-                        <span className="underline-offset">&nbsp;auto-generated drafts</span>
-                      </>
-                    )}
-                    {i === 2 && (
-                      <>
-                        Your best replies become the new standard with
-                        <span className="underline-offset">&nbsp;FAQs</span>
-                      </>
-                    )}
-                    {i === 3 && (
-                      <>
-                        Set the rules and Helper will follow your lead with
-                        <span className="underline-offset">&nbsp;prompt configuration</span>
-                      </>
-                    )}
-                  </h3>
-                  <p className="text-md text-muted-foreground">
-                    {i === 0 && "Human touch, robot efficiency"}
-                    {i === 1 && "All you have to do is click send."}
-                    {i === 2 && "Pin your best and watch Helper learn"}
-                    {i === 3 && "Responses that fit your needs."}
-                  </p>
-                </div>
+          <div className="w-[85vw] max-w-7xl mx-auto md:px-8 columns-1 md:columns-2 gap-6">
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="styleLinter" />
               </div>
-            ))}
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Craft authentic replies in your brand&apos;s voice with
+                  <span className="underline-offset">&nbsp;style linter</span>
+                </h3>
+                <p className="text-md text-muted-foreground">Human touch, robot efficiency</p>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="autoDraft" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Goodbye writer&apos;s block, hello
+                  <span className="underline-offset">&nbsp;auto-generated drafts</span>
+                </h3>
+                <p className="text-md text-muted-foreground">All you have to do is click send.</p>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="pinnedReplies" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Your best replies become the new standard with
+                  <span className="underline-offset">&nbsp;FAQs</span>
+                </h3>
+                <p className="text-md text-muted-foreground">Pin your best and watch Helper learn</p>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="promptConfig" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Set the rules and Helper will follow your lead with
+                  <span className="underline-offset">&nbsp;prompt configuration</span>
+                </h3>
+                <p className="text-md text-muted-foreground">Responses that fit your needs.</p>
+              </div>
+            </div>
           </div>
         </section>
 
