@@ -1,11 +1,15 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { getBaseUrl } from "@/components/constants";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversationMessages, faqs } from "@/db/schema";
+import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { runAIObjectQuery } from "@/lib/ai";
 import { findSimilarInKnowledgeBank } from "@/lib/data/retrieval";
+import { postSlackMessage } from "@/lib/slack/client";
+import { getSuggestedEditButtons } from "@/lib/slack/shared";
 
 const suggestionResponseSchema = z.object({
   action: z.enum(["no_action", "create_entry", "update_entry"]),
@@ -47,7 +51,7 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   2. create_entry - Create a new entry in the knowledge bank. Choose this if the flagged issue is an entirely new problem that is not closely related to any existing entries.
   3. update_entry - Update an existing entry in the knowledge bank. Choose this if an existing entry is close to the flagged issue but appears to have missing or incorrect information.
   
-  If you choose create_entry or update_entry, provide the content for the new or updated entry.
+  If you choose create_entry or update_entry, provide the content for the new or updated entry. This should be only the bare information, without extra pleasantries or canned phrases. Use Markdown for any formatting.
   If you choose update_entry, specify which existing entry should be replaced by its ID.
   
   Respond with a JSON object with these fields:
@@ -89,13 +93,19 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   });
 
   if (suggestion.action === "create_entry") {
-    await db.insert(faqs).values({
-      content: suggestion.content || "",
-      mailboxId: mailbox.id,
-      suggested: true,
-      enabled: false,
-      messageId: message.id,
-    });
+    const newFaq = await db
+      .insert(faqs)
+      .values({
+        content: suggestion.content || "",
+        mailboxId: mailbox.id,
+        suggested: true,
+        enabled: false,
+        messageId: message.id,
+      })
+      .returning()
+      .then(takeUniqueOrThrow);
+
+    notifySuggestedEdit(newFaq, mailbox);
   } else if (suggestion.action === "update_entry" && suggestion.faqIdToReplace) {
     const suggestionToUpdate =
       existingSuggestions.find((faq) => faq.id === suggestion.faqIdToReplace) ||
@@ -111,18 +121,66 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
         })
         .where(eq(faqs.id, suggestion.faqIdToReplace));
     } else {
-      await db.insert(faqs).values({
-        content: suggestion.content || "",
-        mailboxId: mailbox.id,
-        suggested: true,
-        enabled: false,
-        suggestedReplacementForId: suggestion.action === "update_entry" ? suggestion.faqIdToReplace : null,
-        messageId: message.id,
-      });
+      const newFaq = await db
+        .insert(faqs)
+        .values({
+          content: suggestion.content || "",
+          mailboxId: mailbox.id,
+          suggested: true,
+          enabled: false,
+          suggestedReplacementForId: suggestion.action === "update_entry" ? suggestion.faqIdToReplace : null,
+          messageId: message.id,
+        })
+        .returning()
+        .then(takeUniqueOrThrow);
+
+      notifySuggestedEdit(newFaq, mailbox);
     }
   }
 
   return suggestion;
+};
+
+const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
+  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
+    return "Not posted, mailbox not linked to Slack or missing alert channel";
+  }
+
+  let originalContent = "";
+  if (faq.suggestedReplacementForId) {
+    const replacementFaq = await db.query.faqs.findFirst({
+      where: eq(faqs.id, faq.suggestedReplacementForId),
+    });
+    originalContent = replacementFaq?.content ?? "";
+  }
+
+  const messageTs = await postSlackMessage(mailbox.slackBotToken, {
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: originalContent
+            ? `💡 New suggested edit for the knowledge bank\n\n*Suggested content:*\n${faq.content}\n\n*This will overwrite the current entry:*\n${originalContent}`
+            : `💡 New suggested addition to the knowledge bank\n\n*Suggested content:*\n${faq.content}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `<${getBaseUrl()}/mailboxes/${mailbox.slug}/settings?tab=knowledge|View knowledge bank>`,
+        },
+      },
+      getSuggestedEditButtons(faq.id),
+    ],
+    channel: mailbox.slackAlertChannel,
+  });
+
+  await db
+    .update(faqs)
+    .set({ slackChannel: mailbox.slackAlertChannel, slackMessageTs: messageTs })
+    .where(eq(faqs.id, faq.id));
 };
 
 export default inngest.createFunction(

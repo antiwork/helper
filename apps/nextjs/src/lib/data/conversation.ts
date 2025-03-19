@@ -105,6 +105,7 @@ export const updateConversation = async (
       },
     });
   }
+
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
     await updateVipMessageOnClose(updatedConversation.id, byUserId);
 
@@ -187,6 +188,10 @@ export const serializeConversation = (
     isPrompt: conversation.isPrompt ?? false,
     isVisitor: conversation.isVisitor ?? false,
     embeddingText: conversation.embeddingText,
+    githubIssueNumber: conversation.githubIssueNumber,
+    githubIssueUrl: conversation.githubIssueUrl,
+    githubRepoOwner: conversation.githubRepoOwner,
+    githubRepoName: conversation.githubRepoName,
   };
 };
 

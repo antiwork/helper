@@ -5,6 +5,10 @@ import { faqs } from "./faqs";
 import { gmailSupportEmails } from "./gmailSupportEmails";
 import { mailboxesMetadataApi } from "./mailboxesMetadataApi";
 
+type OnboardingMetadata = {
+  completed: boolean;
+};
+
 export const mailboxes = pgTable(
   "mailboxes_mailbox",
   {
@@ -19,6 +23,9 @@ export const mailboxes = pgTable(
     slackBotToken: text(),
     slackBotUserId: text(),
     slackTeamId: text(),
+    githubInstallationId: text(),
+    githubRepoOwner: text(),
+    githubRepoName: text(),
     promptUpdatedAt: timestamp({ withTimezone: true, mode: "date" }).notNull(),
     widgetHMACSecret: varchar({ length: 255 }).notNull(),
     widgetDisplayMode: text().$type<"always" | "revenue_based" | "off">().notNull().default("off"),
@@ -29,7 +36,9 @@ export const mailboxes = pgTable(
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
     disableAutoResponseForVips: boolean().notNull().default(false),
-
+    onboardingMetadata: jsonb().$type<OnboardingMetadata>().default({
+      completed: false,
+    }),
     unused_escalationEmailBody: text("escalation_email_body"),
     unused_escalationExpectedResolutionHours: integer("escalation_expected_resolution_hours"),
   },

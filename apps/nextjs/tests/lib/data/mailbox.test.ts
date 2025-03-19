@@ -47,6 +47,10 @@ test("getMailboxInfo", async () => {
     vipChannelId: null,
     vipExpectedResponseHours: null,
     disableAutoResponseForVips: false,
+    githubConnectUrl: "https://github.com/apps/undefined/installations/new",
+    githubConnected: false,
+    githubRepoName: null,
+    githubRepoOwner: null,
   });
 
   const slackConnectUrl = new URL(info.slackConnectUrl);

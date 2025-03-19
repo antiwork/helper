@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useAssigneesPage } from "./assigneesPage";
 import { CommandList } from "./commandList";
+import { GitHubIssuePage } from "./githubIssuePage";
 import { useMainPage } from "./mainPage";
 import { NotesPage } from "./notesPage";
 import { usePreviousRepliesPage } from "./previousRepliesPage";
@@ -32,7 +33,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const internalInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "tools">("main");
+  const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "tools" | "github-issue">(
+    "main",
+  );
   const pageRef = useRef<string>("main");
   const { user: currentUser } = useUser();
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
@@ -94,6 +97,8 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
         return [];
       case "tools":
         return toolsPage.groups;
+      case "github-issue":
+        return [];
       default:
         return mainPageGroups;
     }
@@ -152,6 +157,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
       setSelectedItemId(null);
     } else if (selectedItem?.id === "add-note") {
       setPage("notes");
+      setSelectedItemId(null);
+    } else if (selectedItem?.id === "github-issue") {
+      setPage("github-issue");
       setSelectedItemId(null);
     } else {
       selectedItem?.onSelect();
@@ -217,6 +225,10 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     <FormPage onOpenChange={onOpenChange}>
       <ToolForm tool={toolsPage.selectedTool} onOpenChange={onOpenChange} />
     </FormPage>
+  ) : open && page === "github-issue" ? (
+    <FormPage onOpenChange={onOpenChange}>
+      <GitHubIssuePage onOpenChange={onOpenChange} />
+    </FormPage>
   ) : (
     <>
       <div>
@@ -226,7 +238,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
             page === "main" ? "Type a command..." : page === "tools" ? "Search tools..." : "Search previous replies..."
           }
           className="rounded-sm rounded-b-none"
-          iconsPrefix={<KeyboardShortcut>/</KeyboardShortcut>}
+          iconsPrefix={<KeyboardShortcut className="text-muted-foreground">/</KeyboardShortcut>}
           onFocus={() => onOpenChange(true)}
           onBlur={() => {
             const oldPage = pageRef.current;

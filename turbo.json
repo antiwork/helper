@@ -99,6 +99,10 @@
     "PROXY_URL",
     "PROXY_SECRET_KEY",
     "GEMINI_API_KEY"
+    "GITHUB_CLIENT_SECRET",
+    "GITHUB_APP_ID",
+    "GITHUB_APP_SLUG",
+    "GITHUB_PRIVATE_KEY"
   ],
   "globalPassThroughEnv": [
     "CI",

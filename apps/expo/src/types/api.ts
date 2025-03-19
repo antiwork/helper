@@ -99,6 +99,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           slackConnected: boolean;
           slackConnectUrl: string;
           slackAlertChannel: string | null;
+          githubConnected: boolean;
+          githubConnectUrl: string;
+          githubRepoOwner: string | null;
+          githubRepoName: string | null;
           responseGeneratorPrompt: string[];
           clerkOrganizationId: string;
           subscription: {
@@ -122,6 +126,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           mailboxSlug: string;
           responseGeneratorPrompt?: string[] | undefined;
           slackAlertChannel?: string | undefined;
+          githubRepoOwner?: string | undefined;
+          githubRepoName?: string | undefined;
           widgetDisplayMode?: "always" | "revenue_based" | "off" | undefined;
           widgetDisplayMinValue?: number | undefined;
           autoRespondEmailToChat?: boolean | undefined;
@@ -240,10 +246,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat";
+              source: "email" | "chat" | "chat#prompt";
               isPrompt: boolean;
               isVisitor: boolean;
               embeddingText: string | null;
+              githubIssueNumber: number | null;
+              githubIssueUrl: string | null;
+              githubRepoOwner: string | null;
+              githubRepoName: string | null;
             }[];
             total: number;
             defaultSort: "oldest" | "highest_value";
@@ -341,10 +351,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   id: number;
                   createdAt: Date;
                   clerkUserId: string | null;
-                  body: string;
-                  role: string | null;
                   slackChannel: string | null;
                   slackMessageTs: string | null;
+                  body: string;
+                  role: string | null;
                 }
               | {
                   isNew: boolean;
@@ -387,10 +397,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat";
+            source: "email" | "chat" | "chat#prompt";
             isPrompt: boolean;
             isVisitor: boolean;
             embeddingText: string | null;
+            githubIssueNumber: number | null;
+            githubIssueUrl: string | null;
+            githubRepoOwner: string | null;
+            githubRepoName: string | null;
           }[];
         }>;
         get: import("@trpc/server").TRPCQueryProcedure<{
@@ -487,10 +501,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   id: number;
                   createdAt: Date;
                   clerkUserId: string | null;
-                  body: string;
-                  role: string | null;
                   slackChannel: string | null;
                   slackMessageTs: string | null;
+                  body: string;
+                  role: string | null;
                 }
               | {
                   isNew: boolean;
@@ -533,10 +547,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               links: Record<string, string> | null;
             } | null;
             summary: string[] | null;
-            source: "email" | "chat";
+            source: "email" | "chat" | "chat#prompt";
             isPrompt: boolean;
             isVisitor: boolean;
             embeddingText: string | null;
+            githubIssueNumber: number | null;
+            githubIssueUrl: string | null;
+            githubRepoOwner: string | null;
+            githubRepoName: string | null;
           };
         }>;
         create: import("@trpc/server").TRPCMutationProcedure<{
@@ -754,6 +772,46 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             };
           }>;
         };
+        github: {
+          createGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              body: string;
+              title: string;
+            };
+            output: {
+              issueNumber: number;
+              issueUrl: string;
+              issueId: number;
+            };
+          }>;
+          linkExistingGitHubIssue: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              issueNumber: number;
+            };
+            output: {
+              issueNumber: number;
+              issueUrl: string;
+            };
+          }>;
+          listRepositoryIssues: import("@trpc/server").TRPCQueryProcedure<{
+            input: {
+              mailboxSlug: string;
+              conversationSlug: string;
+              state?: "open" | "closed" | "all" | undefined;
+            };
+            output: {
+              number: number;
+              title: string;
+              state: string;
+              url: string;
+              updatedAt: string;
+            }[];
+          }>;
+        };
         findSimilar: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
@@ -784,10 +842,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                 links: Record<string, string> | null;
               } | null;
               summary: string[] | null;
-              source: "email" | "chat";
+              source: "email" | "chat" | "chat#prompt";
               isPrompt: boolean;
               isVisitor: boolean;
               embeddingText: string | null;
+              githubIssueNumber: number | null;
+              githubIssueUrl: string | null;
+              githubRepoOwner: string | null;
+              githubRepoName: string | null;
             }[];
             similarityMap: Record<string, number> | undefined;
           } | null;
@@ -836,8 +898,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             suggested: boolean;
             suggestedReplacementForId: number | null;
             messageId: number | null;
-            unused_question: string;
-            unused_body: string;
+            slackChannel: string | null;
+            slackMessageTs: string | null;
           };
         }>;
         update: import("@trpc/server").TRPCMutationProcedure<{
@@ -856,13 +918,28 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             suggested: boolean;
             suggestedReplacementForId: number | null;
             messageId: number | null;
-            unused_question: string;
-            unused_body: string;
+            slackChannel: string | null;
+            slackMessageTs: string | null;
             createdAt: Date;
             updatedAt: Date;
           };
         }>;
         delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+          };
+          output: void;
+        }>;
+        accept: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+            content?: string | undefined;
+          };
+          output: void;
+        }>;
+        reject: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
             id: number;
@@ -883,6 +960,34 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         disconnect: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
+          };
+          output: void;
+        }>;
+      };
+      github: {
+        repositories: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: {
+            id: number;
+            name: string;
+            fullName: string;
+            owner: string;
+            private: boolean;
+          }[];
+        }>;
+        disconnect: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: void;
+        }>;
+        updateRepo: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            repoOwner: string;
+            repoName: string;
           };
           output: void;
         }>;
