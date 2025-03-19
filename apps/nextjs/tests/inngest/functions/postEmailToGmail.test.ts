@@ -12,7 +12,7 @@ import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import { postEmailToGmail } from "@/inngest/functions/postEmailToGmail";
 import { getClerkOrganization, setPrivateMetadata } from "@/lib/data/organization";
 import { getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
-import { convertEmailToRaw } from "@/lib/gmail/lib";
+import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import * as sentryUtils from "@/lib/shared/sentry";
 
 vi.mock("@/lib/resend/client", () => ({
@@ -137,8 +137,8 @@ describe("postEmailToGmail", () => {
       vi.mocked(setPrivateMetadata).mockResolvedValue(organization);
 
       expect(await postEmailToGmail(message.id)).toBeNull();
-      expect(convertEmailToRaw).toHaveBeenCalledTimes(1);
-      expect(convertEmailToRaw).toHaveBeenCalledWith(
+      expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
+      expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
           ...message,
           conversation: expect.objectContaining({
@@ -191,8 +191,8 @@ describe("postEmailToGmail", () => {
       vi.mocked(setPrivateMetadata).mockResolvedValue(organization);
 
       expect(await postEmailToGmail(message.id)).toBeNull();
-      expect(convertEmailToRaw).toHaveBeenCalledTimes(1);
-      expect(convertEmailToRaw).toHaveBeenCalledWith(
+      expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
+      expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
           ...message,
           conversation: expect.objectContaining({

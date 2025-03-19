@@ -240,6 +240,7 @@ export const generateAIResponse = async ({
   conversationId,
   email,
   readPageTool = null,
+  screenshotAvailable = false,
   onFinish,
   dataStream,
   model = openai(COMPLETION_MODEL),
@@ -252,6 +253,7 @@ export const generateAIResponse = async ({
   conversationId: number;
   email: string | null;
   readPageTool?: ReadPageToolConfig | null;
+  screenshotAvailable?: boolean;
   onFinish?: (params: {
     text: string;
     finishReason: string;
@@ -289,10 +291,12 @@ export const generateAIResponse = async ({
       parameters: z.object({}),
     };
   }
-  tools.take_screenshot = {
-    description: "take a screenshot of the current page including any error messages",
-    parameters: z.object({}),
-  };
+  if (screenshotAvailable) {
+    tools.take_screenshot = {
+      description: "take a screenshot of the current page including any error messages",
+      parameters: z.object({}),
+    };
+  }
 
   const traceId = randomUUID();
   const finalMessages = [...systemMessages, ...coreMessages];
@@ -463,7 +467,6 @@ export const respondWithAI = async ({
   messageId: number;
   readPageTool: ReadPageToolConfig | null;
   onResponse?: (result: {
-    text: string;
     messages: Message[];
     platformCustomer: PlatformCustomer | null;
     isPromptConversation: boolean;
@@ -495,7 +498,6 @@ export const respondWithAI = async ({
       sendEmail,
     });
     onResponse?.({
-      text,
       messages,
       platformCustomer,
       isPromptConversation,
@@ -549,6 +551,7 @@ export const respondWithAI = async ({
         conversationId: conversation.id,
         email: userEmail,
         readPageTool,
+        screenshotAvailable: !sendEmail,
         addReasoning: true,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata }) {

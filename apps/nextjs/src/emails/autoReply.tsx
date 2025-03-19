@@ -1,5 +1,4 @@
-import { Body, Container, Head, Hr, Html, Img, Link, Preview, Tailwind, Text } from "@react-email/components";
-import { getBaseUrl } from "@/components/constants";
+import { Body, Head, Hr, Html, Img, Link, Markdown, Preview, Tailwind, Text } from "@react-email/components";
 import tailwindConfig from "../../tailwind.config";
 
 type Props = {
@@ -9,62 +8,58 @@ type Props = {
   hasPlatformCustomer: boolean;
 };
 
-const baseUrl = getBaseUrl();
+// const baseUrl = getBaseUrl();
+const baseUrl = "https://helper.ai";
 
 const AutoReplyEmail = ({ content, companyName, widgetHost, hasPlatformCustomer }: Props) => (
   <Html>
     <Tailwind config={tailwindConfig}>
       <Head />
       <Preview>{content}</Preview>
-      <Body className="bg-white font-system-ui">
-        <Container className="px-3 mx-auto">
-          <Text className="text-sm my-6">
-            {content}
-            <p>
-              Best,
-              <br />
-              {companyName}
-            </p>
-          </Text>
-          <Text className="text-neutral-700 text-sm my-6">
-            To continue the conversation, reply to this email
-            {widgetHost && hasPlatformCustomer && (
-              <>
-                {" or "}
-                <Link href={widgetHost} target="_blank" className="text-blue-700 text-sm underline block mb-4">
-                  click here
-                </Link>{" "}
-                and open the notification message to continue in our live chat.
-              </>
-            )}
-            .
-          </Text>
-          <Hr />
-          <Text className="text-neutral-500 text-xs leading-[22px] mt-3 mb-6">
-            Powered by{" "}
-            <Link
-              href={`https://helper.ai?utm_source=auto-reply-email&utm_medium=email`}
-              target="_blank"
-              className="text-neutral-500 no-underline"
-            >
-              <Img
-                src={`${baseUrl}/logo_mahogany_900_for_email.png`}
-                width="64"
-                alt="Helper Logo"
-                className="align-middle ml-0.5"
-              />
-            </Link>
-          </Text>
-        </Container>
+      <Body className="font-system-ui">
+        <div className="text-sm mb-6">
+          <Markdown>{content}</Markdown>
+        </div>
+        <Text className="text-sm text-neutral-700 my-6">
+          To continue the conversation, reply to this email
+          {widgetHost && hasPlatformCustomer && (
+            <>
+              {" or "}
+              <Link href={widgetHost} target="_blank" className="text-blue-700 underline">
+                click here
+              </Link>{" "}
+              and open the notification message for our live chat
+            </>
+          )}
+          .
+        </Text>
+        <Hr className="mx-0 w-16" />
+        <Text className="text-neutral-500 text-xs leading-[22px] mt-3 mb-6">
+          Powered by{" "}
+          <Link
+            href={`${baseUrl}?utm_source=auto-reply-email&utm_medium=email`}
+            target="_blank"
+            className="text-neutral-500 no-underline"
+          >
+            <Img
+              src={`${baseUrl}/logo_mahogany_900_for_email.png`}
+              width="64"
+              alt="Helper Logo"
+              className="align-middle ml-0.5"
+            />
+          </Link>
+        </Text>
       </Body>
     </Tailwind>
   </Html>
 );
 
 AutoReplyEmail.PreviewProps = {
-  content: "Hello, how are you?",
+  content:
+    "Reasons you might want to use Gumroad are:\n\n- Gumroad makes it easy to sell digital products.\n- Gumroad makes it easy to sell physical products.\n- Gumroad makes it easy to sell services.",
   companyName: "Gumroad",
   widgetHost: "https://example.com",
+  hasPlatformCustomer: true,
 } as Props;
 
 export default AutoReplyEmail;

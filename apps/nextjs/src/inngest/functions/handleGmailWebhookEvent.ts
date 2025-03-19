@@ -190,6 +190,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
   //       https://developers.google.com/gmail/api/guides/sync#full_synchronization
   const historyId = gmailSupportEmail.historyId ?? data.historyId;
   const response = await getMessagesFromHistoryId(client, historyId.toString());
+  console.log("response", response.data);
   if (response.status !== 404) {
     assertSuccessResponseOrThrow(response);
     histories = response.data.history ?? [];
@@ -200,114 +201,113 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         .history ?? [];
   }
 
+  const messagesAdded = histories.flatMap((h) => h.messagesAdded ?? []);
   const results: string[] = [];
 
-  for (const history of histories) {
-    for (const { message } of history.messagesAdded ?? []) {
-      if (!(message?.id && message.threadId)) {
-        results.push("Skipped - missing message ID or thread ID");
+  for (const { message } of messagesAdded) {
+    if (!(message?.id && message.threadId)) {
+      results.push("Skipped - missing message ID or thread ID");
+      continue;
+    }
+
+    const gmailMessageId = message.id;
+    const threadId = message.threadId;
+    const labelIds = message.labelIds ?? [];
+
+    const existingEmail = await db.query.conversationMessages.findFirst({
+      where: eq(conversationMessages.gmailMessageId, gmailMessageId),
+    });
+    if (existingEmail) {
+      results.push(`Skipped - message ${gmailMessageId} already exists`);
+      continue;
+    }
+
+    try {
+      const response = await getMessageById(client, gmailMessageId).then(assertSuccessResponseOrThrow);
+      const parsedEmail = await simpleParser(
+        Buffer.from(assertDefined(response.data.raw), "base64url").toString("utf-8"),
+      );
+      const { parsedEmailFrom } = getParsedEmailInfo(parsedEmail);
+
+      const emailSentFromMailbox = parsedEmailFrom.address === gmailSupportEmail.email;
+      if (emailSentFromMailbox) {
+        results.push(`Skipped - message ${gmailMessageId} sent from mailbox`);
         continue;
       }
 
-      const gmailMessageId = message.id;
-      const threadId = message.threadId;
-      const labelIds = message.labelIds ?? [];
+      const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
+      const isFirstMessage = isNewThread(gmailMessageId, threadId);
+      const shouldIgnore =
+        (!!staffUser && !isFirstMessage) ||
+        labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
+        (await matchesTransactionalEmailAddress(parsedEmailFrom.address));
 
-      const existingEmail = await db.query.conversationMessages.findFirst({
-        where: eq(conversationMessages.gmailMessageId, gmailMessageId),
-      });
-      if (existingEmail) {
-        results.push(`Skipped - message ${gmailMessageId} already exists`);
-        continue;
-      }
+      const createNewConversation = async () => {
+        return await db
+          .insert(conversations)
+          .values({
+            mailboxId: mailbox.id,
+            emailFrom: parsedEmailFrom.address,
+            emailFromName: parsedEmailFrom.name,
+            subject: parsedEmail.subject,
+            status: shouldIgnore || mailbox.autoRespondEmailToChat ? "closed" : "open",
+            closedAt: shouldIgnore || mailbox.autoRespondEmailToChat ? new Date() : null,
+            conversationProvider: "gmail",
+            source: "email",
+            isPrompt: false,
+            isVisitor: false,
+          })
+          .returning({ id: conversations.id, slug: conversations.slug, status: conversations.status })
+          .then(takeUniqueOrThrow);
+      };
 
-      try {
-        const response = await getMessageById(client, gmailMessageId).then(assertSuccessResponseOrThrow);
-        const parsedEmail = await simpleParser(
-          Buffer.from(assertDefined(response.data.raw), "base64url").toString("utf-8"),
-        );
-        const { parsedEmailFrom } = getParsedEmailInfo(parsedEmail);
-
-        const emailSentFromMailbox = parsedEmailFrom.address === gmailSupportEmail.email;
-        if (emailSentFromMailbox) {
-          results.push(`Skipped - message ${gmailMessageId} sent from mailbox`);
-          continue;
-        }
-
-        const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
-        const isFirstMessage = isNewThread(gmailMessageId, threadId);
-        const shouldIgnore =
-          (!!staffUser && !isFirstMessage) ||
-          labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
-          (await matchesTransactionalEmailAddress(parsedEmailFrom.address));
-
-        const createNewConversation = async () => {
-          return await db
-            .insert(conversations)
-            .values({
-              mailboxId: mailbox.id,
-              emailFrom: parsedEmailFrom.address,
-              emailFromName: parsedEmailFrom.name,
-              subject: parsedEmail.subject,
-              status: shouldIgnore || mailbox.autoRespondEmailToChat ? "closed" : "open",
-              closedAt: shouldIgnore || mailbox.autoRespondEmailToChat ? new Date() : null,
-              conversationProvider: "gmail",
-              source: "email",
-              isPrompt: false,
-              isVisitor: false,
-            })
-            .returning({ id: conversations.id, slug: conversations.slug, status: conversations.status })
-            .then(takeUniqueOrThrow);
-        };
-
-        let conversation;
-        if (isNewThread(gmailMessageId, threadId)) {
-          conversation = await createNewConversation();
-        } else {
-          const previousEmail = await db.query.conversationMessages.findFirst({
-            where: eq(conversationMessages.gmailThreadId, threadId),
-            orderBy: (emails, { desc }) => [desc(emails.createdAt)],
-            with: {
-              conversation: {
-                columns: {
-                  id: true,
-                  slug: true,
-                  status: true,
-                },
+      let conversation;
+      if (isNewThread(gmailMessageId, threadId)) {
+        conversation = await createNewConversation();
+      } else {
+        const previousEmail = await db.query.conversationMessages.findFirst({
+          where: eq(conversationMessages.gmailThreadId, threadId),
+          orderBy: (emails, { desc }) => [desc(emails.createdAt)],
+          with: {
+            conversation: {
+              columns: {
+                id: true,
+                slug: true,
+                status: true,
               },
             },
-          });
-          // If a conversation doesn't already exist for this email, create one anyway
-          // (since we likely dropped the initial email).
-          conversation = previousEmail?.conversation ?? (await createNewConversation());
-        }
-        if (conversation.status === "closed" && !shouldIgnore) {
-          await updateConversation(conversation.id, { set: { status: "open" } });
-        }
+          },
+        });
+        // If a conversation doesn't already exist for this email, create one anyway
+        // (since we likely dropped the initial email).
+        conversation = previousEmail?.conversation ?? (await createNewConversation());
+      }
+      if (conversation.status === "closed" && !shouldIgnore) {
+        await updateConversation(conversation.id, { set: { status: "open" } });
+      }
 
-        const newEmail = await createMessageAndProcessAttachments(
-          mailbox.id,
-          parsedEmail,
-          gmailMessageId,
-          threadId,
-          conversation,
-          staffUser,
-        );
+      const newEmail = await createMessageAndProcessAttachments(
+        mailbox.id,
+        parsedEmail,
+        gmailMessageId,
+        threadId,
+        conversation,
+        staffUser,
+      );
 
-        if (!shouldIgnore) {
-          // TODO: make sure respondToEmail sets to open correctly
-          // TODO: make this a job?
-          await respondToEmail(newEmail.id);
-          results.push(`Created and responded to message ${newEmail.id}`);
-          continue;
-        }
-
-        results.push(`Created message ${newEmail.id} (no response needed)`);
-      } catch (error) {
-        captureExceptionAndThrowIfDevelopment(error);
-        results.push(`Error processing message ${gmailMessageId}: ${error}`);
+      if (!shouldIgnore) {
+        // TODO: make sure respondToEmail sets to open correctly
+        // TODO: make this a job?
+        await respondToEmail(newEmail.id);
+        results.push(`Created and responded to message ${newEmail.id}`);
         continue;
       }
+
+      results.push(`Created message ${newEmail.id} (no response needed)`);
+    } catch (error) {
+      captureExceptionAndThrowIfDevelopment(error);
+      results.push(`Error processing message ${gmailMessageId}: ${error}`);
+      continue;
     }
   }
 
@@ -316,7 +316,11 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
     .set({ historyId: data.historyId })
     .where(eq(gmailSupportEmails.id, gmailSupportEmail.id));
 
-  return { results };
+  return {
+    data: env.NODE_ENV === "development" ? data : undefined,
+    messages: messagesAdded.length,
+    results,
+  };
 };
 
 const addressesToString = (value: AddressObject | AddressObject[]) => {

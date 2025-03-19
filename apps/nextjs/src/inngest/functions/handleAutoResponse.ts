@@ -2,13 +2,11 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import AutoReplyEmail from "@/emails/autoReply";
 import { inngest } from "@/inngest/client";
 import { checkTokenCountAndSummarizeIfNeeded, respondWithAI } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
-import { sendEmail } from "@/lib/resend/client";
 
 export const handleAutoResponse = async (messageId: number) => {
   const message = await db.query.conversationMessages
@@ -27,7 +25,7 @@ export const handleAutoResponse = async (messageId: number) => {
   const messageText = cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "");
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
 
-  await respondWithAI({
+  const response = await respondWithAI({
     conversation: message.conversation,
     mailbox: message.conversation.mailbox,
     userEmail: message.emailFrom,
@@ -39,7 +37,7 @@ export const handleAutoResponse = async (messageId: number) => {
     messageId: message.id,
     readPageTool: null,
     sendEmail: true,
-    onResponse: async ({ text, platformCustomer }) => {
+    onResponse: async ({ platformCustomer, humanSupportRequested }) => {
       await db.transaction(async (tx) => {
         if (platformCustomer) {
           await createMessageNotification({
@@ -51,26 +49,23 @@ export const handleAutoResponse = async (messageId: number) => {
           });
         }
 
-        await sendEmail({
-          from: "Helper <no-reply@helper.ai>",
-          to: assertDefined(message.emailFrom),
-          subject: `Re: ${message.conversation.subject ?? "(no subject)"}`,
-          react: AutoReplyEmail({
-            content: text,
-            companyName: message.conversation.mailbox.name,
-            widgetHost: message.conversation.mailbox.widgetHost,
-            hasPlatformCustomer: !!platformCustomer,
-          }),
-        });
-
-        await updateConversation(
-          message.conversationId,
-          { set: { conversationProvider: "chat", status: "closed" } },
-          tx,
-        );
+        if (!humanSupportRequested) {
+          await updateConversation(
+            message.conversationId,
+            { set: { conversationProvider: "chat", status: "closed" } },
+            tx,
+          );
+        }
       });
     },
   });
+
+  // Consume the response to make sure we wait for the AI to generate it
+  const reader = assertDefined(response.body).getReader();
+  while (true) {
+    const { done } = await reader.read();
+    if (done) break;
+  }
 
   return { message: `Auto response sent for message ${messageId}` };
 };
