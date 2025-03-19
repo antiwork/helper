@@ -36,13 +36,40 @@ export const getActionButtons = (): KnownBlock => ({
   ],
 });
 
+export const getSuggestedEditButtons = (faqId: number): KnownBlock => ({
+  type: "actions",
+  block_id: `suggested_edit_actions_${faqId}`,
+  elements: [
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Approve" },
+      action_id: "approve_suggested_edit",
+      value: faqId.toString(),
+      style: "primary",
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Reject" },
+      action_id: "reject_suggested_edit",
+      value: faqId.toString(),
+      style: "danger",
+    },
+    {
+      type: "button",
+      text: { type: "plain_text", text: "Tweak & Approve" },
+      action_id: "tweak_suggested_edit",
+      value: faqId.toString(),
+    },
+  ],
+});
+
 type SlackMessage = {
   conversationId: number;
   slackChannel: string | null;
   slackMessageTs: string | null;
 };
 
-export const handleSlackAction = async (message: SlackMessage, payload: any) => {
+export const handleMessageSlackAction = async (message: SlackMessage, payload: any) => {
   if (!message.slackMessageTs || !message.slackChannel) return;
 
   const conversation = assertDefined(

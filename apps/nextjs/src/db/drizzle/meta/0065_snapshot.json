@@ -1,5 +1,5 @@
 {
-  "id": "36c71b82-c83c-45e3-bf13-d554d3ebe033",
+  "id": "4ad71d40-d393-4016-873f-f6a251a45bba",
   "prevId": "68b5070e-bea0-4043-be17-24ac0c582065",
   "version": "7",
   "dialect": "postgresql",
@@ -838,6 +838,30 @@
           "primaryKey": false,
           "notNull": false
         },
+        "github_issue_number": {
+          "name": "github_issue_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_issue_url": {
+          "name": "github_issue_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_owner": {
+          "name": "github_repo_owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_name": {
+          "name": "github_repo_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "is_prompt": {
           "name": "is_prompt",
           "type": "boolean",
@@ -1365,17 +1389,17 @@
           "primaryKey": false,
           "notNull": false
         },
-        "question": {
-          "name": "question",
+        "slack_channel": {
+          "name": "slack_channel",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "body": {
-          "name": "body",
+        "slack_message_ts": {
+          "name": "slack_message_ts",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         }
       },
       "indexes": {
@@ -1801,6 +1825,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "github_installation_id": {
+          "name": "github_installation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_owner": {
+          "name": "github_repo_owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "github_repo_name": {
+          "name": "github_repo_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "prompt_updated_at": {
           "name": "prompt_updated_at",
           "type": "timestamp with time zone",
@@ -1863,6 +1905,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "onboarding_metadata": {
+          "name": "onboarding_metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"completed\":false}'::jsonb"
         },
         "escalation_email_body": {
           "name": "escalation_email_body",

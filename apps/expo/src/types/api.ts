@@ -351,10 +351,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   id: number;
                   createdAt: Date;
                   clerkUserId: string | null;
-                  body: string;
-                  role: string | null;
                   slackChannel: string | null;
                   slackMessageTs: string | null;
+                  body: string;
+                  role: string | null;
                 }
               | {
                   isNew: boolean;
@@ -501,10 +501,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   id: number;
                   createdAt: Date;
                   clerkUserId: string | null;
-                  body: string;
-                  role: string | null;
                   slackChannel: string | null;
                   slackMessageTs: string | null;
+                  body: string;
+                  role: string | null;
                 }
               | {
                   isNew: boolean;
@@ -898,8 +898,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             suggested: boolean;
             suggestedReplacementForId: number | null;
             messageId: number | null;
-            unused_question: string;
-            unused_body: string;
+            slackChannel: string | null;
+            slackMessageTs: string | null;
           };
         }>;
         update: import("@trpc/server").TRPCMutationProcedure<{
@@ -918,13 +918,28 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             suggested: boolean;
             suggestedReplacementForId: number | null;
             messageId: number | null;
-            unused_question: string;
-            unused_body: string;
+            slackChannel: string | null;
+            slackMessageTs: string | null;
             createdAt: Date;
             updatedAt: Date;
           };
         }>;
         delete: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+          };
+          output: void;
+        }>;
+        accept: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            id: number;
+            content?: string | undefined;
+          };
+          output: void;
+        }>;
+        reject: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
             id: number;
