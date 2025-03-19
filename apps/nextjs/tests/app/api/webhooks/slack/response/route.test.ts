@@ -4,14 +4,14 @@ import { userFactory } from "@tests/support/factories/users";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/webhooks/slack/response/route";
 import { verifySlackRequest } from "@/lib/slack/client";
-import { handleSlackAction } from "@/lib/slack/shared";
+import { handleMessageSlackAction } from "@/lib/slack/shared";
 
 vi.mock("@/lib/slack/client", () => ({
   verifySlackRequest: vi.fn(),
 }));
 
 vi.mock("@/lib/slack/shared", () => ({
-  handleSlackAction: vi.fn(),
+  handleMessageSlackAction: vi.fn(),
 }));
 
 describe("POST /api/webhooks/slack/response", () => {
@@ -70,7 +70,7 @@ describe("POST /api/webhooks/slack/response", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(200);
-    expect(handleSlackAction).toHaveBeenCalledWith(
+    expect(handleMessageSlackAction).toHaveBeenCalledWith(
       {
         conversationId: conversation.id,
         slackChannel: message.slackChannel,

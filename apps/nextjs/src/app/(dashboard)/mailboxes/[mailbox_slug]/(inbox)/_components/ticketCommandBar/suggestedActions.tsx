@@ -57,12 +57,7 @@ export function SuggestedActions({
               );
             case "assign":
               const assignee = orgMembers?.find((m) => m.id === t.clerkUserId);
-              if (!assignee)
-                return (
-                  <span key={`${t.type}-${index}`} className="flex-shrink-0 text-xs text-muted-foreground">
-                    Assign to {t.clerkUserId}
-                  </span>
-                );
+              if (!assignee) return null;
               return (
                 <Button
                   key={`${t.type}-${index}`}
