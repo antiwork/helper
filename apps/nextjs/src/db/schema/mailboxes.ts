@@ -5,11 +5,13 @@ import { faqs } from "./faqs";
 import { gmailSupportEmails } from "./gmailSupportEmails";
 import { mailboxesMetadataApi } from "./mailboxesMetadataApi";
 
-type OnboardingMetadata = {
+export type OnboardingMetadata = {
   completed: boolean;
   emailConnectedAt?: Date;
   widgetAddedAt?: Date;
   knowledgeAddedAt?: Date;
+  websiteUrl?: string;
+  docsUrl?: string;
 };
 
 export const mailboxes = pgTable(

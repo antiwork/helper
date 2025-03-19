@@ -127,10 +127,11 @@ export const mailboxRouter = {
     .input(
       z.object({
         stepId: OnboardingStepSchema,
+        additionalMetadata: z.record(z.any()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await completeOnboardingStep(ctx.mailbox.id, input.stepId);
+      return await completeOnboardingStep(ctx.mailbox.id, input.stepId, input.additionalMetadata);
     }),
   members: mailboxProcedure
     .input(

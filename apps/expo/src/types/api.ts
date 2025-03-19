@@ -121,9 +121,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           disableAutoResponseForVips: boolean;
           onboardingMetadata: {
             completed: boolean;
-            websiteConnected?: boolean | undefined;
-            emailConnected?: boolean | undefined;
-            widgetAdded?: boolean | undefined;
+            emailConnectedAt?: Date | undefined;
+            widgetAddedAt?: Date | undefined;
+            knowledgeAddedAt?: Date | undefined;
           } | null;
         };
       }>;
@@ -149,6 +149,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         input: {
           mailboxSlug: string;
           stepId: "email" | "website" | "widget";
+          additionalMetadata?: Record<string, any> | undefined;
         };
         output: {
           success: boolean;

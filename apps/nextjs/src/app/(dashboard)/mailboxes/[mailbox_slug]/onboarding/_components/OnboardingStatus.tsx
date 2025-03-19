@@ -9,6 +9,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { OnboardingMetadata } from "@/db/schema/mailboxes";
 import { cn } from "@/lib/utils";
 import type { AppRouter } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -43,58 +44,34 @@ export function OnboardingStatus({ mailboxSlug }: OnboardingStatusProps) {
     mailboxSlug,
   });
 
+  useEffect(() => {
+    if (mailbox?.onboardingMetadata) {
+      const metadata = mailbox.onboardingMetadata;
+      if (metadata.websiteUrl) {
+        setWebsiteUrl(metadata.websiteUrl);
+      }
+      if (metadata.docsUrl) {
+        setDocsUrl(metadata.docsUrl);
+      }
+    }
+  }, [mailbox]);
+
   const completeOnboardingStepMutation = api.mailbox.completeOnboardingStep.useMutation({
     onSuccess: () => {
-      // Invalidate mailbox data to refetch and update UI
       utils.mailbox.get.invalidate({ mailboxSlug });
     },
   });
 
   const addWebsiteMutation = api.mailbox.websites.create.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: "Website added!",
         variant: "success",
-      });
-
-      // Trigger crawl after website is added
-      triggerCrawlMutation.mutate({
-        mailboxSlug,
-        websiteId: data.id,
       });
     },
     onError: () => {
       toast({
         title: "Error adding website",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-      setLoading(false);
-    },
-  });
-
-  const triggerCrawlMutation = api.mailbox.websites.triggerCrawl.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Website scan started!",
-        description: "The scan will run in the background.",
-        variant: "success",
-      });
-
-      // Mark onboarding step as completed after triggering crawl
-      completeOnboardingStepMutation.mutate({
-        mailboxSlug,
-        stepId: "website",
-      });
-
-      // Invalidate websites list to reflect changes
-      utils.mailbox.websites.list.invalidate({ mailboxSlug });
-
-      setLoading(false);
-    },
-    onError: () => {
-      toast({
-        title: "Error starting website scan",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -117,18 +94,18 @@ export function OnboardingStatus({ mailboxSlug }: OnboardingStatusProps) {
         setWebsiteUrl(urlToProcess);
       }
 
-      // Add and crawl the main website
       addWebsiteMutation.mutate({
         mailboxSlug,
         name: "Main Website",
         url: urlToProcess,
       });
 
-      // Add docs URL if provided
+      let docsUrlToProcess = "";
       if (docsUrl) {
-        let docsUrlToProcess = docsUrl;
+        docsUrlToProcess = docsUrl;
         if (!/^https?:\/\//i.test(docsUrlToProcess)) {
           docsUrlToProcess = `https://${docsUrlToProcess}`;
+          setDocsUrl(docsUrlToProcess);
         }
 
         addWebsiteMutation.mutate({
@@ -137,6 +114,15 @@ export function OnboardingStatus({ mailboxSlug }: OnboardingStatusProps) {
           url: docsUrlToProcess,
         });
       }
+
+      completeOnboardingStepMutation.mutate({
+        mailboxSlug,
+        stepId: stepId as "website" | "email" | "widget",
+        additionalMetadata: {
+          websiteUrl: urlToProcess,
+          docsUrl: docsUrlToProcess,
+        },
+      });
     } else {
       setLoading(true);
       try {
@@ -167,46 +153,36 @@ export function OnboardingStatus({ mailboxSlug }: OnboardingStatusProps) {
     }
   }, [expandedStep, debouncedWebsiteUrl]);
 
-  // Add a useEffect to load the website initially when the component mounts
   useEffect(() => {
-    // Use a small delay to ensure the iframe is rendered
     const timer = setTimeout(() => {
       handleLoadInitialWebsite();
     }, 500);
-    
     return () => clearTimeout(timer);
   }, []);
 
-  // Add a useEffect to handle iframe loading after mailbox data is loaded
   useEffect(() => {
     if (!isLoadingMailbox && mailbox) {
-      // If mailbox is loaded and we have the iframe, load the website
       const timer = setTimeout(() => {
         handleLoadInitialWebsite();
       }, 500);
-      
       return () => clearTimeout(timer);
     }
   }, [isLoadingMailbox, mailbox]);
 
   const handleLoadInitialWebsite = () => {
-    // Use the initial website URL directly
     setLoadingWebsite(true);
     let urlToLoad = websiteUrl;
     if (!/^https?:\/\//i.test(urlToLoad)) {
       urlToLoad = `https://${urlToLoad}`;
     }
 
-    // Check if iframe exists and set its src
     if (frameRef.current) {
       try {
         frameRef.current.src = `/api/proxy?url=${encodeURIComponent(urlToLoad)}&mailboxSlug=${encodeURIComponent(mailboxSlug)}`;
-        
         frameRef.current.onload = () => {
           setLoadingWebsite(false);
         };
 
-        // Safety timeout to ensure loading state doesn't get stuck
         setTimeout(() => {
           setLoadingWebsite(false);
         }, 10000);
@@ -251,7 +227,6 @@ export function OnboardingStatus({ mailboxSlug }: OnboardingStatusProps) {
     }
   };
 
-  // Show loading state if mailbox data is not yet available
   if (isLoadingMailbox || !mailbox) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">

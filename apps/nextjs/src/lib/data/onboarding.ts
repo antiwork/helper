@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
+import { mailboxes } from "@/db/schema/mailboxes";
 
 export const OnboardingStepSchema = z.enum(["website", "email", "widget"]);
 export type OnboardingStep = z.infer<typeof OnboardingStepSchema>;
@@ -41,10 +41,11 @@ export async function completeOnboardingStep(
     updatedMetadata.completed = true;
   }
 
-  await db
-    .update(mailboxes)
-    .set({ onboardingMetadata: { ...updatedMetadata, ...additionalMetadata } })
-    .where(eq(mailboxes.id, mailbox.id));
+  if (additionalMetadata) {
+    updatedMetadata = { ...updatedMetadata, ...additionalMetadata };
+  }
+
+  await db.update(mailboxes).set({ onboardingMetadata: updatedMetadata }).where(eq(mailboxes.id, mailbox.id));
 
   return { success: true };
 }
