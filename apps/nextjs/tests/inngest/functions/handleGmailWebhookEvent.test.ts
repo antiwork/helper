@@ -1,7 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
-import { transactionalEmailAddressRegexesFactory } from "@tests/support/factories/transactionalEmailAddressRegexes";
 import { userFactory } from "@tests/support/factories/users";
 import { raw as HELPER_MAILBOX_IS_CCED_ONTO_THREAD_RAW } from "@tests/support/fixtures/gmail/helperMailboxIsCcedOntoThread";
 import { raw as MULTIPLE_TO_EMAILS_RAW } from "@tests/support/fixtures/gmail/multipleToEmailAddresses";
@@ -245,9 +244,6 @@ describe("handleGmailWebhookEvent", () => {
 
     it("does not generate a response for transactional emails", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      await transactionalEmailAddressRegexesFactory.create({
-        emailRegex: "noreply@.*",
-      });
 
       mockHistories([
         {
