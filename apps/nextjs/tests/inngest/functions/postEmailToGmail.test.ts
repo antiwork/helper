@@ -51,7 +51,7 @@ vi.mock("@/lib/gmail/client", () => ({
 }));
 
 vi.mock("@/lib/gmail/lib", () => ({
-  convertEmailToRaw: vi.fn().mockImplementation(() => "mock raw email"),
+  convertConversationMessageToRaw: vi.fn().mockImplementation(() => "mock raw email"),
 }));
 
 const setupConversationForGmailSending = async () => {
@@ -145,6 +145,9 @@ describe("postEmailToGmail", () => {
             ...conversation,
             emailFrom: "to@example.com",
             mailbox: {
+              id: mailbox.id,
+              name: mailbox.name,
+              widgetHost: mailbox.widgetHost,
               clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
@@ -199,6 +202,9 @@ describe("postEmailToGmail", () => {
             ...conversation,
             emailFrom: "to@example.com",
             mailbox: {
+              id: mailbox.id,
+              name: mailbox.name,
+              widgetHost: mailbox.widgetHost,
               clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
