@@ -12,7 +12,7 @@ export * from "./files";
 export * from "./notes";
 export * from "./escalations";
 export * from "./aiUsageEvents";
-export * from "./transactionalEmailAddressRegexes";
+
 export * from "./messageNotifications";
 export * from "./topics";
 export * from "./conversationsTopics";
