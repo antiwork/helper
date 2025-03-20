@@ -25,7 +25,7 @@ async function closeInactiveConversations(mailboxId?: number) {
   let totalClosed = 0;
 
   for (const mailbox of enabledMailboxes) {
-    const daysOfInactivity = mailbox.autoCloseDaysOfInactivity || 14; // Default to 14 days if not set
+    const daysOfInactivity = mailbox.autoCloseDaysOfInactivity;
 
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
