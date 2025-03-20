@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
@@ -50,6 +50,54 @@ export const conversationsRouter = {
       hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       assignedToClerkIds: input.assignee ?? null,
       nextCursor,
+    };
+  }),
+
+  listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
+    const { list } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
+
+    const userMessages = db
+      .select({ _: conversationMessages.cleanedUpText })
+      .from(conversationMessages)
+      .where(and(eq(conversationMessages.conversationId, conversations.id), eq(conversationMessages.role, "user")))
+      .orderBy(desc(conversationMessages.createdAt))
+      .limit(1);
+    const staffMessages = db
+      .select({ _: conversationMessages.cleanedUpText })
+      .from(conversationMessages)
+      .where(
+        and(
+          eq(conversationMessages.conversationId, conversations.id),
+          inArray(conversationMessages.role, ["staff", "ai_assistant"]),
+        ),
+      )
+      .orderBy(desc(conversationMessages.createdAt))
+      .limit(1);
+
+    const lastMessages = await db
+      .select({
+        id: conversations.id,
+        staffMessageText: sql`staff_messages.cleaned_up_text`,
+        userMessageText: sql`user_messages.cleaned_up_text`,
+      })
+      .from(conversations)
+      .leftJoin(sql`LATERAL (${userMessages}) user_messages`, sql`TRUE`)
+      .leftJoin(sql`LATERAL (${staffMessages}) staff_messages`, sql`TRUE`)
+      .where(
+        inArray(
+          conversations.id,
+          list.results.map((c) => c.id),
+        ),
+      );
+
+    console.log("lastMessages", lastMessages);
+
+    return {
+      conversations: list.results.map((c) => ({
+        ...c,
+        ...(lastMessages.find((m) => m.id === c.id) ?? {}),
+      })),
+      nextCursor: list.nextCursor,
     };
   }),
 

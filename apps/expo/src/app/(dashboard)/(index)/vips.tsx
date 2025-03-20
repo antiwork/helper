@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
-import { ConversationList } from "../_components/conversationList";
+import { ConversationPreviewList } from "../_components/conversationPreviewList";
 import { Header } from "../_components/header";
 import { TabBar } from "../_components/tabBar";
 
@@ -15,7 +15,7 @@ export default function VipsScreen() {
   const { selectedMailbox } = useMailbox();
 
   const { data, isLoading, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    api.mailbox.conversations.list.useInfiniteQuery(
+    api.mailbox.conversations.listWithPreview.useInfiniteQuery(
       {
         mailboxSlug: selectedMailbox?.slug ?? "",
         category: "conversations",
@@ -45,7 +45,7 @@ export default function VipsScreen() {
         <Header />
       </View>
       <View className="flex-1">
-        <ConversationList
+        <ConversationPreviewList
           conversations={conversations}
           onRefresh={refetch}
           isRefreshing={isRefetching}
