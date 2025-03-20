@@ -1,6 +1,5 @@
 import { ChatBubbleLeftRightIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
 import { Message } from "ai";
-import { cx } from "class-variance-authority";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 
@@ -22,7 +21,6 @@ export default function SupportButtons({
   const [isHelpfulAnimating, setIsHelpfulAnimating] = useState(false);
   const [isTalkToTeamAnimating, setIsTalkToTeamAnimating] = useState(false);
   const [isHelpful, setIsHelpful] = useState(false);
-  const [isResolved, setIsResolved] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   const idFromAnnotation =
@@ -52,7 +50,6 @@ export default function SupportButtons({
 
       if (response.ok) {
         setTimeout(() => {
-          setIsResolved(true);
           setIsVisible(false);
         }, 1000);
       }
