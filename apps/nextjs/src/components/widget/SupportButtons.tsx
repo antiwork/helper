@@ -21,7 +21,7 @@ export default function SupportButtons({
   const [isHelpfulAnimating, setIsHelpfulAnimating] = useState(false);
   const [isTalkToTeamAnimating, setIsTalkToTeamAnimating] = useState(false);
   const [isHelpful, setIsHelpful] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   const idFromAnnotation =
     lastMessage?.annotations?.find(
@@ -66,15 +66,9 @@ export default function SupportButtons({
     setTimeout(() => setIsTalkToTeamAnimating(false), 1000);
   };
 
-  useEffect(() => {
-    if (lastMessage && messageStatus === "ready") {
-      setIsVisible(true);
-    }
-  }, [lastMessage, messageStatus]);
-
   return (
     <AnimatePresence>
-      {isVisible && (
+      {isVisible && messageStatus === "ready" && lastMessage && (
         <motion.div
           className="flex justify-center gap-4 py-3"
           initial={{ opacity: 0, y: 20 }}
