@@ -33,7 +33,6 @@ export default function Conversation({
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [hasReceivedAIMessage, setHasReceivedAIMessage] = useState(false);
 
   useEffect(() => {
     if (conversationSlug) {
@@ -80,6 +79,7 @@ export default function Conversation({
   }, [selectedConversationSlug, isNewConversation, setConversationSlug]);
 
   const isLoading = status === "streaming" || status === "submitted";
+  const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
 
   const { data: conversation, isLoading: isLoadingConversation } = useQuery({
     queryKey: ["conversation", conversationSlug],
@@ -112,22 +112,6 @@ export default function Conversation({
     },
     enabled: !!conversationSlug && !!token && !isNewConversation && !isAnonymous,
   });
-
-  useEffect(() => {
-    if (conversation?.messages?.length) {
-      setMessages(conversation.messages);
-      // Check if there's at least one AI message
-      const hasAIMessage = conversation.messages.some((msg) => msg.role === "assistant");
-      setHasReceivedAIMessage(hasAIMessage);
-    }
-  }, [conversation, setMessages]);
-
-  // Update hasReceivedAIMessage when a new assistant message is added
-  useEffect(() => {
-    if (messages.some((msg) => msg.role === "assistant")) {
-      setHasReceivedAIMessage(true);
-    }
-  }, [messages]);
 
   useEffect(() => {
     if (status === "ready" || isNewConversation) {
@@ -185,10 +169,6 @@ export default function Conversation({
     };
   }, [token]);
 
-  const handleHelpfulClick = () => {
-    console.log("User found the response helpful");
-  };
-
   const handleTalkToTeamClick = () => {
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
   };
@@ -207,11 +187,13 @@ export default function Conversation({
         token={token}
         addToolResult={addToolResult}
       />
-      {hasReceivedAIMessage && status === "ready" && (
-        <div>
-          <SupportButtons onHelpfulClick={handleHelpfulClick} onTalkToTeamClick={handleTalkToTeamClick} />
-        </div>
-      )}
+      <SupportButtons
+        conversationSlug={conversationSlug}
+        token={token}
+        messageStatus={status}
+        lastMessage={lastAIMessage}
+        onTalkToTeamClick={handleTalkToTeamClick}
+      />
       <ChatInput
         input={input}
         inputRef={inputRef}
