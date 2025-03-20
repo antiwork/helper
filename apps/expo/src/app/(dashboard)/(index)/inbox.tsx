@@ -5,6 +5,7 @@ import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { ConversationList } from "../_components/conversationList";
 import { Header } from "../_components/header";
+import { TabBar } from "../_components/tabBar";
 
 export default function InboxScreen() {
   const { selectedMailbox } = useMailbox();
@@ -60,16 +61,19 @@ export default function InboxScreen() {
           </TouchableOpacity>
         ))}
       </View>
-      <ConversationList
-        conversations={conversations}
-        onRefresh={refetch}
-        isRefreshing={isRefetching}
-        isLoading={isLoading}
-        mailboxSlug={selectedMailbox?.slug ?? ""}
-        onLoadMore={handleLoadMore}
-        hasMore={!!hasNextPage}
-        isLoadingMore={isFetchingNextPage}
-      />
+      <View className="flex-1">
+        <ConversationList
+          conversations={conversations}
+          onRefresh={refetch}
+          isRefreshing={isRefetching}
+          isLoading={isLoading}
+          mailboxSlug={selectedMailbox?.slug ?? ""}
+          onLoadMore={handleLoadMore}
+          hasMore={!!hasNextPage}
+          isLoadingMore={isFetchingNextPage}
+        />
+      </View>
+      <TabBar />
     </SafeAreaView>
   );
 }
