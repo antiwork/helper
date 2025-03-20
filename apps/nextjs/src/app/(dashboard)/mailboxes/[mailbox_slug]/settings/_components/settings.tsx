@@ -123,14 +123,6 @@ const Settings = ({
     }
   };
 
-  const handleAutoCloseUpdate = async (updates: AutoCloseUpdates) => {
-    setPendingUpdates((prev) => ({
-      ...prev,
-      autoClose: updates,
-    }));
-    await handleUpdateSettings();
-  };
-
   const items = [
     {
       label: "Workflows",
