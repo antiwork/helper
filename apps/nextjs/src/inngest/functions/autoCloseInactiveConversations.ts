@@ -3,9 +3,6 @@ import { db } from "@/db/client";
 import { conversationEvents, conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 
-/**
- * Common function to auto-close inactive conversations
- */
 async function closeInactiveConversations(mailboxId?: number) {
   const mailboxesQuery = mailboxId
     ? and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true))
