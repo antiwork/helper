@@ -99,8 +99,6 @@ export const mailboxRouter = {
   }),
 
   get: mailboxProcedure.query(async ({ ctx }) => {
-    const mailbox = await getMailboxInfo(ctx.mailbox);
-    console.log("mailbox", mailbox);
     return await getMailboxInfo(ctx.mailbox);
   }),
   update: mailboxProcedure
