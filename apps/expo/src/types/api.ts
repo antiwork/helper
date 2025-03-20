@@ -86,40 +86,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         input: {
           mailboxSlug: string;
         };
-        output: {
-          id: number;
-          name: string;
-          slug: string;
-          isStyleLinterEnabled: boolean;
-          hasMetadataEndpoint: boolean;
-          metadataEndpoint: {
-            url: string;
-            hmacSecret: string;
-            isEnabled: boolean;
-            deletedAt: Date | null;
-          } | null;
-          slackConnected: boolean;
-          slackConnectUrl: string;
-          slackAlertChannel: string | null;
-          responseGeneratorPrompt: string[];
-          clerkOrganizationId: string;
-          subscription: {
-            status: string | null;
-            stripeSubscriptionId: string | null;
-            canceledAt: Date | null;
-          } | null;
-          widgetHMACSecret: string;
-          widgetDisplayMode: "always" | "revenue_based" | "off";
-          widgetDisplayMinValue: number | null;
-          widgetHost: string | null;
-          autoRespondEmailToChat: boolean;
-          vipThreshold: number | null;
-          vipChannelId: string | null;
-          vipExpectedResponseHours: number | null;
-          disableAutoResponseForVips: boolean;
-          autoCloseEnabled: boolean;
-          autoCloseDaysOfInactivity: number;
-        };
+        output: any;
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
         input: {

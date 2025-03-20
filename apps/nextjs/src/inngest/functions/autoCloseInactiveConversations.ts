@@ -3,7 +3,25 @@ import { db } from "@/db/client";
 import { conversationEvents, conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 
-async function closeInactiveConversations(mailboxId?: number) {
+type AutoCloseReport = {
+  totalProcessed: number;
+  mailboxReports: {
+    mailboxId: number;
+    mailboxName: string;
+    inactiveConversations: { id: number; slug: string }[];
+    conversationsClosed: number;
+    status: string;
+  }[];
+  status: string;
+};
+
+async function closeInactiveConversations(mailboxId?: number): Promise<AutoCloseReport> {
+  const report: AutoCloseReport = {
+    totalProcessed: 0,
+    mailboxReports: [],
+    status: "",
+  };
+
   const mailboxesQuery = mailboxId
     ? and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true))
     : eq(mailboxes.autoCloseEnabled, true);
@@ -18,15 +36,20 @@ async function closeInactiveConversations(mailboxId?: number) {
   });
 
   if (enabledMailboxes.length === 0) {
-    console.info("No mailboxes with auto-close enabled found");
-    return { processed: 0 };
+    report.status = "No mailboxes with auto-close enabled found";
+    return report;
   }
 
-  let totalClosed = 0;
-
   for (const mailbox of enabledMailboxes) {
-    const daysOfInactivity = mailbox.autoCloseDaysOfInactivity;
+    const mailboxReport = {
+      mailboxId: mailbox.id,
+      mailboxName: mailbox.name,
+      inactiveConversations: [] as { id: number; slug: string }[],
+      conversationsClosed: 0,
+      status: "",
+    };
 
+    const daysOfInactivity = mailbox.autoCloseDaysOfInactivity;
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
 
@@ -42,12 +65,13 @@ async function closeInactiveConversations(mailboxId?: number) {
       },
     });
 
+    mailboxReport.inactiveConversations = conversationsToClose;
+
     if (conversationsToClose.length === 0) {
-      console.info(`No inactive conversations found for mailbox ${mailbox.name}`);
+      mailboxReport.status = "No inactive conversations found";
+      report.mailboxReports.push(mailboxReport);
       continue;
     }
-
-    console.info(`Found ${conversationsToClose.length} inactive conversations to close for mailbox ${mailbox.name}`);
 
     const now = new Date();
 
@@ -79,13 +103,14 @@ async function closeInactiveConversations(mailboxId?: number) {
       });
     }
 
-    totalClosed += conversationsToClose.length;
+    mailboxReport.conversationsClosed = conversationsToClose.length;
+    mailboxReport.status = `Successfully closed ${conversationsToClose.length} conversations`;
+    report.mailboxReports.push(mailboxReport);
+    report.totalProcessed += conversationsToClose.length;
   }
 
-  return {
-    processed: totalClosed,
-    message: `Auto-closed ${totalClosed} inactive conversations`,
-  };
+  report.status = `Auto-closed ${report.totalProcessed} inactive conversations across ${report.mailboxReports.length} mailboxes`;
+  return report;
 }
 
 /**
