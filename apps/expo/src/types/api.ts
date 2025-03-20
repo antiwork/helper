@@ -1253,6 +1253,16 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               };
         }>;
       };
+      autoClose: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+          mailboxId?: number | undefined;
+        };
+        output: {
+          success: boolean;
+          message: string;
+        };
+      }>;
     };
     organization: {
       createDefaultOrganization: import("@trpc/server").TRPCMutationProcedure<{

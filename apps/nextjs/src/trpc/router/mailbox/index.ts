@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { and, count, eq, inArray, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { setupOrganizationForNewUser } from "@/auth/lib/authService";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
+import { inngest } from "@/inngest/client";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
 import { getMemberStats } from "@/lib/data/stats";
@@ -152,4 +153,40 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
+  autoClose: mailboxProcedure.input(z.object({ mailboxId: z.number().optional() })).mutation(async ({ ctx, input }) => {
+    const { mailboxId } = input;
+
+    if (mailboxId) {
+      const mailbox = await db.query.mailboxes.findFirst({
+        where: eq(mailboxes.id, mailboxId),
+        columns: {
+          id: true,
+          autoCloseEnabled: true,
+        },
+      });
+
+      if (!mailbox) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Mailbox not found" });
+      }
+
+      if (!mailbox.autoCloseEnabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Auto-close is not enabled for this mailbox",
+        });
+      }
+    }
+
+    await inngest.send({
+      name: "conversations/auto-close.check",
+      data: {
+        mailboxId: mailboxId ? Number(mailboxId) : undefined,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Auto-close job triggered successfully",
+    };
+  }),
 } satisfies TRPCRouterRecord;

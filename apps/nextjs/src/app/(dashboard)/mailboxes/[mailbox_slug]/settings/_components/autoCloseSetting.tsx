@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import SectionWrapper from "./sectionWrapper";
 
 export type AutoCloseUpdates = {
@@ -61,33 +62,28 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
     }
   };
 
-  const runAutoCloseNow = async () => {
-    setIsRunningNow(true);
-    try {
-      const response = await fetch("/api/auto-close", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mailboxId: mailbox.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to trigger auto-close");
-      }
-
+  const autoCloseMutation = api.mailbox.autoClose.useMutation({
+    onSuccess: () => {
       toast({
         title: "Auto-close triggered",
         description: "The auto-close job has been triggered successfully.",
       });
-    } catch (error) {
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to trigger auto-close",
+        description: error.message,
         variant: "destructive",
+      });
+    },
+  });
+
+  const runAutoCloseNow = async () => {
+    setIsRunningNow(true);
+    try {
+      await autoCloseMutation.mutateAsync({
+        mailboxId: mailbox.id,
+        mailboxSlug: mailbox.slug,
       });
     } finally {
       setIsRunningNow(false);
