@@ -40,6 +40,9 @@ async function closeInactiveConversations(mailboxId?: number): Promise<AutoClose
     return report;
   }
 
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+
   for (const mailbox of enabledMailboxes) {
     const mailboxReport = {
       mailboxId: mailbox.id,
@@ -50,7 +53,7 @@ async function closeInactiveConversations(mailboxId?: number): Promise<AutoClose
     };
 
     const daysOfInactivity = mailbox.autoCloseDaysOfInactivity;
-    const cutoffDate = new Date();
+    const cutoffDate = new Date(now);
     cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
 
     const conversationsToClose = await db.query.conversations.findMany({
@@ -72,8 +75,6 @@ async function closeInactiveConversations(mailboxId?: number): Promise<AutoClose
       report.mailboxReports.push(mailboxReport);
       continue;
     }
-
-    const now = new Date();
 
     await db
       .update(conversations)
@@ -114,11 +115,11 @@ async function closeInactiveConversations(mailboxId?: number): Promise<AutoClose
 }
 
 /**
- * Scheduled auto-close function that runs daily
+ * Scheduled auto-close function that runs hourly
  */
 const scheduledAutoClose = inngest.createFunction(
   { id: "scheduled-auto-close-inactive-conversations" },
-  { cron: "0 0 * * *" },
+  { cron: "0 * * * *" },
   async () => {
     return await closeInactiveConversations();
   },
