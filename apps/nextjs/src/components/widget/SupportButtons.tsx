@@ -7,7 +7,7 @@ type Props = {
   conversationSlug: string | null;
   token: string | null;
   messageStatus: string;
-  lastMessage: UIMessage | null;
+  lastMessage: UIMessage | undefined;
   onTalkToTeamClick: () => void;
 };
 
