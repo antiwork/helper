@@ -3,7 +3,6 @@ import {
   ArrowUturnUpIcon,
   ChatBubbleLeftIcon,
   EnvelopeIcon,
-  ListBulletIcon,
   PencilSquareIcon,
   PlayIcon,
   ShieldExclamationIcon,
@@ -12,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useMemo } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/ticketCommandBar/toolForm";
 import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useToolExecution } from "@/hooks/useToolExecution";
@@ -21,9 +21,10 @@ import { CommandGroup } from "./types";
 
 type MainPageProps = {
   onOpenChange: (open: boolean) => void;
-  setPage: (page: "main" | "previous-replies" | "assignees" | "notes" | "tools" | "github-issue") => void;
+  setPage: (page: "main" | "previous-replies" | "assignees" | "notes" | "github-issue") => void;
   setSelectedItemId: (id: string | null) => void;
   onToggleCc: () => void;
+  setSelectedTool: (tool: Tool) => void;
 };
 
 export const useMainPage = ({
@@ -31,6 +32,7 @@ export const useMainPage = ({
   setPage,
   setSelectedItemId,
   onToggleCc,
+  setSelectedTool,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
 
@@ -256,57 +258,18 @@ export const useMainPage = ({
         ? [
             {
               heading: "Tools",
-              items: [
-                ...tools.suggested
-                  .flatMap((t) => (t.type === "tool" ? [t.tool] : []))
-                  .map((tool) => ({
-                    id: `tool-${tool.slug}-${JSON.stringify(tool.parameters)}`,
-                    label: tool.name,
-                    icon: PlayIcon,
-                    onSelect: () => {
-                      void handleToolExecution(tool.slug, tool.name, tool.parameters);
-                      onOpenChange(false);
-                    },
-                    preview: (
-                      <div className="p-4">
-                        <h3 className="font-medium mb-2">{tool.name}</h3>
-                        <p className="text-sm text-muted-foreground">{tool.description}</p>
-                        {tool.parameters && Object.keys(tool.parameters).length > 0 && (
-                          <div className="mt-4">
-                            <h4 className="font-medium mb-1">Parameters</h4>
-                            <div className="text-sm text-muted-foreground">
-                              {Object.entries(tool.parameters).map(([name, value]) => (
-                                <div key={name} className="flex gap-1">
-                                  <span>{name}:</span>
-                                  <span className="truncate font-mono" title={JSON.stringify(value)}>
-                                    {JSON.stringify(value)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ),
-                  })),
-                {
-                  id: "all-tools",
-                  label: "All tools",
-                  icon: ListBulletIcon,
-                  preview: (
-                    <div className="p-4">
-                      <h3 className="font-medium mb-2">All Tools</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Browse and call any available tool with any parameters.
-                      </p>
-                    </div>
-                  ),
-                  onSelect: () => {
-                    setPage("tools");
-                    setSelectedItemId(null);
-                  },
-                },
-              ],
+              items: tools.all.map((tool) => ({
+                id: tool.slug,
+                label: tool.name,
+                icon: PlayIcon,
+                onSelect: () => setSelectedTool(tool),
+                preview: (
+                  <div className="p-4">
+                    <h3 className="font-medium mb-2">{tool.name}</h3>
+                    {tool.description && <p className="text-sm text-muted-foreground">{tool.description}</p>}
+                  </div>
+                ),
+              })),
             },
           ]
         : []),
