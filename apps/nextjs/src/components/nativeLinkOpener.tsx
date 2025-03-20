@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getTauriPlatform } from "@/components/useNativePlatform";
 
-export function TauriLinkOpener() {
+export function NativeLinkOpener() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!getTauriPlatform()) return;
+    const tauriPlatform = getTauriPlatform();
+    if (!tauriPlatform && !window.ReactNativeWebView) return;
 
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -23,12 +24,22 @@ export function TauriLinkOpener() {
 
         const url = new URL(href, window.location.origin);
 
-        // Open links relevant to the current origin in the app window
-        if (url.origin === window.location.origin) {
-          router.push(`${url.pathname}${url.search}`);
-        } else {
+        if (window.ReactNativeWebView) {
           event.preventDefault();
-          openUrl(url.toString());
+          window.ReactNativeWebView.postMessage(
+            JSON.stringify({
+              type: "openUrl",
+              url: url.toString(),
+            }),
+          );
+        } else if (tauriPlatform) {
+          // Open links relevant to the current origin in the app window
+          if (url.origin === window.location.origin) {
+            router.push(`${url.pathname}${url.search}`);
+          } else {
+            event.preventDefault();
+            openUrl(url.toString());
+          }
         }
       }
     };
@@ -43,4 +54,4 @@ export function TauriLinkOpener() {
   return null;
 }
 
-export default TauriLinkOpener;
+export default NativeLinkOpener;

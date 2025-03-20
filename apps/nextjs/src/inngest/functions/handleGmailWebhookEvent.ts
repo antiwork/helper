@@ -240,7 +240,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       const shouldIgnore =
         (!!staffUser && !isFirstMessage) ||
         labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
-        (await matchesTransactionalEmailAddress(parsedEmailFrom.address));
+        matchesTransactionalEmailAddress(parsedEmailFrom.address);
 
       const createNewConversation = async () => {
         return await db

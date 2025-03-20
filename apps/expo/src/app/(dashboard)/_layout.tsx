@@ -23,7 +23,10 @@ export default function DashboardLayout() {
       <Stack.Screen name="(index)" options={{ title: "Dashboard", headerShown: false }} />
       <Stack.Screen name="agents" options={{ title: "Agents", ...headerOptions }} />
       <Stack.Screen name="conversations" options={headerOptions} />
-      <Stack.Screen name="conversations/[id]" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen
+        name="conversations/[id]"
+        options={{ ...headerOptions, headerBackButtonDisplayMode: "minimal", title: "" }}
+      />
       <Stack.Screen
         name="profile"
         options={{
