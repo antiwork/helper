@@ -1,13 +1,13 @@
 import { ChatBubbleLeftRightIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
-import { Message } from "ai";
+import { UIMessage } from "ai";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 type Props = {
   conversationSlug: string | null;
   token: string | null;
   messageStatus: string;
-  lastMessage: Message | null;
+  lastMessage: UIMessage | null;
   onTalkToTeamClick: () => void;
 };
 
