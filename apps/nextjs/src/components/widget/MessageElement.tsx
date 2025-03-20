@@ -22,6 +22,7 @@ export default function MessageElement({
   reasoning: Reasoning | null;
   token: string | null;
   conversationSlug: string | null;
+  // bg-foreground or bg-gumroad-pink - Keep this for Tailwind to identify the color
   color: "black" | "gumroad-pink";
 }) {
   const [showReasoning, setShowReasoning] = useState(false);
