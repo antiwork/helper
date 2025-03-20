@@ -190,7 +190,6 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
   //       https://developers.google.com/gmail/api/guides/sync#full_synchronization
   const historyId = gmailSupportEmail.historyId ?? data.historyId;
   const response = await getMessagesFromHistoryId(client, historyId.toString());
-  console.log("response", response.data);
   if (response.status !== 404) {
     assertSuccessResponseOrThrow(response);
     histories = response.data.history ?? [];
