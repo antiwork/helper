@@ -24,8 +24,6 @@ const Page = async (props: { params: Promise<PageProps> }) => {
   const handleUpdateSettings = async (pendingUpdates: PendingUpdates) => {
     "use server";
 
-    console.log("pendingUpdates", pendingUpdates);
-
     if (pendingUpdates.slack) {
       try {
         await api.mailbox.update({
