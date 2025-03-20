@@ -296,8 +296,6 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       );
 
       if (!shouldIgnore) {
-        // TODO: make sure respondToEmail sets to open correctly
-        // TODO: make this a job?
         await respondToEmail(newEmail.id);
         results.push(`Created and responded to message ${newEmail.id}`);
         continue;

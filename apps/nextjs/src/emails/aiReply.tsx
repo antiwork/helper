@@ -44,9 +44,6 @@ const AIReplyEmail = ({ content }: Props) => (
 AIReplyEmail.PreviewProps = {
   content:
     "Reasons you might want to use Gumroad are:\n\n- Gumroad makes it easy to sell digital products.\n- Gumroad makes it easy to sell physical products.\n- Gumroad makes it easy to sell services.",
-  companyName: "Gumroad",
-  widgetHost: "https://example.com",
-  hasPlatformCustomer: true,
-} as Props;
+} satisfies Props;
 
 export default AIReplyEmail;
