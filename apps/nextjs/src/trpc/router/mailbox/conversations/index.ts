@@ -33,6 +33,13 @@ export const conversationsRouter = {
       db
         .select({ count: count() })
         .from(conversations)
+        .leftJoin(
+          platformCustomers,
+          and(
+            eq(conversations.mailboxId, platformCustomers.mailboxId),
+            eq(conversations.emailFrom, platformCustomers.email),
+          ),
+        )
         .where(and(...Object.values(where))),
     ]);
 
