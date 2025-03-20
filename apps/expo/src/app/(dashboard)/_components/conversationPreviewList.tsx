@@ -1,22 +1,17 @@
 import { Link } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Animated, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
-import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
-import { StarIcon, UserIcon } from "react-native-heroicons/outline";
+import React from "react";
+import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { ChevronLeftIcon, ChevronRightIcon, StarIcon, UserIcon } from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
 import { humanizeTime } from "@/utils/humanizeTime";
 
 cssIconInterop(UserIcon);
 cssIconInterop(StarIcon);
+cssIconInterop(ChevronRightIcon);
+cssIconInterop(ChevronLeftIcon);
 
-type Conversation = RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"][number] & {
-  height?: Animated.Value;
-  staffMessageText?: string | null;
-  userMessageText?: string | null;
-};
-
-const ROW_HEIGHT = 120; // Increased height to accommodate message previews
+type Conversation = RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"][number];
 
 export function ConversationPreviewList({
   conversations,
@@ -28,7 +23,7 @@ export function ConversationPreviewList({
   hasMore = false,
   isLoadingMore = false,
 }: {
-  conversations?: RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"];
+  conversations?: Conversation[];
   onRefresh?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
@@ -43,93 +38,63 @@ export function ConversationPreviewList({
     refetchOnMount: false,
   });
 
-  const { mutateAsync: updateConversation } = api.mailbox.conversations.update.useMutation();
-
-  const buildVisibleConversations = (
-    conversations: RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"],
-  ) => conversations.map((c) => ({ ...c, height: new Animated.Value(ROW_HEIGHT) }));
-
-  const [visibleConversations, setVisibleConversations] = useState(buildVisibleConversations(conversations || []));
-
-  useEffect(() => {
-    setVisibleConversations(buildVisibleConversations(conversations || []));
-  }, [conversations]);
-
-  const closeConversation = (item: Conversation) => {
-    void updateConversation({
-      mailboxSlug,
-      conversationSlug: item.slug,
-      status: "closed",
-    });
-    setVisibleConversations((prev) => prev.filter(({ id }) => id !== item.id));
-  };
-
   const renderItem = ({ item }: { item: Conversation }) => {
     const assigneeName = item.assignedToClerkId
       ? (members?.find((m) => m.id === item.assignedToClerkId)?.displayName?.split(" ")[0] ?? null)
       : null;
 
     return (
-      <SwipeToClose onClose={() => closeConversation(item)} isClosed={item.status === "closed"} height={item.height}>
-        <View className="border-b border-border bg-background">
-          <Link href={{ pathname: "/conversations/[id]", params: { id: item.slug, mailboxSlug } }} asChild>
-            <TouchableOpacity className="w-full p-4">
-              {/* Header section with email, assignee, VIP badge, and time */}
-              <View className="flex-row items-center justify-between gap-6">
-                <Text numberOfLines={1} className="text-base font-medium text-foreground flex-1">
-                  {item.platformCustomer?.email ?? item.emailFrom ?? "Anonymous"}
-                </Text>
-                <View className="flex-row items-center gap-4 flex-shrink-0">
-                  {assigneeName && (
-                    <View className="flex-row items-center gap-1">
-                      <UserIcon size={12} className="text-muted-foreground" />
-                      <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
-                    </View>
-                  )}
-                  {item.platformCustomer?.isVip && (
-                    <View className="bg-yellow-200 px-2 py-0.5 rounded">
-                      <Text className="text-xs text-yellow-800 font-medium">VIP</Text>
-                    </View>
-                  )}
-                  <Text className="text-sm text-muted-foreground">{humanizeTime(item.createdAt)}</Text>
-                </View>
-              </View>
-
-              {/* Subject and value */}
-              <View className="flex-row items-center justify-between gap-6 mt-1">
-                <Text numberOfLines={1} className="text-sm font-medium text-foreground flex-1">
-                  {item.subject}
-                </Text>
+      <View className="mx-4 mb-4 rounded border border-border bg-muted">
+        <Link href={{ pathname: "/conversations/[id]", params: { id: item.slug, mailboxSlug } }} asChild>
+          <TouchableOpacity className="w-full p-4">
+            <View className="flex-row items-center justify-between gap-6">
+              <Text numberOfLines={1} className="text-base font-medium text-foreground flex-1">
+                {item.platformCustomer?.name ?? item.platformCustomer?.email ?? item.emailFrom ?? "Anonymous"}
+              </Text>
+              <View className="flex-row items-center gap-4 flex-shrink-0">
+                {assigneeName && (
+                  <View className="flex-row items-center gap-1">
+                    <UserIcon size={12} className="text-muted-foreground" />
+                    <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
+                  </View>
+                )}
                 {item.platformCustomer?.value && parseFloat(item.platformCustomer.value) > 0 && (
                   <Text className="text-sm text-muted-foreground flex-shrink-0">
                     ${(parseFloat(item.platformCustomer.value) / 100).toFixed(2)}
                   </Text>
                 )}
+                {item.platformCustomer?.isVip && (
+                  <View className="bg-yellow-200 px-2 py-0.5 rounded">
+                    <Text className="text-xs text-yellow-800 font-medium">VIP</Text>
+                  </View>
+                )}
+                <Text className="text-sm text-muted-foreground">
+                  {humanizeTime(item.lastUserEmailCreatedAt ?? item.createdAt)}
+                </Text>
               </View>
+            </View>
 
-              {/* Message previews section */}
-              <View className="mt-2">
-                {item.userMessageText && (
-                  <View className="flex-row mt-1">
-                    <Text className="text-xs font-medium text-foreground mr-1">Customer:</Text>
-                    <Text numberOfLines={1} className="text-xs text-muted-foreground flex-1">
-                      {item.userMessageText}
-                    </Text>
-                  </View>
-                )}
-                {item.staffMessageText && (
-                  <View className="flex-row mt-1">
-                    <Text className="text-xs font-medium text-foreground mr-1">Staff:</Text>
-                    <Text numberOfLines={1} className="text-xs text-muted-foreground flex-1">
-                      {item.staffMessageText}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </SwipeToClose>
+            <View className="mt-2">
+              {item.userMessageText && (
+                <View className="flex-row gap-2 mt-1">
+                  <ChevronRightIcon size={12} className="mt-1 text-muted-foreground" />
+                  <Text numberOfLines={3} className="text-sm text-muted-foreground flex-1">
+                    {item.userMessageText.replace(/\s+/g, " ")}
+                  </Text>
+                </View>
+              )}
+              {item.staffMessageText && (
+                <View className="flex-row gap-2 mt-4">
+                  <ChevronLeftIcon size={12} className="mt-1 text-muted-foreground" />
+                  <Text numberOfLines={3} className="text-sm text-muted-foreground flex-1">
+                    {item.staffMessageText.replace(/\s+/g, " ")}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </Link>
+      </View>
     );
   };
 
@@ -160,10 +125,10 @@ export function ConversationPreviewList({
   return (
     <View className="flex-1">
       <FlatList
-        data={visibleConversations}
+        data={conversations}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        className="flex-1"
+        className="pt-4 flex-1"
         refreshControl={onRefresh ? <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} /> : undefined}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
@@ -179,49 +144,3 @@ export function ConversationPreviewList({
     </View>
   );
 }
-
-const SwipeToClose = ({
-  onClose,
-  isClosed = false,
-  height,
-  children,
-}: {
-  onClose: () => void;
-  isClosed?: boolean;
-  height?: Animated.Value;
-  children: React.ReactNode;
-}) => {
-  const handleClose = () => {
-    if (!height) return;
-
-    Animated.timing(height, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start(() => {
-      onClose();
-    });
-  };
-
-  return (
-    <Animated.View style={{ height, overflow: "hidden" }}>
-      <GestureHandlerRootView>
-        <Swipeable
-          renderRightActions={() => <RightSwipeActions isClosed={isClosed} />}
-          onSwipeableOpen={handleClose}
-          rightThreshold={isClosed ? 10_000 : 160}
-        >
-          {children}
-        </Swipeable>
-      </GestureHandlerRootView>
-    </Animated.View>
-  );
-};
-
-const RightSwipeActions = ({ isClosed }: { isClosed: boolean }) => (
-  <View className={`flex-1 ${isClosed ? "bg-muted" : "bg-destructive"} justify-center pr-4`}>
-    <Text className={`text-right ${isClosed ? "text-muted-foreground" : "text-destructive-foreground"} font-medium`}>
-      {isClosed ? "Already Closed" : "Close"}
-    </Text>
-  </View>
-);

@@ -56,47 +56,36 @@ export const conversationsRouter = {
   listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
     const { list } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
 
-    const userMessages = db
-      .select({ _: conversationMessages.cleanedUpText })
-      .from(conversationMessages)
-      .where(and(eq(conversationMessages.conversationId, conversations.id), eq(conversationMessages.role, "user")))
-      .orderBy(desc(conversationMessages.createdAt))
-      .limit(1);
-    const staffMessages = db
-      .select({ _: conversationMessages.cleanedUpText })
-      .from(conversationMessages)
-      .where(
-        and(
-          eq(conversationMessages.conversationId, conversations.id),
-          inArray(conversationMessages.role, ["staff", "ai_assistant"]),
-        ),
-      )
-      .orderBy(desc(conversationMessages.createdAt))
-      .limit(1);
-
-    const lastMessages = await db
+    const messages = await db
       .select({
-        id: conversations.id,
-        staffMessageText: sql`staff_messages.cleaned_up_text`,
-        userMessageText: sql`user_messages.cleaned_up_text`,
+        role: conversationMessages.role,
+        cleanedUpText: conversationMessages.cleanedUpText,
+        conversationId: conversationMessages.conversationId,
+        createdAt: conversationMessages.createdAt,
       })
-      .from(conversations)
-      .leftJoin(sql`LATERAL (${userMessages}) user_messages`, sql`TRUE`)
-      .leftJoin(sql`LATERAL (${staffMessages}) staff_messages`, sql`TRUE`)
+      .from(conversationMessages)
       .where(
         inArray(
-          conversations.id,
+          conversationMessages.conversationId,
           list.results.map((c) => c.id),
         ),
-      );
-
-    console.log("lastMessages", lastMessages);
+      )
+      .orderBy(desc(conversationMessages.createdAt));
 
     return {
-      conversations: list.results.map((c) => ({
-        ...c,
-        ...(lastMessages.find((m) => m.id === c.id) ?? {}),
-      })),
+      conversations: list.results.map((conversation) => {
+        const lastUserMessage = messages.find((m) => m.role === "user" && m.conversationId === conversation.id);
+        const lastStaffMessage = messages.find((m) => m.role === "staff" && m.conversationId === conversation.id);
+
+        return {
+          ...conversation,
+          userMessageText: lastUserMessage?.cleanedUpText ?? null,
+          staffMessageText:
+            lastStaffMessage && lastUserMessage && lastStaffMessage.createdAt > lastUserMessage.createdAt
+              ? lastStaffMessage.cleanedUpText
+              : null,
+        };
+      }),
       nextCursor: list.nextCursor,
     };
   }),

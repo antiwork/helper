@@ -283,10 +283,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           };
           output: {
             conversations: {
-              id: number;
-              staffMessageText?: unknown;
-              userMessageText?: unknown;
+              userMessageText: string | null;
+              staffMessageText: string | null;
               matchedMessageText: string | null;
+              id: number;
               slug: string;
               status: "open" | "closed" | "spam" | null;
               emailFrom: string | null;

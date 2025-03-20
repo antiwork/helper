@@ -2,10 +2,10 @@ import React from "react";
 import { View } from "react-native";
 import { UserIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ConversationPreviewList } from "@/app/(dashboard)/_components/conversationPreviewList";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
-import { ConversationList } from "../_components/conversationList";
 import { Header } from "../_components/header";
 import { TabBar } from "../_components/tabBar";
 
@@ -15,7 +15,7 @@ export default function AssignedScreen() {
   const { selectedMailbox } = useMailbox();
 
   const { data, isLoading, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    api.mailbox.conversations.list.useInfiniteQuery(
+    api.mailbox.conversations.listWithPreview.useInfiniteQuery(
       {
         mailboxSlug: selectedMailbox?.slug ?? "",
         category: "assigned",
@@ -44,7 +44,7 @@ export default function AssignedScreen() {
         <Header />
       </View>
       <View className="flex-1">
-        <ConversationList
+        <ConversationPreviewList
           conversations={conversations}
           onRefresh={refetch}
           isRefreshing={isRefetching}
