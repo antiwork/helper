@@ -1,7 +1,16 @@
 import { Link } from "expo-router";
 import React from "react";
 import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
-import { ChevronLeftIcon, ChevronRightIcon, StarIcon, UserIcon } from "react-native-heroicons/outline";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CreditCardIcon,
+  StarIcon,
+  UserCircleIcon,
+  UserIcon,
+  UserPlusIcon,
+  XCircleIcon,
+} from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
 import { humanizeTime } from "@/utils/humanizeTime";
@@ -10,6 +19,10 @@ cssIconInterop(UserIcon);
 cssIconInterop(StarIcon);
 cssIconInterop(ChevronRightIcon);
 cssIconInterop(ChevronLeftIcon);
+cssIconInterop(UserCircleIcon);
+cssIconInterop(CreditCardIcon);
+cssIconInterop(UserPlusIcon);
+cssIconInterop(XCircleIcon);
 
 type Conversation = RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"][number];
 
@@ -94,6 +107,33 @@ export function ConversationPreviewList({
             </View>
           </TouchableOpacity>
         </Link>
+
+        <View className="border-t border-border flex-row p-2 gap-2">
+          <ActionButton
+            label="Assign"
+            onPress={() => {
+              // Assign functionality will be implemented later
+            }}
+          />
+          <ActionButton
+            label="Close"
+            onPress={() => {
+              // Close functionality will be implemented later
+            }}
+          />
+          <ActionButton
+            label="Impersonate"
+            onPress={() => {
+              // Impersonate functionality will be implemented later
+            }}
+          />
+          <ActionButton
+            label="View Stripe account"
+            onPress={() => {
+              // View Stripe account functionality will be implemented later
+            }}
+          />
+        </View>
       </View>
     );
   };
@@ -144,3 +184,17 @@ export function ConversationPreviewList({
     </View>
   );
 }
+
+const ActionButton = ({ label, onPress }: { label: string; onPress: () => void }) => {
+  return (
+    <TouchableOpacity
+      className="rounded-md py-2 px-3 flex-row items-center gap-1"
+      onPress={(e) => {
+        e.stopPropagation();
+        onPress();
+      }}
+    >
+      <Text className="text-xs font-medium text-muted-foreground">{label}</Text>
+    </TouchableOpacity>
+  );
+};
