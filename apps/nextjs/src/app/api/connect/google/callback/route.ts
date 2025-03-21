@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       refresh_token: tokens.refresh_token,
       expires_at: new Date(tokens.expiry_date!),
     });
-    return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings#integrations`);
+    return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings?tab=integrations`);
   } catch (error) {
     return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings?error=${error}`);
   }

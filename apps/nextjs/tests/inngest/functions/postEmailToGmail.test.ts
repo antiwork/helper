@@ -12,7 +12,7 @@ import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import { postEmailToGmail } from "@/inngest/functions/postEmailToGmail";
 import { getClerkOrganization, setPrivateMetadata } from "@/lib/data/organization";
 import { getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
-import { convertEmailToRaw } from "@/lib/gmail/lib";
+import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import * as sentryUtils from "@/lib/shared/sentry";
 
 vi.mock("@/lib/resend/client", () => ({
@@ -51,7 +51,7 @@ vi.mock("@/lib/gmail/client", () => ({
 }));
 
 vi.mock("@/lib/gmail/lib", () => ({
-  convertEmailToRaw: vi.fn().mockImplementation(() => "mock raw email"),
+  convertConversationMessageToRaw: vi.fn().mockImplementation(() => "mock raw email"),
 }));
 
 const setupConversationForGmailSending = async () => {
@@ -137,14 +137,17 @@ describe("postEmailToGmail", () => {
       vi.mocked(setPrivateMetadata).mockResolvedValue(organization);
 
       expect(await postEmailToGmail(message.id)).toBeNull();
-      expect(convertEmailToRaw).toHaveBeenCalledTimes(1);
-      expect(convertEmailToRaw).toHaveBeenCalledWith(
+      expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
+      expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
           ...message,
           conversation: expect.objectContaining({
             ...conversation,
             emailFrom: "to@example.com",
             mailbox: {
+              id: mailbox.id,
+              name: mailbox.name,
+              widgetHost: mailbox.widgetHost,
               clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
@@ -191,14 +194,17 @@ describe("postEmailToGmail", () => {
       vi.mocked(setPrivateMetadata).mockResolvedValue(organization);
 
       expect(await postEmailToGmail(message.id)).toBeNull();
-      expect(convertEmailToRaw).toHaveBeenCalledTimes(1);
-      expect(convertEmailToRaw).toHaveBeenCalledWith(
+      expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
+      expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
           ...message,
           conversation: expect.objectContaining({
             ...conversation,
             emailFrom: "to@example.com",
             mailbox: {
+              id: mailbox.id,
+              name: mailbox.name,
+              widgetHost: mailbox.widgetHost,
               clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,

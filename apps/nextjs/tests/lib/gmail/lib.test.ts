@@ -5,7 +5,7 @@ import { fileFactory } from "@tests/support/factories/files";
 import { userFactory } from "@tests/support/factories/users";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { convertEmailToRaw } from "@/lib/gmail/lib";
+import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { getFileStream } from "@/s3/utils";
 
 beforeEach(() => {
@@ -36,7 +36,7 @@ describe("convertEmailToRaw", () => {
       body: "Content",
     });
 
-    const result = await convertEmailToRaw(
+    const result = await convertConversationMessageToRaw(
       {
         ...message,
         conversation: {
@@ -76,7 +76,7 @@ describe("convertEmailToRaw", () => {
       emailBcc: ["bcc@example.com"],
     });
 
-    const result = await convertEmailToRaw(
+    const result = await convertConversationMessageToRaw(
       {
         ...message,
         conversation: {
@@ -122,7 +122,7 @@ describe("convertEmailToRaw", () => {
       body: "Content",
     });
 
-    const result = await convertEmailToRaw(
+    const result = await convertConversationMessageToRaw(
       {
         ...message,
         conversation: {
@@ -172,7 +172,7 @@ describe("convertEmailToRaw", () => {
       mimetype: "image/jpeg",
     });
 
-    const result = await convertEmailToRaw(
+    const result = await convertConversationMessageToRaw(
       {
         ...message,
         conversation: {
