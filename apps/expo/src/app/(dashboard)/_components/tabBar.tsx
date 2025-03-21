@@ -9,6 +9,8 @@ import {
   UserIcon as UserIconSolid,
 } from "react-native-heroicons/solid";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useMailbox } from "@/components/mailboxContext";
+import { api } from "@/utils/api";
 import { cn, cssIconInterop } from "@/utils/css";
 
 cssIconInterop(ChartBarIcon);
@@ -31,9 +33,17 @@ function Badge({ count }: { count: number }) {
 export function TabBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { selectedMailbox } = useMailbox();
 
-  // Placeholder counts for badges
-  const vipCount = 3;
+  const { data: vips } = api.mailbox.conversations.list.useQuery({
+    mailboxSlug: selectedMailbox?.slug ?? "",
+    category: "conversations",
+    isVip: true,
+    sort: null,
+    search: null,
+    status: null,
+    limit: 1,
+  });
 
   return (
     <SafeAreaView edges={["bottom"]} className="py-2 flex-row bg-muted">
@@ -55,7 +65,7 @@ export function TabBar() {
           ) : (
             <StarIcon className="size-6 text-muted-foreground" />
           )}
-          <Badge count={vipCount} />
+          {vips && vips.total > 0 && <Badge count={vips.total} />}
         </View>
         <Text className={cn("text-xs mt-[3px]", pathname === "/vips" ? "text-primary" : "text-muted-foreground")}>
           VIPs
@@ -83,7 +93,7 @@ export function TabBar() {
           <InboxIcon className="size-6 text-muted-foreground" />
         )}
         <Text className={cn("text-xs mt-[3px]", pathname === "/inbox" ? "text-primary" : "text-muted-foreground")}>
-          All
+          Inbox
         </Text>
       </TouchableOpacity>
     </SafeAreaView>
