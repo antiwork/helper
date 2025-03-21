@@ -18,7 +18,7 @@ export default function AssignedScreen() {
     () => ({
       mailboxSlug: selectedMailbox?.slug ?? "",
       category: "assigned",
-      sort: null,
+      sort: "oldest",
       search: null,
       status: null,
       limit: 25,
