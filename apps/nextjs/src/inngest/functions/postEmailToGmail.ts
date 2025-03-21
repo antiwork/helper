@@ -3,7 +3,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
-import { convertEmailToRaw } from "@/lib/gmail/lib";
+import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
@@ -32,8 +32,11 @@ export const postEmailToGmail = async (emailId: number) => {
         with: {
           mailbox: {
             columns: {
+              id: true,
               slug: true,
               clerkOrganizationId: true,
+              name: true,
+              widgetHost: true,
             },
             with: {
               gmailSupportEmail: true,
@@ -69,7 +72,7 @@ export const postEmailToGmail = async (emailId: number) => {
     const gmailService = await getGmailService(email.conversation.mailbox.gmailSupportEmail);
     const gmailSupportEmailAddress = email.conversation.mailbox.gmailSupportEmail.email;
 
-    const rawEmail = await convertEmailToRaw(
+    const rawEmail = await convertConversationMessageToRaw(
       { ...email, conversation: { ...email.conversation, emailFrom: email.conversation.emailFrom } },
       gmailSupportEmailAddress,
     );

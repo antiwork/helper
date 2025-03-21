@@ -1,15 +1,18 @@
 import { Readable } from "stream";
+import { render } from "@react-email/render";
 import { and, desc, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files } from "@/db/schema";
+import { conversationMessages, conversations, files, mailboxes } from "@/db/schema";
+import AIReplyEmail from "@/emails/aiReply";
 import { getFileStream } from "@/s3/utils";
 
-export const convertEmailToRaw = async (
+export const convertConversationMessageToRaw = async (
   email: typeof conversationMessages.$inferSelect & {
     conversation: typeof conversations.$inferSelect & {
       emailFrom: string;
+      mailbox: Pick<typeof mailboxes.$inferSelect, "id" | "name" | "widgetHost">;
     };
     files: (typeof files.$inferSelect)[];
   },
@@ -33,6 +36,18 @@ export const convertEmailToRaw = async (
     orderBy: desc(conversationMessages.id),
   });
 
+  let html;
+  let text;
+
+  if (email.role === "ai_assistant") {
+    const reactEmail = <AIReplyEmail content={email.body ?? ""} />;
+    html = await render(reactEmail);
+    text = await render(reactEmail, { plainText: true });
+  } else {
+    html = email.body ?? undefined;
+    text = email.body ? htmlToText(email.body) : undefined;
+  }
+
   const message = new MailComposer({
     from: emailFrom,
     to: email.conversation.emailFrom,
@@ -41,8 +56,8 @@ export const convertEmailToRaw = async (
     bcc: email.emailBcc ?? [],
     inReplyTo: lastEmailWithMessageId?.messageId ?? undefined,
     references: lastEmailWithMessageId?.references ?? undefined,
-    html: email.body ?? undefined,
-    text: email.body ? htmlToText(email.body) : undefined,
+    html,
+    text,
     attachments,
     textEncoding: "base64",
     ...composerOptions,
