@@ -12,6 +12,7 @@ import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import type { DraftedEmail } from "@/serverActions/messages";
 import { RouterOutputs } from "@/trpc";
@@ -193,6 +194,7 @@ export const MessageActions = () => {
         ),
       });
     } catch (error) {
+      captureExceptionAndLog(error);
       toast({
         variant: "destructive",
         title: "Error submitting message",
