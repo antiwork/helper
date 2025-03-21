@@ -63,7 +63,6 @@ export function ConversationPreviewList({
     refetchOnMount: false,
   });
 
-  const [closedConversations, setClosedConversations] = useState<number[]>([]);
   const [showMemberSelector, setShowMemberSelector] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
 
@@ -71,12 +70,12 @@ export function ConversationPreviewList({
 
   const handleCloseConversation = (item: Conversation) => {
     updateConversationMutation.mutate({ mailboxSlug, conversationSlug: item.slug, status: "closed" });
-    setClosedConversations((prev) => [...prev, item.id]);
+    onUpdate({ ...item, status: "closed" });
   };
 
   const handleReopenConversation = (item: Conversation) => {
     updateConversationMutation.mutate({ mailboxSlug, conversationSlug: item.slug, status: "open" });
-    setClosedConversations((prev) => prev.filter((id) => id !== item.id));
+    onUpdate({ ...item, status: "open" });
   };
 
   const handleAssignConversation = (item: Conversation) => {
@@ -100,13 +99,13 @@ export function ConversationPreviewList({
       ? (members?.find((m) => m.id === item.assignedToClerkId)?.displayName?.split(" ")[0] ?? null)
       : null;
 
-    const isClosed = closedConversations.includes(item.id);
-
     return (
       <View className="mx-4 mb-4 rounded border border-border bg-muted">
         <Link href={{ pathname: "/conversations/[id]", params: { id: item.slug, mailboxSlug } }} asChild>
           <TouchableOpacity className="w-full p-4">
-            <View className={`flex-row items-center justify-between gap-6 ${isClosed ? "opacity-60" : ""}`}>
+            <View
+              className={`flex-row items-center justify-between gap-6 ${item.status === "closed" ? "opacity-60" : ""}`}
+            >
               <Text numberOfLines={1} className="text-base font-medium text-foreground flex-1">
                 {item.platformCustomer?.name ?? item.platformCustomer?.email ?? item.emailFrom ?? "Anonymous"}
               </Text>
@@ -133,7 +132,7 @@ export function ConversationPreviewList({
               </View>
             </View>
 
-            <View className={`mt-2 ${isClosed ? "opacity-60" : ""}`}>
+            <View className={`mt-2 ${item.status === "closed" ? "opacity-60" : ""}`}>
               {item.userMessageText && (
                 <View className="flex-row gap-2 mt-1">
                   <ChevronRightIcon size={12} className="mt-1 text-muted-foreground" />
@@ -155,7 +154,7 @@ export function ConversationPreviewList({
         </Link>
 
         <View className="border-t border-border flex-row p-2 gap-2">
-          {isClosed ? (
+          {item.status === "closed" ? (
             <>
               <View className="flex-1 pl-2 flex-row items-center opacity-60">
                 <CheckIcon size={12} className="text-muted-foreground mr-1" />
