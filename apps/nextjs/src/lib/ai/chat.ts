@@ -600,9 +600,7 @@ export const respondWithAI = async ({
             return { id, url, title };
           });
 
-          const uniqueMarkdownSources = markdownSources.filter(
-            (source, index, self) => index === self.findIndex((s) => s.id === source.id),
-          );
+          const uniqueMarkdownSources = Array.from(new Map(markdownSources.map((s) => [s.id, s])).values());
 
           uniqueMarkdownSources.sort((a, b) => {
             if (!a.id || !b.id) return 0;
