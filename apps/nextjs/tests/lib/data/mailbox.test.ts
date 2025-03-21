@@ -51,6 +51,9 @@ test("getMailboxInfo", async () => {
     githubConnected: false,
     githubRepoName: null,
     githubRepoOwner: null,
+    onboardingMetadata: {
+      completed: true,
+    },
   });
 
   const slackConnectUrl = new URL(info.slackConnectUrl);

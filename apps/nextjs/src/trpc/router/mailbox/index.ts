@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { and, count, eq, inArray, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getMailboxInfo } from "@/lib/data/mailbox";
+import { completeOnboardingStep, OnboardingStepSchema } from "@/lib/data/onboarding";
 import { getClerkOrganization } from "@/lib/data/organization";
 import { getMemberStats } from "@/lib/data/stats";
 import { protectedProcedure } from "@/trpc/trpc";
@@ -120,6 +121,17 @@ export const mailboxRouter = {
       const mailboxId = ctx.mailbox.id;
       const updates = input.responseGeneratorPrompt ? { ...input, promptUpdatedAt: new Date() } : input;
       await db.update(mailboxes).set(updates).where(eq(mailboxes.id, mailboxId));
+    }),
+
+  completeOnboardingStep: mailboxProcedure
+    .input(
+      z.object({
+        stepId: OnboardingStepSchema,
+        additionalMetadata: z.record(z.any()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await completeOnboardingStep(ctx.mailbox.id, input.stepId, input.additionalMetadata);
     }),
   members: mailboxProcedure
     .input(

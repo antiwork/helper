@@ -119,6 +119,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipChannelId: string | null;
           vipExpectedResponseHours: number | null;
           disableAutoResponseForVips: boolean;
+          onboardingMetadata: {
+            completed: boolean;
+            emailConnectedAt?: Date | undefined;
+            widgetAddedAt?: Date | undefined;
+            knowledgeAddedAt?: Date | undefined;
+          } | null;
         };
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
@@ -138,6 +144,16 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           disableAutoResponseForVips?: boolean | undefined;
         };
         output: void;
+      }>;
+      completeOnboardingStep: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+          stepId: "email" | "website" | "widget";
+          additionalMetadata?: Record<string, any> | undefined;
+        };
+        output: {
+          success: boolean;
+        };
       }>;
       members: import("@trpc/server").TRPCQueryProcedure<{
         input: {

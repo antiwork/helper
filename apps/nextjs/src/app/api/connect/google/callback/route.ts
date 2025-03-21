@@ -2,13 +2,18 @@ import { NextResponse } from "next/server";
 import { auth, connectSupportEmailUrl } from "@/app/api/connect/google/utils";
 import { gmailScopesGranted } from "@/auth/lib/authService";
 import { getBaseUrl } from "@/components/constants";
+import { assertDefined } from "@/components/utils/assert";
 import { env } from "@/env";
 import { connectSupportEmail } from "@/lib/authService";
+import { getMailboxBySlug } from "@/lib/data/mailbox";
+import { completeOnboardingStep } from "@/lib/data/onboarding";
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
+  const mailbox = assertDefined(await getMailboxBySlug(assertDefined(state)));
+  const isOnboarding = !mailbox.onboardingMetadata?.emailConnectedAt;
 
   if (!code || !state) return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings?error=invalid_code`);
 
@@ -34,8 +39,15 @@ export async function GET(request: Request) {
       refresh_token: tokens.refresh_token,
       expires_at: new Date(tokens.expiry_date!),
     });
+    if (isOnboarding) {
+      await completeOnboardingStep(mailbox.id, "email");
+      return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/onboarding`);
+    }
     return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings?tab=integrations`);
   } catch (error) {
+    if (isOnboarding) {
+      return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/onboarding?error=${error}`);
+    }
     return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings?error=${error}`);
   }
 }

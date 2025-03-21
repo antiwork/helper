@@ -92,6 +92,7 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     vipChannelId: mailbox.vipChannelId,
     vipExpectedResponseHours: mailbox.vipExpectedResponseHours,
     disableAutoResponseForVips: mailbox.disableAutoResponseForVips,
+    onboardingMetadata: mailbox.onboardingMetadata,
   };
 };
 
