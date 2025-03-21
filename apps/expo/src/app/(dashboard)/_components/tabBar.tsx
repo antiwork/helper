@@ -2,6 +2,12 @@ import { usePathname, useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { ChartBarIcon, InboxIcon, StarIcon, UserIcon } from "react-native-heroicons/outline";
+import {
+  ChartBarIcon as ChartBarIconSolid,
+  InboxIcon as InboxIconSolid,
+  StarIcon as StarIconSolid,
+  UserIcon as UserIconSolid,
+} from "react-native-heroicons/solid";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cn, cssIconInterop } from "@/utils/css";
 
@@ -9,6 +15,10 @@ cssIconInterop(ChartBarIcon);
 cssIconInterop(UserIcon);
 cssIconInterop(StarIcon);
 cssIconInterop(InboxIcon);
+cssIconInterop(ChartBarIconSolid);
+cssIconInterop(InboxIconSolid);
+cssIconInterop(StarIconSolid);
+cssIconInterop(UserIconSolid);
 
 function Badge({ count }: { count: number }) {
   return (
@@ -28,7 +38,11 @@ export function TabBar() {
   return (
     <SafeAreaView edges={["bottom"]} className="py-2 flex-row bg-muted">
       <TouchableOpacity className="flex-1 justify-center items-center pt-[5px]" onPress={() => router.push("/")}>
-        <ChartBarIcon className={cn("size-6", pathname === "/" ? "text-primary" : "text-muted-foreground")} />
+        {pathname === "/" ? (
+          <ChartBarIconSolid className="size-6 text-primary" />
+        ) : (
+          <ChartBarIcon className="size-6 text-muted-foreground" />
+        )}
         <Text className={cn("text-xs mt-[3px]", pathname === "/" ? "text-primary" : "text-muted-foreground")}>
           Dashboard
         </Text>
@@ -36,7 +50,11 @@ export function TabBar() {
 
       <TouchableOpacity className="flex-1 justify-center items-center pt-[5px]" onPress={() => router.push("/vips")}>
         <View className="relative">
-          <StarIcon className={cn("size-6", pathname === "/vips" ? "text-primary" : "text-muted-foreground")} />
+          {pathname === "/vips" ? (
+            <StarIconSolid className="size-6 text-primary" />
+          ) : (
+            <StarIcon className="size-6 text-muted-foreground" />
+          )}
           <Badge count={vipCount} />
         </View>
         <Text className={cn("text-xs mt-[3px]", pathname === "/vips" ? "text-primary" : "text-muted-foreground")}>
@@ -48,14 +66,22 @@ export function TabBar() {
         className="flex-1 justify-center items-center pt-[5px]"
         onPress={() => router.push("/assigned")}
       >
-        <UserIcon className={cn("size-6", pathname === "/assigned" ? "text-primary" : "text-muted-foreground")} />
+        {pathname === "/assigned" ? (
+          <UserIconSolid className="size-6 text-primary" />
+        ) : (
+          <UserIcon className="size-6 text-muted-foreground" />
+        )}
         <Text className={cn("text-xs mt-[3px]", pathname === "/assigned" ? "text-primary" : "text-muted-foreground")}>
           Assigned
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity className="flex-1 justify-center items-center pt-[5px]" onPress={() => router.push("/inbox")}>
-        <InboxIcon className={cn("size-6", pathname === "/inbox" ? "text-primary" : "text-muted-foreground")} />
+        {pathname === "/inbox" ? (
+          <InboxIconSolid className="size-6 text-primary" />
+        ) : (
+          <InboxIcon className="size-6 text-muted-foreground" />
+        )}
         <Text className={cn("text-xs mt-[3px]", pathname === "/inbox" ? "text-primary" : "text-muted-foreground")}>
           All
         </Text>

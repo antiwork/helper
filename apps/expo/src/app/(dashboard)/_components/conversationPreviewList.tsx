@@ -1,17 +1,22 @@
 import { Link } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, FlatList, Linking, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import {
-  ArrowUturnLeftIcon,
+  ActivityIndicator,
+  FlatList,
+  Linking,
+  Modal,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  CreditCardIcon,
   StarIcon,
-  UserCircleIcon,
   UserIcon,
-  UserPlusIcon,
-  XCircleIcon,
+  XMarkIcon,
 } from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
@@ -21,17 +26,19 @@ cssIconInterop(UserIcon);
 cssIconInterop(StarIcon);
 cssIconInterop(ChevronRightIcon);
 cssIconInterop(ChevronLeftIcon);
-cssIconInterop(UserCircleIcon);
-cssIconInterop(CreditCardIcon);
-cssIconInterop(UserPlusIcon);
-cssIconInterop(XCircleIcon);
-cssIconInterop(ArrowUturnLeftIcon);
 cssIconInterop(CheckIcon);
+cssIconInterop(XMarkIcon);
 
-type Conversation = RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"][number];
+export type Conversation = RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"][number];
+
+type Member = {
+  id: string;
+  displayName: string;
+};
 
 export function ConversationPreviewList({
   conversations,
+  onUpdate,
   onRefresh,
   isRefreshing = false,
   isLoading = false,
@@ -41,6 +48,7 @@ export function ConversationPreviewList({
   isLoadingMore = false,
 }: {
   conversations?: Conversation[];
+  onUpdate: (conversation: Conversation) => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
@@ -56,6 +64,8 @@ export function ConversationPreviewList({
   });
 
   const [closedConversations, setClosedConversations] = useState<number[]>([]);
+  const [showMemberSelector, setShowMemberSelector] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
 
   const updateConversationMutation = api.mailbox.conversations.update.useMutation();
 
@@ -67,6 +77,22 @@ export function ConversationPreviewList({
   const handleReopenConversation = (item: Conversation) => {
     updateConversationMutation.mutate({ mailboxSlug, conversationSlug: item.slug, status: "open" });
     setClosedConversations((prev) => prev.filter((id) => id !== item.id));
+  };
+
+  const handleAssignConversation = (item: Conversation) => {
+    setSelectedConversation(item);
+    setShowMemberSelector(true);
+  };
+
+  const handleSelectMember = (member: Member | null) => {
+    if (selectedConversation) {
+      updateConversationMutation.mutate({
+        mailboxSlug,
+        conversationSlug: selectedConversation.slug,
+        assignedToId: member?.id ?? null,
+      });
+      onUpdate({ ...selectedConversation, assignedToClerkId: member?.id ?? null });
+    }
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
@@ -139,12 +165,7 @@ export function ConversationPreviewList({
             </>
           ) : (
             <>
-              <ActionButton
-                label="Assign"
-                onPress={() => {
-                  // Assign functionality will be implemented later
-                }}
-              />
+              <ActionButton label="Assign" onPress={() => handleAssignConversation(item)} />
               <ActionButton label="Close" onPress={() => handleCloseConversation(item)} />
               {Object.entries(item.platformCustomer?.links ?? {}).map(([key, value]) => (
                 <ActionButton key={key} label={key} onPress={() => Linking.openURL(value)} />
@@ -199,6 +220,15 @@ export function ConversationPreviewList({
           ) : null
         }
       />
+
+      {members && (
+        <MemberSelector
+          visible={showMemberSelector}
+          onClose={() => setShowMemberSelector(false)}
+          members={members}
+          onSelectMember={handleSelectMember}
+        />
+      )}
     </View>
   );
 }
@@ -214,5 +244,64 @@ const ActionButton = ({ label, onPress }: { label: string; onPress: () => void }
     >
       <Text className="text-xs font-medium text-muted-foreground">{label}</Text>
     </TouchableOpacity>
+  );
+};
+
+const MemberSelector = ({
+  visible,
+  onClose,
+  members,
+  onSelectMember,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  members: Member[];
+  onSelectMember: (member: Member | null) => void;
+}) => {
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <TouchableOpacity
+        activeOpacity={1}
+        className="flex-1 bg-black/50 justify-center items-center p-4"
+        onPress={onClose}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          className="bg-background rounded-lg w-full my-8 shadow-lg max-h-[85%]"
+          onPress={(e) => {
+            // Prevent clicks on the modal content from closing the modal
+            e.stopPropagation();
+          }}
+        >
+          <View className="flex-row justify-between items-center p-4 border-b border-border">
+            <Text className="text-lg font-medium text-foreground">Assign to</Text>
+            <TouchableOpacity onPress={onClose}>
+              <XMarkIcon size={24} className="text-muted-foreground" />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={[{ id: "", displayName: "Anyone" }, ...members]}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                className="p-4 border-b border-border flex-row items-center"
+                onPress={() => {
+                  onSelectMember(item.id ? item : null);
+                  onClose();
+                }}
+              >
+                <Text className="text-foreground">{item.displayName}</Text>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <View className="p-4">
+                <Text className="text-muted-foreground text-center">No members available</Text>
+              </View>
+            }
+          />
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
   );
 };
