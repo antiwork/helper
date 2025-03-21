@@ -54,6 +54,12 @@ Remember these important points:
 - Be clear and concise in your responses.
 - Don't mention when you're using a tool. Don't say things like "I'm using a tool to find information", "To provide you with information".
 - Do not include HTML in your response. If you include any formatting, use Markdown syntax.
+
+### Citations
+- When using website content, assign each unique URL an incremental number (inside a pair of parentheses), including whitespaces around the parentheses, and add it as a hyperlink immediately after the text. Use the format \`[(n)](URL)\`. Doesn't need to mention the page in the text.
+  **Example:**
+  - "This is a statement from the a page [(1)](http://website.com)."
+  - "This statement is from another page [(2)](http://website.com/another-page)."
 `;
 
 export const knowledgeBankPrompt = (entries: { content: string }[]) => {
