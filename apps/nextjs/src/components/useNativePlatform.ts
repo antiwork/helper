@@ -5,6 +5,10 @@ declare global {
   interface Window {
     __EXPO__?: {
       platform: "ios" | "android";
+      onToggleSidebar: (handler: () => void) => void;
+    };
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void;
     };
   }
 }

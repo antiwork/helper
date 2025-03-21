@@ -1,11 +1,10 @@
-import { and, count, eq, ne } from "drizzle-orm";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { disableAIResponse, ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
-import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
+import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
+import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata } from "@/lib/data/retrieval";
 
 export const respondToEmail = async (messageId: number) => {
@@ -19,10 +18,7 @@ export const respondToEmail = async (messageId: number) => {
               columns: {
                 slug: true,
                 autoRespondEmailToChat: true,
-                widgetHost: true,
                 id: true,
-                name: true,
-                disableAutoResponseForVips: true,
               },
             },
           },
@@ -54,30 +50,14 @@ export const respondToEmail = async (messageId: number) => {
     }
   }
 
-  const platformCustomer = email.conversation.emailFrom
-    ? await getPlatformCustomer(email.conversation.mailboxId, email.conversation.emailFrom)
-    : null;
-
-  if (await disableAIResponse(email.conversationId, email.conversation.mailbox, platformCustomer)) {
-    return;
-  }
-
-  const { count: messageCount } = await db
-    .select({ count: count() })
-    .from(conversationMessages)
-    .where(and(eq(conversationMessages.conversationId, email.conversationId), ne(conversationMessages.status, "draft")))
-    .then(takeUniqueOrThrow);
-  const isFollowUp = messageCount > 1;
-
   const emailText = (await getTextWithConversationSubject(email.conversation, email)).trim();
   if (emailText.length === 0) {
     return;
   }
 
   const { mailbox } = email.conversation;
-  const shouldAutoRespond = mailbox.autoRespondEmailToChat && mailbox.widgetHost && !isFollowUp;
 
-  if (shouldAutoRespond) {
+  if (mailbox.autoRespondEmailToChat) {
     await inngest.send({
       name: "conversations/auto-response.create",
       data: { messageId: email.id },

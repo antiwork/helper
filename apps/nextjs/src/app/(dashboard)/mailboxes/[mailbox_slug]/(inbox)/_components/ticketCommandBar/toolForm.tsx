@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToolExecution } from "@/hooks/useToolExecution";
 import type { RouterOutputs } from "@/trpc";
 
-type Tool = RouterOutputs["mailbox"]["conversations"]["tools"]["list"]["all"][number];
+export type Tool = RouterOutputs["mailbox"]["conversations"]["tools"]["list"]["all"][number];
 
 type ToolFormProps = {
   tool: Tool;
