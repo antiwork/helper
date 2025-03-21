@@ -600,7 +600,6 @@ export const respondWithAI = async ({
             return { id, url, title };
           });
 
-          // Deduplicate sources by ID to prevent duplicate rendering
           const uniqueMarkdownSources = markdownSources.filter(
             (source, index, self) => index === self.findIndex((s) => s.id === source.id),
           );
