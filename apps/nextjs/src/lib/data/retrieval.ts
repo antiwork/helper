@@ -148,7 +148,13 @@ export const findSimilarWebsitePages = async (
 export type PromptRetrievalData = {
   knowledgeBank: string | null;
   metadata: string | null;
-  websitePages: string | null;
+  websitePagesPrompt: string | null;
+  websitePages: {
+    url: string;
+    pageTitle: string;
+    markdown: string;
+    similarity: number;
+  }[];
 };
 
 export const fetchPromptRetrievalData = async (
@@ -164,7 +170,8 @@ export const fetchPromptRetrievalData = async (
   return {
     knowledgeBank: knowledgeBankPrompt(knowledgeBank),
     metadata: metadataText,
-    websitePages: websitePages.length > 0 ? websitePagesPrompt(websitePages) : null,
+    websitePagesPrompt: websitePages.length > 0 ? websitePagesPrompt(websitePages) : null,
+    websitePages,
   };
 };
 

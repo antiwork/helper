@@ -98,8 +98,12 @@ export const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
-): Promise<CoreMessage[]> => {
-  const { knowledgeBank, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
+): Promise<{
+  messages: CoreMessage[];
+  sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
+}> => {
+  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
+  console.log("websitePages", websitePages);
 
   const prompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -114,17 +118,20 @@ export const buildPromptMessages = async (
   if (knowledgeBank) {
     systemPrompt += `\n${knowledgeBank}`;
   }
-  if (websitePages) {
-    systemPrompt += `\n${websitePages}`;
+  if (websitePagesPrompt) {
+    systemPrompt += `\n${websitePagesPrompt}`;
   }
   systemPrompt += email ? `\nCurrent user email: ${email}` : "Anonymous user";
 
-  return [
-    {
-      role: "system",
-      content: systemPrompt,
-    },
-  ];
+  return {
+    messages: [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+    ],
+    sources: websitePages,
+  };
 };
 
 const generateReasoning = async ({
@@ -260,6 +267,7 @@ export const generateAIResponse = async ({
     experimental_providerMetadata: any;
     steps: any;
     traceId: string;
+    sources: { url: string; pageTitle: string }[];
   }) => Promise<void>;
   model?: LanguageModelV1;
   addReasoning?: boolean;
@@ -282,7 +290,7 @@ export const generateAIResponse = async ({
     });
 
   const coreMessages = convertToCoreMessages(messagesWithoutToolCalls, { tools: {} });
-  const systemMessages = await buildPromptMessages(mailbox, email, query);
+  const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query);
 
   const tools = await buildTools(conversationId, email, mailbox);
   if (readPageTool) {
@@ -391,6 +399,7 @@ export const generateAIResponse = async ({
           experimental_providerMetadata: { ...experimental_providerMetadata, reasoning },
           steps,
           traceId,
+          sources: sources.map((source) => ({ url: source.url, pageTitle: source.pageTitle })),
         });
       }
     },
@@ -554,7 +563,7 @@ export const respondWithAI = async ({
         screenshotAvailable: !sendEmail,
         addReasoning: true,
         dataStream,
-        async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata }) {
+        async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources }) {
           const hasSensitiveToolCall = steps.some((step: any) =>
             step.toolCalls.some((toolCall: any) => toolCall.toolName.includes("fetch_user_information")),
           );
@@ -582,6 +591,28 @@ export const respondWithAI = async ({
               messageId: assistantMessage.id,
             },
           });
+
+          // Extract sources from markdown links like [(1)](url)
+          const markdownSources = Array.from(text.matchAll(/\[\((\d+)\)\]\((https?:\/\/[^\s)]+)\)/g)).map((match) => {
+            const [, id, url] = match;
+            const existingSource = sources.find((source) => source.url === url);
+            const title = existingSource ? existingSource.pageTitle : url;
+            return { id, url, title };
+          });
+
+          markdownSources.sort((a, b) => {
+            if (!a.id || !b.id) return 0;
+            return parseInt(a.id) - parseInt(b.id);
+          });
+
+          for (const source of markdownSources) {
+            dataStream.writeSource({
+              sourceType: "url",
+              id: source.id ?? "",
+              url: source.url ?? "",
+              title: source.title ?? "",
+            });
+          }
 
           dataStream.writeMessageAnnotation({
             id: assistantMessage.id.toString(),
