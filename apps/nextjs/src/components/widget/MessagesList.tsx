@@ -7,7 +7,6 @@ type Props = {
   messages: MessageWithReaction[];
   conversationSlug: string | null;
   isGumroadTheme: boolean;
-  showLoadingAnimation: boolean;
   token: string | null;
   addToolResult: (options: { toolCallId: string; result: unknown }) => void;
 };
@@ -17,7 +16,6 @@ export default function MessagesList({
   messages,
   conversationSlug,
   isGumroadTheme,
-  showLoadingAnimation,
   token,
   addToolResult,
 }: Props) {
