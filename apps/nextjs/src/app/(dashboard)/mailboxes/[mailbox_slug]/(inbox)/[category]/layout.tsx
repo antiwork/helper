@@ -17,8 +17,10 @@ async function ConversationsLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar mailboxSlug={mailbox_slug} sidebarInfo={sidebarInfo} />
-      <main className="flex flex-col min-h-screen text-foreground w-full">{children}</main>
+      <div className="flex-1 flex h-full flex-col lg:flex-row">
+        <AppSidebar mailboxSlug={mailbox_slug} sidebarInfo={sidebarInfo} />
+        <main className="flex flex-col min-h-screen text-foreground w-full">{children}</main>
+      </div>
     </SidebarProvider>
   );
 }

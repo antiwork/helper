@@ -1,5 +1,4 @@
 import { revalidatePath } from "next/cache";
-import { PageContainer } from "@/components/pageContainer";
 import { api } from "@/trpc/server";
 import { getSidebarInfo } from "../_components/getSidebarInfo";
 import Settings, { type PendingUpdates } from "./_components/settings";
@@ -89,7 +88,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
   };
 
   return (
-    <PageContainer>
+    <>
       <title>Settings</title>
       <Settings
         mailbox={mailboxData}
@@ -99,7 +98,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
         subscription={mailboxData.subscription}
         sidebarInfo={sidebarInfo}
       />
-    </PageContainer>
+    </>
   );
 };
 

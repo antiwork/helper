@@ -1,4 +1,3 @@
-import { PageContainer } from "@/components/pageContainer";
 import { withMailboxAuth } from "@/components/withMailboxAuth";
 import { api } from "@/trpc/server";
 import { DashboardContent } from "./_components/dashboardContent";
@@ -16,11 +15,7 @@ const DashboardPage = async (props: { params: Promise<PageProps> }) => {
     throw new Error("Mailbox not found");
   }
 
-  return (
-    <PageContainer>
-      <DashboardContent mailboxSlug={params.mailbox_slug} currentMailbox={currentMailbox} />
-    </PageContainer>
-  );
+  return <DashboardContent mailboxSlug={params.mailbox_slug} currentMailbox={currentMailbox} />;
 };
 
 export default withMailboxAuth(DashboardPage);

@@ -3,8 +3,8 @@
 import { UserButton } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/peopleTable";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/reactionsChart";
-import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/members/_components/peopleTable";
 import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
