@@ -600,12 +600,14 @@ export const respondWithAI = async ({
             return { id, url, title };
           });
 
-          markdownSources.sort((a, b) => {
+          const uniqueMarkdownSources = Array.from(new Map(markdownSources.map((s) => [s.id, s])).values());
+
+          uniqueMarkdownSources.sort((a, b) => {
             if (!a.id || !b.id) return 0;
             return parseInt(a.id) - parseInt(b.id);
           });
 
-          for (const source of markdownSources) {
+          for (const source of uniqueMarkdownSources) {
             dataStream.writeSource({
               sourceType: "url",
               id: source.id ?? "",
