@@ -23,11 +23,8 @@ export const topicsRelations = relations(topics, ({ many, one }) => ({
   parent: one(topics, {
     fields: [topics.parentId],
     references: [topics.id],
-    relationName: "topic_parent_relation",
   }),
-  children: many(topics, {
-    relationName: "topic_parent_relation",
-  }),
+  children: many(topics),
   mailbox: one(mailboxes, {
     fields: [topics.mailboxId],
     references: [mailboxes.id],
