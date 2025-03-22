@@ -470,6 +470,13 @@
       "when": 1742418972102,
       "tag": "0066_worthless_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1742681031655,
+      "tag": "0067_thankful_baron_strucker",
+      "breakpoints": true
     }
   ]
 }

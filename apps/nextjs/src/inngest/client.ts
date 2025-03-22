@@ -150,6 +150,8 @@ export const inngest = new Inngest({
       "conversations/auto-close.process-mailbox": {
         data: z.object({
           mailboxId: z.number(),
+        }),
+      },
       "conversations/human-support-requested": {
         data: z.object({
           mailboxSlug: z.string(),
