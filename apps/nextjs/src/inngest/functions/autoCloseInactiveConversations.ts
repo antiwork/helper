@@ -42,11 +42,11 @@ async function closeInactiveConversations(): Promise<AutoCloseReport> {
     report.status = "No mailboxes with auto-close enabled found";
     return report;
   }
-
   for (const mailbox of enabledMailboxes) {
     await inngest.send({
       name: "conversations/auto-close.process-mailbox",
       data: { mailboxId: mailbox.id },
+      middleware: [],
     });
   }
 
