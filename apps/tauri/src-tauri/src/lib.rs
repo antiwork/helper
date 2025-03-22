@@ -4,6 +4,7 @@ extern crate lazy_static;
 use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2::AllocAnyThread;
+use objc2::DefinedClass;
 use objc2::{define_class, msg_send, MainThreadMarker, MainThreadOnly};
 use objc2_authentication_services::{
     ASAuthorization, ASAuthorizationAppleIDProvider, ASAuthorizationController,
@@ -13,6 +14,8 @@ use objc2_foundation::{NSArray, NSError, NSObject, NSObjectProtocol};
 use std::cell::RefCell;
 use std::env;
 use std::sync::Mutex;
+use tauri::AppHandle;
+use tauri::Emitter;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 
@@ -41,7 +44,9 @@ fn start_options() -> serde_json::Value {
 }
 
 #[derive(Clone)]
-struct Ivars {}
+struct Ivars {
+    app: AppHandle,
+}
 
 define_class!(
     #[unsafe(super(NSObject))]
@@ -54,9 +59,9 @@ define_class!(
 );
 
 impl ASAuthorizationControllerDelegateImpl {
-    fn new() -> Retained<Self> {
+    fn new(app: AppHandle) -> Retained<Self> {
         let mtm = MainThreadMarker::new().unwrap();
-        let this = Self::alloc(mtm).set_ivars(Ivars {});
+        let this = Self::alloc(mtm).set_ivars(Ivars { app });
         unsafe { msg_send![super(this), init] }
     }
 }
@@ -67,7 +72,11 @@ unsafe impl ASAuthorizationControllerDelegate for ASAuthorizationControllerDeleg
         _controller: &ASAuthorizationController,
         authorization: &ASAuthorization,
     ) {
-        println!("Authorization complete: {:?}", authorization);
+        log::info!("Authorization complete: {:?}", authorization);
+        self.ivars()
+            .app
+            .emit("apple-sign-in-complete", format!("{:?}", authorization))
+            .unwrap();
     }
 
     unsafe fn authorizationController_didCompleteWithError(
@@ -75,13 +84,17 @@ unsafe impl ASAuthorizationControllerDelegate for ASAuthorizationControllerDeleg
         _controller: &ASAuthorizationController,
         error: &NSError,
     ) {
-        println!("Authorization error: {:?}", error);
+        log::error!("Authorization error: {:?}", error);
+        self.ivars()
+            .app
+            .emit("apple-sign-in-error", format!("{:?}", error))
+            .unwrap();
     }
 }
 
 #[cfg(target_os = "macos")]
 #[tauri::command]
-fn start_apple_sign_in() {
+fn start_apple_sign_in(app: AppHandle) {
     unsafe {
         let provider = ASAuthorizationAppleIDProvider::new();
         let request = provider.createRequest();
@@ -94,12 +107,13 @@ fn start_apple_sign_in() {
         );
 
         // Create and store the delegate in thread-local storage to keep it alive
-        let delegate = ASAuthorizationControllerDelegateImpl::new();
+        let delegate = ASAuthorizationControllerDelegateImpl::new(app.clone());
         APPLE_SIGN_IN_DELEGATE.with(|cell| {
             *cell.borrow_mut() = Some(delegate.clone());
         });
 
         controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
+        log::info!("Starting authorization requests");
         controller.performRequests();
     }
 }
