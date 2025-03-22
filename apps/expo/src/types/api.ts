@@ -262,6 +262,65 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             nextCursor: string | null;
           };
         }>;
+        listWithPreview: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+            status?: unknown[] | null | undefined;
+            sort?: unknown;
+            search?: string | null | undefined;
+            reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+            events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
+            topic?: number[] | undefined;
+            limit?: number | undefined;
+            cursor?: string | null | undefined;
+            category?: unknown;
+            assignee?: string[] | undefined;
+            createdAfter?: string | undefined;
+            createdBefore?: string | undefined;
+            repliedBy?: string[] | undefined;
+            customer?: string[] | undefined;
+            isVip?: boolean | undefined;
+          };
+          output: {
+            conversations: {
+              userMessageText: string | null;
+              staffMessageText: string | null;
+              matchedMessageText: string | null;
+              id: number;
+              slug: string;
+              status: "open" | "closed" | "spam" | null;
+              emailFrom: string | null;
+              subject: string;
+              conversationProvider: "gmail" | "helpscout" | "chat" | null;
+              createdAt: Date;
+              updatedAt: Date;
+              closedAt: Date | null;
+              lastUserEmailCreatedAt: Date | null;
+              assignedToClerkId: string | null;
+              platformCustomer: {
+                isVip: boolean;
+                value: string | null;
+                name: string | null;
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                mailboxId: number;
+                email: string;
+                links: Record<string, string> | null;
+              } | null;
+              summary: string[] | null;
+              source: "email" | "chat" | "chat#prompt";
+              isPrompt: boolean;
+              isVisitor: boolean;
+              embeddingText: string | null;
+              githubIssueNumber: number | null;
+              githubIssueUrl: string | null;
+              githubRepoOwner: string | null;
+              githubRepoName: string | null;
+            }[];
+            nextCursor: string | null;
+          };
+        }>;
         bySlug: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;

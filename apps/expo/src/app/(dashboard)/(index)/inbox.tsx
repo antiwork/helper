@@ -5,10 +5,11 @@ import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { ConversationList } from "../_components/conversationList";
 import { Header } from "../_components/header";
+import { TabBar } from "../_components/tabBar";
 
 export default function InboxScreen() {
   const { selectedMailbox } = useMailbox();
-  const [selectedTab, setSelectedTab] = useState<"conversations" | "mine" | "assigned">("mine");
+  const [selectedTab, setSelectedTab] = useState<"conversations" | "mine" | "unassigned">("mine");
 
   const { data, isLoading, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
     api.mailbox.conversations.list.useInfiniteQuery(
@@ -30,8 +31,8 @@ export default function InboxScreen() {
 
   const tabs: { id: typeof selectedTab; label: string }[] = [
     { id: "mine", label: "Mine" },
-    { id: "conversations", label: "Open" },
-    { id: "assigned", label: "Assigned" },
+    { id: "unassigned", label: "Unassigned" },
+    { id: "conversations", label: "All" },
   ];
 
   const handleLoadMore = () => {
@@ -60,16 +61,19 @@ export default function InboxScreen() {
           </TouchableOpacity>
         ))}
       </View>
-      <ConversationList
-        conversations={conversations}
-        onRefresh={refetch}
-        isRefreshing={isRefetching}
-        isLoading={isLoading}
-        mailboxSlug={selectedMailbox?.slug ?? ""}
-        onLoadMore={handleLoadMore}
-        hasMore={!!hasNextPage}
-        isLoadingMore={isFetchingNextPage}
-      />
+      <View className="flex-1">
+        <ConversationList
+          conversations={conversations}
+          onRefresh={refetch}
+          isRefreshing={isRefetching}
+          isLoading={isLoading}
+          mailboxSlug={selectedMailbox?.slug ?? ""}
+          onLoadMore={handleLoadMore}
+          hasMore={!!hasNextPage}
+          isLoadingMore={isFetchingNextPage}
+        />
+      </View>
+      <TabBar />
     </SafeAreaView>
   );
 }
