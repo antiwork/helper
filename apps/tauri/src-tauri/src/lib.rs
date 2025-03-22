@@ -1,13 +1,17 @@
 #[macro_use]
 extern crate lazy_static;
 
+use objc2::rc::Retained;
+use objc2::AllocAnyThread;
+use objc2::{define_class, msg_send, MainThreadMarker, MainThreadOnly};
+use objc2_authentication_services::{
+    ASAuthorization, ASAuthorizationAppleIDProvider, ASAuthorizationController,
+    ASAuthorizationControllerDelegate,
+};
+use objc2_foundation::{NSArray, NSError, NSObject, NSObjectProtocol};
 use std::env;
 use std::sync::Mutex;
-use tao::event::{Event, StartCause};
-use tao::event_loop::{ControlFlow, EventLoopBuilder};
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
-use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_log::{Target, TargetKind};
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
@@ -28,6 +32,53 @@ fn start_options() -> serde_json::Value {
         "isDev": is_dev,
         "deepLinkUrl": deep_link
     })
+}
+
+define_class!(
+    #[unsafe(super(NSObject))]
+    #[thread_kind = MainThreadOnly]
+    #[name = "ASAuthorizationControllerDelegateImpl"]
+    struct ASAuthorizationControllerDelegateImpl;
+
+    unsafe impl NSObjectProtocol for ASAuthorizationControllerDelegateImpl {}
+);
+
+impl ASAuthorizationControllerDelegateImpl {
+    fn new() -> Retained<Self> {
+        let mtm = MainThreadMarker::new().unwrap();
+        let this = Self::alloc(mtm);
+        unsafe { msg_send![super(this), init] }
+    }
+}
+
+unsafe impl ASAuthorizationControllerDelegate for ASAuthorizationControllerDelegateImpl {
+    unsafe fn authorizationController_didCompleteWithAuthorization(
+        &self,
+        _controller: &ASAuthorizationController,
+        authorization: &ASAuthorization,
+    ) {
+        println!("Authorization complete: {:?}", authorization);
+    }
+
+    unsafe fn authorizationController_didCompleteWithError(
+        &self,
+        _controller: &ASAuthorizationController,
+        error: &NSError,
+    ) {
+        println!("Authorization error: {:?}", error);
+    }
+}
+
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn start_apple_sign_in() {
+    let request = ASAuthorizationAppleIDProvider::new().createRequest();
+    let controller = ASAuthorizationController::initWithAuthorizationRequests(
+        ASAuthorizationController::alloc(),
+        NSArray::from_slice(&[&request]),
+    );
+    controller.setDelegate(ASAuthorizationControllerDelegateImpl::new());
+    controller.performRequests();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
