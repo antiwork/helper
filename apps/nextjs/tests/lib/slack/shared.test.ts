@@ -6,7 +6,7 @@ import { createReply } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
 import { findUserViaSlack } from "@/lib/data/user";
 import { openSlackModal, postSlackMessage } from "@/lib/slack/client";
-import { handleSlackAction } from "@/lib/slack/shared";
+import { handleMessageSlackAction } from "@/lib/slack/shared";
 
 vi.mock("@/lib/data/user", () => ({
   findUserViaSlack: vi.fn(),
@@ -62,7 +62,7 @@ describe("handleSlackAction", () => {
       trigger_id: "trigger123",
     };
 
-    await handleSlackAction(message, payload);
+    await handleMessageSlackAction(message, payload);
 
     expect(openSlackModal).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -95,7 +95,7 @@ describe("handleSlackAction", () => {
 
     vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
 
-    await handleSlackAction(message, payload);
+    await handleMessageSlackAction(message, payload);
 
     const updatedConversation = await getConversationById(conversation.id);
     expect(updatedConversation?.status).toBe("closed");
@@ -120,7 +120,7 @@ describe("handleSlackAction", () => {
       user: { id: "U12345" },
     };
 
-    await handleSlackAction(message, payload);
+    await handleMessageSlackAction(message, payload);
 
     expect(postSlackMessage).toHaveBeenCalledWith(
       "xoxb-12345678901234567890",
@@ -162,7 +162,7 @@ describe("handleSlackAction", () => {
 
     vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
 
-    await handleSlackAction(message, payload);
+    await handleMessageSlackAction(message, payload);
 
     expect(createReply).toHaveBeenCalledWith({
       conversationId: conversation.id,
@@ -203,7 +203,7 @@ describe("handleSlackAction", () => {
       },
     };
 
-    await handleSlackAction(message, payload);
+    await handleMessageSlackAction(message, payload);
 
     expect(createReply).toHaveBeenCalledWith({
       conversationId: conversation.id,
@@ -244,7 +244,7 @@ describe("handleSlackAction", () => {
       },
     };
 
-    await handleSlackAction(message, payload);
+    await handleMessageSlackAction(message, payload);
 
     expect(addNote).toHaveBeenCalledWith({
       conversationId: conversation.id,

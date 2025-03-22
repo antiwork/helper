@@ -5,14 +5,7 @@ import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import {
-  conversationMessages,
-  conversations,
-  mailboxes,
-  platformCustomers,
-  WorkflowConditionField,
-  WorkflowConditionOperator,
-} from "@/db/schema";
+import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { inngest } from "@/inngest/client";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/ably/channels";
@@ -26,13 +19,14 @@ import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
 import { getMailboxById } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
-import { evaluateWorkflowCondition } from "./workflowCondition";
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
 
 type NewConversation = Omit<typeof conversations.$inferInsert, OptionalConversationAttributes | "source"> &
   Partial<Pick<typeof conversations.$inferInsert, OptionalConversationAttributes>> & {
     source: NonNullable<(typeof conversations.$inferInsert)["source"]>;
+    isPrompt?: boolean;
+    isVisitor?: boolean;
   };
 
 export type Conversation = typeof conversations.$inferSelect;
@@ -40,8 +34,6 @@ export type Conversation = typeof conversations.$inferSelect;
 export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
 export const MAX_RELATED_CONVERSATIONS_COUNT = 3;
-
-const WORKFLOW_MATCH_CHECKS = 6;
 
 export const createConversation = async (conversation: NewConversation): Promise<typeof conversations.$inferSelect> => {
   try {
@@ -113,6 +105,7 @@ export const updateConversation = async (
       },
     });
   }
+
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
     await updateVipMessageOnClose(updatedConversation.id, byUserId);
 
@@ -192,7 +185,13 @@ export const serializeConversation = (
       : null,
     summary: conversation.summary,
     source: conversation.source ?? "email",
+    isPrompt: conversation.isPrompt ?? false,
+    isVisitor: conversation.isVisitor ?? false,
     embeddingText: conversation.embeddingText,
+    githubIssueNumber: conversation.githubIssueNumber,
+    githubIssueUrl: conversation.githubIssueUrl,
+    githubRepoOwner: conversation.githubRepoOwner,
+    githubRepoName: conversation.githubRepoName,
   };
 };
 
@@ -338,31 +337,6 @@ export const getRelatedConversations = async (
     orderBy: desc(conversations.createdAt),
   });
   return relatedConversations;
-};
-
-export const getMatchingConversationsByPrompt = async (
-  conversations: Conversation[],
-  prompt: string,
-): Promise<Conversation[]> => {
-  const matchingConversations: Conversation[] = [];
-  for (const conversation of conversations.slice(0, WORKFLOW_MATCH_CHECKS)) {
-    const firstUserMessage = await db.query.conversationMessages.findFirst({
-      where: and(eq(conversationMessages.conversationId, conversation.id), eq(conversationMessages.role, "user")),
-      orderBy: [asc(conversationMessages.createdAt)],
-      with: { conversation: true },
-    });
-    if (!firstUserMessage) continue;
-
-    const condition = {
-      operator: WorkflowConditionOperator.PASSES_AI_CONDITIONAL_FOR,
-      field: WorkflowConditionField.FULL_EMAIL_CONTEXT,
-      value: prompt,
-    };
-    if (await evaluateWorkflowCondition(condition, firstUserMessage)) matchingConversations.push(conversation);
-
-    if (matchingConversations.length >= MAX_RELATED_CONVERSATIONS_COUNT) break;
-  }
-  return matchingConversations;
 };
 
 export const generateConversationSubject = async (

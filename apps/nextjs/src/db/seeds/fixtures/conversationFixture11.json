@@ -19,18 +19,6 @@
           "conversationId": 11
         },
         {
-          "id": 81,
-          "role": "workflow",
-          "body": "Hi there,<br><br>Thanks for reaching out about your recent purchase. Here are some helpful resources:<br><br>• <strong>Download issues?</strong> First, please clear your browser cache and try downloading again. If that doesn't work, try using a different browser.<br><br>• <strong>Need to restore access?</strong> Visit your <a href=\"https://store.example.com/library\">Digital Library</a><br><br>• <strong>Technical requirements:</strong> Make sure you have sufficient storage space and a stable internet connection.<br><br>• <strong>Download limits:</strong> You can download your purchase up to 5 times within 30 days.<br><br>Check our <a href=\"https://help.example.com/downloads\">Download Guide</a> for more detailed instructions.<br><br>If you're still having trouble, please reply with:<br>1. The browser you're using<br>2. Any error messages you see<br>3. Screenshots if possible<br><br>We're here to help!",
-          "emailTo": null,
-          "emailFrom": null,
-          "emailCc": null,
-          "emailBcc": null,
-          "metadata": null,
-          "status": "sent",
-          "conversationId": 11
-        },
-        {
           "id": 87,
           "role": "user",
           "body": "I've tried clearing my cache and using Chrome, but when I click the download button nothing happens. I just get a spinning wheel that never completes.",

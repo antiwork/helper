@@ -33,6 +33,7 @@ import WorkflowsSetting, { type Workflow } from "./automaticWorkflowsSetting";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
 import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
+import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
 import PromptSetting from "./promptSetting";
@@ -44,6 +45,7 @@ import ToolSetting from "./toolSetting";
 
 export type PendingUpdates = {
   slack?: SlackUpdates;
+  github?: GitHubUpdates;
   promptLines?: PromptLineUpdate[];
   widget?: {
     displayMode: (typeof mailboxes.$inferSelect)["widgetDisplayMode"];
@@ -59,24 +61,13 @@ type SettingsProps = {
   children?: React.ReactElement<any> | React.ReactElement<any>[];
   onUpdateSettings: (pendingUpdates: PendingUpdates) => Promise<void>;
   mailbox: RouterOutputs["mailbox"]["get"];
-  handleDeleteWorkflow: (id: number) => Promise<string | null>;
   linters: Linter[];
   supportAccount?: SupportAccount;
-  workflows: Workflow[];
   subscription: SubscriptionType | null;
   sidebarInfo: SidebarInfo;
 };
 
-const Settings = ({
-  onUpdateSettings,
-  mailbox,
-  handleDeleteWorkflow,
-  linters,
-  supportAccount,
-  subscription,
-  workflows,
-  sidebarInfo,
-}: SettingsProps) => {
+const Settings = ({ onUpdateSettings, mailbox, linters, supportAccount, subscription, sidebarInfo }: SettingsProps) => {
   const { signOut } = useClerk();
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -108,6 +99,7 @@ const Settings = ({
   const hasPendingUpdates =
     Boolean(pendingUpdates.promptLines?.length) ||
     Boolean(pendingUpdates.slack) ||
+    Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
     Boolean(pendingUpdates.customer) ||
     Boolean(pendingUpdates.autoClose);
@@ -124,14 +116,6 @@ const Settings = ({
   };
 
   const items = [
-    {
-      label: "Workflows",
-      id: "workflows",
-      icon: BoltIcon,
-      content: (
-        <WorkflowsSetting mailboxSlug={mailbox.slug} workflows={workflows} handleDelete={handleDeleteWorkflow} />
-      ),
-    },
     {
       label: "Knowledge",
       id: "knowledge",
@@ -217,6 +201,15 @@ const Settings = ({
               }));
             }}
             onSave={handleUpdateSettings}
+          />
+          <GitHubSetting
+            mailbox={mailbox}
+            onChange={(githubChanges) =>
+              setPendingUpdates({
+                ...pendingUpdates,
+                github: { ...pendingUpdates.github, ...githubChanges },
+              })
+            }
           />
           <ConnectSupportEmail supportAccount={supportAccount} />
         </>

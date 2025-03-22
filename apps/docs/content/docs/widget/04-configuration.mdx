@@ -59,6 +59,36 @@ You can customize the appearance of the chat widget:
 | Option | Type | Description |
 |--------|------|-------------|
 | `title` | string | Custom title for the chat widget |
+| `show_toggle_button` | boolean | Control toggle button visibility |
+
+#### Toggle Button Visibility
+
+The `show_toggle_button` option allows you to control the visibility of the toggle button during widget initialization, overriding the session/mailbox configuration:
+
+- `true`: Always show the toggle button when the widget is hidden, regardless of the server-side setting
+- `false`: Never show the toggle button, regardless of the server-side setting
+- `undefined` or not provided (default): Use the server-side setting to determine toggle button visibility
+
+Example usage:
+
+```javascript
+// Initialize widget with toggle button always visible
+HelperWidget.init({
+  mailbox_slug: "your-mailbox",
+  show_toggle_button: true
+});
+
+// Initialize widget with toggle button always hidden
+HelperWidget.init({
+  mailbox_slug: "your-mailbox",
+  show_toggle_button: false
+});
+
+// Use server-side configuration (default behavior)
+HelperWidget.init({
+  mailbox_slug: "your-mailbox"
+});
+```
 
 ## Security
 
@@ -74,4 +104,4 @@ The HMAC secret is used to generate a hash that verifies the authenticity of the
 - Store your HMAC secret securely in your server environment
 - Never expose your HMAC secret on the client side
 - Use HTTPS to prevent man-in-the-middle attacks
-- Validate the timestamp on your server to prevent replay attacks 
+- Validate the timestamp on your server to prevent replay attacks  

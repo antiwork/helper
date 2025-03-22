@@ -8,20 +8,21 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
 import { getMemberStats } from "@/lib/data/stats";
 import { protectedProcedure } from "@/trpc/trpc";
-import { conversationsRouter } from "./conversations";
+import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
+import { githubRouter } from "./github";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
 import { styleLintersRouter } from "./styleLinters";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
-import { workflowsRouter } from "./workflows";
 
 export { mailboxProcedure };
 
@@ -105,6 +106,8 @@ export const mailboxRouter = {
     .input(
       z.object({
         slackAlertChannel: z.string().optional(),
+        githubRepoOwner: z.string().optional(),
+        githubRepoName: z.string().optional(),
         responseGeneratorPrompt: z.array(z.string()).optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
         widgetDisplayMinValue: z.number().optional(),
@@ -142,11 +145,15 @@ export const mailboxRouter = {
       const startDate = input.customDate || subHours(now, periodInHours[input.period]);
       return await getMemberStats(ctx.mailbox, { startDate, endDate: now });
     }),
+  latestEvents: mailboxProcedure
+    .input(z.object({ cursor: z.date().optional() }))
+    .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
   styleLinters: styleLintersRouter,
   conversations: conversationsRouter,
   faqs: faqsRouter,
-  workflows: workflowsRouter,
+
   slack: slackRouter,
+  github: githubRouter,
   tools: toolsRouter,
   customers: customersRouter,
   websites: websitesRouter,

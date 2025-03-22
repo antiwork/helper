@@ -6,7 +6,7 @@ export const useNewConversation = (token: string | null) => {
   const queryClient = useQueryClient();
 
   const createConversationMutation = useMutation({
-    mutationFn: async (source?: "chat" | "chat#prompt") => {
+    mutationFn: async ({ isPrompt }: { isPrompt: boolean }) => {
       if (!token) {
         throw new Error("Authentication token is required");
       }
@@ -17,9 +17,7 @@ export const useNewConversation = (token: string | null) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          source: source || "chat",
-        }),
+        body: JSON.stringify({ isPrompt }),
       });
 
       if (!response.ok) {

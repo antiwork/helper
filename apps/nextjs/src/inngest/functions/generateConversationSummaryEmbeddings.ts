@@ -18,7 +18,7 @@ export default inngest.createFunction(
       await getConversationById(conversationMessage.conversationId),
     );
 
-    if (conversation.source !== "chat#prompt") {
+    if (!conversation.isPrompt) {
       await generateConversationSummary(conversationMessage.conversationId);
 
       await step.sendEvent("generate-embeddings", {

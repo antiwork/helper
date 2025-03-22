@@ -16,7 +16,7 @@ import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useHelper } from "@helperai/react";
 import { Button } from "@/components/ui/button";
@@ -97,7 +97,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                   <textarea
                     id="customerMessage"
                     name="customerMessage"
-                    rows={3}
+                    rows={2}
                     className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
                     placeholder="Enter customer message here"
                     defaultValue={`Hi! That's a great question. When you un-publish your product, it simply removes the product from the public view.`}
@@ -258,64 +258,8 @@ Please reply with this information. We'll review your request within 1-2 busines
 
 export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
   const { sendPrompt } = useHelper();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollContentRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [cardWidth, setCardWidth] = useState(0);
-  const [scrollPosition, setScrollPosition] = useState(0);
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
-  const isDesktop = useMediaQuery({ minWidth: 1024 });
-
-  useEffect(() => {
-    const updateCardWidth = () => {
-      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-      const minCardWidth = 300;
-      const maxCardWidth = 600;
-      const calculatedWidth = Math.min(Math.max(vw * (isDesktop ? 0.8 : 0.9), minCardWidth), maxCardWidth);
-      setCardWidth(calculatedWidth);
-    };
-
-    updateCardWidth();
-    window.addEventListener("resize", updateCardWidth);
-    return () => window.removeEventListener("resize", updateCardWidth);
-  }, [isDesktop]);
-
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    const scrollContent = scrollContentRef.current;
-    if (scrollContainer && scrollContent && cardWidth > 0 && isDesktop) {
-      let animationFrameId: number;
-
-      const scroll = () => {
-        if (!isHovered) {
-          setScrollPosition((prev) => {
-            const newPosition = (prev + 0.5) % (cardWidth * 8);
-            scrollContainer.scrollLeft = newPosition;
-            return newPosition;
-          });
-        }
-        animationFrameId = requestAnimationFrame(scroll);
-      };
-
-      animationFrameId = requestAnimationFrame(scroll);
-
-      return () => {
-        cancelAnimationFrame(animationFrameId);
-      };
-    }
-  }, [isHovered, cardWidth, isDesktop]);
-
-  useEffect(() => {
-    document.documentElement.style.overflowX = "hidden";
-    return () => {
-      document.documentElement.style.overflowX = "";
-    };
-  }, []);
-
-  const cardTypes = useMemo(() => {
-    return ["styleLinter", "autoDraft", "pinnedReplies", "promptConfig"];
-  }, []);
 
   const generateRandomColors = useCallback(() => {
     const generateRandomColor = () =>
@@ -436,73 +380,57 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               Better-than-human responses
             </h2>
           </div>
-          <div
-            ref={scrollContainerRef}
-            className={`w-full ${isDesktop ? "overflow-x-hidden" : "overflow-x-auto"} overflow-y-hidden scrollbar-hide`}
-            onMouseEnter={() => isDesktop && setIsHovered(true)}
-            onMouseLeave={() => isDesktop && setIsHovered(false)}
-          >
-            <div
-              ref={scrollContentRef}
-              className="flex"
-              style={{
-                width: `${cardWidth * 16}px`,
-                transform: isDesktop ? "none" : `translateX(-${scrollPosition}px)`,
-                transition: isDesktop ? "none" : "transform 0.5s ease-out",
-              }}
-            >
-              {[...Array(16)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-shrink-0 bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden"
-                  style={{
-                    width: `${cardWidth - (isDesktop ? 32 : 16)}px`,
-                    maxWidth: "568px",
-                    minWidth: "350px",
-                    height: "700px",
-                    margin: isDesktop ? "1rem" : "0.5rem",
-                  }}
-                >
-                  <div className="flex-1 overflow-y-auto">
-                    <CardContent type={cardTypes[i % 4] || ""} />
-                  </div>
+          <div className="w-[85vw] max-w-7xl mx-auto md:px-8 columns-1 md:columns-2 gap-6">
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="styleLinter" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Craft authentic replies in your brand&apos;s voice with
+                  <span className="underline-offset">&nbsp;style linter</span>
+                </h3>
+                <p className="text-md text-muted-foreground">Human touch, robot efficiency</p>
+              </div>
+            </div>
 
-                  <div className="flex-1 bg-secondary p-8 overflow-y-auto">
-                    <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                      {i % 4 === 0 && (
-                        <>
-                          Craft authentic replies in your brand&apos;s voice with
-                          <span className="underline-offset">&nbsp;style linter</span>
-                        </>
-                      )}
-                      {i % 4 === 1 && (
-                        <>
-                          Goodbye writer&apos;s block, hello
-                          <span className="underline-offset">&nbsp;auto-generated drafts</span>
-                        </>
-                      )}
-                      {i % 4 === 2 && (
-                        <>
-                          Your best replies become the new standard with
-                          <span className="underline-offset">&nbsp;FAQs</span>
-                        </>
-                      )}
-                      {i % 4 === 3 && (
-                        <>
-                          Set the rules and Helper will follow your lead with
-                          <span className="underline-offset">&nbsp;prompt configuration</span>
-                        </>
-                      )}
-                    </h3>
-                    <p className="text-md text-muted-foreground">
-                      {i % 4 === 0 && "Human touch, robot efficiency"}
-                      {i % 4 === 1 && "All you have to do is click send."}
-                      {i % 4 === 2 && "Pin your best and watch Helper learn"}
-                      {i % 4 === 3 && "Responses that fit your needs."}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="autoDraft" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Goodbye writer&apos;s block, hello
+                  <span className="underline-offset">&nbsp;auto-generated drafts</span>
+                </h3>
+                <p className="text-md text-muted-foreground">All you have to do is click send.</p>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="pinnedReplies" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Your best replies become the new standard with
+                  <span className="underline-offset">&nbsp;FAQs</span>
+                </h3>
+                <p className="text-md text-muted-foreground">Pin your best and watch Helper learn</p>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-3xl shadow-lg flex flex-col overflow-hidden mb-6 break-inside-avoid">
+              <div className="flex-1">
+                <CardContent type="promptConfig" />
+              </div>
+              <div className="bg-secondary p-8">
+                <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
+                  Set the rules and Helper will follow your lead with
+                  <span className="underline-offset">&nbsp;prompt configuration</span>
+                </h3>
+                <p className="text-md text-muted-foreground">Responses that fit your needs.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -513,7 +441,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               Simple, transparent, usage-based pricing
             </h2>
             <div className="text-2xl md:text-3xl text-primary mb-8">
-              <span className="font-bold">$0.99</span> per resolution
+              <span className="font-bold">20¢</span> per resolution
             </div>
 
             <div className="max-w-2xl mx-auto grid md:grid-cols-2 gap-8 text-left mb-12">
@@ -525,7 +453,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                     "In-app live chat",
                     "Human handoff",
                     "Magical auto-assign",
-                    "Intelligent workflows",
+                    "AI-powered responses",
                   ].map((feature) => (
                     <li key={feature} className="flex items-center text-muted-foreground">
                       <svg

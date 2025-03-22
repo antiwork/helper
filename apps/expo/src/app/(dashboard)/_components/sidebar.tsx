@@ -1,5 +1,5 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { usePathname, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Linking, Text, TouchableOpacity, View } from "react-native";
 import {
@@ -30,7 +30,6 @@ export function Sidebar({ navigation }: { navigation: { closeDrawer: () => void 
   const { signOut } = useAuth();
   const { data: mailboxes } = api.mailbox.list.useQuery();
   const router = useRouter();
-  const pathname = usePathname();
   const url = useAuthenticatedUrl("/mailboxes");
 
   const handleLogout = async () => {
@@ -73,37 +72,15 @@ export function Sidebar({ navigation }: { navigation: { closeDrawer: () => void 
                 {mailbox.name}
               </Text>
             </TouchableOpacity>
-            {selectedMailbox?.slug === mailbox.slug && (
-              <View>
-                <TouchableOpacity
-                  onPress={() => router.push("/")}
-                  className={cn("px-12 py-3", pathname === "/" && "bg-muted")}
-                >
-                  <View className="flex-row items-center py-3">
-                    <ChartBarIcon className="mr-3 h-5 w-5 text-foreground" />
-                    <Text className="text-foreground">Dashboard</Text>
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push("/inbox")}
-                  className={cn("px-12 py-3", pathname === "/inbox" && "bg-muted")}
-                >
-                  <View className="flex-row items-center py-3">
-                    <InboxIcon className="mr-3 h-5 w-5 text-foreground" />
-                    <Text className="text-foreground">Inbox</Text>
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={openOnWeb} className="px-12 py-3">
-                  <View className="flex-row items-center py-3">
-                    <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5 text-foreground" />
-                    <Text className="text-foreground">More</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            )}
           </React.Fragment>
         ))}
+
         <View className="my-4 border-b border-border" />
+        <TouchableOpacity onPress={openOnWeb} className="px-6 py-4 flex-row items-center">
+          <ArrowTopRightOnSquareIcon className="mr-3 h-5 w-5 text-foreground" />
+          <Text className="text-foreground">More</Text>
+        </TouchableOpacity>
+
         <Text className="mt-auto px-6 py-4 text-sm uppercase font-semibold text-foreground">
           {user?.fullName ?? "User"}
         </Text>

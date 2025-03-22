@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { conversationMessages, faqs } from "@/db/schema";
+import { handleKnowledgeBankSlackAction } from "@/lib/data/knowledge";
 import { verifySlackRequest } from "@/lib/slack/client";
-import { handleSlackAction } from "@/lib/slack/shared";
+import { handleMessageSlackAction } from "@/lib/slack/shared";
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -30,7 +31,7 @@ export const POST = async (request: Request) => {
     },
   });
   if (message?.conversation) {
-    await handleSlackAction(
+    await handleMessageSlackAction(
       {
         conversationId: message.conversation.id,
         slackChannel: message.slackChannel,
@@ -38,6 +39,18 @@ export const POST = async (request: Request) => {
       },
       payload,
     );
+    return new Response(null, { status: 200 });
+  }
+
+  const knowledge = await db.query.faqs.findFirst({
+    where: eq(faqs.slackMessageTs, messageTs),
+    with: {
+      mailbox: true,
+    },
+  });
+
+  if (knowledge) {
+    await handleKnowledgeBankSlackAction(knowledge, knowledge.mailbox, payload);
     return new Response(null, { status: 200 });
   }
 

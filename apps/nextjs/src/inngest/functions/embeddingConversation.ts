@@ -11,7 +11,7 @@ export default inngest.createFunction(
   async ({ event, step }) => {
     const { conversationSlug } = event.data;
 
-    await step.run("create-embedding", async () => {
+    const conversation = await step.run("create-embedding", async () => {
       const conversation = await getConversationBySlug(conversationSlug);
       if (!conversation) {
         throw new NonRetriableError("Conversation not found");
@@ -23,6 +23,13 @@ export default inngest.createFunction(
         throw e;
       }
     });
+
+    if ("status" in conversation && conversation.status === "open") {
+      await step.sendEvent("update-suggested-actions", {
+        name: "conversations/update-suggested-actions",
+        data: { conversationId: conversation.id },
+      });
+    }
 
     return { success: true };
   },

@@ -19,7 +19,7 @@ import { TRPCProvider } from "@/utils/api";
 import { backgroundColor } from "@/utils/css";
 
 Sentry.init({
-  dsn: "https://506ad038e1c22879cd091110bd02d85b@o4508048702767104.ingest.us.sentry.io/4508452194549760",
+  dsn: process.env.SENTRY_DSN,
 });
 
 const scope = Sentry.getGlobalScope();

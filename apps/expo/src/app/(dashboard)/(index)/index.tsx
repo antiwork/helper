@@ -8,6 +8,7 @@ import { Header } from "../_components/header";
 import { PeopleTable } from "../_components/peopleTable";
 import { ReactionsChart } from "../_components/reactionsChart";
 import { StatusByTypeChart } from "../_components/statusByTypeChart";
+import { TabBar } from "../_components/tabBar";
 import { TimeRange, TimeRangeSelector } from "../_components/timeRangeSelector";
 
 export default function DashboardScreen() {
@@ -30,26 +31,29 @@ export default function DashboardScreen() {
       <View className="py-3">
         <Header />
       </View>
-      <ScrollView
-        className="pt-3 flex-1"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {selectedMailbox && (
-          <>
-            <DashboardAlerts mailboxSlug={selectedMailbox.slug} />
+      <View className="flex-1">
+        <ScrollView
+          className="pt-3 flex-1"
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+          {selectedMailbox && (
+            <>
+              <DashboardAlerts mailboxSlug={selectedMailbox.slug} />
 
-            <View className="mt-6 px-6 flex-row justify-end items-center">
-              <TimeRangeSelector value={timeRange} onValueChange={setTimeRange} />
-            </View>
+              <View className="mt-6 px-6 flex-row justify-end items-center">
+                <TimeRangeSelector value={timeRange} onValueChange={setTimeRange} />
+              </View>
 
-            <View className="mb-16">
-              <StatusByTypeChart mailboxSlug={selectedMailbox.slug} timeRange={timeRange} />
-              <PeopleTable mailboxSlug={selectedMailbox.slug} timeRange={timeRange} />
-              <ReactionsChart mailboxSlug={selectedMailbox.slug} timeRange={timeRange} />
-            </View>
-          </>
-        )}
-      </ScrollView>
+              <View className="mb-16">
+                <StatusByTypeChart mailboxSlug={selectedMailbox.slug} timeRange={timeRange} />
+                <PeopleTable mailboxSlug={selectedMailbox.slug} timeRange={timeRange} />
+                <ReactionsChart mailboxSlug={selectedMailbox.slug} timeRange={timeRange} />
+              </View>
+            </>
+          )}
+        </ScrollView>
+      </View>
+      <TabBar />
     </SafeAreaView>
   );
 }

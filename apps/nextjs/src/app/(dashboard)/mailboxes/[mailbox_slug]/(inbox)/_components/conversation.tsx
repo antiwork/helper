@@ -22,9 +22,7 @@ import {
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
 import { MessageThread } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/messageThread";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/previewModal";
-import PromptInfoModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/promptInfoModal";
 import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/viewers";
-import type { Workflow } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/automaticWorkflowsSetting";
 import type {
   AttachedFile,
   ConversationEvent,
@@ -224,7 +222,7 @@ const ConversationContent = () => {
           <Badge variant="dark">Help Scout</Badge>
         )}
         {conversationInfo?.customerMetadata?.isVip && (
-          <Badge variant="yellow" className="no-underline">
+          <Badge variant="bright" className="no-underline">
             VIP
           </Badge>
         )}
@@ -236,7 +234,6 @@ const ConversationContent = () => {
 
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
-  const [promptModalEntity, setPromptModalEntity] = useState<Workflow | null>(null);
 
   const { scrollRef, contentRef, scrollToBottom } = useStickToBottom({
     initial: "instant",
@@ -257,6 +254,20 @@ const ConversationContent = () => {
   const defaultSize = Number(localStorage.getItem("conversationHeightRange") ?? 65);
 
   const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
+
+  useEffect(() => {
+    if ((nativePlatform === "ios" || nativePlatform === "android") && conversationInfo?.subject) {
+      window.ReactNativeWebView?.postMessage(
+        JSON.stringify({
+          type: "conversationLoaded",
+          subject: conversationInfo?.subject,
+        }),
+      );
+      window.__EXPO__?.onToggleSidebar(() => {
+        setSidebarVisible((prev) => !prev);
+      });
+    }
+  }, [nativePlatform, conversationInfo?.subject]);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="flex w-full">
@@ -314,49 +325,51 @@ const ConversationContent = () => {
                   )}
                 </Carousel>
               </CarouselContext.Provider>
-              <div
-                className={cn(
-                  "min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4",
-                  !conversationInfo && "hidden",
-                )}
-              >
-                <div id="conversation-close" className="sm:hidden">
-                  <XMarkIcon
-                    aria-label="Minimize conversation"
-                    className="text-primary h-5 w-5 cursor-pointer"
-                    onClick={minimize}
-                  />
-                </div>
-                <div className="hidden sm:block">
-                  {conversationInfo?.source === "email" ? (
-                    <EnvelopeIcon className="w-4 h-4" />
-                  ) : (
-                    <ChatBubbleLeftIcon className="w-4 h-4" />
+              {nativePlatform !== "ios" && nativePlatform !== "android" && (
+                <div
+                  className={cn(
+                    "min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4",
+                    !conversationInfo && "hidden",
                   )}
-                </div>
-                <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
-                <CopyLinkButton />
-                <div className="flex-1" />
-                {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationSlug} />}
-                <Button
-                  variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
-                  size="sm"
-                  className="ml-4"
-                  iconOnly
-                  onClick={() => setSidebarVisible(!sidebarVisible)}
                 >
-                  {isAboveSm ? (
-                    sidebarVisible ? (
-                      <PanelRightClose className="h-4 w-4" />
+                  <div id="conversation-close" className="sm:hidden">
+                    <XMarkIcon
+                      aria-label="Minimize conversation"
+                      className="text-primary h-5 w-5 cursor-pointer"
+                      onClick={minimize}
+                    />
+                  </div>
+                  <div className="hidden sm:block">
+                    {conversationInfo?.source === "email" ? (
+                      <EnvelopeIcon className="w-4 h-4" />
                     ) : (
-                      <PanelRightOpen className="h-4 w-4" />
-                    )
-                  ) : (
-                    <InformationCircleIcon className="h-5 w-5" />
-                  )}
-                  <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
-                </Button>
-              </div>
+                      <ChatBubbleLeftIcon className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
+                  <CopyLinkButton />
+                  <div className="flex-1" />
+                  {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationSlug} />}
+                  <Button
+                    variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
+                    size="sm"
+                    className="ml-4"
+                    iconOnly
+                    onClick={() => setSidebarVisible(!sidebarVisible)}
+                  >
+                    {isAboveSm ? (
+                      sidebarVisible ? (
+                        <PanelRightClose className="h-4 w-4" />
+                      ) : (
+                        <PanelRightOpen className="h-4 w-4" />
+                      )
+                    ) : (
+                      <InformationCircleIcon className="h-5 w-5" />
+                    )}
+                    <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
+                  </Button>
+                </div>
+              )}
               {error ? (
                 <div className="flex items-center justify-center flex-grow">
                   <Alert variant="destructive" className="max-w-lg text-center">
@@ -386,9 +399,6 @@ const ConversationContent = () => {
                             setPreviewFileIndex(currentIndex);
                             setPreviewFiles(message.files);
                           }}
-                          onViewWorkflowRun={(message) => {
-                            setPromptModalEntity(message.workflowRun);
-                          }}
                           onDoubleClickWhiteSpace={() =>
                             setLayoutState((state) => ({ ...state, listHidden: !state.listHidden }))
                           }
@@ -412,21 +422,6 @@ const ConversationContent = () => {
               <MessageActions />
             </div>
           </ResizablePanel>
-          {promptModalEntity && (
-            <Dialog
-              open={!!promptModalEntity}
-              onOpenChange={(isOpen) => {
-                if (!isOpen) setPromptModalEntity(null);
-              }}
-            >
-              <DialogContent className="w-full max-w-[72rem]">
-                <DialogHeader>
-                  <DialogTitle>Automatic Workflow Triggered</DialogTitle>
-                </DialogHeader>
-                <PromptInfoModal entity={promptModalEntity} />
-              </DialogContent>
-            </Dialog>
-          )}
         </ResizablePanelGroup>
       </ResizablePanel>
 
@@ -444,7 +439,12 @@ const ConversationContent = () => {
           ) : null}
         </ResizablePanel>
       ) : conversationInfo && sidebarVisible ? (
-        <div className="fixed inset-0 top-10">
+        <div
+          className={cn(
+            "fixed z-20 inset-0",
+            nativePlatform === "ios" || nativePlatform === "android" ? "top-0" : "top-10",
+          )}
+        >
           <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
         </div>
       ) : null}

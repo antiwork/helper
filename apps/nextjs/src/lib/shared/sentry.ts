@@ -16,3 +16,11 @@ export const captureExceptionAndLogIfDevelopment = (
   Sentry.captureException(error, hint);
   if (env.NODE_ENV === "development" || env.NODE_ENV === "test") console.error(error);
 };
+
+export const captureExceptionAndLog = (
+  error: Parameters<typeof Sentry.captureException>[0],
+  hint?: Parameters<typeof Sentry.captureException>[1],
+) => {
+  Sentry.captureException(error, hint);
+  console.error(error);
+};

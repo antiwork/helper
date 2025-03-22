@@ -1,9 +1,10 @@
 "use client";
 
 import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
-import ReactMarkdown from "react-markdown";
+import { useState } from "react";
 import type { FAQ } from "@/app/types/global";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
 type SuggestedKnowledgeBankItemProps = {
@@ -12,37 +13,38 @@ type SuggestedKnowledgeBankItemProps = {
 };
 
 const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBankItemProps) => {
+  const [content, setContent] = useState(faq.content);
   const utils = api.useUtils();
-  const updateFaq = api.mailbox.faqs.update.useMutation({
+  const acceptFaq = api.mailbox.faqs.accept.useMutation({
     onSuccess: () => {
       utils.mailbox.faqs.list.invalidate();
     },
   });
 
-  const deleteFaq = api.mailbox.faqs.delete.useMutation({
+  const rejectFaq = api.mailbox.faqs.reject.useMutation({
     onSuccess: () => {
       utils.mailbox.faqs.list.invalidate();
     },
   });
 
   return (
-    <div className="flex flex-col gap-4 border border-bright rounded-lg p-4">
+    <div className="flex flex-col gap-2 border border-bright rounded-lg p-4">
       <div className="flex-1 w-full text-left text-sm">
-        <ReactMarkdown className="prose prose-sm">{faq?.content}</ReactMarkdown>
+        <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Button
           variant="subtle"
-          onClick={() => deleteFaq.mutate({ mailboxSlug, id: faq.id })}
-          disabled={deleteFaq.isPending}
+          onClick={() => rejectFaq.mutate({ mailboxSlug, id: faq.id })}
+          disabled={rejectFaq.isPending}
         >
           <XMarkIcon className="h-4 w-4 mr-1" />
           Reject
         </Button>
         <Button
           variant="bright"
-          onClick={() => updateFaq.mutate({ mailboxSlug, id: faq.id, enabled: true })}
-          disabled={updateFaq.isPending}
+          onClick={() => acceptFaq.mutate({ mailboxSlug, id: faq.id, content })}
+          disabled={acceptFaq.isPending}
         >
           <CheckIcon className="h-4 w-4 mr-1" />
           Accept

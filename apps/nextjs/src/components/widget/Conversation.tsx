@@ -1,12 +1,13 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import type { MessageWithReaction } from "@/components/widget/Message";
 import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
+import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
@@ -47,9 +48,9 @@ export default function Conversation({
     handleInputChange,
     handleSubmit: handleAISubmit,
     append,
-    isLoading,
     setMessages,
     addToolResult,
+    status,
   } = useChat({
     maxSteps: 3,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
@@ -76,6 +77,9 @@ export default function Conversation({
       setConversationSlug(selectedConversationSlug);
     }
   }, [selectedConversationSlug, isNewConversation, setConversationSlug]);
+
+  const isLoading = status === "streaming" || status === "submitted";
+  const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
 
   const { data: conversation, isLoading: isLoadingConversation } = useQuery({
     queryKey: ["conversation", conversationSlug],
@@ -110,16 +114,10 @@ export default function Conversation({
   });
 
   useEffect(() => {
-    if (conversation?.messages?.length) {
-      setMessages(conversation.messages);
-    }
-  }, [conversation, setMessages]);
-
-  useEffect(() => {
-    if (!isLoading || isNewConversation) {
+    if (status === "ready" || isNewConversation) {
       inputRef.current?.focus();
     }
-  }, [isLoading, isNewConversation]);
+  }, [status, isNewConversation]);
 
   useEffect(() => {
     if (isNewConversation) {
@@ -140,7 +138,7 @@ export default function Conversation({
     try {
       let currentSlug = conversationSlug;
       if (!currentSlug) {
-        currentSlug = await createConversation("chat");
+        currentSlug = await createConversation({ isPrompt: false });
       }
 
       if (currentSlug) {
@@ -155,7 +153,7 @@ export default function Conversation({
     if (!token) return;
 
     const handleDataChange = async (message: unknown) => {
-      const slug = await createConversation("chat#prompt");
+      const slug = await createConversation({ isPrompt: true });
       setMessages([]);
       setConversationSlug(slug);
       append({ role: "user", content: message as string }, { body: { conversationSlug: slug } });
@@ -171,8 +169,9 @@ export default function Conversation({
     };
   }, [token]);
 
-  const lastMessage = messages[messages.length - 1];
-  const showLoadingAnimation = isLoading && (lastMessage?.content?.length === 0 || lastMessage?.role !== "assistant");
+  const handleTalkToTeamClick = () => {
+    append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
+  };
 
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
     return <MessagesSkeleton />;
@@ -185,9 +184,15 @@ export default function Conversation({
         messages={messages as MessageWithReaction[]}
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
-        showLoadingAnimation={showLoadingAnimation}
         token={token}
         addToolResult={addToolResult}
+      />
+      <SupportButtons
+        conversationSlug={conversationSlug}
+        token={token}
+        messageStatus={status}
+        lastMessage={lastAIMessage}
+        onTalkToTeamClick={handleTalkToTeamClick}
       />
       <ChatInput
         input={input}

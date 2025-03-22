@@ -16,13 +16,8 @@ export const faqs = pgTable(
     suggested: boolean().notNull().default(false),
     suggestedReplacementForId: bigint({ mode: "number" }),
     messageId: bigint({ mode: "number" }),
-
-    unused_question: text("question")
-      .notNull()
-      .$default(() => ""),
-    unused_body: text("body")
-      .notNull()
-      .$default(() => ""),
+    slackChannel: text(),
+    slackMessageTs: text(),
   },
   (table) => {
     return {

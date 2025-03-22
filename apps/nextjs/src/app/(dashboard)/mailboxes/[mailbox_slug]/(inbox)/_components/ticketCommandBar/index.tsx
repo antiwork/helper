@@ -12,11 +12,12 @@ import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useAssigneesPage } from "./assigneesPage";
 import { CommandList } from "./commandList";
+import { GitHubIssuePage } from "./githubIssuePage";
 import { useMainPage } from "./mainPage";
 import { NotesPage } from "./notesPage";
 import { usePreviousRepliesPage } from "./previousRepliesPage";
-import { ToolForm } from "./toolForm";
-import { useToolsPage } from "./toolsPage";
+import { SuggestedActions } from "./suggestedActions";
+import { Tool, ToolForm } from "./toolForm";
 
 type TicketCommandBarProps = {
   open: boolean;
@@ -28,10 +29,10 @@ type TicketCommandBarProps = {
 
 export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc, inputRef }: TicketCommandBarProps) {
   const { conversationSlug, mailboxSlug } = useConversationContext();
-  const internalInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "tools">("main");
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
   const pageRef = useRef<string>("main");
   const { user: currentUser } = useUser();
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
@@ -39,6 +40,10 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+  const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
+    { mailboxSlug, conversationSlug },
+    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
+  );
   const { assignTicket } = useAssignTicket();
 
   const [isLoadingPreviousReplies, setIsLoadingPreviousReplies] = useState(false);
@@ -59,6 +64,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setPage,
     setSelectedItemId,
     onToggleCc,
+    setSelectedTool,
   });
 
   const previousRepliesGroups = usePreviousRepliesPage({
@@ -75,8 +81,6 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     onOpenChange,
   });
 
-  const toolsPage = useToolsPage();
-
   const currentGroups = (() => {
     switch (page) {
       case "main":
@@ -87,8 +91,8 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
         return assigneesGroups;
       case "notes":
         return [];
-      case "tools":
-        return toolsPage.groups;
+      case "github-issue":
+        return [];
       default:
         return mainPageGroups;
     }
@@ -103,8 +107,8 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const visibleItems = visibleGroups.flatMap((group) => group.items);
 
   useEffect(() => {
-    pageRef.current = `${page}-${toolsPage.selectedTool ? toolsPage.selectedTool.slug : "none"}`;
-  }, [page, toolsPage.selectedTool]);
+    pageRef.current = `${page}-${selectedTool ? selectedTool.slug : "none"}`;
+  }, [page, selectedTool]);
 
   // Reset selection when dialog opens/closes or page changes
   useEffect(() => {
@@ -122,7 +126,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
       // Wait for the close animation
       setTimeout(() => {
         setPage("main");
-        toolsPage.clearSelectedTool();
+        setSelectedTool(null);
       }, 500);
     }
   }, [open, page, refetchPreviousReplies]);
@@ -147,6 +151,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
       setSelectedItemId(null);
     } else if (selectedItem?.id === "add-note") {
       setPage("notes");
+      setSelectedItemId(null);
+    } else if (selectedItem?.id === "github-issue") {
+      setPage("github-issue");
       setSelectedItemId(null);
     } else {
       selectedItem?.onSelect();
@@ -208,20 +215,22 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     <FormPage onOpenChange={onOpenChange}>
       <NotesPage onOpenChange={onOpenChange} />
     </FormPage>
-  ) : open && page === "tools" && toolsPage.selectedTool ? (
+  ) : open && selectedTool ? (
     <FormPage onOpenChange={onOpenChange}>
-      <ToolForm tool={toolsPage.selectedTool} onOpenChange={onOpenChange} />
+      <ToolForm tool={selectedTool} onOpenChange={onOpenChange} />
+    </FormPage>
+  ) : open && page === "github-issue" ? (
+    <FormPage onOpenChange={onOpenChange}>
+      <GitHubIssuePage onOpenChange={onOpenChange} />
     </FormPage>
   ) : (
     <>
       <div>
         <Input
           ref={inputRef}
-          placeholder={
-            page === "main" ? "Type a command..." : page === "tools" ? "Search tools..." : "Search previous replies..."
-          }
-          className={cn("rounded-sm", open && "rounded-b-none")}
-          iconsPrefix={<KeyboardShortcut>/</KeyboardShortcut>}
+          placeholder={page === "previous-replies" ? "Search previous replies..." : "Type a command..."}
+          className="rounded-sm rounded-b-none"
+          iconsPrefix={<KeyboardShortcut className="text-muted-foreground">/</KeyboardShortcut>}
           onFocus={() => onOpenChange(true)}
           onBlur={() => {
             const oldPage = pageRef.current;
@@ -237,6 +246,11 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           onKeyDown={handleKeyDown}
         />
       </div>
+      <SuggestedActions
+        className={open ? "hidden" : undefined}
+        tools={tools?.suggested ?? null}
+        orgMembers={orgMembers ?? null}
+      />
       <Command
         loop
         value={selectedItemId || ""}

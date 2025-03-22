@@ -70,6 +70,11 @@ export const inngest = new Inngest({
           status: z.enum(["open", "closed", "spam"]),
         }),
       },
+      "conversations/update-suggested-actions": {
+        data: z.object({
+          conversationId: z.number(),
+        }),
+      },
       "gmail/webhook.received": {
         data: z.object({
           body: z.any(),
@@ -145,6 +150,10 @@ export const inngest = new Inngest({
       "conversations/auto-close.process-mailbox": {
         data: z.object({
           mailboxId: z.number(),
+      "conversations/human-support-requested": {
+        data: z.object({
+          mailboxSlug: z.string(),
+          conversationId: z.number(),
         }),
       },
     })

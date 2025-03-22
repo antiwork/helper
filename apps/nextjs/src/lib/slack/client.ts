@@ -3,6 +3,7 @@ import {
   ChatPostEphemeralArguments,
   ChatPostMessageArguments,
   ConversationsListResponse,
+  KnownBlock,
   MessageAttachment,
   ModalView,
   WebClient,
@@ -98,15 +99,17 @@ export const updateSlackMessage = async ({
   channel,
   ts,
   attachments,
+  blocks,
 }: {
   token: string;
   channel: string;
   ts: string;
-  attachments: MessageAttachment[];
+  attachments?: MessageAttachment[];
+  blocks?: KnownBlock[];
 }) => {
   const client = new WebClient(token);
   try {
-    await client.chat.update({ channel, ts, attachments });
+    await client.chat.update({ channel, ts, attachments: attachments ?? [], blocks: blocks ?? [] });
   } catch (error) {
     // Can happen if the bot was removed from the Slack channel after the message was sent
     if (error instanceof Error && error.message.includes("invalid_auth")) return;

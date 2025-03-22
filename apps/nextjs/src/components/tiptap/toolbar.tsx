@@ -1,9 +1,11 @@
 import type { Editor } from "@tiptap/react";
+import { ALargeSmall, Minus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Popover } from "@/components/popover";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
 import LinkModal from "@/components/tiptap/linkModal";
+import { cn } from "@/lib/utils";
 import ToolbarBlockquote from "./icons/blockquote.svg";
 import ToolbarBold from "./icons/bold.svg";
 import ToolbarBulletList from "./icons/bullet-list.svg";
@@ -14,6 +16,8 @@ import ToolbarOrderedList from "./icons/ordered-list.svg";
 
 type ToolbarProps = {
   editor: Editor | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
   uploadInlineImages: (images: File[]) => void;
   uploadFileAttachments: (nonImages: File[]) => void;
   enableImageUpload?: boolean;
@@ -23,6 +27,8 @@ type ToolbarProps = {
 
 const Toolbar = ({
   editor,
+  open,
+  setOpen,
   uploadInlineImages,
   uploadFileAttachments,
   enableImageUpload,
@@ -82,108 +88,115 @@ const Toolbar = ({
   }
 
   return (
-    <div className="flex flex-wrap rounded-t border-b border-border bg-background p-1">
-      <div className="flex flex-wrap gap-1">
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`${baseToolbarStyles} ${editor.isActive("bold") ? "bg-muted hover:bg-muted" : ""}`}
-        >
-          <ToolbarBold />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`${baseToolbarStyles} ${editor.isActive("italic") ? "bg-muted hover:bg-muted" : ""}`}
-        >
-          <ToolbarItalic />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`${baseToolbarStyles} ${editor.isActive("bulletList") ? "bg-muted hover:bg-muted" : ""}`}
-        >
-          <ToolbarBulletList />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`${baseToolbarStyles} ${editor.isActive("orderedList") ? "bg-muted hover:bg-muted" : ""}`}
-        >
-          <ToolbarOrderedList />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`${baseToolbarStyles} ${editor.isActive("blockquote") ? "bg-muted hover:bg-muted" : ""}`}
-        >
-          <ToolbarBlockquote />
-        </button>
-        <Popover
-          className="absolute top-9 z-20"
-          open={isLinkModalOpen}
-          onToggle={toggleLinkModal}
-          trigger={(aria) => (
-            <div
-              {...aria}
-              className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
-            >
-              <ToolbarLink />
-            </div>
-          )}
-        >
-          <LinkModal
-            isLinkModalOpen={isLinkModalOpen}
-            setLinkModalOpen={setLinkModalOpen}
-            linkData={linkData}
-            setLinkData={setLinkData}
-            setLink={setLink}
-          />
-        </Popover>
-        {enableImageUpload && (
-          <label
-            htmlFor={imageFieldId}
-            className={`${baseToolbarStyles} cursor-pointer ${
-              editor.isActive("image") ? "bg-muted hover:bg-muted" : ""
-            }`}
+    <div
+      className={cn(
+        "absolute z-10 bottom-3 right-3 flex flex-wrap gap-1 rounded-t border rounded-sm bg-background p-1",
+        open && "left-3",
+      )}
+    >
+      {open && (
+        <>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`${baseToolbarStyles} ${editor.isActive("bold") ? "bg-muted hover:bg-muted" : ""}`}
           >
-            <input
-              aria-label="Insert images"
-              multiple
-              type="file"
-              id={imageFieldId}
-              className="hidden"
-              onChange={(e) => {
-                const files = [...(e.target.files || [])];
-                if (!files.length) return;
-                uploadInlineImages(files);
-                e.target.value = "";
-              }}
-              accept={imageFileTypes.join(",")}
+            <ToolbarBold />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`${baseToolbarStyles} ${editor.isActive("italic") ? "bg-muted hover:bg-muted" : ""}`}
+          >
+            <ToolbarItalic />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`${baseToolbarStyles} ${editor.isActive("bulletList") ? "bg-muted hover:bg-muted" : ""}`}
+          >
+            <ToolbarBulletList />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`${baseToolbarStyles} ${editor.isActive("orderedList") ? "bg-muted hover:bg-muted" : ""}`}
+          >
+            <ToolbarOrderedList />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={`${baseToolbarStyles} ${editor.isActive("blockquote") ? "bg-muted hover:bg-muted" : ""}`}
+          >
+            <ToolbarBlockquote />
+          </button>
+          <Popover
+            className="absolute top-9 z-20"
+            open={isLinkModalOpen}
+            onToggle={toggleLinkModal}
+            trigger={(aria) => (
+              <div
+                {...aria}
+                className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
+              >
+                <ToolbarLink />
+              </div>
+            )}
+          >
+            <LinkModal
+              isLinkModalOpen={isLinkModalOpen}
+              setLinkModalOpen={setLinkModalOpen}
+              linkData={linkData}
+              setLinkData={setLinkData}
+              setLink={setLink}
             />
-            <ToolbarImage />
-          </label>
-        )}
-        {enableFileUpload && (
-          <label htmlFor={fileFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
-            <input
-              aria-label="Insert attachments"
-              multiple
-              type="file"
-              id={fileFieldId}
-              className="hidden"
-              onChange={(e) => {
-                const files = [...(e.target.files || [])];
-                if (!files.length) return;
-                uploadFileAttachments(files);
-                e.target.value = "";
-              }}
-            />
-            <ToolbarFile />
-          </label>
-        )}
-      </div>
-      <div className="ml-auto flex">{customToolbar ? customToolbar() : null}</div>
+          </Popover>
+          {enableImageUpload && (
+            <label
+              htmlFor={imageFieldId}
+              className={`${baseToolbarStyles} cursor-pointer ${editor.isActive("image") ? "bg-muted hover:bg-muted" : ""}`}
+            >
+              <input
+                aria-label="Insert images"
+                multiple
+                type="file"
+                id={imageFieldId}
+                className="hidden"
+                onChange={(e) => {
+                  const files = [...(e.target.files || [])];
+                  if (!files.length) return;
+                  uploadInlineImages(files);
+                  e.target.value = "";
+                }}
+                accept={imageFileTypes.join(",")}
+              />
+              <ToolbarImage />
+            </label>
+          )}
+          {enableFileUpload && (
+            <label htmlFor={fileFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
+              <input
+                aria-label="Insert attachments"
+                multiple
+                type="file"
+                id={fileFieldId}
+                className="hidden"
+                onChange={(e) => {
+                  const files = [...(e.target.files || [])];
+                  if (!files.length) return;
+                  uploadFileAttachments(files);
+                  e.target.value = "";
+                }}
+              />
+              <ToolbarFile />
+            </label>
+          )}
+        </>
+      )}
+      <button type="button" onClick={() => setOpen(!open)} className={cn(baseToolbarStyles, "ml-auto")}>
+        {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
+      </button>
     </div>
   );
 };

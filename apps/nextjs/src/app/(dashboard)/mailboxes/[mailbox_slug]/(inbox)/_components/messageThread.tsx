@@ -4,20 +4,18 @@ import MessageItem from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_com
 import type { Message } from "@/app/types/global";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ToolMetadata } from "@/db/schema";
-import { WorkflowAction } from "@/types/workflows";
 import { ConversationWithNewMessages } from "./conversation";
 import { ToolItem } from "./toolItem";
 
 export const MessageThread = ({
   conversation,
   onPreviewAttachment,
-  onViewWorkflowRun,
   onDoubleClickWhiteSpace,
   mailboxSlug,
 }: {
   conversation: ConversationWithNewMessages;
   onPreviewAttachment: (message: Message, index: number) => void;
-  onViewWorkflowRun: (message: Message) => void;
+
   onDoubleClickWhiteSpace: (e: React.MouseEvent<HTMLDivElement>) => void;
   mailboxSlug: string;
 }) => {
@@ -37,7 +35,7 @@ export const MessageThread = ({
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-1 flex-col gap-8 pb-4" onDoubleClick={handleDoubleClickWhitespace}>
-        {conversation.source == "chat#prompt" && (
+        {conversation.isPrompt && (
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
             <QuestionMarkCircleIcon className="h-4 w-4 text-muted-foreground" />
             <span>Started this conversation from a prompt</span>
@@ -62,9 +60,6 @@ export const MessageThread = ({
                 message.type === "message" && message.files.length
                   ? (index) => onPreviewAttachment(message, index)
                   : undefined
-              }
-              onViewWorkflowRun={
-                message.type === "message" && message.workflowRun ? () => onViewWorkflowRun(message) : undefined
               }
             />
           ),
@@ -92,28 +87,6 @@ export const MessageThread = ({
           </div>
         )}
       </div>
-      {lastEmail && <NoReplyDraftedDisclaimer message={lastEmail} />}
     </div>
-  );
-};
-
-const NoReplyDraftedDisclaimer = ({ message }: { message: Message }) => {
-  if (!message.workflowRun || message.draft) return null;
-  const disclaimers: Partial<Record<WorkflowAction, string>> = {
-    close_ticket: "closes the ticket without replying to it",
-    mark_spam: "marks the ticket as spam without replying to it",
-  };
-  const actionDescription = disclaimers[message.workflowRun.action];
-  if (!actionDescription) return null;
-
-  return (
-    <Alert variant="default">
-      <InformationCircleIcon className="h-4 w-4" />
-      <AlertTitle>No reply drafted</AlertTitle>
-      <AlertDescription>
-        A reply was not drafted for this conversation because the{" "}
-        <b>{message.workflowRun.name ?? "(no name)"} workflow</b> was triggered, which {actionDescription}.
-      </AlertDescription>
-    </Alert>
   );
 };
