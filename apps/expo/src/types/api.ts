@@ -121,6 +121,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipChannelId: string | null;
           vipExpectedResponseHours: number | null;
           disableAutoResponseForVips: boolean;
+          autoCloseEnabled: boolean;
+          autoCloseDaysOfInactivity: number;
         };
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
