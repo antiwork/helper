@@ -83,8 +83,11 @@ unsafe impl ASAuthorizationControllerDelegate for ASAuthorizationControllerDeleg
 #[tauri::command]
 fn start_apple_sign_in() {
     unsafe {
-        let request = ASAuthorizationAppleIDProvider::new().createRequest();
-        let auth_request: &ASAuthorizationRequest = std::mem::transmute(&request);
+        let provider = ASAuthorizationAppleIDProvider::new();
+        let request = provider.createRequest();
+
+        let auth_request = &request as &ASAuthorizationRequest;
+
         let controller = ASAuthorizationController::initWithAuthorizationRequests(
             ASAuthorizationController::alloc(),
             &*NSArray::from_slice(&[auth_request]),
