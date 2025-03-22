@@ -42,6 +42,7 @@
     "@aws-sdk/s3-presigned-post": "^3.665.0",
     "@aws-sdk/s3-request-presigner": "^3.665.0",
     "@clerk/nextjs": "^6.9.6",
+    "@google/generative-ai": "^0.24.0",
     "@helperai/react": "^0.5.1",
     "@heroicons/react": "^2.0.18",
     "@inngest/middleware-sentry": "^0.1.1",
