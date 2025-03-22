@@ -1295,6 +1295,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         input: void;
         output: string;
       }>;
+      nativeAppleSignIn: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          code: string;
+          firstName: string;
+          lastName: string;
+        };
+        output: string;
+      }>;
     };
     gmailSupportEmail: {
       get: import("@trpc/server").TRPCQueryProcedure<{
