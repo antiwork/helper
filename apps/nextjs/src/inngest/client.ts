@@ -142,6 +142,11 @@ export const inngest = new Inngest({
           mailboxId: z.number().optional(),
         }),
       },
+      "conversations/auto-close.process-mailbox": {
+        data: z.object({
+          mailboxId: z.number(),
+        }),
+      },
     })
     .fromUnion<NonZodEvents>(),
   middleware: [sentryMiddleware()],
