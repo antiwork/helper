@@ -2,13 +2,15 @@
 extern crate lazy_static;
 
 use objc2::rc::Retained;
+use objc2::runtime::ProtocolObject;
 use objc2::AllocAnyThread;
 use objc2::{define_class, msg_send, MainThreadMarker, MainThreadOnly};
 use objc2_authentication_services::{
     ASAuthorization, ASAuthorizationAppleIDProvider, ASAuthorizationController,
-    ASAuthorizationControllerDelegate,
+    ASAuthorizationControllerDelegate, ASAuthorizationRequest,
 };
 use objc2_foundation::{NSArray, NSError, NSObject, NSObjectProtocol};
+use std::cell::RefCell;
 use std::env;
 use std::sync::Mutex;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
@@ -16,6 +18,10 @@ use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
     static ref DEEP_LINK_URL: Mutex<Option<String>> = Mutex::new(None);
+}
+
+thread_local! {
+    static APPLE_SIGN_IN_DELEGATE: RefCell<Option<Retained<ASAuthorizationControllerDelegateImpl>>> = RefCell::new(None);
 }
 
 #[tauri::command]
@@ -34,10 +40,14 @@ fn start_options() -> serde_json::Value {
     })
 }
 
+#[derive(Clone)]
+struct Ivars {}
+
 define_class!(
     #[unsafe(super(NSObject))]
     #[thread_kind = MainThreadOnly]
     #[name = "ASAuthorizationControllerDelegateImpl"]
+    #[ivars = Ivars]
     struct ASAuthorizationControllerDelegateImpl;
 
     unsafe impl NSObjectProtocol for ASAuthorizationControllerDelegateImpl {}
@@ -46,7 +56,7 @@ define_class!(
 impl ASAuthorizationControllerDelegateImpl {
     fn new() -> Retained<Self> {
         let mtm = MainThreadMarker::new().unwrap();
-        let this = Self::alloc(mtm);
+        let this = Self::alloc(mtm).set_ivars(Ivars {});
         unsafe { msg_send![super(this), init] }
     }
 }
@@ -72,13 +82,23 @@ unsafe impl ASAuthorizationControllerDelegate for ASAuthorizationControllerDeleg
 #[cfg(target_os = "macos")]
 #[tauri::command]
 fn start_apple_sign_in() {
-    let request = ASAuthorizationAppleIDProvider::new().createRequest();
-    let controller = ASAuthorizationController::initWithAuthorizationRequests(
-        ASAuthorizationController::alloc(),
-        NSArray::from_slice(&[&request]),
-    );
-    controller.setDelegate(ASAuthorizationControllerDelegateImpl::new());
-    controller.performRequests();
+    unsafe {
+        let request = ASAuthorizationAppleIDProvider::new().createRequest();
+        let auth_request: &ASAuthorizationRequest = std::mem::transmute(&request);
+        let controller = ASAuthorizationController::initWithAuthorizationRequests(
+            ASAuthorizationController::alloc(),
+            &*NSArray::from_slice(&[auth_request]),
+        );
+
+        // Create and store the delegate in thread-local storage to keep it alive
+        let delegate = ASAuthorizationControllerDelegateImpl::new();
+        APPLE_SIGN_IN_DELEGATE.with(|cell| {
+            *cell.borrow_mut() = Some(delegate.clone());
+        });
+
+        controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
+        controller.performRequests();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -89,7 +109,11 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![start_options]);
+        .invoke_handler(tauri::generate_handler![
+            start_options,
+            #[cfg(target_os = "macos")]
+            start_apple_sign_in
+        ]);
 
     #[cfg(desktop)]
     {
