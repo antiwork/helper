@@ -21,6 +21,7 @@ export default function VipsScreen() {
       sort: null,
       search: null,
       status: null,
+      isVip: true,
     }),
     [selectedMailbox?.slug],
   );

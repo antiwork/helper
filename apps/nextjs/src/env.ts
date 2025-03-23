@@ -71,6 +71,10 @@ export const env = createEnv({
     FIRECRAWL_API_KEY: z.string().min(1),
     PROXY_URL: z.string().url().optional(),
     PROXY_SECRET_KEY: z.string().min(1).optional(),
+    APPLE_APP_ID: z.string().min(1).optional(),
+    APPLE_TEAM_ID: z.string().min(1).optional(),
+    APPLE_PRIVATE_KEY: z.string().min(1).optional(),
+    APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
   },
 
   /**
