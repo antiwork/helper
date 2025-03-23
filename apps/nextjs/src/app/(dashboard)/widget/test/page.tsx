@@ -4,14 +4,19 @@ import { WidgetButtons } from "./WidgetButtons";
 
 export const dynamic = "force-dynamic";
 
-export default async function WidgetTest({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
+export default async function WidgetTest({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string; isVip?: string }>;
+}) {
   const session = await auth();
+  const { email, isVip } = await searchParams;
 
   if (!session) {
     return <div>Not logged in</div>;
   }
 
-  const helperAuth = generateHelperAuth({ email: "test@example.com" });
+  const helperAuth = generateHelperAuth({ email: email ?? "test@example.com" });
 
   const config: HelperConfig = {
     ...helperAuth,
@@ -19,7 +24,7 @@ export default async function WidgetTest({ searchParams }: { searchParams: Promi
     experimental_read_page: true,
     customer_metadata: {
       name: "John Doe",
-      value: 100,
+      value: isVip ? 1000_00 : 100,
       links: {
         "Billing Portal": "https://example.com",
       },
