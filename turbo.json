@@ -100,7 +100,11 @@
     "GITHUB_CLIENT_SECRET",
     "GITHUB_APP_ID",
     "GITHUB_APP_SLUG",
-    "GITHUB_PRIVATE_KEY"
+    "GITHUB_PRIVATE_KEY",
+    "APPLE_APP_ID",
+    "APPLE_TEAM_ID",
+    "APPLE_PRIVATE_KEY",
+    "APPLE_PRIVATE_KEY_IDENTIFIER"
   ],
   "globalPassThroughEnv": [
     "CI",
