@@ -336,7 +336,7 @@ function SearchResultItem({
         onClick={(e) => e.stopPropagation()}
         className="mt-0.5"
       />
-      <Link href={`/mailboxes/${params.mailbox_slug}/conversations?id=${conversation.slug}`} className="flex-1">
+      <Link href={`/mailboxes/${params.mailbox_slug}/conversations?id=${conversation.slug}`} className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
