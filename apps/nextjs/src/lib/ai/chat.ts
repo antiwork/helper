@@ -71,7 +71,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadPreviousMessages = async (conversationId: number): Promise<Message[]> => {
+export const loadPreviousMessages = async (conversationId: number, latestMessage?: Message): Promise<Message[]> => {
   const conversation = assertDefined(await getConversationById(conversationId));
   const mailbox = assertDefined(
     await db.query.mailboxes.findFirst({
@@ -82,7 +82,12 @@ export const loadPreviousMessages = async (conversationId: number): Promise<Mess
   const conversationMessages = await getMessages(conversationId, mailbox);
 
   return conversationMessages
-    .filter((message) => message.type === "message" && message.body)
+    .filter(
+      (message) =>
+        message.type === "message" &&
+        message.body &&
+        (latestMessage?.createdAt ? message.createdAt < new Date(latestMessage.createdAt) : true),
+    )
     .map((message) => {
       const messageRecord = message as any; // Type assertion to handle union type
       return {
@@ -483,7 +488,7 @@ export const respondWithAI = async ({
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
 }) => {
-  const previousMessages = await loadPreviousMessages(conversation.id);
+  const previousMessages = await loadPreviousMessages(conversation.id, message);
   const messages = appendClientMessage({
     messages: previousMessages,
     message,
@@ -521,6 +526,13 @@ export const respondWithAI = async ({
     (!isPromptConversation || !isFirstMessage)
   ) {
     await updateConversation(conversation.id, { set: { status: "open" } });
+    onResponse?.({
+      messages,
+      platformCustomer,
+      isPromptConversation,
+      isFirstMessage,
+      humanSupportRequested: true,
+    });
     if (
       messages.length === 1 ||
       (isPromptConversation && messages.filter((message) => message.role === "user").length === 2)

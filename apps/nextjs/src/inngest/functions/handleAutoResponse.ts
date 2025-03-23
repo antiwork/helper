@@ -39,7 +39,7 @@ export const handleAutoResponse = async (messageId: number) => {
     sendEmail: true,
     onResponse: async ({ platformCustomer, humanSupportRequested }) => {
       await db.transaction(async (tx) => {
-        if (platformCustomer) {
+        if (platformCustomer && !humanSupportRequested) {
           await createMessageNotification({
             messageId: message.id,
             conversationId: message.conversationId,
