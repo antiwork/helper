@@ -1,43 +1,27 @@
 #[macro_use]
 extern crate lazy_static;
 
-use objc2::rc::Retained;
-use objc2::runtime::ProtocolObject;
-use objc2::AllocAnyThread;
-use objc2::DefinedClass;
-use objc2::{define_class, msg_send, MainThreadMarker, MainThreadOnly};
-use objc2_authentication_services::{
-    ASAuthorization, ASAuthorizationAppleIDCredential, ASAuthorizationAppleIDProvider,
-    ASAuthorizationController, ASAuthorizationControllerDelegate, ASAuthorizationRequest,
-    ASAuthorizationScopeEmail, ASAuthorizationScopeFullName,
-};
-use objc2_foundation::{NSArray, NSError, NSObject, NSObjectProtocol};
-use std::cell::RefCell;
+#[cfg(target_os = "macos")]
+mod apple_sign_in;
+
 use std::env;
 use std::sync::Mutex;
-use tauri::AppHandle;
-use tauri::Emitter;
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
     static ref DEEP_LINK_URL: Mutex<Option<String>> = Mutex::new(None);
 }
 
-thread_local! {
-    static APPLE_SIGN_IN_DELEGATE: RefCell<Option<Retained<ASAuthorizationControllerDelegateImpl>>> = RefCell::new(None);
-    static AUTHORIZATION_CONTROLLER: RefCell<Option<Retained<ASAuthorizationController>>> = RefCell::new(None);
-}
-
 #[tauri::command]
 fn start_options() -> serde_json::Value {
     let deep_link = DEEP_LINK_URL.lock().unwrap().clone();
 
-    // #[cfg(debug_assertions)]
+    #[cfg(debug_assertions)]
     let is_dev = true;
 
-    // #[cfg(not(debug_assertions))]
-    // let is_dev = false;
+    #[cfg(not(debug_assertions))]
+    let is_dev = false;
 
     serde_json::json!({
         "isDev": is_dev,
@@ -45,110 +29,36 @@ fn start_options() -> serde_json::Value {
     })
 }
 
-#[derive(Clone)]
-struct Ivars {
-    app: AppHandle,
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn is_mac_app_store() -> bool {
+    use std::path::Path;
+
+    if let Ok(current_exe) = std::env::current_exe() {
+        let mut current_dir = current_exe.parent().map(Path::to_path_buf);
+
+        while let Some(dir) = current_dir {
+            if dir.to_string_lossy().ends_with(".app") {
+                let receipt_path = dir.join("Contents/_MASReceipt/receipt");
+                return receipt_path.exists();
+            }
+            current_dir = dir.parent().map(Path::to_path_buf);
+        }
+    }
+
+    false
 }
 
-define_class!(
-    #[unsafe(super(NSObject))]
-    #[thread_kind = MainThreadOnly]
-    #[name = "ASAuthorizationControllerDelegateImpl"]
-    #[ivars = Ivars]
-    struct ASAuthorizationControllerDelegateImpl;
-
-    unsafe impl NSObjectProtocol for ASAuthorizationControllerDelegateImpl {}
-
-    unsafe impl ASAuthorizationControllerDelegate for ASAuthorizationControllerDelegateImpl {
-        #[unsafe(method(authorizationController:didCompleteWithAuthorization:))]
-        #[allow(non_snake_case)]
-        unsafe fn authorizationController_didCompleteWithAuthorization(
-            &self,
-            _controller: &ASAuthorizationController,
-            authorization: &ASAuthorization,
-        ) {
-            let credential = authorization
-                .credential()
-                .downcast::<ASAuthorizationAppleIDCredential>()
-                .unwrap();
-            let code = String::from_utf8(credential.authorizationCode().unwrap().to_vec()).unwrap();
-            let firstName = credential
-                .fullName()
-                .map(|name| name.givenName().unwrap_or_default().to_string());
-            let lastName = credential
-                .fullName()
-                .map(|name| name.familyName().unwrap_or_default().to_string());
-            self.ivars()
-                .app
-                .emit(
-                    "apple-sign-in-complete",
-                    serde_json::json!({
-                        "code": code,
-                        "firstName": firstName,
-                        "lastName": lastName,
-                    }),
-                )
-                .unwrap();
-            log::info!("Authorization complete");
-        }
-
-        #[unsafe(method(authorizationController:didCompleteWithError:))]
-        #[allow(non_snake_case)]
-        unsafe fn authorizationController_didCompleteWithError(
-            &self,
-            _controller: &ASAuthorizationController,
-            error: &NSError,
-        ) {
-            self.ivars()
-                .app
-                .emit("apple-sign-in-error", error.code())
-                .unwrap();
-            log::error!("Authorization error: {:?}", error);
-        }
-    }
-);
-
-impl ASAuthorizationControllerDelegateImpl {
-    fn new(app: AppHandle) -> Retained<Self> {
-        let mtm = MainThreadMarker::new().unwrap();
-        let this = Self::alloc(mtm).set_ivars(Ivars { app });
-        unsafe { msg_send![super(this), init] }
-    }
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+fn is_mac_app_store() -> bool {
+    false
 }
 
 #[cfg(target_os = "macos")]
 #[tauri::command]
 fn start_apple_sign_in(app: AppHandle) {
-    unsafe {
-        let provider = ASAuthorizationAppleIDProvider::new();
-        let request = provider.createRequest();
-        request.setRequestedScopes(Some(&*NSArray::from_slice(&[
-            ASAuthorizationScopeFullName,
-            ASAuthorizationScopeEmail,
-        ])));
-
-        let auth_request = &request as &ASAuthorizationRequest;
-
-        let controller = ASAuthorizationController::initWithAuthorizationRequests(
-            ASAuthorizationController::alloc(),
-            &*NSArray::from_slice(&[auth_request]),
-        );
-
-        // Create and store the delegate in thread-local storage to keep it alive
-        let delegate = ASAuthorizationControllerDelegateImpl::new(app.clone());
-        APPLE_SIGN_IN_DELEGATE.with(|cell| {
-            *cell.borrow_mut() = Some(delegate.clone());
-        });
-
-        // Store the controller in thread-local storage to keep it alive
-        AUTHORIZATION_CONTROLLER.with(|cell| {
-            *cell.borrow_mut() = Some(controller.clone());
-        });
-
-        controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)));
-        log::info!("Starting authorization requests");
-        controller.performRequests();
-    }
+    apple_sign_in::start_apple_sign_in(app);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -167,8 +77,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             start_options,
+            is_mac_app_store,
             #[cfg(target_os = "macos")]
-            start_apple_sign_in
+            start_apple_sign_in,
         ]);
 
     #[cfg(desktop)]

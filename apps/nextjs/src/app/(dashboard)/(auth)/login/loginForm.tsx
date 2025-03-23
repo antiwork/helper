@@ -73,10 +73,10 @@ export function LoginForm() {
   if (!signIn || !signUp) return <Loading />;
 
   const handleOAuthSignIn = async (strategy: OAuthStrategy) => {
-    if (nativePlatform === "macos" && strategy === "oauth_apple") {
+    if (nativePlatform === "macos" && strategy === "oauth_apple" && (await invoke("is_mac_app_store"))) {
       setLoading(true);
       await invoke("start_apple_sign_in");
-    } else if (isTauri && !(nativePlatform === "macos" && strategy === "oauth_apple")) {
+    } else if (isTauri) {
       await openUrl(`${window.location.origin}/login/popup?strategy=${strategy}&deepLink=true`);
     } else {
       try {
