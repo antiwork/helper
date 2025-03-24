@@ -7,6 +7,7 @@ import checkConversationResolution from "./checkConversationResolution";
 import checkVipResponseTimes from "./checkVipResponseTimes";
 import cleanupDanglingFiles from "./cleanupDanglingFiles";
 import crawlWebsite from "./crawlWebsite";
+import detectSimilarConversations from "./detectSimilarConversations";
 import embeddingConversation from "./embeddingConversation";
 import embeddingFaq from "./embeddingFaq";
 import generateConversationSummaryEmbeddings from "./generateConversationSummaryEmbeddings";
@@ -39,6 +40,7 @@ export default [
   refreshConversationDraft,
   generateFilePreview,
   generateConversationSummaryEmbeddings,
+  detectSimilarConversations,
   publishNewConversationEvent,
   handleStripeWebhookEvent,
   cleanupDanglingFiles,
