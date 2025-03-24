@@ -8,16 +8,21 @@ import { getMailboxById } from "@/lib/data/mailbox";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
+// Define the type for similar conversation results
+type SimilarConversationsResult = 
+  | { hasSimilar: false }
+  | { hasSimilar: true; targetConversation: { id: number; [key: string]: any } };
+
 const SIMILARITY_THRESHOLD = 0.7; // Higher threshold for conversation merging
 
 export default inngest.createFunction(
   {
     id: "detect-similar-conversations",
-    debounce: { key: "event.data.conversationId", period: "1m", timeout: "5m" },
+    debounce: { key: "event.data.messageId", period: "1m", timeout: "5m" },
   },
   { event: "conversations/message.created" },
   async ({ event, step }) => {
-    const { messageId, conversationId } = event.data;
+    const { messageId } = event.data;
 
     // Get the message and conversation
     const message = assertDefinedOrRaiseNonRetriableError(await getConversationMessageById(messageId));
@@ -67,7 +72,7 @@ export default inngest.createFunction(
     });
 
     // If a similar conversation was found, mark this one as merged into it
-    if (similarResult.hasSimilar && similarResult.targetConversation) {
+    if (similarResult.hasSimilar === true && 'targetConversation' in similarResult && similarResult.targetConversation) {
       await db
         .update(conversations)
         .set({ mergedIntoId: similarResult.targetConversation.id })
