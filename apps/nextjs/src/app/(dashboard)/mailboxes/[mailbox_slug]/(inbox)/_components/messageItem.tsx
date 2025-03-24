@@ -5,7 +5,13 @@ import type { AttachedFile, Conversation, Message as MessageType, Note as NoteTy
 import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
 import "@/components/linkCta.css";
-import { ChatBubbleLeftIcon, EnvelopeIcon, PencilSquareIcon, UserIcon } from "@heroicons/react/16/solid";
+import {
+  ArrowDownOnSquareIcon,
+  ChatBubbleLeftIcon,
+  EnvelopeIcon,
+  PencilSquareIcon,
+  UserIcon,
+} from "@heroicons/react/16/solid";
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
 import { SparklesIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { truncate } from "lodash";
@@ -170,6 +176,19 @@ const MessageItem = ({
             </div>
           </div>
           <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                    <ArrowDownOnSquareIcon className="h-4 w-4" />
+                    <span className="text-xs">Merged</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Automatically merged based on similarity. Click to split.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {message.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
             {hasReasoning && !userMessage && (
               <Popover>
