@@ -9,7 +9,7 @@ import { findSimilarConversations } from "@/lib/data/retrieval";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 // Define the type for similar conversation results
-type SimilarConversationsResult = 
+type SimilarConversationsResult =
   | { hasSimilar: false }
   | { hasSimilar: true; targetConversation: { id: number; [key: string]: any } };
 
@@ -72,7 +72,7 @@ export default inngest.createFunction(
     });
 
     // If a similar conversation was found, mark this one as merged into it
-    if (similarResult.hasSimilar === true && 'targetConversation' in similarResult && similarResult.targetConversation) {
+    if (similarResult.hasSimilar && "targetConversation" in similarResult && similarResult.targetConversation) {
       await db
         .update(conversations)
         .set({ mergedIntoId: similarResult.targetConversation.id })
