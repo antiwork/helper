@@ -25,7 +25,6 @@ const buildMockOrganization = (overrides: Partial<Organization> = {}) => {
     name: faker.company.name(),
     slug: faker.helpers.slugify(faker.company.name().toLowerCase()),
     privateMetadata: {
-      isStyleLinterEnabled: true,
       automatedRepliesCount: 0,
     },
     ...overrides,

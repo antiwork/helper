@@ -3,7 +3,6 @@ import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import { ensureCleanedUpText, getPastMessages, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
 import { getResponseGeneratorPromptText } from "@/lib/data/mailbox";
 import { runAIQuery } from ".";
-import { generateAIStyleLinterText } from "./generateResponse";
 import { buildMessagesFromHistory } from "./messageBuilder";
 
 export const generateResponseWithPrompt = async ({
@@ -36,8 +35,7 @@ export const generateResponseWithPrompt = async ({
     functionId: "generate-response-with-prompt",
   });
 
-  const { response: lintedResponse } = await generateAIStyleLinterText(mailbox, response);
-  return lintedResponse;
+  return response;
 };
 
 /**

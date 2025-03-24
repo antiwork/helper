@@ -42,18 +42,6 @@ export type Pagination = {
   total_pages: number;
 };
 
-export type Linter = {
-  id: number;
-  before: string;
-  after: string;
-};
-
-export type LinterUpdate = {
-  id?: number;
-  before?: string;
-  after?: string;
-};
-
 export type SupportAccount = {
   id: number;
   email: string;

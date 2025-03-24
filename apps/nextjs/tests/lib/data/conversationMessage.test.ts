@@ -74,8 +74,6 @@ describe("serializeResponseAiDraft", () => {
         pinned_replies: "Pinned replies",
         past_conversations: "Past conversations",
         metadata: "Metadata",
-        style_linter_examples: "Style linter examples",
-        unstyled_response: "Unstyled response",
       },
     };
     const { message: draft1 } = await conversationMessagesFactory.create(conversation.id, {
@@ -260,8 +258,6 @@ describe("getMessages", () => {
         pinned_replies: "Pinned replies",
         past_conversations: null,
         metadata: null,
-        style_linter_examples: null,
-        unstyled_response: null,
       },
     });
 

@@ -70,7 +70,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     id: mailbox.id,
     name: mailbox.name,
     slug: mailbox.slug,
-    isStyleLinterEnabled: !!organization.privateMetadata.isStyleLinterEnabled,
     hasMetadataEndpoint: !!metadataEndpoint,
     metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
