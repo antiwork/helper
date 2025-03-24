@@ -470,6 +470,13 @@
       "when": 1742418972102,
       "tag": "0066_worthless_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1742855499669,
+      "tag": "0067_next_surge",
+      "breakpoints": true
     }
   ]
 }
