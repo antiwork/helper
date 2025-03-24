@@ -71,7 +71,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadPreviousMessages = async (conversationId: number, latestMessage?: Message): Promise<Message[]> => {
+export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
   const conversation = assertDefined(await getConversationById(conversationId));
   const mailbox = assertDefined(
     await db.query.mailboxes.findFirst({
@@ -82,12 +82,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
   const conversationMessages = await getMessages(conversationId, mailbox);
 
   return conversationMessages
-    .filter(
-      (message) =>
-        message.type === "message" &&
-        message.body &&
-        (latestMessage?.createdAt ? message.createdAt < new Date(latestMessage.createdAt) : true),
-    )
+    .filter((message) => message.type === "message" && message.body && message.id !== latestMessageId)
     .map((message) => {
       const messageRecord = message as any; // Type assertion to handle union type
       return {
@@ -488,7 +483,7 @@ export const respondWithAI = async ({
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
 }) => {
-  const previousMessages = await loadPreviousMessages(conversation.id, message);
+  const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
     messages: previousMessages,
     message,
