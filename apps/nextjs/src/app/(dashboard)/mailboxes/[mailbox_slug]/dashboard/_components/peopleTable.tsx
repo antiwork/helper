@@ -44,19 +44,19 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
   return (
     <div className="flex flex-col gap-4">
       {members?.length ? (
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="max-h-[350px] md:max-h-[300px] overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Replies</TableHead>
+                <TableHead className="px-0">Name</TableHead>
+                <TableHead className="px-0">Replies</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {members.map((member: Member) => (
                 <TableRow key={member.id}>
-                  <TableCell>{member.displayName}</TableCell>
-                  <TableCell>{member.replyCount}</TableCell>
+                  <TableCell className="px-0">{member.displayName}</TableCell>
+                  <TableCell className="px-0">{member.replyCount}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

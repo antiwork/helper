@@ -73,7 +73,7 @@ export function ReactionsChart({ mailboxSlug, timeRange }: { mailboxSlug: string
                   innerPadding={timeRange === "7d" ? 0.3 : 0.1}
                   chartBounds={chartBounds}
                   points={[points.positive, points.negative]}
-                  colors={["#22c55e", "#ef4444"]}
+                  colors={["#157F3C", "#BC1010"]}
                   barOptions={({ isBottom, isTop }) => ({
                     roundedCorners: isTop
                       ? { topLeft: 4, topRight: 4 }

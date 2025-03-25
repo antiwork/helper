@@ -50,6 +50,10 @@
     --syntax-function: #6f42c1;
     --syntax-string: #032f62;
     --syntax-number: #005cc5;
+    --chart-open: 1 75% 17%;
+    --chart-closed-manual: 45 99% 55%;
+    --chart-closed-ai: 73 58% 56%;
+    --chart-negative: 17 88% 40%; /* Same as light mode destructive */
   }
 
   .dark {
@@ -98,6 +102,7 @@
     --syntax-function: #dcdcaa;
     --syntax-string: #ce9178;
     --syntax-number: #9cdcfe;
+    --chart-open: 17 90% 49%;  /* Slightly lighter in dark mode for better visibility */
   }
 }
 
