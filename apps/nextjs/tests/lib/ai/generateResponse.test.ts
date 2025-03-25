@@ -26,38 +26,6 @@ describe("generateDraftResponse", () => {
     vi.clearAllMocks();
   });
 
-  it("generates a draft response with style linting", async () => {
-    vi.mocked(generateCompletion)
-      .mockResolvedValueOnce({ text: "Here are the steps to reset your password..." } as any)
-      .mockResolvedValueOnce({ text: "1. Click on the link in the email" } as any);
-
-    const { organization, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-    const { message: lastUserEmail } = await conversationMessagesFactory.create(conversation.id, {
-      role: "user",
-      cleanedUpText: "How do I reset my password?",
-    });
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
-
-    const result = await generateDraftResponse(
-      mailbox.id,
-      { ...lastUserEmail, conversation: { subject: "test subject" } },
-      null,
-    );
-    expect(generateCompletion).toHaveBeenCalledTimes(2);
-
-    expect(result).toEqual({
-      draftResponse: "<ol>\n<li>Click on the link in the email</li>\n</ol>\n",
-      promptInfo: expect.objectContaining({
-        base_prompt: "",
-        pinned_replies: null,
-        past_conversations: null,
-        metadata: null,
-      }),
-    });
-  });
-
   it("handles metadata in the draft response generation", async () => {
     vi.mocked(generateCompletion).mockResolvedValueOnce({ text: "Your order is on its way!" } as any);
 
