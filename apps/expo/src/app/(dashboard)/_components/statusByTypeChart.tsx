@@ -2,14 +2,14 @@ import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { Pie, PolarChart } from "victory-native";
 import { Panel } from "@/app/(dashboard)/_components/panel";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { api } from "@/utils/api";
 import { timeRangeToQuery, type TimeRange } from "./timeRangeSelector";
-import { useColorScheme } from "@/hooks/useColorScheme";
 
 const COLORS = {
   OPEN: {
     light: "#480F0E",
-    dark: "#BC1010" 
+    dark: "#BC1010",
   },
   CLOSED_MANUAL: "#FEB81D",
   CLOSED_AI: "#C2D44B",
@@ -17,11 +17,11 @@ const COLORS = {
 
 export function StatusByTypeChart({ mailboxSlug, timeRange }: { mailboxSlug: string; timeRange: TimeRange }) {
   const colorScheme = useColorScheme();
-  
+
   const chartConfig = {
     open: {
       label: "Open",
-      color: colorScheme === 'dark' ? COLORS.OPEN.dark : COLORS.OPEN.light,
+      color: colorScheme === "dark" ? COLORS.OPEN.dark : COLORS.OPEN.light,
     },
     ai: {
       label: "Closed by AI",
@@ -86,7 +86,9 @@ export function StatusByTypeChart({ mailboxSlug, timeRange }: { mailboxSlug: str
             <Pie.Chart innerRadius="75%" />
           </PolarChart>
           <View className="absolute w-full h-full justify-center items-center">
-            <Text className="text-2xl font-bold text-bright-foreground dark:text-muted-foreground">{totalTickets.toLocaleString()}</Text>
+            <Text className="text-2xl font-bold text-bright-foreground dark:text-muted-foreground">
+              {totalTickets.toLocaleString()}
+            </Text>
             <Text className="text-sm text-muted-foreground">Total</Text>
           </View>
         </View>

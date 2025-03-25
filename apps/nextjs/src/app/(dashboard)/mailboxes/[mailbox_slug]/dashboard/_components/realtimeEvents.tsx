@@ -71,16 +71,20 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {allEvents.map((event) => (
         <motion.div key={event.id} layout>
-          <Panel className={cn("p-0", 
-            (event.isVip || event.type === "bad_reply" || event.type === "good_reply") && "dark:border-0"
-          )}>
+          <Panel
+            className={cn(
+              "p-0",
+              (event.isVip || event.type === "bad_reply" || event.type === "good_reply") && "dark:border-0",
+            )}
+          >
             <Link
               href={`/mailboxes/${mailboxSlug}/conversations?id=${event.conversationSlug}`}
               className={cn(
                 "flex flex-col p-5 transition-colors rounded-lg",
                 "hover:bg-muted dark:hover:bg-muted",
                 event.isVip && "bg-bright/10 dark:bg-transparent dark:border dark:border-bright/50",
-                event.type === "bad_reply" && "bg-destructive/10 dark:bg-transparent dark:border dark:border-destructive/50",
+                event.type === "bad_reply" &&
+                  "bg-destructive/10 dark:bg-transparent dark:border dark:border-destructive/50",
                 event.type === "good_reply" && "bg-success/10 dark:bg-transparent dark:border dark:border-success/50",
               )}
             >

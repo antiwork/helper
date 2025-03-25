@@ -22,7 +22,10 @@ export function Panel({
   return (
     <View className="mt-4 px-6">
       <Link href={href ?? "/"} disabled={!href} asChild>
-        <TouchableOpacity className="bg-white border border-gray-200 dark:border-border dark:bg-muted rounded-xl dark:bg-muted dark:text-muted-foreground" activeOpacity={0.8}>
+        <TouchableOpacity
+          className="bg-white border border-gray-200 dark:border-border dark:bg-muted rounded-xl dark:bg-muted dark:text-muted-foreground"
+          activeOpacity={0.8}
+        >
           <View className="p-4 flex-row gap-2 items-center justify-between">
             <Text
               className={cn(

@@ -102,7 +102,7 @@
     --syntax-function: #dcdcaa;
     --syntax-string: #ce9178;
     --syntax-number: #9cdcfe;
-    --chart-open: 17 90% 49%;  /* Slightly lighter in dark mode for better visibility */
+    --chart-open: 17 90% 49%; /* Slightly lighter in dark mode for better visibility */
   }
 }
 
