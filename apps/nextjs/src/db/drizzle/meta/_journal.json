@@ -470,6 +470,13 @@
       "when": 1742418972102,
       "tag": "0066_worthless_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1742899461418,
+      "tag": "0067_fat_salo",
+      "breakpoints": true
     }
   ]
 }
