@@ -358,7 +358,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
           </div>
         </div>
         {total > 0 && (
-          <div className="sticky bottom-4 right-4 z-10 self-end">
+          <div className="absolute bottom-4 right-4 z-10 self-end">
             <NewConversationModal />
           </div>
         )}

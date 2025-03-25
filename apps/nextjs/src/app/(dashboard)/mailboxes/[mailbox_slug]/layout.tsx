@@ -12,7 +12,7 @@ export default function InboxLayout({ children }: { children: React.ReactNode })
     <LayoutInfoProvider>
       {nativePlatform === "macos" && <TauriDragArea className="top-0 inset-x-0 h-3" />}
       <DeepLinkRedirect />
-      <div className="flex h-full flex-col lg:flex-row">{children}</div>
+      {children}
     </LayoutInfoProvider>
   );
 }
