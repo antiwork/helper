@@ -88,7 +88,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           id: number;
           name: string;
           slug: string;
-          isStyleLinterEnabled: boolean;
           hasMetadataEndpoint: boolean;
           metadataEndpoint: {
             url: string;
@@ -159,47 +158,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
         output: any;
       }>;
-      styleLinters: {
-        list: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            id: number;
-            before: string;
-            after: string;
-          }[];
-        }>;
-        upsert: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            linter: {
-              before: string;
-              after: string;
-              id?: number | undefined;
-            };
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            id: number;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        setEnabled: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            enabled: boolean;
-          };
-          output: void;
-        }>;
-      };
       conversations: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {

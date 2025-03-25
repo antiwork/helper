@@ -2,12 +2,11 @@ import { and, asc, eq, isNull, ne, or } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { db } from "@/db/client";
-import { conversationMessages, styleLinters } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import { getTextWithConversationSubject } from "@/lib/data/conversationMessage";
-import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
+import { getMailboxById } from "@/lib/data/mailbox";
 import { fetchPromptRetrievalData, getPastConversationsPrompt } from "@/lib/data/retrieval";
 import type { PromptInfo } from "@/types/conversationMessages";
-import { getClerkOrganization } from "../data/organization";
 import { cleanUpTextForAI, generateCompletion, GPT_4O_MODEL } from "./core";
 import { buildMessagesFromHistory } from "./messageBuilder";
 import { buildTools } from "./tools";
@@ -29,54 +28,6 @@ Do not:
 - Do not answer as giving instructions or advice for someone that will be replying to the email. Respond as if you are the person that will be replying to the email.
 </GlobalRulesThatMustBeFollowed>
 `;
-
-const STYLE_LINTER_SYSTEM_PROMPT = `You are a style linter. You will be given a draft response, and a list of examples of before/after style linting. You will then rewrite the draft response, making it cleaner and more inline with the style of the examples.
-Here are before/after examples to base your new draft upon:
-{{EXAMPLES}}
-`;
-
-const STYLE_LINTER_USER_PROMPT = `
-This is the draft response you are style linting:
-{{DRAFT_RESPONSE}}
-
-Reply only with a style-linted version, with no additional context.
-`;
-
-export const generateAIStyleLinterText = async (
-  mailbox: Mailbox,
-  response: string,
-): Promise<{ response: string; examples: string | null }> => {
-  const organization = await getClerkOrganization(mailbox.clerkOrganizationId ?? "");
-  if (!organization) {
-    throw new Error("Organization not found");
-  }
-
-  if (!organization.privateMetadata.isStyleLinterEnabled) {
-    return { response, examples: null };
-  }
-
-  const linters = await db.query.styleLinters.findMany({
-    where: eq(styleLinters.clerkOrganizationId, organization.id),
-  });
-
-  if (linters.length === 0) {
-    return { response, examples: null };
-  }
-
-  const examples = buildStyleLinterExamples(linters);
-  const result = await generateCompletion({
-    model: GPT_4O_MODEL,
-    system: STYLE_LINTER_SYSTEM_PROMPT.replace("{{EXAMPLES}}", examples),
-    prompt: STYLE_LINTER_USER_PROMPT.replace("{{DRAFT_RESPONSE}}", response),
-    functionId: "style-linter",
-  });
-
-  return { response: result.text, examples };
-};
-
-const buildStyleLinterExamples = (linters: (typeof styleLinters.$inferSelect)[]) => {
-  return linters.map((linter) => `Before: ${linter.before}\nAfter: ${linter.after}`).join("\n\n");
-};
 
 export const buildPromptWithMessages = async (conversationId: number) => {
   const pastMessages = await db.query.conversationMessages.findMany({
@@ -161,13 +112,7 @@ export const generateDraftResponse = async (
     },
   });
 
-  const resultText = result.text;
-  const { response: lintedResponse, examples: styleLinterExamples } = await generateAIStyleLinterText(
-    mailbox,
-    resultText,
-  );
-
-  const htmlResponse = await convertMarkdownToHtml(lintedResponse);
+  const htmlResponse = await convertMarkdownToHtml(result.text);
 
   return {
     draftResponse: htmlResponse,
@@ -176,8 +121,6 @@ export const generateDraftResponse = async (
       base_prompt: basePrompt,
       pinned_replies: knowledgeBank,
       metadata: metadataPrompt,
-      style_linter_examples: styleLinterExamples,
-      unstyled_response: resultText,
     },
   };
 };

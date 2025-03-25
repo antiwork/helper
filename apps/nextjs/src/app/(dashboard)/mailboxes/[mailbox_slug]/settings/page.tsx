@@ -12,10 +12,9 @@ const Page = async (props: { params: Promise<PageProps> }) => {
   const mailboxPath = `/mailboxes/${params.mailbox_slug}` as const;
   const settingsPath = `${mailboxPath}/settings` as const;
 
-  const [supportAccount, mailboxData, lintersData, sidebarInfo] = await Promise.all([
+  const [supportAccount, mailboxData, sidebarInfo] = await Promise.all([
     api.gmailSupportEmail.get({ mailboxSlug: params.mailbox_slug }),
     api.mailbox.get({ mailboxSlug: params.mailbox_slug }),
-    api.mailbox.styleLinters.list({ mailboxSlug: params.mailbox_slug }),
     getSidebarInfo(params.mailbox_slug),
   ]);
 
@@ -92,10 +91,8 @@ const Page = async (props: { params: Promise<PageProps> }) => {
       <title>Settings</title>
       <Settings
         mailbox={mailboxData}
-        linters={lintersData}
         onUpdateSettings={handleUpdateSettings}
         supportAccount={supportAccount ?? undefined}
-        subscription={mailboxData.subscription}
         sidebarInfo={sidebarInfo}
       />
     </>
