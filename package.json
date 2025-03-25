@@ -53,7 +53,9 @@
     "packages/*"
   ],
   "dependencies": {
+    "@ai-sdk/google": "^1.2.3",
     "@algora/xtrpc": "^0.1.1",
+    "ai": "^4.2.5",
     "date-fns-tz": "^3.2.0"
   }
 }

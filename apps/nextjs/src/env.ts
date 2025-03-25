@@ -75,6 +75,8 @@ export const env = createEnv({
     APPLE_TEAM_ID: z.string().min(1).optional(),
     APPLE_PRIVATE_KEY: z.string().min(1).optional(),
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
+    GOOGLE_GEMINI_API_KEY: z.string().optional(),
+    DEFAULT_LLM_PROVIDER: z.enum(["openai", "gemini"]).optional().default("gemini"),
   },
 
   /**
