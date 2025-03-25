@@ -70,7 +70,7 @@ export const inngest = new Inngest({
           status: z.enum(["open", "closed", "spam"]),
         }),
       },
-      "conversations/update-suggested-actions": {
+      "conversations/embedding.generated": {
         data: z.object({
           conversationId: z.number(),
         }),

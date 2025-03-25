@@ -17,17 +17,24 @@ const MAX_SIMILAR_CONVERSATIONS = 3;
 const MAX_SIMILAR_KNOWLEDGE_ITEMS = 10;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
-export const findSimilarConversations = async (
-  queryInput: string | number[],
-  mailbox: Mailbox,
-  limit: number = MAX_SIMILAR_CONVERSATIONS,
-  excludeConversationSlug?: string,
-  similarityThreshold: number = SIMILARITY_THRESHOLD,
+export const findSimilarConversations = async ({
+  query,
+  mailbox,
+  limit = MAX_SIMILAR_CONVERSATIONS,
+  excludeConversationSlug,
+  similarityThreshold = SIMILARITY_THRESHOLD,
   onlyWithTopics = false,
-) => {
-  const queryEmbedding = Array.isArray(queryInput)
-    ? queryInput
-    : await generateEmbedding(queryInput, "query-find-past-conversations");
+  emailFrom,
+}: {
+  query: string | number[];
+  mailbox: Mailbox;
+  limit?: number;
+  excludeConversationSlug?: string;
+  similarityThreshold?: number;
+  onlyWithTopics?: boolean;
+  emailFrom?: string;
+}) => {
+  const queryEmbedding = Array.isArray(query) ? query : await generateEmbedding(query, "query-find-past-conversations");
   const similarity = sql<number>`1 - (${cosineDistance(conversations.embedding, queryEmbedding)})`;
 
   let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id}`;
@@ -39,6 +46,9 @@ export const findSimilarConversations = async (
       SELECT 1 FROM ${conversationsTopics} ct
       WHERE ct.conversation_id = ${conversations.id}
     )`;
+  }
+  if (emailFrom) {
+    where = sql`${where} AND ${conversations.emailFrom} = ${emailFrom}`;
   }
 
   const similarConversations = await db.query.conversations.findMany({
@@ -68,7 +78,7 @@ export const findSimilarConversations = async (
 };
 
 export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox) => {
-  const similarConversations = await findSimilarConversations(query, mailbox);
+  const similarConversations = await findSimilarConversations({ query, mailbox });
   if (!similarConversations) return null;
 
   const pastConversations = similarConversations
