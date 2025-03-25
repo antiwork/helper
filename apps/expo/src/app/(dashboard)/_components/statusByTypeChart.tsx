@@ -15,22 +15,24 @@ const COLORS = {
   CLOSED_AI: "#C2D44B",
 };
 
-const chartConfig = {
-  open: {
-    label: "Open",
-    color: useColorScheme() === 'dark' ? COLORS.OPEN.dark : COLORS.OPEN.light,
-  },
-  ai: {
-    label: "Closed by AI",
-    color: COLORS.CLOSED_AI,
-  },
-  human: {
-    label: "Closed manually",
-    color: COLORS.CLOSED_MANUAL,
-  },
-};
-
 export function StatusByTypeChart({ mailboxSlug, timeRange }: { mailboxSlug: string; timeRange: TimeRange }) {
+  const colorScheme = useColorScheme();
+  
+  const chartConfig = {
+    open: {
+      label: "Open",
+      color: colorScheme === 'dark' ? COLORS.OPEN.dark : COLORS.OPEN.light,
+    },
+    ai: {
+      label: "Closed by AI",
+      color: COLORS.CLOSED_AI,
+    },
+    human: {
+      label: "Closed manually",
+      color: COLORS.CLOSED_MANUAL,
+    },
+  };
+
   const { startDate } = useMemo(() => timeRangeToQuery(timeRange), [timeRange]);
 
   const { data, isLoading } = api.mailbox.conversations.messages.statusByTypeCount.useQuery({
