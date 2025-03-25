@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, isNotNull, lt } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
@@ -110,6 +110,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
         db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
       ),
       inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
+      isNull(conversationMessages.deletedAt),
       before ? lt(conversationMessages.createdAt, before) : undefined,
     ),
     orderBy: desc(conversationMessages.createdAt),
@@ -122,59 +123,60 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
 
   const messageEvents = messages.map((message) => createMessageEventPayload(message, mailbox));
 
-  const reactions = await db.query.conversationMessages.findMany({
-    columns: {
-      id: true,
-      reactionType: true,
-      reactionFeedback: true,
-      reactionCreatedAt: true,
-    },
-    with: {
-      conversation: {
-        columns: { subject: true, emailFrom: true, slug: true },
-        with: {
-          platformCustomer: { columns: { value: true } },
+  const [reactions, humanSupportRequests] = await Promise.all([
+    db.query.conversationMessages.findMany({
+      columns: {
+        id: true,
+        reactionType: true,
+        reactionFeedback: true,
+        reactionCreatedAt: true,
+      },
+      with: {
+        conversation: {
+          columns: { subject: true, emailFrom: true, slug: true },
+          with: {
+            platformCustomer: { columns: { value: true } },
+          },
         },
       },
-    },
-    where: and(
-      inArray(
-        conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
+      where: and(
+        inArray(
+          conversationMessages.conversationId,
+          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
+        ),
+        isNotNull(conversationMessages.reactionType),
+        isNotNull(conversationMessages.reactionCreatedAt),
+        isNull(conversationMessages.deletedAt),
+        gte(conversationMessages.reactionCreatedAt, earliestMessageTimestamp),
+        before ? lt(conversationMessages.reactionCreatedAt, before) : undefined,
       ),
-      isNotNull(conversationMessages.reactionType),
-      isNotNull(conversationMessages.reactionCreatedAt),
-      gte(conversationMessages.reactionCreatedAt, earliestMessageTimestamp),
-      before ? lt(conversationMessages.reactionCreatedAt, before) : undefined,
-    ),
-    orderBy: desc(conversationMessages.reactionCreatedAt),
-    limit: 20,
-  });
+      orderBy: desc(conversationMessages.reactionCreatedAt),
+      limit: 20,
+    }),
+    db.query.conversationEvents.findMany({
+      where: and(
+        inArray(
+          conversationEvents.conversationId,
+          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
+        ),
+        eq(conversationEvents.type, "request_human_support"),
+        gte(conversationEvents.createdAt, earliestMessageTimestamp),
+        before ? lt(conversationEvents.createdAt, before) : undefined,
+      ),
+      with: {
+        conversation: {
+          columns: { subject: true, emailFrom: true, slug: true },
+          with: {
+            platformCustomer: { columns: { value: true } },
+          },
+        },
+      },
+      orderBy: desc(conversationEvents.createdAt),
+      limit: 20,
+    }),
+  ]);
 
   const reactionEvents = reactions.map((message) => createReactionEventPayload(message, mailbox));
-
-  const humanSupportRequests = await db.query.conversationEvents.findMany({
-    where: and(
-      inArray(
-        conversationEvents.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-      ),
-      eq(conversationEvents.type, "request_human_support"),
-      gte(conversationEvents.createdAt, earliestMessageTimestamp),
-      before ? lt(conversationEvents.createdAt, before) : undefined,
-    ),
-    with: {
-      conversation: {
-        columns: { subject: true, emailFrom: true, slug: true },
-        with: {
-          platformCustomer: { columns: { value: true } },
-        },
-      },
-    },
-    orderBy: desc(conversationEvents.createdAt),
-    limit: 20,
-  });
-
   const humanSupportRequestEvents = humanSupportRequests.map((request) =>
     createHumanSupportRequestEventPayload(request, mailbox),
   );
