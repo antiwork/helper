@@ -1,6 +1,6 @@
 import { User } from "@clerk/nextjs/server";
 import { addSeconds } from "date-fns";
-import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
@@ -50,58 +50,10 @@ export const bodyWithSignature = (body?: string | null, user?: User) => {
 };
 
 export const getMessages = async (conversationId: number, mailbox: typeof mailboxes.$inferSelect) => {
-  // Get messages from the main conversation
-  const messages = await db.query.conversationMessages.findMany({
-    where: and(
-      eq(conversationMessages.conversationId, conversationId),
-      isNull(conversationMessages.deletedAt),
-      or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
-    ),
-    columns: {
-      id: true,
-      status: true,
-      body: true,
-      createdAt: true,
-      emailTo: true,
-      emailCc: true,
-      emailBcc: true,
-      clerkUserId: true,
-      emailFrom: true,
-      isPinned: true,
-      role: true,
-      conversationId: true,
-      metadata: true,
-      slackChannel: true,
-      slackMessageTs: true,
-      reactionType: true,
-      reactionFeedback: true,
-      reactionCreatedAt: true,
-      isFlaggedAsBad: true,
-      reason: true,
-    },
-    with: {
-      files: {
-        where: eq(files.isPublic, false),
-      },
-    },
-  });
-
-  // Find conversations that have been merged into this one
-  const mergedConversations = await db.query.conversations.findMany({
-    where: eq(conversations.mergedIntoId, conversationId),
-    columns: {
-      id: true,
-    },
-  });
-
-  const mergedConversationIds = mergedConversations.map((c) => c.id);
-
-  // If there are merged conversations, get their messages too
-  let mergedMessages: typeof messages = [];
-  if (mergedConversationIds.length > 0) {
-    mergedMessages = await db.query.conversationMessages.findMany({
+  const findMessages = (where: SQL) =>
+    db.query.conversationMessages.findMany({
       where: and(
-        inArray(conversationMessages.conversationId, mergedConversationIds),
+        where,
         isNull(conversationMessages.deletedAt),
         or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
       ),
@@ -133,9 +85,14 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         },
       },
     });
-  }
 
-  // Combine the messages from the main conversation and the merged conversations
+  const messages = await findMessages(eq(conversationMessages.conversationId, conversationId));
+  const mergedMessages = await findMessages(
+    inArray(
+      conversationMessages.conversationId,
+      db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
+    ),
+  );
   const allMessages = [...messages, ...mergedMessages];
 
   const noteRecords = await db.query.notes.findMany({
@@ -172,7 +129,12 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
 
   const messageInfos = await Promise.all(
     allMessages.map((message) =>
-      serializeMessage(message, mailbox, (message.clerkUserId && membersById[message.clerkUserId]) || null),
+      serializeMessage(
+        message,
+        conversationId,
+        mailbox,
+        (message.clerkUserId && membersById[message.clerkUserId]) || null,
+      ),
     ),
   );
 
@@ -238,6 +200,7 @@ export const serializeMessage = async (
   > & {
     files?: (typeof files.$inferSelect)[];
   },
+  conversationId: number,
   mailbox: typeof mailboxes.$inferSelect,
   user: User | null,
 ) => {
@@ -278,6 +241,7 @@ export const serializeMessage = async (
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
     from: message.role === "staff" && user ? user.fullName : message.emailFrom,
+    isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:
       mailbox.slackBotToken && message.slackChannel && message.slackMessageTs

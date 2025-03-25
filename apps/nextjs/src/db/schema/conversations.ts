@@ -83,4 +83,11 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platformCustomers.email],
   }),
   events: many(conversationEvents),
+  mergedInto: one(conversations, {
+    fields: [conversations.mergedIntoId],
+    references: [conversations.id],
+  }),
+  mergedConversations: many(conversations, {
+    relationName: "mergedConversations",
+  }),
 }));

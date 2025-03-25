@@ -53,6 +53,7 @@ export const searchConversations = async (
 
   const where = {
     mailboxId: eq(conversations.mailboxId, mailbox.id),
+    notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToClerkId, filters.assignee) } : {}),
     ...(filters.category === "assigned" ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),

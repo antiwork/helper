@@ -16,9 +16,12 @@ import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
 import { SparklesIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { truncate } from "lodash";
 import { Bot, Frown, ThumbsDown, ThumbsUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { renderMessageBody } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/renderMessageBody";
+import { toast } from "@/components/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { api } from "@/trpc/react";
 
 function getPreviewUrl(file: AttachedFile): string {
   return file.previewUrl
@@ -50,6 +53,7 @@ const MessageItem = ({
   const rightAlignedMessage = !userMessage || message.type === "note";
   const isAIMessage = message.type === "message" && message.role === "ai_assistant";
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
+  const router = useRouter();
 
   const messageLabels: JSX.Element[] = [];
   messageLabels.push(
@@ -138,6 +142,19 @@ const MessageItem = ({
     [message.body, message.type, isAIMessage],
   );
 
+  const splitMergedMutation = api.mailbox.conversations.splitMerged.useMutation({
+    onSuccess: (conversation) => {
+      router.push(`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`);
+    },
+    onError: (e) => {
+      console.error(e);
+      toast({
+        title: "Failed to split conversation",
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <div data-message-item className="responsive-break-words grid">
       <div className={`flex ${rightAlignedMessage ? "justify-end" : ""}`}>
@@ -176,19 +193,28 @@ const MessageItem = ({
             </div>
           </div>
           <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                    <ArrowDownOnSquareIcon className="h-4 w-4" />
-                    <span className="text-xs">Merged</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Automatically merged based on similarity. Click to split.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {message.type === "message" && message.isMerged && (
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to separate this conversation?")) {
+                          splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
+                        }
+                      }}
+                    >
+                      <ArrowDownOnSquareIcon className="h-4 w-4" />
+                      <span className="text-xs">Merged</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Automatically merged based on similarity. Click to split.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {message.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
             {hasReasoning && !userMessage && (
               <Popover>
