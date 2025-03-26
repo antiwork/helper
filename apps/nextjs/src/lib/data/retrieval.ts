@@ -88,12 +88,12 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   return conversationPrompt;
 };
 
-export const findSimilarInKnowledgeBank = async (query: string, mailbox: Mailbox) => {
+export const findEnabledKnowledgeBankEntries = async (query: string, mailbox: Mailbox) => {
   const queryEmbedding = await generateEmbedding(query, "embedding-query-similar-faqs");
   const similarity = sql<number>`1 - (${cosineDistance(faqs.embedding, queryEmbedding)})`;
   const similarFAQs = await db.query.faqs.findMany({
     where: and(
-      sql`${gt(similarity, SIMILARITY_THRESHOLD)} AND ${faqs.mailboxId} = ${mailbox.id}`,
+      eq(faqs.mailboxId, mailbox.id),
       eq(faqs.enabled, true),
     ),
     columns: {
@@ -104,7 +104,6 @@ export const findSimilarInKnowledgeBank = async (query: string, mailbox: Mailbox
       similarity: similarity.as("similarity"),
     },
     orderBy: (_faq, { desc }) => [desc(similarity)],
-    limit: MAX_SIMILAR_KNOWLEDGE_ITEMS,
   });
 
   return similarFAQs;
@@ -162,7 +161,7 @@ export const fetchPromptRetrievalData = async (
   query: string,
   metadata: object | null,
 ): Promise<PromptRetrievalData> => {
-  const knowledgeBank = await findSimilarInKnowledgeBank(query, mailbox);
+  const knowledgeBank = await findEnabledKnowledgeBankEntries(query, mailbox);
   const websitePages = await findSimilarWebsitePages(query, mailbox);
 
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;

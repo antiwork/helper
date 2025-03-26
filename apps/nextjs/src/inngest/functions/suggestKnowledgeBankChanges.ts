@@ -7,7 +7,7 @@ import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { runAIObjectQuery } from "@/lib/ai";
-import { findSimilarInKnowledgeBank } from "@/lib/data/retrieval";
+import { findEnabledKnowledgeBankEntries } from "@/lib/data/retrieval";
 import { postSlackMessage } from "@/lib/slack/client";
 import { getSuggestedEditButtons } from "@/lib/slack/shared";
 
@@ -36,7 +36,7 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   const messageContent = message.body || message.cleanedUpText || "";
   const flagReason = reason || "No reason provided";
 
-  const similarFAQs = await findSimilarInKnowledgeBank(messageContent, mailbox);
+  const similarFAQs = await findEnabledKnowledgeBankEntries(messageContent, mailbox);
   const existingSuggestions = await db.query.faqs.findMany({
     where: and(eq(faqs.suggested, true), eq(faqs.mailboxId, mailbox.id)),
   });
