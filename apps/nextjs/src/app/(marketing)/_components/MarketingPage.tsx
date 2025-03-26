@@ -13,6 +13,8 @@ import {
   TrashIcon,
   UserIcon,
   PlusCircleIcon,
+  ArrowRightOnRectangleIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -180,9 +182,9 @@ Please reply with this information. We'll review your request within 1-2 busines
                   <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
                   <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
                 </div>
-                <div className="space-y-4 opacity-40">
+                <div className="space-y-4 opacity-50">
                   <div className="h-24 w-full rounded bg-gray-200" />
-                  {[...Array(3)].map((_, i) => (
+                  {[...Array(4)].map((_, i) => (
                     <div key={i} className="h-4 w-full rounded bg-gray-200" />
                   ))}
                 </div>
@@ -191,9 +193,24 @@ Please reply with this information. We'll review your request within 1-2 busines
               {/* Chat widget */}
               <div className="relative ml-auto w-[320px] rounded-lg border border-black bg-white shadow-lg">
                 <div className="border-b border-black p-4">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-medium">Support</h2>
-                    <span className="text-sm text-muted-foreground">Powered by Helper</span>
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-0.5">
+                      <h2 className="text-lg font-medium leading-5 text-black">Support</h2>
+                      <p className="flex items-center text-sm text-zinc-500">
+                        Powered by&nbsp;
+                        <a href="https://helper.ai" target="_blank" className="flex items-center">
+                          <Image src="/logo.svg" alt="Helper" width="110" height="32" className="w-12" />
+                        </a>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" className="text-black hover:text-gray-700 hover:bg-gray-100">
+                        <PlusCircleIcon className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-black hover:text-gray-700 hover:bg-gray-100">
+                        <ChevronRightIcon className="h-5 w-5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 
@@ -216,8 +233,8 @@ Please reply with this information. We'll review your request within 1-2 busines
                       placeholder="Ask a question"
                       className="flex-1"
                     />
-                    <Button variant="default" size="icon">
-                      <PaperAirplaneIcon className="h-4 w-4 -rotate-45" />
+                    <Button variant="default" size="sm" className="bg-black text-white">
+                      <PaperAirplaneIcon className="h-4 w-4 -rotate-90" />
                     </Button>
                   </div>
                 </div>
@@ -420,7 +437,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
                   Goodbye writer&apos;s block, hello
-                  <span className="underline-offset">&nbsp;auto-generated drafts</span>
+                  <span className="underline-offset">&nbsp;AI-generated drafts</span>
                 </h3>
                 <p className="text-md text-muted-foreground">All you have to do is click send.</p>
               </div>
