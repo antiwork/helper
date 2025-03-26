@@ -4,15 +4,30 @@ import { getSlackUser } from "../slack/client";
 
 export const clerkClient = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
 
-export const getClerkUser = (userId: string | null) => (userId ? clerkClient.users.getUser(userId) : null);
+export async function benchmarkApiCall<T>(apiCallFn: () => Promise<T>, thresholdMs = 3000): Promise<T> {
+  const startTime = performance.now();
+  try {
+    return await apiCallFn();
+  } finally {
+    const duration = performance.now() - startTime;
+    if (duration > thresholdMs) {
+      console.warn(`Clerk API call took ${duration.toFixed(2)}ms, which exceeds the ${thresholdMs}ms threshold`);
+    }
+  }
+}
+
+export const getClerkUser = (userId: string | null) =>
+  userId ? benchmarkApiCall(() => clerkClient.users.getUser(userId)) : null;
 
 export const getClerkUserList = (
   organizationId: string,
   { limit = 100, ...params }: NonNullable<Parameters<ClerkClient["users"]["getUserList"]>[0]> = {},
-) => clerkClient.users.getUserList({ limit, ...params, organizationId: [organizationId] });
+) => benchmarkApiCall(() => clerkClient.users.getUserList({ limit, ...params, organizationId: [organizationId] }));
 
 export const findUserByEmail = async (organizationId: string, email: string) => {
-  const { data } = await clerkClient.users.getUserList({ organizationId: [organizationId], emailAddress: [email] });
+  const { data } = await benchmarkApiCall(() =>
+    clerkClient.users.getUserList({ organizationId: [organizationId], emailAddress: [email] }),
+  );
   return data[0] ?? null;
 };
 
@@ -33,10 +48,10 @@ export const findUserViaSlack = async (organizationId: string, token: string, sl
 };
 
 export const getOAuthAccessToken = async (clerkUserId: string, provider: "oauth_google" | "oauth_slack") => {
-  const tokens = await clerkClient.users.getUserOauthAccessToken(clerkUserId, provider);
+  const tokens = await benchmarkApiCall(() => clerkClient.users.getUserOauthAccessToken(clerkUserId, provider));
   return tokens.data[0]?.token;
 };
 
 export const setPrivateMetadata = async (user: User, metadata: UserPrivateMetadata) => {
-  await clerkClient.users.updateUserMetadata(user.id, { privateMetadata: metadata });
+  await benchmarkApiCall(() => clerkClient.users.updateUserMetadata(user.id, { privateMetadata: metadata }));
 };
