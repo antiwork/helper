@@ -7,7 +7,6 @@ import checkConversationResolution from "./checkConversationResolution";
 import checkVipResponseTimes from "./checkVipResponseTimes";
 import cleanupDanglingFiles from "./cleanupDanglingFiles";
 import crawlWebsite from "./crawlWebsite";
-import detectSimilarConversations from "./detectSimilarConversations";
 import embeddingConversation from "./embeddingConversation";
 import embeddingFaq from "./embeddingFaq";
 import generateConversationSummaryEmbeddings from "./generateConversationSummaryEmbeddings";
@@ -21,6 +20,7 @@ import hardDeleteRecordsForNonPayingOrgs from "./hardDeleteRecordsForNonPayingOr
 import importGmailThreads from "./importGmailThreads";
 import importRecentGmailThreads from "./importRecentGmailThreads";
 import indexConversationMessage from "./indexConversation";
+import mergeSimilarConversations from "./mergeSimilarConversations";
 import notifyVipMessage from "./notifyVipMessage";
 import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
@@ -40,7 +40,7 @@ export default [
   refreshConversationDraft,
   generateFilePreview,
   generateConversationSummaryEmbeddings,
-  detectSimilarConversations,
+  mergeSimilarConversations,
   publishNewConversationEvent,
   handleStripeWebhookEvent,
   cleanupDanglingFiles,
