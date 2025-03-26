@@ -17,6 +17,7 @@ import {
   StarIcon,
   UserIcon,
   XMarkIcon,
+  EnvelopeIcon,
 } from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
@@ -28,6 +29,7 @@ cssIconInterop(ChevronRightIcon);
 cssIconInterop(ChevronLeftIcon);
 cssIconInterop(CheckIcon);
 cssIconInterop(XMarkIcon);
+cssIconInterop(EnvelopeIcon);
 
 export type Conversation = RouterOutputs["mailbox"]["conversations"]["listWithPreview"]["conversations"][number];
 
@@ -100,12 +102,10 @@ export function ConversationPreviewList({
       : null;
 
     return (
-      <View className="mx-4 mb-4 rounded border border-border bg-muted">
+      <View className="mx-4 mb-4 rounded-2xl border border-border bg-muted">
         <Link href={{ pathname: "/conversations/[id]", params: { id: item.slug, mailboxSlug } }} asChild>
           <TouchableOpacity className="w-full p-4">
-            <View
-              className={`flex-row items-center justify-between gap-6 ${item.status === "closed" ? "opacity-60" : ""}`}
-            >
+            <View className="flex-row items-center justify-between gap-6">
               <Text numberOfLines={1} className="text-base font-medium text-foreground flex-1">
                 {item.platformCustomer?.name ?? item.platformCustomer?.email ?? item.emailFrom ?? "Anonymous"}
               </Text>
@@ -116,37 +116,44 @@ export function ConversationPreviewList({
                     <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
                   </View>
                 )}
-                {item.platformCustomer?.value && parseFloat(item.platformCustomer.value) > 0 && (
-                  <Text className="text-sm text-muted-foreground flex-shrink-0">
-                    ${(parseFloat(item.platformCustomer.value) / 100).toFixed(2)}
+                <View className={`flex-row items-center gap-1 px-2 py-0.5 rounded ${item.platformCustomer?.isVip ? 'bg-yellow-100' : 'bg-muted-foreground/10'}`}>
+                  <StarIcon size={12} className={item.platformCustomer?.isVip ? "text-yellow-600" : "text-muted-foreground"} />
+                  <Text className={`text-xs font-medium ${item.platformCustomer?.isVip ? 'text-yellow-800' : 'text-muted-foreground'}`}>
+                    ${item.platformCustomer?.value ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2) : '0.00'}
                   </Text>
-                )}
-                {item.platformCustomer?.isVip && (
-                  <View className="bg-yellow-200 px-2 py-0.5 rounded">
-                    <Text className="text-xs text-yellow-800 font-medium">VIP</Text>
-                  </View>
-                )}
-                <Text className="text-sm text-muted-foreground">
-                  {humanizeTime(item.lastUserEmailCreatedAt ?? item.createdAt)}
-                </Text>
+                </View>
               </View>
             </View>
 
-            <View className={`mt-2 ${item.status === "closed" ? "opacity-60" : ""}`}>
+            <View className="mt-4">
               {item.userMessageText && (
-                <View className="flex-row gap-2 mt-1">
-                  <ChevronRightIcon size={12} className="mt-1 text-muted-foreground" />
-                  <Text numberOfLines={3} className="text-sm text-muted-foreground flex-1">
-                    {item.userMessageText.replace(/\s+/g, " ")}
-                  </Text>
+                <View className="flex-row gap-2 items-start">
+                  <View className="mt-1">
+                    <EnvelopeIcon size={12} className="text-muted-foreground" />
+                  </View>
+                  <View className="flex-1 flex-row items-start justify-between">
+                    <Text numberOfLines={3} className="text-sm text-muted-foreground flex-1 mr-4">
+                      {item.userMessageText.replace(/\s+/g, " ")}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground flex-shrink-0">
+                      {humanizeTime(item.lastUserEmailCreatedAt ?? item.createdAt)}
+                    </Text>
+                  </View>
                 </View>
               )}
               {item.staffMessageText && (
-                <View className="flex-row gap-2 mt-4">
-                  <ChevronLeftIcon size={12} className="mt-1 text-muted-foreground" />
-                  <Text numberOfLines={3} className="text-sm text-muted-foreground flex-1">
-                    {item.staffMessageText.replace(/\s+/g, " ")}
-                  </Text>
+                <View className="flex-row gap-2 items-start mt-4">
+                  <View className="mt-1">
+                    <UserIcon size={12} className="text-muted-foreground" />
+                  </View>
+                  <View className="flex-1 flex-row items-start justify-between">
+                    <Text numberOfLines={3} className="text-sm text-muted-foreground flex-1 mr-4">
+                      {item.staffMessageText.replace(/\s+/g, " ")}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground flex-shrink-0">
+                      {humanizeTime(item.lastStaffEmailCreatedAt ?? item.createdAt)}
+                    </Text>
+                  </View>
                 </View>
               )}
             </View>
