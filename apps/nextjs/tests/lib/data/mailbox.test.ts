@@ -29,7 +29,6 @@ test("getMailboxInfo", async () => {
     id: mailbox.id,
     name: mailbox.name,
     slug: mailbox.slug,
-    isStyleLinterEnabled: true,
     hasMetadataEndpoint: false,
     metadataEndpoint: null,
     slackConnected: false,

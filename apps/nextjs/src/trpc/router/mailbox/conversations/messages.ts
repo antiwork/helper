@@ -176,19 +176,21 @@ export const messagesRouter = {
     )
     .query(async ({ input, ctx }) => {
       const results = await Promise.all([
-        db.query.conversations
-          .findMany({
-            where: and(
+        db
+          .$count(
+            conversations,
+            and(
               eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "open"),
               gte(conversations.createdAt, input.startDate),
             ),
-          })
-          .then((rows) => ({ type: "open", count: rows.length })),
+          )
+          .then((count) => ({ type: "open", count })),
 
-        db.query.conversations
-          .findMany({
-            where: and(
+        db
+          .$count(
+            conversations,
+            and(
               eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               gte(conversations.createdAt, input.startDate),
@@ -198,7 +200,7 @@ export const messagesRouter = {
                   .from(conversationMessages)
                   .where(
                     and(
-                      eq(conversationMessages.conversationId, sql`conversations.id`),
+                      eq(conversationMessages.conversationId, conversations.id),
                       eq(conversationMessages.role, "ai_assistant"),
                       eq(conversationMessages.status, "sent"),
                       isNull(conversationMessages.deletedAt),
@@ -212,7 +214,7 @@ export const messagesRouter = {
                     .from(conversationMessages)
                     .where(
                       and(
-                        eq(conversationMessages.conversationId, sql`conversations.id`),
+                        eq(conversationMessages.conversationId, conversations.id),
                         eq(conversationMessages.role, "staff"),
                         isNull(conversationMessages.deletedAt),
                       ),
@@ -220,12 +222,13 @@ export const messagesRouter = {
                 ),
               ),
             ),
-          })
-          .then((rows) => ({ type: "ai", count: rows.length })),
+          )
+          .then((count) => ({ type: "ai", count })),
 
-        db.query.conversations
-          .findMany({
-            where: and(
+        db
+          .$count(
+            conversations,
+            and(
               eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               gte(conversations.createdAt, input.startDate),
@@ -235,15 +238,15 @@ export const messagesRouter = {
                   .from(conversationMessages)
                   .where(
                     and(
-                      eq(conversationMessages.conversationId, sql`conversations.id`),
+                      eq(conversationMessages.conversationId, conversations.id),
                       eq(conversationMessages.role, "staff"),
                       isNull(conversationMessages.deletedAt),
                     ),
                   ),
               ),
             ),
-          })
-          .then((rows) => ({ type: "human", count: rows.length })),
+          )
+          .then((count) => ({ type: "human", count })),
       ]);
 
       return results;

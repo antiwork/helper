@@ -2,6 +2,8 @@
 
 import { useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import { OAuthStrategy } from "@clerk/types";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -9,8 +11,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
 import { Button } from "@/components/ui/button";
-import { useNativePlatform } from "@/components/useNativePlatform";
+import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 import { env } from "@/env";
+import { api } from "@/trpc/react";
 import AppleLogo from "./icons/apple-logo.svg";
 import GitHubLogo from "./icons/github-logo.svg";
 import GoogleLogo from "./icons/google-logo.svg";
@@ -24,6 +27,7 @@ export function LoginForm() {
   const { theme, systemTheme } = useTheme();
   const { isTauri, nativePlatform } = useNativePlatform();
   const router = useRouter();
+  const appleSignInMutation = api.user.nativeAppleSignIn.useMutation();
 
   useEffect(() => {
     if (isSignedIn) {
@@ -31,10 +35,48 @@ export function LoginForm() {
     }
   }, [isSignedIn, router]);
 
+  useEffect(() => {
+    if (getTauriPlatform() === "macos") {
+      let unlistenComplete = () => {};
+      let unlistenError = () => {};
+
+      listen<{ code: string; firstName: string | null; lastName: string | null }>(
+        "apple-sign-in-complete",
+        async (event) => {
+          console.log("apple-sign-in-complete", event);
+          const token = await appleSignInMutation.mutateAsync({
+            code: event.payload.code,
+            firstName: event.payload.firstName ?? "",
+            lastName: event.payload.lastName ?? "",
+          });
+          router.push(`/login/token?token=${token}`);
+        },
+      ).then((l) => {
+        unlistenComplete = l;
+      });
+
+      listen("apple-sign-in-error", (event) => {
+        console.error("apple-sign-in-error", event);
+        setError("An error occurred during sign in. Please try again.");
+        setLoading(false);
+      }).then((l) => {
+        unlistenError = l;
+      });
+
+      return () => {
+        unlistenComplete();
+        unlistenError();
+      };
+    }
+  }, []);
+
   if (!signIn || !signUp) return <Loading />;
 
   const handleOAuthSignIn = async (strategy: OAuthStrategy) => {
-    if (isTauri && !(nativePlatform === "macos" && strategy === "oauth_apple")) {
+    if (nativePlatform === "macos" && strategy === "oauth_apple" && (await invoke("is_mac_app_store"))) {
+      setLoading(true);
+      await invoke("start_apple_sign_in");
+    } else if (isTauri) {
       await openUrl(`${window.location.origin}/login/popup?strategy=${strategy}&deepLink=true`);
     } else {
       try {

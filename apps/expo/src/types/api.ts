@@ -88,7 +88,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           id: number;
           name: string;
           slug: string;
-          isStyleLinterEnabled: boolean;
           hasMetadataEndpoint: boolean;
           metadataEndpoint: {
             url: string;
@@ -175,47 +174,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
         output: any;
       }>;
-      styleLinters: {
-        list: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            id: number;
-            before: string;
-            after: string;
-          }[];
-        }>;
-        upsert: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            linter: {
-              before: string;
-              after: string;
-              id?: number | undefined;
-            };
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            id: number;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        setEnabled: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            enabled: boolean;
-          };
-          output: void;
-        }>;
-      };
       conversations: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -275,6 +233,65 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             defaultSort: "oldest" | "highest_value";
             hasGmailSupportEmail: boolean;
             assignedToClerkIds: string[] | null;
+            nextCursor: string | null;
+          };
+        }>;
+        listWithPreview: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+            status?: unknown[] | null | undefined;
+            sort?: unknown;
+            search?: string | null | undefined;
+            reactionType?: "thumbs-up" | "thumbs-down" | undefined;
+            events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
+            topic?: number[] | undefined;
+            limit?: number | undefined;
+            cursor?: string | null | undefined;
+            category?: unknown;
+            assignee?: string[] | undefined;
+            createdAfter?: string | undefined;
+            createdBefore?: string | undefined;
+            repliedBy?: string[] | undefined;
+            customer?: string[] | undefined;
+            isVip?: boolean | undefined;
+          };
+          output: {
+            conversations: {
+              userMessageText: string | null;
+              staffMessageText: string | null;
+              matchedMessageText: string | null;
+              id: number;
+              slug: string;
+              status: "open" | "closed" | "spam" | null;
+              emailFrom: string | null;
+              subject: string;
+              conversationProvider: "gmail" | "helpscout" | "chat" | null;
+              createdAt: Date;
+              updatedAt: Date;
+              closedAt: Date | null;
+              lastUserEmailCreatedAt: Date | null;
+              assignedToClerkId: string | null;
+              platformCustomer: {
+                isVip: boolean;
+                value: string | null;
+                name: string | null;
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                mailboxId: number;
+                email: string;
+                links: Record<string, string> | null;
+              } | null;
+              summary: string[] | null;
+              source: "email" | "chat" | "chat#prompt";
+              isPrompt: boolean;
+              isVisitor: boolean;
+              embeddingText: string | null;
+              githubIssueNumber: number | null;
+              githubIssueUrl: string | null;
+              githubRepoOwner: string | null;
+              githubRepoName: string | null;
+            }[];
             nextCursor: string | null;
           };
         }>;
@@ -1250,6 +1267,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
     user: {
       getSignInToken: import("@trpc/server").TRPCQueryProcedure<{
         input: void;
+        output: string;
+      }>;
+      nativeAppleSignIn: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          code: string;
+          firstName: string;
+          lastName: string;
+        };
         output: string;
       }>;
     };

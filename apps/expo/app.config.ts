@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Helper",
   slug: "helper",
-  version: "1.0.2",
+  version: "1.0.3",
   orientation: "portrait",
   icon: "./src/assets/images/icon.png",
   scheme: "helperai",

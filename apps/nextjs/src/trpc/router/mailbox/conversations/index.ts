@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
@@ -33,6 +33,13 @@ export const conversationsRouter = {
       db
         .select({ count: count() })
         .from(conversations)
+        .leftJoin(
+          platformCustomers,
+          and(
+            eq(conversations.mailboxId, platformCustomers.mailboxId),
+            eq(conversations.emailFrom, platformCustomers.email),
+          ),
+        )
         .where(and(...Object.values(where))),
     ]);
 
@@ -43,6 +50,43 @@ export const conversationsRouter = {
       hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       assignedToClerkIds: input.assignee ?? null,
       nextCursor,
+    };
+  }),
+
+  listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
+    const { list } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
+
+    const messages = await db
+      .select({
+        role: conversationMessages.role,
+        cleanedUpText: conversationMessages.cleanedUpText,
+        conversationId: conversationMessages.conversationId,
+        createdAt: conversationMessages.createdAt,
+      })
+      .from(conversationMessages)
+      .where(
+        inArray(
+          conversationMessages.conversationId,
+          list.results.map((c) => c.id),
+        ),
+      )
+      .orderBy(desc(conversationMessages.createdAt));
+
+    return {
+      conversations: list.results.map((conversation) => {
+        const lastUserMessage = messages.find((m) => m.role === "user" && m.conversationId === conversation.id);
+        const lastStaffMessage = messages.find((m) => m.role === "staff" && m.conversationId === conversation.id);
+
+        return {
+          ...conversation,
+          userMessageText: lastUserMessage?.cleanedUpText ?? null,
+          staffMessageText:
+            lastStaffMessage && lastUserMessage && lastStaffMessage.createdAt > lastUserMessage.createdAt
+              ? lastStaffMessage.cleanedUpText
+              : null,
+        };
+      }),
+      nextCursor: list.nextCursor,
     };
   }),
 

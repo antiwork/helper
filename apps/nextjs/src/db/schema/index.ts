@@ -6,7 +6,6 @@ export * from "./conversationMessages";
 export * from "./mailboxesMetadataApi";
 export * from "./faqs";
 export * from "./subscriptions";
-export * from "./styleLinters";
 export * from "./platformCustomers";
 export * from "./files";
 export * from "./notes";
