@@ -211,15 +211,15 @@ export default function SearchPage() {
               onChange={(customers) => updateFilter({ customer: customers })}
             />
             <VipFilter isVip={filterValues.isVip ?? undefined} onChange={(isVip) => updateFilter({ isVip })} />
-            <PromptFilter
-              isPrompt={filterValues.isPrompt ?? undefined}
-              onChange={(isPrompt) => updateFilter({ isPrompt })}
-            />
             <ReactionFilter
               reactionType={filterValues.reactionType}
               onChange={(reactionType) => updateFilter({ reactionType })}
             />
             <EventFilter selectedEvents={filterValues.events ?? []} onChange={(events) => updateFilter({ events })} />
+            <PromptFilter
+              isPrompt={filterValues.isPrompt ?? undefined}
+              onChange={(isPrompt) => updateFilter({ isPrompt })}
+            />
           </div>
         </div>
         <div className="w-1 lg:w-10" />

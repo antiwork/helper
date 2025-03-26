@@ -165,6 +165,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             status?: unknown[] | null | undefined;
             sort?: unknown;
             search?: string | null | undefined;
+            isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
@@ -226,6 +227,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             status?: unknown[] | null | undefined;
             sort?: unknown;
             search?: string | null | undefined;
+            isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
@@ -609,6 +611,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   status?: unknown[] | null | undefined;
                   sort?: unknown;
                   search?: string | null | undefined;
+                  isPrompt?: boolean | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
                   events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
                   topic?: number[] | undefined;

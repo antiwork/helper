@@ -1,4 +1,4 @@
-import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ export function PromptFilter({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={isPrompt !== undefined ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <QuestionMarkCircleIcon className="h-4 w-4 mr-2" />
+          <ChatBubbleLeftEllipsisIcon className="h-4 w-4 mr-2" />
           {isPrompt === true ? "From a prompt" : isPrompt === false ? "Not from a prompt" : "Prompt"}
         </Button>
       </DropdownMenuTrigger>
