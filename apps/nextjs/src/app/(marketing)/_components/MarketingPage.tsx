@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.239 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
     </svg>
   );
 };
@@ -86,7 +86,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
         <div className="p-6">
           <div className="max-w-xl flex-grow">
             <div className="mb-4 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search knowledge bank..."
@@ -174,35 +174,56 @@ Please reply with this information. We'll review your request within 1-2 busines
       return (
         <div className="p-6">
           <div className="max-w-xl flex-grow">
-            <div className="mb-1">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                <UserIcon className="h-3 w-3" />
-                <span>Customer</span>
-              </div>
-              <div className="inline-block rounded-lg p-4 bg-muted mr-10">
-                <div className="lg:text-base text-sm prose">
-                  <p>Is there a way to offer a customer a partial refund?</p>
+            {/* Chat widget preview */}
+            <div className="relative">
+              {/* Skeleton background with dots */}
+              <div className="absolute inset-0 p-4">
+                <div className="flex gap-2 mb-4">
+                  <div className="h-3 w-3 rounded-full bg-[#FF6057]" />
+                  <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
+                  <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
+                </div>
+                <div className="space-y-4 opacity-40">
+                  <div className="h-24 w-full rounded bg-gray-200" />
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-4 w-full rounded bg-gray-200" />
+                  ))}
                 </div>
               </div>
-            </div>
-            <div className="mb-4">
-              <div className="flex justify-end mb-1">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <UserIcon className="h-3 w-3" />
-                  <span>You</span>
+
+              {/* Chat widget */}
+              <div className="relative ml-auto w-[320px] rounded-lg border border-black bg-white shadow-lg">
+                <div className="border-b border-black p-4">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-medium">Support</h2>
+                    <span className="text-sm text-muted-foreground">Powered by Helper</span>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-secondary rounded-lg p-4 ml-10">
-                <p className="lg:text-base text-sm prose">
-                  To issue a partial refund: Open the order, click "Refund," enter the amount, select a reason, and hit
-                  "Process." The customer will be notified automatically.
-                </p>
-              </div>
-              <div className="flex justify-end mt-2">
-                <button className="inline-flex items-center justify-center text-primary bg-background border border-primary hover:bg-primary hover:text-primary-foreground h-10 rounded-md px-4 text-sm transition-colors duration-300">
-                  <StarIcon className="mr-2 h-4 w-4" />
-                  Add to FAQs
-                </button>
+                
+                <div className="flex flex-col gap-4 p-4">
+                  <div className="ml-auto max-w-[80%] rounded-lg bg-black p-4 text-white">
+                    <p className="text-sm">How do I request a refund?</p>
+                  </div>
+                  
+                  <div className="mr-auto max-w-[80%] rounded-lg border border-black bg-white p-4">
+                    <p className="text-sm">
+                      To request a refund, please go to your order history and click the "Request Refund" button. We'll process your request within 1-2 business days.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-black p-4">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Ask a question"
+                      className="flex-1"
+                    />
+                    <Button variant="default" size="icon">
+                      <PaperAirplaneIcon className="h-4 w-4 -rotate-45" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
