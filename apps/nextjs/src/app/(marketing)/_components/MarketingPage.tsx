@@ -7,10 +7,12 @@ import {
   BookOpenIcon,
   HandThumbDownIcon,
   InboxIcon,
+  MagnifyingGlassIcon,
   PaperAirplaneIcon,
   StarIcon,
   TrashIcon,
   UserIcon,
+  PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -22,6 +24,9 @@ import { useHelper } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { api } from "@/trpc/react";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -80,52 +85,48 @@ const CardContent = React.memo(({ type }: { type: string }) => {
       return (
         <div className="p-6">
           <div className="max-w-xl flex-grow">
-            <div className="my-4 flex flex-col gap-4">
-              <div className="flex gap-4 items-end">
-                <div className="pb-1">
-                  <div className="pb-1">
-                    <div
-                      className="w-10 h-10 rounded-full flex-shrink-0 bg-cover bg-center border-2 border-border"
-                      style={{ backgroundImage: "url('/robot-avatar.png')" }}
-                    ></div>
+            <div className="mb-4 relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+              <Input
+                type="text"
+                placeholder="Search knowledge bank..."
+                className="mb-4 pl-9"
+                defaultValue="refund policy"
+              />
+            </div>
+            <div className="divide-y divide-border">
+              <div className="py-4">
+                <div className="flex gap-4">
+                  <Switch defaultChecked className="mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-sm">
+                      Our refund policy allows for full refunds within 30 days of purchase. After 30 days, we can offer store credit or partial refunds on a case-by-case basis.
+                    </div>
+                    <Badge variant="bright" className="mt-1">
+                      Suggested Edit
+                    </Badge>
                   </div>
-                </div>
-                <div className="flex-grow">
-                  <label htmlFor="customerMessage" className="block text-sm mb-0">
-                    Before
-                  </label>
-                  <textarea
-                    id="customerMessage"
-                    name="customerMessage"
-                    rows={2}
-                    className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
-                    placeholder="Enter customer message here"
-                    defaultValue={`Hi! That's a great question. When you un-publish your product, it simply removes the product from the public view.`}
-                  ></textarea>
+                  <Button variant="ghost" size="sm" iconOnly>
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-4 items-end">
-                <div className="pb-1">
-                  <div
-                    className="w-10 h-10 rounded-full flex-shrink-0 bg-cover bg-center border-2 border-primary"
-                    style={{ backgroundImage: "url('/human-avatar.png')" }}
-                  ></div>
-                </div>
-                <div className="flex-grow">
-                  <label htmlFor="helperResponse" className="block text-sm mb-0">
-                    After
-                  </label>
-                  <textarea
-                    id="helperResponse"
-                    name="helperResponse"
-                    rows={3}
-                    className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
-                    placeholder="Enter Helper response here"
-                    defaultValue={`Hello, That's a great question. yes, your customers will still be able to read and open the ebook from their email even if you un publish it. Let me know how else I can assist today.`}
-                  ></textarea>
+              <div className="py-4">
+                <div className="flex gap-4">
+                  <Switch defaultChecked className="mt-0.5" />
+                  <div className="flex-1 text-sm">
+                    For digital products, refunds are available within 14 days if the product hasn't been downloaded or accessed.
+                  </div>
+                  <Button variant="ghost" size="sm" iconOnly>
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
+            <Button variant="subtle" className="mt-4">
+              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              Add Knowledge
+            </Button>
           </div>
         </div>
       );
@@ -387,10 +388,10 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                  Craft authentic replies in your brand&apos;s voice with
-                  <span className="underline-offset">&nbsp;style linter</span>
+                  Turn support expertise into instant answers with
+                  <span className="underline-offset">&nbsp;Knowledge Bank</span>
                 </h3>
-                <p className="text-md text-muted-foreground">Human touch, robot efficiency</p>
+                <p className="text-md text-muted-foreground">Your knowledge, available 24/7</p>
               </div>
             </div>
 
