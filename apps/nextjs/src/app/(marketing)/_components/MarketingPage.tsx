@@ -85,13 +85,13 @@ const CardContent = React.memo(({ type }: { type: string }) => {
       return (
         <div className="p-6">
           <div className="max-w-xl flex-grow">
-            <div className="mb-4 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="mb-4">
               <Input
                 type="text"
                 placeholder="Search knowledge bank..."
-                className="mb-4 pl-9"
+                className=""
                 defaultValue="refund policy"
+                iconsPrefix={<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />}
               />
             </div>
             <div className="divide-y divide-border">
@@ -102,9 +102,6 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                     <div className="text-sm">
                       Our refund policy allows for full refunds within 30 days of purchase. After 30 days, we can offer store credit or partial refunds on a case-by-case basis.
                     </div>
-                    <Badge variant="bright" className="mt-1">
-                      Suggested Edit
-                    </Badge>
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
                     <TrashIcon className="h-4 w-4" />
@@ -410,7 +407,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
                   Turn support expertise into instant answers with
-                  <span className="underline-offset">&nbsp;Knowledge Bank</span>
+                  <span className="underline-offset">&nbsp;knowledge bank</span>
                 </h3>
                 <p className="text-md text-muted-foreground">Your knowledge, available 24/7</p>
               </div>
@@ -435,10 +432,10 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                  Your best replies become the new standard with
-                  <span className="underline-offset">&nbsp;FAQs</span>
+                    End the support scavenger hunt with
+                  <span className="underline-offset">&nbsp;in-app chat</span>
                 </h3>
-                <p className="text-md text-muted-foreground">Pin your best and watch Helper learn</p>
+                <p className="text-md text-muted-foreground">Zero tab switching required</p>
               </div>
             </div>
 
