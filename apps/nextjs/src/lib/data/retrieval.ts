@@ -92,10 +92,7 @@ export const findEnabledKnowledgeBankEntries = async (query: string, mailbox: Ma
   const queryEmbedding = await generateEmbedding(query, "embedding-query-similar-faqs");
   const similarity = sql<number>`1 - (${cosineDistance(faqs.embedding, queryEmbedding)})`;
   const similarFAQs = await db.query.faqs.findMany({
-    where: and(
-      eq(faqs.mailboxId, mailbox.id),
-      eq(faqs.enabled, true),
-    ),
+    where: and(eq(faqs.mailboxId, mailbox.id), eq(faqs.enabled, true)),
     columns: {
       id: true,
       content: true,
