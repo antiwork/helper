@@ -2,7 +2,6 @@ import { and, cosineDistance, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
-import { conversationsTopics } from "@/db/schema/conversationsTopics";
 import { websitePages, websites } from "@/db/schema/websites";
 import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
