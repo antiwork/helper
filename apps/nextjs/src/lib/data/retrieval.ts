@@ -52,8 +52,8 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   const similarConversations = await findSimilarConversations(query, mailbox);
   if (!similarConversations) return null;
 
-  const pastConversations = similarConversations
-    .map(async (conversation) => {
+  const pastConversations = await Promise.all(
+    similarConversations.map(async (conversation) => {
       const messages = await db.query.conversationMessages.findMany({
         where: eq(conversationMessages.conversationId, conversation.id),
         orderBy: (messages, { asc }) => [asc(messages.id)],
@@ -65,8 +65,8 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
           return `${role}:\n${cleanUpTextForAI(message.cleanedUpText || message.body)}`;
         })
         .join("\n")}\n--- Conversation End ---`;
-    })
-    .join("\n\n");
+    }),
+  );
 
   let conversationPrompt = PAST_CONVERSATIONS_PROMPT.replace("{{PAST_CONVERSATIONS}}", pastConversations);
   conversationPrompt = conversationPrompt.replace("{{USER_QUERY}}", query);
