@@ -158,34 +158,32 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
-  autoClose: mailboxProcedure.input(z.object({ mailboxId: z.number().optional() })).mutation(async ({ ctx, input }) => {
+  autoClose: mailboxProcedure.input(z.object({ mailboxId: z.number() })).mutation(async ({ input }) => {
     const { mailboxId } = input;
 
-    if (mailboxId) {
-      const mailbox = await db.query.mailboxes.findFirst({
-        where: eq(mailboxes.id, mailboxId),
-        columns: {
-          id: true,
-          autoCloseEnabled: true,
-        },
+    const mailbox = await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.id, mailboxId),
+      columns: {
+        id: true,
+        autoCloseEnabled: true,
+      },
+    });
+
+    if (!mailbox) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Mailbox not found" });
+    }
+
+    if (!mailbox.autoCloseEnabled) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Auto-close is not enabled for this mailbox",
       });
-
-      if (!mailbox) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Mailbox not found" });
-      }
-
-      if (!mailbox.autoCloseEnabled) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Auto-close is not enabled for this mailbox",
-        });
-      }
     }
 
     await inngest.send({
       name: "conversations/auto-close.check",
       data: {
-        mailboxId: mailboxId ? Number(mailboxId) : undefined,
+        mailboxId: Number(mailboxId),
       },
     });
 
