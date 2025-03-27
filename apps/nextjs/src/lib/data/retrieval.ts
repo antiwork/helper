@@ -180,6 +180,6 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
     return metadata;
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error);
-    return null; // Return null for all errors
+    return null;
   }
 };
