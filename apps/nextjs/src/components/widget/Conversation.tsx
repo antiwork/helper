@@ -33,6 +33,7 @@ export default function Conversation({
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [isEscalated, setIsEscalated] = useState(false);
 
   useEffect(() => {
     if (conversationSlug) {
@@ -150,6 +151,28 @@ export default function Conversation({
   };
 
   useEffect(() => {
+    if (!token || !conversationSlug) return;
+
+    const checkEscalationStatus = async () => {
+      try {
+        const response = await fetch(`/api/chat/conversation/${conversationSlug}/escalated`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsEscalated(data.isEscalated);
+        }
+      } catch (error) {
+        console.error("Failed to check escalation status:", error);
+      }
+    };
+
+    checkEscalationStatus();
+  }, [conversationSlug, token]);
+
+  useEffect(() => {
     if (!token) return;
 
     const handleDataChange = async (message: unknown) => {
@@ -170,6 +193,7 @@ export default function Conversation({
   }, [token]);
 
   const handleTalkToTeamClick = () => {
+    setIsEscalated(true);
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
   };
 
@@ -193,6 +217,7 @@ export default function Conversation({
         messageStatus={status}
         lastMessage={lastAIMessage}
         onTalkToTeamClick={handleTalkToTeamClick}
+        isEscalated={isEscalated}
       />
       <ChatInput
         input={input}

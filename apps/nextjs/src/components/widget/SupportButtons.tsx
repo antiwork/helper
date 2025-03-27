@@ -9,6 +9,7 @@ type Props = {
   messageStatus: string;
   lastMessage: UIMessage | undefined;
   onTalkToTeamClick: () => void;
+  isEscalated?: boolean;
 };
 
 export default function SupportButtons({
@@ -17,6 +18,7 @@ export default function SupportButtons({
   messageStatus,
   lastMessage,
   onTalkToTeamClick,
+  isEscalated = false,
 }: Props) {
   const [isHelpfulAnimating, setIsHelpfulAnimating] = useState(false);
   const [isTalkToTeamAnimating, setIsTalkToTeamAnimating] = useState(false);
@@ -104,32 +106,34 @@ export default function SupportButtons({
             </motion.div>
             That solved
           </button>
-          <button
-            onClick={handleTalkToTeamClick}
-            className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
-          >
-            <motion.div
-              className="w-4 h-4 origin-center"
-              animate={
-                isTalkToTeamAnimating
-                  ? {
-                      scale: [1, 1.2, 0.9, 1],
-                      transition: {
-                        duration: 0.8,
-                        ease: "easeInOut",
-                        repeatType: "reverse",
-                        repeat: 0,
-                      },
-                    }
-                  : {
-                      scale: 1,
-                    }
-              }
+          {!isEscalated && (
+            <button
+              onClick={handleTalkToTeamClick}
+              className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
             >
-              <ChatBubbleLeftRightIcon className="h-4 w-4" />
-            </motion.div>
-            Talk to a human
-          </button>
+              <motion.div
+                className="w-4 h-4 origin-center"
+                animate={
+                  isTalkToTeamAnimating
+                    ? {
+                        scale: [1, 1.2, 0.9, 1],
+                        transition: {
+                          duration: 0.8,
+                          ease: "easeInOut",
+                          repeatType: "reverse",
+                          repeat: 0,
+                        },
+                      }
+                    : {
+                        scale: 1,
+                      }
+                }
+              >
+                <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              </motion.div>
+              Talk to a human
+            </button>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

@@ -360,3 +360,13 @@ export const generateConversationSubject = async (
 
   await db.update(conversations).set({ subject }).where(eq(conversations.id, conversationId));
 };
+
+export const isConversationEscalated = async (conversationId: number): Promise<boolean> => {
+  const requestHumanSupportEvent = await db.query.conversationEvents.findFirst({
+    where: and(
+      eq(conversationEvents.conversationId, conversationId),
+      eq(conversationEvents.type, "request_human_support"),
+    ),
+  });
+  return !!requestHumanSupportEvent;
+};
