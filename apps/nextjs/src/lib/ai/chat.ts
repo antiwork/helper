@@ -142,6 +142,7 @@ const generateReasoning = async ({
   email,
   conversationId,
   mailboxSlug,
+  traceId = null,
   evaluation = false,
   dataStream,
 }: {
@@ -152,6 +153,7 @@ const generateReasoning = async ({
   email: string | null;
   conversationId: number;
   mailboxSlug: string;
+  traceId?: string | null;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
 }): Promise<{ reasoning: string | null; usage: LanguageModelUsage | null }> => {
