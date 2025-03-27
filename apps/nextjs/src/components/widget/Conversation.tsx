@@ -33,6 +33,7 @@ export default function Conversation({
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [isEscalated, setIsEscalated] = useState(false);
 
   useEffect(() => {
     if (conversationSlug) {
@@ -97,6 +98,9 @@ export default function Conversation({
       }
       const data = await response.json();
       if (data.messages) {
+        if (data.isEscalated) {
+          setIsEscalated(true);
+        }
         return {
           messages: data.messages.map((message: any) => ({
             id: message.id,
@@ -106,6 +110,7 @@ export default function Conversation({
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
           })) as MessageWithReaction[],
+          isEscalated: data.isEscalated,
         };
       }
       return null;
@@ -123,6 +128,7 @@ export default function Conversation({
     if (isNewConversation) {
       setMessages([]);
       setConversationSlug(null);
+      setIsEscalated(false);
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
 
@@ -156,6 +162,7 @@ export default function Conversation({
       const slug = await createConversation({ isPrompt: true });
       setMessages([]);
       setConversationSlug(slug);
+      setIsEscalated(false);
       append({ role: "user", content: message as string }, { body: { conversationSlug: slug } });
     };
 
@@ -170,6 +177,7 @@ export default function Conversation({
   }, [token]);
 
   const handleTalkToTeamClick = () => {
+    setIsEscalated(true);
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
   };
 
@@ -193,6 +201,7 @@ export default function Conversation({
         messageStatus={status}
         lastMessage={lastAIMessage}
         onTalkToTeamClick={handleTalkToTeamClick}
+        isEscalated={isEscalated}
       />
       <ChatInput
         input={input}
