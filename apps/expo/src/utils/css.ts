@@ -3,7 +3,7 @@ import { cssInterop } from "nativewind";
 import { ColorSchemeName, StyleProp } from "react-native";
 import { twMerge } from "tailwind-merge";
 
-export const backgroundColor = (colorScheme: ColorSchemeName) => (colorScheme === "dark" ? "#280b0b" : "#ffffff");
+export const backgroundColor = (colorScheme: ColorSchemeName) => (colorScheme === "dark" ? "#280b0b" : "#fafafa");
 
 export const cssIconInterop = (
   Icon: React.ComponentType<{ width?: number; height?: number; color?: string; style?: StyleProp<any> }>,

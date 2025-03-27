@@ -19,7 +19,6 @@ import { githubRouter } from "./github";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
-import { styleLintersRouter } from "./styleLinters";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
 
@@ -143,7 +142,6 @@ export const mailboxRouter = {
   latestEvents: mailboxProcedure
     .input(z.object({ cursor: z.date().optional() }))
     .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
-  styleLinters: styleLintersRouter,
   conversations: conversationsRouter,
   faqs: faqsRouter,
 

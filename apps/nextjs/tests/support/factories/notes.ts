@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { notes, styleLinters } from "@/db/schema";
+import { notes } from "@/db/schema";
 
 export const noteFactory = {
   create: async (conversationId: number, overrides: Partial<typeof notes.$inferInsert> = {}) => {

@@ -7,7 +7,6 @@ import { conversationFactory } from "@tests/support/factories/conversations";
 import { faqsFactory } from "@tests/support/factories/faqs";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
-import { styleLinterFactory } from "@tests/support/factories/styleLinters";
 import { toolsFactory } from "@tests/support/factories/tools";
 import { userFactory } from "@tests/support/factories/users";
 import { addDays, addHours, subDays, subHours } from "date-fns";
@@ -332,13 +331,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
 
   await faqsFactory.create(mailbox.id, {
     content: "Deleting your account can be done from Settings > Account > Delete Account.",
-  });
-
-  await styleLinterFactory.create(mailbox.clerkOrganizationId, {
-    before:
-      "Hello, Great question! When you unpublish a product on Gumroad, it simply removes the product from the public view and the Gumroad marketplace. However, customers who have already purchased the product will still be able to access their files. They can do this through the download link in their email receipt or from their Gumroad library if they created an account at the time of purchase. So, to answer your question, yes, your customers will still be able to read and open the ebook from their email even if you unpublish it. Let me know if you have any other questions!",
-    after:
-      "Hello, Yes, your customers will still be able to read and open the ebook from their email even if you unpublish it. Let me know if you have any other questions!",
   });
 
   await db

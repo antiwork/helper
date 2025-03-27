@@ -2,31 +2,37 @@ import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { Pie, PolarChart } from "victory-native";
 import { Panel } from "@/app/(dashboard)/_components/panel";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { api } from "@/utils/api";
 import { timeRangeToQuery, type TimeRange } from "./timeRangeSelector";
 
 const COLORS = {
-  OPEN: "#480F0E",
+  OPEN: {
+    light: "#480F0E",
+    dark: "#BC1010",
+  },
   CLOSED_MANUAL: "#FEB81D",
   CLOSED_AI: "#C2D44B",
 };
 
-const chartConfig = {
-  open: {
-    label: "Open",
-    color: COLORS.OPEN,
-  },
-  ai: {
-    label: "Closed by AI",
-    color: COLORS.CLOSED_AI,
-  },
-  human: {
-    label: "Closed manually",
-    color: COLORS.CLOSED_MANUAL,
-  },
-};
-
 export function StatusByTypeChart({ mailboxSlug, timeRange }: { mailboxSlug: string; timeRange: TimeRange }) {
+  const colorScheme = useColorScheme();
+
+  const chartConfig = {
+    open: {
+      label: "Open",
+      color: colorScheme === "dark" ? COLORS.OPEN.dark : COLORS.OPEN.light,
+    },
+    ai: {
+      label: "Closed by AI",
+      color: COLORS.CLOSED_AI,
+    },
+    human: {
+      label: "Closed manually",
+      color: COLORS.CLOSED_MANUAL,
+    },
+  };
+
   const { startDate } = useMemo(() => timeRangeToQuery(timeRange), [timeRange]);
 
   const { data, isLoading } = api.mailbox.conversations.messages.statusByTypeCount.useQuery({
@@ -80,7 +86,9 @@ export function StatusByTypeChart({ mailboxSlug, timeRange }: { mailboxSlug: str
             <Pie.Chart innerRadius="75%" />
           </PolarChart>
           <View className="absolute w-full h-full justify-center items-center">
-            <Text className="text-2xl font-bold">{totalTickets.toLocaleString()}</Text>
+            <Text className="text-2xl font-bold text-bright-foreground dark:text-muted-foreground">
+              {totalTickets.toLocaleString()}
+            </Text>
             <Text className="text-sm text-muted-foreground">Total</Text>
           </View>
         </View>
@@ -88,7 +96,7 @@ export function StatusByTypeChart({ mailboxSlug, timeRange }: { mailboxSlug: str
           {Object.entries(chartConfig).map(([key, { label, color }]) => (
             <View key={key} className="flex-row items-center gap-2">
               <View style={{ width: 12, height: 12, backgroundColor: color, borderRadius: 2 }} />
-              <Text className="text-sm">{label}</Text>
+              <Text className="text-xs text-muted-foreground">{label}</Text>
             </View>
           ))}
         </View>

@@ -1,5 +1,5 @@
 {
-  "id": "8289c017-0012-4004-b2fd-6dc3a4df2027",
+  "id": "1a6fc809-73b5-4abb-9648-66602e55ce9b",
   "prevId": "75e54d6b-6d0d-49bc-af0b-ae12d137fdd4",
   "version": "7",
   "dialect": "postgresql",
@@ -875,12 +875,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
-        },
-        "merged_into_id": {
-          "name": "merged_into_id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
         },
         "suggested_actions": {
           "name": "suggested_actions",
@@ -2180,97 +2174,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.mailboxes_stylelinter": {
-      "name": "mailboxes_stylelinter",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "bigint",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "mailboxes_stylelinter_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "9223372036854775807",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "before": {
-          "name": "before",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "after": {
-          "name": "after",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "clerk_organization_id": {
-          "name": "clerk_organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "mailboxes_stylelinter_created_at_05c6d9c6": {
-          "name": "mailboxes_stylelinter_created_at_05c6d9c6",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "mailboxes_stylelinter_clerk_organization_id": {
-          "name": "mailboxes_stylelinter_clerk_organization_id",
-          "columns": [
-            {
-              "expression": "clerk_organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

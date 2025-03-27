@@ -30,6 +30,7 @@ export const searchSchema = z.object({
   customer: z.array(z.string()).optional(),
   topic: z.array(z.number()).optional(),
   isVip: z.boolean().optional(),
+  isPrompt: z.boolean().optional(),
   reactionType: z.enum(["thumbs-up", "thumbs-down"]).optional(),
   events: z.array(z.enum(["request_human_support", "resolved_by_ai"])).optional(),
 });
@@ -61,6 +62,7 @@ export const searchConversations = async (
     ...(filters.isVip && mailbox.vipThreshold
       ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
       : {}),
+    ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
     ...(filters.repliedBy?.length

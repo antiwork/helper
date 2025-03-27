@@ -11,7 +11,7 @@ function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <main className="flex flex-col min-h-screen text-foreground w-full bg-sidebar">{children}</main>
+      <main className="flex flex-col h-screen text-foreground w-full bg-sidebar">{children}</main>
     </SidebarProvider>
   );
 }

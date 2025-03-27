@@ -26,7 +26,7 @@ const DashboardAlert = ({
     <Link
       href={href}
       className={`flex items-center gap-2 ${
-        variant === "danger" ? "bg-destructive text-destructive-foreground" : "bg-bright text-bright-foreground"
+        variant === "danger" ? "light bg-destructive text-destructive-foreground" : "bg-bright text-bright-foreground"
       } px-4 py-5 rounded-md snap-center w-full shrink-0 md:w-auto md:min-w-96 hover:opacity-90 transition-opacity`}
     >
       {icon}

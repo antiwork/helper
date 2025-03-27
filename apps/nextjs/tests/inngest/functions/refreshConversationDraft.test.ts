@@ -49,8 +49,6 @@ describe("refreshConversationDraft", () => {
       pinned_replies: "Some pinned replies",
       past_conversations: "Some past conversations",
       metadata: "Some metadata",
-      style_linter_examples: "Some style linter examples",
-      unstyled_response: "Some unstyled response",
     };
 
     vi.mocked(generateDraftResponse).mockResolvedValue({
@@ -101,8 +99,6 @@ describe("refreshConversationDraft", () => {
       pinned_replies: "Some pinned replies",
       past_conversations: "Some past conversations",
       metadata: "Some metadata",
-      style_linter_examples: "Some style linter examples",
-      unstyled_response: "Some unstyled response",
     };
 
     vi.mocked(generateDraftResponse).mockResolvedValue({

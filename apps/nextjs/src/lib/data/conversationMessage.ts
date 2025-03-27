@@ -408,8 +408,6 @@ export const createAiDraft = async (
     throw new Error("responseToId is required");
   }
 
-  const validatedPromptInfo = validatePromptInfo(promptInfo);
-
   return await createConversationMessage(
     {
       conversationId,
@@ -417,7 +415,7 @@ export const createAiDraft = async (
       role: "ai_assistant",
       status: "draft",
       responseToId,
-      promptInfo: validatedPromptInfo,
+      promptInfo,
       cleanedUpText: body,
       isPerfect: false,
       isFlaggedAsBad: false,
@@ -560,14 +558,6 @@ const generateCleanedUpText = (html: string) => {
     .split(/\s*\n\s*/)
     .filter((p) => p.trim().replace(/\s+/g, " "));
   return paragraphs.join("\n\n");
-};
-
-const validatePromptInfo = (promptInfo: PromptInfo): PromptInfo => {
-  if (!promptInfo.style_linter_examples) {
-    promptInfo.style_linter_examples = null;
-    promptInfo.unstyled_response = null;
-  }
-  return promptInfo;
 };
 
 export const hasStaffMessages = async (conversationId: number, tx: Transaction | typeof db = db): Promise<boolean> => {

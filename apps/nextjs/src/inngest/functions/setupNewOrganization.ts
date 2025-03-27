@@ -22,7 +22,6 @@ export default inngest.createFunction(
       if (!organization.privateMetadata.freeTrialEndsAt) {
         const freeTrialEndsAt = dayjs().add(FREE_TRIAL_PERIOD_DAYS, "day").toDate();
         await setPrivateMetadata(event.data.organizationId, {
-          styleLinterEnabled: false,
           automatedRepliesCount: 0,
           freeTrialEndsAt,
         });
