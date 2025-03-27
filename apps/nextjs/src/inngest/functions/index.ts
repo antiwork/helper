@@ -1,5 +1,3 @@
-import assignConversationTopic from "./assignConversationTopic";
-import bulkAssignMissingTopics from "./bulkAssignMissingTopics";
 import bulkEmbeddingClosedConversations from "./bulkEmbeddingClosedConversations";
 import bulkUpdateConversations from "./bulkUpdateConversations";
 import checkAssignedTicketResponseTimes from "./checkAssignedTicketResponseTimes";
@@ -52,8 +50,6 @@ export default [
   generateWeeklyReports,
   generateMailboxWeeklyReport,
   notifyVipMessage,
-  assignConversationTopic,
-  bulkAssignMissingTopics,
   bulkUpdateConversations,
   crawlWebsite,
   scheduledWebsiteCrawl,
