@@ -68,7 +68,7 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
     }),
   );
 
-  let conversationPrompt = PAST_CONVERSATIONS_PROMPT.replace("{{PAST_CONVERSATIONS}}", pastConversations);
+  let conversationPrompt = PAST_CONVERSATIONS_PROMPT.replace("{{PAST_CONVERSATIONS}}", pastConversations.join("\n\n"));
   conversationPrompt = conversationPrompt.replace("{{USER_QUERY}}", query);
 
   return conversationPrompt;
