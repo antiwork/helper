@@ -9,7 +9,7 @@ import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } fr
 import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
-import { captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
@@ -182,7 +182,7 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
     if (error instanceof MetadataAPIError) {
       return null;
     }
-    captureExceptionAndThrowIfDevelopment(error);
-    throw new Error(`Metadata API request failed: unknown error`);
+    captureExceptionAndLogIfDevelopment(error);
+    return null; // Return null for all errors instead of throwing
   }
 };
