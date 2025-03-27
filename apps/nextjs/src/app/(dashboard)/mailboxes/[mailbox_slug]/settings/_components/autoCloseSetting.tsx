@@ -109,7 +109,7 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
         {isEnabled && (
           <div className="space-y-2">
             <Label htmlFor="days-of-inactivity">Days of inactivity before auto-close</Label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-fit">
               <Input
                 id="days-of-inactivity"
                 type="number"
@@ -118,7 +118,7 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
                 onChange={handleDaysChange}
                 className="w-24"
               />
-              <span className="text-sm text-muted-foreground">days</span>
+              <span className="text-sm text-muted-foreground">{daysOfInactivity === 1 ? "day" : "days"}</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Tickets with no activity for this many days will be automatically closed.
