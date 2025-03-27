@@ -179,10 +179,7 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
     });
     return metadata;
   } catch (error) {
-    if (error instanceof MetadataAPIError) {
-      return null;
-    }
     captureExceptionAndLogIfDevelopment(error);
-    throw new Error(`Metadata API request failed: unknown error`); // Maintain backward compatibility with tests
+    return null; // Return null for all errors
   }
 };
