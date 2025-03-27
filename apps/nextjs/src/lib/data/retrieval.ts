@@ -173,10 +173,15 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
   if (!metadataApi) return null;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    
     const metadata = await getMetadata(metadataApi, {
       email,
       timestamp: timestamp(),
     });
+    
+    clearTimeout(timeoutId);
     return metadata;
   } catch (error) {
     if (error instanceof MetadataAPIError) {
