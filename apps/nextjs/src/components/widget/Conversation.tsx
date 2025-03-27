@@ -33,6 +33,7 @@ export default function Conversation({
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [isEscalated, setIsEscalated] = useState(false);
 
   useEffect(() => {
     if (conversationSlug) {
@@ -123,8 +124,31 @@ export default function Conversation({
     if (isNewConversation) {
       setMessages([]);
       setConversationSlug(null);
+      setIsEscalated(false);
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const hasHumanSupportRequest = messages.some(
+        (msg) => msg.role === "user" && msg.content.toLowerCase().includes("i need to talk to a human"),
+      );
+      if (hasHumanSupportRequest) {
+        setIsEscalated(true);
+      }
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (conversation?.messages) {
+      const hasHumanSupportRequest = conversation.messages.some(
+        (msg) => msg.role === "user" && msg.content.toLowerCase().includes("i need to talk to a human"),
+      );
+      if (hasHumanSupportRequest) {
+        setIsEscalated(true);
+      }
+    }
+  }, [conversation]);
 
   const handleSubmit = async (e?: { preventDefault: () => void }) => {
     if (e) {
@@ -156,6 +180,7 @@ export default function Conversation({
       const slug = await createConversation({ isPrompt: true });
       setMessages([]);
       setConversationSlug(slug);
+      setIsEscalated(false);
       append({ role: "user", content: message as string }, { body: { conversationSlug: slug } });
     };
 
@@ -170,6 +195,7 @@ export default function Conversation({
   }, [token]);
 
   const handleTalkToTeamClick = () => {
+    setIsEscalated(true);
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
   };
 
@@ -193,6 +219,7 @@ export default function Conversation({
         messageStatus={status}
         lastMessage={lastAIMessage}
         onTalkToTeamClick={handleTalkToTeamClick}
+        isEscalated={isEscalated}
       />
       <ChatInput
         input={input}
