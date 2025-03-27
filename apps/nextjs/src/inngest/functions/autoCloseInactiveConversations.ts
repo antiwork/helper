@@ -46,7 +46,6 @@ async function closeInactiveConversations(): Promise<AutoCloseReport> {
     await inngest.send({
       name: "conversations/auto-close.process-mailbox",
       data: { mailboxId: mailbox.id },
-      middleware: [],
     });
   }
 
