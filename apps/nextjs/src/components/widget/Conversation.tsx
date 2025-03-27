@@ -152,7 +152,7 @@ export default function Conversation({
 
   const checkEscalationStatus = useCallback(async () => {
     if (!token || !conversationSlug) return;
-    
+
     try {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}/escalated`, {
         headers: {
@@ -172,7 +172,7 @@ export default function Conversation({
     if (!token || !conversationSlug) return;
     checkEscalationStatus();
   }, [conversationSlug, token, checkEscalationStatus]);
-  
+
   useEffect(() => {
     if (messages.length > 0 && conversationSlug) {
       checkEscalationStatus();

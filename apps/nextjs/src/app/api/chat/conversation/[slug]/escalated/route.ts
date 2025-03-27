@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db/client";
-import { conversations, conversationEvents } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 import { authenticateWidget } from "@/app/api/widget/utils";
+import { db } from "@/db/client";
+import { conversationEvents, conversations } from "@/db/schema";
 
 export async function GET(
   request: NextRequest,
@@ -17,7 +17,7 @@ export async function GET(
     const conversation = await db.query.conversations.findFirst({
       where: eq(conversations.slug, slug),
     });
-    
+
     if (!conversation) {
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
@@ -28,7 +28,7 @@ export async function GET(
         eq(conversationEvents.type, "request_human_support"),
       ),
     });
-    
+
     const isEscalated = !!requestHumanSupportEvent;
 
     return NextResponse.json({ isEscalated });
