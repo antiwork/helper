@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getConversationBySlug, isConversationEscalated } from "@/lib/data/conversation";
-import { authenticateWidget } from "@/lib/widget/auth";
+import { authenticateWidget } from "@/app/api/widget/utils";
 
 export async function GET(
   request: NextRequest,
   { params: { slug } }: { params: { slug: string } },
 ): Promise<NextResponse> {
   try {
-    const token = request.headers.get("Authorization")?.replace("Bearer ", "") ?? null;
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const session = await authenticateWidget(token);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authResult = await authenticateWidget(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: 401 });
     }
 
     const conversation = await getConversationBySlug(slug);
