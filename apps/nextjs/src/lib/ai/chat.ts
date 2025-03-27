@@ -142,7 +142,6 @@ const generateReasoning = async ({
   email,
   conversationId,
   mailboxSlug,
-  traceId = null,
   evaluation = false,
   dataStream,
 }: {
@@ -153,7 +152,6 @@ const generateReasoning = async ({
   email: string | null;
   conversationId: number;
   mailboxSlug: string;
-  traceId?: string | null;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
 }): Promise<{ reasoning: string | null; usage: LanguageModelUsage | null }> => {
@@ -190,7 +188,6 @@ const generateReasoning = async ({
         functionId: "reasoning",
         metadata: {
           sessionId: conversationId,
-          langfuseTraceId: traceId ?? randomUUID(),
           userId: email ?? "anonymous",
           email: email ?? "anonymous",
           mailboxSlug,
@@ -201,7 +198,7 @@ const generateReasoning = async ({
     dataStream?.writeData({
       event: "reasoningStarted",
       data: {
-        id: traceId,
+        id: randomUUID(),
       },
     });
 
@@ -214,7 +211,7 @@ const generateReasoning = async ({
         dataStream?.writeData({
           event: "reasoningFinished",
           data: {
-            id: traceId,
+            id: randomUUID(),
           },
         });
       } else if (!textPart.includes("<think>") && !finished) {
@@ -319,7 +316,6 @@ export const generateAIResponse = async ({
       email,
       conversationId,
       mailboxSlug: mailbox.slug,
-      traceId,
       evaluation,
       dataStream,
     });
@@ -371,7 +367,6 @@ export const generateAIResponse = async ({
       functionId: "chat-completion",
       metadata: {
         sessionId: conversationId,
-        langfuseTraceId: traceId,
         userId: email ?? "anonymous",
         email: email ?? "anonymous",
         mailboxSlug: mailbox.slug,
