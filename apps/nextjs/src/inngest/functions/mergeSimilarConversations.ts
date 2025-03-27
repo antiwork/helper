@@ -1,6 +1,7 @@
-import { and, eq, isNull, not } from "drizzle-orm";
+import { and, eq, exists, isNull, not } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
+import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { inngest } from "@/inngest/client";
 import { runAIObjectQuery } from "@/lib/ai";
@@ -12,13 +13,18 @@ export default inngest.createFunction(
     id: "detect-similar-conversations",
     debounce: { key: "event.data.messageId", period: "1m", timeout: "5m" },
   },
-  { event: "conversations/embedding.generated" },
+  { event: "conversations/message.created" },
   async ({ event }) => {
-    const { conversationId } = event.data;
+    const { messageId } = event.data;
 
     const conversation = assertDefinedOrRaiseNonRetriableError(
       await db.query.conversations.findFirst({
-        where: eq(conversations.id, conversationId),
+        where: exists(
+          db
+            .select({ id: conversationMessages.conversationId })
+            .from(conversationMessages)
+            .where(eq(conversationMessages.id, messageId)),
+        ),
         with: {
           messages: {
             columns: {
@@ -47,7 +53,7 @@ export default inngest.createFunction(
         eq(conversations.emailFrom, conversation.emailFrom),
         not(eq(conversations.id, conversation.id)),
         isNull(conversations.mergedIntoId),
-        not(eq(conversations.status, "spam")),
+        eq(conversations.status, "open"),
       ),
       with: {
         messages: {
@@ -61,7 +67,7 @@ export default inngest.createFunction(
         },
       },
       orderBy: (conversations, { desc }) => [desc(conversations.createdAt)],
-      limit: 5,
+      limit: 10,
     });
 
     if (otherConversations.length === 0) {
@@ -75,12 +81,9 @@ Created: ${conversation.createdAt.toISOString()}
 Status: ${conversation.status}
 Messages:
 ${conversation.messages
-  .map((msg) => {
-    const role = msg.role === "user" ? "Customer" : "Assistant";
-    const content = msg.cleanedUpText ?? "";
-    return `- ${role}: ${content.substring(0, 300)}${content.length > 300 ? "..." : ""}`;
-  })
-  .join("\n")}
+  .map((msg) => `- ${msg.role === "user" ? "Customer" : "Assistant"}: ${msg.cleanedUpText ?? ""}`)
+  .join("\n")
+  .slice(0, 10000)}
     `;
 
     const otherConversationsText = otherConversations
@@ -92,12 +95,9 @@ Created: ${conv.createdAt.toISOString()}
 Status: ${conv.status}
 Messages:
 ${conv.messages
-  .map((msg) => {
-    const role = msg.role === "user" ? "Customer" : "Assistant";
-    const content = msg.cleanedUpText ?? "";
-    return `- ${role}: ${content.substring(0, 300)}${content.length > 300 ? "..." : ""}`;
-  })
-  .join("\n")}
+  .map((msg) => `- ${msg.role === "user" ? "Customer" : "Assistant"}: ${msg.cleanedUpText ?? ""}`)
+  .join("\n")
+  .slice(0, 10000)}
       `;
       })
       .join("\n");

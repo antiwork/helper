@@ -25,8 +25,8 @@ export default inngest.createFunction(
     });
 
     if ("status" in conversation && conversation.status === "open") {
-      await step.sendEvent("embedding-generated", {
-        name: "conversations/embedding.generated",
+      await step.sendEvent("update-suggested-actions", {
+        name: "conversations/update-suggested-actions",
         data: { conversationId: conversation.id },
       });
     }
