@@ -112,13 +112,13 @@ export function ConversationPreviewList({
               <View className="flex-row items-center gap-4 flex-shrink-0">
                 {assigneeName && (
                   <View className="flex-row items-center gap-1">
-                    <UserIcon size={12} className="text-muted-foreground" />
+                    <UserIcon size={14} className="text-muted-foreground" />
                     <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
                   </View>
                 )}
-                <View className={`flex-row items-center gap-1 px-2 py-0.5 rounded ${item.platformCustomer?.isVip ? 'bg-yellow-100' : 'bg-muted-foreground/10'}`}>
-                  <StarIcon size={12} className={item.platformCustomer?.isVip ? "text-yellow-600" : "text-muted-foreground"} />
-                  <Text className={`text-xs font-medium ${item.platformCustomer?.isVip ? 'text-yellow-800' : 'text-muted-foreground'}`}>
+                <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? 'bg-amber-400' : 'bg-muted'}`}>
+                  {item.platformCustomer?.isVip && <StarIcon size={14} className="text-background" />}
+                  <Text className={`text-sm font-medium ${item.platformCustomer?.isVip ? 'text-background' : 'text-muted-foreground'}`}>
                     ${item.platformCustomer?.value ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2) : '0.00'}
                   </Text>
                 </View>
