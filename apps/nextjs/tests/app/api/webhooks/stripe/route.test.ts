@@ -1,6 +1,6 @@
 import { mockInngest } from "@tests/support/inngestUtils";
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, inject, it, vi } from "vitest";
 import { POST } from "@/app/api/webhooks/stripe/route";
 import { env } from "@/env";
 import { stripe } from "@/lib/stripe/client";
@@ -15,17 +15,14 @@ vi.mock("@/lib/stripe/client", () => ({
   },
 }));
 
-vi.mock("@/env", async () => {
-  const { env } = await import("@/env");
-  return {
-    env: {
-      ...env,
-      STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
-      ABLY_API_KEY: "test.key",
-      ADDITIONAL_PAID_ORGANIZATION_IDS: "org_1234567890",
-    },
-  };
-});
+vi.mock("@/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
+    ABLY_API_KEY: "test.key",
+    ADDITIONAL_PAID_ORGANIZATION_IDS: "org_1234567890",
+  },
+}));
 
 describe("POST /api/webhooks/stripe", () => {
   beforeEach(() => {

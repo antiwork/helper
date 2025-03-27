@@ -1,17 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, inject, it, vi } from "vitest";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 
-vi.mock("@/env", async () => {
-  const { env } = await import("@/env");
-  return {
-    env: {
-      ...env,
-      PROXY_SECRET_KEY: "test-secret-key",
-      PROXY_URL: "https://proxy.helperai.com",
-      AUTH_URL: "https://helper.ai",
-    },
-  };
-});
+vi.mock("@/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    PROXY_SECRET_KEY: "test-secret-key",
+    PROXY_URL: "https://proxy.helperai.com",
+    AUTH_URL: "https://helper.ai",
+  },
+}));
 
 vi.mock("@/s3/utils", () => ({
   isS3Url: (url: string) => url.includes("s3.amazonaws.com"),
