@@ -1,8 +1,10 @@
+import { envMock } from "@tests/support/mockEnv";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 
 vi.mock("@/env", () => ({
   env: {
+    ...envMock(),
     PROXY_SECRET_KEY: "test-secret-key",
     PROXY_URL: "https://proxy.helperai.com",
     AUTH_URL: "https://helper.ai",
