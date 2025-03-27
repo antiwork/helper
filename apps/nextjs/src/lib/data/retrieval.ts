@@ -23,7 +23,6 @@ export const findSimilarConversations = async (
   limit: number = MAX_SIMILAR_CONVERSATIONS,
   excludeConversationSlug?: string,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
-  onlyWithTopics = false,
 ) => {
   const queryEmbedding = Array.isArray(queryInput)
     ? queryInput
@@ -33,12 +32,6 @@ export const findSimilarConversations = async (
   let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id}`;
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
-  }
-  if (onlyWithTopics) {
-    where = sql`${where} AND EXISTS (
-      SELECT 1 FROM ${conversationsTopics} ct
-      WHERE ct.conversation_id = ${conversations.id}
-    )`;
   }
 
   const similarConversations = await db.query.conversations.findMany({

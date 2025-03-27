@@ -208,28 +208,6 @@ const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) =>
 
 const generateSeedsFromFixtures = async (mailboxId: number) => {
   const fixtures = Object.entries(assertDefined(fixtureData[mailboxId]));
-  const topicMap = new Map<typeof topics.$inferSelect, (typeof topics.$inferSelect)[]>();
-  const createTopic = async (name: string, subtopicNames: string[]) => {
-    const topic = await db.insert(topics).values({ name, mailboxId }).returning().then(takeUniqueOrThrow);
-    const subtopics = await Promise.all(
-      subtopicNames.map(async (name) => {
-        const subTopic = await db
-          .insert(topics)
-          .values({ name, parentId: topic.id, mailboxId })
-          .returning()
-          .then(takeUniqueOrThrow);
-        return subTopic;
-      }),
-    );
-    topicMap.set(topic, subtopics);
-  };
-  await Promise.all([
-    createTopic("Account Access", ["Login Issues", "Account Suspension", "Password Reset"]),
-    createTopic("Product Access", ["Download Issues", "Content Availability", "Purchase Recovery"]),
-    createTopic("Billing", ["Refunds", "Payment Issues", "Invoices"]),
-    createTopic("Creator Support", ["Product Questions", "Technical Issues", "Content Guidelines"]),
-    createTopic("Platform Issues", ["Website Problems", "App Issues", "Integration Problems"]),
-  ]);
 
   await Promise.all(
     fixtures
@@ -265,16 +243,6 @@ const generateSeedsFromFixtures = async (mailboxId: number) => {
               : {}),
           });
         }
-
-        const topic = [...topicMap.keys()][fixtureIndex % topicMap.size]!;
-        const subTopic = [...topicMap.get(topic)!][fixtureIndex % topicMap.get(topic)!.length]!;
-        await db.insert(conversationsTopics).values({
-          conversationId: conversation.id,
-          topicId: topic.id,
-          subTopicId: subTopic.id,
-          mailboxId,
-          createdAt: conversation.createdAt,
-        });
       }),
   );
 };
