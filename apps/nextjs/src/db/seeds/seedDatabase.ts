@@ -18,14 +18,7 @@ import { db } from "@/db/client";
 import { env } from "@/env";
 import { indexMessage } from "@/inngest/functions/indexConversation";
 import { getClerkUser } from "@/lib/data/user";
-import {
-  conversationMessages,
-  conversations,
-  conversationsTopics,
-  mailboxes,
-  mailboxesMetadataApi,
-  topics,
-} from "../schema";
+import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
 
 const getTables = async () => {
   const result = await db.execute(sql`
@@ -33,7 +26,7 @@ const getTables = async () => {
     FROM information_schema.tables
     WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
   `);
-  return result.map((row) => row.table_name as string);
+  return result.rows.map((row) => row.table_name as string);
 };
 
 const checkIfAllTablesAreEmpty = async () => {
@@ -41,7 +34,7 @@ const checkIfAllTablesAreEmpty = async () => {
     const result = await db.execute(sql`
     SELECT EXISTS (SELECT 1 FROM ${sql.identifier(tableName)} LIMIT 1)
   `);
-    return !result[0]?.exists;
+    return !result.rows[0]?.exists;
   };
 
   const tables = await getTables();

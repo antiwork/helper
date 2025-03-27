@@ -29,8 +29,8 @@ describe("encryptedField", () => {
       sql`SELECT ${gmailSupportEmails.email}, ${gmailSupportEmails.accessToken} FROM ${sql.identifier(getTableName(gmailSupportEmails))} WHERE id = ${gmailSupportEmail.id}`,
     );
 
-    expect(rawDbValues[0]?.email).toBe("test@example.com");
-    expect(rawDbValues[0]?.accessToken).not.toBe(testAccessToken);
+    expect(rawDbValues.rows[0]?.email).toBe("test@example.com");
+    expect(rawDbValues.rows[0]?.accessToken).not.toBe(testAccessToken);
 
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
@@ -67,8 +67,8 @@ describe("nativeEncryptedField", () => {
       sql`SELECT ${tools.name}, ${tools.authenticationToken} FROM ${sql.identifier(getTableName(tools))} WHERE id = ${tool.id}`,
     );
 
-    expect(rawDbValues[0]?.name).toBe("Test Tool");
-    expect(rawDbValues[0]?.authenticationToken).not.toBe(testAuthToken);
+    expect(rawDbValues.rows[0]?.name).toBe("Test Tool");
+    expect(rawDbValues.rows[0]?.authenticationToken).not.toBe(testAuthToken);
 
     const decryptedTool = await db.query.tools.findFirst({
       where: (tools, { eq }) => eq(tools.id, tool.id),

@@ -2,10 +2,11 @@ import { truncateDb } from "@tests/support/setupDatabase";
 import { afterAll, beforeAll, beforeEach, inject, vi } from "vitest";
 
 beforeAll(() => {
-  vi.mock("@/env", () => {
-    const TEST_DATABASE_URL = inject("TEST_DATABASE_URL");
-    const stubbedEnv = {
-      POSTGRES_URL: TEST_DATABASE_URL,
+  vi.stubEnv("POSTGRES_URL", inject("TEST_DATABASE_URL"));
+
+  vi.mock("@/env", () => ({
+    env: {
+      POSTGRES_URL: inject("TEST_DATABASE_URL"),
       CRYPTO_SECRET: "secret",
       ENCRYPT_COLUMN_SECRET: "2319a2b757d52982035248289cb0fe27",
       AUTH_URL: "http://localhost:1234",
@@ -17,11 +18,8 @@ beforeAll(() => {
       OPENAI_API_KEY: "test-openai-api-key",
       ABLY_API_KEY: "test-ably-api-key",
       ADDITIONAL_PAID_ORGANIZATION_IDS: "org_1234567890",
-    };
-    return {
-      env: stubbedEnv,
-    };
-  });
+    },
+  }));
 
   // Used implicitly by the Vercel AI SDK
   vi.stubEnv("OPENAI_API_KEY", "test-openai-api-key");
