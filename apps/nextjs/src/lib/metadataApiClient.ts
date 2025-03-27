@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { URLSearchParams } from "url";
 import { z } from "zod";
 
-const METADATA_API_TIMEOUT_SECONDS = 60;
+const METADATA_API_TIMEOUT_SECONDS = 15;
 const METADATA_API_MAX_LENGTH = 5000; // ~1000 tokens (GPT-3.5/GPT-4)
 
 export class MetadataAPIError extends Error {

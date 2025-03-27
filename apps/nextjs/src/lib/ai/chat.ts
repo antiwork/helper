@@ -25,7 +25,7 @@ import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit }
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
-import { Conversation, getConversationById, updateConversation } from "@/lib/data/conversation";
+import { Conversation, getConversationById, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, disableAIResponse, getMessages } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
@@ -518,7 +518,7 @@ export const respondWithAI = async ({
     (await disableAIResponse(conversation.id, mailbox, platformCustomer)) &&
     (!isPromptConversation || !isFirstMessage)
   ) {
-    await updateConversation(conversation.id, { set: { status: "open" } });
+    await updateOriginalConversation(conversation.id, { set: { status: "open" } });
     onResponse?.({
       messages,
       platformCustomer,

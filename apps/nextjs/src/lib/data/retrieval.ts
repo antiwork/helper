@@ -9,7 +9,7 @@ import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } fr
 import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
-import { captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
@@ -35,7 +35,7 @@ export const findSimilarConversations = async (
   }
 
   const similarConversations = await db.query.conversations.findMany({
-    where,
+    where: and(where, isNull(conversations.mergedIntoId)),
     extras: {
       similarity: similarity.as("similarity"),
     },
@@ -172,10 +172,7 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
     });
     return metadata;
   } catch (error) {
-    if (error instanceof MetadataAPIError) {
-      return null;
-    }
-    captureExceptionAndThrowIfDevelopment(error);
-    throw new Error(`Metadata API request failed: unknown error`);
+    captureExceptionAndLogIfDevelopment(error);
+    return null;
   }
 };

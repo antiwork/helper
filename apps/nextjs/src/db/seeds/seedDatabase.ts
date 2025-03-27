@@ -147,6 +147,15 @@ export const seedDatabase = async () => {
           console.log(`Indexed message ${message.id}`);
         }),
       );
+
+      if (conversation.subject === "Download Issues with Digital Asset Bundle") {
+        await db
+          .update(conversations)
+          .set({
+            mergedIntoId: conversationRecords.find((c) => c.subject === "Download and License Issues")!.id,
+          })
+          .where(eq(conversations.id, conversation.id));
+      }
     }
 
     // Optionally create this file to do any additional seeding, e.g. setting up integrations with local credentials

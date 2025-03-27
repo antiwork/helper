@@ -307,6 +307,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   cc: string[];
                   bcc: string[];
                   from: string | null;
+                  isMerged: boolean;
                   isPinned: boolean;
                   slackUrl: string | null;
                   draft: {
@@ -457,6 +458,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   cc: string[];
                   bcc: string[];
                   from: string | null;
+                  isMerged: boolean;
                   isPinned: boolean;
                   slackUrl: string | null;
                   draft: {
@@ -644,6 +646,45 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             emailId: number;
           };
           output: void;
+        }>;
+        splitMerged: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            messageId: number;
+          };
+          output: {
+            id: number;
+            slug: string;
+            status: "open" | "closed" | "spam" | null;
+            emailFrom: string | null;
+            subject: string;
+            conversationProvider: "gmail" | "helpscout" | "chat" | null;
+            createdAt: Date;
+            updatedAt: Date;
+            closedAt: Date | null;
+            lastUserEmailCreatedAt: Date | null;
+            assignedToClerkId: string | null;
+            platformCustomer: {
+              isVip: boolean;
+              value: string | null;
+              name: string | null;
+              id: number;
+              createdAt: Date;
+              updatedAt: Date;
+              mailboxId: number;
+              email: string;
+              links: Record<string, string> | null;
+            } | null;
+            summary: string[] | null;
+            source: "email" | "chat" | "chat#prompt";
+            isPrompt: boolean;
+            isVisitor: boolean;
+            embeddingText: string | null;
+            githubIssueNumber: number | null;
+            githubIssueUrl: string | null;
+            githubRepoOwner: string | null;
+            githubRepoName: string | null;
+          };
         }>;
         messages: {
           previousReplies: import("@trpc/server").TRPCQueryProcedure<{

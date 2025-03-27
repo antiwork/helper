@@ -7,7 +7,7 @@
           "role": "user",
           "body": "I can't download my purchased digital assets after payment",
           "emailTo": null,
-          "emailFrom": "sarah.davis@example.com",
+          "emailFrom": "design.enthusiast42@example.com",
           "emailCc": [],
           "emailBcc": null,
           "metadata": {
@@ -23,7 +23,7 @@
           "role": "user",
           "body": "I've tried clearing my cache and using Chrome, but when I click the download button nothing happens. I just get a spinning wheel that never completes.",
           "emailTo": null,
-          "emailFrom": "sarah.davis@example.com",
+          "emailFrom": "design.enthusiast42@example.com",
           "emailCc": [],
           "emailBcc": null,
           "metadata": null,
@@ -58,7 +58,7 @@
       "conversation": {
         "source": "chat",
         "subject": "Download Issues with Digital Asset Bundle",
-        "emailFrom": "sarah.davis@example.com",
+        "emailFrom": "design.enthusiast42@example.com",
         "status": "open",
         "emailFromName": null,
 

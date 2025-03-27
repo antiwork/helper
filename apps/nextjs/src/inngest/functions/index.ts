@@ -18,6 +18,7 @@ import hardDeleteRecordsForNonPayingOrgs from "./hardDeleteRecordsForNonPayingOr
 import importGmailThreads from "./importGmailThreads";
 import importRecentGmailThreads from "./importRecentGmailThreads";
 import indexConversationMessage from "./indexConversation";
+import mergeSimilarConversations from "./mergeSimilarConversations";
 import notifyVipMessage from "./notifyVipMessage";
 import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
@@ -37,6 +38,7 @@ export default [
   refreshConversationDraft,
   generateFilePreview,
   generateConversationSummaryEmbeddings,
+  mergeSimilarConversations,
   publishNewConversationEvent,
   handleStripeWebhookEvent,
   cleanupDanglingFiles,
