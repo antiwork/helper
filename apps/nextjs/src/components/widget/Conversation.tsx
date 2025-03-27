@@ -1,7 +1,7 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import type { MessageWithReaction } from "@/components/widget/Message";
@@ -150,27 +150,34 @@ export default function Conversation({
     }
   };
 
+  const checkEscalationStatus = useCallback(async () => {
+    if (!token || !conversationSlug) return;
+    
+    try {
+      const response = await fetch(`/api/chat/conversation/${conversationSlug}/escalated`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIsEscalated(data.isEscalated);
+      }
+    } catch (error) {
+      console.error("Failed to check escalation status:", error);
+    }
+  }, [conversationSlug, token]);
+
   useEffect(() => {
     if (!token || !conversationSlug) return;
-
-    const checkEscalationStatus = async () => {
-      try {
-        const response = await fetch(`/api/chat/conversation/${conversationSlug}/escalated`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setIsEscalated(data.isEscalated);
-        }
-      } catch (error) {
-        console.error("Failed to check escalation status:", error);
-      }
-    };
-
     checkEscalationStatus();
-  }, [conversationSlug, token]);
+  }, [conversationSlug, token, checkEscalationStatus]);
+  
+  useEffect(() => {
+    if (messages.length > 0 && conversationSlug) {
+      checkEscalationStatus();
+    }
+  }, [messages, checkEscalationStatus, conversationSlug]);
 
   useEffect(() => {
     if (!token) return;
