@@ -40,27 +40,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # langfuse-server:
-  #   image: langfuse/langfuse:2
-  #   ports:
-  #     - "3020:3000"
-  #   environment:
-  #     - DATABASE_URL=postgresql://username:password@db:5432/langfuse
-  #     - NEXTAUTH_SECRET=mysecret
-  #     - SALT=mysalt
-  #     - ENCRYPTION_KEY=b484dc3d77e194f02f3771e328ecd20d022c3c7a2699b1185b994a9513d1ebaa
-  #     - AUTH_URL=http://localhost:3020
-  #     - TELEMETRY_ENABLED=false
-  #     - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=true
-  #     - LANGFUSE_INIT_ORG_ID=helperai
-  #     - LANGFUSE_INIT_ORG_NAME=Helper.ai
-  #     - LANGFUSE_INIT_PROJECT_ID=helperai
-  #     - LANGFUSE_INIT_PROJECT_NAME=helper-ai-development
-  #     - LANGFUSE_INIT_PROJECT_PUBLIC_KEY=pk-lf-c2d89bce-f43f-4587-8982-02e955b9b542
-  #     - LANGFUSE_INIT_PROJECT_SECRET_KEY=sk-lf-7cf5475d-37f0-4734-9690-cd650c372934
-  #     - LANGFUSE_INIT_USER_EMAIL=dev@helper.ai
-  #     - LANGFUSE_INIT_USER_NAME=Helper.ai
-  #     - LANGFUSE_INIT_USER_PASSWORD=password
+
 
 volumes:
   helperai_pgdata:

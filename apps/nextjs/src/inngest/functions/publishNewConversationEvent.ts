@@ -58,7 +58,12 @@ const publish = async (messageId: number) => {
     await publishToAbly({
       channel: conversationChannelId(message.conversation.mailbox.slug, message.conversation.slug),
       event: "conversation.message",
-      data: await serializeMessage(message, message.conversation.mailbox, await getClerkUser(message.clerkUserId)),
+      data: await serializeMessage(
+        message,
+        message.conversation.id,
+        message.conversation.mailbox,
+        await getClerkUser(message.clerkUserId),
+      ),
       trim: (data, amount) => ({
         ...data,
         body: data.body && amount < data.body.length ? data.body.slice(0, data.body.length - amount) : null,

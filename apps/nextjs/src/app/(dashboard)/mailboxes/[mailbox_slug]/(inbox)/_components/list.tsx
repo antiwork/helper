@@ -335,7 +335,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
   return (
     <>
       {searchBar}
-      <div className="relative h-full flex flex-col">
+      <div className="relative h-full min-h-0 flex flex-col">
         <div
           className="flex-1 overflow-y-auto mt-2 md:border-b md:border-sidebar-border h-[calc(100%-50px)]"
           ref={resultsContainerRef}
@@ -358,7 +358,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
           </div>
         </div>
         {total > 0 && (
-          <div className="sticky bottom-4 right-4 z-10 self-end">
+          <div className="absolute bottom-4 right-4 z-10 self-end">
             <NewConversationModal />
           </div>
         )}

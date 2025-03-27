@@ -1,13 +1,12 @@
 #[macro_use]
 extern crate lazy_static;
 
+#[cfg(target_os = "macos")]
+mod apple_sign_in;
+
 use std::env;
 use std::sync::Mutex;
-use tao::event::{Event, StartCause};
-use tao::event_loop::{ControlFlow, EventLoopBuilder};
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
-use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
@@ -30,15 +29,58 @@ fn start_options() -> serde_json::Value {
     })
 }
 
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn is_mac_app_store() -> bool {
+    use std::path::Path;
+
+    if let Ok(current_exe) = std::env::current_exe() {
+        let mut current_dir = current_exe.parent().map(Path::to_path_buf);
+
+        while let Some(dir) = current_dir {
+            if dir.to_string_lossy().ends_with(".app") {
+                let receipt_path = dir.join("Contents/_MASReceipt/receipt");
+                return receipt_path.exists();
+            }
+            current_dir = dir.parent().map(Path::to_path_buf);
+        }
+    }
+
+    false
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+fn is_mac_app_store() -> bool {
+    false
+}
+
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn start_apple_sign_in(app: AppHandle) {
+    apple_sign_in::start_apple_sign_in(app);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Webview,
+                ))
+                .build(),
+        )
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![start_options]);
+        .invoke_handler(tauri::generate_handler![
+            start_options,
+            is_mac_app_store,
+            #[cfg(target_os = "macos")]
+            start_apple_sign_in,
+        ]);
 
     #[cfg(desktop)]
     {

@@ -58,7 +58,7 @@ export async function generateMailboxReport(mailboxId: number) {
 
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
 
-  const openCountMessage = `• Open tickets: ${openTicketCount}`;
+  const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

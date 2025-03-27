@@ -25,7 +25,7 @@ import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit }
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
-import { Conversation, getConversationById, updateConversation } from "@/lib/data/conversation";
+import { Conversation, getConversationById, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, disableAIResponse, getMessages } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
@@ -71,7 +71,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadPreviousMessages = async (conversationId: number): Promise<Message[]> => {
+export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
   const conversation = assertDefined(await getConversationById(conversationId));
   const mailbox = assertDefined(
     await db.query.mailboxes.findFirst({
@@ -82,7 +82,7 @@ export const loadPreviousMessages = async (conversationId: number): Promise<Mess
   const conversationMessages = await getMessages(conversationId, mailbox);
 
   return conversationMessages
-    .filter((message) => message.type === "message" && message.body)
+    .filter((message) => message.type === "message" && message.body && message.id !== latestMessageId)
     .map((message) => {
       const messageRecord = message as any; // Type assertion to handle union type
       return {
@@ -190,7 +190,6 @@ const generateReasoning = async ({
         functionId: "reasoning",
         metadata: {
           sessionId: conversationId,
-          langfuseTraceId: traceId ?? randomUUID(),
           userId: email ?? "anonymous",
           email: email ?? "anonymous",
           mailboxSlug,
@@ -201,7 +200,7 @@ const generateReasoning = async ({
     dataStream?.writeData({
       event: "reasoningStarted",
       data: {
-        id: traceId,
+        id: traceId || randomUUID(),
       },
     });
 
@@ -214,7 +213,7 @@ const generateReasoning = async ({
         dataStream?.writeData({
           event: "reasoningFinished",
           data: {
-            id: traceId,
+            id: traceId || randomUUID(),
           },
         });
       } else if (!textPart.includes("<think>") && !finished) {
@@ -371,7 +370,6 @@ export const generateAIResponse = async ({
       functionId: "chat-completion",
       metadata: {
         sessionId: conversationId,
-        langfuseTraceId: traceId,
         userId: email ?? "anonymous",
         email: email ?? "anonymous",
         mailboxSlug: mailbox.slug,
@@ -483,7 +481,7 @@ export const respondWithAI = async ({
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
 }) => {
-  const previousMessages = await loadPreviousMessages(conversation.id);
+  const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
     messages: previousMessages,
     message,
@@ -520,7 +518,14 @@ export const respondWithAI = async ({
     (await disableAIResponse(conversation.id, mailbox, platformCustomer)) &&
     (!isPromptConversation || !isFirstMessage)
   ) {
-    await updateConversation(conversation.id, { set: { status: "open" } });
+    await updateOriginalConversation(conversation.id, { set: { status: "open" } });
+    onResponse?.({
+      messages,
+      platformCustomer,
+      isPromptConversation,
+      isFirstMessage,
+      humanSupportRequested: true,
+    });
     if (
       messages.length === 1 ||
       (isPromptConversation && messages.filter((message) => message.role === "user").length === 2)

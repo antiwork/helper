@@ -27,6 +27,7 @@ import { AssigneeFilter } from "./_components/assigneeFilter";
 import { CustomerFilter } from "./_components/customerFilter";
 import { DateFilter } from "./_components/dateFilter";
 import { EventFilter } from "./_components/eventFilter";
+import { PromptFilter } from "./_components/promptFilter";
 import { ReactionFilter } from "./_components/reactionFilter";
 import { ResponderFilter } from "./_components/responderFilter";
 import { StatusFilter } from "./_components/statusFilter";
@@ -45,6 +46,7 @@ export default function SearchPage() {
     repliedBy: parseAsArrayOf(parseAsString),
     customer: parseAsArrayOf(parseAsString),
     isVip: parseAsBoolean,
+    isPrompt: parseAsBoolean,
     reactionType: parseAsStringEnum(["thumbs-up", "thumbs-down"] as const),
     events: parseAsArrayOf(parseAsStringEnum(["request_human_support", "resolved_by_ai"] as const)),
   });
@@ -71,6 +73,7 @@ export default function SearchPage() {
     repliedBy: searchParams.repliedBy ?? undefined,
     customer: searchParams.customer ?? undefined,
     isVip: searchParams.isVip ?? undefined,
+    isPrompt: searchParams.isPrompt ?? undefined,
     reactionType: searchParams.reactionType ?? undefined,
     events: searchParams.events ?? undefined,
   };
@@ -213,6 +216,10 @@ export default function SearchPage() {
               onChange={(reactionType) => updateFilter({ reactionType })}
             />
             <EventFilter selectedEvents={filterValues.events ?? []} onChange={(events) => updateFilter({ events })} />
+            <PromptFilter
+              isPrompt={filterValues.isPrompt ?? undefined}
+              onChange={(isPrompt) => updateFilter({ isPrompt })}
+            />
           </div>
         </div>
         <div className="w-1 lg:w-10" />
@@ -336,7 +343,10 @@ function SearchResultItem({
         onClick={(e) => e.stopPropagation()}
         className="mt-0.5"
       />
-      <Link href={`/mailboxes/${params.mailbox_slug}/conversations?id=${conversation.slug}`} className="flex-1">
+      <Link
+        href={`/mailboxes/${params.mailbox_slug}/conversations?id=${conversation.slug}`}
+        className="flex-1 min-w-0 overflow-hidden"
+      >
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">

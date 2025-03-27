@@ -2,7 +2,6 @@
 
 import { useClerk } from "@clerk/nextjs";
 import {
-  BoltIcon,
   BookOpenIcon,
   ChatBubbleBottomCenterIcon,
   ComputerDesktopIcon,
@@ -12,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronUp } from "lucide-react";
 import React, { useState, useTransition } from "react";
-import type { Linter, PromptLineUpdate, Subscription as SubscriptionType, SupportAccount } from "@/app/types/global";
+import type { PromptLineUpdate, SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
@@ -38,7 +37,6 @@ import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
 import PromptSetting from "./promptSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
-import StyleLinterSetting from "./styleLinterSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
 import ToolSetting from "./toolSetting";
@@ -61,13 +59,11 @@ type SettingsProps = {
   children?: React.ReactElement<any> | React.ReactElement<any>[];
   onUpdateSettings: (pendingUpdates: PendingUpdates) => Promise<void>;
   mailbox: RouterOutputs["mailbox"]["get"];
-  linters: Linter[];
   supportAccount?: SupportAccount;
-  subscription: SubscriptionType | null;
   sidebarInfo: SidebarInfo;
 };
 
-const Settings = ({ onUpdateSettings, mailbox, linters, supportAccount, subscription, sidebarInfo }: SettingsProps) => {
+const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: SettingsProps) => {
   const { signOut } = useClerk();
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -155,7 +151,6 @@ const Settings = ({ onUpdateSettings, mailbox, linters, supportAccount, subscrip
             }}
             pendingUpdates={pendingUpdates.promptLines}
           />
-          <StyleLinterSetting isLinterEnabled={mailbox.isStyleLinterEnabled} linters={linters} />
         </>
       ),
     },

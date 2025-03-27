@@ -61,9 +61,6 @@ export const env = createEnv({
       .regex(/^org_\w+(?:,org_\w+)*$/)
       .optional(),
     JINA_API_TOKEN: z.string().min(1),
-    LANGFUSE_SECRET_KEY: z.string().min(1),
-    LANGFUSE_PUBLIC_KEY: z.string().min(1),
-    LANGFUSE_BASEURL: z.string().url().optional(),
     DRIZZLE_LOGGING: z.string().optional(),
     KV_UPSTASH_KV_REST_API_URL: z.string().url(),
     KV_UPSTASH_KV_REST_API_TOKEN: z.string().min(1),
@@ -71,6 +68,10 @@ export const env = createEnv({
     FIRECRAWL_API_KEY: z.string().min(1),
     PROXY_URL: z.string().url().optional(),
     PROXY_SECRET_KEY: z.string().min(1).optional(),
+    APPLE_APP_ID: z.string().min(1).optional(),
+    APPLE_TEAM_ID: z.string().min(1).optional(),
+    APPLE_PRIVATE_KEY: z.string().min(1).optional(),
+    APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
   },
 
   /**

@@ -75,7 +75,7 @@ export function ReactionsChart({
     },
     negative: {
       label: "Negative",
-      color: "hsl(var(--destructive))",
+      color: "hsl(var(--chart-negative))",
     },
   };
 
@@ -89,8 +89,8 @@ export function ReactionsChart({
       <ChartContainer config={chartConfig} className="h-[300px]">
         <BarChart data={Object.values(chartData)} stackOffset="sign" barGap={16}>
           <XAxis dataKey="label" axisLine={false} tickLine={false} />
-          <YAxis domain={["dataMin", "dataMax"]} axisLine={false} tickLine={false} />
-          <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeWidth={1} />
+          <YAxis width={20} domain={["dataMin", "dataMax"]} axisLine={false} tickLine={false} />
+          <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1} />
           <ChartTooltip
             position={{ y: 0 }}
             content={<ChartTooltipContent valueFormatter={(value) => Math.abs(value).toLocaleString()} />}

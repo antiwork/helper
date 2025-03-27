@@ -90,7 +90,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           id: number;
           name: string;
           slug: string;
-          isStyleLinterEnabled: boolean;
           hasMetadataEndpoint: boolean;
           metadataEndpoint: {
             url: string;
@@ -165,47 +164,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
         output: any;
       }>;
-      styleLinters: {
-        list: import("@trpc/server").TRPCQueryProcedure<{
-          input: {
-            mailboxSlug: string;
-          };
-          output: {
-            id: number;
-            before: string;
-            after: string;
-          }[];
-        }>;
-        upsert: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            linter: {
-              before: string;
-              after: string;
-              id?: number | undefined;
-            };
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        delete: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            id: number;
-          };
-          output: {
-            success: boolean;
-          };
-        }>;
-        setEnabled: import("@trpc/server").TRPCMutationProcedure<{
-          input: {
-            mailboxSlug: string;
-            enabled: boolean;
-          };
-          output: void;
-        }>;
-      };
       conversations: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
@@ -213,6 +171,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             status?: unknown[] | null | undefined;
             sort?: unknown;
             search?: string | null | undefined;
+            isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
@@ -274,6 +233,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             status?: unknown[] | null | undefined;
             sort?: unknown;
             search?: string | null | undefined;
+            isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
             topic?: number[] | undefined;
@@ -353,6 +313,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   cc: string[];
                   bcc: string[];
                   from: string | null;
+                  isMerged: boolean;
                   isPinned: boolean;
                   slackUrl: string | null;
                   draft: {
@@ -503,6 +464,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   cc: string[];
                   bcc: string[];
                   from: string | null;
+                  isMerged: boolean;
                   isPinned: boolean;
                   slackUrl: string | null;
                   draft: {
@@ -657,6 +619,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   status?: unknown[] | null | undefined;
                   sort?: unknown;
                   search?: string | null | undefined;
+                  isPrompt?: boolean | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
                   events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
                   topic?: number[] | undefined;
@@ -689,6 +652,45 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             emailId: number;
           };
           output: void;
+        }>;
+        splitMerged: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            messageId: number;
+          };
+          output: {
+            id: number;
+            slug: string;
+            status: "open" | "closed" | "spam" | null;
+            emailFrom: string | null;
+            subject: string;
+            conversationProvider: "gmail" | "helpscout" | "chat" | null;
+            createdAt: Date;
+            updatedAt: Date;
+            closedAt: Date | null;
+            lastUserEmailCreatedAt: Date | null;
+            assignedToClerkId: string | null;
+            platformCustomer: {
+              isVip: boolean;
+              value: string | null;
+              name: string | null;
+              id: number;
+              createdAt: Date;
+              updatedAt: Date;
+              mailboxId: number;
+              email: string;
+              links: Record<string, string> | null;
+            } | null;
+            summary: string[] | null;
+            source: "email" | "chat" | "chat#prompt";
+            isPrompt: boolean;
+            isVisitor: boolean;
+            embeddingText: string | null;
+            githubIssueNumber: number | null;
+            githubIssueUrl: string | null;
+            githubRepoOwner: string | null;
+            githubRepoName: string | null;
+          };
         }>;
         messages: {
           previousReplies: import("@trpc/server").TRPCQueryProcedure<{
@@ -1309,6 +1311,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
     user: {
       getSignInToken: import("@trpc/server").TRPCQueryProcedure<{
         input: void;
+        output: string;
+      }>;
+      nativeAppleSignIn: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          code: string;
+          firstName: string;
+          lastName: string;
+        };
         output: string;
       }>;
     };

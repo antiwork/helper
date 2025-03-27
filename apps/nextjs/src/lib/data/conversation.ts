@@ -52,6 +52,17 @@ export const createConversation = async (conversation: NewConversation): Promise
   }
 };
 
+// If the conversation is merged into another conversation, update the original conversation instead.
+// This is mainly useful in automated actions, especially when setting the conversation status to "open",
+// since only the original conversation will be shown to staff in the inbox.
+export const updateOriginalConversation: typeof updateConversation = async (id, options, tx = db) => {
+  const conversation = assertDefined(
+    await tx.query.conversations.findFirst({ columns: { mergedIntoId: true }, where: eq(conversations.id, id) }),
+  );
+  if (conversation.mergedIntoId) return updateConversation(conversation.mergedIntoId, options, tx);
+  return updateConversation(id, options, tx);
+};
+
 export const updateConversation = async (
   id: number,
   {
@@ -145,19 +156,6 @@ export const updateConversation = async (
     publishEvents();
   }
   return updatedConversation ?? null;
-};
-
-export const updateConversationStatus = async (conversation: typeof conversations.$inferSelect, status: string) => {
-  const result = await updateConversation(conversation.id, {
-    set: { status: status as (typeof conversations.$inferSelect)["status"] },
-  });
-  if (result && status === "closed") {
-    await inngest.send({
-      name: "conversations/embedding.create",
-      data: { conversationSlug: conversation.slug },
-    });
-  }
-  return result;
 };
 
 export const serializeConversation = (

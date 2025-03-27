@@ -9,7 +9,7 @@ import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } fr
 import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
-import { captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
@@ -23,7 +23,6 @@ export const findSimilarConversations = async (
   limit: number = MAX_SIMILAR_CONVERSATIONS,
   excludeConversationSlug?: string,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
-  onlyWithTopics = false,
 ) => {
   const queryEmbedding = Array.isArray(queryInput)
     ? queryInput
@@ -34,15 +33,9 @@ export const findSimilarConversations = async (
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
   }
-  if (onlyWithTopics) {
-    where = sql`${where} AND EXISTS (
-      SELECT 1 FROM ${conversationsTopics} ct
-      WHERE ct.conversation_id = ${conversations.id}
-    )`;
-  }
 
   const similarConversations = await db.query.conversations.findMany({
-    where,
+    where: and(where, isNull(conversations.mergedIntoId)),
     with: {
       messages: {
         columns: {
@@ -186,10 +179,7 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
     });
     return metadata;
   } catch (error) {
-    if (error instanceof MetadataAPIError) {
-      return null;
-    }
-    captureExceptionAndThrowIfDevelopment(error);
-    throw new Error(`Metadata API request failed: unknown error`);
+    captureExceptionAndLogIfDevelopment(error);
+    return null;
   }
 };

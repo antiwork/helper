@@ -7,7 +7,6 @@ import { conversationFactory } from "@tests/support/factories/conversations";
 import { faqsFactory } from "@tests/support/factories/faqs";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
-import { styleLinterFactory } from "@tests/support/factories/styleLinters";
 import { toolsFactory } from "@tests/support/factories/tools";
 import { userFactory } from "@tests/support/factories/users";
 import { addDays, addHours, subDays, subHours } from "date-fns";
@@ -148,6 +147,15 @@ export const seedDatabase = async () => {
           console.log(`Indexed message ${message.id}`);
         }),
       );
+
+      if (conversation.subject === "Download Issues with Digital Asset Bundle") {
+        await db
+          .update(conversations)
+          .set({
+            mergedIntoId: conversationRecords.find((c) => c.subject === "Download and License Issues")!.id,
+          })
+          .where(eq(conversations.id, conversation.id));
+      }
     }
 
     // Optionally create this file to do any additional seeding, e.g. setting up integrations with local credentials
@@ -209,28 +217,6 @@ const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) =>
 
 const generateSeedsFromFixtures = async (mailboxId: number) => {
   const fixtures = Object.entries(assertDefined(fixtureData[mailboxId]));
-  const topicMap = new Map<typeof topics.$inferSelect, (typeof topics.$inferSelect)[]>();
-  const createTopic = async (name: string, subtopicNames: string[]) => {
-    const topic = await db.insert(topics).values({ name, mailboxId }).returning().then(takeUniqueOrThrow);
-    const subtopics = await Promise.all(
-      subtopicNames.map(async (name) => {
-        const subTopic = await db
-          .insert(topics)
-          .values({ name, parentId: topic.id, mailboxId })
-          .returning()
-          .then(takeUniqueOrThrow);
-        return subTopic;
-      }),
-    );
-    topicMap.set(topic, subtopics);
-  };
-  await Promise.all([
-    createTopic("Account Access", ["Login Issues", "Account Suspension", "Password Reset"]),
-    createTopic("Product Access", ["Download Issues", "Content Availability", "Purchase Recovery"]),
-    createTopic("Billing", ["Refunds", "Payment Issues", "Invoices"]),
-    createTopic("Creator Support", ["Product Questions", "Technical Issues", "Content Guidelines"]),
-    createTopic("Platform Issues", ["Website Problems", "App Issues", "Integration Problems"]),
-  ]);
 
   await Promise.all(
     fixtures
@@ -266,16 +252,6 @@ const generateSeedsFromFixtures = async (mailboxId: number) => {
               : {}),
           });
         }
-
-        const topic = [...topicMap.keys()][fixtureIndex % topicMap.size]!;
-        const subTopic = [...topicMap.get(topic)!][fixtureIndex % topicMap.get(topic)!.length]!;
-        await db.insert(conversationsTopics).values({
-          conversationId: conversation.id,
-          topicId: topic.id,
-          subTopicId: subTopic.id,
-          mailboxId,
-          createdAt: conversation.createdAt,
-        });
       }),
   );
 };
@@ -323,13 +299,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
 
   await faqsFactory.create(mailbox.id, {
     content: "Deleting your account can be done from Settings > Account > Delete Account.",
-  });
-
-  await styleLinterFactory.create(mailbox.clerkOrganizationId, {
-    before:
-      "Hello, Great question! When you unpublish a product on Gumroad, it simply removes the product from the public view and the Gumroad marketplace. However, customers who have already purchased the product will still be able to access their files. They can do this through the download link in their email receipt or from their Gumroad library if they created an account at the time of purchase. So, to answer your question, yes, your customers will still be able to read and open the ebook from their email even if you unpublish it. Let me know if you have any other questions!",
-    after:
-      "Hello, Yes, your customers will still be able to read and open the ebook from their email even if you unpublish it. Let me know if you have any other questions!",
   });
 
   await db

@@ -9,7 +9,6 @@ import { conversationMessages, conversations } from "@/db/schema";
 import { dashboardChannelId } from "@/lib/ably/channels";
 import { publishToAbly } from "@/lib/ably/client";
 import { createReactionEventPayload } from "@/lib/data/dashboardEvent";
-import { langfuse } from "@/lib/langfuse/client";
 
 const MessageReactionSchema = z.discriminatedUnion("type", [
   z.object({
@@ -74,20 +73,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const reaction = reactionResult.data;
 
-  const traceId = message.metadata && "trace_id" in message.metadata ? (message.metadata.trace_id as string) : null;
-  if (traceId) {
-    try {
-      langfuse.score({
-        traceId,
-        name: "user_feedback",
-        value: reaction.type === "thumbs-up" ? 1 : 0,
-        comment: reaction.type === "thumbs-down" ? reaction.feedback || undefined : undefined,
-      });
-    } catch (error) {
-      console.error("Failed to send feedback to Langfuse:", error);
-    }
-  }
-
   if (message.reactionType === "thumbs-down" && reaction.type === "thumbs-down" && message.reactionFeedback == null) {
     await db
       .update(conversationMessages)
@@ -121,7 +106,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     })
     .where(eq(conversationMessages.id, messageId));
   waitUntil(publishEvent(messageId));
-  waitUntil(langfuse.flushAsync());
 
   return Response.json({ reaction });
 }

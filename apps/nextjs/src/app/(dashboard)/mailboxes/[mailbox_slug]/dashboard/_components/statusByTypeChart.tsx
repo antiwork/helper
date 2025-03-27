@@ -13,9 +13,9 @@ import { api } from "@/trpc/react";
 import { type TimeRange } from "./dashboardContent";
 
 const COLORS = {
-  OPEN: "#480F0E",
-  CLOSED_MANUAL: "#FEB81D",
-  CLOSED_AI: "#C2D44B",
+  OPEN: "hsl(var(--chart-open))",
+  CLOSED_MANUAL: "hsl(var(--chart-closed-manual))",
+  CLOSED_AI: "hsl(var(--chart-closed-ai))",
 };
 
 const chartConfig = {
@@ -118,7 +118,7 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
                   }}
                 />
               </Pie>
-              <ChartLegend content={<ChartLegendContent />} verticalAlign="bottom" className="text-sm" />
+              <ChartLegend content={<ChartLegendContent />} verticalAlign="bottom" className="text-xs" />
             </PieChart>
           </ChartContainer>
         </ResponsiveContainer>

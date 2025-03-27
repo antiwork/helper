@@ -7,7 +7,7 @@ import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 const CONCURRENCY_LIMIT = 3;
-const PAGE_LIMIT = 100;
+const PAGE_LIMIT = 150;
 const firecrawl = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY });
 
 export const crawlWebsite = async (websiteId: number, crawlId: number): Promise<void> => {

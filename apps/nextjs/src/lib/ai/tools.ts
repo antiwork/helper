@@ -4,7 +4,7 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { inngest } from "@/inngest/client";
 import { REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
-import { getConversationById, updateConversation } from "@/lib/data/conversation";
+import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
@@ -65,7 +65,7 @@ const requestHumanSupport = async (
     email = newEmail;
   }
 
-  await updateConversation(conversation.id, {
+  await updateOriginalConversation(conversation.id, {
     set: { status: "open" },
     message: reason,
     type: "request_human_support",
