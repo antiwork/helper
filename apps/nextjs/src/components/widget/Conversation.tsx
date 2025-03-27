@@ -98,6 +98,9 @@ export default function Conversation({
       }
       const data = await response.json();
       if (data.messages) {
+        if (data.isEscalated) {
+          setIsEscalated(true);
+        }
         return {
           messages: data.messages.map((message: any) => ({
             id: message.id,
@@ -107,6 +110,7 @@ export default function Conversation({
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
           })) as MessageWithReaction[],
+          isEscalated: data.isEscalated,
         };
       }
       return null;
@@ -127,28 +131,6 @@ export default function Conversation({
       setIsEscalated(false);
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      const hasHumanSupportRequest = messages.some(
-        (msg) => msg.role === "user" && msg.content.toLowerCase().includes("i need to talk to a human"),
-      );
-      if (hasHumanSupportRequest) {
-        setIsEscalated(true);
-      }
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    if (conversation?.messages) {
-      const hasHumanSupportRequest = conversation.messages.some(
-        (msg) => msg.role === "user" && msg.content.toLowerCase().includes("i need to talk to a human"),
-      );
-      if (hasHumanSupportRequest) {
-        setIsEscalated(true);
-      }
-    }
-  }, [conversation]);
 
   const handleSubmit = async (e?: { preventDefault: () => void }) => {
     if (e) {

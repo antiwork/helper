@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
+import { conversationEvents } from "@/db/schema/conversationEvents";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -28,6 +29,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     return Response.json({ error: "Conversation not found" }, { status: 404 });
   }
 
+  const requestHumanSupportEvent = await db.query.conversationEvents.findFirst({
+    where: and(
+      eq(conversationEvents.conversationId, conversation.id),
+      eq(conversationEvents.type, "request_human_support"),
+    ),
+  });
+
+  const isEscalated = !!requestHumanSupportEvent;
+
   const formattedMessages = conversation.messages.map((message) => ({
     id: message.id.toString(),
     role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
@@ -37,5 +47,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     reactionFeedback: message.reactionFeedback,
   }));
 
-  return Response.json({ messages: formattedMessages });
+  return Response.json({ messages: formattedMessages, isEscalated });
 }
