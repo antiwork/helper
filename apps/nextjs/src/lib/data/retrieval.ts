@@ -183,6 +183,6 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
       return null;
     }
     captureExceptionAndLogIfDevelopment(error);
-    return null; // Return null for all errors instead of throwing
+    throw new Error(`Metadata API request failed: unknown error`); // Maintain backward compatibility with tests
   }
 };
