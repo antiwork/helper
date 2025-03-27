@@ -1,6 +1,6 @@
 import { and, cosineDistance, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { faqs } from "@/db/schema";
+import { conversationMessages, faqs } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
 import { conversationsTopics } from "@/db/schema/conversationsTopics";
 import { websitePages, websites } from "@/db/schema/websites";
@@ -36,18 +36,6 @@ export const findSimilarConversations = async (
 
   const similarConversations = await db.query.conversations.findMany({
     where,
-    with: {
-      messages: {
-        columns: {
-          id: true,
-          body: true,
-          cleanedUpText: true,
-          role: true,
-          createdAt: true,
-        },
-        orderBy: (messages, { asc }) => [asc(messages.id)],
-      },
-    },
     extras: {
       similarity: similarity.as("similarity"),
     },
@@ -65,8 +53,13 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   if (!similarConversations) return null;
 
   const pastConversations = similarConversations
-    .map((conversation) => {
-      return `--- Conversation Start ---\nDate: ${conversation.createdAt.toLocaleDateString()}\n${conversation.messages
+    .map(async (conversation) => {
+      const messages = await db.query.conversationMessages.findMany({
+        where: eq(conversationMessages.conversationId, conversation.id),
+        orderBy: (messages, { asc }) => [asc(messages.id)],
+      });
+
+      return `--- Conversation Start ---\nDate: ${conversation.createdAt.toLocaleDateString()}\n${messages
         .map((message) => {
           const role = message.role === "user" ? "Customer" : "Agent";
           return `${role}:\n${cleanUpTextForAI(message.cleanedUpText || message.body)}`;
