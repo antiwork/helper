@@ -58,7 +58,7 @@ export const truncateDb = async () => {
   }
 
   const tablenames = await db.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname='public'`);
-  const tables = tablenames
+  const tables = tablenames.rows
     .map(({ tablename }) => tablename)
     .filter((name) => name !== "__drizzle_migrations")
     .map((name) => `"public"."${name}"`)
