@@ -2,6 +2,7 @@ import { and, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationEvents, conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 type AutoCloseReport = {
   totalProcessed: number;
@@ -54,24 +55,16 @@ async function closeInactiveConversations(): Promise<AutoCloseReport> {
 }
 
 async function closeInactiveConversationsForMailbox(mailboxId: number): Promise<MailboxAutoCloseReport> {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true)),
-    columns: {
-      id: true,
-      name: true,
-      autoCloseDaysOfInactivity: true,
-    },
-  });
-
-  if (!mailbox) {
-    return {
-      mailboxId,
-      mailboxName: "Unknown",
-      inactiveConversations: [],
-      conversationsClosed: 0,
-      status: "Mailbox not found or auto-close not enabled",
-    };
-  }
+  const mailbox = assertDefinedOrRaiseNonRetriableError(
+    await db.query.mailboxes.findFirst({
+      where: and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true)),
+      columns: {
+        id: true,
+        name: true,
+        autoCloseDaysOfInactivity: true,
+      },
+    }),
+  );
 
   const mailboxReport: MailboxAutoCloseReport = {
     mailboxId: mailbox.id,
