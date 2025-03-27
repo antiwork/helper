@@ -10,7 +10,6 @@ import {
   conversationsTopics,
   mailboxes,
   platformCustomers,
-  topics,
 } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
@@ -28,7 +27,6 @@ export const searchSchema = z.object({
   createdBefore: z.string().datetime().optional(),
   repliedBy: z.array(z.string()).optional(),
   customer: z.array(z.string()).optional(),
-  topic: z.array(z.number()).optional(),
   isVip: z.boolean().optional(),
   isPrompt: z.boolean().optional(),
   reactionType: z.enum(["thumbs-up", "thumbs-down"]).optional(),
@@ -81,17 +79,6 @@ export const searchConversations = async (
         }
       : {}),
     ...(filters.customer?.length ? { customer: inArray(conversations.emailFrom, filters.customer) } : {}),
-    ...(filters.topic?.length
-      ? {
-          topic: exists(
-            db
-              .select()
-              .from(conversationsTopics)
-              .leftJoin(topics, eq(conversationsTopics.subTopicId, topics.id))
-              .where(and(eq(conversationsTopics.conversationId, conversations.id), inArray(topics.id, filters.topic))),
-          ),
-        }
-      : {}),
     ...(filters.reactionType
       ? {
           reaction: exists(
