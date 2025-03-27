@@ -70,11 +70,11 @@ export default function SupportButtons({
     setTimeout(() => setIsTalkToTeamAnimating(false), 1000);
   };
 
-  const shouldHideHumanSupportButton = isEscalated || hasClickedTalkToHuman;
+  const shouldHideButtons = isEscalated || hasClickedTalkToHuman;
 
   return (
     <AnimatePresence>
-      {isVisible && messageStatus === "ready" && lastMessage && (
+      {isVisible && messageStatus === "ready" && lastMessage && !shouldHideButtons && (
         <motion.div
           className="flex justify-center gap-4 py-3"
           initial={{ opacity: 0, y: 20 }}
@@ -110,34 +110,32 @@ export default function SupportButtons({
             </motion.div>
             That solved
           </button>
-          {!shouldHideHumanSupportButton && (
-            <button
-              onClick={handleTalkToTeamClick}
-              className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
+          <button
+            onClick={handleTalkToTeamClick}
+            className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
+          >
+            <motion.div
+              className="w-4 h-4 origin-center"
+              animate={
+                isTalkToTeamAnimating
+                  ? {
+                      scale: [1, 1.2, 0.9, 1],
+                      transition: {
+                        duration: 0.8,
+                        ease: "easeInOut",
+                        repeatType: "reverse",
+                        repeat: 0,
+                      },
+                    }
+                  : {
+                      scale: 1,
+                    }
+              }
             >
-              <motion.div
-                className="w-4 h-4 origin-center"
-                animate={
-                  isTalkToTeamAnimating
-                    ? {
-                        scale: [1, 1.2, 0.9, 1],
-                        transition: {
-                          duration: 0.8,
-                          ease: "easeInOut",
-                          repeatType: "reverse",
-                          repeat: 0,
-                        },
-                      }
-                    : {
-                        scale: 1,
-                      }
-                }
-              >
-                <ChatBubbleLeftRightIcon className="h-4 w-4" />
-              </motion.div>
-              Talk to a human
-            </button>
-          )}
+              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+            </motion.div>
+            Talk to a human
+          </button>
         </motion.div>
       )}
     </AnimatePresence>
