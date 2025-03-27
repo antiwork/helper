@@ -200,7 +200,7 @@ const generateReasoning = async ({
     dataStream?.writeData({
       event: "reasoningStarted",
       data: {
-        id: randomUUID(),
+        id: traceId || randomUUID(),
       },
     });
 
@@ -213,7 +213,7 @@ const generateReasoning = async ({
         dataStream?.writeData({
           event: "reasoningFinished",
           data: {
-            id: randomUUID(),
+            id: traceId || randomUUID(),
           },
         });
       } else if (!textPart.includes("<think>") && !finished) {
