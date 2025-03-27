@@ -86,43 +86,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         input: {
           mailboxSlug: string;
         };
-        output: {
-          id: number;
-          name: string;
-          slug: string;
-          hasMetadataEndpoint: boolean;
-          metadataEndpoint: {
-            url: string;
-            hmacSecret: string;
-            isEnabled: boolean;
-            deletedAt: Date | null;
-          } | null;
-          slackConnected: boolean;
-          slackConnectUrl: string;
-          slackAlertChannel: string | null;
-          githubConnected: boolean;
-          githubConnectUrl: string;
-          githubRepoOwner: string | null;
-          githubRepoName: string | null;
-          responseGeneratorPrompt: string[];
-          clerkOrganizationId: string;
-          subscription: {
-            status: string | null;
-            stripeSubscriptionId: string | null;
-            canceledAt: Date | null;
-          } | null;
-          widgetHMACSecret: string;
-          widgetDisplayMode: "always" | "revenue_based" | "off";
-          widgetDisplayMinValue: number | null;
-          widgetHost: string | null;
-          autoRespondEmailToChat: boolean;
-          vipThreshold: number | null;
-          vipChannelId: string | null;
-          vipExpectedResponseHours: number | null;
-          disableAutoResponseForVips: boolean;
-          autoCloseEnabled: boolean;
-          autoCloseDaysOfInactivity: number;
-        };
+        output: any;
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
         input: {
@@ -174,7 +138,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
-            topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
             category?: unknown;
@@ -236,7 +199,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
-            topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
             category?: unknown;
@@ -391,7 +353,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
-                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
+                  eventType:
+                    | "update"
+                    | "request_human_support"
+                    | "reasoning_toggled"
+                    | "resolved_by_ai"
+                    | "auto_closed_due_to_inactivity";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -542,7 +509,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
-                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
+                  eventType:
+                    | "update"
+                    | "request_human_support"
+                    | "reasoning_toggled"
+                    | "resolved_by_ai"
+                    | "auto_closed_due_to_inactivity";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -622,7 +594,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   isPrompt?: boolean | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
                   events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
-                  topic?: number[] | undefined;
                   limit?: number | undefined;
                   cursor?: string | null | undefined;
                   category?: unknown;
@@ -1274,7 +1245,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       autoClose: import("@trpc/server").TRPCMutationProcedure<{
         input: {
           mailboxSlug: string;
-          mailboxId?: number | undefined;
+          mailboxId: number;
         };
         output: {
           success: boolean;
