@@ -27,7 +27,7 @@ const getRelationsReferencingConversationRecords = () => {
   return relationsReferencingConversationRecords;
 };
 
-const EXPECTED_RELATION_COUNT = 10;
+const EXPECTED_RELATION_COUNT = 12;
 export const hardDeleteRecordsForNonPayingOrgs = async () => {
   // When this assert fails, please manually consider whether
   // this code needs to be updated. For example, if a new table is
