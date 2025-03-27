@@ -86,7 +86,7 @@ async function closeInactiveConversationsForMailbox(mailboxId: number): Promise<
     where: and(
       eq(conversations.mailboxId, mailbox.id),
       eq(conversations.status, "open"),
-      lt(conversations.updatedAt, cutoffDate),
+      lt(conversations.lastUserEmailCreatedAt, cutoffDate),
     ),
     columns: {
       id: true,
@@ -101,23 +101,13 @@ async function closeInactiveConversationsForMailbox(mailboxId: number): Promise<
     return mailboxReport;
   }
 
-  await db
-    .update(conversations)
-    .set({
-      status: "closed",
-      closedAt: now,
-      updatedAt: now,
-    })
-    .where(
-      and(
-        eq(conversations.mailboxId, mailbox.id),
-        eq(conversations.status, "open"),
-        lt(conversations.updatedAt, cutoffDate),
-      ),
-    );
-
   for (const conversation of conversationsToClose) {
     await updateConversation(conversation.id, {
+      set: {
+        status: "closed",
+        closedAt: now,
+        updatedAt: now,
+      },
       type: "auto_closed_due_to_inactivity",
       message: "Auto-closed due to inactivity",
     });
