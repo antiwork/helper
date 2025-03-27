@@ -318,6 +318,7 @@ export const generateAIResponse = async ({
       email,
       conversationId,
       mailboxSlug: mailbox.slug,
+      traceId,
       evaluation,
       dataStream,
     });
