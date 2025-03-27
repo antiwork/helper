@@ -1,4 +1,4 @@
-import { and, eq, exists, isNull, not } from "drizzle-orm";
+import { and, eq, inArray, isNull, not } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
@@ -9,17 +9,15 @@ import { getMailboxById } from "@/lib/data/mailbox";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 export default inngest.createFunction(
-  {
-    id: "detect-similar-conversations",
-    debounce: { key: "event.data.messageId", period: "1m", timeout: "5m" },
-  },
+  { id: "merge-similar-conversations" },
   { event: "conversations/message.created" },
   async ({ event }) => {
     const { messageId } = event.data;
 
     const conversation = assertDefinedOrRaiseNonRetriableError(
       await db.query.conversations.findFirst({
-        where: exists(
+        where: inArray(
+          conversations.id,
           db
             .select({ id: conversationMessages.conversationId })
             .from(conversationMessages)
@@ -38,7 +36,6 @@ export default inngest.createFunction(
     );
 
     if (!conversation.emailFrom) return { message: "Skipped: no email from" };
-    if (!conversation.embedding) return { message: "Skipped: no embedding text" };
     if (conversation.mergedIntoId) return { message: "Skipped: conversation is already merged" };
 
     const userMessageCount = conversation.messages.filter((m) => m.role === "user").length;
