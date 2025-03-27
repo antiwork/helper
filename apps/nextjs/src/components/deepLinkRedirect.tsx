@@ -20,21 +20,24 @@ export function DeepLinkRedirect() {
           iframe.style.display = "none";
           document.body.appendChild(iframe);
 
-          const timeoutId = setTimeout(() => {
-            resolve(false);
-            document.body.removeChild(iframe);
-          }, 1000);
-
-          window.addEventListener(
-            "blur",
-            () => {
-              // The window being blurred just after opening the deep link indicates the app was opened
-              clearTimeout(timeoutId);
-              resolve(true);
+          const handleBlur = () => {
+            // The window being blurred just after opening the deep link indicates the app was opened
+            clearTimeout(timeoutId);
+            resolve(true);
+            if (iframe.parentNode === document.body) {
               document.body.removeChild(iframe);
-            },
-            { once: true },
-          );
+            }
+          };
+
+          window.addEventListener("blur", handleBlur, { once: true });
+
+          const timeoutId = setTimeout(() => {
+            window.removeEventListener("blur", handleBlur);
+            resolve(false);
+            if (iframe.parentNode === document.body) {
+              document.body.removeChild(iframe);
+            }
+          }, 1000);
 
           iframe.src = deepLink;
         });
