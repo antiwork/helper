@@ -2,6 +2,7 @@ import { and, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationEvents, conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { updateConversation } from "@/lib/data/conversation";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 type AutoCloseReport = {
@@ -116,15 +117,9 @@ async function closeInactiveConversationsForMailbox(mailboxId: number): Promise<
     );
 
   for (const conversation of conversationsToClose) {
-    await db.insert(conversationEvents).values({
-      conversationId: conversation.id,
-      type: "update",
-      changes: {
-        status: "closed",
-      },
-      reason: "auto_closed_due_to_inactivity",
-      createdAt: now,
-      updatedAt: now,
+    await updateConversation(conversation.id, {
+      type: "auto_closed_due_to_inactivity",
+      message: "Auto-closed due to inactivity",
     });
   }
 
