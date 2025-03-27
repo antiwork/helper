@@ -222,6 +222,24 @@ export const conversationsRouter = {
       ]);
     });
   }),
+  splitMerged: mailboxProcedure.input(z.object({ messageId: z.number() })).mutation(async ({ ctx, input }) => {
+    const message = await db.query.conversationMessages.findFirst({
+      where: and(eq(conversationMessages.id, input.messageId)),
+      with: {
+        conversation: true,
+      },
+    });
+    if (!message || message.conversation.mailboxId !== ctx.mailbox.id || !message.conversation.mergedIntoId) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
+    }
+    const conversation = await db
+      .update(conversations)
+      .set({ mergedIntoId: null, status: "open" })
+      .where(eq(conversations.id, message.conversation.id))
+      .returning()
+      .then(takeUniqueOrThrow);
+    return serializeConversation(ctx.mailbox, conversation, null);
+  }),
   messages: messagesRouter,
   files: filesRouter,
   tools: toolsRouter,

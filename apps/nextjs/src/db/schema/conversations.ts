@@ -34,6 +34,7 @@ export const conversations = pgTable(
     githubRepoName: text(),
     isPrompt: boolean().notNull().default(false),
     isVisitor: boolean().notNull().default(false),
+    mergedIntoId: bigint({ mode: "number" }),
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }
@@ -82,4 +83,11 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platformCustomers.email],
   }),
   events: many(conversationEvents),
+  mergedInto: one(conversations, {
+    fields: [conversations.mergedIntoId],
+    references: [conversations.id],
+  }),
+  mergedConversations: many(conversations, {
+    relationName: "mergedConversations",
+  }),
 }));

@@ -35,7 +35,7 @@ export const findSimilarConversations = async (
   }
 
   const similarConversations = await db.query.conversations.findMany({
-    where,
+    where: and(where, isNull(conversations.mergedIntoId)),
     with: {
       messages: {
         columns: {
