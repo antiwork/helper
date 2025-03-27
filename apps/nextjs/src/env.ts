@@ -61,9 +61,6 @@ export const env = createEnv({
       .regex(/^org_\w+(?:,org_\w+)*$/)
       .optional(),
     JINA_API_TOKEN: z.string().min(1),
-    LANGFUSE_SECRET_KEY: z.string().min(1),
-    LANGFUSE_PUBLIC_KEY: z.string().min(1),
-    LANGFUSE_BASEURL: z.string().url().optional(),
     DRIZZLE_LOGGING: z.string().optional(),
     KV_UPSTASH_KV_REST_API_URL: z.string().url(),
     KV_UPSTASH_KV_REST_API_TOKEN: z.string().min(1),

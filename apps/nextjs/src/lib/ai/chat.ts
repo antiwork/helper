@@ -190,7 +190,6 @@ const generateReasoning = async ({
         functionId: "reasoning",
         metadata: {
           sessionId: conversationId,
-          langfuseTraceId: traceId ?? randomUUID(),
           userId: email ?? "anonymous",
           email: email ?? "anonymous",
           mailboxSlug,
@@ -201,7 +200,7 @@ const generateReasoning = async ({
     dataStream?.writeData({
       event: "reasoningStarted",
       data: {
-        id: traceId,
+        id: traceId || randomUUID(),
       },
     });
 
@@ -214,7 +213,7 @@ const generateReasoning = async ({
         dataStream?.writeData({
           event: "reasoningFinished",
           data: {
-            id: traceId,
+            id: traceId || randomUUID(),
           },
         });
       } else if (!textPart.includes("<think>") && !finished) {
@@ -371,7 +370,6 @@ export const generateAIResponse = async ({
       functionId: "chat-completion",
       metadata: {
         sessionId: conversationId,
-        langfuseTraceId: traceId,
         userId: email ?? "anonymous",
         email: email ?? "anonymous",
         mailboxSlug: mailbox.slug,
