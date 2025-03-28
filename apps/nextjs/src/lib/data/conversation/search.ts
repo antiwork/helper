@@ -143,27 +143,16 @@ export const searchConversations = async (
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
-    .leftJoin(
-      conversationMessages,
-      and(
-        eq(conversations.id, conversationMessages.conversationId),
-        inArray(
-          conversationMessages.id,
-          matches.map((m) => m.id),
-        ),
-      ),
-    )
     .where(and(...Object.values(where)))
     .orderBy(...orderBy)
     .limit(filters.limit + 1) // Get one extra to determine if there's a next page
     .offset(filters.cursor ? parseInt(filters.cursor) : 0)
     .then((results) => ({
-      results: results
-        .slice(0, filters.limit)
-        .map(({ conversations_conversation, mailboxes_platformcustomer, messages }) => ({
-          ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-          matchedMessageText: messages?.cleanedUpText ?? null,
-        })),
+      results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
+        ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+        matchedMessageText:
+          matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+      })),
       nextCursor: results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
     }));
 
