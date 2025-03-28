@@ -1,6 +1,4 @@
-import assignConversationTopic from "./assignConversationTopic";
 import autoCloseInactiveConversationsFunctions from "./autoCloseInactiveConversations";
-import bulkAssignMissingTopics from "./bulkAssignMissingTopics";
 import bulkEmbeddingClosedConversations from "./bulkEmbeddingClosedConversations";
 import bulkUpdateConversations from "./bulkUpdateConversations";
 import checkAssignedTicketResponseTimes from "./checkAssignedTicketResponseTimes";

@@ -28,7 +28,6 @@ import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { SidebarInfo } from "../../_components/getSidebarInfo";
 import AutoCloseSetting, { AutoCloseUpdates } from "./autoCloseSetting";
-import WorkflowsSetting, { type Workflow } from "./automaticWorkflowsSetting";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
 import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
