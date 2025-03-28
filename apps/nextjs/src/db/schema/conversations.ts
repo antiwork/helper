@@ -68,6 +68,11 @@ export const conversations = pgTable(
         table.embedding.asc().nullsLast().op("vector_cosine_ops"),
       ),
       slugUnique: unique("conversations_conversation_slug_key").on(table.slug),
+      mailboxAssignedToStatusIdIdx: index("conversations_mailbox_assigned_to_status_id_idx").on(
+        table.mailboxId,
+        table.status,
+        table.assignedToId,
+      ),
     };
   },
 );
