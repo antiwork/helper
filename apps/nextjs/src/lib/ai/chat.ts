@@ -26,7 +26,12 @@ import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { Conversation, getConversationById, updateOriginalConversation } from "@/lib/data/conversation";
-import { createConversationMessage, disableAIResponse, getMessages } from "@/lib/data/conversationMessage";
+import {
+  createConversationMessage,
+  disableAIResponse,
+  getMessages,
+  getMessagesOnly,
+} from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
@@ -72,17 +77,10 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
 };
 
 export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
-  const conversation = assertDefined(await getConversationById(conversationId));
-  const mailbox = assertDefined(
-    await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, conversation.mailboxId),
-    }),
-  );
-
-  const conversationMessages = await getMessages(conversationId, mailbox);
+  const conversationMessages = await getMessagesOnly(conversationId);
 
   return conversationMessages
-    .filter((message) => message.type === "message" && message.body && message.id !== latestMessageId)
+    .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
       const messageRecord = message as any; // Type assertion to handle union type
       return {

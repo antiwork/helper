@@ -49,6 +49,18 @@ export const bodyWithSignature = (body?: string | null, user?: User) => {
   return body ?? "";
 };
 
+export const getMessagesOnly = async (conversationId: number) => {
+  const messages = await db.query.conversationMessages.findMany({
+    where: and(
+      isNull(conversationMessages.deletedAt),
+      eq(conversationMessages.conversationId, conversationId),
+      or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
+    ),
+  });
+
+  return messages;
+};
+
 export const getMessages = async (conversationId: number, mailbox: typeof mailboxes.$inferSelect) => {
   const findMessages = (where: SQL) =>
     db.query.conversationMessages.findMany({
