@@ -47,7 +47,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       list: import("@trpc/server").TRPCQueryProcedure<{
         input: void;
         output: {
-          openTicketCount: number;
           name: string;
           id: number;
           slug: string;
