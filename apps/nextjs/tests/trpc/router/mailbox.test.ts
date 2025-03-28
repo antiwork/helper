@@ -30,13 +30,7 @@ describe("mailboxRouter", () => {
       const { user, organization, mailbox } = await userFactory.createRootUser();
       vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
-      await conversationFactory.create(mailbox.id, { status: "open" });
-      await conversationFactory.create(mailbox.id, { status: "open" });
-
       const { mailbox: mailbox2 } = await mailboxFactory.create(organization.id);
-      await conversationFactory.create(mailbox2.id, { status: "open" });
-      await conversationFactory.create(mailbox2.id, { status: "closed" });
-
       const { organization: otherOrg } = await userFactory.createRootUser();
       await mailboxFactory.create(otherOrg.id);
 
@@ -50,13 +44,11 @@ describe("mailboxRouter", () => {
           id: mailbox.id,
           name: mailbox.name,
           slug: mailbox.slug,
-          openTicketCount: 2,
         },
         {
           id: mailbox2.id,
           name: mailbox2.name,
           slug: mailbox2.slug,
-          openTicketCount: 1,
         },
       ]);
     });

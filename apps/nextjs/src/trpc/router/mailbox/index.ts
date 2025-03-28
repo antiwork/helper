@@ -44,28 +44,7 @@ export const mailboxRouter = {
       );
       allMailboxes.push(mailbox);
     }
-
-    const openTicketCountByMailbox = await db
-      .select({
-        mailboxId: conversations.mailboxId,
-        count: count(conversations.id),
-      })
-      .from(conversations)
-      .where(
-        and(
-          eq(conversations.status, "open"),
-          inArray(
-            conversations.mailboxId,
-            allMailboxes.map(({ id }) => id),
-          ),
-        ),
-      )
-      .groupBy(conversations.mailboxId);
-
-    return allMailboxes.map((mailbox) => ({
-      ...mailbox,
-      openTicketCount: openTicketCountByMailbox.find(({ mailboxId }) => mailboxId === mailbox.id)?.count ?? 0,
-    }));
+    return allMailboxes;
   }),
   countByStatus: mailboxProcedure.query(async ({ ctx }) => {
     const countByStatus = async (where?: SQL) => {
