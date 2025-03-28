@@ -28,7 +28,7 @@ export const findSimilarConversations = async (
     : await generateEmbedding(queryInput, "query-find-past-conversations");
   const similarity = sql<number>`1 - (${cosineDistance(conversations.embedding, queryEmbedding)})`;
 
-  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id}`;
+  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id} AND ${eq(conversations.isPrompt, false)}`;
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
   }
