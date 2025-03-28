@@ -1,3 +1,4 @@
+import autoCloseInactiveConversationsFunctions from "./autoCloseInactiveConversations";
 import bulkEmbeddingClosedConversations from "./bulkEmbeddingClosedConversations";
 import bulkUpdateConversations from "./bulkUpdateConversations";
 import checkAssignedTicketResponseTimes from "./checkAssignedTicketResponseTimes";
@@ -61,5 +62,6 @@ export default [
   checkAssignedTicketResponseTimes,
   suggestKnowledgeBankChanges,
   checkConversationResolution,
+  ...autoCloseInactiveConversationsFunctions,
   updateSuggestedActions,
 ];

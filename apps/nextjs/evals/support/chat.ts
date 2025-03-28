@@ -126,6 +126,8 @@ export const parseMessagesWithMocks = (input: string) => {
     githubRepoName: null,
     unused_escalationEmailBody: null,
     unused_escalationExpectedResolutionHours: null,
+    autoCloseEnabled: false,
+    autoCloseDaysOfInactivity: 14,
     onboardingMetadata: {
       completed: true,
     },

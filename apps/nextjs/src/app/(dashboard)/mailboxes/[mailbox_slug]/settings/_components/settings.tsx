@@ -27,6 +27,7 @@ import { getTauriPlatform } from "@/components/useNativePlatform";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { SidebarInfo } from "../../_components/getSidebarInfo";
+import AutoCloseSetting, { AutoCloseUpdates } from "./autoCloseSetting";
 import ChatWidgetSetting from "./chatWidgetSetting";
 import ConnectSupportEmail from "./connectSupportEmail";
 import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
@@ -50,6 +51,7 @@ export type PendingUpdates = {
     widgetHost?: string;
   };
   customer?: CustomerUpdates;
+  autoClose?: AutoCloseUpdates;
 };
 
 type SettingsProps = {
@@ -94,7 +96,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
     Boolean(pendingUpdates.slack) ||
     Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
-    Boolean(pendingUpdates.customer);
+    Boolean(pendingUpdates.customer) ||
+    Boolean(pendingUpdates.autoClose);
 
   const handleSignOut = async () => {
     try {
@@ -176,12 +179,22 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
           <MetadataEndpointSetting metadataEndpoint={mailbox.metadataEndpoint} />
           <SlackSetting
             mailbox={mailbox}
-            onChange={(slackChanges) =>
-              setPendingUpdates({
-                ...pendingUpdates,
-                slack: { ...pendingUpdates.slack, ...slackChanges },
-              })
-            }
+            onChange={(slackUpdates) => {
+              setPendingUpdates((prev) => ({
+                ...prev,
+                slack: slackUpdates,
+              }));
+            }}
+          />
+          <AutoCloseSetting
+            mailbox={mailbox}
+            onChange={(autoCloseUpdates) => {
+              setPendingUpdates((prev) => ({
+                ...prev,
+                autoClose: autoCloseUpdates,
+              }));
+            }}
+            onSave={handleUpdateSettings}
           />
           <GitHubSetting
             mailbox={mailbox}

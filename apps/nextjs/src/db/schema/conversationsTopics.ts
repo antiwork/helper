@@ -31,10 +31,12 @@ export const conversationsTopicsRelations = relations(conversationsTopics, ({ on
   topic: one(topics, {
     fields: [conversationsTopics.topicId],
     references: [topics.id],
+    relationName: "conversation_main_topic_relation",
   }),
   subTopic: one(topics, {
     fields: [conversationsTopics.subTopicId],
     references: [topics.id],
+    relationName: "conversation_sub_topic_relation",
   }),
   mailbox: one(mailboxes, {
     fields: [conversationsTopics.mailboxId],

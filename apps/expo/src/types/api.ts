@@ -51,6 +51,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           name: string;
           id: number;
           slug: string;
+          autoCloseEnabled: boolean;
+          autoCloseDaysOfInactivity: number;
         }[];
       }>;
       countByStatus: import("@trpc/server").TRPCQueryProcedure<{
@@ -118,6 +120,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipChannelId: string | null;
           vipExpectedResponseHours: number | null;
           disableAutoResponseForVips: boolean;
+          autoCloseEnabled: boolean;
+          autoCloseDaysOfInactivity: number;
         };
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
@@ -135,6 +139,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipChannelId?: string | undefined;
           vipExpectedResponseHours?: number | undefined;
           disableAutoResponseForVips?: boolean | undefined;
+          autoCloseEnabled?: boolean | undefined;
+          autoCloseDaysOfInactivity?: number | undefined;
         };
         output: void;
       }>;
@@ -168,7 +174,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
-            topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
             category?: unknown;
@@ -230,7 +235,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
             events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
-            topic?: number[] | undefined;
             limit?: number | undefined;
             cursor?: string | null | undefined;
             category?: unknown;
@@ -385,7 +389,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
-                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
+                  eventType:
+                    | "update"
+                    | "request_human_support"
+                    | "reasoning_toggled"
+                    | "resolved_by_ai"
+                    | "auto_closed_due_to_inactivity";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -536,7 +545,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isVisible?: boolean | undefined;
                   };
                   byUser: string | null;
-                  eventType: "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai";
+                  eventType:
+                    | "update"
+                    | "request_human_support"
+                    | "reasoning_toggled"
+                    | "resolved_by_ai"
+                    | "auto_closed_due_to_inactivity";
                   type: "event";
                   id: number;
                   createdAt: Date;
@@ -616,7 +630,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   isPrompt?: boolean | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
                   events?: ("request_human_support" | "resolved_by_ai")[] | undefined;
-                  topic?: number[] | undefined;
                   limit?: number | undefined;
                   cursor?: string | null | undefined;
                   category?: unknown;
@@ -1265,6 +1278,16 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               };
         }>;
       };
+      autoClose: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          mailboxSlug: string;
+          mailboxId: number;
+        };
+        output: {
+          success: boolean;
+          message: string;
+        };
+      }>;
     };
     organization: {
       createDefaultOrganization: import("@trpc/server").TRPCMutationProcedure<{

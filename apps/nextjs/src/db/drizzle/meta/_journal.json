@@ -484,6 +484,13 @@
       "when": 1743072589199,
       "tag": "0068_closed_unus",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1743112093349,
+      "tag": "0069_open_patriot",
+      "breakpoints": true
     }
   ]
 }
