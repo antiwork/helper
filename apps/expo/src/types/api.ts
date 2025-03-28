@@ -51,8 +51,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           name: string;
           id: number;
           slug: string;
-          autoCloseEnabled: boolean;
-          autoCloseDaysOfInactivity: number;
         }[];
       }>;
       countByStatus: import("@trpc/server").TRPCQueryProcedure<{

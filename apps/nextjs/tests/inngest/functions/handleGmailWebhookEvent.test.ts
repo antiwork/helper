@@ -19,7 +19,6 @@ import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
 import { handleGmailWebhookEvent } from "@/inngest/functions/handleGmailWebhookEvent";
 import { findUserByEmail } from "@/lib/data/user";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
-import { respondToEmail } from "@/lib/respondToEmail";
 import { s3UrlToS3Key, uploadFile } from "@/s3/utils";
 
 vi.mock("@/lib/gmail/client");
@@ -33,7 +32,6 @@ vi.mock("@/s3/utils", async (importOriginal) => {
     uploadFile: vi.fn(),
   };
 });
-vi.mock("@/lib/respondToEmail");
 vi.mock("@/lib/data/user");
 
 mockInngest();
@@ -102,7 +100,6 @@ describe("handleGmailWebhookEvent", () => {
     vi.mocked(getGmailService).mockReturnValue({} as any);
     vi.mocked(generateFilePreview);
     vi.mocked(uploadFile).mockResolvedValue("mocked-s3-url");
-    vi.mocked(respondToEmail);
     vi.mocked(findUserByEmail).mockResolvedValue(null);
   });
 
@@ -187,7 +184,6 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
 
       expect(getMessageById).not.toHaveBeenCalled();
-      expect(respondToEmail).not.toHaveBeenCalled();
     });
 
     it("does not process emails sent from the mailbox", async () => {
@@ -239,7 +235,6 @@ describe("handleGmailWebhookEvent", () => {
       expect(conversation).toMatchObject({
         status: "closed",
       });
-      expect(respondToEmail).not.toHaveBeenCalled();
     });
 
     it("does not generate a response for transactional emails", async () => {
@@ -268,7 +263,6 @@ describe("handleGmailWebhookEvent", () => {
       expect(conversation).toMatchObject({
         status: "closed",
       });
-      expect(respondToEmail).not.toHaveBeenCalled();
     });
 
     it("short-circuits if the Gmail support email record is not found", async () => {
@@ -279,7 +273,6 @@ describe("handleGmailWebhookEvent", () => {
       expect(getMessageById).not.toHaveBeenCalled();
       expect(generateFilePreview).not.toHaveBeenCalled();
       expect(uploadFile).not.toHaveBeenCalled();
-      expect(respondToEmail).not.toHaveBeenCalled();
     });
   });
 
@@ -336,7 +329,6 @@ describe("handleGmailWebhookEvent", () => {
         where: (g, { eq }) => eq(g.id, gmailSupportEmail.id),
       });
       expect(updatedGmailSupportEmail?.historyId).toBe(DATA_HISTORY_ID);
-      expect(respondToEmail).toHaveBeenCalled();
     });
 
     it("creates a conversation and email record even if the email is not the first in the Gmail thread", async () => {
@@ -391,7 +383,6 @@ describe("handleGmailWebhookEvent", () => {
         where: (g, { eq }) => eq(g.id, gmailSupportEmail.id),
       });
       expect(updatedGmailSupportEmail?.historyId).toBe(DATA_HISTORY_ID);
-      expect(respondToEmail).toHaveBeenCalled();
     });
 
     it("creates an email record and re-opens the conversation for a new email on an existing Gmail thread", async () => {
@@ -458,7 +449,6 @@ describe("handleGmailWebhookEvent", () => {
         isPinned: false,
         isFlaggedAsBad: false,
       });
-      expect(respondToEmail).toHaveBeenCalled();
     });
 
     it("keeps conversation open when email is from a staff user (first message)", async () => {
@@ -491,7 +481,6 @@ describe("handleGmailWebhookEvent", () => {
       expect(conversation).toMatchObject({
         status: "open",
       });
-      expect(respondToEmail).toHaveBeenCalled();
     });
   });
 

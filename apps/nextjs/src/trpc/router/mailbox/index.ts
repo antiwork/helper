@@ -34,8 +34,6 @@ export const mailboxRouter = {
         id: true,
         name: true,
         slug: true,
-        autoCloseEnabled: true,
-        autoCloseDaysOfInactivity: true,
       },
     });
 
