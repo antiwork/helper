@@ -51,16 +51,12 @@ describe("mailboxRouter", () => {
           name: mailbox.name,
           slug: mailbox.slug,
           openTicketCount: 2,
-          autoCloseEnabled: false,
-          autoCloseDaysOfInactivity: 14,
         },
         {
           id: mailbox2.id,
           name: mailbox2.name,
           slug: mailbox2.slug,
           openTicketCount: 1,
-          autoCloseEnabled: false,
-          autoCloseDaysOfInactivity: 14,
         },
       ]);
     });
