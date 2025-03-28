@@ -6,7 +6,10 @@ import { inngest } from "@/inngest/client";
 import { checkTokenCountAndSummarizeIfNeeded, respondWithAI } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
+import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
+import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
+import { fetchMetadata } from "@/lib/data/retrieval";
 
 export const handleAutoResponse = async (messageId: number) => {
   const message = await db.query.conversationMessages
@@ -21,6 +24,34 @@ export const handleAutoResponse = async (messageId: number) => {
       },
     })
     .then(assertDefined);
+
+  if (message.conversation.status === "spam") return { message: "Skipped - conversation is spam" };
+  if (!message.gmailMessageId) return { message: "Skipped - message is not an email" };
+
+  await ensureCleanedUpText(message);
+
+  const customerMetadata = message.emailFrom
+    ? await fetchMetadata(message.emailFrom, message.conversation.mailbox.slug)
+    : null;
+  if (customerMetadata) {
+    await db
+      .update(conversationMessages)
+      .set({ metadata: customerMetadata ?? null })
+      .where(eq(conversationMessages.id, messageId));
+
+    if (message.emailFrom) {
+      await upsertPlatformCustomer({
+        email: message.emailFrom,
+        mailboxId: message.conversation.mailboxId,
+        customerMetadata: customerMetadata.metadata,
+      });
+    }
+  }
+
+  if (!message.conversation.mailbox.autoRespondEmailToChat) return { message: "Skipped - auto respond is disabled" };
+
+  const emailText = (await getTextWithConversationSubject(message.conversation, message)).trim();
+  if (emailText.length === 0) return { message: "Skipped - email text is empty" };
 
   const messageText = cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "");
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
@@ -67,7 +98,7 @@ export const handleAutoResponse = async (messageId: number) => {
     if (done) break;
   }
 
-  return { message: `Auto response sent for message ${messageId}` };
+  return { message: "Auto response sent", messageId };
 };
 
 export default inngest.createFunction(
