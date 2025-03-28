@@ -4,17 +4,17 @@ import { useUser } from "@clerk/nextjs";
 import {
   ArrowPathIcon,
   ArrowRightIcon,
+  ArrowRightOnRectangleIcon,
   BookOpenIcon,
+  ChevronRightIcon,
   HandThumbDownIcon,
   InboxIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
+  PlusCircleIcon,
   StarIcon,
   TrashIcon,
   UserIcon,
-  PlusCircleIcon,
-  ArrowRightOnRectangleIcon,
-  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -23,17 +23,18 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useHelper } from "@helperai/react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useNativePlatform } from "@/components/useNativePlatform";
-import { api } from "@/trpc/react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
+import { useNativePlatform } from "@/components/useNativePlatform";
+import { api } from "@/trpc/react";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />    </svg>
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />{" "}
+    </svg>
   );
 };
 
@@ -101,7 +102,8 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                   <Switch defaultChecked className="mt-0.5" />
                   <div className="flex-1">
                     <div className="text-sm">
-                      Our refund policy allows for full refunds within 30 days of purchase. After 30 days, we can offer store credit or partial refunds on a case-by-case basis.
+                      Our refund policy allows for full refunds within 30 days of purchase. After 30 days, we can offer
+                      store credit or partial refunds on a case-by-case basis.
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
@@ -113,7 +115,8 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                 <div className="flex gap-4">
                   <Switch defaultChecked className="mt-0.5" />
                   <div className="flex-1 text-sm">
-                    For digital products, refunds are available within 14 days if the product hasn't been downloaded or accessed.
+                    For digital products, refunds are available within 14 days if the product hasn't been downloaded or
+                    accessed.
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
                     <TrashIcon className="h-4 w-4" />
@@ -203,24 +206,35 @@ Please reply with this information. We'll review your request within 1-2 busines
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-black hover:text-gray-700 hover:bg-gray-100" iconOnly>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-black hover:text-gray-700 hover:bg-gray-100"
+                        iconOnly
+                      >
                         <PlusCircleIcon className="h-5 w-5" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-black hover:text-gray-700 hover:bg-gray-100" iconOnly>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-black hover:text-gray-700 hover:bg-gray-100"
+                        iconOnly
+                      >
                         <ChevronRightIcon className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col gap-4 p-4">
                   <div className="ml-auto max-w-[80%] rounded-lg bg-black p-4 text-white">
                     <p className="text-sm">How do I request a refund?</p>
                   </div>
-                  
+
                   <div className="mr-auto max-w-[80%] rounded-lg border border-black bg-white p-4">
                     <p className="text-sm">
-                      To request a refund, please go to your order history and click the "Request Refund" button. We'll process your request within 1-2 business days.
+                      To request a refund, please go to your order history and click the "Request Refund" button. We'll
+                      process your request within 1-2 business days.
                     </p>
                   </div>
                 </div>
@@ -448,7 +462,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                    End the support scavenger hunt with
+                  End the support scavenger hunt with
                   <span className="underline-offset">&nbsp;in-app chat</span>
                 </h3>
                 <p className="text-md text-muted-foreground">Zero tab switching required</p>
