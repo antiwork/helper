@@ -103,7 +103,7 @@ export const handleAutoResponse = async (messageId: number) => {
 
 export default inngest.createFunction(
   { id: "handle-auto-response" },
-  { event: "conversations/message.created" },
+  { event: "conversations/auto-response.create" },
   async ({ event, step }) => {
     const { messageId } = event.data;
 
