@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
-import { and, count, eq, inArray, isNotNull, isNull, SQL } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { setupOrganizationForNewUser } from "@/auth/lib/authService";
 import { assertDefined } from "@/components/utils/assert";
@@ -51,7 +51,7 @@ export const mailboxRouter = {
       const result = await db
         .select({ status: conversations.status, count: count() })
         .from(conversations)
-        .where(and(eq(conversations.mailboxId, ctx.mailbox.id), where))
+        .where(and(eq(conversations.mailboxId, ctx.mailbox.id), isNull(conversations.mergedIntoId), where))
         .groupBy(conversations.status);
       return {
         open: result.find((c) => c.status === "open")?.count ?? 0,
