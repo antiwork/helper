@@ -142,6 +142,16 @@ export const inngest = new Inngest({
           reason: z.string().nullable(),
         }),
       },
+      "conversations/auto-close.check": {
+        data: z.object({
+          mailboxId: z.number().optional(),
+        }),
+      },
+      "conversations/auto-close.process-mailbox": {
+        data: z.object({
+          mailboxId: z.number(),
+        }),
+      },
       "conversations/human-support-requested": {
         data: z.object({
           mailboxSlug: z.string(),

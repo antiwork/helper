@@ -34,6 +34,7 @@ export const conversations = pgTable(
     githubRepoName: text(),
     isPrompt: boolean().notNull().default(false),
     isVisitor: boolean().notNull().default(false),
+    mergedIntoId: bigint({ mode: "number" }),
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }
@@ -67,6 +68,11 @@ export const conversations = pgTable(
         table.embedding.asc().nullsLast().op("vector_cosine_ops"),
       ),
       slugUnique: unique("conversations_conversation_slug_key").on(table.slug),
+      mailboxAssignedToStatusIdIdx: index("conversations_mailbox_assigned_to_status_id_idx").on(
+        table.mailboxId,
+        table.status,
+        table.assignedToId,
+      ),
     };
   },
 );
@@ -82,4 +88,11 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platformCustomers.email],
   }),
   events: many(conversationEvents),
+  mergedInto: one(conversations, {
+    fields: [conversations.mergedIntoId],
+    references: [conversations.id],
+  }),
+  mergedConversations: many(conversations, {
+    relationName: "mergedConversations",
+  }),
 }));

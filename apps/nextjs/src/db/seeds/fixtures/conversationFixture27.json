@@ -35,7 +35,7 @@
         }
       ],
       "conversation": {
-        "source": "chat",
+        "source": "email",
         "subject": "Business Verification Documentation Request",
         "emailFrom": "michael.chen456@example.com",
         "status": "open",

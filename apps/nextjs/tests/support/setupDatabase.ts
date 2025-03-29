@@ -6,7 +6,6 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
-import { db } from "@/db/client";
 import * as schema from "@/db/schema";
 
 export async function setupDockerTestDb() {
@@ -57,8 +56,9 @@ export const truncateDb = async () => {
     throw new Error("This function should only be called in test environments.");
   }
 
+  const { db } = await import("@/db/client");
   const tablenames = await db.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname='public'`);
-  const tables = tablenames
+  const tables = tablenames.rows
     .map(({ tablename }) => tablename)
     .filter((name) => name !== "__drizzle_migrations")
     .map((name) => `"public"."${name}"`)

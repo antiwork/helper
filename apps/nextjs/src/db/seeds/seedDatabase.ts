@@ -18,14 +18,7 @@ import { db } from "@/db/client";
 import { env } from "@/env";
 import { indexMessage } from "@/inngest/functions/indexConversation";
 import { getClerkUser } from "@/lib/data/user";
-import {
-  conversationMessages,
-  conversations,
-  conversationsTopics,
-  mailboxes,
-  mailboxesMetadataApi,
-  topics,
-} from "../schema";
+import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
 
 const getTables = async () => {
   const result = await db.execute(sql`
@@ -33,7 +26,7 @@ const getTables = async () => {
     FROM information_schema.tables
     WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
   `);
-  return result.map((row) => row.table_name as string);
+  return result.rows.map((row) => row.table_name as string);
 };
 
 const checkIfAllTablesAreEmpty = async () => {
@@ -41,7 +34,7 @@ const checkIfAllTablesAreEmpty = async () => {
     const result = await db.execute(sql`
     SELECT EXISTS (SELECT 1 FROM ${sql.identifier(tableName)} LIMIT 1)
   `);
-    return !result[0]?.exists;
+    return !result.rows[0]?.exists;
   };
 
   const tables = await getTables();
@@ -147,6 +140,15 @@ export const seedDatabase = async () => {
           console.log(`Indexed message ${message.id}`);
         }),
       );
+
+      if (conversation.subject === "Download Issues with Digital Asset Bundle") {
+        await db
+          .update(conversations)
+          .set({
+            mergedIntoId: conversationRecords.find((c) => c.subject === "Download and License Issues")!.id,
+          })
+          .where(eq(conversations.id, conversation.id));
+      }
     }
 
     // Optionally create this file to do any additional seeding, e.g. setting up integrations with local credentials
@@ -208,28 +210,6 @@ const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) =>
 
 const generateSeedsFromFixtures = async (mailboxId: number) => {
   const fixtures = Object.entries(assertDefined(fixtureData[mailboxId]));
-  const topicMap = new Map<typeof topics.$inferSelect, (typeof topics.$inferSelect)[]>();
-  const createTopic = async (name: string, subtopicNames: string[]) => {
-    const topic = await db.insert(topics).values({ name, mailboxId }).returning().then(takeUniqueOrThrow);
-    const subtopics = await Promise.all(
-      subtopicNames.map(async (name) => {
-        const subTopic = await db
-          .insert(topics)
-          .values({ name, parentId: topic.id, mailboxId })
-          .returning()
-          .then(takeUniqueOrThrow);
-        return subTopic;
-      }),
-    );
-    topicMap.set(topic, subtopics);
-  };
-  await Promise.all([
-    createTopic("Account Access", ["Login Issues", "Account Suspension", "Password Reset"]),
-    createTopic("Product Access", ["Download Issues", "Content Availability", "Purchase Recovery"]),
-    createTopic("Billing", ["Refunds", "Payment Issues", "Invoices"]),
-    createTopic("Creator Support", ["Product Questions", "Technical Issues", "Content Guidelines"]),
-    createTopic("Platform Issues", ["Website Problems", "App Issues", "Integration Problems"]),
-  ]);
 
   await Promise.all(
     fixtures
@@ -265,16 +245,6 @@ const generateSeedsFromFixtures = async (mailboxId: number) => {
               : {}),
           });
         }
-
-        const topic = [...topicMap.keys()][fixtureIndex % topicMap.size]!;
-        const subTopic = [...topicMap.get(topic)!][fixtureIndex % topicMap.get(topic)!.length]!;
-        await db.insert(conversationsTopics).values({
-          conversationId: conversation.id,
-          topicId: topic.id,
-          subTopicId: subTopic.id,
-          mailboxId,
-          createdAt: conversation.createdAt,
-        });
       }),
   );
 };

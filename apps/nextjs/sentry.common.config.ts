@@ -9,7 +9,4 @@ export const commonConfig = {
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
-
-  // Skip OTel setup as we're using Langfuse for tracing.
-  skipOpenTelemetrySetup: true,
 };

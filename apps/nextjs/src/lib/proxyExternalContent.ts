@@ -19,7 +19,7 @@ export const proxyExternalContent = async (html: string | null) => {
             return match[0];
 
           if (/^https?:\/\/[^\s]+$/.test(content))
-            return `${name}="${shouldProxyUrl(content) ? await proxyUrl(content) : match[0]}"`;
+            return shouldProxyUrl(content) ? `${name}="${await proxyUrl(content)}"` : match[0];
 
           let processedValue = value;
           if (name === "style") {

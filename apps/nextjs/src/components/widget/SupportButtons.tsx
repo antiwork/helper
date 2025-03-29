@@ -9,6 +9,7 @@ type Props = {
   messageStatus: string;
   lastMessage: UIMessage | undefined;
   onTalkToTeamClick: () => void;
+  isEscalated?: boolean;
 };
 
 export default function SupportButtons({
@@ -17,11 +18,13 @@ export default function SupportButtons({
   messageStatus,
   lastMessage,
   onTalkToTeamClick,
+  isEscalated = false,
 }: Props) {
   const [isHelpfulAnimating, setIsHelpfulAnimating] = useState(false);
   const [isTalkToTeamAnimating, setIsTalkToTeamAnimating] = useState(false);
   const [isHelpful, setIsHelpful] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [hasClickedTalkToHuman, setHasClickedTalkToHuman] = useState(false);
 
   const idFromAnnotation =
     lastMessage?.annotations?.find(
@@ -62,13 +65,16 @@ export default function SupportButtons({
 
   const handleTalkToTeamClick = () => {
     setIsTalkToTeamAnimating(true);
+    setHasClickedTalkToHuman(true);
     onTalkToTeamClick();
     setTimeout(() => setIsTalkToTeamAnimating(false), 1000);
   };
 
+  const shouldHideButtons = isEscalated || hasClickedTalkToHuman;
+
   return (
     <AnimatePresence>
-      {isVisible && messageStatus === "ready" && lastMessage && (
+      {isVisible && messageStatus === "ready" && lastMessage && !shouldHideButtons && (
         <motion.div
           className="flex justify-center gap-4 py-3"
           initial={{ opacity: 0, y: 20 }}

@@ -12,7 +12,7 @@
   --sidebar-accent-foreground: hsl(0 0% 100%); /* Sidebar accent text color */
   --sidebar-border: hsl(0 0% 100% / 20%); /* Sidebar border color */
   --sidebar-ring: hsl(0 0% 100%); /* Sidebar focus ring color */
-  --background: hsl(0 0% 100%); /* Default background color of <body> */
+  --background: hsl(0 0% 98%); /* Default background color of <body> */
   --foreground: hsl(0 58% 10%); /* Default text color */
   --card: hsl(0 0% 100%); /* Background color for <Card> */
   --card-foreground: hsl(0 58% 10%); /* Text color for <Card> */

@@ -3,7 +3,6 @@ import cx from "classnames";
 import { useEffect } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import MessageElement from "@/components/widget/MessageElement";
-import { MessageReaction } from "@/components/widget/MessageReaction";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { sendScreenshot } from "@/lib/widget/messages";
 
@@ -115,21 +114,6 @@ export default function Message({ message, conversationSlug, token, addToolResul
         <span className="text-xs text-gray-400" title={message.createdAt ? message.createdAt.toLocaleString() : ""}>
           {message.createdAt ? <HumanizedTime time={message.createdAt.toISOString()} /> : null}
         </span>
-        {message.role === "assistant" && persistedId && (
-          <MessageReaction
-            messageId={persistedId.toString()}
-            conversationSlug={conversationSlug}
-            token={token}
-            initialReaction={
-              message.reactionType
-                ? {
-                    type: message.reactionType,
-                    feedback: message.reactionFeedback ?? null,
-                  }
-                : null
-            }
-          />
-        )}
       </div>
     </div>
   );

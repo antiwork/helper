@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db } from "@/db/client";
 import { env } from "@/env";
 import { seedDatabase } from "./seeds/seedDatabase";

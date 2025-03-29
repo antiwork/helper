@@ -10,7 +10,6 @@ import {
   conversationsTopics,
   mailboxes,
   platformCustomers,
-  topics,
 } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
@@ -28,8 +27,8 @@ export const searchSchema = z.object({
   createdBefore: z.string().datetime().optional(),
   repliedBy: z.array(z.string()).optional(),
   customer: z.array(z.string()).optional(),
-  topic: z.array(z.number()).optional(),
   isVip: z.boolean().optional(),
+  isPrompt: z.boolean().optional(),
   reactionType: z.enum(["thumbs-up", "thumbs-down"]).optional(),
   events: z.array(z.enum(["request_human_support", "resolved_by_ai"])).optional(),
 });
@@ -53,6 +52,7 @@ export const searchConversations = async (
 
   const where = {
     mailboxId: eq(conversations.mailboxId, mailbox.id),
+    notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToClerkId, filters.assignee) } : {}),
     ...(filters.category === "assigned" ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
@@ -60,6 +60,7 @@ export const searchConversations = async (
     ...(filters.isVip && mailbox.vipThreshold
       ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
       : {}),
+    ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
     ...(filters.repliedBy?.length
@@ -78,17 +79,6 @@ export const searchConversations = async (
         }
       : {}),
     ...(filters.customer?.length ? { customer: inArray(conversations.emailFrom, filters.customer) } : {}),
-    ...(filters.topic?.length
-      ? {
-          topic: exists(
-            db
-              .select()
-              .from(conversationsTopics)
-              .leftJoin(topics, eq(conversationsTopics.subTopicId, topics.id))
-              .where(and(eq(conversationsTopics.conversationId, conversations.id), inArray(topics.id, filters.topic))),
-          ),
-        }
-      : {}),
     ...(filters.reactionType
       ? {
           reaction: exists(
@@ -153,27 +143,16 @@ export const searchConversations = async (
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
-    .leftJoin(
-      conversationMessages,
-      and(
-        eq(conversations.id, conversationMessages.conversationId),
-        inArray(
-          conversationMessages.id,
-          matches.map((m) => m.id),
-        ),
-      ),
-    )
     .where(and(...Object.values(where)))
     .orderBy(...orderBy)
     .limit(filters.limit + 1) // Get one extra to determine if there's a next page
     .offset(filters.cursor ? parseInt(filters.cursor) : 0)
     .then((results) => ({
-      results: results
-        .slice(0, filters.limit)
-        .map(({ conversations_conversation, mailboxes_platformcustomer, messages }) => ({
-          ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-          matchedMessageText: messages?.cleanedUpText ?? null,
-        })),
+      results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
+        ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+        matchedMessageText:
+          matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+      })),
       nextCursor: results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
     }));
 

@@ -14,7 +14,11 @@ export async function searchEmailsByKeywords(
 ) {
   const searchIndex = extractHashedWordsFromEmail({ body: keywords }).join(" ");
   const searchResult = await db
-    .select({ id: conversationMessages.id, conversationId: conversationMessages.conversationId })
+    .select({
+      id: conversationMessages.id,
+      conversationId: conversationMessages.conversationId,
+      cleanedUpText: conversationMessages.cleanedUpText,
+    })
     .from(conversationMessages)
     .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
     .where(

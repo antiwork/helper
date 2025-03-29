@@ -188,5 +188,8 @@ export default process.env.VERCEL_ENV === "production"
       // https://docs.sentry.io/product/crons/
       // https://vercel.com/docs/cron-jobs
       automaticVercelMonitors: true,
+
+      // Avoid cluttering traces with a ton of middleware spans.
+      autoInstrumentMiddleware: false,
     })
   : nextConfig;

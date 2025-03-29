@@ -1,15 +1,14 @@
 import { and, cosineDistance, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { faqs } from "@/db/schema";
+import { conversationMessages, faqs } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
-import { conversationsTopics } from "@/db/schema/conversationsTopics";
 import { websitePages, websites } from "@/db/schema/websites";
 import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
 import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
-import { captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
@@ -23,38 +22,19 @@ export const findSimilarConversations = async (
   limit: number = MAX_SIMILAR_CONVERSATIONS,
   excludeConversationSlug?: string,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
-  onlyWithTopics = false,
 ) => {
   const queryEmbedding = Array.isArray(queryInput)
     ? queryInput
     : await generateEmbedding(queryInput, "query-find-past-conversations");
   const similarity = sql<number>`1 - (${cosineDistance(conversations.embedding, queryEmbedding)})`;
 
-  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id}`;
+  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id} AND ${eq(conversations.isPrompt, false)}`;
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
   }
-  if (onlyWithTopics) {
-    where = sql`${where} AND EXISTS (
-      SELECT 1 FROM ${conversationsTopics} ct
-      WHERE ct.conversation_id = ${conversations.id}
-    )`;
-  }
 
   const similarConversations = await db.query.conversations.findMany({
-    where,
-    with: {
-      messages: {
-        columns: {
-          id: true,
-          body: true,
-          cleanedUpText: true,
-          role: true,
-          createdAt: true,
-        },
-        orderBy: (messages, { asc }) => [asc(messages.id)],
-      },
-    },
+    where: and(where, isNull(conversations.mergedIntoId)),
     extras: {
       similarity: similarity.as("similarity"),
     },
@@ -71,18 +51,23 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   const similarConversations = await findSimilarConversations(query, mailbox);
   if (!similarConversations) return null;
 
-  const pastConversations = similarConversations
-    .map((conversation) => {
-      return `--- Conversation Start ---\nDate: ${conversation.createdAt.toLocaleDateString()}\n${conversation.messages
+  const pastConversations = await Promise.all(
+    similarConversations.map(async (conversation) => {
+      const messages = await db.query.conversationMessages.findMany({
+        where: eq(conversationMessages.conversationId, conversation.id),
+        orderBy: (messages, { asc }) => [asc(messages.id)],
+      });
+
+      return `--- Conversation Start ---\nDate: ${conversation.createdAt.toLocaleDateString()}\n${messages
         .map((message) => {
           const role = message.role === "user" ? "Customer" : "Agent";
           return `${role}:\n${cleanUpTextForAI(message.cleanedUpText || message.body)}`;
         })
         .join("\n")}\n--- Conversation End ---`;
-    })
-    .join("\n\n");
+    }),
+  );
 
-  let conversationPrompt = PAST_CONVERSATIONS_PROMPT.replace("{{PAST_CONVERSATIONS}}", pastConversations);
+  let conversationPrompt = PAST_CONVERSATIONS_PROMPT.replace("{{PAST_CONVERSATIONS}}", pastConversations.join("\n\n"));
   conversationPrompt = conversationPrompt.replace("{{USER_QUERY}}", query);
 
   return conversationPrompt;
@@ -182,10 +167,7 @@ export const fetchMetadata = async (email: string, mailboxSlug: string) => {
     });
     return metadata;
   } catch (error) {
-    if (error instanceof MetadataAPIError) {
-      return null;
-    }
-    captureExceptionAndThrowIfDevelopment(error);
-    throw new Error(`Metadata API request failed: unknown error`);
+    captureExceptionAndLogIfDevelopment(error);
+    return null;
   }
 };

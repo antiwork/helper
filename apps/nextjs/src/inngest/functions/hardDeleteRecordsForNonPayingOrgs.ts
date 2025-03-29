@@ -18,6 +18,7 @@ import {
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { ADDITIONAL_PAID_ORGANIZATION_IDS, getClerkOrganization } from "@/lib/data/organization";
+import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 const getRelationsReferencingConversationRecords = () => {
   const allRelations = Object.values(assertDefined(db._.schema)).flatMap((table) => Object.values(table.relations));
@@ -27,7 +28,7 @@ const getRelationsReferencingConversationRecords = () => {
   return relationsReferencingConversationRecords;
 };
 
-const EXPECTED_RELATION_COUNT = 10;
+const EXPECTED_RELATION_COUNT = 12;
 export const hardDeleteRecordsForNonPayingOrgs = async () => {
   // When this assert fails, please manually consider whether
   // this code needs to be updated. For example, if a new table is
@@ -55,12 +56,19 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
     );
 
   for (const mailbox of nonPayingMailboxesWithConversations) {
-    const organization = await getClerkOrganization(mailbox.clerkOrganizationId);
-    if (
-      !organization.privateMetadata.freeTrialEndsAt ||
-      new Date(organization.privateMetadata.freeTrialEndsAt) > subDays(new Date(), 31)
-    )
-      continue;
+    try {
+      const organization = await getClerkOrganization(mailbox.clerkOrganizationId);
+      if (
+        !organization.privateMetadata.freeTrialEndsAt ||
+        new Date(organization.privateMetadata.freeTrialEndsAt) > subDays(new Date(), 31)
+      )
+        continue;
+    } catch (error) {
+      captureExceptionAndLogIfDevelopment(error, {
+        extra: { mailboxId: mailbox.id, organizationId: mailbox.clerkOrganizationId },
+      });
+      continue; // Skip this mailbox and continue with the next one
+    }
 
     await db.delete(faqs).where(eq(faqs.mailboxId, mailbox.id));
 

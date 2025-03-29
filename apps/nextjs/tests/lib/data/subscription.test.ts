@@ -1,5 +1,5 @@
 import { userFactory } from "@tests/support/factories/users";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, inject, it, vi } from "vitest";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { gmailSupportEmails } from "@/db/schema";
@@ -20,17 +20,14 @@ vi.mock("@/lib/stripe/client", () => ({
   },
 }));
 
-vi.mock("@/env", async () => {
-  const { env } = await import("@/env");
-  return {
-    env: {
-      ...env,
-      AUTH_URL: "http://localhost:3010",
-      STRIPE_FIXED_PRICE_ID: "price_123",
-      STRIPE_GRADUATED_PRICE_ID: "price_456",
-    },
-  };
-});
+vi.mock("@/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    AUTH_URL: "http://localhost:3010",
+    STRIPE_FIXED_PRICE_ID: "price_123",
+    STRIPE_GRADUATED_PRICE_ID: "price_456",
+  },
+}));
 
 describe("createStripeCheckoutSessionUrl", () => {
   it("returns a Stripe checkout URL", async () => {
