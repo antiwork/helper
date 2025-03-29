@@ -73,10 +73,10 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     hasMetadataEndpoint: !!metadataEndpoint,
     metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
-    slackConnectUrl: getSlackConnectUrl(mailbox.slug),
+    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl(mailbox.slug) : null,
     slackAlertChannel: mailbox.slackAlertChannel,
     githubConnected: !!mailbox.githubInstallationId,
-    githubConnectUrl: getGitHubInstallUrl(),
+    githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
     githubRepoOwner: mailbox.githubRepoOwner,
     githubRepoName: mailbox.githubRepoName,
     responseGeneratorPrompt: mailbox.responseGeneratorPrompt ?? [],
@@ -93,6 +93,8 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     disableAutoResponseForVips: mailbox.disableAutoResponseForVips,
     autoCloseEnabled: mailbox.autoCloseEnabled,
     autoCloseDaysOfInactivity: mailbox.autoCloseDaysOfInactivity,
+    firecrawlEnabled: !!env.FIRECRAWL_API_KEY,
+    billingEnabled: !!env.STRIPE_PRICE_ID,
   };
 };
 

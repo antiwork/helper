@@ -56,7 +56,7 @@ export const createOrganization = async (user: User) => {
 export type SubscriptionStatus = "paid" | "free_trial" | "free_trial_expired";
 
 export const getSubscriptionStatus = async (organization: Organization): Promise<SubscriptionStatus> => {
-  if (ADDITIONAL_PAID_ORGANIZATION_IDS.includes(organization.id)) {
+  if (!env.STRIPE_PRICE_ID || ADDITIONAL_PAID_ORGANIZATION_IDS.includes(organization.id)) {
     return "paid";
   }
 
