@@ -15,7 +15,7 @@ export const MobileList = () => {
   const [conversationSlug] = useQueryState("id");
   const { nativePlatform } = useNativePlatform();
 
-  const { data: countData } = api.mailbox.countByStatus.useQuery(
+  const { data: countData } = api.mailbox.countByCategory.useQuery(
     { mailboxSlug },
     {
       staleTime: 0,
@@ -33,7 +33,7 @@ export const MobileList = () => {
       {nativePlatform === "macos" && <TauriDragArea className="top-0 inset-x-0 h-8" />}
       <AppInstallBanner />
       <CategoryNav
-        countByStatus={countData}
+        countByCategory={countData}
         mailboxSlug={mailboxSlug}
         variant="mobile"
         className={cn("flex items-center h-14 px-4", nativePlatform === "macos" && "mt-8")}

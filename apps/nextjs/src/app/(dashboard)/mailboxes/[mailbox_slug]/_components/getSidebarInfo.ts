@@ -2,9 +2,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { api } from "@/trpc/server";
 
 export const getSidebarInfo = async (mailboxSlug: string) => {
-  const [user, countByStatus, mailboxes, { trialInfo }] = await Promise.all([
+  const [user, countByCategory, mailboxes, { trialInfo }] = await Promise.all([
     currentUser(),
-    api.mailbox.countByStatus({ mailboxSlug }),
+    api.mailbox.countByCategory({ mailboxSlug }),
     api.mailbox.list(),
     api.organization.getOnboardingStatus(),
   ]);
@@ -14,7 +14,7 @@ export const getSidebarInfo = async (mailboxSlug: string) => {
   const loggedInEmail = user?.primaryEmailAddress?.emailAddress;
   const avatarName = loggedInEmail || loggedInName;
 
-  return { countByStatus, mailboxes, currentMailbox, loggedInName, loggedInEmail, avatarName, trialInfo };
+  return { countByCategory, mailboxes, currentMailbox, loggedInName, loggedInEmail, avatarName, trialInfo };
 };
 
 export type SidebarInfo = Awaited<ReturnType<typeof getSidebarInfo>>;

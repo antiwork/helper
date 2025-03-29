@@ -137,12 +137,12 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
 
   const conversations = conversationListData?.conversations ?? [];
   const total = conversationListData?.total ?? 0;
-  const { data: countData } = api.mailbox.countByStatus.useQuery({ mailboxSlug: input.mailboxSlug });
+  const { data: countData } = api.mailbox.countByCategory.useQuery({ mailboxSlug: input.mailboxSlug });
   const status = countData
-    ? (["open", "closed", "spam"] as const)
+    ? (["open"] as const)
         .map((status) => ({
           status,
-          count: countData[category][status] ?? 0,
+          count: countData[category] ?? 0,
         }))
         .filter((c) => c.count > 0 || c.status === "open")
     : [];

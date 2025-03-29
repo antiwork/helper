@@ -46,25 +46,21 @@ export const mailboxRouter = {
     }
     return allMailboxes;
   }),
-  countByStatus: mailboxProcedure.query(async ({ ctx }) => {
-    const countByStatus = async (where?: SQL) => {
+  countByCategory: mailboxProcedure.query(async ({ ctx }) => {
+    const countOpenByCategory = async (where?: SQL) => {
       const result = await db
         .select({ status: conversations.status, count: count() })
         .from(conversations)
         .where(and(eq(conversations.mailboxId, ctx.mailbox.id), isNull(conversations.mergedIntoId), where))
         .groupBy(conversations.status);
-      return {
-        open: result.find((c) => c.status === "open")?.count ?? 0,
-        closed: result.find((c) => c.status === "closed")?.count ?? 0,
-        spam: result.find((c) => c.status === "spam")?.count ?? 0,
-      };
+      return result.find((c) => c.status === "open")?.count ?? 0;
     };
 
     const [all, mine, assigned, unassigned] = await Promise.all([
-      countByStatus(),
-      countByStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
-      countByStatus(isNotNull(conversations.assignedToClerkId)),
-      countByStatus(isNull(conversations.assignedToClerkId)),
+      countOpenByCategory(),
+      countOpenByCategory(eq(conversations.assignedToClerkId, ctx.session.userId)),
+      countOpenByCategory(isNotNull(conversations.assignedToClerkId)),
+      countOpenByCategory(isNull(conversations.assignedToClerkId)),
     ]);
 
     return {
