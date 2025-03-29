@@ -69,7 +69,8 @@ fn start_apple_sign_in(app: AppHandle) {
 }
 
 #[tauri::command]
-fn add_tab(window: tauri::Window, url: String) -> Result<String, String> {
+fn add_tab(window: tauri::Window, app: AppHandle, url: String) -> Result<String, String> {
+    log::info!("Adding tab: {}", url);
     let mut tab_id = NEXT_TAB_ID.lock().unwrap();
     let id = format!("tab_{}", *tab_id);
     *tab_id += 1;
@@ -89,16 +90,16 @@ fn add_tab(window: tauri::Window, url: String) -> Result<String, String> {
         .unwrap();
 
     let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+    let is_first_tab = tab_webviews.is_empty();
     tab_webviews.insert(id.clone(), webview);
 
-    if tab_webviews.len() == 1 {
-        let mut active_tab = ACTIVE_TAB.lock().unwrap();
-        *active_tab = Some(id.clone());
-    } else {
-        if let Some(webview) = tab_webviews.get(&id) {
-            webview.hide().map_err(|e| e.to_string())?;
+    if is_first_tab {
+        if let Some(tab_bar) = window.get_webview("tab_bar") {
+            let _ = tab_bar.set_size(LogicalSize::new(logical_size.width, 40.));
         }
     }
+
+    set_active_tab(id.clone()).map_err(|e| e.to_string())?;
 
     Ok(id)
 }
@@ -125,6 +126,47 @@ fn set_active_tab(tab_id: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn close_tab(window: tauri::Window, tab_id: String) -> Result<Option<String>, String> {
+    let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+
+    if !tab_webviews.contains_key(&tab_id) {
+        return Err(format!("Tab with id {} not found", tab_id));
+    }
+
+    tab_webviews.remove(&tab_id);
+
+    let mut active_tab = ACTIVE_TAB.lock().unwrap();
+    let was_active = active_tab.as_ref().map_or(false, |id| id == &tab_id);
+
+    if tab_webviews.is_empty() {
+        let size = window.inner_size().unwrap();
+        let scale_factor = window.scale_factor().unwrap();
+        let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
+
+        if let Some(tab_bar) = window.get_webview("tab_bar") {
+            let _ = tab_bar.set_size(LogicalSize::new(logical_size.width, logical_size.height));
+        }
+
+        *active_tab = None;
+        return Ok(None);
+    }
+
+    if was_active {
+        if let Some(new_active_id) = tab_webviews.keys().next().cloned() {
+            *active_tab = Some(new_active_id.clone());
+
+            if let Some(webview) = tab_webviews.get(&new_active_id) {
+                let _ = webview.show();
+            }
+
+            return Ok(Some(new_active_id));
+        }
+    }
+
+    Ok(active_tab.clone())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -141,9 +183,10 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             start_options,
-            is_mac_app_store,
             add_tab,
             set_active_tab,
+            close_tab,
+            is_mac_app_store,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,
         ]);
@@ -237,11 +280,15 @@ pub fn run() {
                 }
             }
 
+            let size = window.inner_size().unwrap();
+            let scale_factor = window.scale_factor().unwrap();
+            let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
+
             let tab_bar_webview = window
                 .add_child(
                     WebviewBuilder::new("tab_bar", WebviewUrl::default()),
                     LogicalPosition::new(0., 0.),
-                    LogicalSize::new(1200., 40.),
+                    LogicalSize::new(logical_size.width, logical_size.height),
                 )
                 .unwrap();
 
@@ -250,14 +297,23 @@ pub fn run() {
                 tauri::WindowEvent::Resized(size) => {
                     let logical_size = size.to_logical(window_clone.scale_factor().unwrap());
 
-                    let _ = tab_bar_webview.set_size(LogicalSize::new(logical_size.width, 40.));
-
                     let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
-                    for (_, webview) in tab_webviews.iter() {
-                        let _ = webview.set_size(LogicalSize::new(
-                            logical_size.width,
-                            logical_size.height - 40.,
-                        ));
+                    let has_tabs = !tab_webviews.is_empty();
+
+                    if has_tabs {
+                        // With tabs: tab bar takes 40px height
+                        let _ = tab_bar_webview.set_size(LogicalSize::new(logical_size.width, 40.));
+
+                        for (_, webview) in tab_webviews.iter() {
+                            let _ = webview.set_size(LogicalSize::new(
+                                logical_size.width,
+                                logical_size.height - 40.,
+                            ));
+                        }
+                    } else {
+                        // No tabs: tab bar takes full height
+                        let _ = tab_bar_webview
+                            .set_size(LogicalSize::new(logical_size.width, logical_size.height));
                     }
                 }
                 _ => {}
