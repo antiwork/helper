@@ -70,7 +70,6 @@ describe("serializeResponseAiDraft", () => {
     const params = {
       role: "ai_assistant" as const,
       promptInfo: {
-        base_prompt: "Base prompt",
         pinned_replies: "Pinned replies",
         past_conversations: "Past conversations",
         metadata: "Metadata",
