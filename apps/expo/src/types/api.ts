@@ -101,7 +101,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           githubConnectUrl: string;
           githubRepoOwner: string | null;
           githubRepoName: string | null;
-          responseGeneratorPrompt: string[];
           clerkOrganizationId: string;
           subscription: {
             status: string | null;
@@ -124,7 +123,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       update: import("@trpc/server").TRPCMutationProcedure<{
         input: {
           mailboxSlug: string;
-          responseGeneratorPrompt?: string[] | undefined;
           slackAlertChannel?: string | undefined;
           githubRepoOwner?: string | undefined;
           githubRepoName?: string | undefined;

@@ -69,27 +69,6 @@ describe("mailboxRouter", () => {
   });
 
   describe("update", () => {
-    it("updates response generator prompt", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
-
-      const caller = createCaller(createTestTRPCContext(user, organization));
-
-      await caller.mailbox.update({
-        mailboxSlug: mailbox.slug,
-        responseGeneratorPrompt: ["New prompt 1", "New prompt 2"],
-      });
-
-      const updatedMailbox = await db.query.mailboxes.findFirst({
-        where: eq(mailboxes.id, mailbox.id),
-      });
-
-      expect(updatedMailbox).toMatchObject({
-        responseGeneratorPrompt: ["New prompt 1", "New prompt 2"],
-        promptUpdatedAt: expect.any(Date),
-      });
-    });
-
     it("updates slack settings", async () => {
       const { user, mailbox, organization } = await userFactory.createRootUser();
       vi.mocked(getClerkOrganization).mockResolvedValue(organization);
