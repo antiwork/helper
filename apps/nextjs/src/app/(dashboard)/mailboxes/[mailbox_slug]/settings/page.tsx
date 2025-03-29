@@ -44,8 +44,6 @@ const Page = async (props: { params: Promise<PageProps> }) => {
       }
     }
 
-
-
     if (pendingUpdates.widget) {
       await api.mailbox.update({
         mailboxSlug: params.mailbox_slug,
