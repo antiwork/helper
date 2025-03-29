@@ -138,14 +138,6 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
   const conversations = conversationListData?.conversations ?? [];
   const total = conversationListData?.total ?? 0;
   const { data: countData } = api.mailbox.countByCategory.useQuery({ mailboxSlug: input.mailboxSlug });
-  const status = countData
-    ? (["open"] as const)
-        .map((status) => ({
-          status,
-          count: countData[category] ?? 0,
-        }))
-        .filter((c) => c.count > 0 || c.status === "open")
-    : [];
   const defaultSort = conversationListData?.defaultSort;
 
   const { handleStatusFilterChange, handleSortChange } = useFilterHandlers();
@@ -170,29 +162,22 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const statusOptions = useMemo(() => {
-    const statuses = status.flatMap((status) =>
-      status.status
-        ? {
-            value: status.status,
-            label: `${formatNumber(status.count)} ${capitalize(status.status)}`,
-            selected: searchParams.status ? searchParams.status == status.status : status.status === "open",
-          }
-        : [],
-    );
-
-    if (searchParams.status) {
-      if (!statuses.some((s) => s.value === searchParams.status)) {
-        statuses.push({
-          value: "open" as const,
-          label: `0 ${capitalize(searchParams.status)}`,
-          selected: true,
-        });
-      }
-    }
-
-    return statuses;
-  }, [status, searchParams]);
+  const statusOptions = useMemo(
+    () =>
+      (["open", "closed", "spam"] as const).flatMap((status) =>
+        status
+          ? {
+              value: status,
+              label:
+                status === "open" && countData
+                  ? `${formatNumber(countData[category] ?? 0)} ${capitalize(status)}`
+                  : capitalize(status),
+              selected: searchParams.status ? searchParams.status == status : status === "open",
+            }
+          : [],
+      ),
+    [countData, searchParams],
+  );
 
   const sortOptions = useMemo(
     () => [
