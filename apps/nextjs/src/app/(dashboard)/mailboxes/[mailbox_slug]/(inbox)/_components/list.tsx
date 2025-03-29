@@ -175,10 +175,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
       status.status
         ? {
             value: status.status,
-            label:
-              status.status === "closed" || status.status === "spam"
-                ? capitalize(status.status)
-                : `${formatNumber(status.count)} ${capitalize(status.status)}`,
+            label: `${formatNumber(status.count)} ${capitalize(status.status)}`,
             selected: searchParams.status ? searchParams.status == status.status : status.status === "open",
           }
         : [],
@@ -188,10 +185,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
       if (!statuses.some((s) => s.value === searchParams.status)) {
         statuses.push({
           value: searchParams.status,
-          label:
-            searchParams.status === "closed" || searchParams.status === "spam"
-              ? capitalize(searchParams.status)
-              : `0 ${capitalize(searchParams.status)}`,
+          label: `0 ${capitalize(searchParams.status)}`,
           selected: true,
         });
       }
