@@ -184,7 +184,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (searchParams.status) {
       if (!statuses.some((s) => s.value === searchParams.status)) {
         statuses.push({
-          value: searchParams.status,
+          value: "open" as const,
           label: `0 ${capitalize(searchParams.status)}`,
           selected: true,
         });
