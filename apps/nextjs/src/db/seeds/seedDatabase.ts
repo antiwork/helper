@@ -70,7 +70,6 @@ export const seedDatabase = async () => {
       mailboxOverrides: {
         name: "Gumroad",
         slug: "gumroad",
-        responseGeneratorPrompt: ["You are a helpful customer support assistant."],
         promptUpdatedAt: addDays(new Date(), 1),
         widgetHMACSecret: "9cff9d28-7333-4e29-8f01-c2945f1a887f",
       },
@@ -288,6 +287,10 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
     ],
     authenticationMethod: "bearer_token",
     authenticationToken: gumroadDevToken,
+  });
+
+  await faqsFactory.create(mailbox.id, {
+    content: "1. You are a helpful customer support assistant.",
   });
 
   await faqsFactory.create(mailbox.id, {

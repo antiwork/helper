@@ -79,7 +79,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     githubConnectUrl: getGitHubInstallUrl(),
     githubRepoOwner: mailbox.githubRepoOwner,
     githubRepoName: mailbox.githubRepoName,
-    responseGeneratorPrompt: mailbox.responseGeneratorPrompt ?? [],
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: subscription ?? null,
     widgetHMACSecret: mailbox.widgetHMACSecret,

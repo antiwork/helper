@@ -3,7 +3,6 @@
 import { useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
-  ChatBubbleBottomCenterIcon,
   ComputerDesktopIcon,
   CreditCardIcon,
   LinkIcon,
@@ -11,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronUp } from "lucide-react";
 import React, { useState, useTransition } from "react";
-import type { PromptLineUpdate, SupportAccount } from "@/app/types/global";
+import type { SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
@@ -130,12 +129,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
           }
         />
       ),
-    },
-    {
-      label: "Replies",
-      id: "replies",
-      icon: ChatBubbleBottomCenterIcon,
-      content: <></>,
     },
     {
       label: "In-App Chat",

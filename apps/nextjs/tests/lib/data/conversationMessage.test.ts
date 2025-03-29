@@ -254,7 +254,6 @@ describe("getMessages", () => {
       role: "ai_assistant",
       responseToId: userMessage.id,
       promptInfo: {
-        base_prompt: "Base prompt",
         pinned_replies: "Pinned replies",
         past_conversations: null,
         metadata: null,

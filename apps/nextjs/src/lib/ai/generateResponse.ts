@@ -81,10 +81,8 @@ export const generateDraftResponse = async (
   } = await fetchPromptRetrievalData(mailbox, userPrompt, metadata);
   const relevantPastConversations = await getPastConversationsPrompt(userPrompt, mailbox);
 
-  const basePrompt = mailbox.responseGeneratorPrompt?.join("\n") || "";
   const systemPrompt = [
     SYSTEM_PROMPT_PREFIX,
-    basePrompt,
     knowledgeBank ? [knowledgeBank] : [],
     websitePages ? [websitePages] : [],
     relevantPastConversations ? [relevantPastConversations] : [],
@@ -118,7 +116,6 @@ export const generateDraftResponse = async (
     draftResponse: htmlResponse,
     promptInfo: {
       past_conversations: relevantPastConversations,
-      base_prompt: basePrompt,
       pinned_replies: knowledgeBank,
       metadata: metadataPrompt,
     },
