@@ -49,11 +49,13 @@
             };
 
             if (deepLinkUrl) {
-              window.location.replace(validateUrl(deepLinkUrl.replace("antiwork-helper://", "")));
+              window.__TAURI__.core.invoke("add_tab", {
+                url: validateUrl(deepLinkUrl.replace("antiwork-helper://", "")),
+              });
             } else if (receivedDeepLinkUrl) {
-              window.location.replace(validateUrl(receivedDeepLinkUrl));
+              window.__TAURI__.core.invoke("add_tab", { url: validateUrl(receivedDeepLinkUrl) });
             } else {
-              window.location.replace(`${baseUrl}/mailboxes`);
+              window.__TAURI__.core.invoke("add_tab", { url: `${baseUrl}/mailboxes` });
             }
           });
           return;

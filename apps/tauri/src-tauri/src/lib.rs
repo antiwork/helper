@@ -4,15 +4,20 @@ extern crate lazy_static;
 #[cfg(target_os = "macos")]
 mod apple_sign_in;
 
+use std::collections::HashMap;
 use std::env;
 use std::sync::Mutex;
 use tauri::{
-    AppHandle, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl, WindowBuilder,
+    AppHandle, LogicalPosition, LogicalSize, Manager, Url, Webview, WebviewBuilder, WebviewUrl,
+    WindowBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
     static ref DEEP_LINK_URL: Mutex<Option<String>> = Mutex::new(None);
+    static ref TAB_WEBVIEWS: Mutex<HashMap<String, Webview>> = Mutex::new(HashMap::new());
+    static ref ACTIVE_TAB: Mutex<Option<String>> = Mutex::new(None);
+    static ref NEXT_TAB_ID: Mutex<u32> = Mutex::new(0);
 }
 
 #[tauri::command]
@@ -63,6 +68,63 @@ fn start_apple_sign_in(app: AppHandle) {
     apple_sign_in::start_apple_sign_in(app);
 }
 
+#[tauri::command]
+fn add_tab(window: tauri::Window, url: String) -> Result<String, String> {
+    let mut tab_id = NEXT_TAB_ID.lock().unwrap();
+    let id = format!("tab_{}", *tab_id);
+    *tab_id += 1;
+
+    let size = window.inner_size().unwrap();
+    let scale_factor = window.scale_factor().unwrap();
+    let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
+
+    let parsed_url = Url::parse(&url).map_err(|e| e.to_string())?;
+
+    let webview = window
+        .add_child(
+            WebviewBuilder::new(&id, WebviewUrl::External(parsed_url)).disable_drag_drop_handler(),
+            LogicalPosition::new(0., 40.),
+            LogicalSize::new(logical_size.width, logical_size.height - 40.),
+        )
+        .unwrap();
+
+    let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+    tab_webviews.insert(id.clone(), webview);
+
+    if tab_webviews.len() == 1 {
+        let mut active_tab = ACTIVE_TAB.lock().unwrap();
+        *active_tab = Some(id.clone());
+    } else {
+        if let Some(webview) = tab_webviews.get(&id) {
+            webview.hide().map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok(id)
+}
+
+#[tauri::command]
+fn set_active_tab(tab_id: String) -> Result<(), String> {
+    let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+
+    if !tab_webviews.contains_key(&tab_id) {
+        return Err(format!("Tab with id {} not found", tab_id));
+    }
+
+    for (_, webview) in tab_webviews.iter() {
+        let _ = webview.hide();
+    }
+
+    if let Some(webview) = tab_webviews.get(&tab_id) {
+        webview.show().map_err(|e| e.to_string())?;
+    }
+
+    let mut active_tab = ACTIVE_TAB.lock().unwrap();
+    *active_tab = Some(tab_id);
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -80,6 +142,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             start_options,
             is_mac_app_store,
+            add_tab,
+            set_active_tab,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,
         ]);
@@ -173,19 +237,11 @@ pub fn run() {
                 }
             }
 
-            let tabs_webview = window
+            let tab_bar_webview = window
                 .add_child(
-                    WebviewBuilder::new("tabs", WebviewUrl::default()),
+                    WebviewBuilder::new("tab_bar", WebviewUrl::default()),
                     LogicalPosition::new(0., 0.),
                     LogicalSize::new(1200., 40.),
-                )
-                .unwrap();
-
-            let main_webview = window
-                .add_child(
-                    WebviewBuilder::new("main", WebviewUrl::default()).disable_drag_drop_handler(),
-                    LogicalPosition::new(0., 40.),
-                    LogicalSize::new(1200., 800.),
                 )
                 .unwrap();
 
@@ -193,11 +249,16 @@ pub fn run() {
             window.on_window_event(move |event| match event {
                 tauri::WindowEvent::Resized(size) => {
                     let logical_size = size.to_logical(window_clone.scale_factor().unwrap());
-                    tabs_webview.set_size(LogicalSize::new(logical_size.width, 40.));
-                    main_webview.set_size(LogicalSize::new(
-                        logical_size.width,
-                        logical_size.height - 40.,
-                    ));
+
+                    let _ = tab_bar_webview.set_size(LogicalSize::new(logical_size.width, 40.));
+
+                    let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+                    for (_, webview) in tab_webviews.iter() {
+                        let _ = webview.set_size(LogicalSize::new(
+                            logical_size.width,
+                            logical_size.height - 40.,
+                        ));
+                    }
                 }
                 _ => {}
             });
