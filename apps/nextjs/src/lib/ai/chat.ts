@@ -19,19 +19,14 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, mailboxes } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
-import { Conversation, getConversationById, updateOriginalConversation } from "@/lib/data/conversation";
-import {
-  createConversationMessage,
-  disableAIResponse,
-  getMessages,
-  getMessagesOnly,
-} from "@/lib/data/conversationMessage";
+import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
+import { createConversationMessage, disableAIResponse, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
@@ -109,9 +104,6 @@ export const buildPromptMessages = async (
       new Date().toISOString(),
     ),
   ];
-  if (mailbox.responseGeneratorPrompt) {
-    prompt.push(mailbox.responseGeneratorPrompt.join("\n"));
-  }
   let systemPrompt = prompt.join("\n");
   if (knowledgeBank) {
     systemPrompt += `\n${knowledgeBank}`;

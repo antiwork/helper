@@ -45,7 +45,6 @@ describe("refreshConversationDraft", () => {
 
     const newDraftContent = "New draft content";
     const promptInfo: PromptInfo = {
-      base_prompt: "Some base prompt",
       pinned_replies: "Some pinned replies",
       past_conversations: "Some past conversations",
       metadata: "Some metadata",
@@ -95,7 +94,6 @@ describe("refreshConversationDraft", () => {
 
     const newDraftContent = "New draft content";
     const promptInfo: PromptInfo = {
-      base_prompt: "Some base prompt",
       pinned_replies: "Some pinned replies",
       past_conversations: "Some past conversations",
       metadata: "Some metadata",

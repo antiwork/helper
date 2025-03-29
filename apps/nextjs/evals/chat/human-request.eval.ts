@@ -34,9 +34,8 @@ evalite("Human request clarification", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank: knowledgeBankPrompt([]),
+          knowledgeBank: knowledgeBankPrompt(gumroadPrompt.map((content) => ({ content }))),
         },
-        additionalPrompt: gumroadPrompt,
         tools: {
           request_human_support: tool,
         },
@@ -85,9 +84,8 @@ evalite("Request human support after clarifying", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank: knowledgeBankPrompt([]),
+          knowledgeBank: knowledgeBankPrompt(gumroadPrompt.map((content) => ({ content }))),
         },
-        additionalPrompt: gumroadPrompt,
         tools: {
           request_human_support: tool,
         },
@@ -114,9 +112,8 @@ evalite("Request human support when the issue is already clear", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank: knowledgeBankPrompt([]),
+          knowledgeBank: knowledgeBankPrompt(gumroadPrompt.map((content) => ({ content }))),
         },
-        additionalPrompt: gumroadPrompt,
         tools: {
           request_human_support: tool,
         },

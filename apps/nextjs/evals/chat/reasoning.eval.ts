@@ -29,13 +29,13 @@ evalite("Reasoning - Identify valid payout method", {
         ],
         promptRetrievalData: {
           knowledgeBank: knowledgeBankPrompt([
+            ...gumroadPrompt.map((content) => ({ content })),
             {
               content:
                 "If the user has a generic payment decline, ask them to use another form of payment to complete their purchase or contact their bank for more information.",
             },
           ]),
         },
-        additionalPrompt: gumroadPrompt,
       }),
       expected: `Recommend the user to migrate their payout method to Stripe.`,
     },
@@ -57,6 +57,7 @@ evalite("Reasoning - Correct refund information", {
         ],
         promptRetrievalData: {
           knowledgeBank: knowledgeBankPrompt([
+            ...gumroadPrompt.map((content) => ({ content })),
             {
               content:
                 "Refunds are possible within 14 days of purchase. If you've already received the product, you can't get a refund. If you haven't received it yet, you can cancel your order and get a refund.",
@@ -67,7 +68,6 @@ evalite("Reasoning - Correct refund information", {
             },
           ]),
         },
-        additionalPrompt: gumroadPrompt,
         tools: {
           find_last_order: {
             description: "Find the last order of the user",
@@ -117,15 +117,25 @@ evalite("Reasoning - Fees and overdraft explanation", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank:
-            "Common account fees are: Monthly maintenance, overdraft, wire transfer fees.\nAvoid overdraft fees by maintaining minimum balance and enrolling in overdraft protection.\nQ: What is overdraft protection? A: Links savings account to cover checking shortfalls.\nTo dispute charges, submit form within 60 days.\nNo fee at bank ATMs, $3 at others.",
+          knowledgeBank: knowledgeBankPrompt([
+            {
+              content:
+                "Common account fees are: Monthly maintenance, overdraft, wire transfer fees.\nAvoid overdraft fees by maintaining minimum balance and enrolling in overdraft protection.\nQ: What is overdraft protection? A: Links savings account to cover checking shortfalls.\nTo dispute charges, submit form within 60 days.\nNo fee at bank ATMs, $3 at others.",
+            },
+            {
+              content: "Check pending transactions",
+            },
+            {
+              content: "Review account history for unusual activity",
+            },
+            {
+              content: "Verify all recent deposits cleared",
+            },
+            {
+              content: "Check if any automatic payments processed",
+            },
+          ]),
         },
-        additionalPrompt: [
-          "Check pending transactions",
-          "Review account history for unusual activity",
-          "Verify all recent deposits cleared",
-          "Check if any automatic payments processed",
-        ],
       }),
       expected:
         "The AI should: 1) Check for pending transactions that might have affected available balance, 2) Review timing of recent deposits and withdrawals, 3) Look for any automatic payments or holds, 4) Explain difference between available and posted balance, 5) Offer to waive fee if this is first occurrence and customer maintains good balance history. Should NOT assume overdraft without investigating other possibilities.",
@@ -162,15 +172,17 @@ evalite("Reasoning - Tool calling", {
         ],
         promptRetrievalData: {
           knowledgeBank: knowledgeBankPrompt([
+            ...gumroadPrompt.map((content) => ({ content })),
             {
               content:
                 "If the user has a generic payment decline, ask them to use another form of payment to complete their purchase or contact their bank for more information.",
             },
+            {
+              content:
+                "Use the refund_order tool only if the order can be refunded. Returned by the search_orders tool.",
+            },
           ]),
         },
-        additionalPrompt: gumroadPrompt.concat([
-          "Use the refund_order tool only if the order can be refunded. Returned by the search_orders tool.",
-        ]),
         tools: {
           search_orders: {
             description: "Search for orders",

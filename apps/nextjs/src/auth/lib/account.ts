@@ -10,9 +10,6 @@ import { getOAuthAccessToken } from "@/lib/data/user";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { getSlackTeam } from "@/lib/slack/client";
 
-const DEFAULT_MAILBOX_PROMPT = [
-  "You are a helpful customer support assistant. Your goal is to solve the customer's problem effectively with as few words as possible.",
-];
 export const FREE_TRIAL_PERIOD_DAYS = 30;
 export const WIDGET_HMAC_SECRET_PREFIX = "hlpr_widget_";
 
@@ -22,7 +19,6 @@ export const createInitialMailbox = async (tx: Transaction, user: User, organiza
     .values({
       name: organization.name.replace("Organization", "Inbox"),
       slug: assertDefined(organization.slug),
-      responseGeneratorPrompt: DEFAULT_MAILBOX_PROMPT,
       clerkOrganizationId: organization.id,
       promptUpdatedAt: new Date(),
       widgetHMACSecret: `${WIDGET_HMAC_SECRET_PREFIX}${crypto.randomBytes(16).toString("hex")}`,
