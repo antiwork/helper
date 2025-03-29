@@ -36,7 +36,7 @@ export const suggestKnowledgeBankChanges = async (messageId: number, reason: str
   const messageContent = message.body || message.cleanedUpText || "";
   const flagReason = reason || "No reason provided";
 
-  const similarFAQs = await findEnabledKnowledgeBankEntries(messageContent, mailbox);
+  const similarFAQs = await findEnabledKnowledgeBankEntries(mailbox);
   const existingSuggestions = await db.query.faqs.findMany({
     where: and(eq(faqs.suggested, true), eq(faqs.mailboxId, mailbox.id)),
   });
