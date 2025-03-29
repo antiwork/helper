@@ -6,7 +6,9 @@ mod apple_sign_in;
 
 use std::env;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl, WindowBuilder,
+};
 use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
@@ -96,9 +98,8 @@ pub fn run() {
 
     builder
         .setup(|app| {
-            let mut win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+            let mut win_builder = WindowBuilder::new(app, "main")
                 .title("Helper")
-                .disable_drag_drop_handler()
                 .inner_size(1200.0, 800.0);
 
             #[cfg(target_os = "macos")]
@@ -171,6 +172,35 @@ pub fn run() {
                     );
                 }
             }
+
+            let tabs_webview = window
+                .add_child(
+                    WebviewBuilder::new("tabs", WebviewUrl::default()),
+                    LogicalPosition::new(0., 0.),
+                    LogicalSize::new(1200., 40.),
+                )
+                .unwrap();
+
+            let main_webview = window
+                .add_child(
+                    WebviewBuilder::new("main", WebviewUrl::default()).disable_drag_drop_handler(),
+                    LogicalPosition::new(0., 40.),
+                    LogicalSize::new(1200., 800.),
+                )
+                .unwrap();
+
+            let window_clone = window.clone();
+            window.on_window_event(move |event| match event {
+                tauri::WindowEvent::Resized(size) => {
+                    let logical_size = size.to_logical(window_clone.scale_factor().unwrap());
+                    tabs_webview.set_size(LogicalSize::new(logical_size.width, 40.));
+                    main_webview.set_size(LogicalSize::new(
+                        logical_size.width,
+                        logical_size.height - 40.,
+                    ));
+                }
+                _ => {}
+            });
 
             Ok(())
         })
