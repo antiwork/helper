@@ -34,7 +34,7 @@ import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
 import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
-import PromptSetting from "./promptSetting";
+
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
@@ -43,7 +43,7 @@ import ToolSetting from "./toolSetting";
 export type PendingUpdates = {
   slack?: SlackUpdates;
   github?: GitHubUpdates;
-  promptLines?: PromptLineUpdate[];
+
   widget?: {
     displayMode: (typeof mailboxes.$inferSelect)["widgetDisplayMode"];
     displayMinValue?: number;
@@ -92,7 +92,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
   };
 
   const hasPendingUpdates =
-    Boolean(pendingUpdates.promptLines?.length) ||
     Boolean(pendingUpdates.slack) ||
     Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
@@ -137,21 +136,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       label: "Replies",
       id: "replies",
       icon: ChatBubbleBottomCenterIcon,
-      content: (
-        <>
-          <PromptSetting
-            mailboxSlug={mailbox.slug}
-            promptLines={mailbox.responseGeneratorPrompt}
-            onChange={(changes) => {
-              setPendingUpdates({
-                ...pendingUpdates,
-                promptLines: changes,
-              });
-            }}
-            pendingUpdates={pendingUpdates.promptLines}
-          />
-        </>
-      ),
+      content: <></>,
     },
     {
       label: "In-App Chat",

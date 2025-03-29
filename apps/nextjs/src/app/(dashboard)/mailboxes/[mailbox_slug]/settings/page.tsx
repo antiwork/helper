@@ -44,24 +44,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
       }
     }
 
-    if (pendingUpdates.promptLines) {
-      try {
-        const currentPrompt = await api.mailbox.get({ mailboxSlug: params.mailbox_slug });
-        const updatePromptLines = [...currentPrompt.responseGeneratorPrompt];
-        pendingUpdates.promptLines.forEach((line) => {
-          if (line.lineIndex !== undefined && line.content) {
-            updatePromptLines[line.lineIndex] = line.content;
-          }
-        });
 
-        await api.mailbox.update({
-          mailboxSlug: params.mailbox_slug,
-          responseGeneratorPrompt: updatePromptLines,
-        });
-      } catch (e) {
-        throw new Error("Failed to update prompt lines");
-      }
-    }
 
     if (pendingUpdates.widget) {
       await api.mailbox.update({

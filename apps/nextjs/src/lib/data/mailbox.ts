@@ -146,7 +146,3 @@ export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, rep
     })
     .where(eq(mailboxes.id, mailboxId));
 };
-
-export const getResponseGeneratorPromptText = (responseGeneratorPrompt: string[]): string => {
-  return responseGeneratorPrompt.join("\n");
-};
