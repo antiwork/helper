@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
@@ -25,7 +25,7 @@ export const faqsRouter = {
       })
       .from(faqs)
       .where(eq(faqs.mailboxId, ctx.mailbox.id))
-      .orderBy(desc(faqs.createdAt));
+      .orderBy(asc(faqs.content));
   }),
   create: mailboxProcedure
     .input(
