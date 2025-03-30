@@ -7,7 +7,7 @@ import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,9 @@ export function LoginForm() {
   const router = useRouter();
   const appleSignInMutation = api.user.nativeAppleSignIn.useMutation();
 
+  const searchParams = useSearchParams();
+  const desktopRedirectUrl = `/desktop/manager?initialTabUrl=${encodeURIComponent(searchParams.get("initialTabUrl") ?? "")}`;
+
   useEffect(() => {
     if (isSignedIn) {
       router.push("/mailboxes");
@@ -49,7 +52,7 @@ export function LoginForm() {
             firstName: event.payload.firstName ?? "",
             lastName: event.payload.lastName ?? "",
           });
-          router.push(`/login/token?token=${token}`);
+          router.push(`/login/token?token=${token}&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`);
         },
       ).then((l) => {
         unlistenComplete = l;
@@ -77,7 +80,9 @@ export function LoginForm() {
       setLoading(true);
       await invoke("start_apple_sign_in");
     } else if (isTauri) {
-      await openUrl(`${window.location.origin}/login/popup?strategy=${strategy}&deepLink=true`);
+      await openUrl(
+        `${window.location.origin}/login/popup?strategy=${strategy}&deepLink=true&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`,
+      );
     } else {
       try {
         setError(null);
@@ -109,7 +114,7 @@ export function LoginForm() {
 
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
-        router.push("/mailboxes");
+        router.push(isTauri ? desktopRedirectUrl : "/mailboxes");
       } else {
         console.error("Sign in not complete:", signInAttempt);
         setError("Failed to sign in with dev account");

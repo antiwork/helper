@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod tab_manager;
+mod utils;
+
 #[cfg(target_os = "macos")]
 mod apple_sign_in;
 
@@ -8,7 +11,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::Mutex;
 use tauri::{
-    AppHandle, LogicalPosition, LogicalSize, Manager, Url, Webview, WebviewBuilder, WebviewUrl,
+    AppHandle, LogicalPosition, LogicalSize, Manager, Webview, WebviewBuilder, WebviewUrl,
     WindowBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
@@ -69,102 +72,22 @@ fn start_apple_sign_in(app: AppHandle) {
 }
 
 #[tauri::command]
-fn add_tab(window: tauri::Window, app: AppHandle, url: String) -> Result<String, String> {
-    log::info!("Adding tab: {}", url);
-    let mut tab_id = NEXT_TAB_ID.lock().unwrap();
-    let id = format!("tab_{}", *tab_id);
-    *tab_id += 1;
-
-    let size = window.inner_size().unwrap();
-    let scale_factor = window.scale_factor().unwrap();
-    let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
-
-    let parsed_url = Url::parse(&url).map_err(|e| e.to_string())?;
-
-    let webview = window
-        .add_child(
-            WebviewBuilder::new(&id, WebviewUrl::External(parsed_url)).disable_drag_drop_handler(),
-            LogicalPosition::new(0., 40.),
-            LogicalSize::new(logical_size.width, logical_size.height - 40.),
-        )
-        .unwrap();
-
-    let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
-    let is_first_tab = tab_webviews.is_empty();
-    tab_webviews.insert(id.clone(), webview);
-
-    if is_first_tab {
-        if let Some(tab_bar) = window.get_webview("tab_bar") {
-            let _ = tab_bar.set_size(LogicalSize::new(logical_size.width, 40.));
-        }
-    }
-
-    set_active_tab(id.clone()).map_err(|e| e.to_string())?;
-
-    Ok(id)
+fn add_tab(app: AppHandle, window: tauri::Window, url: String) -> Result<String, String> {
+    tab_manager::add_tab(app, window, url)
 }
 
 #[tauri::command]
-fn set_active_tab(tab_id: String) -> Result<(), String> {
-    let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
-
-    if !tab_webviews.contains_key(&tab_id) {
-        return Err(format!("Tab with id {} not found", tab_id));
-    }
-
-    for (_, webview) in tab_webviews.iter() {
-        let _ = webview.hide();
-    }
-
-    if let Some(webview) = tab_webviews.get(&tab_id) {
-        webview.show().map_err(|e| e.to_string())?;
-    }
-
-    let mut active_tab = ACTIVE_TAB.lock().unwrap();
-    *active_tab = Some(tab_id);
-
-    Ok(())
+fn set_active_tab(app: AppHandle, tab_id: String) -> Result<(), String> {
+    tab_manager::set_active_tab(app, tab_id)
 }
 
 #[tauri::command]
-fn close_tab(window: tauri::Window, tab_id: String) -> Result<Option<String>, String> {
-    let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
-
-    if !tab_webviews.contains_key(&tab_id) {
-        return Err(format!("Tab with id {} not found", tab_id));
-    }
-
-    tab_webviews.remove(&tab_id);
-
-    let mut active_tab = ACTIVE_TAB.lock().unwrap();
-    let was_active = active_tab.as_ref().map_or(false, |id| id == &tab_id);
-
-    if tab_webviews.is_empty() {
-        let size = window.inner_size().unwrap();
-        let scale_factor = window.scale_factor().unwrap();
-        let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
-
-        if let Some(tab_bar) = window.get_webview("tab_bar") {
-            let _ = tab_bar.set_size(LogicalSize::new(logical_size.width, logical_size.height));
-        }
-
-        *active_tab = None;
-        return Ok(None);
-    }
-
-    if was_active {
-        if let Some(new_active_id) = tab_webviews.keys().next().cloned() {
-            *active_tab = Some(new_active_id.clone());
-
-            if let Some(webview) = tab_webviews.get(&new_active_id) {
-                let _ = webview.show();
-            }
-
-            return Ok(Some(new_active_id));
-        }
-    }
-
-    Ok(active_tab.clone())
+fn close_tab(
+    app: AppHandle,
+    window: tauri::Window,
+    tab_id: String,
+) -> Result<Option<String>, String> {
+    tab_manager::close_tab(app, window, tab_id)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -216,6 +139,9 @@ pub fn run() {
             }
 
             let window = win_builder.build().unwrap();
+
+            let background_color = utils::get_background_color(&window);
+            let _ = window.set_background_color(Some(background_color));
 
             #[cfg(target_os = "macos")]
             {
@@ -286,7 +212,9 @@ pub fn run() {
 
             let tab_bar_webview = window
                 .add_child(
-                    WebviewBuilder::new("tab_bar", WebviewUrl::default()),
+                    WebviewBuilder::new("tab_bar", WebviewUrl::default())
+                        .disable_drag_drop_handler()
+                        .background_color(background_color),
                     LogicalPosition::new(0., 0.),
                     LogicalSize::new(logical_size.width, logical_size.height),
                 )

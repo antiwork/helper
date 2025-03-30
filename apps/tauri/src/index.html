@@ -48,15 +48,13 @@
               }
             };
 
-            if (deepLinkUrl) {
-              window.__TAURI__.core.invoke("add_tab", {
-                url: validateUrl(deepLinkUrl.replace("antiwork-helper://", "")),
-              });
-            } else if (receivedDeepLinkUrl) {
-              window.__TAURI__.core.invoke("add_tab", { url: validateUrl(receivedDeepLinkUrl) });
-            } else {
-              window.__TAURI__.core.invoke("add_tab", { url: `${baseUrl}/mailboxes` });
-            }
+            const initialTabUrl = deepLinkUrl
+              ? validateUrl(deepLinkUrl.replace("antiwork-helper://", ""))
+              : receivedDeepLinkUrl
+                ? validateUrl(receivedDeepLinkUrl.replace("antiwork-helper://", ""))
+                : "";
+
+            window.location.href = `${baseUrl}/desktop/manager?initialTabUrl=${encodeURIComponent(initialTabUrl)}`;
           });
           return;
         }
