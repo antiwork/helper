@@ -1,6 +1,8 @@
 extern crate lazy_static;
 use crate::utils;
-use crate::{ACTIVE_TAB, NEXT_TAB_ID, TAB_WEBVIEWS};
+use crate::{ACTIVE_TAB, NEXT_TAB_ID, TAB_TITLES, TAB_WEBVIEWS};
+use std::collections::HashMap;
+use std::sync::Mutex;
 use tauri::webview::PageLoadEvent;
 use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl};
 
@@ -19,6 +21,11 @@ pub fn add_tab(
     let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
 
     let parsed_url = tauri::Url::parse(&url).map_err(|e| e.to_string())?;
+
+    {
+        let mut tab_titles = TAB_TITLES.lock().unwrap();
+        tab_titles.insert(id.clone(), "".to_string());
+    }
 
     let background_color = utils::get_background_color(&window);
     let app_for_page_load = app.clone();
@@ -102,6 +109,11 @@ pub fn close_tab(
     }
 
     {
+        let mut tab_titles = TAB_TITLES.lock().unwrap();
+        tab_titles.remove(&tab_id);
+    }
+
+    {
         let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
 
         if !tab_webviews.contains_key(&tab_id) {
@@ -149,15 +161,30 @@ pub fn close_tab(
     Ok(new_active_id_option)
 }
 
+pub fn update_tab(app: tauri::AppHandle, tab_id: String, title: String) -> Result<(), String> {
+    let mut tab_titles = TAB_TITLES.lock().unwrap();
+
+    if !tab_titles.contains_key(&tab_id) {
+        return Err(format!("Tab with id {} not found", tab_id));
+    }
+
+    tab_titles.insert(tab_id, title);
+
+    emit_tab_bar_update(app);
+
+    Ok(())
+}
+
 fn emit_tab_bar_update(app: tauri::AppHandle) {
     let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
     let active_tab = ACTIVE_TAB.lock().unwrap();
+    let tab_titles = TAB_TITLES.lock().unwrap();
 
     let tab_info = tab_webviews
         .iter()
         .map(|(id, webview)| {
             let url = webview.url().unwrap().to_string();
-            let title = webview.title().unwrap_or_default();
+            let title = tab_titles.get(id).cloned().unwrap_or_default();
 
             serde_json::json!({
                 "id": id,

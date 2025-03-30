@@ -21,6 +21,7 @@ lazy_static! {
     static ref TAB_WEBVIEWS: Mutex<HashMap<String, Webview>> = Mutex::new(HashMap::new());
     static ref ACTIVE_TAB: Mutex<Option<String>> = Mutex::new(None);
     static ref NEXT_TAB_ID: Mutex<u32> = Mutex::new(0);
+    static ref TAB_TITLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
 }
 
 #[tauri::command]
@@ -90,6 +91,11 @@ fn close_tab(
     tab_manager::close_tab(app, window, tab_id)
 }
 
+#[tauri::command]
+fn update_tab(app: AppHandle, tab_id: String, title: String) -> Result<(), String> {
+    tab_manager::update_tab(app, tab_id, title)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -109,6 +115,7 @@ pub fn run() {
             add_tab,
             set_active_tab,
             close_tab,
+            update_tab,
             is_mac_app_store,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,
