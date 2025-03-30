@@ -50,65 +50,65 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
     >
       <div className="absolute -z-10 inset-0 border-b" />
       {nativePlatform === "macos" && <div className="w-[70px]" />}
-      <div className="flex-1 flex">
-        <Reorder.Group
-          axis="x"
-          values={tabs}
-          layoutScroll
-          style={{ overflowX: "scroll", display: "flex" }}
-          onReorder={(newTabs) => {
-            invoke("reorder_tabs", { tabIds: newTabs.map((tab) => tab.id) });
-            setTabs(newTabs);
-          }}
-        >
-          {tabs.map((tab) => (
-            <Reorder.Item key={tab.id} value={tab}>
-              <div
-                data-no-drag
-                key={tab.id}
-                className={cn(
-                  "h-full w-56 flex items-center pl-4 pr-2 border-x border-transparent",
-                  activeTab === tab.id && "bg-background border-border",
-                )}
-                onClick={() => invoke("set_active_tab", { tabId: tab.id })}
+      <Reorder.Group
+        axis="x"
+        values={tabs}
+        layoutScroll
+        style={{ overflowX: "scroll", display: "flex" }}
+        onReorder={(newTabs) => {
+          invoke("reorder_tabs", { tabIds: newTabs.map((tab) => tab.id) });
+          setTabs(newTabs);
+        }}
+      >
+        {tabs.map((tab) => (
+          <Reorder.Item key={tab.id} value={tab}>
+            <div
+              data-no-drag
+              key={tab.id}
+              className={cn(
+                "h-full w-56 flex items-center pl-4 pr-2 border-x border-transparent cursor-pointer",
+                activeTab === tab.id && "bg-background border-border",
+              )}
+              onClick={() => invoke("set_active_tab", { tabId: tab.id })}
+            >
+              <span className="flex-1 truncate">{tab.title || <em>Loading ...</em>}</span>
+              <button
+                className="ml-2 p-1 rounded transition-colors hover:bg-muted"
+                onClick={() => {
+                  invoke("close_tab", { tabId: tab.id });
+                  recentlyClosedTabs.current.push(tab);
+                }}
               >
-                <span className="flex-1 truncate">{tab.title || <em>Loading ...</em>}</span>
-                <button
-                  className="ml-2 p-1 rounded transition-colors hover:bg-muted"
-                  onClick={() => {
-                    invoke("close_tab", { tabId: tab.id });
-                    recentlyClosedTabs.current.push(tab);
-                  }}
-                >
-                  <XMarkIcon className="w-4 h-4" />
-                </button>
-              </div>
-            </Reorder.Item>
-          ))}
-        </Reorder.Group>
-        {/* Hide add tab button initially to avoid layout shift */}
-        {tabs.length > 0 && (
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
+      {/* Hide control buttons initially to avoid layout shift */}
+      {tabs.length > 0 && (
+        <>
           <button
             className="self-center ml-1 p-2 rounded transition-colors hover:bg-muted"
             onClick={() => invoke("add_tab", { url: `${window.location.origin}/mailboxes` })}
           >
             <PlusIcon className="w-4 h-4" />
           </button>
-        )}
-      </div>
-      <button
-        className="self-center mx-1 p-2 rounded transition-colors hover:bg-muted"
-        onClick={() =>
-          invoke("show_tab_context_menu", {
-            tabs: JSON.stringify({
-              recentlyClosedTabs: recentlyClosedTabs.current,
-              recentlyClosedWindow: recentlyClosedWindow.current,
-            }),
-          })
-        }
-      >
-        <EllipsisHorizontalIcon className="w-4 h-4" />
-      </button>
+          <button
+            className="self-center ml-auto mr-1 p-2 rounded transition-colors hover:bg-muted"
+            onClick={() =>
+              invoke("show_tab_context_menu", {
+                tabs: JSON.stringify({
+                  recentlyClosedTabs: recentlyClosedTabs.current,
+                  recentlyClosedWindow: recentlyClosedWindow.current,
+                }),
+              })
+            }
+          >
+            <EllipsisHorizontalIcon className="w-4 h-4" />
+          </button>
+        </>
+      )}
     </div>
   );
 };

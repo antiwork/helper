@@ -1,5 +1,4 @@
 extern crate lazy_static;
-use crate::utils;
 use crate::{ACTIVE_TAB, NEXT_TAB_ID, TAB_ORDER, TAB_TITLES, TAB_WEBVIEWS};
 use tauri::webview::PageLoadEvent;
 use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl};
@@ -30,19 +29,15 @@ pub fn add_tab(
         tab_order.push(id.clone());
     }
 
-    let background_color = utils::get_background_color(&window);
     let app_for_page_load = app.clone();
     let id_for_page_load = id.clone();
     let webview = window
         .add_child(
             WebviewBuilder::new(&id, WebviewUrl::External(parsed_url))
                 .disable_drag_drop_handler()
-                .background_color(background_color)
-                .on_page_load(move |_, payload| {
+                .on_page_load(move |webview, payload| {
                     if let PageLoadEvent::Finished = payload.event() {
-                        set_active_tab(app_for_page_load.clone(), id_for_page_load.clone())
-                            .map_err(|e| e.to_string())
-                            .unwrap();
+                        let _ = webview.show();
                     }
                 }),
             LogicalPosition::new(0., 40.),
@@ -50,13 +45,11 @@ pub fn add_tab(
         )
         .unwrap();
 
-    let _ = webview.hide();
-
     let is_first_tab;
     {
         let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
         is_first_tab = tab_webviews.is_empty();
-        tab_webviews.insert(id.clone(), webview);
+        tab_webviews.insert(id.clone(), webview.clone());
     }
 
     if is_first_tab {
@@ -65,7 +58,12 @@ pub fn add_tab(
         }
     }
 
-    emit_tab_bar_update(app);
+    set_active_tab(app_for_page_load.clone(), id_for_page_load.clone())
+        .map_err(|e| e.to_string())
+        .unwrap();
+
+    // It'll be shown when the tab is loaded - avoids a flash of default grey background
+    let _ = webview.hide();
 
     Ok(id)
 }
