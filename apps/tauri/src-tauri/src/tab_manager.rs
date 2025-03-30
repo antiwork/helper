@@ -1,8 +1,6 @@
 extern crate lazy_static;
 use crate::utils;
-use crate::{ACTIVE_TAB, NEXT_TAB_ID, TAB_TITLES, TAB_WEBVIEWS};
-use std::collections::HashMap;
-use std::sync::Mutex;
+use crate::{ACTIVE_TAB, NEXT_TAB_ID, TAB_ORDER, TAB_TITLES, TAB_WEBVIEWS};
 use tauri::webview::PageLoadEvent;
 use tauri::{Emitter, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl};
 
@@ -25,6 +23,11 @@ pub fn add_tab(
     {
         let mut tab_titles = TAB_TITLES.lock().unwrap();
         tab_titles.insert(id.clone(), "".to_string());
+    }
+
+    {
+        let mut tab_order = TAB_ORDER.lock().unwrap();
+        tab_order.push(id.clone());
     }
 
     let background_color = utils::get_background_color(&window);
@@ -114,6 +117,13 @@ pub fn close_tab(
     }
 
     {
+        let mut tab_order = TAB_ORDER.lock().unwrap();
+        if let Some(index) = tab_order.iter().position(|id| id == &tab_id) {
+            tab_order.remove(index);
+        }
+    }
+
+    {
         let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
 
         if !tab_webviews.contains_key(&tab_id) {
@@ -130,7 +140,6 @@ pub fn close_tab(
         } else if tab_was_active {
             new_active_id_option = tab_webviews.keys().next().cloned();
 
-            // Show the new active tab if there is one
             if let Some(ref new_id) = new_active_id_option {
                 if let Some(webview) = tab_webviews.get(new_id) {
                     let _ = webview.show();
@@ -162,13 +171,38 @@ pub fn close_tab(
 }
 
 pub fn update_tab(app: tauri::AppHandle, tab_id: String, title: String) -> Result<(), String> {
-    let mut tab_titles = TAB_TITLES.lock().unwrap();
+    {
+        let mut tab_titles = TAB_TITLES.lock().unwrap();
 
-    if !tab_titles.contains_key(&tab_id) {
-        return Err(format!("Tab with id {} not found", tab_id));
+        if !tab_titles.contains_key(&tab_id) {
+            return Err(format!("Tab with id {} not found", tab_id));
+        }
+
+        tab_titles.insert(tab_id, title);
     }
 
-    tab_titles.insert(tab_id, title);
+    emit_tab_bar_update(app);
+
+    Ok(())
+}
+
+pub fn reorder_tabs(app: tauri::AppHandle, tab_ids: Vec<String>) -> Result<(), String> {
+    {
+        let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+
+        for tab_id in &tab_ids {
+            if !tab_webviews.contains_key(tab_id) {
+                return Err(format!("Tab with id {} not found", tab_id));
+            }
+        }
+
+        if tab_ids.len() != tab_webviews.len() {
+            return Err("New tab order must include all existing tabs".to_string());
+        }
+
+        let mut tab_order = TAB_ORDER.lock().unwrap();
+        *tab_order = tab_ids;
+    }
 
     emit_tab_bar_update(app);
 
@@ -176,29 +210,41 @@ pub fn update_tab(app: tauri::AppHandle, tab_id: String, title: String) -> Resul
 }
 
 fn emit_tab_bar_update(app: tauri::AppHandle) {
-    let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
-    let active_tab = ACTIVE_TAB.lock().unwrap();
-    let tab_titles = TAB_TITLES.lock().unwrap();
+    let tab_info;
+    {
+        let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+        let tab_titles = TAB_TITLES.lock().unwrap();
+        let tab_order = TAB_ORDER.lock().unwrap();
 
-    let tab_info = tab_webviews
-        .iter()
-        .map(|(id, webview)| {
-            let url = webview.url().unwrap().to_string();
-            let title = tab_titles.get(id).cloned().unwrap_or_default();
+        tab_info = tab_order
+            .iter()
+            .filter_map(|id| {
+                if let Some(webview) = tab_webviews.get(id) {
+                    let url = webview.url().unwrap().to_string();
+                    let title = tab_titles.get(id).cloned().unwrap_or_default();
 
-            serde_json::json!({
-                "id": id,
-                "title": title,
-                "url": url,
+                    Some(serde_json::json!({
+                        "id": id,
+                        "title": title,
+                        "url": url,
+                    }))
+                } else {
+                    None
+                }
             })
-        })
-        .collect::<Vec<_>>();
+            .collect::<Vec<_>>();
+    }
+
+    let active_tab;
+    {
+        active_tab = ACTIVE_TAB.lock().unwrap().clone();
+    }
 
     app.emit(
         "tab-bar-update",
         serde_json::json!({
             "tabs": tab_info,
-            "activeTab": active_tab.clone(),
+            "activeTab": active_tab,
         }),
     )
     .unwrap();

@@ -1,5 +1,7 @@
 "use client";
 
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -44,10 +46,48 @@ export function NativeLinkOpener() {
       }
     };
 
+    const setupTitleObserver = () => {
+      if (!tauriPlatform) return;
+
+      const tabId = getCurrentWebview().label;
+      if (tabId === "tab_bar") return;
+
+      if (document.title) {
+        invoke("update_tab", { tabId, title: document.title });
+      }
+
+      const titleObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.type === "childList" ||
+            (mutation.type === "characterData" &&
+              mutation.target.nodeName === "#text" &&
+              mutation.target.parentNode?.nodeName === "TITLE")
+          ) {
+            invoke("update_tab", { tabId, title: document.title });
+          }
+        });
+      });
+
+      document.querySelectorAll("title").forEach((titleElement) => {
+        titleObserver.observe(titleElement, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+        });
+      });
+
+      titleObserver.observe(document.querySelector("head")!, { childList: true });
+
+      return titleObserver;
+    };
+
+    const titleObserver = setupTitleObserver();
     document.addEventListener("click", handleLinkClick);
 
     return () => {
       document.removeEventListener("click", handleLinkClick);
+      titleObserver?.disconnect();
     };
   }, []);
 

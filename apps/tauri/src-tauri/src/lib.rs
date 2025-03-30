@@ -22,6 +22,7 @@ lazy_static! {
     static ref ACTIVE_TAB: Mutex<Option<String>> = Mutex::new(None);
     static ref NEXT_TAB_ID: Mutex<u32> = Mutex::new(0);
     static ref TAB_TITLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+    static ref TAB_ORDER: Mutex<Vec<String>> = Mutex::new(Vec::new());
 }
 
 #[tauri::command]
@@ -96,6 +97,11 @@ fn update_tab(app: AppHandle, tab_id: String, title: String) -> Result<(), Strin
     tab_manager::update_tab(app, tab_id, title)
 }
 
+#[tauri::command]
+fn reorder_tabs(app: AppHandle, tab_ids: Vec<String>) -> Result<(), String> {
+    tab_manager::reorder_tabs(app, tab_ids)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -116,6 +122,7 @@ pub fn run() {
             set_active_tab,
             close_tab,
             update_tab,
+            reorder_tabs,
             is_mac_app_store,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,

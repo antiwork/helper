@@ -1,10 +1,11 @@
 "use client";
 
-import { XMarkIcon } from "@heroicons/react/16/solid";
+import { EllipsisHorizontalIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useMemo, useState } from "react";
+import { Reorder } from "motion/react";
+import { useRef, useState } from "react";
 import { resolveDeepLinkUrl } from "@/components/deepLinkHandler";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { useRunOnce } from "@/components/useRunOnce";
@@ -14,6 +15,8 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
   const { nativePlatform } = useNativePlatform();
   const [tabs, setTabs] = useState<{ id: string; title: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const recentlyClosedTabs = useRef<{ id: string; title: string; url: string }[]>([]);
+  const recentlyClosedWindow = useRef<{ id: string; title: string; url: string }[]>([]);
 
   useRunOnce(() => {
     listen<{
@@ -25,55 +28,87 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
       localStorage.setItem("tabUrls", JSON.stringify(event.payload.tabs.map((tab) => tab.url)));
     });
 
-    // const savedTabs = JSON.parse(localStorage.getItem("tabUrls") ?? "[]");
-    const savedTabs = [];
-    if (initialTabUrl) {
-      const resolved = resolveDeepLinkUrl(initialTabUrl);
-      if (resolved) savedTabs.push(resolved);
-    }
-    savedTabs.forEach((url: string) => invoke("add_tab", { url }));
-    if (savedTabs.length === 0) invoke("add_tab", { url: `${window.location.origin}/mailboxes` });
+    recentlyClosedWindow.current = JSON.parse(localStorage.getItem("tabUrls") ?? "[]");
+
+    const resolved = initialTabUrl ? resolveDeepLinkUrl(initialTabUrl) : null;
+    invoke("add_tab", { url: resolved ?? `${window.location.origin}/mailboxes` });
   });
 
   return (
-    <div className="flex h-10 text-sm">
-      {nativePlatform === "macos" && <DragArea className="w-[70px] border-b" />}
-      {tabs.map((tab) => (
-        <div
-          key={tab.id}
-          className={cn(
-            "flex items-center border-b px-4",
-            activeTab === tab.id && "bg-background border-x border-b-transparent",
-          )}
-        >
-          {tab.title ?? <em>Loading ...</em>}
-          <button
-            className="p-1 rounded transition-colors hover:bg-muted"
-            onClick={() => invoke("close_tab", { id: tab.id })}
-          >
-            <XMarkIcon className="w-3 h-3" />
-          </button>
-        </div>
-      ))}
-      <DragArea className="flex-1 border-b" />
-    </div>
-  );
-};
-
-const DragArea = ({ className }: { className: string }) => {
-  const appWindow = useMemo(() => getCurrentWindow(), []);
-  return (
     <div
-      className={className}
+      className="flex h-10 text-sm relative"
       onMouseDown={(e) => {
+        if ((e.target as HTMLElement).closest("[data-no-drag]")) return;
         if (e.buttons === 1) {
           if (e.detail === 2) {
-            appWindow?.toggleMaximize();
+            getCurrentWindow().toggleMaximize();
           } else {
-            appWindow?.startDragging();
+            getCurrentWindow().startDragging();
           }
         }
       }}
-    />
+    >
+      <div className="absolute -z-10 inset-0 border-b" />
+      {nativePlatform === "macos" && <div className="w-[70px]" />}
+      <div className="flex-1 flex">
+        <Reorder.Group
+          axis="x"
+          values={tabs}
+          layoutScroll
+          style={{ overflowX: "scroll", display: "flex" }}
+          onReorder={(newTabs) => {
+            invoke("reorder_tabs", { tabIds: newTabs.map((tab) => tab.id) });
+            setTabs(newTabs);
+          }}
+        >
+          {tabs.map((tab) => (
+            <Reorder.Item key={tab.id} value={tab}>
+              <div
+                data-no-drag
+                key={tab.id}
+                className={cn(
+                  "h-full w-56 flex items-center pl-4 pr-2 border-x border-transparent",
+                  activeTab === tab.id && "bg-background border-border",
+                )}
+                onClick={() => invoke("set_active_tab", { tabId: tab.id })}
+              >
+                <span className="flex-1 truncate">{tab.title || <em>Loading ...</em>}</span>
+                <button
+                  className="ml-2 p-1 rounded transition-colors hover:bg-muted"
+                  onClick={() => {
+                    invoke("close_tab", { tabId: tab.id });
+                    recentlyClosedTabs.current.push(tab);
+                  }}
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </Reorder.Item>
+          ))}
+        </Reorder.Group>
+        {/* Hide add tab button initially to avoid layout shift */}
+        {tabs.length > 0 && (
+          <button
+            className="self-center ml-1 p-2 rounded transition-colors hover:bg-muted"
+            onClick={() => invoke("add_tab", { url: `${window.location.origin}/mailboxes` })}
+          >
+            <PlusIcon className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+      <button
+        className="self-center mx-1 p-2 rounded transition-colors hover:bg-muted"
+        onClick={() =>
+          invoke("show_tab_context_menu", {
+            tabs: JSON.stringify({
+              recentlyClosedTabs: recentlyClosedTabs.current,
+              recentlyClosedWindow: recentlyClosedWindow.current,
+            }),
+          })
+        }
+      >
+        <EllipsisHorizontalIcon className="w-4 h-4" />
+      </button>
+    </div>
   );
 };
