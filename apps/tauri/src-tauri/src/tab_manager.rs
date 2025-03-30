@@ -128,7 +128,9 @@ pub fn close_tab(
             return Err(format!("Tab with id {} not found", tab_id));
         }
 
-        tab_webviews.remove(&tab_id);
+        let webview = tab_webviews.remove(&tab_id).unwrap();
+        webview.close().unwrap();
+
         is_tab_empty = tab_webviews.is_empty();
 
         let tab_was_active = current_active_id.as_ref().map_or(false, |id| id == &tab_id);
