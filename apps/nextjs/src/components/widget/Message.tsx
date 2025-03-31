@@ -73,7 +73,13 @@ export default function Message({ message, conversationSlug, token, data, color 
           color={color}
         />
         {message.experimental_attachments?.map((attachment) => (
-          <a key={attachment.url} href={attachment.url} className="p-4 pb-0" target="_blank" rel="noopener noreferrer">
+          <a
+            key={attachment.url}
+            href={attachment.url}
+            className="block p-4 pt-0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img className="w-full rounded-lg" src={attachment.url} alt={attachment.name} />
           </a>
         ))}

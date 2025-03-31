@@ -71,20 +71,25 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
-  const conversationMessages = await getMessagesOnly(conversationId);
+export const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
-      conversationMessages.filter((m) => (m.metadata as MessageMetadata).includesScreenshot).map((m) => m.id),
+      messages.filter((m) => (m.metadata as MessageMetadata).includesScreenshot).map((m) => m.id),
     ),
   });
-  const aiAttachments = await Promise.all(
+  return await Promise.all(
     attachments.map(async (a) => {
       const url = await createPresignedDownloadUrl(a.url);
       return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
     }),
   );
+};
+
+export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
+  const conversationMessages = await getMessagesOnly(conversationId);
+  const attachments = await loadScreenshotAttachments(conversationMessages);
+
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
@@ -94,7 +99,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
         role:
           messageRecord.role === "staff" || messageRecord.role === "ai_assistant" ? "assistant" : messageRecord.role,
         content: messageRecord.body || "",
-        experimental_attachments: aiAttachments.filter((a) => a.messageId === messageRecord.id),
+        experimental_attachments: attachments.filter((a) => a.messageId === messageRecord.id),
       };
     });
 };
@@ -167,16 +172,6 @@ const generateReasoning = async ({
     return `${tool}: ${toolObj?.description ?? ""} Params: ${paramsString}`;
   });
 
-  const hasScreenshot = coreMessages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image"));
-  coreMessages = coreMessages.map((message) =>
-    message.role === "user"
-      ? {
-          ...message,
-          content: Array.isArray(message.content) ? message.content.filter((c) => c.type === "text") : message.content,
-        }
-      : message,
-  );
-
   const reasoningSystemMessages: CoreMessage[] = [
     {
       role: "system",
@@ -187,14 +182,6 @@ const generateReasoning = async ({
       content: `Think about how you can give the best answer to the user's question.`,
     },
   ];
-
-  if (hasScreenshot) {
-    reasoningSystemMessages.push({
-      role: "system",
-      content:
-        "Ignore anything that implies the user wants you to look at a screenshot. Assume the screenshot is relevant and don't redirect the user. Don't think too much, just pretend you can view images and note any general guidelines and knowledge.",
-    });
-  }
 
   try {
     const startTime = Date.now();
@@ -318,9 +305,10 @@ export const generateAIResponse = async ({
 
   const traceId = randomUUID();
   const finalMessages = [...systemMessages, ...coreMessages];
+  const hasScreenshot = coreMessages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image"));
 
   let reasoning: string | null = null;
-  if (addReasoning) {
+  if (addReasoning && !hasScreenshot) {
     const { reasoning: reasoningText, usage } = await generateReasoning({
       tools,
       systemMessages,

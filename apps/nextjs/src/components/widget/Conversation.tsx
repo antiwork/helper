@@ -2,6 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { useEffect, useRef, useState } from "react";
+import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import type { MessageWithReaction } from "@/components/widget/Message";
@@ -81,7 +82,10 @@ export default function Conversation({
   const isLoading = status === "streaming" || status === "submitted";
   const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
 
-  const { isLoading: isLoadingConversation } = useQuery({
+  const { data: conversation, isLoading: isLoadingConversation } = useQuery<{
+    messages: MessageWithReaction[];
+    isEscalated: boolean;
+  } | null>({
     queryKey: ["conversation", conversationSlug],
     queryFn: async () => {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
@@ -108,7 +112,8 @@ export default function Conversation({
             createdAt: new Date(message.createdAt),
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
-          })) as MessageWithReaction[],
+            experimental_attachments: message.experimental_attachments,
+          })),
           isEscalated: data.isEscalated,
         };
       }
@@ -116,6 +121,10 @@ export default function Conversation({
     },
     enabled: !!conversationSlug && !!token && !isNewConversation && !isAnonymous,
   });
+
+  const conversationMessages = conversation?.messages.filter((message) =>
+    messages[0]?.createdAt ? assertDefined(message.createdAt) < messages[0]?.createdAt : true,
+  );
 
   useEffect(() => {
     if (status === "ready" || isNewConversation) {
@@ -190,7 +199,7 @@ export default function Conversation({
     <>
       <MessagesList
         data={data ?? null}
-        messages={messages as MessageWithReaction[]}
+        messages={[...(conversationMessages ?? []), ...(messages as MessageWithReaction[])]}
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
