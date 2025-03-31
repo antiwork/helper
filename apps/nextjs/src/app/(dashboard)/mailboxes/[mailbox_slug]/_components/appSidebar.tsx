@@ -337,8 +337,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                     window.open("http://docs.helper.ai", "_blank", "noopener,noreferrer");
                   }}
                 >
-                  <BookOpenIcon className="h-4 w-4 mr-2" />
-                  <span>Docs</span>
+                  <span>Documentation</span>
                 </DropdownMenuItem>
                 {isMobileWeb || (isDesktopWeb && user?.unsafeMetadata?.desktopAppPromptDismissed) ? (
                   <DropdownMenuItem
