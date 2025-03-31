@@ -27,12 +27,7 @@ import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
-import {
-  ConversationMessage,
-  createConversationMessage,
-  disableAIResponse,
-  getMessagesOnly,
-} from "@/lib/data/conversationMessage";
+import { createConversationMessage, disableAIResponse, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
