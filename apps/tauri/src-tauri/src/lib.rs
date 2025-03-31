@@ -103,6 +103,11 @@ fn reorder_tabs(app: AppHandle, tab_ids: Vec<String>) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn close_all_tabs(app: AppHandle, window: tauri::Window) -> Result<(), String> {
+    tab_manager::close_all_tabs(app, window)
+}
+
+#[tauri::command]
 fn toggle_tab_context_menu(app: AppHandle, tabs: String) {
     app.emit("tab-context-menu", tabs).unwrap();
 }
@@ -128,6 +133,7 @@ pub fn run() {
             close_tab,
             update_tab,
             reorder_tabs,
+            close_all_tabs,
             toggle_tab_context_menu,
             is_mac_app_store,
             #[cfg(target_os = "macos")]

@@ -88,7 +88,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     try {
       // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
       window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",
