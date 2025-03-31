@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { DocumentTitle } from "@/components/documentTitle";
 import { api } from "@/trpc/server";
 import { getSidebarInfo } from "../_components/getSidebarInfo";
 import Settings, { type PendingUpdates } from "./_components/settings";
@@ -85,7 +86,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
 
   return (
     <>
-      <title>Settings</title>
+      <DocumentTitle>Settings</DocumentTitle>
       <Settings
         mailbox={mailboxData}
         onUpdateSettings={handleUpdateSettings}

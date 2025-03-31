@@ -14,6 +14,7 @@ import {
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/mobileList";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useSaveLatestMailboxSlug";
 import { getGlobalAblyClient } from "@/components/ablyClient";
+import { DocumentTitle } from "@/components/documentTitle";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -64,7 +65,7 @@ const Inbox = () => {
   if (isMobile) {
     return (
       <div className="flex grow overflow-hidden">
-        {pageTitle ? <title>{pageTitle}</title> : null}
+        {pageTitle ? <DocumentTitle>{pageTitle}</DocumentTitle> : null}
         <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
           <MobileList />
         </div>
@@ -80,7 +81,7 @@ const Inbox = () => {
 
   return (
     <div className="flex grow overflow-hidden">
-      {pageTitle ? <title>{pageTitle}</title> : null}
+      {pageTitle ? <DocumentTitle>{pageTitle}</DocumentTitle> : null}
       {currentConversationSlug ? (
         <Conversation key={currentConversationSlug} />
       ) : (

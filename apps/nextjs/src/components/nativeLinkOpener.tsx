@@ -63,45 +63,10 @@ export function NativeLinkOpener() {
       }
     };
 
-    const setupTitleObserver = () => {
-      if (!tauriPlatform) return;
-
-      if (document.title) {
-        invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
-      }
-
-      const titleObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (
-            mutation.type === "childList" ||
-            (mutation.type === "characterData" &&
-              mutation.target.nodeName === "#text" &&
-              mutation.target.parentNode?.nodeName === "TITLE")
-          ) {
-            invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
-          }
-        });
-      });
-
-      document.querySelectorAll("title").forEach((titleElement) => {
-        titleObserver.observe(titleElement, {
-          childList: true,
-          characterData: true,
-          subtree: true,
-        });
-      });
-
-      titleObserver.observe(document.querySelector("head")!, { childList: true });
-
-      return titleObserver;
-    };
-
-    const titleObserver = setupTitleObserver();
     document.addEventListener("click", handleLinkClick);
 
     return () => {
       document.removeEventListener("click", handleLinkClick);
-      titleObserver?.disconnect();
     };
   }, []);
 
