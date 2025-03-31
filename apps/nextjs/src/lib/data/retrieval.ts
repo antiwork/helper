@@ -7,7 +7,7 @@ import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
 import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
-import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
+import { getMetadata, timestamp } from "../metadataApiClient";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
@@ -28,7 +28,7 @@ export const findSimilarConversations = async (
     : await generateEmbedding(queryInput, "query-find-past-conversations");
   const similarity = sql<number>`1 - (${cosineDistance(conversations.embedding, queryEmbedding)})`;
 
-  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id}`;
+  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id} AND ${eq(conversations.isPrompt, false)}`;
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
   }
@@ -73,27 +73,15 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   return conversationPrompt;
 };
 
-export const findSimilarInKnowledgeBank = async (query: string, mailbox: Mailbox) => {
-  const queryEmbedding = await generateEmbedding(query, "embedding-query-similar-faqs");
-  const similarity = sql<number>`1 - (${cosineDistance(faqs.embedding, queryEmbedding)})`;
-  const similarFAQs = await db.query.faqs.findMany({
-    where: and(
-      sql`${gt(similarity, SIMILARITY_THRESHOLD)} AND ${faqs.mailboxId} = ${mailbox.id}`,
-      eq(faqs.enabled, true),
-    ),
+export const findEnabledKnowledgeBankEntries = async (mailbox: Mailbox) =>
+  await db.query.faqs.findMany({
+    where: and(eq(faqs.mailboxId, mailbox.id), eq(faqs.enabled, true)),
     columns: {
       id: true,
       content: true,
     },
-    extras: {
-      similarity: similarity.as("similarity"),
-    },
-    orderBy: (_faq, { desc }) => [desc(similarity)],
-    limit: MAX_SIMILAR_KNOWLEDGE_ITEMS,
+    orderBy: (faqs, { asc }) => [asc(faqs.content)],
   });
-
-  return similarFAQs;
-};
 
 export const findSimilarWebsitePages = async (
   query: string,
@@ -147,7 +135,7 @@ export const fetchPromptRetrievalData = async (
   query: string,
   metadata: object | null,
 ): Promise<PromptRetrievalData> => {
-  const knowledgeBank = await findSimilarInKnowledgeBank(query, mailbox);
+  const knowledgeBank = await findEnabledKnowledgeBankEntries(mailbox);
   const websitePages = await findSimilarWebsitePages(query, mailbox);
 
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;

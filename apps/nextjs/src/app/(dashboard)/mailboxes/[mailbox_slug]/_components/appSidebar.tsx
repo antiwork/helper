@@ -137,11 +137,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                       <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                       <span className="truncate text-base">{mailbox.name}</span>
                       <span className="ml-auto">
-                        {mailbox.slug === currentMailbox?.slug ? (
-                          <CheckCircleIcon className="text-foreground" />
-                        ) : (
-                          <span className="text-right text-base opacity-50">{mailbox.openTicketCount}</span>
-                        )}
+                        {mailbox.slug === currentMailbox?.slug && <CheckCircleIcon className="text-foreground" />}
                       </span>
                     </Link>
                   </DropdownMenuItem>

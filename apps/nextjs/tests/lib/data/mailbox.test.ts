@@ -34,7 +34,6 @@ test("getMailboxInfo", async () => {
     slackConnected: false,
     slackConnectUrl: expect.any(String),
     slackAlertChannel: null,
-    responseGeneratorPrompt: [],
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
@@ -50,6 +49,8 @@ test("getMailboxInfo", async () => {
     githubConnected: false,
     githubRepoName: null,
     githubRepoOwner: null,
+    autoCloseDaysOfInactivity: 14,
+    autoCloseEnabled: false,
   });
 
   const slackConnectUrl = new URL(info.slackConnectUrl);

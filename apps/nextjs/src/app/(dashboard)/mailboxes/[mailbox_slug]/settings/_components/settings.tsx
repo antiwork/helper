@@ -3,7 +3,6 @@
 import { useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
-  ChatBubbleBottomCenterIcon,
   ComputerDesktopIcon,
   CreditCardIcon,
   LinkIcon,
@@ -11,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronUp } from "lucide-react";
 import React, { useState, useTransition } from "react";
-import type { PromptLineUpdate, SupportAccount } from "@/app/types/global";
+import type { SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
@@ -34,7 +33,6 @@ import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
 import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
-import PromptSetting from "./promptSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
@@ -43,7 +41,7 @@ import ToolSetting from "./toolSetting";
 export type PendingUpdates = {
   slack?: SlackUpdates;
   github?: GitHubUpdates;
-  promptLines?: PromptLineUpdate[];
+
   widget?: {
     displayMode: (typeof mailboxes.$inferSelect)["widgetDisplayMode"];
     displayMinValue?: number;
@@ -92,7 +90,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
   };
 
   const hasPendingUpdates =
-    Boolean(pendingUpdates.promptLines?.length) ||
     Boolean(pendingUpdates.slack) ||
     Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
@@ -131,26 +128,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
             })
           }
         />
-      ),
-    },
-    {
-      label: "Replies",
-      id: "replies",
-      icon: ChatBubbleBottomCenterIcon,
-      content: (
-        <>
-          <PromptSetting
-            mailboxSlug={mailbox.slug}
-            promptLines={mailbox.responseGeneratorPrompt}
-            onChange={(changes) => {
-              setPendingUpdates({
-                ...pendingUpdates,
-                promptLines: changes,
-              });
-            }}
-            pendingUpdates={pendingUpdates.promptLines}
-          />
-        </>
       ),
     },
     {

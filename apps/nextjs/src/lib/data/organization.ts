@@ -8,30 +8,24 @@ import { db } from "@/db/client";
 import { subscriptions } from "@/db/schema";
 import { env } from "@/env";
 import { redis } from "@/lib/redis/client";
-import { benchmarkApiCall, clerkClient, getClerkUserList } from "./user";
+import { clerkClient, getClerkUserList } from "./user";
 
 export const ADDITIONAL_PAID_ORGANIZATION_IDS = env.ADDITIONAL_PAID_ORGANIZATION_IDS?.split(",") ?? [];
 
 export const getClerkOrganization = cache(async (organizationId: string) => {
-  return await benchmarkApiCall(() => clerkClient.organizations.getOrganization({ organizationId }));
+  return await clerkClient.organizations.getOrganization({ organizationId });
 });
 
 export const addMember = async (organizationId: string, userId: string) => {
-  return await benchmarkApiCall(() =>
-    clerkClient.organizations.createOrganizationMembership({ organizationId, userId, role: "org:member" }),
-  );
+  return await clerkClient.organizations.createOrganizationMembership({ organizationId, userId, role: "org:member" });
 };
 
 export const setPrivateMetadata = async (organizationId: string, metadata: Record<string, any>) => {
-  return await benchmarkApiCall(() =>
-    clerkClient.organizations.updateOrganizationMetadata(organizationId, { privateMetadata: metadata }),
-  );
+  return await clerkClient.organizations.updateOrganizationMetadata(organizationId, { privateMetadata: metadata });
 };
 
 export const getOrganizationMembers = async (organizationId: string, limit = 100) => {
-  return await benchmarkApiCall(() =>
-    clerkClient.organizations.getOrganizationMembershipList({ organizationId, limit }),
-  );
+  return await clerkClient.organizations.getOrganizationMembershipList({ organizationId, limit });
 };
 
 export const getOrganizationAdminUsers = async (organizationId: string) => {
@@ -45,20 +39,18 @@ export const getOrganizationAdminUsers = async (organizationId: string) => {
 };
 
 export const getOrganizationMemberships = async (userId: string) => {
-  return await benchmarkApiCall(() => clerkClient.users.getOrganizationMembershipList({ userId }));
+  return await clerkClient.users.getOrganizationMembershipList({ userId });
 };
 
 export const createOrganization = async (user: User) => {
-  return await benchmarkApiCall(() =>
-    clerkClient.organizations.createOrganization({
-      name: user.firstName ? `${user.firstName}'s Organization` : "My Organization",
-      createdBy: user.id,
-      privateMetadata: {
-        freeTrialEndsAt: addDays(new Date(), FREE_TRIAL_PERIOD_DAYS).toISOString(),
-        automatedRepliesCount: 0,
-      },
-    }),
-  );
+  return await clerkClient.organizations.createOrganization({
+    name: user.firstName ? `${user.firstName}'s Organization` : "My Organization",
+    createdBy: user.id,
+    privateMetadata: {
+      freeTrialEndsAt: addDays(new Date(), FREE_TRIAL_PERIOD_DAYS).toISOString(),
+      automatedRepliesCount: 0,
+    },
+  });
 };
 
 export type SubscriptionStatus = "paid" | "free_trial" | "free_trial_expired";

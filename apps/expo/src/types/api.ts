@@ -47,12 +47,9 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       list: import("@trpc/server").TRPCQueryProcedure<{
         input: void;
         output: {
-          openTicketCount: number;
           name: string;
           id: number;
           slug: string;
-          autoCloseEnabled: boolean;
-          autoCloseDaysOfInactivity: number;
         }[];
       }>;
       countByStatus: import("@trpc/server").TRPCQueryProcedure<{
@@ -104,7 +101,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           githubConnectUrl: string;
           githubRepoOwner: string | null;
           githubRepoName: string | null;
-          responseGeneratorPrompt: string[];
           clerkOrganizationId: string;
           subscription: {
             status: string | null;
@@ -112,7 +108,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             canceledAt: Date | null;
           } | null;
           widgetHMACSecret: string;
-          widgetDisplayMode: "always" | "revenue_based" | "off";
+          widgetDisplayMode: "off" | "always" | "revenue_based";
           widgetDisplayMinValue: number | null;
           widgetHost: string | null;
           autoRespondEmailToChat: boolean;
@@ -127,11 +123,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       update: import("@trpc/server").TRPCMutationProcedure<{
         input: {
           mailboxSlug: string;
-          responseGeneratorPrompt?: string[] | undefined;
           slackAlertChannel?: string | undefined;
           githubRepoOwner?: string | undefined;
           githubRepoName?: string | undefined;
-          widgetDisplayMode?: "always" | "revenue_based" | "off" | undefined;
+          widgetDisplayMode?: "off" | "always" | "revenue_based" | undefined;
           widgetDisplayMinValue?: number | undefined;
           autoRespondEmailToChat?: boolean | undefined;
           widgetHost?: string | undefined;
@@ -338,11 +333,11 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isPublic: boolean;
                   }[];
                   metadata:
+                    | import("../db/schema").ToolMetadata
                     | (Partial<import("../types/customerInfo").CustomerInfo> &
                         Record<string, unknown> & {
                           reasoning?: string | null | undefined;
                         })
-                    | import("../db/schema").ToolMetadata
                     | null;
                   reactionType: "thumbs-up" | "thumbs-down" | null;
                   reactionFeedback: string | null;
@@ -494,11 +489,11 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     isPublic: boolean;
                   }[];
                   metadata:
+                    | import("../db/schema").ToolMetadata
                     | (Partial<import("../types/customerInfo").CustomerInfo> &
                         Record<string, unknown> & {
                           reasoning?: string | null | undefined;
                         })
-                    | import("../db/schema").ToolMetadata
                     | null;
                   reactionType: "thumbs-up" | "thumbs-down" | null;
                   reactionFeedback: string | null;
@@ -775,12 +770,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         files: {
           initiateUpload: import("@trpc/server").TRPCMutationProcedure<{
             input: {
+              conversationSlug: string;
               file: {
                 isInline: boolean;
                 fileName: string;
                 fileSize: number;
               };
-              conversationSlug: string;
             };
             output: {
               file: {

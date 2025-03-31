@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
-import { and, count, eq, inArray, isNotNull, isNull, SQL } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { setupOrganizationForNewUser } from "@/auth/lib/authService";
 import { assertDefined } from "@/components/utils/assert";
@@ -34,8 +34,6 @@ export const mailboxRouter = {
         id: true,
         name: true,
         slug: true,
-        autoCloseEnabled: true,
-        autoCloseDaysOfInactivity: true,
       },
     });
 
@@ -46,35 +44,14 @@ export const mailboxRouter = {
       );
       allMailboxes.push(mailbox);
     }
-
-    const openTicketCountByMailbox = await db
-      .select({
-        mailboxId: conversations.mailboxId,
-        count: count(conversations.id),
-      })
-      .from(conversations)
-      .where(
-        and(
-          eq(conversations.status, "open"),
-          inArray(
-            conversations.mailboxId,
-            allMailboxes.map(({ id }) => id),
-          ),
-        ),
-      )
-      .groupBy(conversations.mailboxId);
-
-    return allMailboxes.map((mailbox) => ({
-      ...mailbox,
-      openTicketCount: openTicketCountByMailbox.find(({ mailboxId }) => mailboxId === mailbox.id)?.count ?? 0,
-    }));
+    return allMailboxes;
   }),
   countByStatus: mailboxProcedure.query(async ({ ctx }) => {
     const countByStatus = async (where?: SQL) => {
       const result = await db
         .select({ status: conversations.status, count: count() })
         .from(conversations)
-        .where(and(eq(conversations.mailboxId, ctx.mailbox.id), where))
+        .where(and(eq(conversations.mailboxId, ctx.mailbox.id), isNull(conversations.mergedIntoId), where))
         .groupBy(conversations.status);
       return {
         open: result.find((c) => c.status === "open")?.count ?? 0,
@@ -106,7 +83,6 @@ export const mailboxRouter = {
         slackAlertChannel: z.string().optional(),
         githubRepoOwner: z.string().optional(),
         githubRepoName: z.string().optional(),
-        responseGeneratorPrompt: z.array(z.string()).optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
         widgetDisplayMinValue: z.number().optional(),
         autoRespondEmailToChat: z.boolean().optional(),
@@ -120,9 +96,7 @@ export const mailboxRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const mailboxId = ctx.mailbox.id;
-      const updates = input.responseGeneratorPrompt ? { ...input, promptUpdatedAt: new Date() } : input;
-      await db.update(mailboxes).set(updates).where(eq(mailboxes.id, mailboxId));
+      await db.update(mailboxes).set(input).where(eq(mailboxes.id, ctx.mailbox.id));
     }),
   members: mailboxProcedure
     .input(
