@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::Mutex;
 use tauri::{
-    AppHandle, LogicalPosition, LogicalSize, Manager, Webview, WebviewBuilder, WebviewUrl,
+    AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, Webview, WebviewBuilder, WebviewUrl,
     WindowBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
@@ -102,6 +102,11 @@ fn reorder_tabs(app: AppHandle, tab_ids: Vec<String>) -> Result<(), String> {
     tab_manager::reorder_tabs(app, tab_ids)
 }
 
+#[tauri::command]
+fn show_tab_context_menu(app: AppHandle, tabs: String) {
+    app.emit("tab-context-menu", tabs).unwrap();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -123,6 +128,7 @@ pub fn run() {
             close_tab,
             update_tab,
             reorder_tabs,
+            show_tab_context_menu,
             is_mac_app_store,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,

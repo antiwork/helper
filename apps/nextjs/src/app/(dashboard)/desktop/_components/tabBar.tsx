@@ -4,19 +4,18 @@ import { EllipsisHorizontalIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { uniqBy } from "lodash";
 import { Reorder } from "motion/react";
 import { useRef, useState } from "react";
 import { resolveDeepLinkUrl } from "@/components/deepLinkHandler";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { useRunOnce } from "@/components/useRunOnce";
-import { cn } from "@/lib/utils";
 
 export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
   const { nativePlatform } = useNativePlatform();
   const [tabs, setTabs] = useState<{ id: string; title: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
-  const recentlyClosedTabs = useRef<{ id: string; title: string; url: string }[]>([]);
-  const recentlyClosedWindow = useRef<{ id: string; title: string; url: string }[]>([]);
+  const recentlyClosedTabs = useRef<{ title: string; url: string }[]>([]);
 
   useRunOnce(() => {
     listen<{
@@ -25,10 +24,16 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
     }>("tab-bar-update", (event) => {
       setTabs(event.payload.tabs);
       setActiveTab(event.payload.activeTab);
-      localStorage.setItem("tabUrls", JSON.stringify(event.payload.tabs.map((tab) => tab.url)));
+      recentlyClosedTabs.current = recentlyClosedTabs.current.filter(
+        (tab) => !event.payload.tabs.some((t) => t.url === tab.url),
+      );
+      localStorage.setItem(
+        "recentTabs",
+        JSON.stringify(event.payload.tabs.map((tab) => ({ title: tab.title, url: tab.url }))),
+      );
     });
 
-    recentlyClosedWindow.current = JSON.parse(localStorage.getItem("tabUrls") ?? "[]");
+    recentlyClosedTabs.current = JSON.parse(localStorage.getItem("recentTabs") ?? "[]");
 
     const resolved = initialTabUrl ? resolveDeepLinkUrl(initialTabUrl) : null;
     invoke("add_tab", { url: resolved ?? `${window.location.origin}/mailboxes` });
@@ -49,7 +54,7 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
       }}
     >
       <div className="absolute -z-10 inset-0 border-b" />
-      {nativePlatform === "macos" && <div className="w-[70px]" />}
+      {nativePlatform === "macos" && <div className="w-[70px] border-r" />}
       <Reorder.Group
         axis="x"
         values={tabs}
@@ -65,18 +70,17 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
             <div
               data-no-drag
               key={tab.id}
-              className={cn(
-                "h-full w-56 flex items-center pl-4 pr-2 border-x border-transparent cursor-pointer",
-                activeTab === tab.id && "bg-background border-border",
-              )}
+              className="relative h-full w-56 flex items-center pl-4 pr-2 border-r border-b bg-background cursor-pointer"
               onClick={() => invoke("set_active_tab", { tabId: tab.id })}
             >
+              {activeTab === tab.id && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-bright" />}
               <span className="flex-1 truncate">{tab.title || <em>Loading ...</em>}</span>
               <button
                 className="ml-2 p-1 rounded transition-colors hover:bg-muted"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   invoke("close_tab", { tabId: tab.id });
-                  recentlyClosedTabs.current.push(tab);
+                  recentlyClosedTabs.current = uniqBy([tab, ...recentlyClosedTabs.current], "url").slice(0, 10);
                 }}
               >
                 <XMarkIcon className="w-4 h-4" />
@@ -98,10 +102,7 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
             className="self-center ml-auto mr-1 p-2 rounded transition-colors hover:bg-muted"
             onClick={() =>
               invoke("show_tab_context_menu", {
-                tabs: JSON.stringify({
-                  recentlyClosedTabs: recentlyClosedTabs.current,
-                  recentlyClosedWindow: recentlyClosedWindow.current,
-                }),
+                tabs: JSON.stringify(recentlyClosedTabs.current),
               })
             }
           >

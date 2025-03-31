@@ -1,18 +1,27 @@
 "use client";
 
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getTauriPlatform } from "@/components/useNativePlatform";
 
 export function NativeLinkOpener() {
   const router = useRouter();
+  const [recentlyClosedTabs, setRecentlyClosedTabs] = useState<{ url: string; title: string }[] | null>(null);
 
   useEffect(() => {
     const tauriPlatform = getTauriPlatform();
     if (!tauriPlatform && !window.ReactNativeWebView) return;
+    if (tauriPlatform && getCurrentWebview().label === "tab_bar") return;
+
+    listen<string>("tab-context-menu", (event) => {
+      setRecentlyClosedTabs((tabs) => (tabs ? null : JSON.parse(event.payload)));
+    });
 
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -37,7 +46,15 @@ export function NativeLinkOpener() {
         } else if (tauriPlatform) {
           // Open links relevant to the current origin in the app window
           if (url.origin === window.location.origin) {
-            router.push(`${url.pathname}${url.search}`);
+            if (
+              event.ctrlKey ||
+              event.metaKey ||
+              (event.target instanceof HTMLAnchorElement && event.target.getAttribute("target") === "_blank")
+            ) {
+              invoke("add_tab", { url: url.toString() });
+            } else {
+              router.push(`${url.pathname}${url.search}`);
+            }
           } else {
             event.preventDefault();
             openUrl(url.toString());
@@ -49,11 +66,8 @@ export function NativeLinkOpener() {
     const setupTitleObserver = () => {
       if (!tauriPlatform) return;
 
-      const tabId = getCurrentWebview().label;
-      if (tabId === "tab_bar") return;
-
       if (document.title) {
-        invoke("update_tab", { tabId, title: document.title });
+        invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
       }
 
       const titleObserver = new MutationObserver((mutations) => {
@@ -64,7 +78,7 @@ export function NativeLinkOpener() {
               mutation.target.nodeName === "#text" &&
               mutation.target.parentNode?.nodeName === "TITLE")
           ) {
-            invoke("update_tab", { tabId, title: document.title });
+            invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
           }
         });
       });
@@ -91,7 +105,40 @@ export function NativeLinkOpener() {
     };
   }, []);
 
-  return null;
+  return recentlyClosedTabs ? (
+    <div className="fixed -top-4 right-1">
+      <Popover open={true} onOpenChange={(open) => !open && setRecentlyClosedTabs(null)}>
+        <PopoverTrigger>
+          <div />
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-1">
+          {recentlyClosedTabs.length === 0 ? (
+            <div className="flex h-32 items-center justify-center text-center text-xs text-muted-foreground px-10">
+              Recently closed tabs will appear here.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <div className="px-4 py-2 text-xs font-medium text-muted-foreground">Recently closed tabs</div>
+              {recentlyClosedTabs.map((tab) => (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="block w-full justify-start truncate"
+                  key={tab.url}
+                  onClick={() => {
+                    invoke("add_tab", { url: tab.url });
+                    setRecentlyClosedTabs(null);
+                  }}
+                >
+                  {tab.title}
+                </Button>
+              ))}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+    </div>
+  ) : null;
 }
 
 export default NativeLinkOpener;

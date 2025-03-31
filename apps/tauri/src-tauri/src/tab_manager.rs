@@ -73,7 +73,7 @@ pub fn set_active_tab(app: tauri::AppHandle, tab_id: String) -> Result<(), Strin
         let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
 
         if !tab_webviews.contains_key(&tab_id) {
-            return Err(format!("Tab with id {} not found", tab_id));
+            return Err(format!("[set_active_tab] Tab with id {} not found", tab_id));
         }
 
         for (_, webview) in tab_webviews.iter() {
@@ -125,7 +125,7 @@ pub fn close_tab(
         let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
 
         if !tab_webviews.contains_key(&tab_id) {
-            return Err(format!("Tab with id {} not found", tab_id));
+            return Err(format!("[close_tab] Tab with id {} not found", tab_id));
         }
 
         let webview = tab_webviews.remove(&tab_id).unwrap();
@@ -175,7 +175,7 @@ pub fn update_tab(app: tauri::AppHandle, tab_id: String, title: String) -> Resul
         let mut tab_titles = TAB_TITLES.lock().unwrap();
 
         if !tab_titles.contains_key(&tab_id) {
-            return Err(format!("Tab with id {} not found", tab_id));
+            return Err(format!("[update_tab] Tab with id {} not found", tab_id));
         }
 
         tab_titles.insert(tab_id, title);
@@ -192,7 +192,7 @@ pub fn reorder_tabs(app: tauri::AppHandle, tab_ids: Vec<String>) -> Result<(), S
 
         for tab_id in &tab_ids {
             if !tab_webviews.contains_key(tab_id) {
-                return Err(format!("Tab with id {} not found", tab_id));
+                return Err(format!("[reorder_tabs] Tab with id {} not found", tab_id));
             }
         }
 
