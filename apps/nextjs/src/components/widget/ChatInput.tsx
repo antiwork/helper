@@ -1,13 +1,17 @@
 import { Camera } from "lucide-react";
+import * as motion from "motion/react-client";
+import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
+import { useScreenshotStore } from "@/components/widget/widgetState";
+import { sendScreenshot } from "@/lib/widget/messages";
 
 type Props = {
   input: string;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (e?: { preventDefault: () => void }) => void;
+  handleSubmit: (screenshotData?: string) => void;
   isLoading: boolean;
 };
 
@@ -49,11 +53,43 @@ const SCREENSHOT_KEYWORDS = [
 ];
 
 export default function ChatInput({ input, inputRef, handleInputChange, handleSubmit, isLoading }: Props) {
-  const showScreenshot = SCREENSHOT_KEYWORDS.some((keyword) => input.toLowerCase().includes(keyword));
+  const [showScreenshot, setShowScreenshot] = useState(false);
+  const [includeScreenshot, setIncludeScreenshot] = useState(false);
+  const { screenshot, setScreenshot } = useScreenshotStore();
+
+  useEffect(() => {
+    if (!input) {
+      setShowScreenshot(false);
+      setIncludeScreenshot(false);
+    } else if (SCREENSHOT_KEYWORDS.some((keyword) => input.toLowerCase().includes(keyword))) {
+      setShowScreenshot(true);
+    }
+  }, [input]);
+
+  useEffect(() => {
+    if (screenshot?.response) {
+      handleSubmit(screenshot.response);
+      setScreenshot(null);
+    }
+  }, [screenshot]);
+
+  const submit = () => {
+    if (includeScreenshot) {
+      sendScreenshot();
+    } else {
+      handleSubmit();
+    }
+  };
 
   return (
     <div className="h-24 border-t border-black p-4">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+        className="flex flex-col gap-2"
+      >
         <div className="flex-1 flex items-start">
           <Textarea
             aria-label="Ask a question"
@@ -63,7 +99,7 @@ export default function ChatInput({ input, inputRef, handleInputChange, handleSu
             onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit();
+                submit();
               }
             }}
             placeholder="Ask a question"
@@ -73,9 +109,21 @@ export default function ChatInput({ input, inputRef, handleInputChange, handleSu
           <ShadowHoverButton isLoading={isLoading} />
         </div>
         {showScreenshot && (
-          <div className="flex items-center gap-2">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 30,
+            }}
+            className="flex items-center gap-2"
+          >
             <Checkbox
               id="screenshot"
+              checked={includeScreenshot}
+              onCheckedChange={(e) => setIncludeScreenshot(e === true)}
               className="border-muted-foreground data-[state=checked]:bg-black data-[state=checked]:text-white"
             />
             <label
@@ -85,7 +133,7 @@ export default function ChatInput({ input, inputRef, handleInputChange, handleSu
               <Camera className="w-4 h-4" />
               Include a screenshot for better support?
             </label>
-          </div>
+          </motion.div>
         )}
       </form>
     </div>

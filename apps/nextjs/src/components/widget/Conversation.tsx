@@ -132,11 +132,7 @@ export default function Conversation({
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
 
-  const handleSubmit = async (e?: { preventDefault: () => void }) => {
-    if (e) {
-      e.preventDefault();
-    }
-
+  const handleSubmit = async (screenshotData?: string) => {
     if (!input.trim()) return;
 
     setData(undefined);
@@ -148,7 +144,10 @@ export default function Conversation({
       }
 
       if (currentSlug) {
-        handleAISubmit(e, { body: { conversationSlug: currentSlug } });
+        handleAISubmit(undefined, {
+          experimental_attachments: screenshotData ? [{ name: "screenshot.png", url: screenshotData }] : [],
+          body: { conversationSlug: currentSlug },
+        });
       }
     } catch (error) {
       console.error("Error submitting message:", error);

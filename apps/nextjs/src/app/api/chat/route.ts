@@ -59,7 +59,12 @@ export async function POST(request: Request) {
   const conversation = await getConversation(conversationSlug, session, mailbox);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
-  const userMessage = await createUserMessage(conversation.id, userEmail, message.content);
+  const userMessage = await createUserMessage(
+    conversation.id,
+    userEmail,
+    message.content,
+    message.experimental_attachments?.[0]?.url,
+  );
 
   return await respondWithAI({
     conversation,

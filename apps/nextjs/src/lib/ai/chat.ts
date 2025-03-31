@@ -15,11 +15,10 @@ import {
   type TextStreamPart,
   type Tool,
 } from "ai";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { conversationMessages, files } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
@@ -73,6 +72,12 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
 
 export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
   const conversationMessages = await getMessagesOnly(conversationId);
+  const attachments = await db.query.files.findMany({
+    where: inArray(
+      files.messageId,
+      conversationMessages.filter((m) => m.metadata?.includesScreenshot).map((m) => m.id),
+    ),
+  });
 
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
@@ -236,7 +241,6 @@ export const generateAIResponse = async ({
   conversationId,
   email,
   readPageTool = null,
-  screenshotAvailable = false,
   onFinish,
   dataStream,
   model = openai(COMPLETION_MODEL),
@@ -249,7 +253,6 @@ export const generateAIResponse = async ({
   conversationId: number;
   email: string | null;
   readPageTool?: ReadPageToolConfig | null;
-  screenshotAvailable?: boolean;
   onFinish?: (params: {
     text: string;
     finishReason: string;
@@ -285,12 +288,6 @@ export const generateAIResponse = async ({
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
-      parameters: z.object({}),
-    };
-  }
-  if (screenshotAvailable) {
-    tools.take_screenshot = {
-      description: "take a screenshot of the current page including any error messages",
       parameters: z.object({}),
     };
   }
@@ -394,8 +391,13 @@ export const generateAIResponse = async ({
   });
 };
 
-export const createUserMessage = (conversationId: number, email: string | null, query: string) => {
-  return createConversationMessage({
+export const createUserMessage = async (
+  conversationId: number,
+  email: string | null,
+  query: string,
+  screenshotData?: string,
+) => {
+  const message = await createConversationMessage({
     conversationId,
     emailFrom: email,
     body: query,
@@ -404,7 +406,19 @@ export const createUserMessage = (conversationId: number, email: string | null, 
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
+    metadata: { includesScreenshot: !!screenshotData },
   });
+
+  if (screenshotData) {
+    await createAndUploadFile({
+      data: Buffer.from(screenshotData, "base64"),
+      fileName: `screenshot-${Date.now()}.png`,
+      prefix: `screenshots/${conversationId}`,
+      messageId: message.id,
+    });
+  }
+
+  return message;
 };
 
 export const createAssistantMessage = (
@@ -555,7 +569,6 @@ export const respondWithAI = async ({
         conversationId: conversation.id,
         email: userEmail,
         readPageTool,
-        screenshotAvailable: !sendEmail,
         addReasoning: true,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources }) {
@@ -661,41 +674,41 @@ const hashQuery = (query: string): string => {
   return createHash("md5").update(query).digest("hex");
 };
 
-const addScreenshotResult = async (messages: Message[], conversation: Conversation, messageId: number) => {
-  const screenshotInvocation = messages
-    .at(-1)
-    ?.toolInvocations?.find((invocation: any) => invocation.toolName === "take_screenshot");
+// const addScreenshotResult = async (messages: Message[], conversation: Conversation, messageId: number) => {
+//   const screenshotInvocation = messages
+//     .at(-1)
+//     ?.toolInvocations?.find((invocation: any) => invocation.toolName === "take_screenshot");
 
-  if (screenshotInvocation?.state === "result") {
-    if (screenshotInvocation.result.data) {
-      const assistantMessage = assertDefined(await lastAssistantMessage(conversation.id));
-      const base64Data = screenshotInvocation.result.data.split(",")[1];
+//   if (screenshotInvocation?.state === "result") {
+//     if (screenshotInvocation.result.data) {
+//       const assistantMessage = assertDefined(await lastAssistantMessage(conversation.id));
+//       const base64Data = screenshotInvocation.result.data.split(",")[1];
 
-      await createAndUploadFile({
-        data: Buffer.from(base64Data, "base64"),
-        fileName: `screenshot-${Date.now()}.png`,
-        prefix: `screenshots/${conversation.slug}`,
-        messageId: assistantMessage.id,
-      });
+//       await createAndUploadFile({
+//         data: Buffer.from(base64Data, "base64"),
+//         fileName: `screenshot-${Date.now()}.png`,
+//         prefix: `screenshots/${conversation.slug}`,
+//         messageId: assistantMessage.id,
+//       });
 
-      messages.push({
-        role: "user",
-        content: "Here's the screenshot. Don't describe it, just use it to help respond to my previous message.",
-        experimental_attachments: [
-          {
-            name: "screenshot.png",
-            contentType: "image/png",
-            url: screenshotInvocation.result.data,
-          },
-        ],
-        id: `${assistantMessage.id}-screenshot`,
-      });
-    } else {
-      messages.push({
-        role: "user",
-        content: "I couldn't take a screenshot for you.",
-        id: `${messageId}-screenshot`,
-      });
-    }
-  }
-};
+//       messages.push({
+//         role: "user",
+//         content: "Here's the screenshot. Don't describe it, just use it to help respond to my previous message.",
+//         experimental_attachments: [
+//           {
+//             name: "screenshot.png",
+//             contentType: "image/png",
+//             url: screenshotInvocation.result.data,
+//           },
+//         ],
+//         id: `${assistantMessage.id}-screenshot`,
+//       });
+//     } else {
+//       messages.push({
+//         role: "user",
+//         content: "I couldn't take a screenshot for you.",
+//         id: `${messageId}-screenshot`,
+//       });
+//     }
+//   }
+// };
