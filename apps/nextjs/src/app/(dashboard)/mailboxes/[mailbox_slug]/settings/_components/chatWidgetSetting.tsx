@@ -182,9 +182,9 @@ const ChatWidgetSetting = ({
           href="http://docs.helper.ai"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
+          className="text-primary underline hover:underline"
         >
-          docs.helper.ai
+          our documentation
         </a>
         . Choose your preferred implementation method below.
       </p>
