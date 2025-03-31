@@ -31,6 +31,10 @@ export const organizationRouter = {
   getMembers: protectedProcedure.query(async ({ ctx }) => {
     const organization = await getClerkOrganization(ctx.session.orgId);
     const users = await getClerkUserList(organization.id);
-    return users.data.map((user) => ({ id: user.id, displayName: user.fullName ?? user.id }));
+    return users.data.map((user) => ({ 
+      id: user.id, 
+      displayName: user.fullName ?? user.id,
+      email: user.emailAddresses[0]?.emailAddress,
+    }));
   }),
 } satisfies TRPCRouterRecord;
