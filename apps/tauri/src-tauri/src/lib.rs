@@ -103,7 +103,7 @@ fn reorder_tabs(app: AppHandle, tab_ids: Vec<String>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn show_tab_context_menu(app: AppHandle, tabs: String) {
+fn toggle_tab_context_menu(app: AppHandle, tabs: String) {
     app.emit("tab-context-menu", tabs).unwrap();
 }
 
@@ -128,7 +128,7 @@ pub fn run() {
             close_tab,
             update_tab,
             reorder_tabs,
-            show_tab_context_menu,
+            toggle_tab_context_menu,
             is_mac_app_store,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,

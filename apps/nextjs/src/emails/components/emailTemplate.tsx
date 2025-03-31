@@ -13,7 +13,6 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 import { getBaseUrl } from "@/components/constants";
-import { DocumentTitle } from "@/components/documentTitle";
 import tailwindConfig from "../../../tailwind.config";
 
 type Props = {
@@ -88,7 +87,7 @@ export const EmailTemplate: ResendEmail<Props> = ({ subject, previewText, childr
       <Preview>{previewText}</Preview>
       <Tailwind config={tailwindConfig}>
         <Head>
-          <DocumentTitle>{subject}</DocumentTitle>
+          <title>{subject}</title>
           <Font
             fontFamily="Sundry-Regular"
             fallbackFontFamily="sans-serif"

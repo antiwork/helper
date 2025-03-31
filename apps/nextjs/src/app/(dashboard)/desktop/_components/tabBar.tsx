@@ -101,7 +101,7 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
           <button
             className="self-center ml-auto mr-1 p-2 rounded transition-colors hover:bg-muted"
             onClick={() =>
-              invoke("show_tab_context_menu", {
+              invoke("toggle_tab_context_menu", {
                 tabs: JSON.stringify(recentlyClosedTabs.current),
               })
             }

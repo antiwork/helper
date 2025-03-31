@@ -20,7 +20,7 @@ export function NativeLinkOpener() {
     if (tauriPlatform && getCurrentWebview().label === "tab_bar") return;
 
     listen<string>("tab-context-menu", (event) => {
-      setRecentlyClosedTabs((tabs) => (tabs ? null : JSON.parse(event.payload)));
+      setRecentlyClosedTabs(event.payload ? JSON.parse(event.payload) : null);
     });
 
     const handleLinkClick = (event: MouseEvent) => {
@@ -63,16 +63,67 @@ export function NativeLinkOpener() {
       }
     };
 
+    const setupTitleObserver = () => {
+      if (!tauriPlatform) return;
+
+      if (document.title) {
+        invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
+      }
+
+      const titleObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === "childList") {
+            const addedTitles = Array.from(mutation.addedNodes).filter((node) => node.nodeName === "TITLE");
+            if (addedTitles.length > 0) {
+              addedTitles.forEach((titleNode) => {
+                titleObserver.observe(titleNode, {
+                  childList: true,
+                  characterData: true,
+                  subtree: true,
+                });
+              });
+              invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
+            }
+          }
+
+          if (
+            mutation.type === "characterData" &&
+            mutation.target.nodeName === "#text" &&
+            mutation.target.parentNode?.nodeName === "TITLE"
+          ) {
+            invoke("update_tab", { tabId: getCurrentWebview().label, title: document.title });
+          }
+        });
+      });
+
+      document.querySelectorAll("title").forEach((titleElement) => {
+        titleObserver.observe(titleElement, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+        });
+      });
+
+      titleObserver.observe(document.querySelector("head")!, {
+        childList: true,
+        subtree: true,
+      });
+
+      return titleObserver;
+    };
+
+    const titleObserver = setupTitleObserver();
     document.addEventListener("click", handleLinkClick);
 
     return () => {
       document.removeEventListener("click", handleLinkClick);
+      titleObserver?.disconnect();
     };
   }, []);
 
   return recentlyClosedTabs ? (
     <div className="fixed -top-4 right-1">
-      <Popover open={true} onOpenChange={(open) => !open && setRecentlyClosedTabs(null)}>
+      <Popover open={true} onOpenChange={(open) => !open && invoke("toggle_tab_context_menu", { tabs: "" })}>
         <PopoverTrigger>
           <div />
         </PopoverTrigger>
@@ -92,7 +143,7 @@ export function NativeLinkOpener() {
                   key={tab.url}
                   onClick={() => {
                     invoke("add_tab", { url: tab.url });
-                    setRecentlyClosedTabs(null);
+                    invoke("toggle_tab_context_menu", { tabs: "" });
                   }}
                 >
                   {tab.title}

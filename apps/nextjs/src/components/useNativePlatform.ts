@@ -32,7 +32,9 @@ export const useNativePlatform = () => {
 
   useEffect(() => {
     setPlatform(getNativePlatform());
-    tauriApp.getVersion().then((version) => setIsLegacyTauri(parseInt(version.replaceAll(".", "")) < 105));
+    if (getTauriPlatform()) {
+      tauriApp.getVersion().then((version) => setIsLegacyTauri(parseInt(version.replaceAll(".", "")) < 105));
+    }
   }, []);
 
   return {

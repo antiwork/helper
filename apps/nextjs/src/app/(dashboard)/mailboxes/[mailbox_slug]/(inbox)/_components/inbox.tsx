@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
 import { CATEGORY_LABELS } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/categoryNav";
+import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import {
   ConversationListContextProvider,
   useConversationListContext,
@@ -14,7 +15,6 @@ import {
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/mobileList";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useSaveLatestMailboxSlug";
 import { getGlobalAblyClient } from "@/components/ablyClient";
-import { DocumentTitle } from "@/components/documentTitle";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -36,8 +36,7 @@ const Inbox = () => {
   const { currentConversationSlug, conversationListData, isPending } = useConversationListContext();
   const utils = api.useUtils();
   const isMobile = useIsMobile();
-
-  const currentConversation = conversationListData?.conversations.find((c) => c.slug === currentConversationSlug);
+  const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
   const pageTitle = currentConversation
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];
@@ -65,7 +64,7 @@ const Inbox = () => {
   if (isMobile) {
     return (
       <div className="flex grow overflow-hidden">
-        {pageTitle ? <DocumentTitle>{pageTitle}</DocumentTitle> : null}
+        {pageTitle ? <title>{pageTitle}</title> : null}
         <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
           <MobileList />
         </div>
@@ -81,7 +80,7 @@ const Inbox = () => {
 
   return (
     <div className="flex grow overflow-hidden">
-      {pageTitle ? <DocumentTitle>{pageTitle}</DocumentTitle> : null}
+      {pageTitle ? <title>{pageTitle}</title> : null}
       {currentConversationSlug ? (
         <Conversation key={currentConversationSlug} />
       ) : (
