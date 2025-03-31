@@ -40,65 +40,79 @@ export default inngest.createFunction(
 
     if (!mailboxesList.length) return;
 
+    const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
+
     for (const mailbox of mailboxesList) {
-      const overdueAssignedConversations = await db
-        .select({
-          subject: conversations.subject,
-          slug: conversations.slug,
-          assignedToClerkId: conversations.assignedToClerkId,
-          lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
-        })
-        .from(conversations)
-        .where(
-          and(
-            eq(conversations.mailboxId, mailbox.id),
-            isNotNull(conversations.assignedToClerkId),
-            eq(conversations.status, "open"),
-            gt(
-              sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
-              24, // 24 hours threshold
+      try {
+        const overdueAssignedConversations = await db
+          .select({
+            subject: conversations.subject,
+            slug: conversations.slug,
+            assignedToClerkId: conversations.assignedToClerkId,
+            lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
+          })
+          .from(conversations)
+          .where(
+            and(
+              eq(conversations.mailboxId, mailbox.id),
+              isNotNull(conversations.assignedToClerkId),
+              eq(conversations.status, "open"),
+              gt(
+                sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
+                24, // 24 hours threshold
+              ),
             ),
-          ),
-        )
-        .orderBy(desc(conversations.lastUserEmailCreatedAt));
+          )
+          .orderBy(desc(conversations.lastUserEmailCreatedAt));
 
-      if (!overdueAssignedConversations.length) continue;
+        if (!overdueAssignedConversations.length) continue;
 
-      const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
-      const clerkUsers = await getClerkUserList(mailbox.clerkOrganizationId);
-      const clerkUsersById = new Map(clerkUsers.data.map((user) => [user.id, user]));
+        const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
+        const clerkUsers = await getClerkUserList(mailbox.clerkOrganizationId);
+        const clerkUsersById = new Map(clerkUsers.data.map((user) => [user.id, user]));
 
-      const blocks: KnownBlock[] = [
-        {
-          type: "section" as const,
-          text: {
-            type: "mrkdwn",
-            text: [
-              `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
-              ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
-                const subject = conversation.subject;
-                const assignee = clerkUsersById.get(conversation.assignedToClerkId!);
-                const assigneeEmail = assignee?.emailAddresses[0]?.emailAddress;
-                const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
-                const mention = slackUserId ? `<@${slackUserId}>` : assignee?.fullName || "Unknown";
-                const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
-              }),
-              ...(overdueAssignedConversations.length > 10
-                ? [`(and ${overdueAssignedConversations.length - 10} more)`]
-                : []),
-            ].join("\n"),
+        const blocks: KnownBlock[] = [
+          {
+            type: "section" as const,
+            text: {
+              type: "mrkdwn",
+              text: [
+                `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
+                ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
+                  const subject = conversation.subject;
+                  const assignee = clerkUsersById.get(conversation.assignedToClerkId!);
+                  const assigneeEmail = assignee?.emailAddresses[0]?.emailAddress;
+                  const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
+                  const mention = slackUserId ? `<@${slackUserId}>` : assignee?.fullName || "Unknown";
+                  const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
+                  return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
+                }),
+                ...(overdueAssignedConversations.length > 10
+                  ? [`(and ${overdueAssignedConversations.length - 10} more)`]
+                  : []),
+              ].join("\n"),
+            },
           },
-        },
-      ];
+        ];
 
-      await postSlackMessage(mailbox.slackBotToken!, {
-        channel: mailbox.slackAlertChannel!,
-        text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
-        blocks,
-      });
+        await postSlackMessage(mailbox.slackBotToken!, {
+          channel: mailbox.slackAlertChannel!,
+          text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
+          blocks,
+        });
+      } catch (error) {
+        failedMailboxes.push({
+          id: mailbox.id,
+          name: mailbox.name,
+          slug: mailbox.slug,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
-    return { success: true };
+    return {
+      success: true,
+      failedMailboxes: failedMailboxes.length > 0 ? failedMailboxes : [],
+    };
   },
 );
