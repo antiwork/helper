@@ -20,13 +20,19 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
+import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { createConversationMessage, disableAIResponse, getMessagesOnly } from "@/lib/data/conversationMessage";
+import {
+  ConversationMessage,
+  createConversationMessage,
+  disableAIResponse,
+  getMessagesOnly,
+} from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
@@ -77,32 +83,30 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
-      const messageRecord = message as any;
-
-      if (messageRecord.role === "tool") {
+      if (message.role === "tool") {
+        const tool = message.metadata?.tool as HelperTool;
         return {
-          id: messageRecord.id.toString(),
+          id: message.id.toString(),
           role: "assistant",
           content: "",
           toolInvocations: [
             {
-              id: messageRecord.id.toString(),
-              toolName: messageRecord.metadata.tool.slug,
-              result: messageRecord.metadata.result,
+              id: message.id.toString(),
+              toolName: tool.slug,
+              result: message.metadata?.result,
               step: 0,
               state: "result",
-              toolCallId: `tool_${messageRecord.id}`,
-              args: messageRecord.metadata.parameters,
+              toolCallId: `tool_${message.id}`,
+              args: message.metadata?.parameters,
             },
           ],
         };
       }
 
       return {
-        id: messageRecord.id.toString(),
-        role:
-          messageRecord.role === "staff" || messageRecord.role === "ai_assistant" ? "assistant" : messageRecord.role,
-        content: messageRecord.body || "",
+        id: message.id.toString(),
+        role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
+        content: message.body || "",
       };
     });
 };

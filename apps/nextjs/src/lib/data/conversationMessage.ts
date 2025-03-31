@@ -56,6 +56,7 @@ export const getMessagesOnly = async (conversationId: number) => {
       eq(conversationMessages.conversationId, conversationId),
       or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
     ),
+    orderBy: [asc(conversationMessages.createdAt)],
   });
 
   return messages;
