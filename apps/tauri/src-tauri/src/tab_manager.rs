@@ -249,3 +249,42 @@ fn emit_tab_bar_update(app: tauri::AppHandle) {
     )
     .unwrap();
 }
+
+pub fn close_all_tabs(app: tauri::AppHandle, window: tauri::Window) -> Result<(), String> {
+    let tab_ids_to_close;
+    {
+        let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+        tab_ids_to_close = tab_webviews.keys().cloned().collect::<Vec<String>>();
+    }
+
+    if tab_ids_to_close.is_empty() {
+        return Ok(());
+    }
+
+    {
+        let mut tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+        for tab_id in &tab_ids_to_close {
+            if let Some(webview) = tab_webviews.remove(tab_id) {
+                webview.close().unwrap();
+            }
+        }
+        let mut tab_titles = TAB_TITLES.lock().unwrap();
+        tab_titles.clear();
+        let mut tab_order = TAB_ORDER.lock().unwrap();
+        tab_order.clear();
+        let mut active_tab = ACTIVE_TAB.lock().unwrap();
+        *active_tab = None;
+    }
+
+    let size = window.inner_size().unwrap();
+    let scale_factor = window.scale_factor().unwrap();
+    let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
+
+    if let Some(tab_bar) = window.get_webview("tab_bar") {
+        let _ = tab_bar.set_size(LogicalSize::new(logical_size.width, logical_size.height));
+    }
+
+    emit_tab_bar_update(app);
+
+    Ok(())
+}

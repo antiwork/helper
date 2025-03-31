@@ -6,22 +6,35 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { uniqBy } from "lodash";
 import { Reorder } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { resolveDeepLinkUrl } from "@/components/deepLinkHandler";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { useRunOnce } from "@/components/useRunOnce";
+import { api } from "@/trpc/react";
 
 export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
   const { nativePlatform } = useNativePlatform();
   const [tabs, setTabs] = useState<{ id: string; title: string; url: string }[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const recentlyClosedTabs = useRef<{ title: string; url: string }[]>([]);
+  const { refetch: checkSignedIn } = api.isSignedIn.useQuery(undefined, { enabled: false, staleTime: 0 });
+  const router = useRouter();
 
   useRunOnce(() => {
     listen<{
       tabs: { id: string; title: string; url: string }[];
       activeTab: string;
-    }>("tab-bar-update", (event) => {
+    }>("tab-bar-update", async (event) => {
+      if (event.payload.tabs.length === 0) {
+        if (await checkSignedIn()) {
+          invoke("add_tab", { url: `${window.location.origin}/mailboxes` });
+        } else {
+          router.push("/login");
+        }
+        return;
+      }
+
       setTabs(event.payload.tabs);
       setActiveTab(event.payload.activeTab);
       recentlyClosedTabs.current = recentlyClosedTabs.current.filter(
