@@ -50,6 +50,7 @@ const SCREENSHOT_KEYWORDS = [
   "not responding",
   "slow",
   "hangs",
+  "screenshot",
 ];
 
 export default function ChatInput({ input, inputRef, handleInputChange, handleSubmit, isLoading }: Props) {

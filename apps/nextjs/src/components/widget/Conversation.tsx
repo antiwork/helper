@@ -50,7 +50,6 @@ export default function Conversation({
     handleSubmit: handleAISubmit,
     append,
     setMessages,
-    addToolResult,
     status,
   } = useChat({
     maxSteps: 3,
@@ -82,7 +81,7 @@ export default function Conversation({
   const isLoading = status === "streaming" || status === "submitted";
   const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
 
-  const { data: conversation, isLoading: isLoadingConversation } = useQuery({
+  const { isLoading: isLoadingConversation } = useQuery({
     queryKey: ["conversation", conversationSlug],
     queryFn: async () => {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
@@ -144,8 +143,11 @@ export default function Conversation({
       }
 
       if (currentSlug) {
+        console.log("submitting with currentSlug", currentSlug);
         handleAISubmit(undefined, {
-          experimental_attachments: screenshotData ? [{ name: "screenshot.png", url: screenshotData }] : [],
+          experimental_attachments: screenshotData
+            ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
+            : [],
           body: { conversationSlug: currentSlug },
         });
       }
@@ -192,7 +194,6 @@ export default function Conversation({
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
-        addToolResult={addToolResult}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

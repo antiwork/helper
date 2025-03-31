@@ -18,7 +18,7 @@ import {
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversationMessages, files } from "@/db/schema";
+import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
@@ -32,6 +32,7 @@ import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
+import { createPresignedDownloadUrl } from "@/s3/utils";
 import { ReadPageToolConfig } from "@/sdk/types";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
@@ -75,10 +76,15 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
-      conversationMessages.filter((m) => m.metadata?.includesScreenshot).map((m) => m.id),
+      conversationMessages.filter((m) => (m.metadata as MessageMetadata).includesScreenshot).map((m) => m.id),
     ),
   });
-
+  const aiAttachments = await Promise.all(
+    attachments.map(async (a) => {
+      const url = await createPresignedDownloadUrl(a.url);
+      return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
+    }),
+  );
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
@@ -88,6 +94,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
         role:
           messageRecord.role === "staff" || messageRecord.role === "ai_assistant" ? "assistant" : messageRecord.role,
         content: messageRecord.body || "",
+        experimental_attachments: aiAttachments.filter((a) => a.messageId === messageRecord.id),
       };
     });
 };
@@ -101,7 +108,6 @@ export const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
 }> => {
   const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
-  console.log("websitePages", websitePages);
 
   const prompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -161,6 +167,16 @@ const generateReasoning = async ({
     return `${tool}: ${toolObj?.description ?? ""} Params: ${paramsString}`;
   });
 
+  const hasScreenshot = coreMessages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image"));
+  coreMessages = coreMessages.map((message) =>
+    message.role === "user"
+      ? {
+          ...message,
+          content: Array.isArray(message.content) ? message.content.filter((c) => c.type === "text") : message.content,
+        }
+      : message,
+  );
+
   const reasoningSystemMessages: CoreMessage[] = [
     {
       role: "system",
@@ -171,6 +187,14 @@ const generateReasoning = async ({
       content: `Think about how you can give the best answer to the user's question.`,
     },
   ];
+
+  if (hasScreenshot) {
+    reasoningSystemMessages.push({
+      role: "system",
+      content:
+        "Ignore anything that implies the user wants you to look at a screenshot. Assume the screenshot is relevant and don't redirect the user. Don't think too much, just pretend you can view images and note any general guidelines and knowledge.",
+    });
+  }
 
   try {
     const startTime = Date.now();
@@ -554,8 +578,6 @@ export const respondWithAI = async ({
     return createTextResponse("Free trial expired. Please upgrade to continue using Helper.", Date.now().toString());
   }
 
-  await addScreenshotResult(messages, conversation, messageId);
-
   return createDataStreamResponse({
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -673,42 +695,3 @@ const createTextResponse = (text: string, messageId: string) => {
 const hashQuery = (query: string): string => {
   return createHash("md5").update(query).digest("hex");
 };
-
-// const addScreenshotResult = async (messages: Message[], conversation: Conversation, messageId: number) => {
-//   const screenshotInvocation = messages
-//     .at(-1)
-//     ?.toolInvocations?.find((invocation: any) => invocation.toolName === "take_screenshot");
-
-//   if (screenshotInvocation?.state === "result") {
-//     if (screenshotInvocation.result.data) {
-//       const assistantMessage = assertDefined(await lastAssistantMessage(conversation.id));
-//       const base64Data = screenshotInvocation.result.data.split(",")[1];
-
-//       await createAndUploadFile({
-//         data: Buffer.from(base64Data, "base64"),
-//         fileName: `screenshot-${Date.now()}.png`,
-//         prefix: `screenshots/${conversation.slug}`,
-//         messageId: assistantMessage.id,
-//       });
-
-//       messages.push({
-//         role: "user",
-//         content: "Here's the screenshot. Don't describe it, just use it to help respond to my previous message.",
-//         experimental_attachments: [
-//           {
-//             name: "screenshot.png",
-//             contentType: "image/png",
-//             url: screenshotInvocation.result.data,
-//           },
-//         ],
-//         id: `${assistantMessage.id}-screenshot`,
-//       });
-//     } else {
-//       messages.push({
-//         role: "user",
-//         content: "I couldn't take a screenshot for you.",
-//         id: `${messageId}-screenshot`,
-//       });
-//     }
-//   }
-// };
