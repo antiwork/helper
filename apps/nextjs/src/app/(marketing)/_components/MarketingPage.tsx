@@ -15,6 +15,7 @@ import {
   PlusCircleIcon,
   ArrowRightOnRectangleIcon,
   ChevronRightIcon,
+  PlayIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -172,70 +173,30 @@ Please reply with this information. We'll review your request within 1-2 busines
       return (
         <div className="p-6">
           <div className="max-w-xl flex-grow">
-            {/* Chat widget preview */}
             <div className="relative">
-              {/* Skeleton background with dots */}
-              <div className="absolute inset-0 p-4">
-                <div className="flex gap-2 mb-4">
-                  <div className="h-3 w-3 rounded-full bg-[#FF6057]" />
-                  <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
-                  <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
-                </div>
-                <div className="space-y-4 opacity-50">
-                  <div className="h-24 w-full rounded bg-gray-200" />
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-4 w-full rounded bg-gray-200" />
+              <Input
+                type="text"
+                placeholder="Type a command..."
+                className="rounded-sm rounded-b-none border-b-0"
+                iconsPrefix={<span className="text-muted-foreground">/</span>}
+              />
+              <div className="border rounded-b-sm bg-background p-2">
+                <div className="text-xs text-muted-foreground font-medium px-2 py-1.5">Tools</div>
+                <div className="flex flex-col gap-1">
+                  {[
+                    "Resend last receipt",
+                    "Send reset password",
+                    "Refund last purchase",
+                    "Search purchase"
+                  ].map((tool) => (
+                    <div
+                      key={tool}
+                      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                    >
+                      <PlayIcon className="h-4 w-4" />
+                      {tool}
+                    </div>
                   ))}
-                </div>
-              </div>
-
-              {/* Chat widget */}
-              <div className="relative ml-auto w-[320px] rounded-lg border border-black bg-white shadow-lg">
-                <div className="border-b border-black p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-0.5">
-                      <h2 className="text-lg font-medium leading-5 text-black">Support</h2>
-                      <p className="flex items-center text-sm text-zinc-500">
-                        Powered by&nbsp;
-                        <a href="https://helper.ai" target="_blank" className="flex items-center">
-                          <Image src="/logo.svg" alt="Helper" width="110" height="32" className="w-12" />
-                        </a>
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="text-black hover:text-gray-700 hover:bg-gray-100" iconOnly>
-                        <PlusCircleIcon className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-black hover:text-gray-700 hover:bg-gray-100" iconOnly>
-                        <ChevronRightIcon className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-4 p-4">
-                  <div className="ml-auto max-w-[80%] rounded-lg bg-black p-4 text-white">
-                    <p className="text-sm">How do I request a refund?</p>
-                  </div>
-                  
-                  <div className="mr-auto max-w-[80%] rounded-lg border border-black bg-white p-4">
-                    <p className="text-sm">
-                      To request a refund, please go to your order history and click the "Request Refund" button. We'll process your request within 1-2 business days.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-t border-black p-4">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Ask a question"
-                      className="flex-1 border-none bg-transparent p-0 outline-none focus:border-none focus:outline-none focus:ring-0 placeholder:text-gray-700 text-black"
-                    />
-                    <Button variant="default" size="sm" className="bg-black text-white">
-                      <PaperAirplaneIcon className="h-4 w-4 -rotate-90" />
-                    </Button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -425,7 +386,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                   Turn support expertise into instant answers with
                   <span className="underline-offset">&nbsp;knowledge bank</span>
                 </h3>
-                <p className="text-md text-muted-foreground">Your knowledge, available 24/7</p>
+                <p className="text-md text-muted-foreground">Your knowledge, available 24/7.</p>
               </div>
             </div>
 
@@ -448,10 +409,10 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                    End the support scavenger hunt with
-                  <span className="underline-offset">&nbsp;in-app chat</span>
+                Make every support chat productive with integrated
+                  <span className="underline-offset">&nbsp;Tools</span>
                 </h3>
-                <p className="text-md text-muted-foreground">Zero tab switching required</p>
+                <p className="text-md text-muted-foreground">Actions speak louder than words.</p>
               </div>
             </div>
 
