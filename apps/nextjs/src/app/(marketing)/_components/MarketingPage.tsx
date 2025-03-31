@@ -410,7 +410,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
                   Make every support chat productive with integrated
-                  <span className="underline-offset">&nbsp;Tools</span>
+                  <span className="underline-offset">&nbsp;tools</span>
                 </h3>
                 <p className="text-md text-muted-foreground">Actions speak louder than words.</p>
               </div>
