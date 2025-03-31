@@ -11,11 +11,11 @@ import {
   InboxIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
+  PlayIcon,
   PlusCircleIcon,
   StarIcon,
   TrashIcon,
   UserIcon,
-  PlayIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
@@ -186,20 +186,17 @@ Please reply with this information. We'll review your request within 1-2 busines
               <div className="border rounded-b-sm bg-background p-2">
                 <div className="text-xs text-muted-foreground font-medium px-2 py-1.5">Tools</div>
                 <div className="flex flex-col gap-1">
-                  {[
-                    "Resend last receipt",
-                    "Send reset password",
-                    "Refund last purchase",
-                    "Search purchase"
-                  ].map((tool) => (
-                    <div
-                      key={tool}
-                      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
-                    >
-                      <PlayIcon className="h-4 w-4" />
-                      {tool}
-                    </div>
-                  ))}
+                  {["Resend last receipt", "Send reset password", "Refund last purchase", "Search purchase"].map(
+                    (tool) => (
+                      <div
+                        key={tool}
+                        className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                      >
+                        <PlayIcon className="h-4 w-4" />
+                        {tool}
+                      </div>
+                    ),
+                  )}
                 </div>
               </div>
             </div>
@@ -412,7 +409,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                Make every support chat productive with integrated
+                  Make every support chat productive with integrated
                   <span className="underline-offset">&nbsp;Tools</span>
                 </h3>
                 <p className="text-md text-muted-foreground">Actions speak louder than words.</p>
