@@ -15,6 +15,7 @@ import {
   StarIcon,
   TrashIcon,
   UserIcon,
+  PlayIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
