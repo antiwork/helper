@@ -111,7 +111,7 @@ export default inngest.createFunction(
     }
 
     return {
-      success: true,
+      success: failedMailboxes.length === 0,
       failedMailboxes: failedMailboxes.length > 0 ? failedMailboxes : [],
     };
   },
