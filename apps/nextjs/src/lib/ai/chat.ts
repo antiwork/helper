@@ -77,7 +77,27 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
-      const messageRecord = message as any; // Type assertion to handle union type
+      const messageRecord = message as any;
+
+      if (messageRecord.role === "tool") {
+        return {
+          id: messageRecord.id.toString(),
+          role: "assistant",
+          content: "",
+          toolInvocations: [
+            {
+              id: messageRecord.id.toString(),
+              toolName: messageRecord.metadata.tool.slug,
+              result: messageRecord.metadata.result,
+              step: 0,
+              state: "result",
+              toolCallId: `tool_${messageRecord.id}`,
+              args: messageRecord.metadata.parameters,
+            },
+          ],
+        };
+      }
+
       return {
         id: messageRecord.id.toString(),
         role:
@@ -96,7 +116,6 @@ export const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
 }> => {
   const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
-  console.log("websitePages", websitePages);
 
   const prompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -268,17 +287,7 @@ export const generateAIResponse = async ({
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
 
-  const messagesWithoutToolCalls = messages
-    .filter((m) => (m.role as string) !== "tool")
-    .map((m) => {
-      if (m.role === "assistant" && m.toolInvocations && m.toolInvocations.length > 0) {
-        const { toolInvocations, ...rest } = m;
-        return rest;
-      }
-      return m;
-    });
-
-  const coreMessages = convertToCoreMessages(messagesWithoutToolCalls, { tools: {} });
+  const coreMessages = convertToCoreMessages(messages, { tools: {} });
   const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query);
 
   const tools = await buildTools(conversationId, email, mailbox);
