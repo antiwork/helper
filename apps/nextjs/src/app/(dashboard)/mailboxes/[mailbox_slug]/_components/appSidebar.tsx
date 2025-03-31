@@ -9,7 +9,7 @@ import {
   UserProfile,
   useUser,
 } from "@clerk/nextjs";
-import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
+import { BookOpenIcon, ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { ChevronsUpDown, ChevronUp, Download, Settings, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -331,6 +331,14 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                     <OrganizationList hidePersonal hideSlug />
                   </DialogContent>
                 </Dialog>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    window.open("http://docs.helper.ai", "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <span>Documentation</span>
+                </DropdownMenuItem>
                 {isMobileWeb || (isDesktopWeb && user?.unsafeMetadata?.desktopAppPromptDismissed) ? (
                   <DropdownMenuItem
                     onSelect={(e) => {
