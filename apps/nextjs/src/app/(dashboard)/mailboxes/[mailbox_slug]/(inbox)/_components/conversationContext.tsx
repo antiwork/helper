@@ -19,6 +19,20 @@ export type ConversationContextType = {
 
 const ConversationContext = createContext<ConversationContextType | null>(null);
 
+export function useConversationQuery(mailboxSlug: string, conversationSlug: string | null) {
+  const result = api.mailbox.conversations.get.useQuery(
+    {
+      mailboxSlug,
+      conversationSlug: conversationSlug ?? "",
+    },
+    {
+      enabled: !!conversationSlug,
+    },
+  );
+
+  return conversationSlug ? result : null;
+}
+
 export const ConversationContextProvider = ({ children }: { children: React.ReactNode }) => {
   const {
     mailboxSlug,
@@ -36,17 +50,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
     isPending,
     error,
     refetch,
-  } = api.mailbox.conversations.get.useQuery(
-    {
-      mailboxSlug,
-      conversationSlug,
-    },
-    {
-      // Leaves some buffer to avoid a duplicate request on initial load (where we prefetch data).
-      // Otherwise, this is close to zero to ensure that the latest messages get shown.
-      staleTime: 6 * 1000,
-    },
-  );
+  } = assertDefined(useConversationQuery(mailboxSlug, currentConversationSlug));
 
   const { mutate: updateConversation } = api.mailbox.conversations.update.useMutation();
   const update = (inputs: Partial<RouterInputs["mailbox"]["conversations"]["update"]>) =>
