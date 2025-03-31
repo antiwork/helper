@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getTauriPlatform } from "@/components/useNativePlatform";
 
-export function NativeLinkOpener() {
+export function NativeAppIntegration() {
   const router = useRouter();
   const [recentlyClosedTabs, setRecentlyClosedTabs] = useState<{ url: string; title: string }[] | null>(null);
 
@@ -134,21 +134,23 @@ export function NativeLinkOpener() {
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              <div className="px-4 py-2 text-xs font-medium text-muted-foreground">Recently closed tabs</div>
-              {recentlyClosedTabs.map((tab) => (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="block w-full justify-start truncate"
-                  key={tab.url}
-                  onClick={() => {
-                    invoke("add_tab", { url: tab.url });
-                    invoke("toggle_tab_context_menu", { tabs: "" });
-                  }}
-                >
-                  {tab.title}
-                </Button>
-              ))}
+              <div className="px-3 py-2 text-xs font-medium text-muted-foreground">Recently closed tabs</div>
+              {recentlyClosedTabs
+                .filter((tab) => tab.url && tab.title)
+                .map((tab) => (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="block w-full text-left truncate"
+                    key={tab.url}
+                    onClick={() => {
+                      invoke("add_tab", { url: tab.url });
+                      invoke("toggle_tab_context_menu", { tabs: "" });
+                    }}
+                  >
+                    {tab.title}
+                  </Button>
+                ))}
             </div>
           )}
         </PopoverContent>
@@ -157,4 +159,4 @@ export function NativeLinkOpener() {
   ) : null;
 }
 
-export default NativeLinkOpener;
+export default NativeAppIntegration;

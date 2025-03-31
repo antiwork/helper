@@ -9,14 +9,13 @@ interface ClientLayoutProps {
 }
 
 export function ClientLayout({ children }: ClientLayoutProps) {
-  const { nativePlatform } = useNativePlatform();
+  const { nativePlatform, isLegacyTauri } = useNativePlatform();
 
   return (
     <main
       className={cn(
         "flex flex-col min-h-screen text-foreground w-full",
-
-        nativePlatform === "macos" && "pt-6",
+        nativePlatform === "macos" && isLegacyTauri && "pt-6",
       )}
     >
       {children}
