@@ -12,10 +12,10 @@ type Props = {
   customDate?: Date;
 };
 
-type Member = RouterOutputs["mailbox"]["members"][number];
+type Member = RouterOutputs["mailbox"]["members"]["stats"][number];
 
 export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
-  const { data: members, isLoading } = api.mailbox.members.useQuery(
+  const { data: members, isLoading } = api.mailbox.members.stats.useQuery(
     { mailboxSlug, period: timeRange === "custom" ? "24h" : timeRange, customDate },
     { enabled: !!mailboxSlug },
   );

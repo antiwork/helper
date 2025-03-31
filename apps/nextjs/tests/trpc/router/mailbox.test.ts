@@ -136,7 +136,7 @@ describe("mailboxRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user, organization));
 
-      const result = await caller.mailbox.members({ mailboxSlug: mailbox.slug, period: "1y" });
+      const result = await caller.mailbox.members.stats({ mailboxSlug: mailbox.slug, period: "1y" });
 
       expect(result.sort((a, b) => a.replyCount - b.replyCount)).toEqual([
         {

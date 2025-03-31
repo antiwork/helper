@@ -139,19 +139,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
         output: void;
       }>;
-      members: import("@trpc/server").TRPCQueryProcedure<{
-        input: {
-          mailboxSlug: string;
-          period: "24h" | "7d" | "30d" | "1y";
-          customDate?: Date | undefined;
-        };
-        output: {
-          id: string;
-          email: string | undefined;
-          displayName: string | null;
-          replyCount: number;
-        }[];
-      }>;
       latestEvents: import("@trpc/server").TRPCQueryProcedure<{
         input: {
           mailboxSlug: string;
@@ -286,6 +273,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             slugs: string[];
           };
           output: {
+            mergedInto:
+              | {
+                  slug: string;
+                }
+              | null
+              | undefined;
             customerMetadata: {
               name: string | null;
               value: number | null;
@@ -437,6 +430,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               body: string;
               isStale: boolean;
             } | null;
+            mergedInto:
+              | {
+                  slug: string;
+                }
+              | null
+              | undefined;
             customerMetadata: {
               name: string | null;
               value: number | null;
@@ -725,8 +724,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           reactionCount: import("@trpc/server").TRPCQueryProcedure<{
             input: {
               mailboxSlug: string;
-              period: "hourly" | "daily" | "monthly";
               startDate: Date;
+              period: "hourly" | "daily" | "monthly";
             };
             output: {
               count: number;
@@ -1002,6 +1001,21 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             id: number;
           };
           output: void;
+        }>;
+      };
+      members: {
+        stats: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+            period: "24h" | "7d" | "30d" | "1y";
+            customDate?: Date | undefined;
+          };
+          output: {
+            id: string;
+            email: string | undefined;
+            displayName: string | null;
+            replyCount: number;
+          }[];
         }>;
       };
       slack: {
@@ -1295,6 +1309,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           id: string;
           displayName: string;
+          email: string | undefined;
         }[];
       }>;
     };
