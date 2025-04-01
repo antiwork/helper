@@ -36,11 +36,7 @@ export const inngest = new Inngest({
           conversationSlug: z.string(),
         }),
       },
-      "conversations/topic.assign": {
-        data: z.object({
-          conversationId: z.number(),
-        }),
-      },
+
       "conversations/message.created": {
         data: z.object({
           messageId: z.number(),
