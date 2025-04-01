@@ -203,7 +203,7 @@ pub fn run() {
                     } else if event.id() == "contact_us" {
                         let _ = app.opener().open_url("mailto:help@helper.ai", None::<&str>);
                     } else if event.id() == "show_window" {
-                        let _ = app.get_webview_window("main").unwrap().show();
+                        let _ = app.get_window("main").unwrap().show();
                     }
                 });
 
