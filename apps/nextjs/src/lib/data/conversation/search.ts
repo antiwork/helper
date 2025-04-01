@@ -3,13 +3,7 @@ import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, lt, 
 import { z } from "zod";
 import { DEFAULT_CONVERSATIONS_PER_PAGE } from "@/components/constants";
 import { db } from "@/db/client";
-import {
-  conversationEvents,
-  conversationMessages,
-  conversations,
-  mailboxes,
-  platformCustomers,
-} from "@/db/schema";
+import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
