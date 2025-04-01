@@ -201,8 +201,16 @@ export const serializeConversationWithMessages = async (
     ? await getPlatformCustomer(mailbox.id, conversation.emailFrom)
     : null;
 
+  const mergedInto = conversation.mergedIntoId
+    ? await db.query.conversations.findFirst({
+        where: eq(conversations.id, conversation.mergedIntoId),
+        columns: { slug: true },
+      })
+    : null;
+
   return {
     ...serializeConversation(mailbox, conversation, platformCustomer),
+    mergedInto,
     customerMetadata: platformCustomer
       ? {
           name: platformCustomer.name,
