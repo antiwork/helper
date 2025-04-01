@@ -7,7 +7,6 @@ import {
   conversationEvents,
   conversationMessages,
   conversations,
-  conversationsTopics,
   mailboxes,
   platformCustomers,
 } from "@/db/schema";
