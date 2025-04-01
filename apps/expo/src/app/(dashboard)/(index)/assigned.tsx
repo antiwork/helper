@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { UserIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Conversation, ConversationPreviewList } from "@/app/(dashboard)/_components/conversationPreviewList";
@@ -17,7 +17,7 @@ export default function AssignedScreen() {
   const params = useMemo(
     () => ({
       mailboxSlug: selectedMailbox?.slug ?? "",
-      category: "assigned",
+      category: "mine",
       sort: "oldest",
       search: null,
       status: null,
@@ -58,6 +58,11 @@ export default function AssignedScreen() {
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="py-3">
         <Header />
+      </View>
+      <View className="px-4 py-2">
+        <Text className="text-xl font-semibold">
+          Mine ({conversations.length})
+        </Text>
       </View>
       <View className="flex-1">
         <ConversationPreviewList

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { StarIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMailbox } from "@/components/mailboxContext";
@@ -11,17 +11,18 @@ import { TabBar } from "../_components/tabBar";
 
 cssIconInterop(StarIcon);
 
-export default function VipsScreen() {
+export default function VIPsScreen() {
   const { selectedMailbox } = useMailbox();
 
   const params = useMemo(
     () => ({
       mailboxSlug: selectedMailbox?.slug ?? "",
       category: "conversations",
-      sort: null,
+      isVip: true,
+      sort: "oldest",
       search: null,
       status: null,
-      isVip: true,
+      limit: 25,
     }),
     [selectedMailbox?.slug],
   );
@@ -58,6 +59,11 @@ export default function VipsScreen() {
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="py-3">
         <Header />
+      </View>
+      <View className="px-4 py-2">
+        <Text className="text-xl font-semibold">
+          VIPs ({conversations.length})
+        </Text>
       </View>
       <View className="flex-1">
         <ConversationPreviewList
