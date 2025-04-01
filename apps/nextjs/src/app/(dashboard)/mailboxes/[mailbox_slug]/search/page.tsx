@@ -1,6 +1,6 @@
 "use client";
 
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/20/solid";
 import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
@@ -32,6 +32,7 @@ import { ReactionFilter } from "./_components/reactionFilter";
 import { ResponderFilter } from "./_components/responderFilter";
 import { StatusFilter } from "./_components/statusFilter";
 import { VipFilter } from "./_components/vipFilter";
+import { cn } from "@/lib/utils";
 
 export default function SearchPage() {
   const params = useParams<{ mailbox_slug: string }>();
@@ -56,6 +57,7 @@ export default function SearchPage() {
   const [filterValues, setFilterValues] = useState<typeof searchParams>(searchParams);
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const isSearching = Object.values(omit(searchParams, "page")).some((value) =>
     Array.isArray(value) ? value.length > 0 : !!value,
@@ -160,13 +162,22 @@ export default function SearchPage() {
     }
   };
 
+  const getActiveFilterCount = () => {
+    return Object.values(omit(filterValues, ['search'])).reduce((count, value) => {
+      if (Array.isArray(value)) {
+        return count + (value.length > 0 ? 1 : 0);
+      }
+      return count + (value ? 1 : 0);
+    }, 0);
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full">
       <div className="flex gap-2 justify-between border-b border-border px-2 py-4">
         <Button
           variant="ghost"
           iconOnly
-          className="mt-1"
+          className="mt-1 hidden md:flex"
           onClick={() => {
             if (window.history.length > 1) {
               router.back();
@@ -178,15 +189,81 @@ export default function SearchPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1 max-w-5xl mx-auto flex flex-col gap-3">
+          <Button
+            variant="ghost"
+            iconOnly
+            className="md:hidden self-start"
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push(`/mailboxes/${params.mailbox_slug}/conversations`);
+              }
+            }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <Input
             value={filterValues.search ?? ""}
             onChange={(e) => updateFilter({ search: e.target.value })}
             placeholder="Search conversations..."
-            iconsSuffix={<MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />}
+            iconsSuffix={
+              <div className="flex items-center gap-2">
+                <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="md:hidden mr-2 gap-1.5"
+                >
+                  <FunnelIcon className="h-5 w-5" />
+                  {getActiveFilterCount() > 0 && (
+                    <span className="text-xs">({getActiveFilterCount()})</span>
+                  )}
+                </Button>
+              </div>
+            }
             className="text-base px-4 py-3"
             autoFocus
           />
-          <div className="flex gap-3 overflow-x-auto">
+          <div className={cn("md:hidden", !showFilters && "hidden")}>
+            <div className="flex flex-wrap gap-2">
+              <StatusFilter
+                selectedStatuses={filterValues.status ?? []}
+                onChange={(statuses) => updateFilter({ status: statuses })}
+              />
+              <DateFilter
+                initialStartDate={filterValues.createdAfter}
+                initialEndDate={filterValues.createdBefore}
+                onSelect={(startDate, endDate) => {
+                  updateFilter({ createdAfter: startDate, createdBefore: endDate });
+                }}
+              />
+              <AssigneeFilter
+                selectedAssignees={filterValues.assignee ?? []}
+                onChange={(assignees) => updateFilter({ assignee: assignees })}
+              />
+              <ResponderFilter
+                selectedResponders={filterValues.repliedBy ?? []}
+                onChange={(responders) => updateFilter({ repliedBy: responders })}
+              />
+              <CustomerFilter
+                selectedCustomers={filterValues.customer ?? []}
+                onChange={(customers) => updateFilter({ customer: customers })}
+              />
+              <VipFilter isVip={filterValues.isVip ?? undefined} onChange={(isVip) => updateFilter({ isVip })} />
+              <ReactionFilter
+                reactionType={filterValues.reactionType}
+                onChange={(reactionType) => updateFilter({ reactionType })}
+              />
+              <EventFilter selectedEvents={filterValues.events ?? []} onChange={(events) => updateFilter({ events })} />
+              <PromptFilter
+                isPrompt={filterValues.isPrompt ?? undefined}
+                onChange={(isPrompt) => updateFilter({ isPrompt })}
+              />
+            </div>
+          </div>
+          <div className="hidden md:flex gap-3 overflow-x-auto">
             <StatusFilter
               selectedStatuses={filterValues.status ?? []}
               onChange={(statuses) => updateFilter({ status: statuses })}
