@@ -172,6 +172,16 @@ const generateReasoning = async ({
     return `${tool}: ${toolObj?.description ?? ""} Params: ${paramsString}`;
   });
 
+  const hasScreenshot = coreMessages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image"));
+  coreMessages = coreMessages.map((message) =>
+    message.role === "user"
+      ? {
+          ...message,
+          content: Array.isArray(message.content) ? message.content.filter((c) => c.type === "text") : message.content,
+        }
+      : message,
+  );
+
   const reasoningSystemMessages: CoreMessage[] = [
     {
       role: "system",
@@ -182,6 +192,14 @@ const generateReasoning = async ({
       content: `Think about how you can give the best answer to the user's question.`,
     },
   ];
+
+  if (hasScreenshot) {
+    reasoningSystemMessages.push({
+      role: "system",
+      content:
+        "Don't worry if there's no screenshot, as sometimes it's not sent due to lack of multimodal functionality. Just move on.",
+    });
+  }
 
   try {
     const startTime = Date.now();
@@ -305,10 +323,9 @@ export const generateAIResponse = async ({
 
   const traceId = randomUUID();
   const finalMessages = [...systemMessages, ...coreMessages];
-  const hasScreenshot = coreMessages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image"));
 
   let reasoning: string | null = null;
-  if (addReasoning && !hasScreenshot) {
+  if (addReasoning) {
     const { reasoning: reasoningText, usage } = await generateReasoning({
       tools,
       systemMessages,

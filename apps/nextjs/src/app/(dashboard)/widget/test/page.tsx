@@ -47,6 +47,12 @@ export default async function WidgetTest({
             <li>Created to improve AI response quality</li>
           </ul>
         </div>
+        <div className="text-md text-black mt-4">
+          <p className="font-semibold mb-2">Sample error message</p>
+          <div className="bg-destructive text-destructive-foreground p-4 rounded-md">
+            <p>Your account is currently under review. Please check back later.</p>
+          </div>
+        </div>
       </div>
     </HelperProvider>
   );
