@@ -176,8 +176,17 @@ const ChatWidgetSetting = ({
 
       <h2 className="mb-2 mt-4 text-lg font-semibold text-foreground">Setup instructions</h2>
       <p className="text-md mt-2 text-sm text-foreground">
-        To install the chat widget, you'll need to set up both backend and frontend components. Choose your preferred
-        implementation method below.
+        To install the chat widget, you'll need to set up both backend and frontend components. For complete
+        documentation, visit{" "}
+        <a
+          href="http://docs.helper.ai"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline hover:underline"
+        >
+          our documentation
+        </a>
+        . Choose your preferred implementation method below.
       </p>
 
       <div className="mt-8">

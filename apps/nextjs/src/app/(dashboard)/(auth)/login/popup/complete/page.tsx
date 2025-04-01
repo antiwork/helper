@@ -14,7 +14,9 @@ export default function CompletePage() {
 
   useEffect(() => {
     if (userId && signInToken) {
-      window.location.href = `antiwork-helper:///login/token?userId=${userId}&token=${signInToken}`;
+      const redirectUrl = localStorage.getItem("popupLoginRedirectUrl");
+      localStorage.removeItem("popupLoginRedirectUrl");
+      window.location.href = `antiwork-helper:///login/token?userId=${userId}&token=${signInToken}&redirectUrl=${encodeURIComponent(redirectUrl ?? "/mailboxes")}`;
     }
   }, [userId, signInToken]);
 

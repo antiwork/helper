@@ -62,7 +62,6 @@ export const conversations = pgTable(
       mailboxIdIdx: index("conversations_conversation_mailbox_id_7fb25662").on(table.mailboxId),
       // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
       slugLikeIdx: index("conversations_conversation_slug_9924e9b1_like").on(table.slug),
-      statusIdx: index("conversations_conversation_status_c5b08f82").on(table.status),
       embeddingVectorIdx: index("embedding_vector_index").using(
         "hnsw",
         table.embedding.asc().nullsLast().op("vector_cosine_ops"),

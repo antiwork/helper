@@ -13,8 +13,6 @@ export * from "./escalations";
 export * from "./aiUsageEvents";
 
 export * from "./messageNotifications";
-export * from "./topics";
-export * from "./conversationsTopics";
 export * from "./websites";
 export * from "./toolApis";
 export * from "./tools";

@@ -98,7 +98,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
 
   const handleSignOut = async () => {
     try {
-      await signOut({ redirectUrl: "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",

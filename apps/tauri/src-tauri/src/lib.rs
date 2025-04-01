@@ -1,16 +1,28 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod tab_manager;
+mod utils;
+
 #[cfg(target_os = "macos")]
 mod apple_sign_in;
 
+use std::collections::HashMap;
 use std::env;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, Webview, WebviewBuilder, WebviewUrl,
+    WindowBuilder,
+};
 use tauri_plugin_opener::OpenerExt;
 
 lazy_static! {
     static ref DEEP_LINK_URL: Mutex<Option<String>> = Mutex::new(None);
+    static ref TAB_WEBVIEWS: Mutex<HashMap<String, Webview>> = Mutex::new(HashMap::new());
+    static ref ACTIVE_TAB: Mutex<Option<String>> = Mutex::new(None);
+    static ref NEXT_TAB_ID: Mutex<u32> = Mutex::new(0);
+    static ref TAB_TITLES: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+    static ref TAB_ORDER: Mutex<Vec<String>> = Mutex::new(Vec::new());
 }
 
 #[tauri::command]
@@ -61,6 +73,45 @@ fn start_apple_sign_in(app: AppHandle) {
     apple_sign_in::start_apple_sign_in(app);
 }
 
+#[tauri::command]
+fn add_tab(app: AppHandle, window: tauri::Window, url: String) -> Result<String, String> {
+    tab_manager::add_tab(app, window, url)
+}
+
+#[tauri::command]
+fn set_active_tab(app: AppHandle, tab_id: String) -> Result<(), String> {
+    tab_manager::set_active_tab(app, tab_id)
+}
+
+#[tauri::command]
+fn close_tab(
+    app: AppHandle,
+    window: tauri::Window,
+    tab_id: String,
+) -> Result<Option<String>, String> {
+    tab_manager::close_tab(app, window, tab_id)
+}
+
+#[tauri::command]
+fn update_tab(app: AppHandle, tab_id: String, title: String) -> Result<(), String> {
+    tab_manager::update_tab(app, tab_id, title)
+}
+
+#[tauri::command]
+fn reorder_tabs(app: AppHandle, tab_ids: Vec<String>) -> Result<(), String> {
+    tab_manager::reorder_tabs(app, tab_ids)
+}
+
+#[tauri::command]
+fn close_all_tabs(app: AppHandle, window: tauri::Window) -> Result<(), String> {
+    tab_manager::close_all_tabs(app, window)
+}
+
+#[tauri::command]
+fn toggle_tab_context_menu(app: AppHandle, tabs: String) {
+    app.emit("tab-context-menu", tabs).unwrap();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -77,6 +128,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             start_options,
+            add_tab,
+            set_active_tab,
+            close_tab,
+            update_tab,
+            reorder_tabs,
+            close_all_tabs,
+            toggle_tab_context_menu,
             is_mac_app_store,
             #[cfg(target_os = "macos")]
             start_apple_sign_in,
@@ -96,9 +154,8 @@ pub fn run() {
 
     builder
         .setup(|app| {
-            let mut win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+            let mut win_builder = WindowBuilder::new(app, "main")
                 .title("Helper")
-                .disable_drag_drop_handler()
                 .inner_size(1200.0, 800.0);
 
             #[cfg(target_os = "macos")]
@@ -108,6 +165,9 @@ pub fn run() {
             }
 
             let window = win_builder.build().unwrap();
+
+            let background_color = utils::get_background_color(&window);
+            let _ = window.set_background_color(Some(background_color));
 
             #[cfg(target_os = "macos")]
             {
@@ -171,6 +231,47 @@ pub fn run() {
                     );
                 }
             }
+
+            let size = window.inner_size().unwrap();
+            let scale_factor = window.scale_factor().unwrap();
+            let logical_size: LogicalSize<f32> = size.to_logical(scale_factor);
+
+            let tab_bar_webview = window
+                .add_child(
+                    WebviewBuilder::new("tab_bar", WebviewUrl::default())
+                        .disable_drag_drop_handler()
+                        .background_color(background_color),
+                    LogicalPosition::new(0., 0.),
+                    LogicalSize::new(logical_size.width, logical_size.height),
+                )
+                .unwrap();
+
+            let window_clone = window.clone();
+            window.on_window_event(move |event| match event {
+                tauri::WindowEvent::Resized(size) => {
+                    let logical_size = size.to_logical(window_clone.scale_factor().unwrap());
+
+                    let tab_webviews = TAB_WEBVIEWS.lock().unwrap();
+                    let has_tabs = !tab_webviews.is_empty();
+
+                    if has_tabs {
+                        // With tabs: tab bar takes 40px height
+                        let _ = tab_bar_webview.set_size(LogicalSize::new(logical_size.width, 40.));
+
+                        for (_, webview) in tab_webviews.iter() {
+                            let _ = webview.set_size(LogicalSize::new(
+                                logical_size.width,
+                                logical_size.height - 40.,
+                            ));
+                        }
+                    } else {
+                        // No tabs: tab bar takes full height
+                        let _ = tab_bar_webview
+                            .set_size(LogicalSize::new(logical_size.width, logical_size.height));
+                    }
+                }
+                _ => {}
+            });
 
             Ok(())
         })

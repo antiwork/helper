@@ -498,6 +498,20 @@
       "when": 1743189167093,
       "tag": "0070_loose_argent",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1743437836886,
+      "tag": "0071_sudden_tattoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1743473751117,
+      "tag": "0072_misty_valeria_richards",
+      "breakpoints": true
     }
   ]
 }

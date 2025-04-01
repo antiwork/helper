@@ -9,7 +9,7 @@ import {
   UserProfile,
   useUser,
 } from "@clerk/nextjs";
-import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
+import { BookOpenIcon, ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { ChevronsUpDown, ChevronUp, Download, Settings, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -52,7 +52,6 @@ import NativeAppModal, {
   MAC_UNIVERSAL_INSTALLER_URL,
   WINDOWS_INSTALLER_URL,
 } from "./nativeAppModal";
-import { useLayoutInfo } from "./useLayoutInfo";
 
 type Props = {
   mailboxSlug: string;
@@ -70,12 +69,10 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
   const { signOut } = useClerk();
-  const { nativePlatform } = useNativePlatform();
+  const { nativePlatform, isLegacyTauri } = useNativePlatform();
   const { user } = useUser();
   const [showNativeAppModal, setShowNativeAppModal] = useState(false);
-  const { setState: setLayoutState } = useLayoutInfo();
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  const router = useRouter();
 
   const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
@@ -91,7 +88,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     try {
       // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
       window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -110,11 +107,12 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     <Sidebar
       className={cn(
         "bg-sidebar text-sidebar-foreground border-r border-sidebar-border",
-
-        nativePlatform === "macos" && "pt-6",
+        nativePlatform === "macos" && isLegacyTauri && "pt-6",
       )}
     >
-      {nativePlatform === "macos" && <TauriDragArea className="top-0 left-0 w-[--sidebar-width] h-8" />}
+      {nativePlatform === "macos" && isLegacyTauri && (
+        <TauriDragArea className="top-0 left-0 w-[--sidebar-width] h-8" />
+      )}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center justify-between">
@@ -333,6 +331,14 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                     <OrganizationList hidePersonal hideSlug />
                   </DialogContent>
                 </Dialog>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    window.open("http://docs.helper.ai", "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <span>Documentation</span>
+                </DropdownMenuItem>
                 {isMobileWeb || (isDesktopWeb && user?.unsafeMetadata?.desktopAppPromptDismissed) ? (
                   <DropdownMenuItem
                     onSelect={(e) => {

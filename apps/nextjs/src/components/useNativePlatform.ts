@@ -1,3 +1,4 @@
+import * as tauriApp from "@tauri-apps/api/app";
 import * as osPlugin from "@tauri-apps/plugin-os";
 import { useEffect, useState } from "react";
 
@@ -27,14 +28,19 @@ export const getNativePlatform = () => getTauriPlatform() ?? getExpoPlatform() ?
 
 export const useNativePlatform = () => {
   const [platform, setPlatform] = useState<ReturnType<typeof getNativePlatform>>(null);
+  const [isLegacyTauri, setIsLegacyTauri] = useState(false);
 
   useEffect(() => {
     setPlatform(getNativePlatform());
+    if (getTauriPlatform()) {
+      tauriApp.getVersion().then((version) => setIsLegacyTauri(parseInt(version.replaceAll(".", "")) < 105));
+    }
   }, []);
 
   return {
     nativePlatform: platform,
     isTauri: platform === "macos" || platform === "windows" || platform === "linux",
     isExpo: platform === "ios" || platform === "android",
+    isLegacyTauri,
   };
 };

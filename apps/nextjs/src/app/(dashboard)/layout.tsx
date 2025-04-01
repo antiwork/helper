@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { DeepLinkHandler } from "@/components/deepLinkHandler";
 import { sundryBold, sundryMedium, sundryNarrowBold, sundryNarrowMedium, sundryRegular } from "@/components/fonts";
-import { NativeLinkOpener } from "@/components/nativeLinkOpener";
+import { NativeAppIntegration } from "@/components/nativeAppIntegration";
 import { SentryContext } from "@/components/sentryContext";
 import { TauriUpdateChecker } from "@/components/tauriUpdateChecker";
 import { ThemeProvider } from "@/components/themeProvider";
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <TRPCReactProvider>
                 <HydrateClient>
                   <TauriUpdateChecker />
-                  <NativeLinkOpener />
+                  <NativeAppIntegration />
                   <DeepLinkHandler />
                   {children}
                 </HydrateClient>
