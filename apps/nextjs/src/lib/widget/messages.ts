@@ -7,6 +7,7 @@ export const READY_ACTION = "READY";
 export const CLOSE_ACTION = "CLOSE";
 export const CONVERSATION_UPDATE_ACTION = "CONVERSATION_UPDATE";
 export const SCREENSHOT_ACTION = "SCREENSHOT";
+export const MINIMIZE_ACTION = "MINIMIZE";
 export const MESSAGE_TYPE = "HELPER_WIDGET_MESSAGE";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
@@ -37,5 +38,11 @@ export const sendConversationUpdate = (conversationSlug: string | null) => {
 export const sendScreenshot = () => {
   sendMessageToParent({
     action: SCREENSHOT_ACTION,
+  });
+};
+
+export const minimizeWidget = () => {
+  sendMessageToParent({
+    action: MINIMIZE_ACTION,
   });
 };

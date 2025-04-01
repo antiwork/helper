@@ -21,7 +21,7 @@ export default async function WidgetTest({
   const config: HelperConfig = {
     ...helperAuth,
     title: "Support & Help",
-    experimental_read_page: true,
+    experimental_read_page: false,
     customer_metadata: {
       name: "John Doe",
       value: isVip ? 1000_00 : 100,

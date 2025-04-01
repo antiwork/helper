@@ -1,8 +1,12 @@
-import { Context } from "modern-screenshot";
+import { take } from "lodash";
+import { Context, domToBlob } from "modern-screenshot";
 import type { NotificationStatus } from "@/db/schema/messageNotifications";
-import { CLOSE_ACTION, CONVERSATION_UPDATE_ACTION, READY_ACTION, SCREENSHOT_ACTION } from "@/lib/widget/messages";
+import { connectSupportEmail } from "@/lib/authService";
+import { CLOSE_ACTION, CONVERSATION_UPDATE_ACTION, MINIMIZE_ACTION, READY_ACTION, SCREENSHOT_ACTION } from "@/lib/widget/messages";
+import { domElements } from "./domElements";
 import embedStyles from "./embed.css";
 import type { HelperWidgetConfig } from "./types";
+
 
 declare const __EMBED_URL__: string;
 
@@ -34,6 +38,7 @@ class HelperWidget {
   private sessionToken: string | null = null;
   private showWidget = false;
   private showToggleButton: boolean | null = null;
+  private isMinimized = false;
 
   private messageQueue: any[] = [];
   private observer: MutationObserver | null = null;
@@ -58,6 +63,7 @@ class HelperWidget {
     await this.createSessionWithRetry();
     this.createToggleButton();
     this.loadPreviousStatusFromLocalStorage();
+    this.takeDOMSnapshot();
   }
 
   private async createSessionWithRetry() {
@@ -66,6 +72,16 @@ class HelperWidget {
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
     console.error("Failed to create Helper session after 3 attempts");
+  }
+
+  private takeDOMSnapshot() {
+    const domTracking = domElements({
+      debugMode: true,
+      doHighlightElements: true,
+      focusHighlightIndex: -1,
+      viewportExpansion: 0,
+    });
+    console.log(domTracking);
   }
 
   private async createSession() {
@@ -176,7 +192,28 @@ class HelperWidget {
 
   private injectStyles(): void {
     const style = document.createElement("style");
-    style.textContent = embedStyles;
+    style.textContent = `${embedStyles}
+      .helper-widget-wrapper {
+        transition: height 0.3s ease, width 0.3s ease, right 0.3s ease, bottom 0.3s ease;
+      }
+      .helper-widget-wrapper.minimized {
+        height: 290px !important;
+        width: 390px !important;
+        border-radius: 12px;
+        border: 2px solid rgba(0, 0, 0, 0.1) !important;
+        right: 20px !important;
+        bottom: 20px !important;
+        top: auto !important;
+        left: auto !important;
+        position: fixed !important;
+        overflow: hidden;
+        box-shadow: none !important;
+      }
+      .helper-widget-toggle-button.with-minimized-widget {
+        bottom: 20px !important;
+        right: 20px !important;
+      }
+    `;
     document.head.appendChild(style);
   }
 
@@ -257,6 +294,9 @@ class HelperWidget {
         switch (action) {
           case CLOSE_ACTION:
             HelperWidget.hide();
+            break;
+          case MINIMIZE_ACTION:
+            HelperWidget.minimize();
             break;
           case READY_ACTION:
             this.onIframeReady();
@@ -420,7 +460,9 @@ class HelperWidget {
     }
     if (this.iframeWrapper && this.overlay && !this.isVisible) {
       this.iframeWrapper.classList.add("visible");
-      this.overlay.classList.add("visible");
+      if (!this.isMinimized) {
+        this.overlay.classList.add("visible");
+      }
       if (!this.isIframeReady) {
         this.showLoadingOverlay();
       }
@@ -440,6 +482,9 @@ class HelperWidget {
       // Hide the toggle button when the widget is visible
       if (this.toggleButton) {
         this.toggleButton.classList.remove("visible");
+        if (this.isMinimized) {
+          this.toggleButton.classList.add("with-minimized-widget");
+        }
       }
     }
   }
@@ -447,9 +492,11 @@ class HelperWidget {
   private hideInternal(): void {
     if (this.iframeWrapper && this.overlay && this.isVisible) {
       this.iframeWrapper.classList.remove("visible");
+      this.iframeWrapper.classList.remove("minimized");
       this.overlay.classList.remove("visible");
       this.hideLoadingOverlay();
       this.isVisible = false;
+      this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
 
@@ -460,6 +507,7 @@ class HelperWidget {
         (this.showToggleButton === true || (this.showToggleButton === null && !this.showWidget))
       ) {
         this.toggleButton.classList.add("visible");
+        this.toggleButton.classList.remove("with-minimized-widget");
       }
     }
   }
@@ -471,6 +519,40 @@ class HelperWidget {
       this.showInternal();
     }
     this.updateAllToggleElements();
+  }
+
+  private minimizeInternal(): void {
+    if (this.iframeWrapper && this.isVisible) {
+      this.iframeWrapper.classList.add("minimized");
+      if (this.overlay) {
+        this.overlay.classList.remove("visible");
+      }
+      this.isMinimized = true;
+      if (this.toggleButton) {
+        this.toggleButton.classList.add("with-minimized-widget");
+      }
+    }
+  }
+
+  private maximizeInternal(): void {
+    if (this.iframeWrapper && this.isVisible) {
+      this.iframeWrapper.classList.remove("minimized");
+      if (this.overlay) {
+        this.overlay.classList.add("visible");
+      }
+      this.isMinimized = false;
+      if (this.toggleButton) {
+        this.toggleButton.classList.remove("with-minimized-widget");
+      }
+    }
+  }
+
+  private toggleMinimize(): void {
+    if (this.isMinimized) {
+      this.maximizeInternal();
+    } else {
+      this.minimizeInternal();
+    }
   }
 
   private updateAllToggleElements(): void {
@@ -528,6 +610,24 @@ class HelperWidget {
   public static toggle(): void {
     if (HelperWidget.instance) {
       HelperWidget.instance.toggleInternal();
+    }
+  }
+
+  public static minimize(): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.minimizeInternal();
+    }
+  }
+
+  public static maximize(): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.maximizeInternal();
+    }
+  }
+
+  public static toggleMinimize(): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.toggleMinimize();
     }
   }
 
