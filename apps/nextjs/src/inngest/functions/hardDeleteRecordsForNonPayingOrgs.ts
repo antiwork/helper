@@ -7,14 +7,12 @@ import {
   conversationEvents,
   conversationMessages,
   conversations,
-  conversationsTopics,
   faqs,
   files,
   mailboxes,
   messageNotifications,
   notes,
   subscriptions,
-  topics,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { ADDITIONAL_PAID_ORGANIZATION_IDS, getClerkOrganization } from "@/lib/data/organization";
@@ -71,9 +69,6 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
     }
 
     await db.delete(faqs).where(eq(faqs.mailboxId, mailbox.id));
-
-    await db.delete(topics).where(eq(topics.mailboxId, mailbox.id));
-    await db.delete(conversationsTopics).where(eq(conversationsTopics.mailboxId, mailbox.id));
 
     const mailboxConversations = db
       .$with("mailbox_conversations")
