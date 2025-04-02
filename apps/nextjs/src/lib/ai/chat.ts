@@ -97,40 +97,43 @@ export const loadPreviousMessages = async (
   const attachments = await loadScreenshotAttachments(conversationMessages);
   const members = memoize(() => getOrganizationMembers(mailbox.clerkOrganizationId));
 
-  return conversationMessages
-    .filter((message) => message.body && message.id !== latestMessageId)
-    .map(async (message) => {
-      if (message.role === "tool") {
-        const tool = message.metadata?.tool as HelperTool;
+  return Promise.all(
+    conversationMessages
+      .filter((message) => message.body && message.id !== latestMessageId)
+      .map(async (message) => {
+        if (message.role === "tool") {
+          const tool = message.metadata?.tool as HelperTool;
+          return {
+            id: message.id.toString(),
+            role: "assistant",
+            content: "",
+            toolInvocations: [
+              {
+                id: message.id.toString(),
+                toolName: tool.slug,
+                result: message.metadata?.result,
+                step: 0,
+                state: "result",
+                toolCallId: `tool_${message.id}`,
+                args: message.metadata?.parameters,
+              },
+            ],
+          };
+        }
+
+        const user = message.clerkUserId
+          ? (await members()).data.find((m) => m.publicUserData?.userId === message.clerkUserId)
+          : null;
+
         return {
           id: message.id.toString(),
-          role: "assistant",
-          content: "",
-          toolInvocations: [
-            {
-              id: message.id.toString(),
-              toolName: tool.slug,
-              result: message.metadata?.result,
-              step: 0,
-              state: "result",
-              toolCallId: `tool_${message.id}`,
-              args: message.metadata?.parameters,
-            },
-          ],
+          role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
+          content: message.body || "",
+          annotations: user ? [{ user: { firstName: user.publicUserData?.firstName } }] : null,
+          experimental_attachments: attachments.filter((a) => a.messageId === message.id),
         };
-      }
-
-      const user = message.clerkUserId
-        ? (await members()).data.find((m) => m.publicUserData?.userId === message.clerkUserId)
-        : null;
-
-      return {
-        id: message.id.toString(),
-        role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
-        content: message.body || "",
-        experimental_attachments: attachments.filter((a) => a.messageId === message.id),
-      };
-    });
+      }),
+  );
 };
 
 export const buildPromptMessages = async (
