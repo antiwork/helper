@@ -200,7 +200,7 @@ export default function Page() {
         </div>
       </div>
       {isGuidingUser && (
-        <div className="flex min-h-screen flex-col items-center justify-center p-2">
+        <div className="flex min-h-screen flex-col items-center justify-center px-4">
           <AISteps steps={steps} />
         </div>
       )}

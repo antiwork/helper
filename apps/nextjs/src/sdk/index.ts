@@ -197,10 +197,10 @@ class HelperWidget {
         transition: height 0.3s ease, width 0.3s ease, right 0.3s ease, bottom 0.3s ease;
       }
       .helper-widget-wrapper.minimized {
-        height: 290px !important;
+        height: 280px !important;
         width: 390px !important;
         border-radius: 12px;
-        border: 2px solid rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid rgba(0, 0, 0, 0.7) !important;
         right: 20px !important;
         bottom: 20px !important;
         top: auto !important;
