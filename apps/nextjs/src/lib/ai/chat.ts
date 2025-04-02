@@ -16,6 +16,7 @@ import {
   type Tool,
 } from "ai";
 import { and, desc, eq } from "drizzle-orm";
+import { memoize } from "lodash";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -30,7 +31,7 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import { createConversationMessage, disableAIResponse, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
-import { getCachedSubscriptionStatus } from "@/lib/data/organization";
+import { getCachedSubscriptionStatus, getOrganizationMembers } from "@/lib/data/organization";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
@@ -72,12 +73,17 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
+export const loadPreviousMessages = async (
+  conversationId: number,
+  mailbox: Mailbox,
+  latestMessageId?: number,
+): Promise<Message[]> => {
   const conversationMessages = await getMessagesOnly(conversationId);
+  const members = memoize(() => getOrganizationMembers(mailbox.clerkOrganizationId));
 
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
-    .map((message) => {
+    .map(async (message) => {
       if (message.role === "tool") {
         const tool = message.metadata?.tool as HelperTool;
         return {
@@ -97,6 +103,10 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
           ],
         };
       }
+
+      const user = message.clerkUserId
+        ? (await members()).data.find((m) => m.publicUserData?.userId === message.clerkUserId)
+        : null;
 
       return {
         id: message.id.toString(),
@@ -479,7 +489,7 @@ export const respondWithAI = async ({
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
 }) => {
-  const previousMessages = await loadPreviousMessages(conversation.id, messageId);
+  const previousMessages = await loadPreviousMessages(conversation.id, mailbox, messageId);
   const messages = appendClientMessage({
     messages: previousMessages,
     message,

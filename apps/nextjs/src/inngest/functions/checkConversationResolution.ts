@@ -31,7 +31,7 @@ Where [reason] is a brief explanation of your decision.
 Just check if the assistant has provided information generally relevant to the customer's issue - it doesn't need to be an exact match.`;
 
 const checkAIBasedResolution = async (conversationId: number, mailbox: Mailbox) => {
-  const messages = await loadPreviousMessages(conversationId);
+  const messages = await loadPreviousMessages(conversationId, mailbox);
 
   const aiResponse = await runAIQuery({
     messages: messages.map((msg) => ({

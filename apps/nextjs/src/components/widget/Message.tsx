@@ -1,3 +1,4 @@
+import { UserIcon } from "@heroicons/react/16/solid";
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
 import { useEffect } from "react";
@@ -67,6 +68,11 @@ export default function Message({ message, conversationSlug, token, addToolResul
     }
   }, [screenshot, screenshotInvocation]);
 
+  const userAnnotation = message.annotations?.find(
+    (annotation): annotation is { user: { firstName: string } } =>
+      typeof annotation === "object" && annotation !== null && "user" in annotation,
+  );
+
   if (!conversationSlug) {
     return null;
   }
@@ -84,6 +90,12 @@ export default function Message({ message, conversationSlug, token, addToolResul
           "border border-black bg-white text-black": message.role !== USER_ROLE,
         })}
       >
+        {userAnnotation ? (
+          <div className="flex items-center text-muted-foreground text-xs">
+            <UserIcon className="w-4 h-4 mr-2" />
+            {userAnnotation.user.firstName}
+          </div>
+        ) : null}
         <MessageElement
           messageId={persistedId?.toString()}
           conversationSlug={conversationSlug}
