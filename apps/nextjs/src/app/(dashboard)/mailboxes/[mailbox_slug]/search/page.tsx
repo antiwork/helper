@@ -1,7 +1,14 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon, StarIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  CurrencyDollarIcon,
+  FunnelIcon,
+  InboxIcon,
+  ShieldExclamationIcon,
+  StarIcon,
+} from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { formatCurrency } from "@/components/utils/currency";
+import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { AssigneeFilter } from "./_components/assigneeFilter";
 import { CustomerFilter } from "./_components/customerFilter";
@@ -32,7 +40,6 @@ import { ReactionFilter } from "./_components/reactionFilter";
 import { ResponderFilter } from "./_components/responderFilter";
 import { StatusFilter } from "./_components/statusFilter";
 import { VipFilter } from "./_components/vipFilter";
-import { cn } from "@/lib/utils";
 
 export default function SearchPage() {
   const params = useParams<{ mailbox_slug: string }>();
@@ -163,7 +170,7 @@ export default function SearchPage() {
   };
 
   const getActiveFilterCount = () => {
-    return Object.values(omit(filterValues, ['search'])).reduce((count, value) => {
+    return Object.values(omit(filterValues, ["search"])).reduce((count, value) => {
       if (Array.isArray(value)) {
         return count + (value.length > 0 ? 1 : 0);
       }
@@ -219,9 +226,7 @@ export default function SearchPage() {
                       className="md:hidden gap-1.5"
                     >
                       <FunnelIcon className="h-5 w-5" />
-                      {getActiveFilterCount() > 0 && (
-                        <span className="text-xs">({getActiveFilterCount()})</span>
-                      )}
+                      {getActiveFilterCount() > 0 && <span className="text-xs">({getActiveFilterCount()})</span>}
                     </Button>
                   </div>
                 }
@@ -322,9 +327,7 @@ export default function SearchPage() {
                       checked={allConversationsSelected || selectedConversations.length > 0}
                       onCheckedChange={toggleAllConversations}
                       id="select-all"
-                      disabled={
-                        !allConversationsSelected && !selectedConversations.length && totalResults > 10_000
-                      }
+                      disabled={!allConversationsSelected && !selectedConversations.length && totalResults > 10_000}
                     />
                   </div>
                   <TooltipProvider delayDuration={0}>
@@ -413,10 +416,14 @@ function SearchResultItem({
   }
 
   return (
-    <div className={cn(
-      "flex items-start gap-4 py-4 px-4 md:px-4 transition-colors",
-      isSelected ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400" : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-    )}>
+    <div
+      className={cn(
+        "flex items-start gap-4 py-4 px-4 md:px-4 transition-colors",
+        isSelected
+          ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
+          : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
+      )}
+    >
       <Checkbox
         checked={isSelected}
         onCheckedChange={onToggleSelect}
@@ -440,14 +447,16 @@ function SearchResultItem({
                   <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
                   Open
                 </Badge>
-              ) : status === "closed" && (
-                <Badge variant="gray" className="gap-1.5">
-                  <CheckIcon className="h-3 w-3" />
-                  Closed
-                </Badge>
+              ) : (
+                status === "closed" && (
+                  <Badge variant="gray" className="gap-1.5">
+                    <CheckIcon className="h-3 w-3" />
+                    Closed
+                  </Badge>
+                )
               )}
-              {conversation.platformCustomer?.value && (
-                conversation.platformCustomer.isVip ? (
+              {conversation.platformCustomer?.value &&
+                (conversation.platformCustomer.isVip ? (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -464,8 +473,7 @@ function SearchResultItem({
                     <CurrencyDollarIcon className="h-3 w-3" />
                     {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                   </Badge>
-                )
-              )}
+                ))}
             </div>
             {highlightedText && (
               <p
