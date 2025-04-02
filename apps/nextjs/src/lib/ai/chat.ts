@@ -15,11 +15,10 @@ import {
   type TextStreamPart,
   type Tool,
 } from "ai";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
@@ -34,6 +33,7 @@ import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
+import { createPresignedDownloadUrl } from "@/s3/utils";
 import { ReadPageToolConfig } from "@/sdk/types";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
@@ -72,8 +72,24 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
+export const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
+  const attachments = await db.query.files.findMany({
+    where: inArray(
+      files.messageId,
+      messages.filter((m) => (m.metadata as MessageMetadata).includesScreenshot).map((m) => m.id),
+    ),
+  });
+  return await Promise.all(
+    attachments.map(async (a) => {
+      const url = await createPresignedDownloadUrl(a.url);
+      return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
+    }),
+  );
+};
+
 export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
   const conversationMessages = await getMessagesOnly(conversationId);
+  const attachments = await loadScreenshotAttachments(conversationMessages);
 
   return conversationMessages
     .filter((message) => message.body && message.id !== latestMessageId)
@@ -102,6 +118,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
         id: message.id.toString(),
         role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
         content: message.body || "",
+        experimental_attachments: attachments.filter((a) => a.messageId === message.id),
       };
     });
 };
@@ -174,6 +191,16 @@ const generateReasoning = async ({
     return `${tool}: ${toolObj?.description ?? ""} Params: ${paramsString}`;
   });
 
+  const hasScreenshot = coreMessages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "image"));
+  coreMessages = coreMessages.map((message) =>
+    message.role === "user"
+      ? {
+          ...message,
+          content: Array.isArray(message.content) ? message.content.filter((c) => c.type === "text") : message.content,
+        }
+      : message,
+  );
+
   const reasoningSystemMessages: CoreMessage[] = [
     {
       role: "system",
@@ -184,6 +211,14 @@ const generateReasoning = async ({
       content: `Think about how you can give the best answer to the user's question.`,
     },
   ];
+
+  if (hasScreenshot) {
+    reasoningSystemMessages.push({
+      role: "system",
+      content:
+        "Don't worry if there's no screenshot, as sometimes it's not sent due to lack of multimodal functionality. Just move on.",
+    });
+  }
 
   try {
     const startTime = Date.now();
@@ -254,7 +289,6 @@ export const generateAIResponse = async ({
   conversationId,
   email,
   readPageTool = null,
-  screenshotAvailable = false,
   onFinish,
   dataStream,
   model = openai(COMPLETION_MODEL),
@@ -267,7 +301,6 @@ export const generateAIResponse = async ({
   conversationId: number;
   email: string | null;
   readPageTool?: ReadPageToolConfig | null;
-  screenshotAvailable?: boolean;
   onFinish?: (params: {
     text: string;
     finishReason: string;
@@ -293,12 +326,6 @@ export const generateAIResponse = async ({
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
-      parameters: z.object({}),
-    };
-  }
-  if (screenshotAvailable) {
-    tools.take_screenshot = {
-      description: "take a screenshot of the current page including any error messages",
       parameters: z.object({}),
     };
   }
@@ -402,8 +429,13 @@ export const generateAIResponse = async ({
   });
 };
 
-export const createUserMessage = (conversationId: number, email: string | null, query: string) => {
-  return createConversationMessage({
+export const createUserMessage = async (
+  conversationId: number,
+  email: string | null,
+  query: string,
+  screenshotData?: string,
+) => {
+  const message = await createConversationMessage({
     conversationId,
     emailFrom: email,
     body: query,
@@ -412,7 +444,19 @@ export const createUserMessage = (conversationId: number, email: string | null, 
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
+    metadata: { includesScreenshot: !!screenshotData },
   });
+
+  if (screenshotData) {
+    await createAndUploadFile({
+      data: Buffer.from(screenshotData, "base64"),
+      fileName: `screenshot-${Date.now()}.png`,
+      prefix: `screenshots/${conversationId}`,
+      messageId: message.id,
+    });
+  }
+
+  return message;
 };
 
 export const createAssistantMessage = (
@@ -548,8 +592,6 @@ export const respondWithAI = async ({
     return createTextResponse("Free trial expired. Please upgrade to continue using Helper.", Date.now().toString());
   }
 
-  await addScreenshotResult(messages, conversation, messageId);
-
   return createDataStreamResponse({
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -563,7 +605,6 @@ export const respondWithAI = async ({
         conversationId: conversation.id,
         email: userEmail,
         readPageTool,
-        screenshotAvailable: !sendEmail,
         addReasoning: true,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources }) {
@@ -667,43 +708,4 @@ const createTextResponse = (text: string, messageId: string) => {
 
 const hashQuery = (query: string): string => {
   return createHash("md5").update(query).digest("hex");
-};
-
-const addScreenshotResult = async (messages: Message[], conversation: Conversation, messageId: number) => {
-  const screenshotInvocation = messages
-    .at(-1)
-    ?.toolInvocations?.find((invocation: any) => invocation.toolName === "take_screenshot");
-
-  if (screenshotInvocation?.state === "result") {
-    if (screenshotInvocation.result.data) {
-      const assistantMessage = assertDefined(await lastAssistantMessage(conversation.id));
-      const base64Data = screenshotInvocation.result.data.split(",")[1];
-
-      await createAndUploadFile({
-        data: Buffer.from(base64Data, "base64"),
-        fileName: `screenshot-${Date.now()}.png`,
-        prefix: `screenshots/${conversation.slug}`,
-        messageId: assistantMessage.id,
-      });
-
-      messages.push({
-        role: "user",
-        content: "Here's the screenshot. Don't describe it, just use it to help respond to my previous message.",
-        experimental_attachments: [
-          {
-            name: "screenshot.png",
-            contentType: "image/png",
-            url: screenshotInvocation.result.data,
-          },
-        ],
-        id: `${assistantMessage.id}-screenshot`,
-      });
-    } else {
-      messages.push({
-        role: "user",
-        content: "I couldn't take a screenshot for you.",
-        id: `${messageId}-screenshot`,
-      });
-    }
-  }
 };

@@ -3,6 +3,7 @@ import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
+import { loadScreenshotAttachments } from "@/lib/ai/chat";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -29,6 +30,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     return Response.json({ error: "Conversation not found" }, { status: 404 });
   }
 
+  const attachments = await loadScreenshotAttachments(conversation.messages);
+
   const requestHumanSupportEvent = await db.query.conversationEvents.findFirst({
     where: and(
       eq(conversationEvents.conversationId, conversation.id),
@@ -45,6 +48,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     createdAt: message.createdAt.toISOString(),
     reactionType: message.reactionType,
     reactionFeedback: message.reactionFeedback,
+    experimental_attachments: attachments.filter((a) => a.messageId === message.id),
   }));
 
   return Response.json({ messages: formattedMessages, isEscalated });

@@ -70,7 +70,7 @@ export const createAndUploadFile = async ({
   const s3Key = generateS3Key([prefix], fileName);
   const s3Url = await uploadFile(data, s3Key, mimetype);
 
-  return await db
+  const file = await db
     .insert(files)
     .values({
       name: fileName,
@@ -84,4 +84,13 @@ export const createAndUploadFile = async ({
     })
     .returning()
     .then(takeUniqueOrThrow);
+
+  if (!isInline) {
+    await inngest.send({
+      name: "files/preview.generate",
+      data: { fileId: file.id },
+    });
+  }
+
+  return file;
 };

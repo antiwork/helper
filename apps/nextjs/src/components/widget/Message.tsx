@@ -1,10 +1,7 @@
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
-import { useEffect } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import MessageElement from "@/components/widget/MessageElement";
-import { useScreenshotStore } from "@/components/widget/widgetState";
-import { sendScreenshot } from "@/lib/widget/messages";
 
 const USER_ROLE = "user";
 
@@ -18,14 +15,11 @@ type Props = {
   message: MessageWithReaction;
   conversationSlug: string | null;
   token: string | null;
-  addToolResult: (options: { toolCallId: string; result: unknown }) => void;
   data: JSONValue[] | null;
   color: "black" | "gumroad-pink";
 };
 
-export default function Message({ message, conversationSlug, token, addToolResult, data, color }: Props) {
-  const { screenshot, setScreenshot } = useScreenshotStore();
-
+export default function Message({ message, conversationSlug, token, data, color }: Props) {
   const idFromAnnotation =
     message.annotations?.find(
       (annotation): annotation is { id: string | number } =>
@@ -53,20 +47,6 @@ export default function Message({ message, conversationSlug, token, addToolResul
     }
   }
 
-  const screenshotInvocation = message.toolInvocations?.find(
-    (invocation) => invocation.toolName === "take_screenshot" && invocation.state !== "result",
-  );
-
-  useEffect(() => {
-    if (screenshot?.response && screenshotInvocation) {
-      addToolResult({
-        toolCallId: screenshotInvocation.toolCallId,
-        result: { data: screenshot.response },
-      });
-      setScreenshot(null);
-    }
-  }, [screenshot, screenshotInvocation]);
-
   if (!conversationSlug) {
     return null;
   }
@@ -92,23 +72,17 @@ export default function Message({ message, conversationSlug, token, addToolResul
           token={token}
           color={color}
         />
-        {screenshotInvocation ? (
-          <div key={screenshotInvocation.toolCallId} className="flex items-center gap-2 p-4 border-t border-black">
-            <p className="mr-auto">Allow Helper to take a screenshot?</p>
-            <button
-              onClick={() => addToolResult({ toolCallId: screenshotInvocation.toolCallId, result: { data: null } })}
-              className="flex h-8 px-3 items-center justify-center rounded-md text-sm transition-all duration-300 ease-in-out border border-black hover:bg-[#FF90E7]"
-            >
-              Deny
-            </button>
-            <button
-              onClick={() => sendScreenshot()}
-              className="flex h-8 px-3 items-center justify-center rounded-md bg-black text-sm text-white transition-all duration-300 ease-in-out border border-black hover:bg-[#FF90E7] hover:text-black"
-            >
-              Allow
-            </button>
-          </div>
-        ) : null}
+        {message.experimental_attachments?.map((attachment) => (
+          <a
+            key={attachment.url}
+            href={attachment.url}
+            className="block p-4 pt-0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img className="w-full rounded-lg" src={attachment.url} alt={attachment.name} />
+          </a>
+        ))}
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-400" title={message.createdAt ? message.createdAt.toLocaleString() : ""}>
