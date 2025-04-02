@@ -1,6 +1,6 @@
 import { KnownBlock } from "@slack/web-api";
 import { intervalToDuration, isWeekend } from "date-fns";
-import { and, desc, eq, gt, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
@@ -56,6 +56,7 @@ export default inngest.createFunction(
             and(
               eq(conversations.mailboxId, mailbox.id),
               isNotNull(conversations.assignedToClerkId),
+              isNull(conversations.mergedIntoId),
               eq(conversations.status, "open"),
               gt(
                 sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
