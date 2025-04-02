@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai/react";
+import { AppLayout } from "./_components/AppLayout";
 import { WidgetButtons } from "./WidgetButtons";
 
+// Page configuration
 export const dynamic = "force-dynamic";
 
 export default async function WidgetTest({
@@ -34,18 +36,16 @@ export default async function WidgetTest({
   return (
     <HelperProvider host="https://helperai.dev" {...config}>
       <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
-        <div className="w-full max-w-xl rounded-lg bg-background p-6 shadow-md">
-          <h1 className="mb-4 text-2xl font-bold text-foreground">Helper widget Test Page</h1>
+        <div className="w-full max-w-6xl rounded-lg bg-background p-6 shadow-md">
+          <h1 className="mb-4 text-2xl font-bold text-foreground">Helper Widget Test Page</h1>
           <WidgetButtons />
-        </div>
-        <div className="text-md text-black mt-4">
-          <p className="font-semibold">Sample Flexile page content</p>
-          <p className="mt-6">Raphael completed the following tasks last week:</p>
-          <ul>
-            <li>Created a Gumroad membership product</li>
-            <li>Created a PR for Helper Widget</li>
-            <li>Created to improve AI response quality</li>
-          </ul>
+
+          <div className="mt-8 border-t pt-6">
+            <h2 className="mb-4 text-xl font-semibold">Demo App</h2>
+            <div className="h-[500px] overflow-hidden rounded border shadow-inner">
+              <AppLayout />
+            </div>
+          </div>
         </div>
       </div>
     </HelperProvider>

@@ -8,6 +8,13 @@ import {
   SCREENSHOT_ACTION,
 } from "@/lib/widget/messages";
 import { domElements } from "./domElements";
+import {
+  clickableElementsToString,
+  constructDomTree,
+  findInteractiveElements,
+  stringifyDomTree,
+  type DomTrackingData,
+} from "./domTree";
 import embedStyles from "./embed.css";
 import type { HelperWidgetConfig } from "./types";
 
@@ -27,6 +34,7 @@ interface Notification {
 class HelperWidget {
   private static instance: HelperWidget | null = null;
   private config: HelperWidgetConfig;
+  private currentDomTracking: any;
   private iframe: HTMLIFrameElement | null = null;
   private iframeWrapper: HTMLDivElement | null = null;
   private helperIcon: HTMLButtonElement | null = null;
@@ -54,6 +62,7 @@ class HelperWidget {
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
+    this.currentDomTracking = null;
   }
 
   private async setup(): Promise<void> {
@@ -66,7 +75,6 @@ class HelperWidget {
     await this.createSessionWithRetry();
     this.createToggleButton();
     this.loadPreviousStatusFromLocalStorage();
-    this.takeDOMSnapshot();
   }
 
   private async createSessionWithRetry() {
@@ -77,14 +85,18 @@ class HelperWidget {
     console.error("Failed to create Helper session after 3 attempts");
   }
 
-  private takeDOMSnapshot() {
-    const domTracking = domElements({
-      debugMode: true,
-      doHighlightElements: true,
-      focusHighlightIndex: -1,
-      viewportExpansion: 0,
+  private takeDOMSnapshot(
+    debugMode = false,
+    doHighlightElements = false,
+    focusHighlightIndex = -1,
+    viewportExpansion = 0,
+  ) {
+    return domElements({
+      debugMode,
+      doHighlightElements,
+      focusHighlightIndex,
+      viewportExpansion,
     });
-    console.log(domTracking);
   }
 
   private async createSession() {
@@ -200,7 +212,7 @@ class HelperWidget {
         transition: height 0.3s ease, width 0.3s ease, right 0.3s ease, bottom 0.3s ease;
       }
       .helper-widget-wrapper.minimized {
-        height: 280px !important;
+        height: 320px !important;
         width: 390px !important;
         border-radius: 12px;
         border: 1px solid rgba(0, 0, 0, 0.7) !important;
@@ -293,29 +305,76 @@ class HelperWidget {
 
     window.addEventListener("message", (event: MessageEvent) => {
       const embedOrigin = new URL(__EMBED_URL__).origin;
-      if (event.origin === embedOrigin && event.data && event.data.type === this.messageType) {
-        const { action, content } = event.data.payload;
-        switch (action) {
-          case CLOSE_ACTION:
-            HelperWidget.hide();
-            break;
-          case MINIMIZE_ACTION:
-            HelperWidget.minimize();
-            break;
-          case READY_ACTION:
-            this.onIframeReady();
-            break;
-          case CONVERSATION_UPDATE_ACTION:
-            if (content.conversationSlug && content.conversationSlug.length > 0) {
-              this.currentConversationSlug = content.conversationSlug;
-              if (!this.isAnonymous()) {
-                localStorage.setItem(this.CONVERSATION_STORAGE_KEY, content.conversationSlug || "");
-              }
+
+      // Handle messages from our iframe
+      if (event.data && event.data.type === this.messageType) {
+        const { action, requestId, content } = event.data.payload || {};
+
+        // Handle request-response pattern messages (has requestId)
+        if (requestId) {
+          try {
+            let response = null;
+
+            if (action === "FETCH_PAGE_DETAILS") {
+              response = HelperWidget.fetchCurrentPageDetails();
             }
-            break;
-          case SCREENSHOT_ACTION:
-            this.takeScreenshot();
-            break;
+
+            // Send the response back to the iframe
+            if (event.source && "postMessage" in event.source) {
+              (event.source as Window).postMessage(
+                {
+                  type: this.messageType,
+                  payload: {
+                    responseId: requestId,
+                    response,
+                  },
+                },
+                "*",
+              );
+            }
+          } catch (error) {
+            // Send error back to iframe
+            if (event.source && "postMessage" in event.source) {
+              (event.source as Window).postMessage(
+                {
+                  type: this.messageType,
+                  payload: {
+                    responseId: requestId,
+                    error: error instanceof Error ? error.message : String(error),
+                  },
+                },
+                "*",
+              );
+            }
+          }
+          return; // Process only as request-response, not as regular action
+        }
+
+        // Regular action messages (from iframe with embedOrigin)
+        if (event.origin === embedOrigin) {
+          const { action, content } = event.data.payload;
+          switch (action) {
+            case CLOSE_ACTION:
+              HelperWidget.hide();
+              break;
+            case MINIMIZE_ACTION:
+              HelperWidget.minimize();
+              break;
+            case READY_ACTION:
+              this.onIframeReady();
+              break;
+            case CONVERSATION_UPDATE_ACTION:
+              if (content.conversationSlug && content.conversationSlug.length > 0) {
+                this.currentConversationSlug = content.conversationSlug;
+                if (!this.isAnonymous()) {
+                  localStorage.setItem(this.CONVERSATION_STORAGE_KEY, content.conversationSlug || "");
+                }
+              }
+              break;
+            case SCREENSHOT_ACTION:
+              this.takeScreenshot();
+              break;
+          }
         }
       }
     });
@@ -671,6 +730,55 @@ class HelperWidget {
     }
   }
 
+  public static fetchCurrentPageDetails(): {
+    currentPageDetails: { url: string; title: string };
+    domTracking: any;
+    clickableElements?: string;
+    interactiveElements?: ReturnType<typeof findInteractiveElements>;
+  } | null {
+    if (!HelperWidget.instance) {
+      return null;
+    }
+
+    const domTracking = HelperWidget.instance.takeDOMSnapshot();
+    HelperWidget.instance.currentDomTracking = domTracking;
+
+    const currentPageDetails = {
+      url: window.location.href,
+      title: document.title,
+    };
+
+    try {
+      const domTree = constructDomTree(domTracking as DomTrackingData);
+
+      const includeAttributes = [
+        "title",
+        "type",
+        "name",
+        "role",
+        "tabindex",
+        "aria-label",
+        "placeholder",
+        "value",
+        "alt",
+        "aria-expanded",
+      ];
+
+      const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
+      const interactiveElements = findInteractiveElements(domTree.root);
+
+      return {
+        currentPageDetails,
+        domTracking,
+        clickableElements,
+        interactiveElements,
+      };
+    } catch (error) {
+      console.error("Failed to construct DOM tree:", error);
+      return { currentPageDetails, domTracking };
+    }
+  }
+
   public static async init(config: HelperWidgetConfig): Promise<HelperWidget> {
     if (!HelperWidget.instance) {
       HelperWidget.instance = new HelperWidget(config);
@@ -798,6 +906,64 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
+  }
+
+  /**
+   * Gets a formatted list of clickable elements on the current page
+   * @param includeAttributes Optional list of attribute names to include
+   * @returns Formatted string of clickable elements or null if widget is not initialized
+   */
+  public static getFormattedClickableElements(includeAttributes?: string[]): string | null {
+    if (!HelperWidget.instance) {
+      return null;
+    }
+
+    try {
+      const domTracking = HelperWidget.instance.takeDOMSnapshot();
+      const domTree = constructDomTree(domTracking as DomTrackingData);
+      const defaultAttributes = [
+        "title",
+        "type",
+        "name",
+        "role",
+        "tabindex",
+        "aria-label",
+        "placeholder",
+        "value",
+        "alt",
+        "aria-expanded",
+      ];
+
+      return clickableElementsToString(domTree.root, includeAttributes || defaultAttributes);
+    } catch (error) {
+      console.error("Failed to get clickable elements:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets all clickable elements on the current page
+   * @returns Array of clickable elements or null if widget is not initialized
+   */
+  public static getClickableElements(): { index: number; description: string; element: any }[] | null {
+    if (!HelperWidget.instance) {
+      return null;
+    }
+
+    try {
+      const domTracking = HelperWidget.instance.takeDOMSnapshot();
+      const domTree = constructDomTree(domTracking as DomTrackingData);
+      const interactiveElements = findInteractiveElements(domTree.root);
+
+      return interactiveElements.map((item) => ({
+        index: item.index,
+        description: item.description,
+        element: item.element,
+      }));
+    } catch (error) {
+      console.error("Failed to get clickable elements:", error);
+      return null;
+    }
   }
 }
 

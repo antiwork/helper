@@ -96,7 +96,6 @@ export const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
 }> => {
   const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
-  console.log("websitePages", websitePages);
 
   const prompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
