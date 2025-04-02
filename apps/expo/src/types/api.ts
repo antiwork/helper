@@ -1004,6 +1004,21 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         }>;
       };
       members: {
+        update: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            role: "Core" | "Non-core" | "AFK";
+            userId: string;
+            keywords?: string[] | undefined;
+          };
+          output: import("../lib/data/user").UserWithMailboxAccessData;
+        }>;
+        list: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: import("../lib/data/user").UserWithMailboxAccessData[];
+        }>;
         stats: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
@@ -1311,6 +1326,14 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           displayName: string;
           email: string | undefined;
         }[];
+      }>;
+      inviteMember: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          email: string;
+        };
+        output: {
+          invitationId: string;
+        };
       }>;
     };
     user: {

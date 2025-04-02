@@ -1,10 +1,48 @@
-import { type TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { z } from "zod";
 import { getMemberStats } from "@/lib/data/stats";
+import { getUsersWithMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
 import { mailboxProcedure } from "./procedure";
 
 export const membersRouter = {
+  update: mailboxProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        role: z.enum(["Core", "Non-core", "AFK"]),
+        keywords: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
+          role: input.role,
+          keywords: input.keywords,
+        });
+
+        return user;
+      } catch (error) {
+        console.error("Error updating team member:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update team member",
+        });
+      }
+    }),
+
+  list: mailboxProcedure.query(async ({ ctx }) => {
+    try {
+      return await getUsersWithMailboxAccess(ctx.mailbox.clerkOrganizationId, ctx.mailbox.id);
+    } catch (error) {
+      console.error("Error fetching mailbox members:", error);
+      return [];
+    }
+  }),
+
   stats: mailboxProcedure
     .input(
       z.object({
