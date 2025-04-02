@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
-import { bodyWithSignature, createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
+import { createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findUserViaSlack, getClerkUser } from "@/lib/data/user";
@@ -237,7 +237,6 @@ const openRespondModal = async (
   triggerId: string,
 ) => {
   const draft = await getLastAiGeneratedDraft(message.conversationId);
-  const draftBody = bodyWithSignature(draft?.body, user);
   await openSlackModal({
     token: assertDefined(conversation.mailbox.slackBotToken),
     triggerId,
@@ -252,7 +251,7 @@ const openRespondModal = async (
           label: { type: "plain_text", text: "Reply" },
           element: {
             type: "plain_text_input",
-            initial_value: draftBody,
+            initial_value: draft?.body ?? "",
             multiline: true,
             focus_on_load: true,
             action_id: "message",

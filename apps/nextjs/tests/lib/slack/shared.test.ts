@@ -20,7 +20,6 @@ vi.mock("@/lib/slack/client", () => ({
 
 vi.mock("@/lib/data/conversationMessage", () => ({
   createReply: vi.fn(),
-  bodyWithSignature: vi.fn(),
   getLastAiGeneratedDraft: vi.fn(),
 }));
 
