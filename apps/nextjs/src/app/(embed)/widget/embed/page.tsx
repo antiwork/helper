@@ -4,15 +4,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cx from "classnames";
 import { domAnimation, LazyMotion, m } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
-import { AISteps } from "@/components/widget/ai-steps";
+// import { AISteps } from "@/components/widget/ai-steps";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
+import HelpingHand from "@/components/widget/HelpingHand";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
-import { MESSAGE_TYPE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
+import { MESSAGE_TYPE, minimizeWidget, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
 
 const queryClient = new QueryClient();
@@ -20,7 +21,7 @@ const GUMROAD_MAILBOX_SLUG = "gumroad";
 
 type GuideInstructions = {
   instructions: string;
-  callId: string;
+  callId: string | null;
 };
 
 const steps = [
@@ -122,6 +123,10 @@ export default function Page() {
         } else {
           messageQueue.push(content as string);
         }
+      } else if (action === "START_GUIDE") {
+        setGuideInstructions({ instructions: content as string, callId: null });
+        setIsGuidingUser(true);
+        minimizeWidget();
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -199,11 +204,7 @@ export default function Page() {
           </LazyMotion>
         </div>
       </div>
-      {isGuidingUser && (
-        <div className="flex min-h-screen flex-col items-center justify-center px-4">
-          <AISteps steps={steps} />
-        </div>
-      )}
+      {isGuidingUser && guideInstructions && <HelpingHand guideInstructions={guideInstructions} token={token} />}
     </QueryClientProvider>
   );
 }

@@ -1,12 +1,15 @@
-import { take } from "lodash";
-import { Context, domToBlob } from "modern-screenshot";
+import { Context } from "modern-screenshot";
 import type { NotificationStatus } from "@/db/schema/messageNotifications";
-import { connectSupportEmail } from "@/lib/authService";
-import { CLOSE_ACTION, CONVERSATION_UPDATE_ACTION, MINIMIZE_ACTION, READY_ACTION, SCREENSHOT_ACTION } from "@/lib/widget/messages";
+import {
+  CLOSE_ACTION,
+  CONVERSATION_UPDATE_ACTION,
+  MINIMIZE_ACTION,
+  READY_ACTION,
+  SCREENSHOT_ACTION,
+} from "@/lib/widget/messages";
 import { domElements } from "./domElements";
 import embedStyles from "./embed.css";
 import type { HelperWidgetConfig } from "./types";
-
 
 declare const __EMBED_URL__: string;
 
@@ -283,6 +286,7 @@ class HelperWidget {
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
+    this.connectExistingStartGuideElements();
     this.setupMutationObserver();
 
     this.overlay?.addEventListener("click", () => HelperWidget.hide());
@@ -364,6 +368,25 @@ class HelperWidget {
     }
 
     HelperWidget.show();
+  }
+
+  private connectExistingStartGuideElements(): void {
+    document.querySelectorAll("[data-helper-start-guide]").forEach(this.connectStartGuideElement.bind(this));
+  }
+
+  private connectStartGuideElement(element: Element): void {
+    element.addEventListener("click", (event: Event) => this.handleStartGuideClick(event as MouseEvent));
+  }
+
+  private handleStartGuideClick(event: MouseEvent): void {
+    const startGuideElement = event.currentTarget as HTMLElement;
+    const prompt = startGuideElement.getAttribute("data-helper-start-guide");
+
+    if (prompt) {
+      this.startGuideInternal(prompt);
+      startGuideElement.setAttribute("data-helper-start-guide-sent", "true");
+      HelperWidget.show();
+    }
   }
 
   private connectExistingToggleElements(): void {
@@ -452,6 +475,10 @@ class HelperWidget {
 
   private sendPromptToEmbed(prompt: string | null): void {
     this.sendMessageToEmbed({ action: "PROMPT", content: prompt });
+  }
+
+  private startGuideInternal(prompt: string): void {
+    this.sendMessageToEmbed({ action: "START_GUIDE", content: prompt });
   }
 
   private showInternal(): void {
@@ -635,6 +662,12 @@ class HelperWidget {
     if (HelperWidget.instance) {
       HelperWidget.instance.sendPromptToEmbed(prompt);
       HelperWidget.instance.showInternal();
+    }
+  }
+
+  public static startGuide(prompt: string): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.startGuideInternal(prompt);
     }
   }
 

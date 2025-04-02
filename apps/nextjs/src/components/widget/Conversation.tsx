@@ -10,12 +10,12 @@ import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
-import { closeWidget, minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
+import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
 
 type GuideInstructions = {
   instructions: string;
-  callId: string;
+  callId: string | null;
 };
 
 type Props = {
@@ -94,7 +94,7 @@ export default function Conversation({
 
   const cancelGuide = () => {
     setGuideInstructions(null);
-    if (guideInstructions) {
+    if (guideInstructions?.callId) {
       addToolResult({
         toolCallId: guideInstructions.callId,
         result: "Cancelled, return the text result",
