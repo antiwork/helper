@@ -15,7 +15,7 @@ type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelec
 };
 
 async function fetchConversationMessage(messageId: number): Promise<MessageWithConversationAndMailbox> {
-  return assertDefinedOrRaiseNonRetriableError(
+  const message = assertDefinedOrRaiseNonRetriableError(
     await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, messageId),
       with: {
@@ -27,6 +27,21 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
       },
     }),
   );
+
+  if (message.conversation.mergedIntoId) {
+    const mergedConversation = assertDefinedOrRaiseNonRetriableError(
+      await db.query.conversations.findFirst({
+        where: eq(conversations.id, message.conversation.mergedIntoId),
+        with: {
+          mailbox: true,
+        },
+      }),
+    );
+
+    return { ...message, conversation: mergedConversation };
+  }
+
+  return message;
 }
 
 async function handleVipSlackMessage(message: MessageWithConversationAndMailbox) {

@@ -2,6 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { useEffect, useRef, useState } from "react";
+import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import type { MessageWithReaction } from "@/components/widget/Message";
@@ -50,7 +51,6 @@ export default function Conversation({
     handleSubmit: handleAISubmit,
     append,
     setMessages,
-    addToolResult,
     status,
   } = useChat({
     maxSteps: 3,
@@ -82,7 +82,10 @@ export default function Conversation({
   const isLoading = status === "streaming" || status === "submitted";
   const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
 
-  const { data: conversation, isLoading: isLoadingConversation } = useQuery({
+  const { data: conversation, isLoading: isLoadingConversation } = useQuery<{
+    messages: MessageWithReaction[];
+    isEscalated: boolean;
+  } | null>({
     queryKey: ["conversation", conversationSlug],
     queryFn: async () => {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
@@ -109,7 +112,8 @@ export default function Conversation({
             createdAt: new Date(message.createdAt),
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
-          })) as MessageWithReaction[],
+            experimental_attachments: message.experimental_attachments,
+          })),
           isEscalated: data.isEscalated,
         };
       }
@@ -117,6 +121,10 @@ export default function Conversation({
     },
     enabled: !!conversationSlug && !!token && !isNewConversation && !isAnonymous,
   });
+
+  const conversationMessages = conversation?.messages.filter((message) =>
+    messages[0]?.createdAt ? assertDefined(message.createdAt) < messages[0]?.createdAt : true,
+  );
 
   useEffect(() => {
     if (status === "ready" || isNewConversation) {
@@ -132,11 +140,7 @@ export default function Conversation({
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
 
-  const handleSubmit = async (e?: { preventDefault: () => void }) => {
-    if (e) {
-      e.preventDefault();
-    }
-
+  const handleSubmit = async (screenshotData?: string) => {
     if (!input.trim()) return;
 
     setData(undefined);
@@ -148,7 +152,13 @@ export default function Conversation({
       }
 
       if (currentSlug) {
-        handleAISubmit(e, { body: { conversationSlug: currentSlug } });
+        console.log("submitting with currentSlug", currentSlug);
+        handleAISubmit(undefined, {
+          experimental_attachments: screenshotData
+            ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
+            : [],
+          body: { conversationSlug: currentSlug },
+        });
       }
     } catch (error) {
       console.error("Error submitting message:", error);
@@ -189,11 +199,10 @@ export default function Conversation({
     <>
       <MessagesList
         data={data ?? null}
-        messages={messages as MessageWithReaction[]}
+        messages={[...(conversationMessages ?? []), ...(messages as MessageWithReaction[])]}
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
-        addToolResult={addToolResult}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

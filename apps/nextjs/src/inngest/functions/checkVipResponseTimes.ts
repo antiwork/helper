@@ -36,6 +36,7 @@ export default inngest.createFunction(
           and(
             eq(conversations.mailboxId, mailbox.id),
             isNull(conversations.assignedToClerkId),
+            isNull(conversations.mergedIntoId),
             eq(conversations.status, "open"),
             gt(
               sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
