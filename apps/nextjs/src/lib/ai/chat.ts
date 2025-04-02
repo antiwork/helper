@@ -76,7 +76,7 @@ export const loadScreenshotAttachments = async (messages: (typeof conversationMe
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
-      messages.filter((m) => (m.metadata as MessageMetadata).includesScreenshot).map((m) => m.id),
+      messages.filter((m) => (m.metadata as MessageMetadata)?.includesScreenshot).map((m) => m.id),
     ),
   });
   return await Promise.all(
