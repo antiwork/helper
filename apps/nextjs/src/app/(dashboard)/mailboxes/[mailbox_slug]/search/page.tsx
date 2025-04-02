@@ -1,7 +1,14 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  CurrencyDollarIcon,
+  FunnelIcon,
+  InboxIcon,
+  ShieldExclamationIcon,
+  StarIcon,
+} from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { formatCurrency } from "@/components/utils/currency";
+import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { AssigneeFilter } from "./_components/assigneeFilter";
 import { CustomerFilter } from "./_components/customerFilter";
@@ -56,6 +64,7 @@ export default function SearchPage() {
   const [filterValues, setFilterValues] = useState<typeof searchParams>(searchParams);
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const isSearching = Object.values(omit(searchParams, "page")).some((value) =>
     Array.isArray(value) ? value.length > 0 : !!value,
@@ -160,13 +169,22 @@ export default function SearchPage() {
     }
   };
 
+  const getActiveFilterCount = () => {
+    return Object.values(omit(filterValues, ["search"])).reduce((count, value) => {
+      if (Array.isArray(value)) {
+        return count + (value.length > 0 ? 1 : 0);
+      }
+      return count + (value ? 1 : 0);
+    }, 0);
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full">
-      <div className="flex gap-2 justify-between border-b border-border px-2 py-4">
+      <div className="flex  justify-between border-b border-border px-2 py-4">
         <Button
           variant="ghost"
           iconOnly
-          className="mt-1"
+          className="mt-1 hidden md:flex"
           onClick={() => {
             if (window.history.length > 1) {
               router.back();
@@ -177,16 +195,84 @@ export default function SearchPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1 max-w-5xl mx-auto flex flex-col gap-3">
-          <Input
-            value={filterValues.search ?? ""}
-            onChange={(e) => updateFilter({ search: e.target.value })}
-            placeholder="Search conversations..."
-            iconsSuffix={<MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />}
-            className="text-base px-4 py-3"
-            autoFocus
-          />
-          <div className="flex gap-3 overflow-x-auto">
+        <div className="flex-1 max-w-5xl mx-auto flex flex-col gap-3 md:px-0">
+          <div className="flex items-center gap-2 px-2 md:px-0">
+            <Button
+              variant="ghost"
+              iconOnly
+              className="md:hidden"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push(`/mailboxes/${params.mailbox_slug}/conversations`);
+                }
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex-1">
+              <Input
+                value={filterValues.search ?? ""}
+                onChange={(e) => updateFilter({ search: e.target.value })}
+                placeholder="Search conversations..."
+                iconsSuffix={
+                  <div className="flex items-center gap-2">
+                    <MagnifyingGlassIcon className="hidden md:block h-5 w-5 text-muted-foreground" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="md:hidden gap-1.5"
+                    >
+                      <FunnelIcon className="h-5 w-5" />
+                      {getActiveFilterCount() > 0 && <span className="text-xs">({getActiveFilterCount()})</span>}
+                    </Button>
+                  </div>
+                }
+                className="text-base px-4 py-3"
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className={cn("md:hidden", !showFilters && "hidden")}>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <StatusFilter
+                selectedStatuses={filterValues.status ?? []}
+                onChange={(statuses) => updateFilter({ status: statuses })}
+              />
+              <DateFilter
+                initialStartDate={filterValues.createdAfter}
+                initialEndDate={filterValues.createdBefore}
+                onSelect={(startDate, endDate) => {
+                  updateFilter({ createdAfter: startDate, createdBefore: endDate });
+                }}
+              />
+              <AssigneeFilter
+                selectedAssignees={filterValues.assignee ?? []}
+                onChange={(assignees) => updateFilter({ assignee: assignees })}
+              />
+              <ResponderFilter
+                selectedResponders={filterValues.repliedBy ?? []}
+                onChange={(responders) => updateFilter({ repliedBy: responders })}
+              />
+              <CustomerFilter
+                selectedCustomers={filterValues.customer ?? []}
+                onChange={(customers) => updateFilter({ customer: customers })}
+              />
+              <VipFilter isVip={filterValues.isVip ?? undefined} onChange={(isVip) => updateFilter({ isVip })} />
+              <ReactionFilter
+                reactionType={filterValues.reactionType}
+                onChange={(reactionType) => updateFilter({ reactionType })}
+              />
+              <EventFilter selectedEvents={filterValues.events ?? []} onChange={(events) => updateFilter({ events })} />
+              <PromptFilter
+                isPrompt={filterValues.isPrompt ?? undefined}
+                onChange={(isPrompt) => updateFilter({ isPrompt })}
+              />
+            </div>
+          </div>
+          <div className="hidden md:flex gap-3 overflow-x-auto">
             <StatusFilter
               selectedStatuses={filterValues.status ?? []}
               onChange={(statuses) => updateFilter({ status: statuses })}
@@ -225,37 +311,35 @@ export default function SearchPage() {
         <div className="w-1 lg:w-10" />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4" ref={resultsContainerRef}>
+      <div className="flex-1 overflow-y-auto md:p-4" ref={resultsContainerRef}>
         {isSearching ? (
           searchResults.length === 0 && !isFetching ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
               <MagnifyingGlassIcon className="h-12 w-12 mb-4" />
               <p className="text-lg">No conversations found</p>
             </div>
           ) : (
-            <div className="max-w-5xl mx-auto flex flex-col gap-2">
+            <div className="max-w-5xl mx-auto">
               {searchResults.length > 0 && (
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-center gap-4 mb-4 px-4 pt-4 md:pt-0">
+                  <div className="w-5 flex items-center">
+                    <Checkbox
+                      checked={allConversationsSelected || selectedConversations.length > 0}
+                      onCheckedChange={toggleAllConversations}
+                      id="select-all"
+                      disabled={!allConversationsSelected && !selectedConversations.length && totalResults > 10_000}
+                    />
+                  </div>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={allConversationsSelected || selectedConversations.length > 0}
-                            onCheckedChange={toggleAllConversations}
-                            id="select-all"
-                            disabled={
-                              !allConversationsSelected && !selectedConversations.length && totalResults > 10_000
-                            }
-                          />
-                          <label htmlFor="select-all" className="text-sm text-muted-foreground">
-                            {allConversationsSelected
-                              ? "All conversations selected"
-                              : selectedConversations.length > 0
-                                ? `${selectedConversations.length} selected`
-                                : "Select all"}
-                          </label>
-                        </div>
+                        <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
+                          {allConversationsSelected
+                            ? "All conversations selected"
+                            : selectedConversations.length > 0
+                              ? `${selectedConversations.length} selected`
+                              : "Select all"}
+                        </label>
                       </TooltipTrigger>
                       {!allConversationsSelected && !selectedConversations.length && totalResults > 10_000 && (
                         <TooltipContent side="right">Up to 10,000 conversations can be updated at once</TooltipContent>
@@ -285,15 +369,17 @@ export default function SearchPage() {
                   <span className="ml-auto text-sm text-muted-foreground">{totalResults} results</span>
                 </div>
               )}
-              {searchResults.map((conversation) => (
-                <SearchResultItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  searchTerms={searchParams.search?.split(" ").filter(Boolean) ?? []}
-                  isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-                  onToggleSelect={() => toggleConversation(conversation.id)}
-                />
-              ))}
+              <div className="flex flex-col gap-0.5">
+                {searchResults.map((conversation) => (
+                  <SearchResultItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    searchTerms={searchParams.search?.split(" ").filter(Boolean) ?? []}
+                    isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
+                    onToggleSelect={() => toggleConversation(conversation.id)}
+                  />
+                ))}
+              </div>
               {isFetching && (
                 <div className="flex justify-center p-4">
                   <LoadingSpinner size="md" />
@@ -320,13 +406,7 @@ function SearchResultItem({
   onToggleSelect: () => void;
 }) {
   const params = useParams<{ mailbox_slug: string }>();
-
   const status = conversation.status ?? "open";
-  const StatusIcon = {
-    open: InboxIcon,
-    closed: CheckIcon,
-    spam: ShieldExclamationIcon,
-  }[status];
 
   let highlightedText = highlightKeywords(conversation.matchedMessageText?.replace(/\s+/g, " ") ?? "", searchTerms);
   const highlightIndex = highlightedText.indexOf("<mark");
@@ -336,39 +416,68 @@ function SearchResultItem({
   }
 
   return (
-    <div className="flex items-start gap-2 p-4 rounded-lg border border-border hover:border-border/80">
+    <div
+      className={cn(
+        "flex items-start gap-4 py-4 px-4 md:px-4 transition-colors",
+        isSelected
+          ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
+          : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
+      )}
+    >
       <Checkbox
         checked={isSelected}
         onCheckedChange={onToggleSelect}
         onClick={(e) => e.stopPropagation()}
-        className="mt-0.5"
+        className="mt-1"
       />
       <Link
         href={`/mailboxes/${params.mailbox_slug}/conversations?id=${conversation.slug}`}
         className="flex-1 min-w-0 overflow-hidden"
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 md:gap-4 gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-medium truncate">{conversation.emailFrom}</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <StatusIcon className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent side="left">{upperFirst(status)}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <p
-                className="text-sm truncate"
-                dangerouslySetInnerHTML={{ __html: highlightKeywords(conversation.subject, searchTerms) }}
-              />
+            <p className="text-sm text-muted-foreground">{conversation.emailFrom}</p>
+            <p
+              className="text-base font-medium text-foreground mb-2"
+              dangerouslySetInnerHTML={{ __html: highlightKeywords(conversation.subject, searchTerms) }}
+            />
+            <div className="flex items-center gap-2 mb-2">
+              {status === "open" ? (
+                <Badge variant="success-light" className="gap-1.5 dark:bg-success dark:text-success-foreground">
+                  <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
+                  Open
+                </Badge>
+              ) : (
+                status === "closed" && (
+                  <Badge variant="gray" className="gap-1.5">
+                    <CheckIcon className="h-3 w-3" />
+                    Closed
+                  </Badge>
+                )
+              )}
+              {conversation.platformCustomer?.value &&
+                (conversation.platformCustomer.isVip ? (
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="bright" className="gap-1">
+                          <StarIcon className="h-3.5 w-3.5" />
+                          {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">VIP</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Badge variant="gray" className="gap-1">
+                    <CurrencyDollarIcon className="h-3 w-3" />
+                    {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                  </Badge>
+                ))}
             </div>
             {highlightedText && (
               <p
-                className="mt-1 text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap"
+                className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: highlightedText }}
               />
             )}
@@ -376,18 +485,11 @@ function SearchResultItem({
           <div className="flex items-center gap-3 flex-shrink-0">
             {conversation.assignedToClerkId && (
               <AssignedToLabel
-                className="flex items-center gap-1 text-xs text-muted-foreground"
+                className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
                 assignedToClerkId={conversation.assignedToClerkId}
               />
             )}
-            {conversation.platformCustomer?.isVip && <Badge variant="bright">VIP</Badge>}
-            {conversation.platformCustomer?.value && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <CurrencyDollarIcon className="h-3 w-3" />
-                {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-              </div>
-            )}
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               <HumanizedTime
                 time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
                 titlePrefix="Last email received on"
