@@ -1,7 +1,7 @@
 "use client";
 
 import { MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon, StarIcon } from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -302,37 +302,37 @@ export default function SearchPage() {
         <div className="w-1 lg:w-10" />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4" ref={resultsContainerRef}>
+      <div className="flex-1 overflow-y-auto md:p-4" ref={resultsContainerRef}>
         {isSearching ? (
           searchResults.length === 0 && !isFetching ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
               <MagnifyingGlassIcon className="h-12 w-12 mb-4" />
               <p className="text-lg">No conversations found</p>
             </div>
           ) : (
-            <div className="max-w-5xl mx-auto flex flex-col gap-2">
+            <div className="max-w-5xl mx-auto">
               {searchResults.length > 0 && (
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex items-center gap-4 mb-2 px-4 pt-4 md:pt-0">
+                  <div className="w-5">
+                    <Checkbox
+                      checked={allConversationsSelected || selectedConversations.length > 0}
+                      onCheckedChange={toggleAllConversations}
+                      id="select-all"
+                      disabled={
+                        !allConversationsSelected && !selectedConversations.length && totalResults > 10_000
+                      }
+                    />
+                  </div>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={allConversationsSelected || selectedConversations.length > 0}
-                            onCheckedChange={toggleAllConversations}
-                            id="select-all"
-                            disabled={
-                              !allConversationsSelected && !selectedConversations.length && totalResults > 10_000
-                            }
-                          />
-                          <label htmlFor="select-all" className="text-sm text-muted-foreground">
-                            {allConversationsSelected
-                              ? "All conversations selected"
-                              : selectedConversations.length > 0
-                                ? `${selectedConversations.length} selected`
-                                : "Select all"}
-                          </label>
-                        </div>
+                        <label htmlFor="select-all" className="text-sm text-muted-foreground">
+                          {allConversationsSelected
+                            ? "All conversations selected"
+                            : selectedConversations.length > 0
+                              ? `${selectedConversations.length} selected`
+                              : "Select all"}
+                        </label>
                       </TooltipTrigger>
                       {!allConversationsSelected && !selectedConversations.length && totalResults > 10_000 && (
                         <TooltipContent side="right">Up to 10,000 conversations can be updated at once</TooltipContent>
@@ -362,15 +362,17 @@ export default function SearchPage() {
                   <span className="ml-auto text-sm text-muted-foreground">{totalResults} results</span>
                 </div>
               )}
-              {searchResults.map((conversation) => (
-                <SearchResultItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  searchTerms={searchParams.search?.split(" ").filter(Boolean) ?? []}
-                  isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-                  onToggleSelect={() => toggleConversation(conversation.id)}
-                />
-              ))}
+              <div className="flex flex-col gap-0.5">
+                {searchResults.map((conversation) => (
+                  <SearchResultItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    searchTerms={searchParams.search?.split(" ").filter(Boolean) ?? []}
+                    isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
+                    onToggleSelect={() => toggleConversation(conversation.id)}
+                  />
+                ))}
+              </div>
               {isFetching && (
                 <div className="flex justify-center p-4">
                   <LoadingSpinner size="md" />
@@ -397,13 +399,7 @@ function SearchResultItem({
   onToggleSelect: () => void;
 }) {
   const params = useParams<{ mailbox_slug: string }>();
-
   const status = conversation.status ?? "open";
-  const StatusIcon = {
-    open: InboxIcon,
-    closed: CheckIcon,
-    spam: ShieldExclamationIcon,
-  }[status];
 
   let highlightedText = highlightKeywords(conversation.matchedMessageText?.replace(/\s+/g, " ") ?? "", searchTerms);
   const highlightIndex = highlightedText.indexOf("<mark");
@@ -413,39 +409,63 @@ function SearchResultItem({
   }
 
   return (
-    <div className="flex items-start gap-2 p-4 rounded-lg border border-border hover:border-border/80">
+    <div className={cn(
+      "flex items-start gap-4 py-4 px-4 md:px-4 transition-colors",
+      isSelected ? "bg-[#FDF8F3] dark:bg-white/5 border-l-4 border-l-bright" : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+    )}>
       <Checkbox
         checked={isSelected}
         onCheckedChange={onToggleSelect}
         onClick={(e) => e.stopPropagation()}
-        className="mt-0.5"
+        className="mt-1"
       />
       <Link
         href={`/mailboxes/${params.mailbox_slug}/conversations?id=${conversation.slug}`}
         className="flex-1 min-w-0 overflow-hidden"
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 md:gap-4 gap-2">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-medium truncate">{conversation.emailFrom}</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <StatusIcon className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent side="left">{upperFirst(status)}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <p
-                className="text-sm truncate"
-                dangerouslySetInnerHTML={{ __html: highlightKeywords(conversation.subject, searchTerms) }}
-              />
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{conversation.emailFrom}</p>
+            <p
+              className="text-base font-medium text-gray-900 dark:text-gray-100 mb-2"
+              dangerouslySetInnerHTML={{ __html: highlightKeywords(conversation.subject, searchTerms) }}
+            />
+            <div className="flex items-center gap-2 mb-2">
+              {status === "open" ? (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-success/10 dark:bg-white/5 text-success dark:text-gray-400 text-xs">
+                  <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                  Open
+                </div>
+              ) : status === "closed" && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 text-xs">
+                  <CheckIcon className="h-3 w-3" />
+                  Closed
+                </div>
+              )}
+              {conversation.platformCustomer?.value && (
+                conversation.platformCustomer.isVip ? (
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-bright/90 text-foreground dark:text-background">
+                          <StarIcon className="h-3.5 w-3.5" />
+                          {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">VIP</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400">
+                    <CurrencyDollarIcon className="h-3 w-3" />
+                    {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                  </div>
+                )
+              )}
             </div>
             {highlightedText && (
               <p
-                className="mt-1 text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap"
+                className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: highlightedText }}
               />
             )}
@@ -453,18 +473,11 @@ function SearchResultItem({
           <div className="flex items-center gap-3 flex-shrink-0">
             {conversation.assignedToClerkId && (
               <AssignedToLabel
-                className="flex items-center gap-1 text-xs text-muted-foreground"
+                className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
                 assignedToClerkId={conversation.assignedToClerkId}
               />
             )}
-            {conversation.platformCustomer?.isVip && <Badge variant="bright">VIP</Badge>}
-            {conversation.platformCustomer?.value && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <CurrencyDollarIcon className="h-3 w-3" />
-                {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-              </div>
-            )}
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               <HumanizedTime
                 time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
                 titlePrefix="Last email received on"
