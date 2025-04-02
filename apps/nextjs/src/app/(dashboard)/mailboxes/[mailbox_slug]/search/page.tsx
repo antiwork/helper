@@ -173,7 +173,7 @@ export default function SearchPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      <div className="flex gap-2 justify-between border-b border-border px-2 py-4">
+      <div className="flex  justify-between border-b border-border px-2 py-4">
         <Button
           variant="ghost"
           iconOnly
@@ -188,46 +188,50 @@ export default function SearchPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1 max-w-5xl mx-auto flex flex-col gap-3">
-          <Button
-            variant="ghost"
-            iconOnly
-            className="md:hidden self-start"
-            onClick={() => {
-              if (window.history.length > 1) {
-                router.back();
-              } else {
-                router.push(`/mailboxes/${params.mailbox_slug}/conversations`);
-              }
-            }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <Input
-            value={filterValues.search ?? ""}
-            onChange={(e) => updateFilter({ search: e.target.value })}
-            placeholder="Search conversations..."
-            iconsSuffix={
-              <div className="flex items-center gap-2">
-                <MagnifyingGlassIcon className="hidden md:block h-5 w-5 text-muted-foreground" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="md:hidden mr-2 gap-1.5"
-                >
-                  <FunnelIcon className="h-5 w-5" />
-                  {getActiveFilterCount() > 0 && (
-                    <span className="text-xs">({getActiveFilterCount()})</span>
-                  )}
-                </Button>
-              </div>
-            }
-            className="text-base px-4 py-3"
-            autoFocus
-          />
+        <div className="flex-1 max-w-5xl mx-auto flex flex-col gap-3 md:px-0">
+          <div className="flex items-center gap-2 px-2 md:px-0">
+            <Button
+              variant="ghost"
+              iconOnly
+              className="md:hidden"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push(`/mailboxes/${params.mailbox_slug}/conversations`);
+                }
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex-1">
+              <Input
+                value={filterValues.search ?? ""}
+                onChange={(e) => updateFilter({ search: e.target.value })}
+                placeholder="Search conversations..."
+                iconsSuffix={
+                  <div className="flex items-center gap-2">
+                    <MagnifyingGlassIcon className="hidden md:block h-5 w-5 text-muted-foreground" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="md:hidden gap-1.5"
+                    >
+                      <FunnelIcon className="h-5 w-5" />
+                      {getActiveFilterCount() > 0 && (
+                        <span className="text-xs">({getActiveFilterCount()})</span>
+                      )}
+                    </Button>
+                  </div>
+                }
+                className="text-base px-4 py-3"
+                autoFocus
+              />
+            </div>
+          </div>
           <div className={cn("md:hidden", !showFilters && "hidden")}>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-center">
               <StatusFilter
                 selectedStatuses={filterValues.status ?? []}
                 onChange={(statuses) => updateFilter({ status: statuses })}
@@ -312,8 +316,8 @@ export default function SearchPage() {
           ) : (
             <div className="max-w-5xl mx-auto">
               {searchResults.length > 0 && (
-                <div className="flex items-center gap-4 mb-2 px-4 pt-4 md:pt-0">
-                  <div className="w-5">
+                <div className="flex items-center gap-4 mb-4 px-4 pt-4 md:pt-0">
+                  <div className="w-5 flex items-center">
                     <Checkbox
                       checked={allConversationsSelected || selectedConversations.length > 0}
                       onCheckedChange={toggleAllConversations}
@@ -326,7 +330,7 @@ export default function SearchPage() {
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <label htmlFor="select-all" className="text-sm text-muted-foreground">
+                        <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
                           {allConversationsSelected
                             ? "All conversations selected"
                             : selectedConversations.length > 0
@@ -411,7 +415,7 @@ function SearchResultItem({
   return (
     <div className={cn(
       "flex items-start gap-4 py-4 px-4 md:px-4 transition-colors",
-      isSelected ? "bg-[#FDF8F3] dark:bg-white/5 border-l-4 border-l-bright" : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+      isSelected ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400" : "hover:bg-gray-50 dark:hover:bg-white/[0.02]"
     )}>
       <Checkbox
         checked={isSelected}
@@ -425,47 +429,47 @@ function SearchResultItem({
       >
         <div className="flex items-start justify-between gap-4 md:gap-4 gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{conversation.emailFrom}</p>
+            <p className="text-sm text-muted-foreground">{conversation.emailFrom}</p>
             <p
-              className="text-base font-medium text-gray-900 dark:text-gray-100 mb-2"
+              className="text-base font-medium text-foreground mb-2"
               dangerouslySetInnerHTML={{ __html: highlightKeywords(conversation.subject, searchTerms) }}
             />
             <div className="flex items-center gap-2 mb-2">
               {status === "open" ? (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-success/10 dark:bg-white/5 text-success dark:text-gray-400 text-xs">
-                  <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                <Badge variant="success-light" className="gap-1.5 dark:bg-success dark:text-success-foreground">
+                  <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
                   Open
-                </div>
+                </Badge>
               ) : status === "closed" && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 text-xs">
+                <Badge variant="gray" className="gap-1.5">
                   <CheckIcon className="h-3 w-3" />
                   Closed
-                </div>
+                </Badge>
               )}
               {conversation.platformCustomer?.value && (
                 conversation.platformCustomer.isVip ? (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-bright/90 text-foreground dark:text-background">
+                        <Badge variant="bright" className="gap-1">
                           <StarIcon className="h-3.5 w-3.5" />
                           {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-                        </div>
+                        </Badge>
                       </TooltipTrigger>
                       <TooltipContent side="left">VIP</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 ) : (
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400">
+                  <Badge variant="gray" className="gap-1">
                     <CurrencyDollarIcon className="h-3 w-3" />
                     {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-                  </div>
+                  </Badge>
                 )
               )}
             </div>
             {highlightedText && (
               <p
-                className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 whitespace-pre-wrap"
+                className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: highlightedText }}
               />
             )}

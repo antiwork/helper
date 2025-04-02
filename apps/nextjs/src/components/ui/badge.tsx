@@ -11,7 +11,9 @@ const badgeVariants = cva(
         dark: "text-primary-foreground bg-primary",
         bright: "text-bright-foreground bg-bright",
         success: "text-success-foreground bg-success",
+        "success-light": "text-success bg-success/10",
         destructive: "text-destructive-foreground bg-destructive",
+        gray: "text-muted-foreground bg-muted/80",
       },
       size: {
         default: "text-xxs",
