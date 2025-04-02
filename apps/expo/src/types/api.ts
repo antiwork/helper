@@ -167,8 +167,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
-            status?: unknown[] | null | undefined;
             sort?: unknown;
+            status?: unknown[] | null | undefined;
             search?: string | null | undefined;
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
@@ -228,8 +228,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         listWithPreview: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
-            status?: unknown[] | null | undefined;
             sort?: unknown;
+            status?: unknown[] | null | undefined;
             search?: string | null | undefined;
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
@@ -610,8 +610,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           input: {
             mailboxSlug: string;
             conversationSlug: string;
-            status?: "open" | "closed" | "spam" | undefined;
             message?: string | null | undefined;
+            status?: "open" | "closed" | "spam" | undefined;
             assignedToId?: string | null | undefined;
           };
           output: void;
@@ -623,8 +623,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             conversationFilter:
               | number[]
               | {
-                  status?: unknown[] | null | undefined;
                   sort?: unknown;
+                  status?: unknown[] | null | undefined;
                   search?: string | null | undefined;
                   isPrompt?: boolean | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;
