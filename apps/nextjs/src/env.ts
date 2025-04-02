@@ -2,6 +2,9 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets";
 import { z } from "zod";
 
+const defaultInDevelopment = (value: z.ZodString, developmentDefault: string) =>
+  (process.env.NODE_ENV ?? "development") === "development" ? value.default(developmentDefault) : value;
+
 export const env = createEnv({
   extends: [vercel()],
   shared: {
@@ -12,16 +15,26 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    AUTH_URL: z.string().url().optional().default("https://helper.ai"), // The root URL of the app; called this because next-auth uses it
-    POSTGRES_URL: z.string().url(), // Postgres connection string. Keep the sample one if you use the default dev scripts
-    POSTGRES_URL_NON_POOLING: z.string().url(), // Same as POSTGRES_URL unless using a cloud database provider with built-in pooling
-    KV_UPSTASH_KV_REST_API_URL: z.string().url(), // Upstash KV connection details. Keep the sample one if you use the default dev scripts
-    KV_UPSTASH_KV_REST_API_TOKEN: z.string().min(1),
+    AUTH_URL: defaultInDevelopment(z.string().url(), "https://helperai.dev"), // The root URL of the app; legacy name which was required by next-auth
+    POSTGRES_URL: defaultInDevelopment(
+      z.string().url(),
+      "postgresql://username:password@127.0.0.1:5435/helperai_development",
+    ),
+    POSTGRES_URL_NON_POOLING: defaultInDevelopment(
+      z.string().url(),
+      // Same as POSTGRES_URL unless using a cloud database provider with built-in pooling
+      "postgresql://username:password@127.0.0.1:5435/helperai_development",
+    ),
+    KV_UPSTASH_KV_REST_API_URL: defaultInDevelopment(z.string().url(), "http://localhost:8089"),
+    KV_UPSTASH_KV_REST_API_TOKEN: defaultInDevelopment(z.string().min(1), "example_token"),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
-    CRYPTO_SECRET: z.string().min(1),
-    ENCRYPT_COLUMN_SECRET: z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
-    WIDGET_JWT_SECRET: z.string().min(1),
+    CRYPTO_SECRET: defaultInDevelopment(z.string().min(1), "example_crypto_secret"),
+    ENCRYPT_COLUMN_SECRET: defaultInDevelopment(
+      z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
+      "1234567890abcdef1234567890abcdef",
+    ),
+    WIDGET_JWT_SECRET: defaultInDevelopment(z.string().min(1), "example_jwt_secret"),
 
     // Required integrations
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
@@ -93,7 +106,10 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1).default("/login"),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1).default("/login"),
-    NEXT_PUBLIC_VERCEL_ENV: z.enum(["development", "preview", "production"]),
+    NEXT_PUBLIC_VERCEL_ENV: defaultInDevelopment(
+      z.enum(["development", "preview", "production"]) as any,
+      "development",
+    ),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
