@@ -11,7 +11,13 @@ import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
 import { stripe } from "@/lib/stripe/client";
 
 vi.mock("@/lib/gmail/client");
-vi.mock("@/lib/stripe/client");
+vi.mock("@/lib/stripe/client", () => ({
+  stripe: {
+    subscriptions: {
+      retrieve: vi.fn(),
+    },
+  },
+}));
 
 describe("handleStripeEvent", () => {
   describe("checkout.session.completed", () => {

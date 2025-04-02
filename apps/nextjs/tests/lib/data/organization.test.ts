@@ -1,12 +1,20 @@
 import { subscriptionFactory } from "@tests/support/factories/subscriptions";
 import { userFactory } from "@tests/support/factories/users";
-import { describe, expect, it } from "vitest";
+import { describe, expect, inject, it, vi } from "vitest";
 import { SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT } from "@/components/constants";
 import {
   ADDITIONAL_PAID_ORGANIZATION_IDS,
   canSendAutomatedReplies,
   getSubscriptionStatus,
 } from "@/lib/data/organization";
+
+vi.mock("@/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    STRIPE_PRICE_ID: "price_1234567890",
+    ADDITIONAL_PAID_ORGANIZATION_IDS: "org_1234567890",
+  },
+}));
 
 describe("getSubscriptionStatus", () => {
   it("returns 'paid' for Gumroad organization", async () => {
