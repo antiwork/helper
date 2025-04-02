@@ -95,10 +95,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             deletedAt: Date | null;
           } | null;
           slackConnected: boolean;
-          slackConnectUrl: string;
+          slackConnectUrl: string | null;
           slackAlertChannel: string | null;
           githubConnected: boolean;
-          githubConnectUrl: string;
+          githubConnectUrl: string | null;
           githubRepoOwner: string | null;
           githubRepoName: string | null;
           responseGeneratorPrompt: string[];
@@ -119,6 +119,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           disableAutoResponseForVips: boolean;
           autoCloseEnabled: boolean;
           autoCloseDaysOfInactivity: number;
+          firecrawlEnabled: boolean;
+          billingEnabled: boolean;
         };
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
