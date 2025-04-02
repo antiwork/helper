@@ -1,7 +1,7 @@
 "use client";
 
-import { MagnifyingGlassIcon, FunnelIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon, StarIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { CheckIcon, CurrencyDollarIcon, InboxIcon, ShieldExclamationIcon, StarIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import { omit, upperFirst } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -209,7 +209,7 @@ export default function SearchPage() {
             placeholder="Search conversations..."
             iconsSuffix={
               <div className="flex items-center gap-2">
-                <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
+                <MagnifyingGlassIcon className="hidden md:block h-5 w-5 text-muted-foreground" />
                 <Button
                   variant="ghost"
                   size="sm"
