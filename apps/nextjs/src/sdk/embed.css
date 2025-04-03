@@ -8,7 +8,11 @@
   transition: right 0.3s ease-in-out;
   z-index: 2147483000;
   overflow: hidden;
-  transition: height 0.3s ease, width 0.3s ease, right 0.3s ease, bottom 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0.3s ease,
+    right 0.3s ease,
+    bottom 0.3s ease;
 }
 
 .helper-widget-wrapper iframe {
@@ -413,7 +417,7 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  background-color: #FEB61C;
+  background-color: #feb61c;
   border-radius: 50%;
   padding: 8px;
   display: flex;
@@ -426,7 +430,9 @@
 }
 
 .helper-guide-hand.animating {
-  transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+  transition:
+    left 0.6s ease-in-out,
+    top 0.6s ease-in-out;
 }
 
 .helper-guide-hand.clicking {
