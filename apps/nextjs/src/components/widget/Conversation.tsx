@@ -112,6 +112,7 @@ export default function Conversation({
             createdAt: new Date(message.createdAt),
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
+            annotations: message.annotations,
             experimental_attachments: message.experimental_attachments,
           })),
           isEscalated: data.isEscalated,

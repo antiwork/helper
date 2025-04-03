@@ -6,6 +6,7 @@ import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, mailboxes } from "@/db/schema";
 import AIReplyEmail from "@/emails/aiReply";
+import { getClerkUser } from "@/lib/data/user";
 import { getFileStream } from "@/s3/utils";
 
 export const convertConversationMessageToRaw = async (
@@ -45,7 +46,11 @@ export const convertConversationMessageToRaw = async (
     text = await render(reactEmail, { plainText: true });
   } else {
     html = email.body ?? undefined;
-    text = email.body ? htmlToText(email.body) : undefined;
+    const user = await getClerkUser(email.clerkUserId);
+    if (html && user) {
+      html += `<p>Best,<br />${user.firstName}</p>`;
+    }
+    text = html ? htmlToText(html) : undefined;
   }
 
   const message = new MailComposer({

@@ -7,7 +7,7 @@ import { TextSelection } from "@tiptap/pm/state";
 import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
-import React, { useEffect, useImperativeHandle, useRef } from "react";
+import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
@@ -62,7 +62,7 @@ export type TipTapEditorRef = {
   scrollTo: (y: number) => void;
 };
 
-const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
+const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
   (
     {
       defaultContent,
@@ -74,6 +74,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
       enableImageUpload,
       enableFileUpload,
       placeholder,
+      signature,
       editable,
       ariaLabel,
       className,
@@ -276,6 +277,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps>(
           <div className="flex-grow">
             <EditorContent editor={editor} onKeyDown={handleModEnter} />
           </div>
+          {signature}
           {attachments.length > 0 ? (
             <div className="flex w-full flex-wrap gap-2 pt-4">
               {attachments.map((fileInfo, idx) => (

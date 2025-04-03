@@ -47,6 +47,11 @@ export default function Message({ message, conversationSlug, token, data, color 
     }
   }
 
+  const userAnnotation = message.annotations?.find(
+    (annotation): annotation is { user: { firstName: string } } =>
+      typeof annotation === "object" && annotation !== null && "user" in annotation,
+  );
+
   if (!conversationSlug) {
     return null;
   }
@@ -64,6 +69,11 @@ export default function Message({ message, conversationSlug, token, data, color 
           "border border-black bg-white text-black": message.role !== USER_ROLE,
         })}
       >
+        {userAnnotation ? (
+          <div className="p-4 pb-0 flex items-center text-muted-foreground text-xs font-bold">
+            {userAnnotation.user.firstName}
+          </div>
+        ) : null}
         <MessageElement
           messageId={persistedId?.toString()}
           conversationSlug={conversationSlug}
