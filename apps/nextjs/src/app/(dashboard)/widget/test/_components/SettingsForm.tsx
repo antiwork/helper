@@ -15,7 +15,7 @@ export const SettingsForm = () => {
 
   return (
     <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-md">
-      <h2 className="mb-6 text-2xl font-bold">Settings</h2>
+      <h2 className="mb-6 text-2xl font-bold text-black">Settings</h2>
 
       {successMessage && (
         <div className="mb-4 rounded-md bg-green-50 p-4">

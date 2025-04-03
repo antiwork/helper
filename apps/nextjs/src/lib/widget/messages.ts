@@ -102,3 +102,7 @@ export const fetchCurrentPageDetails = async (): Promise<{
 export const clickElement = async (index: number) => {
   return await sendRequestToParent("CLICK_ELEMENT", { index });
 };
+
+export const selectDropdownOption = async (index: number, text: string) => {
+  return await sendRequestToParent("SELECT_DROPDOWN_OPTION", { index, text });
+};

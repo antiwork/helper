@@ -124,9 +124,11 @@ export default function Page() {
           messageQueue.push(content as string);
         }
       } else if (action === "START_GUIDE") {
-        setGuideInstructions({ instructions: content as string, callId: null });
-        setIsGuidingUser(true);
         minimizeWidget();
+        console.log("START_GUIDE", content);
+        setGuideInstructions({ instructions: content as string, callId: null });
+        console.log("calling setIsGuidingUser(true)");
+        setIsGuidingUser(true);
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -204,7 +206,9 @@ export default function Page() {
           </LazyMotion>
         </div>
       </div>
-      {isGuidingUser && guideInstructions && <HelpingHand guideInstructions={guideInstructions} token={token} />}
+      {isGuidingUser && guideInstructions && (
+        <HelpingHand instructions={guideInstructions.instructions} callId={guideInstructions.callId} token={token} />
+      )}
     </QueryClientProvider>
   );
 }

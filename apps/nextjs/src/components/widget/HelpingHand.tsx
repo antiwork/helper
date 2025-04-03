@@ -1,11 +1,6 @@
 import { useChat } from "@ai-sdk/react";
-import { useEffect, useState } from "react";
-import { clickElement, fetchCurrentPageDetails } from "@/lib/widget/messages";
-
-type GuideInstructions = {
-  instructions: string;
-  callId: string | null;
-};
+import { useEffect, useRef, useState } from "react";
+import { clickElement, fetchCurrentPageDetails, selectDropdownOption } from "@/lib/widget/messages";
 
 const INITIAL_PROMPT = `
 Your ultimate task is: """INSTRUCTIONS""". If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.
@@ -17,10 +12,12 @@ Current Page Title: {{CURRENT_PAGE_TITLE}}
 `;
 
 export default function HelpingHand({
-  guideInstructions,
+  instructions,
+  callId,
   token,
 }: {
-  guideInstructions: GuideInstructions;
+  instructions: string;
+  callId: string | null;
   token: string;
 }) {
   const [toolPending, setToolPending] = useState<{
@@ -63,20 +60,37 @@ export default function HelpingHand({
     const type = Object.keys(action)[0];
     if (!type) return;
     const params = action[type];
-    const pageDetails = await fetchCurrentPageDetails();
-
-    console.log(pageDetails);
-    console.log(type);
-    console.log(params);
 
     if (type == "click_element") {
       const index = params.index;
       const result = await clickElement(index);
-      console.log(result);
+      console.log("click_element result", result);
       if (result && toolCallId) {
         const pageDetails = await fetchCurrentPageDetails();
         const result = `
-        Execute the last action.
+        Executed the last action to click the element.
+  
+        Now, the current URL is: ${pageDetails.currentPageDetails.url}
+        Current Page Title: ${pageDetails.currentPageDetails.title}
+        Elements: ${pageDetails.clickableElements}
+        `;
+
+        addToolResult({
+          toolCallId,
+          result,
+        });
+      }
+    }
+
+    if (type == "select_dropdown_option") {
+      const index = params.index;
+      const text = params.text;
+      const result = await selectDropdownOption(index, text);
+      console.log("select_dropdown_option result", result);
+      if (result && toolCallId) {
+        const pageDetails = await fetchCurrentPageDetails();
+        const result = `
+        Executed the last action to select the dropdown option.
   
         Now, the current URL is: ${pageDetails.currentPageDetails.url}
         Current Page Title: ${pageDetails.currentPageDetails.title}
@@ -96,7 +110,7 @@ export default function HelpingHand({
     console.log(pageDetails);
     append({
       role: "user",
-      content: INITIAL_PROMPT.replace("INSTRUCTIONS", guideInstructions.instructions)
+      content: INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)
         .replace("{{CURRENT_URL}}", pageDetails.currentPageDetails.url)
         .replace("{{CURRENT_PAGE_TITLE}}", pageDetails.currentPageDetails.title)
         .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements)),
@@ -121,10 +135,10 @@ export default function HelpingHand({
   };
 
   useEffect(() => {
-    if (guideInstructions && guideInstructions.instructions.length > 0) {
+    if (instructions && instructions.length > 0) {
       sendInitialPrompt();
     }
-  }, [guideInstructions]);
+  }, [instructions]);
 
   return (
     <div className="flex flex-col h-72 w-full items-center px-4 text-sm text-gray-500 overflow-y-auto">

@@ -43,7 +43,7 @@ export function WidgetButtons() {
         </button>
 
         <button
-          data-helper-start-guide="Change my refund policy to 30 days - Go to the Settings page, scroll down to the Refund Policy section, and select a 30-day refund policy from the dropdown menu. If needed, you can also add fine print to describe your policy in more detail."
+          data-helper-start-guide="Change my refund policy to 3 months - Go to the Settings page, scroll down to the Refund Policy section, and select a 3 months refund policy from the dropdown menu. If needed, you can also add fine print to describe your policy in more detail."
           className="ml-4 focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-primary-foreground transition duration-300 hover:bg-blue-600 focus:outline-none"
         >
           Start guide (data-attr)

@@ -38,7 +38,7 @@ export const AppLayout = () => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen text-black">
       <Sidebar onMenuItemClick={setActivePage} activePage={activePage} />
       <main className="flex-1 overflow-auto bg-gray-50 p-6">{renderContent()}</main>
     </div>

@@ -299,6 +299,7 @@ class HelperWidget {
 
   private createHelperHand(): HTMLDivElement {
     if (this.helperHandElement) return this.helperHandElement;
+
     this.helperHandElement = document.createElement("div");
     this.helperHandElement.className = "helper-guide-hand";
     this.helperHandElement.innerHTML = `
@@ -343,20 +344,17 @@ class HelperWidget {
       }
     `;
 
+    this.helperHandElement.style.left = "50%";
+    this.helperHandElement.style.top = "50%";
+    this.helperHandElement.classList.remove("animating", "clicking");
+    this.helperHandElement.classList.add("visible");
+
     const styleEl = document.createElement("style");
     styleEl.textContent = styles;
     document.head.appendChild(styleEl);
 
     document.body.appendChild(this.helperHandElement);
     return this.helperHandElement;
-  }
-
-  private positionHandAtCenter(): void {
-    const hand = this.createHelperHand();
-    hand.style.left = "50%";
-    hand.style.top = "50%";
-    hand.classList.remove("animating", "clicking");
-    hand.classList.add("visible");
   }
 
   private animateHandToElement(index: number): Promise<boolean> {
@@ -410,43 +408,69 @@ class HelperWidget {
     });
   }
 
-  private async guideClickElement(index: number): Promise<boolean> {
-    await this.animateHandToElement(index);
-    return this.clickElement(index);
-  }
-
   private hideHelperHand(): void {
     if (this.helperHandElement) {
       this.helperHandElement.classList.remove("visible");
     }
   }
 
+  private async selectDropdownOption(index: number, text: string): Promise<boolean> {
+    this.createHelperHand();
+    const element = this.fetchElementByIndex(index);
+    if (!element) return false;
+
+    // Check if it's a select element
+    if (element instanceof HTMLSelectElement) {
+      await this.animateHandToElement(index);
+
+      // Find the option with matching text
+      const options = Array.from(element.options);
+      const option = options.find((opt) => opt.text === text || opt.value === text);
+
+      if (option) {
+        // Set the value and dispatch change event
+        element.value = option.value;
+
+        // Dispatch change event to trigger any listeners
+        const event = new Event("change", { bubbles: true });
+        element.dispatchEvent(event);
+        return true;
+      }
+      return false;
+    }
+
+    // For non-select elements (like custom dropdowns), fall back to click
+    await this.animateHandToElement(index);
+    element.click();
+    return true;
+  }
+
+  private fetchElementByIndex(index: number): HTMLElement | null {
+    const elements = Object.values(this.lastDomTracking.map);
+    const domTrackingElement = elements.find((element: any) => element.highlightIndex === index) as Record<string, any>;
+    console.log(domTrackingElement);
+    if (!domTrackingElement) return null;
+
+    const xpath = domTrackingElement.xpath;
+    const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    return element as HTMLElement;
+  }
+
   private async clickElement(index: number): Promise<boolean> {
     this.createHelperHand();
-    this.positionHandAtCenter();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const domTracking = this.lastDomTracking;
     if (!domTracking) return false;
 
-    const elements = Object.values(this.lastDomTracking.map);
-    const domTrackingElement = elements.find((element: any) => element.highlightIndex === index) as Record<string, any>;
-    console.log(domTrackingElement);
-    if (!domTrackingElement) return false;
+    const element = this.fetchElementByIndex(index);
+    if (!element) return false;
 
-    const xpath = domTrackingElement.xpath;
-    const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     await this.animateHandToElement(index);
 
-    console.log("element via xPath", xpath, element);
-
-    if (element) {
-      console.log("clicking element", element);
-      (element as HTMLElement).click();
-      return true;
-    }
-
-    return false;
+    console.log("clicking element", element);
+    element.click();
+    return true;
   }
 
   private setupEventListeners(): void {
@@ -475,6 +499,10 @@ class HelperWidget {
 
             if (action === "CLICK_ELEMENT") {
               response = (await HelperWidget.instance?.clickElement(content.index)) ?? false;
+            }
+
+            if (action === "SELECT_DROPDOWN_OPTION") {
+              response = (await HelperWidget.instance?.selectDropdownOption(content.index, content.text)) ?? false;
             }
 
             // Send the response back to the iframe
@@ -928,6 +956,8 @@ class HelperWidget {
       const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
       const interactiveElements = findInteractiveElements(domTree.root);
 
+      console.log("clickableElements", clickableElements);
+
       return {
         currentPageDetails,
         domTracking,
@@ -1067,64 +1097,6 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
-  }
-
-  /**
-   * Gets a formatted list of clickable elements on the current page
-   * @param includeAttributes Optional list of attribute names to include
-   * @returns Formatted string of clickable elements or null if widget is not initialized
-   */
-  public static getFormattedClickableElements(includeAttributes?: string[]): string | null {
-    if (!HelperWidget.instance) {
-      return null;
-    }
-
-    try {
-      const domTracking = HelperWidget.instance.takeDOMSnapshot();
-      const domTree = constructDomTree(domTracking as DomTrackingData);
-      const defaultAttributes = [
-        "title",
-        "type",
-        "name",
-        "role",
-        "tabindex",
-        "aria-label",
-        "placeholder",
-        "value",
-        "alt",
-        "aria-expanded",
-      ];
-
-      return clickableElementsToString(domTree.root, includeAttributes || defaultAttributes);
-    } catch (error) {
-      console.error("Failed to get clickable elements:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Gets all clickable elements on the current page
-   * @returns Array of clickable elements or null if widget is not initialized
-   */
-  public static getClickableElements(): { index: number; description: string; element: any }[] | null {
-    if (!HelperWidget.instance) {
-      return null;
-    }
-
-    try {
-      const domTracking = HelperWidget.instance.takeDOMSnapshot();
-      const domTree = constructDomTree(domTracking as DomTrackingData);
-      const interactiveElements = findInteractiveElements(domTree.root);
-
-      return interactiveElements.map((item) => ({
-        index: item.index,
-        description: item.description,
-        element: item.element,
-      }));
-    } catch (error) {
-      console.error("Failed to get clickable elements:", error);
-      return null;
-    }
   }
 }
 
