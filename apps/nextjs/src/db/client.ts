@@ -7,6 +7,7 @@ import { env } from "@/env";
 
 export const createDbClient = (url: string, options: PoolConfig = {}) => {
   // https://github.com/brianc/node-postgres/issues/2558
+  console.log("DATABASE URL", url, "env", env);
   const urlWithoutVerification = url.replace("?sslmode=require", "?sslmode=no-verify");
   const pool = new Pool({ connectionString: urlWithoutVerification, ...options });
   return drizzle({ client: pool, schema, casing: "snake_case", logger: !!env.DRIZZLE_LOGGING });
