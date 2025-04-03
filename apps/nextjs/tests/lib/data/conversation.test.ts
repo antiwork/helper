@@ -17,7 +17,6 @@ import {
   getConversationBySlugAndMailbox,
   getNonSupportParticipants,
   getRelatedConversations,
-  MAX_RELATED_CONVERSATIONS_COUNT,
   updateConversation,
 } from "@/lib/data/conversation";
 import { getClerkOrganization } from "@/lib/data/organization";
@@ -330,8 +329,8 @@ describe("getRelatedConversations", () => {
     });
 
     vi.mocked(searchEmailsByKeywords).mockResolvedValue([
-      { id: message1.id, conversationId: conversation1.id },
-      { id: message2.id, conversationId: conversation2.id },
+      { id: message1.id, conversationId: conversation1.id, cleanedUpText: message1.cleanedUpText },
+      { id: message2.id, conversationId: conversation2.id, cleanedUpText: message2.cleanedUpText },
     ]);
 
     // Get all related conversations

@@ -27,7 +27,7 @@
     "start": "npx next start",
     "test": "npm run with-dev-env vitest",
     "test:watch": "npm run with-dev-env vitest -- --watch",
-    "typecheck": "npm run with-dev-env npm run build && npm run db:check",
+    "typecheck": "tsc --noEmit && npm run with-dev-env npm run build && npm run db:check",
     "with-dev-env": "dotenv -e ./.env.development.local -e ./.env.local --"
   },
   "overrides": {
