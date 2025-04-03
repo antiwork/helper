@@ -9,13 +9,7 @@ import {
   SCREENSHOT_ACTION,
 } from "@/lib/widget/messages";
 import { domElements } from "./domElements";
-import {
-  clickableElementsToString,
-  constructDomTree,
-  findInteractiveElements,
-  stringifyDomTree,
-  type DomTrackingData,
-} from "./domTree";
+import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 import embedStyles from "./embed.css";
 import type { HelperWidgetConfig } from "./types";
 
@@ -210,28 +204,7 @@ class HelperWidget {
 
   private injectStyles(): void {
     const style = document.createElement("style");
-    style.textContent = `${embedStyles}
-      .helper-widget-wrapper {
-        transition: height 0.3s ease, width 0.3s ease, right 0.3s ease, bottom 0.3s ease;
-      }
-      .helper-widget-wrapper.minimized {
-        height: 320px !important;
-        width: 390px !important;
-        border-radius: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.7) !important;
-        right: 20px !important;
-        bottom: 20px !important;
-        top: auto !important;
-        left: auto !important;
-        position: fixed !important;
-        overflow: hidden;
-        box-shadow: none !important;
-      }
-      .helper-widget-toggle-button.with-minimized-widget {
-        bottom: 20px !important;
-        right: 20px !important;
-      }
-    `;
+    style.textContent = embedStyles;
     document.head.appendChild(style);
   }
 
@@ -309,50 +282,10 @@ class HelperWidget {
       </svg>
     `;
 
-    // Style the hand
-    const styles = `
-      .helper-guide-hand {
-        position: fixed;
-        z-index: 999999;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 36px;
-        height: 39px;
-        filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5));
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-        background-color: #FEB61C;
-        border-radius: 50%;
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .helper-guide-hand.visible {
-        opacity: 1;
-      }
-      
-      .helper-guide-hand.animating {
-        transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
-      }
-      
-      .helper-guide-hand.clicking {
-        transform: translate(-50%, -50%) scale(0.8);
-        transition: transform 0.2s ease;
-      }
-    `;
-
     this.helperHandElement.style.left = "50%";
     this.helperHandElement.style.top = "50%";
     this.helperHandElement.classList.remove("animating", "clicking");
     this.helperHandElement.classList.add("visible");
-
-    const styleEl = document.createElement("style");
-    styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
 
     document.body.appendChild(this.helperHandElement);
     return this.helperHandElement;
@@ -638,7 +571,7 @@ class HelperWidget {
     if (prompt) {
       this.startGuideInternal(prompt);
       startGuideElement.setAttribute("data-helper-start-guide-sent", "true");
-      HelperWidget.show();
+      // HelperWidget.show();
     }
   }
 

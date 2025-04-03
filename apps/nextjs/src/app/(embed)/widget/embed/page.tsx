@@ -126,7 +126,6 @@ export default function Page() {
       } else if (action === "START_GUIDE") {
         minimizeWidget();
         setGuideInstructions({ instructions: content as string, callId: null });
-        console.log("calling setIsGuidingUser(true)");
         setIsGuidingUser(true);
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);

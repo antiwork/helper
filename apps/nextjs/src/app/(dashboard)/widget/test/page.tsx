@@ -3,7 +3,6 @@ import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai
 import { AppLayout } from "./_components/AppLayout";
 import { WidgetButtons } from "./WidgetButtons";
 
-// Page configuration
 export const dynamic = "force-dynamic";
 
 export default async function WidgetTest({

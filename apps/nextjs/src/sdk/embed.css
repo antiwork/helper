@@ -8,6 +8,7 @@
   transition: right 0.3s ease-in-out;
   z-index: 2147483000;
   overflow: hidden;
+  transition: height 0.3s ease, width 0.3s ease, right 0.3s ease, bottom 0.3s ease;
 }
 
 .helper-widget-wrapper iframe {
@@ -18,6 +19,24 @@
 
 .helper-widget-wrapper.visible {
   right: 0;
+}
+.helper-widget-wrapper.minimized {
+  height: 320px !important;
+  width: 390px !important;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.7) !important;
+  right: 20px !important;
+  bottom: 20px !important;
+  top: auto !important;
+  left: auto !important;
+  position: fixed !important;
+  overflow: hidden;
+  box-shadow: none !important;
+}
+
+.helper-widget-toggle-button.with-minimized-widget {
+  bottom: 20px !important;
+  right: 20px !important;
 }
 
 @keyframes helper-widget-fade-in {
@@ -380,4 +399,37 @@
   .helper-widget-icon + .notification-container {
     bottom: 96px;
   }
+}
+
+.helper-guide-hand {
+  position: fixed;
+  z-index: 999999;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 39px;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  background-color: #FEB61C;
+  border-radius: 50%;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.helper-guide-hand.visible {
+  opacity: 1;
+}
+
+.helper-guide-hand.animating {
+  transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+}
+
+.helper-guide-hand.clicking {
+  transform: translate(-50%, -50%) scale(0.8);
+  transition: transform 0.2s ease;
 }
