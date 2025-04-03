@@ -65,6 +65,7 @@ export default function Conversation({
     setMessages,
     status,
     stop,
+    addToolResult,
   } = useChat({
     maxSteps: 3,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
