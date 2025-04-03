@@ -11,5 +11,5 @@ export const DEFAULT_CONVERSATIONS_PER_PAGE = 25;
 
 export const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin;
-  return env.VERCEL_ENV === "preview" ? `https://${env.VERCEL_URL}` : env.AUTH_URL;
+  return env.AUTH_URL;
 };

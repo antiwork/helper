@@ -5,6 +5,9 @@ import { z } from "zod";
 const defaultUnlessDeployed = (value: z.ZodString, testingDefault: string) =>
   ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
 
+const defaultRootUrl =
+  process.env.VERCEL_ENV === "production" ? "https://helper.ai" : `https://${process.env.VERCEL_URL ?? "helperai.dev"}`;
+
 export const env = createEnv({
   extends: [vercel()],
   shared: {
@@ -15,7 +18,7 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    AUTH_URL: defaultUnlessDeployed(z.string().url(), "https://helperai.dev"), // The root URL of the app; legacy name which was required by next-auth
+    AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
     POSTGRES_URL: defaultUnlessDeployed(
       z.string().url(),
       "postgresql://username:password@127.0.0.1:5435/helperai_development",
