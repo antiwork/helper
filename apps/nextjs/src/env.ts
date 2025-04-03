@@ -2,8 +2,10 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets";
 import { z } from "zod";
 
-const defaultUnlessDeployed = (value: z.ZodString, testingDefault: string) =>
-  ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
+const defaultUnlessDeployed = (value: z.ZodString, testingDefault: string) => {
+  console.log("isDeployed", ["preview", "production"].includes(process.env.VERCEL_ENV ?? ""));
+  return ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
+};
 
 export const env = createEnv({
   extends: [vercel()],
