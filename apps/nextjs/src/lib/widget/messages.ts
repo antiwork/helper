@@ -106,3 +106,7 @@ export const clickElement = async (index: number) => {
 export const selectDropdownOption = async (index: number, text: string) => {
   return await sendRequestToParent("SELECT_DROPDOWN_OPTION", { index, text });
 };
+
+export const guideDone = async () => {
+  return await sendRequestToParent("GUIDE_DONE");
+};

@@ -1,6 +1,12 @@
 import { useChat } from "@ai-sdk/react";
-import { useEffect, useRef, useState } from "react";
-import { clickElement, fetchCurrentPageDetails, selectDropdownOption } from "@/lib/widget/messages";
+import { useEffect, useState } from "react";
+import {
+  clickElement,
+  closeWidget,
+  fetchCurrentPageDetails,
+  guideDone,
+  selectDropdownOption,
+} from "@/lib/widget/messages";
 
 const INITIAL_PROMPT = `
 Your ultimate task is: """INSTRUCTIONS""". If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.
@@ -60,6 +66,11 @@ export default function HelpingHand({
     const type = Object.keys(action)[0];
     if (!type) return;
     const params = action[type];
+
+    if (type == "done") {
+      closeWidget();
+      await guideDone();
+    }
 
     if (type == "click_element") {
       const index = params.index;

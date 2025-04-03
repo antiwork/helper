@@ -505,6 +505,11 @@ class HelperWidget {
               response = (await HelperWidget.instance?.selectDropdownOption(content.index, content.text)) ?? false;
             }
 
+            if (action === "GUIDE_DONE") {
+              this.hideHelperHand();
+              HelperWidget.hide();
+            }
+
             // Send the response back to the iframe
             if (event.source && "postMessage" in event.source) {
               (event.source as Window).postMessage(
@@ -626,6 +631,7 @@ class HelperWidget {
   private handleStartGuideClick(event: MouseEvent): void {
     const startGuideElement = event.currentTarget as HTMLElement;
     const prompt = startGuideElement.getAttribute("data-helper-start-guide");
+    console.log("PROMPT TO GUIDE", prompt);
 
     if (prompt) {
       this.startGuideInternal(prompt);
