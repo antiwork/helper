@@ -567,7 +567,7 @@ const cleanupMessage = (message: string): string => {
 const generateCleanedUpText = (html: string) => {
   if (!html.trim()) return "";
 
-  const paragraphs = htmlToText(html)
+  const paragraphs = htmlToText(html, { wordwrap: false })
     .split(/\s*\n\s*/)
     .filter((p) => p.trim().replace(/\s+/g, " "));
   return paragraphs.join("\n\n");
