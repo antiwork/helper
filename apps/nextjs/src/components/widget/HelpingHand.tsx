@@ -9,13 +9,13 @@ import {
 } from "@/lib/widget/messages";
 
 const INITIAL_PROMPT = `
-Your ultimate task is: """INSTRUCTIONS""". If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.
+Your ultimate task is: """INSTRUCTIONS""". 
+If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.
     
 Current URL: {{CURRENT_URL}}
 Current Page Title: {{CURRENT_PAGE_TITLE}}
 
-{{PAGE_DETAILS}}
-`;
+{{PAGE_DETAILS}}`;
 
 export default function HelpingHand({
   instructions,
@@ -34,7 +34,7 @@ export default function HelpingHand({
 
   const { messages, append, addToolResult } = useChat({
     api: "/api/ai-guide",
-    maxSteps: 20,
+    maxSteps: 10,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
     onToolCall({ toolCall }) {
       console.log("toolCall", toolCall);

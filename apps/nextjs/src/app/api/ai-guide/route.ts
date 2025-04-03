@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 
   const query = messages[messages.length - 1].content;
 
-  if (query && query.length > 0) {
+  if (false && query && query.length > 0) {
     const { knowledgeBank, websitePagesPrompt } = await fetchPromptRetrievalData(mailbox, query, null);
     if (knowledgeBank) {
       systemPrompt += `\n${knowledgeBank}`;
