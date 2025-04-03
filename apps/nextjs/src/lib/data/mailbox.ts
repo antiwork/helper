@@ -31,7 +31,9 @@ export const resetMailboxPromptUpdatedAt = async (tx: Transaction, mailboxId: nu
 
 export type Mailbox = typeof mailboxes.$inferSelect;
 
-const getSlackConnectUrl = (mailboxSlug: string): string => {
+const getSlackConnectUrl = (mailboxSlug: string): string | null => {
+  if (!env.SLACK_CLIENT_ID) return null;
+
   const params = new URLSearchParams({
     scope: REQUIRED_SCOPES.join(","),
     redirect_uri: SLACK_REDIRECT_URI,

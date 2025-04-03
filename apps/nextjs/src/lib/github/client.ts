@@ -3,17 +3,18 @@ import { memoize } from "lodash";
 import { App } from "octokit";
 import { env } from "@/env";
 
-const privateKeyPkcs8 = memoize(
-  () =>
-    crypto.createPrivateKey(env.GITHUB_PRIVATE_KEY).export({
-      type: "pkcs8",
-      format: "pem",
-    }) as string,
-);
+const privateKeyPkcs8 = memoize(() => {
+  if (!env.GITHUB_PRIVATE_KEY) throw new Error("GITHUB_PRIVATE_KEY is not set");
+  return crypto.createPrivateKey(env.GITHUB_PRIVATE_KEY).export({
+    type: "pkcs8",
+    format: "pem",
+  }) as string;
+});
 
 export const getGitHubInstallUrl = () => `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`;
 
 export const getOctokit = (installationId: string) => {
+  if (!env.GITHUB_APP_ID) throw new Error("GITHUB_APP_ID is not set");
   const app = new App({ appId: env.GITHUB_APP_ID, privateKey: privateKeyPkcs8() });
   return app.getInstallationOctokit(Number(installationId));
 };

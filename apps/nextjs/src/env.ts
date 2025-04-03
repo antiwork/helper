@@ -2,8 +2,8 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets";
 import { z } from "zod";
 
-const defaultInDevelopment = (value: z.ZodString, developmentDefault: string) =>
-  (process.env.NODE_ENV ?? "development") === "development" ? value.default(developmentDefault) : value;
+const defaultUnlessDeployed = (value: z.ZodString, testingDefault: string) =>
+  ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
 
 export const env = createEnv({
   extends: [vercel()],
@@ -15,26 +15,26 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    AUTH_URL: defaultInDevelopment(z.string().url(), "https://helperai.dev"), // The root URL of the app; legacy name which was required by next-auth
-    POSTGRES_URL: defaultInDevelopment(
+    AUTH_URL: defaultUnlessDeployed(z.string().url(), "https://helperai.dev"), // The root URL of the app; legacy name which was required by next-auth
+    POSTGRES_URL: defaultUnlessDeployed(
       z.string().url(),
       "postgresql://username:password@127.0.0.1:5435/helperai_development",
     ),
-    POSTGRES_URL_NON_POOLING: defaultInDevelopment(
+    POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
       z.string().url(),
       // Same as POSTGRES_URL unless using a cloud database provider with built-in pooling
       "postgresql://username:password@127.0.0.1:5435/helperai_development",
     ),
-    KV_UPSTASH_KV_REST_API_URL: defaultInDevelopment(z.string().url(), "http://localhost:8089"),
-    KV_UPSTASH_KV_REST_API_TOKEN: defaultInDevelopment(z.string().min(1), "example_token"),
+    KV_UPSTASH_KV_REST_API_URL: defaultUnlessDeployed(z.string().url(), "http://localhost:8089"),
+    KV_UPSTASH_KV_REST_API_TOKEN: defaultUnlessDeployed(z.string().min(1), "example_token"),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
-    CRYPTO_SECRET: defaultInDevelopment(z.string().min(1), "example_crypto_secret"),
-    ENCRYPT_COLUMN_SECRET: defaultInDevelopment(
+    CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
+    ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
       z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
       "1234567890abcdef1234567890abcdef",
     ),
-    WIDGET_JWT_SECRET: defaultInDevelopment(z.string().min(1), "example_jwt_secret"),
+    WIDGET_JWT_SECRET: defaultUnlessDeployed(z.string().min(1), "example_jwt_secret"),
 
     // Required integrations
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
@@ -65,14 +65,14 @@ export const env = createEnv({
     // Optional integrations
 
     // Slack OAuth client credentials from https://api.slack.com/apps
-    SLACK_CLIENT_ID: z.string().min(1),
-    SLACK_CLIENT_SECRET: z.string().min(1),
-    SLACK_SIGNING_SECRET: z.string().min(1),
+    SLACK_CLIENT_ID: z.string().min(1).optional(),
+    SLACK_CLIENT_SECRET: z.string().min(1).optional(),
+    SLACK_SIGNING_SECRET: z.string().min(1).optional(),
     // GitHub app credentials from https://github.com/apps
-    GITHUB_APP_SLUG: z.string().min(1),
-    GITHUB_APP_ID: z.string().min(1),
-    GITHUB_CLIENT_SECRET: z.string().min(1),
-    GITHUB_PRIVATE_KEY: z.string().min(1),
+    GITHUB_APP_SLUG: z.string().min(1).optional(),
+    GITHUB_APP_ID: z.string().min(1).optional(),
+    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
+    GITHUB_PRIVATE_KEY: z.string().min(1).optional(),
     // Stripe subscription plan and credentials for paid organizations
     STRIPE_PRICE_ID: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
@@ -106,7 +106,7 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1).default("/login"),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1).default("/login"),
-    NEXT_PUBLIC_VERCEL_ENV: defaultInDevelopment(
+    NEXT_PUBLIC_VERCEL_ENV: defaultUnlessDeployed(
       z.enum(["development", "preview", "production"]) as any,
       "development",
     ),
