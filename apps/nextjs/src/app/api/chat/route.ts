@@ -59,7 +59,24 @@ export async function POST(request: Request) {
   const conversation = await getConversation(conversationSlug, session, mailbox);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
-  const userMessage = await createUserMessage(conversation.id, userEmail, message.content);
+  const screenshotData = message.experimental_attachments?.[0]?.url;
+
+  if (
+    (message.experimental_attachments ?? []).length > 1 ||
+    (screenshotData && !screenshotData.startsWith("data:image/png;base64,"))
+  ) {
+    return corsResponse(
+      { error: "Only a single PNG image attachment sent via data URL is supported" },
+      { status: 400 },
+    );
+  }
+
+  const userMessage = await createUserMessage(
+    conversation.id,
+    userEmail,
+    message.content,
+    screenshotData?.replace("data:image/png;base64,", ""),
+  );
 
   return await respondWithAI({
     conversation,

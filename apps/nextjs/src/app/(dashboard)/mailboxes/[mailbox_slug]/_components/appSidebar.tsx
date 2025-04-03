@@ -88,7 +88,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     try {
       // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
       window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -331,6 +331,14 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                     <OrganizationList hidePersonal hideSlug />
                   </DialogContent>
                 </Dialog>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    window.open("http://docs.helper.ai", "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <span>Documentation</span>
+                </DropdownMenuItem>
                 {isMobileWeb || (isDesktopWeb && user?.unsafeMetadata?.desktopAppPromptDismissed) ? (
                   <DropdownMenuItem
                     onSelect={(e) => {

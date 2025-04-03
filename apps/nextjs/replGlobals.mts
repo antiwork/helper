@@ -4,6 +4,7 @@ import {
   count,
   desc,
   eq,
+  exists,
   gt,
   gte,
   ilike,
@@ -14,6 +15,7 @@ import {
   lt,
   lte,
   not,
+  notExists,
   or,
   sql,
 } from "drizzle-orm";
@@ -21,6 +23,7 @@ import { createDbClient } from "@/db/client";
 import { explainAnalyze } from "@/db/lib/debug";
 import * as dbSchemas from "@/db/schema";
 import { env } from "@/env";
+import { inngest } from "@/inngest/client";
 
 // @ts-expect-error Node's CommonJS module loading changes the schemas to be under a single 'default' export
 const schemas = dbSchemas.default;
@@ -29,6 +32,7 @@ const db = createDbClient(env.POSTGRES_URL_NON_POOLING, { max: 1 });
 
 Object.entries({
   db,
+  inngest,
   explainAnalyze,
   sql,
   ...schemas,
@@ -48,6 +52,8 @@ Object.entries({
   count,
   like,
   ilike,
+  exists,
+  notExists,
 }).forEach(([key, value]) => {
   (globalThis as any)[key] = value;
 });

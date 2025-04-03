@@ -7,14 +7,12 @@ import {
   conversationEvents,
   conversationMessages,
   conversations,
-  conversationsTopics,
   faqs,
   files,
   mailboxes,
   messageNotifications,
   notes,
   subscriptions,
-  topics,
 } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { ADDITIONAL_PAID_ORGANIZATION_IDS, getClerkOrganization } from "@/lib/data/organization";
@@ -28,7 +26,7 @@ const getRelationsReferencingConversationRecords = () => {
   return relationsReferencingConversationRecords;
 };
 
-const EXPECTED_RELATION_COUNT = 12;
+const EXPECTED_RELATION_COUNT = 11;
 export const hardDeleteRecordsForNonPayingOrgs = async () => {
   // When this assert fails, please manually consider whether
   // this code needs to be updated. For example, if a new table is
@@ -71,9 +69,6 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
     }
 
     await db.delete(faqs).where(eq(faqs.mailboxId, mailbox.id));
-
-    await db.delete(topics).where(eq(topics.mailboxId, mailbox.id));
-    await db.delete(conversationsTopics).where(eq(conversationsTopics.mailboxId, mailbox.id));
 
     const mailboxConversations = db
       .$with("mailbox_conversations")

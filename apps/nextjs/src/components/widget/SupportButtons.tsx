@@ -108,7 +108,7 @@ export default function SupportButtons({
             >
               <HandThumbUpIcon className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
             </motion.div>
-            That solved
+            That solved it!
           </button>
           <button
             onClick={handleTalkToTeamClick}

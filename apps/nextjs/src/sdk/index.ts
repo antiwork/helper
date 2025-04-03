@@ -868,6 +868,7 @@ class HelperWidget {
     this.screenshotContext ??= await createContext(document.body, {
       workerUrl: screenshotWorkerUrl,
       workerNumber: 1,
+      filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
     });
     try {
       const screenshot = await domToPng(this.screenshotContext);
