@@ -1,3 +1,4 @@
+import confetti from "canvas-confetti";
 import { Context } from "modern-screenshot";
 import type { NotificationStatus } from "@/db/schema/messageNotifications";
 import {
@@ -507,6 +508,7 @@ class HelperWidget {
 
             if (action === "GUIDE_DONE") {
               this.hideHelperHand();
+              this.celebrateGuideDone();
               HelperWidget.hide();
             }
 
@@ -1103,6 +1105,36 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
+  }
+
+  private celebrateGuideDone(): void {
+    // Fire some celebratory confetti
+    const duration = 2000;
+    const end = Date.now() + duration;
+
+    const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
+
+    (function frame() {
+      confetti({
+        particleCount: 7,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors,
+      });
+
+      confetti({
+        particleCount: 7,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
   }
 }
 
