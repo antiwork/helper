@@ -16,7 +16,6 @@ import {
   type Tool,
 } from "ai";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { memoize } from "lodash";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
@@ -30,7 +29,7 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import { createConversationMessage, disableAIResponse, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
-import { getCachedSubscriptionStatus, getOrganizationMembers } from "@/lib/data/organization";
+import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
@@ -88,52 +87,40 @@ export const loadScreenshotAttachments = async (messages: (typeof conversationMe
   );
 };
 
-export const loadPreviousMessages = async (
-  conversationId: number,
-  mailbox: Mailbox,
-  latestMessageId?: number,
-): Promise<Message[]> => {
+export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
   const conversationMessages = await getMessagesOnly(conversationId);
   const attachments = await loadScreenshotAttachments(conversationMessages);
-  const members = memoize(() => getOrganizationMembers(mailbox.clerkOrganizationId));
 
-  return Promise.all(
-    conversationMessages
-      .filter((message) => message.body && message.id !== latestMessageId)
-      .map(async (message) => {
-        if (message.role === "tool") {
-          const tool = message.metadata?.tool as HelperTool;
-          return {
-            id: message.id.toString(),
-            role: "assistant",
-            content: "",
-            toolInvocations: [
-              {
-                id: message.id.toString(),
-                toolName: tool.slug,
-                result: message.metadata?.result,
-                step: 0,
-                state: "result",
-                toolCallId: `tool_${message.id}`,
-                args: message.metadata?.parameters,
-              },
-            ],
-          };
-        }
-
-        const user = message.clerkUserId
-          ? (await members()).data.find((m) => m.publicUserData?.userId === message.clerkUserId)
-          : null;
-
+  return conversationMessages
+    .filter((message) => message.body && message.id !== latestMessageId)
+    .map((message) => {
+      if (message.role === "tool") {
+        const tool = message.metadata?.tool as HelperTool;
         return {
           id: message.id.toString(),
-          role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
-          content: message.body || "",
-          annotations: user ? [{ user: { firstName: user.publicUserData?.firstName } }] : null,
-          experimental_attachments: attachments.filter((a) => a.messageId === message.id),
+          role: "assistant",
+          content: "",
+          toolInvocations: [
+            {
+              id: message.id.toString(),
+              toolName: tool.slug,
+              result: message.metadata?.result,
+              step: 0,
+              state: "result",
+              toolCallId: `tool_${message.id}`,
+              args: message.metadata?.parameters,
+            },
+          ],
         };
-      }),
-  );
+      }
+
+      return {
+        id: message.id.toString(),
+        role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
+        content: message.body || "",
+        experimental_attachments: attachments.filter((a) => a.messageId === message.id),
+      };
+    });
 };
 
 export const buildPromptMessages = async (
@@ -536,7 +523,7 @@ export const respondWithAI = async ({
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
 }) => {
-  const previousMessages = await loadPreviousMessages(conversation.id, mailbox, messageId);
+  const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
     messages: previousMessages,
     message,

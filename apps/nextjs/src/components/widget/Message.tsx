@@ -1,4 +1,3 @@
-import { UserIcon } from "@heroicons/react/16/solid";
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
 import HumanizedTime from "@/components/humanizedTime";
@@ -71,8 +70,7 @@ export default function Message({ message, conversationSlug, token, data, color 
         })}
       >
         {userAnnotation ? (
-          <div className="flex items-center text-muted-foreground text-xs">
-            <UserIcon className="w-4 h-4 mr-2" />
+          <div className="p-4 pb-0 flex items-center text-muted-foreground text-xs font-bold">
             {userAnnotation.user.firstName}
           </div>
         ) : null}
