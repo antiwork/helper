@@ -95,32 +95,6 @@ describe("serializeResponseAiDraft", () => {
       isStale: true,
     });
   });
-
-  it("includes signature when provided", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({ userOverrides: { firstName: "John" } });
-    const { conversation } = await conversationFactory.create(mailbox.id);
-    const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
-    const { message: draft } = await conversationMessagesFactory.create(conversation.id, {
-      role: "ai_assistant",
-      body: "This is a draft",
-      responseToId: message.id,
-      status: "draft",
-    });
-
-    expect(serializeResponseAiDraft(draft, mailbox)).toEqual({
-      id: draft.id,
-      responseToId: message.id,
-      body: `This is a draft`,
-      isStale: false,
-    });
-
-    expect(serializeResponseAiDraft(draft, mailbox, user)).toEqual({
-      id: draft.id,
-      responseToId: message.id,
-      body: `This is a draft<br><br>Best,<br>John`,
-      isStale: false,
-    });
-  });
 });
 
 describe("getMessages", () => {
@@ -544,13 +518,13 @@ describe("createReply", () => {
 
     const result = await createReply({
       conversationId: conversation.id,
-      message: `<p>AI generated response</p><p>Best,</p><p>${user.firstName}</p>`,
+      message: `<p>AI generated response</p>`,
       user,
     });
 
     const createdMessage = await getConversationMessageById(result);
     expect(createdMessage).toMatchObject({
-      body: `<p>AI generated response</p><p>Best,</p><p>${user.firstName}</p>`,
+      body: `<p>AI generated response</p>`,
       isPerfect: true,
     });
   });

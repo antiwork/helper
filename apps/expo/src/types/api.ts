@@ -318,7 +318,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   draft: {
                     id: number;
                     responseToId: number;
-                    body: string;
+                    body: string | null;
                     isStale: boolean;
                   } | null;
                   files: {
@@ -440,7 +440,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             draft: {
               id: number;
               responseToId: number;
-              body: string;
+              body: string | null;
               isStale: boolean;
             } | null;
             mergedInto:
@@ -474,7 +474,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   draft: {
                     id: number;
                     responseToId: number;
-                    body: string;
+                    body: string | null;
                     isStale: boolean;
                   } | null;
                   files: {

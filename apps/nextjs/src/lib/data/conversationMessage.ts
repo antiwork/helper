@@ -29,7 +29,6 @@ const isAiDraftStale = (draft: typeof conversationMessages.$inferSelect, mailbox
 export const serializeResponseAiDraft = (
   draft: typeof conversationMessages.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user?: User,
 ) => {
   if (!draft?.responseToId) {
     return null;
@@ -37,16 +36,9 @@ export const serializeResponseAiDraft = (
   return {
     id: draft.id,
     responseToId: draft.responseToId,
-    body: bodyWithSignature(draft.body, user),
+    body: draft.body,
     isStale: isAiDraftStale(draft, mailbox),
   };
-};
-
-export const bodyWithSignature = (body?: string | null, user?: User) => {
-  if (body && user?.firstName) {
-    return `${body}<br><br>Best,<br>${user?.firstName}`;
-  }
-  return body ?? "";
 };
 
 export const getMessagesOnly = async (conversationId: number) => {
@@ -354,8 +346,7 @@ export const createReply = async (
 
     const lastAiDraft = await getLastAiGeneratedDraft(conversationId, tx);
     if (lastAiDraft?.body) {
-      const draftBody = user ? bodyWithSignature(lastAiDraft.body, user) : lastAiDraft.body;
-      if (message && cleanupMessage(draftBody) === cleanupMessage(message)) {
+      if (message && cleanupMessage(lastAiDraft.body) === cleanupMessage(message)) {
         await tx
           .update(conversationMessages)
           .set({ isPerfect: true })
