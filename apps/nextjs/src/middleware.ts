@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 
-const isAuthenticatedRoute = createRouteMatcher(["/mailboxes(.*)", "/dashboard(.*)", "/desktop/signed-out(.*)"]);
+const isAuthenticatedRoute = createRouteMatcher(["/mailboxes(.*)", "/dashboard(.*)"]);
 
 export default clerkMiddleware(
   async (auth, request) => {
