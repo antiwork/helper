@@ -9,7 +9,7 @@ import {
   UserProfile,
   useUser,
 } from "@clerk/nextjs";
-import { BookOpenIcon, ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
+import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { ChevronsUpDown, ChevronUp, Download, Settings, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -88,7 +88,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     try {
       // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
       window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",

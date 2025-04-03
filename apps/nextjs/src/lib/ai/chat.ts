@@ -77,7 +77,7 @@ export const loadScreenshotAttachments = async (messages: (typeof conversationMe
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
-      messages.filter((m) => (m.metadata as MessageMetadata).includesScreenshot).map((m) => m.id),
+      messages.filter((m) => (m.metadata as MessageMetadata)?.includesScreenshot).map((m) => m.id),
     ),
   });
   return await Promise.all(
@@ -574,6 +574,14 @@ export const respondWithAI = async ({
     (!isPromptConversation || !isFirstMessage)
   ) {
     await updateOriginalConversation(conversation.id, { set: { status: "open" } });
+    if (
+      messages.length === 1 ||
+      (isPromptConversation && messages.filter((message) => message.role === "user").length === 2)
+    ) {
+      const message = "Our support team will respond to your message shortly. Thank you for your patience.";
+      const assistantMessage = await handleAssistantMessage(message, true);
+      return createTextResponse(message, assistantMessage.id.toString());
+    }
     onResponse?.({
       messages,
       platformCustomer,
@@ -581,14 +589,6 @@ export const respondWithAI = async ({
       isFirstMessage,
       humanSupportRequested: true,
     });
-    if (
-      messages.length === 1 ||
-      (isPromptConversation && messages.filter((message) => message.role === "user").length === 2)
-    ) {
-      const message = "Our support team will respond to your message shortly. Thank you for your patience.";
-      const assistantMessage = await handleAssistantMessage(message, false);
-      return createTextResponse(message, assistantMessage.id.toString());
-    }
     return createTextResponse("", Date.now().toString());
   }
 

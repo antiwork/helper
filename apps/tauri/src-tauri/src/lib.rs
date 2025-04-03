@@ -123,7 +123,11 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_window_state::Builder::new().build())
+        .plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_denylist(&["login-popup"])
+                .build(),
+        )
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
@@ -203,7 +207,7 @@ pub fn run() {
                     } else if event.id() == "contact_us" {
                         let _ = app.opener().open_url("mailto:help@helper.ai", None::<&str>);
                     } else if event.id() == "show_window" {
-                        let _ = app.get_webview_window("main").unwrap().show();
+                        let _ = app.get_window("main").unwrap().show();
                     }
                 });
 
