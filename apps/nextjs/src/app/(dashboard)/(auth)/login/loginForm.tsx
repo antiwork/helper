@@ -89,6 +89,7 @@ export function LoginForm() {
         url: `${location.origin}/login/popup?strategy=${strategy}&tauri=true&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`,
         width: 600,
         height: 600,
+        title: "Sign in",
       });
       window.once("tauri://created", function () {
         window.show();
