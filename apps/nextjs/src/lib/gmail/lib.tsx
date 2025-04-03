@@ -48,8 +48,7 @@ export const convertConversationMessageToRaw = async (
     html = email.body ?? undefined;
     const user = await getClerkUser(email.clerkUserId);
     if (html && user) {
-      const signature = `<p>Best,<br />${user.firstName}</p>`;
-      html = html.replace(/<\/body>/i, `${signature}</body>`);
+      html += `<p>Best,<br />${user.firstName}</p>`;
     }
     text = html ? htmlToText(html) : undefined;
   }

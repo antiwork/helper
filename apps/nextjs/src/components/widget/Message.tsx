@@ -48,28 +48,11 @@ export default function Message({ message, conversationSlug, token, data, color 
     }
   }
 
-<<<<<<< HEAD
-  const screenshotInvocation = message.toolInvocations?.find(
-    (invocation) => invocation.toolName === "take_screenshot" && invocation.state !== "result",
-  );
-
-  useEffect(() => {
-    if (screenshot?.response && screenshotInvocation) {
-      addToolResult({
-        toolCallId: screenshotInvocation.toolCallId,
-        result: { data: screenshot.response },
-      });
-      setScreenshot(null);
-    }
-  }, [screenshot, screenshotInvocation]);
-
   const userAnnotation = message.annotations?.find(
     (annotation): annotation is { user: { firstName: string } } =>
       typeof annotation === "object" && annotation !== null && "user" in annotation,
   );
 
-=======
->>>>>>> main
   if (!conversationSlug) {
     return null;
   }

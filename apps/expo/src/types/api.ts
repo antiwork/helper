@@ -286,6 +286,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             slugs: string[];
           };
           output: {
+            mergedInto:
+              | {
+                  slug: string;
+                }
+              | null
+              | undefined;
             customerMetadata: {
               name: string | null;
               value: number | null;
@@ -437,6 +443,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               body: string;
               isStale: boolean;
             } | null;
+            mergedInto:
+              | {
+                  slug: string;
+                }
+              | null
+              | undefined;
             customerMetadata: {
               name: string | null;
               value: number | null;
