@@ -43,4 +43,4 @@ export const AppLayout = () => {
       <main className="flex-1 overflow-auto bg-gray-50 p-6">{renderContent()}</main>
     </div>
   );
-}; 
+};

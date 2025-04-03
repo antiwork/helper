@@ -98,3 +98,7 @@ export const fetchCurrentPageDetails = async (): Promise<{
 }> => {
   return await sendRequestToParent("FETCH_PAGE_DETAILS");
 };
+
+export const clickElement = async (index: number) => {
+  return await sendRequestToParent("CLICK_ELEMENT", { index });
+};

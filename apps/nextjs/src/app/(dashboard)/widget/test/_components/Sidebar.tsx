@@ -46,4 +46,4 @@ export const Sidebar = ({ activePage, onMenuItemClick }: SidebarProps) => {
       </nav>
     </div>
   );
-}; 
+};

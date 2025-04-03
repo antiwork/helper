@@ -34,7 +34,7 @@ interface Notification {
 class HelperWidget {
   private static instance: HelperWidget | null = null;
   private config: HelperWidgetConfig;
-  private currentDomTracking: any;
+  private lastDomTracking: any;
   private iframe: HTMLIFrameElement | null = null;
   private iframeWrapper: HTMLDivElement | null = null;
   private helperIcon: HTMLButtonElement | null = null;
@@ -62,7 +62,7 @@ class HelperWidget {
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
-    this.currentDomTracking = null;
+    this.lastDomTracking = null;
   }
 
   private async setup(): Promise<void> {
@@ -295,6 +295,29 @@ class HelperWidget {
     document.body.appendChild(this.overlay);
   }
 
+  private clickElement(index: number): boolean {
+    const domTracking = this.lastDomTracking;
+    if (!domTracking) return false;
+
+    const elements = Object.values(this.lastDomTracking.map);
+    const domTrackingElement = elements.find((element: any) => element.highlightIndex === index) as Record<string, any>;
+    console.log(domTrackingElement);
+    if (!domTrackingElement) return false;
+
+    const xpath = domTrackingElement.xpath;
+    const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
+    console.log("element via xPath", xpath, element);
+
+    if (element) {
+      console.log("clicking element", element);
+      (element as HTMLElement).click();
+      return true;
+    }
+
+    return false;
+  }
+
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
@@ -317,6 +340,10 @@ class HelperWidget {
 
             if (action === "FETCH_PAGE_DETAILS") {
               response = HelperWidget.fetchCurrentPageDetails();
+            }
+
+            if (action === "CLICK_ELEMENT") {
+              response = HelperWidget.instance.clickElement(content.index);
             }
 
             // Send the response back to the iframe
@@ -741,7 +768,7 @@ class HelperWidget {
     }
 
     const domTracking = HelperWidget.instance.takeDOMSnapshot();
-    HelperWidget.instance.currentDomTracking = domTracking;
+    HelperWidget.instance.lastDomTracking = domTracking;
 
     const currentPageDetails = {
       url: window.location.href,
@@ -778,6 +805,8 @@ class HelperWidget {
       return { currentPageDetails, domTracking };
     }
   }
+
+  private static clic;
 
   public static async init(config: HelperWidgetConfig): Promise<HelperWidget> {
     if (!HelperWidget.instance) {

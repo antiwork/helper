@@ -37,7 +37,6 @@ export default async function WidgetTest({
     <HelperProvider host="https://helperai.dev" {...config}>
       <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
         <div className="w-full max-w-6xl rounded-lg bg-background p-6 shadow-md">
-          <h1 className="mb-4 text-2xl font-bold text-foreground">Helper Widget Test Page</h1>
           <WidgetButtons />
 
           <div className="mt-8 border-t pt-6">
