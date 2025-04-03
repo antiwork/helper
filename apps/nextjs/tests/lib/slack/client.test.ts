@@ -1,10 +1,17 @@
 import { WebClient } from "@slack/web-api";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, inject, it, vi } from "vitest";
 import { env } from "@/env";
 import * as slackClient from "@/lib/slack/client";
 import { SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 
 vi.mock("@slack/web-api");
+vi.mock("@/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    SLACK_CLIENT_ID: "test",
+    SLACK_CLIENT_SECRET: "test",
+  },
+}));
 
 const mockSlackClient = (implementation: { [K in keyof WebClient]?: Partial<WebClient[K]> }) => {
   return vi.mocked(WebClient).mockImplementation(() => implementation as WebClient);
