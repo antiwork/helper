@@ -21,6 +21,7 @@ import { env } from "@/env";
  */
 export const createTRPCContext = (opts: { headers: Headers; session: Awaited<ReturnType<typeof auth>> }) => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
+  // eslint-disable-next-line no-console
   console.log(">>> tRPC Request from", source, "by user ID", opts.session?.userId ?? "Unknown");
 
   return { session: opts.session };
@@ -72,6 +73,7 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   const result = await next();
 
   const end = Date.now();
+  // eslint-disable-next-line no-console
   console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
 
   return result;

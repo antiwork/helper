@@ -91,7 +91,7 @@ export default tseslint.config(
       // eqeqeq: ["error", "smart"],
       "no-alert": "off",
       radix: "off",
-      "no-console": "off",
+      "no-console": "error",
       "prefer-promise-reject-errors": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "custom/turbo-no-undeclared-env-vars-t3-env": "error",
