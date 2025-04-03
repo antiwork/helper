@@ -4,7 +4,7 @@ import { useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import { OAuthStrategy } from "@clerk/types";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -80,9 +80,19 @@ export function LoginForm() {
       setLoading(true);
       await invoke("start_apple_sign_in");
     } else if (isTauri) {
-      await openUrl(
-        `${window.location.origin}/login/popup?strategy=${strategy}&deepLink=true&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`,
-      );
+      setLoading(true);
+      const window = new WebviewWindow("login-popup", {
+        url: `${location.origin}/login/popup?strategy=${strategy}&tauri=true&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`,
+        // width: 600,
+        // height: 600,
+      });
+      window.once("tauri://close-requested", () => {
+        setLoading(false);
+      });
+      window.listen("logged-in", () => {
+        window.close();
+        location.reload();
+      });
     } else {
       try {
         setError(null);
