@@ -518,13 +518,13 @@ describe("createReply", () => {
 
     const result = await createReply({
       conversationId: conversation.id,
-      message: `<p>AI generated response</p><p>Best,</p><p>${user.firstName}</p>`,
+      message: `<p>AI generated response</p>`,
       user,
     });
 
     const createdMessage = await getConversationMessageById(result);
     expect(createdMessage).toMatchObject({
-      body: `<p>AI generated response</p><p>Best,</p><p>${user.firstName}</p>`,
+      body: `<p>AI generated response</p>`,
       isPerfect: true,
     });
   });
