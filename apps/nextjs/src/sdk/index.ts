@@ -59,6 +59,8 @@ class HelperWidget {
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
 
+  private helperHandElement: HTMLDivElement | null = null;
+
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
@@ -295,6 +297,126 @@ class HelperWidget {
     document.body.appendChild(this.overlay);
   }
 
+  private createHelperHand(): HTMLDivElement {
+    if (this.helperHandElement) return this.helperHandElement;
+    this.helperHandElement = document.createElement("div");
+    this.helperHandElement.className = "helper-guide-hand";
+    this.helperHandElement.innerHTML = `
+      <svg width="36" height="39" viewBox="0 0 26 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16.9885 19.1603C14.4462 16.4526 25.36 8.80865 25.36 8.80865L22.5717 4.78239C22.5717 4.78239 18.2979 8.46521 15.1353 12.7541C14.4648 13.7215 13.1488 12.9234 13.9447 11.5515C15.9064 8.16995 21.5892 2.70127 21.5892 2.70127L17.2712 0.54569C17.2712 0.54569 14.458 3.38303 10.9133 10.5004C10.2651 11.8018 8.94659 11.1429 9.39493 9.80167C10.5422 6.36947 14.2637 0.913031 14.2637 0.913031L9.74091 0.17627C9.74091 0.17627 7.30141 4.59585 5.78539 10.0891C5.46118 11.2634 4.04931 10.9838 4.2171 9.81717C4.50759 7.79708 6.51921 1.95354 6.51921 1.95354L2.60762 1.97033C2.60762 1.97033 -0.737277 9.78607 1.7329 18.4073C3.13956 23.3167 7.54191 28.1763 13.287 28.1763C18.9209 28.1763 23.8513 23.8362 25.5294 17.1416L21.6221 14.1778C21.6221 14.1778 19.4441 21.7758 16.9885 19.1603Z" fill="#FFFFFF"/>
+      </svg>
+    `;
+    
+    // Style the hand
+    const styles = `
+      .helper-guide-hand {
+        position: fixed;
+        z-index: 999999;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 36px;
+        height: 39px;
+        filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        background-color: #3B82F6;
+        border-radius: 50%;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .helper-guide-hand.visible {
+        opacity: 1;
+      }
+      
+      .helper-guide-hand.animating {
+        transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+      }
+      
+      .helper-guide-hand.clicking {
+        transform: translate(-50%, -50%) scale(0.8);
+        transition: transform 0.2s ease;
+      }
+    `;
+    
+    const styleEl = document.createElement("style");
+    styleEl.textContent = styles;
+    document.head.appendChild(styleEl);
+    
+    document.body.appendChild(this.helperHandElement);
+    return this.helperHandElement;
+  }
+  
+  private positionHandAtCenter(): void {
+    const hand = this.createHelperHand();
+    hand.style.left = "50%";
+    hand.style.top = "50%";
+    hand.classList.remove("animating", "clicking");
+    hand.classList.add("visible");
+  }
+  
+  private animateHandToElement(index: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const domTracking = this.lastDomTracking;
+      if (!domTracking) {
+        resolve(false);
+        return;
+      }
+      
+      const elements = Object.values(domTracking.map);
+      const domTrackingElement = elements.find((element: any) => element.highlightIndex === index) as Record<string, any>;
+      
+      if (!domTrackingElement) {
+        resolve(false);
+        return;
+      }
+      
+      const xpath = domTrackingElement.xpath;
+      const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue as HTMLElement;
+      
+      if (!element) {
+        resolve(false);
+        return;
+      }
+      
+      const hand = this.createHelperHand();
+      const rect = element.getBoundingClientRect();
+      
+      // Target position (center of the element)
+      const targetX = rect.left + rect.width / 2;
+      const targetY = rect.top + rect.height / 2;
+      
+      hand.classList.add("animating", "visible");
+      hand.style.left = `${targetX}px`;
+      hand.style.top = `${targetY}px`;
+      
+      // Simulate clicking after the hand reaches the element
+      setTimeout(() => {
+        hand.classList.add("clicking");
+        
+        setTimeout(() => {
+          hand.classList.remove("clicking");
+          resolve(true);
+        }, 200);
+      }, 600);
+    });
+  }
+  
+  private async guideClickElement(index: number): Promise<boolean> {
+    await this.animateHandToElement(index);
+    return this.clickElement(index);
+  }
+  
+  private hideHelperHand(): void {
+    if (this.helperHandElement) {
+      this.helperHandElement.classList.remove("visible");
+    }
+  }
+
   private clickElement(index: number): boolean {
     const domTracking = this.lastDomTracking;
     if (!domTracking) return false;
@@ -343,7 +465,7 @@ class HelperWidget {
             }
 
             if (action === "CLICK_ELEMENT") {
-              response = HelperWidget.instance.clickElement(content.index);
+              response = HelperWidget.instance?.clickElement(content.index) ?? false;
             }
 
             // Send the response back to the iframe
@@ -687,6 +809,9 @@ class HelperWidget {
     if (this.notificationContainer) {
       document.body.removeChild(this.notificationContainer);
     }
+    if (this.helperHandElement) {
+      document.body.removeChild(this.helperHandElement);
+    }
     this.hideAllNotifications();
     if (this.observer) {
       this.observer.disconnect();
@@ -805,8 +930,6 @@ class HelperWidget {
       return { currentPageDetails, domTracking };
     }
   }
-
-  private static clic;
 
   public static async init(config: HelperWidgetConfig): Promise<HelperWidget> {
     if (!HelperWidget.instance) {
