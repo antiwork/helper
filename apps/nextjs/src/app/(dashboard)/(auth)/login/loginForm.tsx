@@ -4,22 +4,23 @@ import { useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import { OAuthStrategy } from "@clerk/types";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
 import { Button } from "@/components/ui/button";
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 import { env } from "@/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import AppleLogo from "./icons/apple-logo.svg";
 import GitHubLogo from "./icons/github-logo.svg";
 import GoogleLogo from "./icons/google-logo.svg";
 
 export function LoginForm() {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const { signIn, setActive } = useSignIn();
   const { signUp } = useSignUp();
   const [loading, setLoading] = useState(false);
@@ -29,11 +30,17 @@ export function LoginForm() {
   const router = useRouter();
   const appleSignInMutation = api.user.nativeAppleSignIn.useMutation();
 
+  const searchParams = useSearchParams();
+  const desktopRedirectUrl = `/desktop/manager?initialTabUrl=${encodeURIComponent(searchParams.get("initialTabUrl") ?? "")}`;
+
   useEffect(() => {
     if (isSignedIn) {
       router.push("/mailboxes");
     }
-  }, [isSignedIn, router]);
+    if (isLoaded && !isSignedIn && getTauriPlatform()) {
+      invoke("close_all_tabs");
+    }
+  }, [isSignedIn, isLoaded, router]);
 
   useEffect(() => {
     if (getTauriPlatform() === "macos") {
@@ -49,7 +56,7 @@ export function LoginForm() {
             firstName: event.payload.firstName ?? "",
             lastName: event.payload.lastName ?? "",
           });
-          router.push(`/login/token?token=${token}`);
+          router.push(`/login/token?token=${token}&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`);
         },
       ).then((l) => {
         unlistenComplete = l;
@@ -77,7 +84,27 @@ export function LoginForm() {
       setLoading(true);
       await invoke("start_apple_sign_in");
     } else if (isTauri) {
-      await openUrl(`${window.location.origin}/login/popup?strategy=${strategy}&deepLink=true`);
+      setLoading(true);
+      const window = new WebviewWindow("login-popup", {
+        url: `${location.origin}/login/popup?strategy=${strategy}&tauri=true&redirectUrl=${encodeURIComponent(desktopRedirectUrl)}`,
+        width: 600,
+        height: 600,
+        title: "Sign in",
+      });
+      window.once("tauri://created", function () {
+        window.show();
+      });
+      window.once("tauri://error", function (e) {
+        captureExceptionAndLog(e);
+      });
+      window.once("tauri://close-requested", () => {
+        setLoading(false);
+        window.destroy();
+      });
+      window.listen("logged-in", () => {
+        window.close();
+        router.push("/desktop/manager");
+      });
     } else {
       try {
         setError(null);
@@ -109,7 +136,7 @@ export function LoginForm() {
 
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
-        router.push("/mailboxes");
+        router.push(isTauri ? desktopRedirectUrl : "/mailboxes");
       } else {
         console.error("Sign in not complete:", signInAttempt);
         setError("Failed to sign in with dev account");

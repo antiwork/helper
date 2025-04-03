@@ -103,7 +103,7 @@ export const conversationsRouter = {
 
     return {
       ...(await serializeConversationWithMessages(ctx.mailbox, ctx.conversation)),
-      draft: draft ? serializeResponseAiDraft(draft, ctx.mailbox, user) : null,
+      draft: draft ? serializeResponseAiDraft(draft, ctx.mailbox) : null,
     };
   }),
   create: mailboxProcedure

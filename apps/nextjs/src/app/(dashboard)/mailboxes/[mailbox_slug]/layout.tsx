@@ -6,11 +6,11 @@ import { useNativePlatform } from "@/components/useNativePlatform";
 import { LayoutInfoProvider } from "./_components/useLayoutInfo";
 
 export default function InboxLayout({ children }: { children: React.ReactNode }) {
-  const { nativePlatform } = useNativePlatform();
+  const { nativePlatform, isLegacyTauri } = useNativePlatform();
 
   return (
     <LayoutInfoProvider>
-      {nativePlatform === "macos" && <TauriDragArea className="top-0 inset-x-0 h-3" />}
+      {nativePlatform === "macos" && isLegacyTauri && <TauriDragArea className="top-0 inset-x-0 h-3" />}
       <DeepLinkRedirect />
       {children}
     </LayoutInfoProvider>

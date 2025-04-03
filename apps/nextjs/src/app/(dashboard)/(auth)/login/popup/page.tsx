@@ -15,6 +15,8 @@ export default function PopupPage() {
     const startAuth = async () => {
       if (!signIn || !strategy) return;
 
+      localStorage.setItem("popupLoginRedirectUrl", searchParams.get("redirectUrl") ?? "");
+
       try {
         await signIn.authenticateWithRedirect({
           strategy,

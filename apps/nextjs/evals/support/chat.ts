@@ -60,14 +60,12 @@ export const buildMessagesWithMocks = ({
   messages,
   promptRetrievalData,
   getPastConversationsPrompt = null,
-  additionalPrompt = null,
   mailboxName = null,
   tools = {},
 }: {
   messages: Message[];
   promptRetrievalData: PromptRetrievalData;
   getPastConversationsPrompt?: string | null;
-  additionalPrompt?: string[] | null;
   mailboxName?: string | null;
   tools?: Record<string, HelperTool>;
 }) => {
@@ -75,14 +73,13 @@ export const buildMessagesWithMocks = ({
     messages,
     promptRetrievalData,
     getPastConversationsPrompt,
-    additionalPrompt,
     mailboxName,
     tools,
   });
 };
 
 export const parseMessagesWithMocks = (input: string) => {
-  const { messages, mailboxName, additionalPrompt, tools, promptRetrievalData } = JSON.parse(input);
+  const { messages, mailboxName, tools, promptRetrievalData } = JSON.parse(input);
   const parsedTools: Record<string, HelperTool> = tools;
 
   vi.mocked(fetchPromptRetrievalData).mockResolvedValue(promptRetrievalData as FetchPromptRetrievalData);
@@ -102,7 +99,6 @@ export const parseMessagesWithMocks = (input: string) => {
     id: 1,
     name: mailboxName || "Gumroad",
     slug: mailboxName || "gumroad",
-    responseGeneratorPrompt: [...(additionalPrompt ?? [])],
     clerkOrganizationId: "test_org",
     gmailSupportEmailId: null,
     slackAlertChannel: null,
@@ -124,6 +120,7 @@ export const parseMessagesWithMocks = (input: string) => {
     githubInstallationId: null,
     githubRepoOwner: null,
     githubRepoName: null,
+    unused_responseGeneratorPrompt: [],
     unused_escalationEmailBody: null,
     unused_escalationExpectedResolutionHours: null,
     autoCloseEnabled: false,

@@ -66,7 +66,7 @@ export const knowledgeBankPrompt = (entries: { content: string }[]) => {
   if (entries.length === 0) return null;
 
   const knowledgeEntries = entries.map((entry) => entry.content).join("\n\n");
-  return `Here is relevant knowledge from our knowledge bank. Use this information to inform your responses, adapting the content as needed while maintaining accuracy:\n\n${knowledgeEntries}`;
+  return `The following are information and instructions from our knowledge bank. Follow all rules, and use any relevant information to inform your responses, adapting the content as needed while maintaining accuracy:\n\n${knowledgeEntries}`;
 };
 
 export const websitePagesPrompt = (

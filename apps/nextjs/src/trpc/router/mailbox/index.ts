@@ -83,7 +83,6 @@ export const mailboxRouter = {
         slackAlertChannel: z.string().optional(),
         githubRepoOwner: z.string().optional(),
         githubRepoName: z.string().optional(),
-        responseGeneratorPrompt: z.array(z.string()).optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
         widgetDisplayMinValue: z.number().optional(),
         autoRespondEmailToChat: z.boolean().optional(),
@@ -97,9 +96,7 @@ export const mailboxRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const mailboxId = ctx.mailbox.id;
-      const updates = input.responseGeneratorPrompt ? { ...input, promptUpdatedAt: new Date() } : input;
-      await db.update(mailboxes).set(updates).where(eq(mailboxes.id, mailboxId));
+      await db.update(mailboxes).set(input).where(eq(mailboxes.id, ctx.mailbox.id));
     }),
   members: mailboxProcedure
     .input(

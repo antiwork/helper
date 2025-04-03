@@ -1,6 +1,10 @@
 name: Tests
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 permissions:
   contents: read
 
@@ -24,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
 
       - run: npm ci
 

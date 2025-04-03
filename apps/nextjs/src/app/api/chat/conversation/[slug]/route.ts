@@ -1,8 +1,11 @@
 import { and, asc, eq } from "drizzle-orm";
+import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
+import { loadScreenshotAttachments } from "@/lib/ai/chat";
+import { getClerkUser } from "@/lib/data/user";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -29,6 +32,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     return Response.json({ error: "Conversation not found" }, { status: 404 });
   }
 
+  const attachments = await loadScreenshotAttachments(conversation.messages);
+
   const requestHumanSupportEvent = await db.query.conversationEvents.findFirst({
     where: and(
       eq(conversationEvents.conversationId, conversation.id),
@@ -38,14 +43,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 
   const isEscalated = !!requestHumanSupportEvent;
 
-  const formattedMessages = conversation.messages.map((message) => ({
-    id: message.id.toString(),
-    role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
-    content: message.cleanedUpText || message.body,
-    createdAt: message.createdAt.toISOString(),
-    reactionType: message.reactionType,
-    reactionFeedback: message.reactionFeedback,
-  }));
+  const formattedMessages = await Promise.all(
+    conversation.messages.map(async (message) => ({
+      id: message.id.toString(),
+      role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
+      content: message.cleanedUpText || message.body,
+      createdAt: message.createdAt.toISOString(),
+      reactionType: message.reactionType,
+      reactionFeedback: message.reactionFeedback,
+      annotations: message.clerkUserId ? await getUserAnnotation(message.clerkUserId) : undefined,
+      experimental_attachments: attachments.filter((a) => a.messageId === message.id),
+    })),
+  );
 
   return Response.json({ messages: formattedMessages, isEscalated });
 }
+
+const getUserAnnotation = cache(async (userId: string) => {
+  const user = await getClerkUser(userId);
+  return user ? [{ user: { firstName: user.firstName } }] : undefined;
+});

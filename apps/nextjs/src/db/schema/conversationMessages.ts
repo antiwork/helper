@@ -21,12 +21,12 @@ export type ToolMetadata = {
   success: boolean;
   parameters: Record<string, unknown>;
 };
+export type MessageMetadata = Partial<CustomerInfo> &
+  Record<string, unknown> & { reasoning?: string | null; includesScreenshot?: boolean };
 
 type MessageStatus = "queueing" | "sent" | "failed" | "draft" | "discarded";
 export type MessageRole = "user" | "staff" | "ai_assistant" | "tool";
-type MessageMetadata<T extends MessageRole> = T extends "tool"
-  ? ToolMetadata
-  : Partial<CustomerInfo> & Record<string, unknown> & { reasoning?: string | null };
+type Metadata<T extends MessageRole> = T extends "tool" ? ToolMetadata : MessageMetadata;
 
 export const DRAFT_STATUSES: Partial<MessageStatus>[] = ["draft", "discarded"];
 
@@ -44,7 +44,7 @@ export const conversationMessages = pgTable(
     cleanedUpText: encryptedField(),
     role: text().notNull().$type<MessageRole>(),
     clerkUserId: text(),
-    metadata: jsonb().$type<MessageMetadata<MessageRole>>(),
+    metadata: jsonb().$type<Metadata<MessageRole>>(),
     responseToId: bigint({ mode: "number" }),
     status: text().$type<MessageStatus>(),
     messageId: text(),

@@ -101,7 +101,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           githubConnectUrl: string | null;
           githubRepoOwner: string | null;
           githubRepoName: string | null;
-          responseGeneratorPrompt: string[];
           clerkOrganizationId: string;
           subscription: {
             status: string | null;
@@ -126,7 +125,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       update: import("@trpc/server").TRPCMutationProcedure<{
         input: {
           mailboxSlug: string;
-          responseGeneratorPrompt?: string[] | undefined;
           slackAlertChannel?: string | undefined;
           githubRepoOwner?: string | undefined;
           githubRepoName?: string | undefined;
@@ -290,6 +288,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             slugs: string[];
           };
           output: {
+            mergedInto:
+              | {
+                  slug: string;
+                }
+              | null
+              | undefined;
             customerMetadata: {
               name: string | null;
               value: number | null;
@@ -316,7 +320,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   draft: {
                     id: number;
                     responseToId: number;
-                    body: string;
+                    body: string | null;
                     isStale: boolean;
                   } | null;
                   files: {
@@ -336,13 +340,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     noteId: number | null;
                     isPublic: boolean;
                   }[];
-                  metadata:
-                    | import("../db/schema").ToolMetadata
-                    | (Partial<import("../types/customerInfo").CustomerInfo> &
-                        Record<string, unknown> & {
-                          reasoning?: string | null | undefined;
-                        })
-                    | null;
+                  metadata: import("../db/schema").ToolMetadata | import("../db/schema").MessageMetadata | null;
                   reactionType: "thumbs-up" | "thumbs-down" | null;
                   reactionFeedback: string | null;
                   reactionCreatedAt: Date | null;
@@ -444,9 +442,15 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             draft: {
               id: number;
               responseToId: number;
-              body: string;
+              body: string | null;
               isStale: boolean;
             } | null;
+            mergedInto:
+              | {
+                  slug: string;
+                }
+              | null
+              | undefined;
             customerMetadata: {
               name: string | null;
               value: number | null;
@@ -472,7 +476,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   draft: {
                     id: number;
                     responseToId: number;
-                    body: string;
+                    body: string | null;
                     isStale: boolean;
                   } | null;
                   files: {
@@ -492,13 +496,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                     noteId: number | null;
                     isPublic: boolean;
                   }[];
-                  metadata:
-                    | import("../db/schema").ToolMetadata
-                    | (Partial<import("../types/customerInfo").CustomerInfo> &
-                        Record<string, unknown> & {
-                          reasoning?: string | null | undefined;
-                        })
-                    | null;
+                  metadata: import("../db/schema").ToolMetadata | import("../db/schema").MessageMetadata | null;
                   reactionType: "thumbs-up" | "thumbs-down" | null;
                   reactionFeedback: string | null;
                   reactionCreatedAt: Date | null;

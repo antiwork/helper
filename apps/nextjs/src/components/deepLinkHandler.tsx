@@ -25,11 +25,16 @@ export function DeepLinkHandler() {
   const { url } = useDeepLink();
 
   useEffect(() => {
-    if (!url) return;
-    const resolved = new URL(url, window.location.origin);
-    if (resolved.origin !== window.location.origin) return;
-    router.push(resolved.toString());
+    const resolved = url && resolveDeepLinkUrl(url);
+    if (!resolved) return;
+    router.push(resolved);
   }, [url]);
 
   return null;
 }
+
+export const resolveDeepLinkUrl = (url: string) => {
+  const resolved = new URL(url, window.location.origin);
+  if (resolved.origin !== window.location.origin) return null;
+  return resolved.toString();
+};

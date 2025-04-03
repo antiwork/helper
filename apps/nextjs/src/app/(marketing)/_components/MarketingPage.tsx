@@ -4,10 +4,15 @@ import { useUser } from "@clerk/nextjs";
 import {
   ArrowPathIcon,
   ArrowRightIcon,
+  ArrowRightOnRectangleIcon,
   BookOpenIcon,
+  ChevronRightIcon,
   HandThumbDownIcon,
   InboxIcon,
+  MagnifyingGlassIcon,
   PaperAirplaneIcon,
+  PlayIcon,
+  PlusCircleIcon,
   StarIcon,
   TrashIcon,
   UserIcon,
@@ -19,14 +24,17 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useHelper } from "@helperai/react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { api } from "@/trpc/react";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />{" "}
     </svg>
   );
 };
@@ -80,52 +88,47 @@ const CardContent = React.memo(({ type }: { type: string }) => {
       return (
         <div className="p-6">
           <div className="max-w-xl flex-grow">
-            <div className="my-4 flex flex-col gap-4">
-              <div className="flex gap-4 items-end">
-                <div className="pb-1">
-                  <div className="pb-1">
-                    <div
-                      className="w-10 h-10 rounded-full flex-shrink-0 bg-cover bg-center border-2 border-border"
-                      style={{ backgroundImage: "url('/robot-avatar.png')" }}
-                    ></div>
+            <div className="mb-4">
+              <Input
+                type="text"
+                placeholder="Search knowledge bank..."
+                className=""
+                defaultValue="refund policy"
+                iconsPrefix={<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />}
+              />
+            </div>
+            <div className="divide-y divide-border">
+              <div className="py-4">
+                <div className="flex gap-4">
+                  <Switch defaultChecked className="mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-sm">
+                      Our refund policy allows for full refunds within 30 days of purchase. After 30 days, we can offer
+                      store credit or partial refunds on a case-by-case basis.
+                    </div>
                   </div>
-                </div>
-                <div className="flex-grow">
-                  <label htmlFor="customerMessage" className="block text-sm mb-0">
-                    Before
-                  </label>
-                  <textarea
-                    id="customerMessage"
-                    name="customerMessage"
-                    rows={2}
-                    className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
-                    placeholder="Enter customer message here"
-                    defaultValue={`Hi! That's a great question. When you un-publish your product, it simply removes the product from the public view.`}
-                  ></textarea>
+                  <Button variant="ghost" size="sm" iconOnly>
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-4 items-end">
-                <div className="pb-1">
-                  <div
-                    className="w-10 h-10 rounded-full flex-shrink-0 bg-cover bg-center border-2 border-primary"
-                    style={{ backgroundImage: "url('/human-avatar.png')" }}
-                  ></div>
-                </div>
-                <div className="flex-grow">
-                  <label htmlFor="helperResponse" className="block text-sm mb-0">
-                    After
-                  </label>
-                  <textarea
-                    id="helperResponse"
-                    name="helperResponse"
-                    rows={3}
-                    className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
-                    placeholder="Enter Helper response here"
-                    defaultValue={`Hello, That's a great question. yes, your customers will still be able to read and open the ebook from their email even if you un publish it. Let me know how else I can assist today.`}
-                  ></textarea>
+              <div className="py-4">
+                <div className="flex gap-4">
+                  <Switch defaultChecked className="mt-0.5" />
+                  <div className="flex-1 text-sm">
+                    For digital products, refunds are available within 14 days if the product hasn't been downloaded or
+                    accessed.
+                  </div>
+                  <Button variant="ghost" size="sm" iconOnly>
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
+            <Button variant="subtle" className="mt-4">
+              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              Add Knowledge
+            </Button>
           </div>
         </div>
       );
@@ -173,35 +176,28 @@ Please reply with this information. We'll review your request within 1-2 busines
       return (
         <div className="p-6">
           <div className="max-w-xl flex-grow">
-            <div className="mb-1">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                <UserIcon className="h-3 w-3" />
-                <span>Customer</span>
-              </div>
-              <div className="inline-block rounded-lg p-4 bg-muted mr-10">
-                <div className="lg:text-base text-sm prose">
-                  <p>Is there a way to offer a customer a partial refund?</p>
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Type a command..."
+                className="rounded-sm rounded-b-none border-b-0"
+                iconsPrefix={<span className="text-muted-foreground">/</span>}
+              />
+              <div className="border rounded-b-sm bg-background p-2">
+                <div className="text-xs text-muted-foreground font-medium px-2 py-1.5">Tools</div>
+                <div className="flex flex-col gap-1">
+                  {["Resend last receipt", "Send reset password", "Refund last purchase", "Search purchase"].map(
+                    (tool) => (
+                      <div
+                        key={tool}
+                        className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                      >
+                        <PlayIcon className="h-4 w-4" />
+                        {tool}
+                      </div>
+                    ),
+                  )}
                 </div>
-              </div>
-            </div>
-            <div className="mb-4">
-              <div className="flex justify-end mb-1">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <UserIcon className="h-3 w-3" />
-                  <span>You</span>
-                </div>
-              </div>
-              <div className="bg-secondary rounded-lg p-4 ml-10">
-                <p className="lg:text-base text-sm prose">
-                  To issue a partial refund: Open the order, click "Refund," enter the amount, select a reason, and hit
-                  "Process." The customer will be notified automatically.
-                </p>
-              </div>
-              <div className="flex justify-end mt-2">
-                <button className="inline-flex items-center justify-center text-primary bg-background border border-primary hover:bg-primary hover:text-primary-foreground h-10 rounded-md px-4 text-sm transition-colors duration-300">
-                  <StarIcon className="mr-2 h-4 w-4" />
-                  Add to FAQs
-                </button>
               </div>
             </div>
           </div>
@@ -387,10 +383,10 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                  Craft authentic replies in your brand&apos;s voice with
-                  <span className="underline-offset">&nbsp;style linter</span>
+                  Turn support expertise into instant answers with
+                  <span className="underline-offset">&nbsp;knowledge bank</span>
                 </h3>
-                <p className="text-md text-muted-foreground">Human touch, robot efficiency</p>
+                <p className="text-md text-muted-foreground">Your knowledge, available 24/7.</p>
               </div>
             </div>
 
@@ -401,7 +397,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
                   Goodbye writer&apos;s block, hello
-                  <span className="underline-offset">&nbsp;auto-generated drafts</span>
+                  <span className="underline-offset">&nbsp;AI-generated drafts</span>
                 </h3>
                 <p className="text-md text-muted-foreground">All you have to do is click send.</p>
               </div>
@@ -413,10 +409,10 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
               </div>
               <div className="bg-secondary p-8">
                 <h3 className="font-sundry-narrow-bold text-3xl md:text-5xl text-primary font-bold mb-4">
-                  Your best replies become the new standard with
-                  <span className="underline-offset">&nbsp;FAQs</span>
+                  Make every support chat productive with integrated
+                  <span className="underline-offset">&nbsp;tools</span>
                 </h3>
-                <p className="text-md text-muted-foreground">Pin your best and watch Helper learn</p>
+                <p className="text-md text-muted-foreground">Actions speak louder than words.</p>
               </div>
             </div>
 

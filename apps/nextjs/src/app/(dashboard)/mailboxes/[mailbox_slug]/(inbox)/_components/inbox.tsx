@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
 import { CATEGORY_LABELS } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/categoryNav";
+import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import {
   ConversationListContextProvider,
   useConversationListContext,
@@ -35,8 +36,7 @@ const Inbox = () => {
   const { currentConversationSlug, conversationListData, isPending } = useConversationListContext();
   const utils = api.useUtils();
   const isMobile = useIsMobile();
-
-  const currentConversation = conversationListData?.conversations.find((c) => c.slug === currentConversationSlug);
+  const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
   const pageTitle = currentConversation
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];

@@ -10,6 +10,7 @@ import {
 import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { create } from "zustand";
@@ -270,7 +271,7 @@ const ConversationContent = () => {
   }, [nativePlatform, conversationInfo?.subject]);
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="flex w-full">
+    <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
       <ResizablePanel defaultSize={75} minSize={50} maxSize={85}>
         <ResizablePanelGroup direction="vertical" className="flex w-full flex-col bg-background">
           <ResizablePanel
@@ -282,6 +283,16 @@ const ConversationContent = () => {
             }}
           >
             <div className="flex flex-col h-full">
+              {conversationInfo?.mergedInto?.slug && (
+                <div className="absolute inset-0 z-50 bg-background/75 flex flex-col items-center justify-center gap-4 h-full text-lg">
+                  Merged into another conversation.
+                  <Button variant="subtle" asChild>
+                    <Link href={`/mailboxes/${mailboxSlug}/conversations?id=${conversationInfo.mergedInto.slug}`}>
+                      View
+                    </Link>
+                  </Button>
+                </div>
+              )}
               <CarouselContext.Provider
                 value={{
                   currentIndex: previewFileIndex,

@@ -81,7 +81,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
     githubRepoOwner: mailbox.githubRepoOwner,
     githubRepoName: mailbox.githubRepoName,
-    responseGeneratorPrompt: mailbox.responseGeneratorPrompt ?? [],
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: subscription ?? null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
@@ -149,8 +148,4 @@ export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, rep
       githubRepoName: repoName,
     })
     .where(eq(mailboxes.id, mailboxId));
-};
-
-export const getResponseGeneratorPromptText = (responseGeneratorPrompt: string[]): string => {
-  return responseGeneratorPrompt.join("\n");
 };

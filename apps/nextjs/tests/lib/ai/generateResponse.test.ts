@@ -72,7 +72,6 @@ describe("generateDraftResponse", () => {
     expect(result).toEqual({
       draftResponse: "<p>Here's how to reset your password...</p>\n",
       promptInfo: expect.objectContaining({
-        base_prompt: "",
         pinned_replies: null,
         past_conversations: null,
         metadata: null,
