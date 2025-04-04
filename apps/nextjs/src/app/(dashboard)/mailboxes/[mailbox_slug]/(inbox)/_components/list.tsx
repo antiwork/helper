@@ -1,6 +1,7 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import { Bot } from "lucide-react";
 import { ChannelProvider } from "ably/react";
 import { capitalize } from "lodash";
 import Link from "next/link";
@@ -573,7 +574,7 @@ export const AssignedToLabel = ({
   if (assignedToAI) {
     return (
       <div className={className} title="Assigned to Helper agent">
-        <UserIcon className="h-3 w-3" />
+        <Bot className="h-3 w-3" />
         Helper agent
       </div>
     );

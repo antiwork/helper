@@ -1,4 +1,5 @@
 import { UserIcon } from "@heroicons/react/24/outline";
+import { Bot } from "lucide-react";
 import type { CommandGroup } from "./types";
 
 type AssigneesPageProps = {
@@ -17,6 +18,23 @@ export const useAssigneesPage = ({
   {
     heading: "Assignees",
     items: [
+      {
+        id: "helper-agent",
+        label: "Helper agent",
+        icon: Bot,
+        onSelect: () => {
+          if (onAssignTicket) {
+            onAssignTicket(null, true);
+            onOpenChange(false);
+          }
+        },
+        preview: (
+          <div className="p-4">
+            <h3 className="font-medium mb-2">Assign to Helper agent</h3>
+            <p className="text-sm text-muted-foreground">Assign this conversation to be handled by the Helper agent.</p>
+          </div>
+        ),
+      },
       {
         id: "unassign",
         label: "Unassign",

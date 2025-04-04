@@ -3,6 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import { UserIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
+import { Bot } from "lucide-react";
 import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useAssignTicket";
 import { AssignSelect } from "@/components/assignSelect";
@@ -68,6 +69,27 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
         <PopoverContent className="w-80 p-4">
           <div className="flex flex-col space-y-4">
             <h4 className="font-medium">Assign conversation</h4>
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 justify-start"
+                onClick={() => {
+                  assignTicket(null, "Assigned to Helper agent", true);
+                  toggleAssignModal(false);
+                }}
+              >
+                <Bot className="h-4 w-4" />
+                <span>Helper agent</span>
+              </Button>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-background px-2 text-muted-foreground">or assign to team member</span>
+                </div>
+              </div>
+            </div>
             <AssignSelect selectedUserId={assignedTo?.id} onChange={(assignee) => setAssignedTo(assignee)} />
             <div className="grid gap-1">
               <Label htmlFor="assignMessage">Message</Label>
