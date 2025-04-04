@@ -11,6 +11,7 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { name: "Dashboard", icon: "📊", path: "/dashboard" },
+  { name: "Checkout", icon: "🏷️", path: "/discounts" },
   { name: "Settings", icon: "⚙️", path: "/settings" },
   { name: "Profile", icon: "👤", path: "/profile" },
   { name: "Help", icon: "❓", path: "/help" },

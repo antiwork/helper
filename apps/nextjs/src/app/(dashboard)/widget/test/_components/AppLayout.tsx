@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { DiscountForm } from "./DiscountForm";
+import { DiscountList } from "./DiscountList";
 import { SettingsForm } from "./SettingsForm";
 import { Sidebar } from "./Sidebar";
 
@@ -11,6 +13,8 @@ export const AppLayout = () => {
     switch (activePage) {
       case "Settings":
         return <SettingsForm />;
+      case "Checkout":
+        return <DiscountList />;
       case "Dashboard":
         return (
           <div className="p-6">
@@ -38,9 +42,9 @@ export const AppLayout = () => {
   };
 
   return (
-    <div className="flex h-screen text-black">
+    <div className="flex h-full text-black">
       <Sidebar onMenuItemClick={setActivePage} activePage={activePage} />
-      <main className="flex-1 overflow-auto bg-gray-50 p-6">{renderContent()}</main>
+      <main className="flex-1 overflow-y-auto bg-gray-50">{renderContent()}</main>
     </div>
   );
 };
