@@ -36,6 +36,15 @@ export async function setupDockerTestDb() {
   console.log("Applying migrations...");
   const migrationPath = path.join(__dirname, "..", "..", "src", "db", "drizzle");
   console.log("Migration path:", migrationPath);
+  
+  const customMigrationsPath = path.join(__dirname, "..", "..", "src", "db", "migrations");
+  console.log("Custom migrations path:", customMigrationsPath);
+  
+  const assignedToAiMigrationPath = path.join(customMigrationsPath, "0000_add_assigned_to_ai_field", "migration.sql");
+  const migrationSql = await import("fs").then(fs => fs.promises.readFile(assignedToAiMigrationPath, "utf-8"));
+  await db.execute(sql`${sql.raw(migrationSql)}`);
+  console.log("Applied custom migration for assignedToAI field");
+  
   await migrate(db, {
     migrationsFolder: migrationPath,
   });
