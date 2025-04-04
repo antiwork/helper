@@ -3,11 +3,11 @@
 import KnowledgeBankSetting from "./knowledgeBankSetting";
 import WebsiteCrawlSetting from "./websiteCrawlSetting";
 
-const KnowledgeSetting = () => {
+const KnowledgeSetting = ({ websitesEnabled }: { websitesEnabled: boolean }) => {
   return (
     <>
       <div className="space-y-6">
-        <WebsiteCrawlSetting />
+        {websitesEnabled && <WebsiteCrawlSetting />}
         <KnowledgeBankSetting />
       </div>
     </>

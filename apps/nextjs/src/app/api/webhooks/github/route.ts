@@ -9,7 +9,7 @@ import { createReply } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
 
 const verifyGitHubWebhook = (payload: string, signature: string | null) => {
-  if (!signature) return false;
+  if (!signature || !env.GITHUB_CLIENT_SECRET) return false;
 
   const hmac = crypto.createHmac("sha256", env.GITHUB_CLIENT_SECRET);
   const digest = `sha256=${hmac.update(payload).digest("hex")}`;
