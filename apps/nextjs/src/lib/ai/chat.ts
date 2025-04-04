@@ -541,6 +541,8 @@ export const respondWithAI = async ({
     traceId: string | null = null,
     reasoning: string | null = null,
   ) => {
+    await updateOriginalConversation(conversation.id, { set: { assignedToAI: true } });
+
     const assistantMessage = await createAssistantMessage(conversation.id, messageId, text, {
       traceId,
       reasoning,

@@ -159,7 +159,11 @@ export const conversationsRouter = {
       }
 
       await updateConversation(ctx.conversation.id, {
-        set: { status: input.status, assignedToClerkId: input.assignedToId },
+        set: {
+          status: input.status,
+          assignedToClerkId: input.assignedToId,
+          ...(input.assignedToId ? { assignedToAI: false } : {}),
+        },
         byUserId: ctx.session.userId,
         message: input.message ?? null,
       });

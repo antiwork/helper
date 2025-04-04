@@ -104,6 +104,9 @@ export const updateConversation = async (
     });
   }
   if (updatedConversation.assignedToClerkId && current.assignedToClerkId !== updatedConversation.assignedToClerkId) {
+    if (current.assignedToAI) {
+      await tx.update(conversations).set({ assignedToAI: false }).where(eq(conversations.id, id));
+    }
     await inngest.send({
       name: "conversations/assigned",
       data: {

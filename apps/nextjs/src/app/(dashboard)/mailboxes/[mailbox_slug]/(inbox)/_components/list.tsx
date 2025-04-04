@@ -518,6 +518,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
                   variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
                 )}
                 assignedToClerkId={conversation.assignedToClerkId}
+                assignedToAI={conversation.assignedToAI}
               />
             )}
             {conversation.platformCustomer?.isVip && (
@@ -556,9 +557,11 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
 
 export const AssignedToLabel = ({
   assignedToClerkId,
+  assignedToAI,
   className,
 }: {
   assignedToClerkId: string;
+  assignedToAI?: boolean;
   className?: string;
 }) => {
   const { data: members } = api.organization.getMembers.useQuery(undefined, {
@@ -566,6 +569,15 @@ export const AssignedToLabel = ({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  if (assignedToAI) {
+    return (
+      <div className={className} title="Assigned to Helper agent">
+        <UserIcon className="h-3 w-3" />
+        Helper agent
+      </div>
+    );
+  }
 
   const displayName = members?.find((m) => m.id === assignedToClerkId)?.displayName?.split(" ")[0];
 

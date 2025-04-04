@@ -317,7 +317,11 @@ export const createReply = async (
 
   return tx0.transaction(async (tx) => {
     if (shouldAutoAssign && user && !conversation.assignedToClerkId) {
-      await updateConversation(conversationId, { set: { assignedToClerkId: user.id }, byUserId: null }, tx);
+      await updateConversation(
+        conversationId,
+        { set: { assignedToClerkId: user.id, assignedToAI: false }, byUserId: null },
+        tx,
+      );
     }
 
     const createdMessage = await createConversationMessage(
