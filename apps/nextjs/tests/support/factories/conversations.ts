@@ -23,6 +23,7 @@ export const conversationFactory = {
         lastUserEmailCreatedAt: faker.date.recent(),
         isPrompt: false,
         isVisitor: false,
+        assignedToAI: false,
         ...overrides,
       })
       .returning();
