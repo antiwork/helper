@@ -1,12 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
-import {
-  closeWidget,
-  executeAction,
-  executeGuideAction,
-  fetchCurrentPageDetails,
-  guideDone,
-} from "@/lib/widget/messages";
+import { closeWidget, executeGuideAction, fetchCurrentPageDetails, guideDone } from "@/lib/widget/messages";
 
 const INITIAL_PROMPT = `
 Your ultimate task is: """INSTRUCTIONS""". 
