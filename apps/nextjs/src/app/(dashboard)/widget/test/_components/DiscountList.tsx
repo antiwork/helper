@@ -61,44 +61,44 @@ export function DiscountList() {
     <div className="h-full p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Discounts</h1>
-        <button 
+        <button
           onClick={() => setShowForm(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Add discount
         </button>
       </div>
-      
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Name
               </th>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Code
               </th>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Discount
               </th>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Used
               </th>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Products
@@ -119,9 +119,7 @@ export function DiscountList() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {discount.type === "percentage" 
-                      ? `${discount.value}%` 
-                      : `$${discount.value.toFixed(2)}`}
+                    {discount.type === "percentage" ? `${discount.value}%` : `$${discount.value.toFixed(2)}`}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -131,12 +129,8 @@ export function DiscountList() {
                   <div className="text-sm text-gray-900">{discount.products}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button className="text-blue-600 hover:text-blue-900 mr-3">
-                    Edit
-                  </button>
-                  <button className="text-red-600 hover:text-red-900">
-                    Delete
-                  </button>
+                  <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                  <button className="text-red-600 hover:text-red-900">Delete</button>
                 </td>
               </tr>
             ))}
@@ -145,4 +139,4 @@ export function DiscountList() {
       </div>
     </div>
   );
-} 
+}
