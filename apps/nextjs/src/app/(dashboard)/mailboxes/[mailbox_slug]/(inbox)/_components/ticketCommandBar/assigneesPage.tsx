@@ -5,7 +5,7 @@ import type { CommandGroup } from "./types";
 type AssigneesPageProps = {
   orgMembers: { id: string; displayName: string }[] | undefined;
   currentUserId: string | undefined;
-  onAssignTicket?: (assignedTo: { id: string; displayName: string } | null) => void;
+  onAssignTicket?: (assignedTo: { id: string; displayName: string } | null, assignedToAI?: boolean) => void;
   onOpenChange: (open: boolean) => void;
 };
 
