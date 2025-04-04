@@ -439,6 +439,20 @@ class HelperWidget {
               response = (await HelperWidget.instance?.selectDropdownOption(content.index, content.text)) ?? false;
             }
 
+            if (action === "EXECUTE_GUIDE_ACTION") {
+              const { actionType, params } = content;
+              const instance = HelperWidget.instance;
+
+              if (actionType === "click_element") {
+                response = (await instance?.clickElement(params.index)) ?? false;
+              } else if (actionType === "select_dropdown_option") {
+                response = (await instance?.selectDropdownOption(params.index, params.text)) ?? false;
+              } else {
+                console.warn(`Unknown action type: ${actionType}`);
+                response = false;
+              }
+            }
+
             if (action === "GUIDE_DONE") {
               this.hideHelperHand();
               this.celebrateGuideDone();
@@ -473,10 +487,9 @@ class HelperWidget {
               );
             }
           }
-          return; // Process only as request-response, not as regular action
+          return;
         }
 
-        // Regular action messages (from iframe with embedOrigin)
         if (event.origin === embedOrigin) {
           const { action, content } = event.data.payload;
           switch (action) {

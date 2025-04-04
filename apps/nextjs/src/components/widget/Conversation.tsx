@@ -190,7 +190,6 @@ export default function Conversation({
       }
 
       if (currentSlug) {
-        console.log("submitting with currentSlug", currentSlug);
         handleAISubmit(undefined, {
           experimental_attachments: screenshotData
             ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]

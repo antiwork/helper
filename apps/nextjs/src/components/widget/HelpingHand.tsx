@@ -1,11 +1,11 @@
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
 import {
-  clickElement,
   closeWidget,
+  executeAction,
+  executeGuideAction,
   fetchCurrentPageDetails,
   guideDone,
-  selectDropdownOption,
 } from "@/lib/widget/messages";
 
 const INITIAL_PROMPT = `
@@ -62,57 +62,36 @@ export default function HelpingHand({
       Authorization: `Bearer ${token}`,
     },
   });
+
   const handleAction = async (action: Record<string, any>, toolCallId: string) => {
     const type = Object.keys(action)[0];
     if (!type) return;
     const params = action[type];
 
-    if (type == "done") {
+    if (type === "done") {
       closeWidget();
       await guideDone();
+      return;
     }
 
-    if (type == "click_element") {
-      const index = params.index;
-      const result = await clickElement(index);
-      console.log("click_element result", result);
-      if (result && toolCallId) {
-        const pageDetails = await fetchCurrentPageDetails();
-        const result = `
-        Executed the last action to click the element.
-  
-        Now, the current URL is: ${pageDetails.currentPageDetails.url}
-        Current Page Title: ${pageDetails.currentPageDetails.title}
-        Elements: ${pageDetails.clickableElements}
-        `;
+    // General handler for all action types
+    const result = await executeGuideAction(type, params);
+    console.log(`${type} result:`, result);
 
-        addToolResult({
-          toolCallId,
-          result,
-        });
-      }
-    }
+    if (result && toolCallId) {
+      const pageDetails = await fetchCurrentPageDetails();
+      const resultMessage = `
+      Executed the last action: ${type}.
 
-    if (type == "select_dropdown_option") {
-      const index = params.index;
-      const text = params.text;
-      const result = await selectDropdownOption(index, text);
-      console.log("select_dropdown_option result", result);
-      if (result && toolCallId) {
-        const pageDetails = await fetchCurrentPageDetails();
-        const result = `
-        Executed the last action to select the dropdown option.
-  
-        Now, the current URL is: ${pageDetails.currentPageDetails.url}
-        Current Page Title: ${pageDetails.currentPageDetails.title}
-        Elements: ${pageDetails.clickableElements}
-        `;
+      Now, the current URL is: ${pageDetails.currentPageDetails.url}
+      Current Page Title: ${pageDetails.currentPageDetails.title}
+      Elements: ${pageDetails.clickableElements}
+      `;
 
-        addToolResult({
-          toolCallId,
-          result,
-        });
-      }
+      addToolResult({
+        toolCallId,
+        result: resultMessage,
+      });
     }
   };
 

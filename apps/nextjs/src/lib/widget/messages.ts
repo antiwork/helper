@@ -99,12 +99,8 @@ export const fetchCurrentPageDetails = async (): Promise<{
   return await sendRequestToParent("FETCH_PAGE_DETAILS");
 };
 
-export const clickElement = async (index: number) => {
-  return await sendRequestToParent("CLICK_ELEMENT", { index });
-};
-
-export const selectDropdownOption = async (index: number, text: string) => {
-  return await sendRequestToParent("SELECT_DROPDOWN_OPTION", { index, text });
+export const executeGuideAction = async (actionType: string, params: Record<string, any>) => {
+  return await sendRequestToParent("EXECUTE_GUIDE_ACTION", { actionType, params });
 };
 
 export const guideDone = async () => {
