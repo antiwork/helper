@@ -4,7 +4,7 @@ import { and, desc, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, mailboxes } from "@/db/schema";
+import { conversationMessages, conversations, files } from "@/db/schema";
 import AIReplyEmail from "@/emails/aiReply";
 import { getClerkUser } from "@/lib/data/user";
 import { getFileStream } from "@/s3/utils";
@@ -13,7 +13,6 @@ export const convertConversationMessageToRaw = async (
   email: typeof conversationMessages.$inferSelect & {
     conversation: typeof conversations.$inferSelect & {
       emailFrom: string;
-      mailbox: Pick<typeof mailboxes.$inferSelect, "id" | "name" | "widgetHost">;
     };
     files: (typeof files.$inferSelect)[];
   },
