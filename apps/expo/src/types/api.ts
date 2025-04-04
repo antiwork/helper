@@ -115,7 +115,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipThreshold: number | null;
           vipChannelId: string | null;
           vipExpectedResponseHours: number | null;
-          disableAutoResponseForVips: boolean;
           autoCloseEnabled: boolean;
           autoCloseDaysOfInactivity: number;
         };
@@ -133,7 +132,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipThreshold?: number | undefined;
           vipChannelId?: string | undefined;
           vipExpectedResponseHours?: number | undefined;
-          disableAutoResponseForVips?: boolean | undefined;
           autoCloseEnabled?: boolean | undefined;
           autoCloseDaysOfInactivity?: number | undefined;
         };

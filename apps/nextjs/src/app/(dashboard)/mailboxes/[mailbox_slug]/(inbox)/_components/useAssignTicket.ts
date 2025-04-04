@@ -12,11 +12,11 @@ export const useAssignTicket = () => {
     useConversationListContext();
 
   const assignTicket = (
-    assignedTo: { id: string; displayName: string } | null,
+    assignedTo: { id: string; displayName: string } | { ai: true } | null,
     message?: string | null,
-    assignedToAI?: boolean,
   ) => {
-    const assignedToId = assignedTo?.id ?? null;
+    const assignedToId = !!assignedTo && "id" in assignedTo ? assignedTo.id : null;
+    const assignedToAI = !!assignedTo && "ai" in assignedTo;
     update({
       mailboxSlug,
       conversationSlug: assertDefined(currentConversationSlug),
@@ -32,13 +32,7 @@ export const useAssignTicket = () => {
         pages: data.pages.map((page) => ({
           ...page,
           conversations: page.conversations.map((c) =>
-            c.slug === currentConversationSlug
-              ? {
-                  ...c,
-                  assignedToClerkId: assignedToId ?? null,
-                  assignedToAI: assignedToAI ?? false,
-                }
-              : c,
+            c.slug === currentConversationSlug ? { ...c, assignedToClerkId: assignedToId, assignedToAI } : c,
           ),
         })),
       };
@@ -51,9 +45,9 @@ export const useAssignTicket = () => {
           : "Unassigned ticket",
     });
     if (
-      (input.category === "mine" && assignedTo?.id !== conversationListData?.assignedToClerkIds?.[0]) ||
-      (input.category === "unassigned" && assignedTo) ||
-      (input.category === "assigned" && !assignedTo)
+      (input.category === "mine" && assignedToId !== conversationListData?.assignedToClerkIds?.[0]) ||
+      (input.category === "unassigned" && assignedToId) ||
+      (input.category === "assigned" && !assignedToId)
     ) {
       removeConversation();
     } else {

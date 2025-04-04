@@ -74,7 +74,7 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
                 variant="outlined"
                 className="flex items-center gap-2 justify-start"
                 onClick={() => {
-                  assignTicket(null, "Assigned to Helper agent", true);
+                  assignTicket({ ai: true }, "Assigned to Helper agent");
                   toggleAssignModal(false);
                 }}
               >

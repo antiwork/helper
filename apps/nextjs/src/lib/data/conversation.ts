@@ -25,6 +25,7 @@ type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
 type NewConversation = Omit<typeof conversations.$inferInsert, OptionalConversationAttributes | "source"> &
   Partial<Pick<typeof conversations.$inferInsert, OptionalConversationAttributes>> & {
     source: NonNullable<(typeof conversations.$inferInsert)["source"]>;
+    assignedToAI: boolean;
     isPrompt?: boolean;
     isVisitor?: boolean;
   };

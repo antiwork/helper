@@ -12,7 +12,6 @@ import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
-import { PlatformCustomer } from "@/lib/data/platformCustomer";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { createPresignedDownloadUrl } from "@/s3/utils";
@@ -566,30 +565,4 @@ const generateCleanedUpText = (html: string) => {
     .split(/\s*\n\s*/)
     .filter((p) => p.trim().replace(/\s+/g, " "));
   return paragraphs.join("\n\n");
-};
-
-export const hasStaffMessages = async (conversationId: number, tx: Transaction | typeof db = db): Promise<boolean> => {
-  const staffMessage = await tx.query.conversationMessages.findFirst({
-    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "staff")),
-  });
-  return !!staffMessage;
-};
-
-export const disableAIResponse = async (
-  conversationId: number,
-  mailbox: Pick<typeof mailboxes.$inferSelect, "disableAutoResponseForVips">,
-  platformCustomer: PlatformCustomer | null,
-) => {
-  const requestHumanSupportEvent = await db.query.conversationEvents.findFirst({
-    where: and(
-      eq(conversationEvents.conversationId, conversationId),
-      eq(conversationEvents.type, "request_human_support"),
-    ),
-  });
-
-  return (
-    !!requestHumanSupportEvent ||
-    (platformCustomer?.isVip && mailbox.disableAutoResponseForVips) ||
-    (await hasStaffMessages(conversationId))
-  );
 };

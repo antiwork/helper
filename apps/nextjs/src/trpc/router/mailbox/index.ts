@@ -90,7 +90,6 @@ export const mailboxRouter = {
         vipThreshold: z.number().optional(),
         vipChannelId: z.string().optional(),
         vipExpectedResponseHours: z.number().optional(),
-        disableAutoResponseForVips: z.boolean().optional(),
         autoCloseEnabled: z.boolean().optional(),
         autoCloseDaysOfInactivity: z.number().optional(),
       }),
