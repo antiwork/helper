@@ -12,17 +12,17 @@ export const useAssignTicket = () => {
     useConversationListContext();
 
   const assignTicket = (
-    assignedTo: { id: string; displayName: string } | null, 
+    assignedTo: { id: string; displayName: string } | null,
     message?: string | null,
-    assignedToAI?: boolean
+    assignedToAI?: boolean,
   ) => {
     const assignedToId = assignedTo?.id ?? null;
-    update({ 
-      mailboxSlug, 
-      conversationSlug: assertDefined(currentConversationSlug), 
-      assignedToId, 
+    update({
+      mailboxSlug,
+      conversationSlug: assertDefined(currentConversationSlug),
+      assignedToId,
       message,
-      assignedToAI 
+      assignedToAI,
     });
 
     utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
@@ -32,17 +32,23 @@ export const useAssignTicket = () => {
         pages: data.pages.map((page) => ({
           ...page,
           conversations: page.conversations.map((c) =>
-            c.slug === currentConversationSlug ? { 
-              ...c, 
-              assignedToClerkId: assignedToId ?? null,
-              assignedToAI: assignedToAI ?? false
-            } : c,
+            c.slug === currentConversationSlug
+              ? {
+                  ...c,
+                  assignedToClerkId: assignedToId ?? null,
+                  assignedToAI: assignedToAI ?? false,
+                }
+              : c,
           ),
         })),
       };
     });
     toast({
-      title: assignedToAI ? "Assigned to Helper agent" : (assignedTo ? `Assigned ${assignedTo.displayName}` : "Unassigned ticket"),
+      title: assignedToAI
+        ? "Assigned to Helper agent"
+        : assignedTo
+          ? `Assigned ${assignedTo.displayName}`
+          : "Unassigned ticket",
     });
     if (
       (input.category === "mine" && assignedTo?.id !== conversationListData?.assignedToClerkIds?.[0]) ||

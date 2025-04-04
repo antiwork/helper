@@ -2,8 +2,8 @@
 
 import { useUser } from "@clerk/nextjs";
 import { UserIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
 import { Bot } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useAssignTicket";
 import { AssignSelect } from "@/components/assignSelect";
@@ -70,8 +70,8 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
           <div className="flex flex-col space-y-4">
             <h4 className="font-medium">Assign conversation</h4>
             <div className="flex flex-col gap-2">
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 className="flex items-center gap-2 justify-start"
                 onClick={() => {
                   assignTicket(null, "Assigned to Helper agent", true);
