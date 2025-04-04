@@ -84,6 +84,7 @@
     "@tauri-apps/plugin-os": "^2.2.0",
     "@tauri-apps/plugin-process": "^2.2.0",
     "@tauri-apps/plugin-updater": "^2.5.0",
+    "@testing-library/user-event": "^14.6.1",
     "@tiptap/core": "^2.4.0",
     "@tiptap/extension-bold": "^2.4.0",
     "@tiptap/extension-bubble-menu": "^2.4.0",

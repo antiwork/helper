@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import confetti from "canvas-confetti";
 import scrollIntoView from "scroll-into-view-if-needed";
 
@@ -158,9 +159,11 @@ export class GuideManager {
     if (!element) return false;
 
     await this.animateHandToElementAndScroll(index);
+    console.log("input text element", element);
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      element.value = text;
+      userEvent.click(element);
+      userEvent.keyboard(text);
       return true;
     }
 
