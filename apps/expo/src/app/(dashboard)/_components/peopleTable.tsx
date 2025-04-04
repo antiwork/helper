@@ -4,7 +4,7 @@ import { api } from "@/utils/api";
 import { type TimeRange } from "./timeRangeSelector";
 
 export function PeopleTable({ mailboxSlug, timeRange }: { mailboxSlug: string; timeRange: TimeRange }) {
-  const { data: membersData, isLoading } = api.mailbox.members.useQuery(
+  const { data: membersData, isLoading } = api.mailbox.members.stats.useQuery(
     { mailboxSlug, period: timeRange },
     { enabled: !!mailboxSlug },
   );

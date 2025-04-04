@@ -6,7 +6,7 @@ import { type TimeRange } from "./_components/timeRangeSelector";
 export default function AgentsScreen() {
   const { mailboxSlug, timeRange } = useLocalSearchParams<{ mailboxSlug: string; timeRange: TimeRange }>();
 
-  const { data: membersData, isLoading } = api.mailbox.members.useQuery(
+  const { data: membersData, isLoading } = api.mailbox.members.stats.useQuery(
     { mailboxSlug, period: timeRange },
     { enabled: !!mailboxSlug },
   );
