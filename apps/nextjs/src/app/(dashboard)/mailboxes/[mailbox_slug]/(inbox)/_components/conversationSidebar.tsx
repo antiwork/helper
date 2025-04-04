@@ -1,5 +1,6 @@
 import { ArrowUturnLeftIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, CurrencyDollarIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import { Bot } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { AssignPopoverButton } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/assignPopoverButton";
@@ -126,7 +127,14 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             <Badge>{conversation.status || "open"}</Badge>
           </div>
           <span className="text-muted-foreground">Assignee</span>
-          <AssignPopoverButton initialAssignedToClerkId={conversation.assignedToClerkId} />
+          {conversation.assignedToAI ? (
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              <span>Helper agent</span>
+            </div>
+          ) : (
+            <AssignPopoverButton initialAssignedToClerkId={conversation.assignedToClerkId} />
+          )}
         </div>
       </div>
 

@@ -46,7 +46,7 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
     const ccStaffUser = await findUserByEmail(mailbox.clerkOrganizationId, ccAddress);
     if (ccStaffUser) {
       await updateConversation(conversationId, {
-        set: { assignedToClerkId: ccStaffUser.id },
+        set: { assignedToClerkId: ccStaffUser.id, assignedToAI: false },
         message: "Auto-assigned based on CC",
         skipAblyEvents: true,
       });

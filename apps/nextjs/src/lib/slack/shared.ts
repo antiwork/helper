@@ -132,7 +132,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
         await updateConversation(
           conversation.id,
           {
-            set: { assignedToClerkId: selectedUserId },
+            set: { assignedToClerkId: selectedUserId, assignedToAI: false },
             message: note || null,
             byUserId: user?.id ?? null,
           },

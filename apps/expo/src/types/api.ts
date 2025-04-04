@@ -611,6 +611,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             message?: string | null | undefined;
             status?: "open" | "closed" | "spam" | undefined;
             assignedToId?: string | null | undefined;
+            assignedToAI?: boolean | undefined;
           };
           output: void;
         }>;

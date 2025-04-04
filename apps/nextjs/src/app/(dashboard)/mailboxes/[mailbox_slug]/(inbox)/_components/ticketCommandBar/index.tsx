@@ -77,7 +77,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const assigneesGroups = useAssigneesPage({
     orgMembers,
     currentUserId: currentUser?.id,
-    onAssignTicket: assignTicket,
+    onAssignTicket: (assignedTo, assignedToAI) => assignTicket(assignedTo, null, assignedToAI),
     onOpenChange,
   });
 

@@ -148,6 +148,7 @@ export const conversationsRouter = {
         status: z.enum(["open", "closed", "spam"]).optional(),
         assignedToId: z.string().nullable().optional(),
         message: z.string().nullable().optional(),
+        assignedToAI: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -159,7 +160,17 @@ export const conversationsRouter = {
       }
 
       await updateConversation(ctx.conversation.id, {
-        set: { status: input.status, assignedToClerkId: input.assignedToId },
+        set: {
+          status: input.status,
+          assignedToClerkId: input.assignedToId,
+          ...(input.assignedToId ? { assignedToAI: false } : {}),
+          ...(input.assignedToAI !== undefined
+            ? {
+                assignedToAI: input.assignedToAI,
+                ...(input.assignedToAI ? { assignedToClerkId: null } : {}),
+              }
+            : {}),
+        },
         byUserId: ctx.session.userId,
         message: input.message ?? null,
       });
