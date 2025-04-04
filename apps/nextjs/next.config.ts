@@ -10,7 +10,7 @@ if (!env.GOOGLE_CLIENT_ID) {
 }
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   /** We already do linting as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   poweredByHeader: false,

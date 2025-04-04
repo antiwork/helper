@@ -2,6 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -10,8 +11,13 @@ import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
-import { sendConversationUpdate } from "@/lib/widget/messages";
+import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
+
+type GuideInstructions = {
+  instructions: string;
+  callId: string | null;
+};
 
 type Props = {
   token: string | null;
@@ -21,6 +27,9 @@ type Props = {
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
   isAnonymous: boolean;
+  guideInstructions: GuideInstructions | null;
+  setIsGuidingUser: (isGuidingUser: boolean) => void;
+  setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
 };
 
 export default function Conversation({
@@ -31,6 +40,9 @@ export default function Conversation({
   readPageTool,
   onLoadFailed,
   isAnonymous,
+  guideInstructions,
+  setIsGuidingUser,
+  setGuideInstructions,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -52,6 +64,8 @@ export default function Conversation({
     append,
     setMessages,
     status,
+    stop,
+    addToolResult,
   } = useChat({
     maxSteps: 3,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
@@ -59,12 +73,18 @@ export default function Conversation({
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
       }
+
+      if (toolCall.toolName === "guide_user") {
+        const args = toolCall.args as { instructions: string };
+        setGuideInstructions({ instructions: args.instructions, callId: toolCall.toolCallId });
+      }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
       return {
         id,
         readPageTool,
         message: messages[messages.length - 1],
+        conversationSlug,
         ...requestBody,
       };
     },
@@ -72,6 +92,23 @@ export default function Conversation({
       Authorization: `Bearer ${token}`,
     },
   });
+
+  const cancelGuide = () => {
+    setGuideInstructions(null);
+    if (guideInstructions?.callId) {
+      addToolResult({
+        toolCallId: guideInstructions.callId,
+        result: "Cancelled, return the text result",
+      });
+    }
+  };
+
+  const startGuide = async () => {
+    minimizeWidget();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsGuidingUser(true);
+    stop();
+  };
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {
@@ -153,7 +190,6 @@ export default function Conversation({
       }
 
       if (currentSlug) {
-        console.log("submitting with currentSlug", currentSlug);
         handleAISubmit(undefined, {
           experimental_attachments: screenshotData
             ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
@@ -205,21 +241,35 @@ export default function Conversation({
         isGumroadTheme={isGumroadTheme}
         token={token}
       />
-      <SupportButtons
-        conversationSlug={conversationSlug}
-        token={token}
-        messageStatus={status}
-        lastMessage={lastAIMessage}
-        onTalkToTeamClick={handleTalkToTeamClick}
-        isEscalated={isEscalated}
-      />
-      <ChatInput
-        input={input}
-        inputRef={inputRef}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        isLoading={isLoading}
-      />
+      {guideInstructions ? (
+        <div className="border-t border-black p-4 flex flex-col gap-2">
+          <span className="text-xs text-gray-500">{guideInstructions.instructions}</span>
+          <div className="flex justify-end gap-2">
+            <Button variant="outlined" onClick={cancelGuide}>
+              Cancel Guide
+            </Button>
+            <Button onClick={startGuide}>Start Guide</Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <SupportButtons
+            conversationSlug={conversationSlug}
+            token={token}
+            messageStatus={status}
+            lastMessage={lastAIMessage}
+            onTalkToTeamClick={handleTalkToTeamClick}
+            isEscalated={isEscalated}
+          />
+          <ChatInput
+            input={input}
+            inputRef={inputRef}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        </>
+      )}
     </>
   );
 }
