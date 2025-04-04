@@ -71,7 +71,7 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
             <h4 className="font-medium">Assign conversation</h4>
             <div className="flex flex-col gap-2">
               <Button 
-                variant="outline" 
+                variant="outlined" 
                 className="flex items-center gap-2 justify-start"
                 onClick={() => {
                   assignTicket(null, "Assigned to Helper agent", true);
