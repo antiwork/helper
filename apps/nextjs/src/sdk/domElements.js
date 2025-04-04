@@ -6,9 +6,10 @@ export function domElements(
     focusHighlightIndex: -1,
     viewportExpansion: 0,
     debugMode: false,
+    onlyVisibleElements: true,
   },
 ) {
-  const { doHighlightElements, focusHighlightIndex, viewportExpansion, debugMode } = args;
+  const { doHighlightElements, focusHighlightIndex, viewportExpansion, debugMode, onlyVisibleElements } = args;
   let highlightIndex = 0; // Reset highlight index
 
   // Add timing stack to handle recursion

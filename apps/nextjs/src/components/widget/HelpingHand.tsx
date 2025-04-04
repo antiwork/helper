@@ -41,8 +41,8 @@ export default function HelpingHand({
 
       console.log("Next goal:", params.current_state.next_goal);
 
-      if (params.action.length > 0) {
-        handleAction(params.action[0], toolCall.toolCallId);
+      if (params.action) {
+        handleAction(params.action, toolCall.toolCallId);
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
@@ -57,10 +57,12 @@ export default function HelpingHand({
     },
   });
 
-  const handleAction = async (action: Record<string, any>, toolCallId: string) => {
-    const type = Object.keys(action)[0];
+  const handleAction = async (action: any, toolCallId: string) => {
+    const type = action.type;
     if (!type) return;
-    const params = action[type];
+
+    // everything (key,value) is in the action object other than the type
+    const params = Object.fromEntries(Object.entries(action).filter(([key]) => key !== "type"));
 
     if (type === "done") {
       closeWidget();

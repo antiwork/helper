@@ -1,5 +1,22 @@
 import confetti from "canvas-confetti";
-import type { DomTrackingData } from "./domTree";
+import scrollIntoView from "scroll-into-view-if-needed";
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const fetchElementByXpath = (xpath: string) => {
+  return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
+    .singleNodeValue as HTMLElement;
+};
+
+const isVisible = (element: HTMLElement) => {
+  const rect = element.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+};
 
 export class GuideManager {
   private helperHandElement: HTMLDivElement | null = null;
@@ -34,8 +51,8 @@ export class GuideManager {
     return this.helperHandElement;
   }
 
-  public animateHandToElement(index: number): Promise<boolean> {
-    return new Promise((resolve) => {
+  public animateHandToElementAndScroll(index: number): Promise<boolean> {
+    return new Promise(async (resolve) => {
       const domTracking = this.lastDomTracking;
       if (!domTracking) {
         resolve(false);
@@ -53,14 +70,24 @@ export class GuideManager {
         return;
       }
 
-      const xpath = domTrackingElement.xpath;
-      const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
-        .singleNodeValue as HTMLElement;
-
+      let element = fetchElementByXpath(domTrackingElement.xpath);
       if (!element) {
         resolve(false);
         return;
       }
+
+      // Only scroll if element is not visible
+      if (!isVisible(element)) {
+        console.log("scrolling to element", element);
+        scrollIntoView(element, {
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+        await wait(1500);
+      }
+
+      element = fetchElementByXpath(domTrackingElement.xpath);
 
       const hand = this.createHelperHand();
       const rect = element.getBoundingClientRect();
@@ -102,6 +129,44 @@ export class GuideManager {
     return element as HTMLElement;
   }
 
+  public async executeDOMAction(actionType: string, params: any): Promise<boolean> {
+    switch (actionType) {
+      case "click_element":
+        return await this.clickElement(params.index);
+      case "select_dropdown_option":
+        return await this.selectDropdownOption(params.index, params.text);
+      case "input_text":
+        return await this.inputText(params.index, params.text);
+      case "scroll_down":
+      case "scroll_up":
+      case "scroll_to_text":
+      case "extract_content":
+      case "get_dropdown_options":
+      case "go_back":
+        window.history.back();
+        return true;
+      case "wait":
+        await wait(params.seconds * 1000);
+        return true;
+    }
+    console.warn(`Unknown action type: ${actionType}`);
+    return false;
+  }
+
+  public async inputText(index: number, text: string): Promise<boolean> {
+    const element = this.fetchElementByIndex(index);
+    if (!element) return false;
+
+    await this.animateHandToElementAndScroll(index);
+
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      element.value = text;
+      return true;
+    }
+
+    return false;
+  }
+
   public async clickElement(index: number): Promise<boolean> {
     this.createHelperHand();
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -112,7 +177,7 @@ export class GuideManager {
     const element = this.fetchElementByIndex(index);
     if (!element) return false;
 
-    await this.animateHandToElement(index);
+    await this.animateHandToElementAndScroll(index);
 
     console.log("clicking element", element);
     element.click();
@@ -126,7 +191,7 @@ export class GuideManager {
 
     // Check if it's a select element
     if (element instanceof HTMLSelectElement) {
-      await this.animateHandToElement(index);
+      await this.animateHandToElementAndScroll(index);
 
       // Find the option with matching text
       const options = Array.from(element.options);
@@ -145,7 +210,7 @@ export class GuideManager {
     }
 
     // For non-select elements (like custom dropdowns), fall back to click
-    await this.animateHandToElement(index);
+    await this.animateHandToElementAndScroll(index);
     element.click();
     return true;
   }

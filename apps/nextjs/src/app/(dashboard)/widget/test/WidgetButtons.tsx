@@ -6,7 +6,7 @@ export function WidgetButtons() {
   const { toggle, sendPrompt } = useHelper();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 helper-widget-test-buttons">
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-white">Using hooks:</h3>
         <button

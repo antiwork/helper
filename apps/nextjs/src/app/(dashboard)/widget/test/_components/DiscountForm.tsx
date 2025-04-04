@@ -7,6 +7,82 @@ export function DiscountForm() {
   const [minimumAmount, setMinimumAmount] = useState(false);
   const [minimumQuantity, setMinimumQuantity] = useState(false);
   const [allProducts, setAllProducts] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [formValues, setFormValues] = useState({
+    name: "",
+    code: "",
+    products: "",
+    value: 0,
+  });
+
+  const handleInputChange = (field: keyof typeof formValues, value: string | number) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    // In a real app, this would send data to an API
+    setIsSuccess(true);
+  };
+
+  if (isSuccess) {
+    return (
+      <div className="max-w-4xl bg-white p-6 rounded-lg shadow">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <h2 className="text-xl font-semibold text-green-700">Discount created successfully!</h2>
+          </div>
+
+          <div className="ml-8 space-y-2 text-gray-700">
+            <p>
+              <span className="font-medium">Name:</span> {formValues.name || "Unnamed discount"}
+            </p>
+            <p>
+              <span className="font-medium">Code:</span> {formValues.code || "dlehOwh"}
+            </p>
+            <p>
+              <span className="font-medium">Discount type:</span>
+              {discountType === "percentage" ? `${formValues.value || 0}% off` : `$${formValues.value || 0} off`}
+            </p>
+            <p>
+              <span className="font-medium">Products:</span>
+              {allProducts ? "All products" : formValues.products || "No specific products"}
+            </p>
+
+            {(limitQuantity || limitValidity || minimumAmount || minimumQuantity) && (
+              <div className="mt-2">
+                <p className="font-medium">Additional settings:</p>
+                <ul className="list-disc ml-5">
+                  {limitQuantity && <li>Limited quantity</li>}
+                  {limitValidity && <li>Limited validity period</li>}
+                  {minimumAmount && <li>Minimum qualifying amount</li>}
+                  {minimumQuantity && <li>Minimum quantity requirement</li>}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => setIsSuccess(false)}
+              className="bg-transparent border border-gray-300 text-gray-700 px-4 py-2 rounded flex items-center gap-2"
+            >
+              Edit discount
+            </button>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Share discount</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl bg-white p-6 rounded-lg shadow">
@@ -28,7 +104,9 @@ export function DiscountForm() {
           <button className="bg-transparent border border-gray-300 text-gray-700 px-4 py-2 rounded flex items-center gap-2">
             <span>Cancel</span>
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add discount</button>
+          <button onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Add discount
+          </button>
         </div>
       </div>
 
@@ -41,6 +119,8 @@ export function DiscountForm() {
             type="text"
             id="name"
             placeholder="Black Friday"
+            value={formValues.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
             className="w-full border border-gray-300 rounded p-2 text-gray-800"
           />
         </div>
@@ -54,6 +134,8 @@ export function DiscountForm() {
               type="text"
               id="discount-code"
               placeholder="dlehOwh"
+              value={formValues.code}
+              onChange={(e) => handleInputChange("code", e.target.value)}
               className="w-full border border-gray-300 rounded-l p-2 text-gray-800"
             />
             <button className="bg-gray-200 border border-gray-300 rounded-r p-2 text-gray-600">
@@ -76,6 +158,8 @@ export function DiscountForm() {
             type="text"
             id="products"
             placeholder="Products to which this discount will apply"
+            value={formValues.products}
+            onChange={(e) => handleInputChange("products", e.target.value)}
             className="w-full border border-gray-300 rounded p-2 text-gray-800 mb-2"
           />
           <div className="flex items-center">
@@ -113,6 +197,8 @@ export function DiscountForm() {
                     type="number"
                     className="w-20 border border-gray-300 rounded-l p-2 text-gray-800"
                     placeholder="0"
+                    value={formValues.value}
+                    onChange={(e) => handleInputChange("value", parseFloat(e.target.value))}
                   />
                   <span className="bg-gray-200 border border-gray-300 rounded-r p-2 text-gray-600">%</span>
                 </div>
@@ -137,6 +223,8 @@ export function DiscountForm() {
                     type="number"
                     className="w-20 border border-gray-300 rounded-r p-2 text-gray-800"
                     placeholder="0"
+                    value={formValues.value}
+                    onChange={(e) => handleInputChange("value", parseFloat(e.target.value))}
                   />
                 </div>
               )}

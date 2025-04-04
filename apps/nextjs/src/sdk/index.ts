@@ -30,7 +30,6 @@ interface Notification {
 class HelperWidget {
   private static instance: HelperWidget | null = null;
   private config: HelperWidgetConfig;
-  private lastDomTracking: any;
   private iframe: HTMLIFrameElement | null = null;
   private iframeWrapper: HTMLDivElement | null = null;
   private helperIcon: HTMLButtonElement | null = null;
@@ -59,7 +58,6 @@ class HelperWidget {
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
-    this.lastDomTracking = null;
     this.guideManager = new GuideManager();
   }
 
@@ -306,15 +304,7 @@ class HelperWidget {
 
             if (action === "EXECUTE_GUIDE_ACTION") {
               const { actionType, params } = content;
-
-              if (actionType === "click_element") {
-                response = await this.guideManager.clickElement(params.index);
-              } else if (actionType === "select_dropdown_option") {
-                response = await this.guideManager.selectDropdownOption(params.index, params.text);
-              } else {
-                console.warn(`Unknown action type: ${actionType}`);
-                response = false;
-              }
+              response = await this.guideManager.executeDOMAction(actionType, params);
             }
 
             if (action === "GUIDE_DONE") {
@@ -747,7 +737,6 @@ class HelperWidget {
     }
 
     const domTracking = HelperWidget.instance.takeDOMSnapshot();
-    HelperWidget.instance.lastDomTracking = domTracking;
     HelperWidget.instance.guideManager.setDomTracking(domTracking);
 
     const currentPageDetails = {
