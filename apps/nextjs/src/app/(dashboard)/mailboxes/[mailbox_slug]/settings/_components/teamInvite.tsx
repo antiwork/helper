@@ -16,11 +16,10 @@ type TeamInviteProps = {
 
 export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
-  const [isInviting, setIsInviting] = useState(false);
 
   const utils = api.useUtils();
 
-  const { mutate: inviteMemberMutation } = api.organization.inviteMember.useMutation({
+  const { mutate: inviteMemberMutation, isPending: isInviting } = api.organization.inviteMember.useMutation({
     onSuccess: () => {
       toast({
         title: "Invitation sent",
@@ -29,7 +28,6 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
       });
 
       setEmailInput("");
-      setIsInviting(false);
 
       // Invalidate the members list query to refresh data after new invite
       utils.mailbox.members.list.invalidate({ mailboxSlug });
@@ -43,7 +41,6 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
         description: error.message,
         variant: "destructive",
       });
-      setIsInviting(false);
     },
   });
 
@@ -51,8 +48,6 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
     if (!isValidEmail || isInviting) {
       return;
     }
-
-    setIsInviting(true);
 
     // Check if email already exists in the organization
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
@@ -64,7 +59,6 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
         description: "This user is already in your organization",
         variant: "destructive",
       });
-      setIsInviting(false);
     } else {
       inviteMemberMutation({
         email: emailInput,
