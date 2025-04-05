@@ -1,23 +1,27 @@
 import { useUser } from "@clerk/nextjs";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { Check } from "lucide-react";
+import { Bot, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { api } from "@/trpc/react";
 
-export type AssigneeOption = {
-  id: string;
-  displayName: string;
-};
+export type AssigneeOption =
+  | {
+      id: string;
+      displayName: string;
+    }
+  | { ai: true };
 
 interface AssignSelectProps {
   selectedUserId?: string | null;
   onChange: (assignee: AssigneeOption | null) => void;
+  aiOption?: boolean;
+  aiOptionSelected?: boolean;
 }
 
-export const AssignSelect = ({ selectedUserId, onChange }: AssignSelectProps) => {
+export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelected }: AssignSelectProps) => {
   const { user: currentUser } = useUser();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,19 +42,27 @@ export const AssignSelect = ({ selectedUserId, onChange }: AssignSelectProps) =>
     member.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  const aiItem = {
+    id: "ai",
+    displayName: "Helper agent",
+  };
+
   const allItems = [
     ...(!searchTerm || "anyone".includes(searchTerm.toLowerCase()) ? [{ id: null, displayName: "Anyone" }] : []),
+    ...(aiOption && (!searchTerm || aiItem.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
+      ? [aiItem]
+      : []),
     ...filteredMembers,
   ];
 
-  const selectedMember = sortedMembers.find((m) => m.id === selectedUserId);
+  const selectedMember = aiOptionSelected ? aiItem : sortedMembers.find((m) => m.id === selectedUserId);
 
   useEffect(() => {
     setHighlightedIndex(0);
   }, [open, searchTerm]);
 
-  const selectOption = (option: AssigneeOption | { id: null }) => {
-    onChange(option.id === null ? null : option);
+  const selectOption = (option: AssigneeOption | null) => {
+    onChange(option);
     setOpen(false);
   };
 
@@ -73,7 +85,7 @@ export const AssignSelect = ({ selectedUserId, onChange }: AssignSelectProps) =>
         if (highlightedIndex !== -1) {
           e.preventDefault();
           const selectedItem = allItems[highlightedIndex];
-          if (selectedItem) selectOption(selectedItem);
+          if (selectedItem) selectOption(selectedItem.id === null ? null : selectedItem);
         }
         break;
       case "Escape":
@@ -99,15 +111,18 @@ export const AssignSelect = ({ selectedUserId, onChange }: AssignSelectProps) =>
               {allItems.map((item, index) => (
                 <CommandItem
                   key={item.id ?? "anyone"}
-                  onSelect={() => selectOption(item)}
+                  onSelect={() => selectOption(item.id === null ? null : item.id === "ai" ? { ai: true } : item)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   data-highlighted={highlightedIndex === index}
                   className={highlightedIndex === index ? "bg-accent text-accent-foreground" : ""}
                 >
-                  <Check className={`mr-2 h-4 w-4 ${selectedUserId === item.id ? "opacity-100" : "opacity-0"}`} />
-                  <span className="truncate">
-                    {item.displayName}
-                    {item.id === currentUser?.id && " (You)"}
+                  <Check className={`mr-2 h-4 w-4 ${selectedMember?.id === item.id ? "opacity-100" : "opacity-0"}`} />
+                  <span className="flex items-center gap-1">
+                    {item.id === "ai" ? <Bot className="h-4 w-4" /> : null}
+                    <span className="flex-1 min-w-0 truncate">
+                      {item.displayName}
+                      {item.id === currentUser?.id && " (You)"}
+                    </span>
                   </span>
                 </CommandItem>
               ))}

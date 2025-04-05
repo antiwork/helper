@@ -512,7 +512,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {conversation.assignedToClerkId && (
+            {(conversation.assignedToClerkId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(
                   "shrink-0 break-all flex items-center gap-1 text-xs font-sundry-regular",
@@ -561,7 +561,7 @@ export const AssignedToLabel = ({
   assignedToAI,
   className,
 }: {
-  assignedToClerkId: string;
+  assignedToClerkId: string | null;
   assignedToAI?: boolean;
   className?: string;
 }) => {
@@ -575,7 +575,6 @@ export const AssignedToLabel = ({
     return (
       <div className={className} title="Assigned to Helper agent">
         <Bot className="h-3 w-3" />
-        Helper agent
       </div>
     );
   }

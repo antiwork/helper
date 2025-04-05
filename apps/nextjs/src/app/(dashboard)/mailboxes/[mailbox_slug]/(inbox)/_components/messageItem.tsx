@@ -71,7 +71,7 @@ const MessageItem = ({
       ) : (
         <Bot className="h-3 w-3" />
       )}
-      {message.from ? message.from : "Assistant"}
+      {message.from ? message.from : "Helper agent"}
     </span>,
   );
   if (message.type === "message" && message.emailTo)

@@ -26,9 +26,7 @@ export type PreviousConversation = {
   createdAt: string;
 };
 
-export type Conversation = RouterOutputs["mailbox"]["conversations"]["get"] & {
-  assignedToAI?: boolean;
-};
+export type Conversation = RouterOutputs["mailbox"]["conversations"]["get"];
 export type Message = Extract<Conversation["messages"][number], { type: "message" }>;
 export type Note = Extract<Conversation["messages"][number], { type: "note" }>;
 export type ConversationEvent = Extract<Conversation["messages"][number], { type: "event" }>;

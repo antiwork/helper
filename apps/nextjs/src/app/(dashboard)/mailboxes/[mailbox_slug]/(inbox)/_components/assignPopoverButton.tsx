@@ -6,7 +6,7 @@ import { Bot } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useAssignTicket";
-import { AssignSelect } from "@/components/assignSelect";
+import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,7 +15,13 @@ import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
-export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssignedToClerkId: string | null }) => {
+export const AssignPopoverButton = ({
+  initialAssignedToClerkId,
+  assignedToAI = false,
+}: {
+  initialAssignedToClerkId: string | null;
+  assignedToAI?: boolean;
+}) => {
   const { assignTicket } = useAssignTicket();
   const { setState: setLayoutState } = useLayoutInfo();
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -30,8 +36,14 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
   const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null;
 
   useEffect(() => {
-    setAssignedTo(orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null);
-  }, [initialAssignedToClerkId, orgMembers]);
+    // Only set assigned to an org member if not assigned to AI
+    if (!assignedToAI) {
+      setAssignedTo(orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null);
+    } else {
+      // Set to a special value for AI
+      setAssignedTo({ id: "ai", displayName: "Helper agent" });
+    }
+  }, [initialAssignedToClerkId, orgMembers, assignedToAI]);
 
   const toggleAssignModal = (open: boolean) => {
     setShowAssignModal(open);
@@ -52,45 +64,55 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
     assignTicket(selfAssignee, null);
   });
 
-  const [assignedTo, setAssignedTo] = useState<{ id: string; displayName: string } | null>(null);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const [assignMessage, setAssignMessage] = useState<string>("");
+
+  const handleAssignSelectChange = (assignee: AssigneeOption | null) => {
+    setAssignedTo(assignee);
+  };
+
+  const handleAssignSubmit = () => {
+    if (assignedTo && "ai" in assignedTo) {
+      assignTicket({ ai: true }, assignMessage || null);
+    } else {
+      assignTicket(assignedTo, assignMessage || null);
+    }
+  };
 
   return (
     <>
       <Popover open={showAssignModal} onOpenChange={(isOpen) => toggleAssignModal(isOpen)}>
         <PopoverTrigger asChild>
           <button
-            className={cn("flex items-center gap-1 hover:underline", !currentAssignee && "text-muted-foreground")}
+            className={cn(
+              "flex items-center gap-1 hover:underline",
+              !currentAssignee && !assignedToAI && "text-muted-foreground",
+            )}
           >
-            <UserIcon className="h-4 w-4" />
-            {currentAssignee ? currentAssignee.displayName : "Unassigned"}
+            {assignedToAI ? (
+              <>
+                <Bot className="h-4 w-4" />
+                <span>Helper agent</span>
+              </>
+            ) : (
+              <>
+                <UserIcon className="h-4 w-4" />
+                {currentAssignee ? currentAssignee.displayName : "Unassigned"}
+              </>
+            )}
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-4">
           <div className="flex flex-col space-y-4">
             <h4 className="font-medium">Assign conversation</h4>
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outlined"
-                className="flex items-center gap-2 justify-start"
-                onClick={() => {
-                  assignTicket({ ai: true }, "Assigned to Helper agent");
-                  toggleAssignModal(false);
-                }}
-              >
-                <Bot className="h-4 w-4" />
-                <span>Helper agent</span>
-              </Button>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-background px-2 text-muted-foreground">or assign to team member</span>
-                </div>
-              </div>
-            </div>
-            <AssignSelect selectedUserId={assignedTo?.id} onChange={(assignee) => setAssignedTo(assignee)} />
+
+            <AssignSelect
+              selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
+              onChange={handleAssignSelectChange}
+              aiOption
+              aiOptionSelected={assignedToAI}
+            />
+
             <div className="grid gap-1">
               <Label htmlFor="assignMessage">Message</Label>
               <Textarea
@@ -98,11 +120,11 @@ export const AssignPopoverButton = ({ initialAssignedToClerkId }: { initialAssig
                 placeholder="Add an optional reason for assignment..."
                 value={assignMessage}
                 rows={3}
-                onModEnter={() => assignTicket(assignedTo, assignMessage || null)}
+                onModEnter={() => handleAssignSubmit()}
                 onChange={(e) => setAssignMessage(e.target.value)}
               />
             </div>
-            <Button className="w-full" onClick={() => assignTicket(assignedTo, assignMessage || null)}>
+            <Button className="w-full" onClick={handleAssignSubmit}>
               Assign
             </Button>
           </div>

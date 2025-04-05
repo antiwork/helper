@@ -179,6 +179,7 @@ export const serializeConversation = (
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
     assignedToClerkId: conversation.assignedToClerkId,
+    assignedToAI: conversation.assignedToAI,
     platformCustomer: platformCustomer
       ? {
           ...platformCustomer,
