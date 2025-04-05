@@ -7,19 +7,10 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { api } from "@/trpc/react";
 import SectionWrapper from "./sectionWrapper";
-
-interface TeamMember {
-  id: string;
-  displayName: string;
-  email: string | undefined;
-  role: "Core" | "Non-core" | "AFK";
-  keywords: string[];
-}
+import TeamMemberRow, { type TeamMember } from "./teamMemberRow";
 
 type TeamSettingProps = {
   mailboxSlug: string;
@@ -28,56 +19,9 @@ type TeamSettingProps = {
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const [emailInput, setEmailInput] = useState("");
   const [isInviting, setIsInviting] = useState(false);
-  const [keywordsBeingEdited, setKeywordsBeingEdited] = useState<Record<string, string>>({});
 
   const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
   const utils = api.useUtils();
-
-  // Debounced API call for updating keywords - 800ms is a good balance
-  const debouncedUpdateKeywords = useDebouncedCallback((memberId: string, keywords: string[], role: string) => {
-    updateTeamMember({
-      mailboxSlug,
-      userId: memberId,
-      role: role as "Core" | "Non-core" | "AFK",
-      keywords,
-    });
-  }, 800);
-
-  const { mutate: updateTeamMember } = api.mailbox.members.update.useMutation({
-    onSuccess: (updatedMember) => {
-      // Update the cached data with the server response
-      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map((member) => (member.id === updatedMember.id ? updatedMember : member));
-      });
-
-      // Reset keywords being edited if keywords were updated
-      if (updatedMember.role !== "Non-core") {
-        setKeywordsBeingEdited((prev) => {
-          const updated = { ...prev };
-          delete updated[updatedMember.id];
-          return updated;
-        });
-      } else {
-        setKeywordsBeingEdited((prev) => ({
-          ...prev,
-          [updatedMember.id]: updatedMember.keywords.join(", "),
-        }));
-      }
-
-      toast({
-        title: "Team member role updated",
-        variant: "success",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to update team member role",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   const { mutate: inviteMemberMutation } = api.organization.inviteMember.useMutation({
     onSuccess: () => {
@@ -89,6 +33,9 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
 
       setEmailInput("");
       setIsInviting(false);
+
+      // Invalidate the members list query to refresh data after new invite
+      utils.mailbox.members.list.invalidate({ mailboxSlug });
     },
     onError: (error) => {
       toast({
@@ -122,34 +69,6 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       inviteMemberMutation({
         email: emailInput,
       });
-    }
-  };
-
-  const updateTeamMemberRole = (memberId: TeamMember["id"], role: TeamMember["role"]) => {
-    // Find the current member to get existing keywords
-    const member = teamMembers.find((m) => m.id === memberId);
-
-    if (!member) return;
-
-    // If not Non-core role, clear keywords
-    const keywords = role !== "Non-core" ? [] : member.keywords || [];
-
-    // Update on the server
-    updateTeamMember({
-      mailboxSlug,
-      userId: memberId,
-      role,
-      keywords,
-    });
-  };
-
-  const updateTeamMemberKeywords = (memberId: string, newKeywords: string) => {
-    const keywords = newKeywords.split(",").map((k) => k.trim());
-
-    // Find the current member role to include in the update
-    const member = teamMembers.find((m) => m.id === memberId);
-    if (member) {
-      debouncedUpdateKeywords(memberId, keywords, member.role);
     }
   };
 
@@ -230,42 +149,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                   </TableCell>
                 </TableRow>
               ) : (
-                teamMembers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell>{member.displayName || ""}</TableCell>
-                    <TableCell>{member.email || ""}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={member.role}
-                        onValueChange={(value: "Core" | "Non-core" | "AFK") => updateTeamMemberRole(member.id, value)}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Core">Core</SelectItem>
-                          <SelectItem value="Non-core">Non-core</SelectItem>
-                          <SelectItem value="AFK">AFK</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      {member.role === "Non-core" && (
-                        <Input
-                          value={keywordsBeingEdited[member.id] || member.keywords.join(", ")}
-                          onChange={(e) => {
-                            setKeywordsBeingEdited({
-                              ...keywordsBeingEdited,
-                              [member.id]: e.target.value,
-                            });
-                            updateTeamMemberKeywords(member.id, e.target.value);
-                          }}
-                          placeholder="Enter keywords separated by commas"
-                        />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                teamMembers.map((member) => <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} />)
               )}
             </TableBody>
           </Table>
