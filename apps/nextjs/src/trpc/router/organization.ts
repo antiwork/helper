@@ -5,6 +5,7 @@ import { SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { createOrganization, getClerkOrganization, getSubscriptionStatus } from "@/lib/data/organization";
 import { createOrganizationInvitation, getClerkUserList } from "@/lib/data/user";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const organizationRouter = {
@@ -52,7 +53,13 @@ export const organizationRouter = {
           invitationId: invitation.id,
         };
       } catch (error) {
-        console.error("Error creating organization invitation:", error);
+        captureExceptionAndLog(error, {
+          extra: {
+            email: input.email,
+            organizationId: ctx.session.orgId,
+            userId: ctx.session.userId,
+          },
+        });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to invite team member",

@@ -3,6 +3,7 @@ import { subHours } from "date-fns";
 import { z } from "zod";
 import { getMemberStats } from "@/lib/data/stats";
 import { getUsersWithMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 
 export const membersRouter = {
@@ -23,7 +24,14 @@ export const membersRouter = {
 
         return user;
       } catch (error) {
-        console.error("Error updating team member:", error);
+        captureExceptionAndLog(error, {
+          extra: {
+            userId: input.userId,
+            mailboxId: ctx.mailbox.id,
+            role: input.role,
+            mailboxSlug: ctx.mailbox.slug,
+          },
+        });
         if (error instanceof TRPCError) {
           throw error;
         }
@@ -38,7 +46,14 @@ export const membersRouter = {
     try {
       return await getUsersWithMailboxAccess(ctx.mailbox.clerkOrganizationId, ctx.mailbox.id);
     } catch (error) {
-      console.error("Error fetching mailbox members:", error);
+      captureExceptionAndLog(error, {
+        tags: { route: "mailbox.members.list" },
+        extra: {
+          mailboxId: ctx.mailbox.id,
+          organizationId: ctx.mailbox.clerkOrganizationId,
+          mailboxSlug: ctx.mailbox.slug,
+        },
+      });
       return [];
     }
   }),
