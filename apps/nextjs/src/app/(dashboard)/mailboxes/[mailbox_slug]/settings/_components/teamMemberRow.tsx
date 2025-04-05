@@ -6,13 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
+
+export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
+  core: "Core",
+  nonCore: "Non-core",
+  afk: "AFK",
+};
 
 export interface TeamMember {
   id: string;
   displayName: string;
   email: string | undefined;
-  role: "Core" | "Non-core" | "AFK";
+  role: UserRole;
   keywords: string[];
 }
 
@@ -24,7 +31,7 @@ type TeamMemberRowProps = {
 const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   // Local state for this row's keywords and role
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
-  const [role, setRole] = useState<"Core" | "Non-core" | "AFK">(member.role);
+  const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
 
   // Get the utility functions for cache management
@@ -82,13 +89,13 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   }, 800);
 
   // Handle role changes
-  const handleRoleChange = (newRole: "Core" | "Non-core" | "AFK") => {
+  const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
 
-    // Clear keywords if not Non-core
-    const newKeywords = newRole !== "Non-core" ? [] : localKeywords;
+    // Clear keywords if not nonCore
+    const newKeywords = newRole !== "nonCore" ? [] : localKeywords;
 
-    if (newRole !== "Non-core") {
+    if (newRole !== "nonCore") {
       setKeywordsInput("");
       setLocalKeywords([]);
     }
@@ -118,19 +125,19 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
       <TableCell>{member.displayName || ""}</TableCell>
       <TableCell>{member.email || ""}</TableCell>
       <TableCell>
-        <Select value={role} onValueChange={(value: "Core" | "Non-core" | "AFK") => handleRoleChange(value)}>
+        <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Core">Core</SelectItem>
-            <SelectItem value="Non-core">Non-core</SelectItem>
-            <SelectItem value="AFK">AFK</SelectItem>
+            <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+            <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+            <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>
       <TableCell>
-        {role === "Non-core" && (
+        {role === "nonCore" && (
           <Input
             value={keywordsInput}
             onChange={(e) => handleKeywordsChange(e.target.value)}

@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { api } from "@/trpc/react";
 import SectionWrapper from "./sectionWrapper";
 import { TeamInvite } from "./teamInvite";
-import TeamMemberRow, { type TeamMember } from "./teamMemberRow";
+import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 
 type TeamSettingProps = {
   mailboxSlug: string;
@@ -58,9 +58,9 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">
-          <p>Note: Core members are assigned tickets in a round-robin style.</p>
-          <p>Non-core members are only assigned if the ticket tags match their keywords.</p>
-          <p>AFK members do not receive any ticket assignments.</p>
+          <p>Note: {ROLE_DISPLAY_NAMES.core} members are assigned tickets in a round-robin style.</p>
+          <p>{ROLE_DISPLAY_NAMES.nonCore} members are only assigned if the ticket tags match their keywords.</p>
+          <p>{ROLE_DISPLAY_NAMES.afk} members do not receive any ticket assignments.</p>
         </div>
       </div>
     </>

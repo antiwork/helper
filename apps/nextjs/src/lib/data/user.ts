@@ -30,8 +30,10 @@ export const createOrganizationInvitation = async (
   });
 };
 
+export type UserRole = "core" | "nonCore" | "afk";
+
 type MailboxAccess = {
-  role: "Core" | "Non-core" | "AFK";
+  role: UserRole;
   keywords: string[];
   updatedAt: string;
 };
@@ -40,7 +42,7 @@ export type UserWithMailboxAccessData = {
   id: string;
   displayName: string;
   email: string | undefined;
-  role: MailboxAccess["role"] | "AFK";
+  role: UserRole;
   keywords: MailboxAccess["keywords"];
 };
 
@@ -59,7 +61,7 @@ export const getUsersWithMailboxAccess = async (
       id: user.id,
       displayName: user.fullName ?? user.id,
       email: user.emailAddresses[0]?.emailAddress,
-      role: access?.role || "AFK",
+      role: access?.role || "afk",
       keywords: access?.keywords || [],
     };
   });
@@ -69,7 +71,7 @@ export const updateUserMailboxData = async (
   userId: string,
   mailboxId: number,
   updates: {
-    role?: MailboxAccess["role"];
+    role?: UserRole;
     keywords?: MailboxAccess["keywords"];
   },
 ): Promise<UserWithMailboxAccessData> => {
@@ -100,7 +102,7 @@ export const updateUserMailboxData = async (
     id: updatedUser.id,
     displayName: updatedUser.fullName ?? updatedUser.id,
     email: updatedUser.emailAddresses[0]?.emailAddress,
-    role: updatedMailboxData.role || "AFK",
+    role: updatedMailboxData.role || "afk",
     keywords: updatedMailboxData.keywords || [],
   };
 };

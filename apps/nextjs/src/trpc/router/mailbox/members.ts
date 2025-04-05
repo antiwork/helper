@@ -11,7 +11,7 @@ export const membersRouter = {
     .input(
       z.object({
         userId: z.string(),
-        role: z.enum(["Core", "Non-core", "AFK"]),
+        role: z.enum(["core", "nonCore", "afk"]),
         keywords: z.array(z.string()).optional(),
       }),
     )
