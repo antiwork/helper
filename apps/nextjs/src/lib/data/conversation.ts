@@ -84,15 +84,12 @@ export const updateConversation = async (
   const current = assertDefined(await tx.query.conversations.findFirst({ where: eq(conversations.id, id) }));
   if (dbUpdates.assignedToAI) {
     dbUpdates.status = "closed";
+    dbUpdates.assignedToClerkId = null;
+  } else if (dbUpdates.assignedToClerkId) {
+    dbUpdates.assignedToAI = false;
   }
   if (current.status !== "closed" && dbUpdates.status === "closed") {
     dbUpdates.closedAt = new Date();
-  }
-  if (current.assignedToAI && dbUpdates.assignedToClerkId) {
-    dbUpdates.assignedToAI = false;
-  }
-  if (current.assignedToClerkId && dbUpdates.assignedToAI) {
-    dbUpdates.assignedToClerkId = null;
   }
 
   const updatedConversation = await tx

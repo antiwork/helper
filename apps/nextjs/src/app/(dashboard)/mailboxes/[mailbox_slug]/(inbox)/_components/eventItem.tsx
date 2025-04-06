@@ -55,10 +55,10 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const Icon =
     event.eventType === "resolved_by_ai"
       ? CheckCircleIcon
-      : event.changes.status
-        ? statusIcons[event.changes.status]
-        : event.changes.assignedToAI
-          ? Bot
+      : event.changes.assignedToAI
+        ? Bot
+        : event.changes.status
+          ? statusIcons[event.changes.status]
           : UserIcon;
 
   return (

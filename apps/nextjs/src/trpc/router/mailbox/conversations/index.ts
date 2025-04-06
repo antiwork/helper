@@ -163,13 +163,7 @@ export const conversationsRouter = {
         set: {
           status: input.status,
           assignedToClerkId: input.assignedToId,
-          ...(input.assignedToAI !== undefined
-            ? {
-                assignedToAI: input.assignedToAI,
-                ...(input.assignedToAI ? { assignedToClerkId: null } : {}),
-              }
-            : {}),
-          ...(input.assignedToId ? { assignedToAI: false } : {}),
+          assignedToAI: input.assignedToAI,
         },
         byUserId: ctx.session.userId,
         message: input.message ?? null,
