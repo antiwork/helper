@@ -24,6 +24,8 @@ export const billingRouter = {
   }),
 
   subscribe: mailboxProcedure.input(z.object({ sessionId: z.string() })).mutation(async ({ input }) => {
+    if (!stripe) throw new Error("Stripe environment variables are not set");
+
     const errorMessage = "Payment cannot be verified at the moment, please check after 10 minutes.";
 
     try {
@@ -61,6 +63,8 @@ export const billingRouter = {
   }),
 
   get: mailboxProcedure.query(async ({ ctx }) => {
+    if (!stripe) return null;
+
     const subscription = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.clerkOrganizationId, ctx.mailbox.clerkOrganizationId),
       columns: {

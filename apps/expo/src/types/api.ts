@@ -95,10 +95,10 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             deletedAt: Date | null;
           } | null;
           slackConnected: boolean;
-          slackConnectUrl: string;
+          slackConnectUrl: string | null;
           slackAlertChannel: string | null;
           githubConnected: boolean;
-          githubConnectUrl: string;
+          githubConnectUrl: string | null;
           githubRepoOwner: string | null;
           githubRepoName: string | null;
           clerkOrganizationId: string;
@@ -117,6 +117,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipExpectedResponseHours: number | null;
           autoCloseEnabled: boolean;
           autoCloseDaysOfInactivity: number;
+          firecrawlEnabled: boolean;
+          billingEnabled: boolean;
         };
       }>;
       update: import("@trpc/server").TRPCMutationProcedure<{
@@ -161,8 +163,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
-            status?: unknown[] | null | undefined;
             sort?: unknown;
+            status?: unknown[] | null | undefined;
             search?: string | null | undefined;
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
@@ -223,8 +225,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         listWithPreview: import("@trpc/server").TRPCQueryProcedure<{
           input: {
             mailboxSlug: string;
-            status?: unknown[] | null | undefined;
             sort?: unknown;
+            status?: unknown[] | null | undefined;
             search?: string | null | undefined;
             isPrompt?: boolean | undefined;
             reactionType?: "thumbs-up" | "thumbs-down" | undefined;
@@ -610,8 +612,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           input: {
             mailboxSlug: string;
             conversationSlug: string;
-            status?: "open" | "closed" | "spam" | undefined;
             message?: string | null | undefined;
+            status?: "open" | "closed" | "spam" | undefined;
             assignedToId?: string | null | undefined;
             assignedToAI?: boolean | undefined;
           };
@@ -624,8 +626,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             conversationFilter:
               | number[]
               | {
-                  status?: unknown[] | null | undefined;
                   sort?: unknown;
+                  status?: unknown[] | null | undefined;
                   search?: string | null | undefined;
                   isPrompt?: boolean | undefined;
                   reactionType?: "thumbs-up" | "thumbs-down" | undefined;

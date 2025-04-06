@@ -1,4 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
+import { htmlToText } from "html-to-text";
 import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
@@ -37,7 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     conversation.messages.map(async (message) => ({
       id: message.id.toString(),
       role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
-      content: message.cleanedUpText || message.body,
+      content: message.cleanedUpText || htmlToText(message.body ?? "", { wordwrap: false }),
       createdAt: message.createdAt.toISOString(),
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,

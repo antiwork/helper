@@ -10,7 +10,6 @@ beforeAll(() => {
       CRYPTO_SECRET: "secret",
       ENCRYPT_COLUMN_SECRET: "2319a2b757d52982035248289cb0fe27",
       AUTH_URL: "http://localhost:1234",
-      AUTH_SECRET: "secret",
       SLACK_CLIENT_ID: "client-id",
       NODE_ENV: "test",
       GOOGLE_PUBSUB_CLAIM_EMAIL: "service-push-authentication@helper-ai-413611.iam.gserviceaccount.com",

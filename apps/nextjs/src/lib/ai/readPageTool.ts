@@ -46,6 +46,8 @@ export const generateReadPageTool = async (
   currentURL: string,
   email: string,
 ): Promise<{ toolName: string; toolDescription: string; pageContent: string } | null> => {
+  if (!env.JINA_API_TOKEN) return null;
+
   const cacheKey = generateCacheKey(currentURL, email);
   const cachedResult = await redis.get<{
     toolName: string;

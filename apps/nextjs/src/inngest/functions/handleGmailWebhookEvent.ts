@@ -295,9 +295,6 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         // (since we likely dropped the initial email).
         conversation = previousEmail?.conversation ?? (await createNewConversation());
       }
-      if (conversation.status === "closed" && !shouldIgnore) {
-        await updateConversation(conversation.id, { set: { status: "open" } });
-      }
 
       const newEmail = await createMessageAndProcessAttachments(
         mailbox.id,

@@ -144,6 +144,9 @@ const SlackSetting = ({
     }
   };
 
+  const connectUrl = mailbox.slackConnectUrl;
+  if (!connectUrl) return null;
+
   return (
     <SectionWrapper title="Slack Integration" description="Notify your team and respond without leaving Slack.">
       {isSlackConnected ? (
@@ -174,7 +177,7 @@ const SlackSetting = ({
           </div>
         </>
       ) : (
-        <Button onClick={() => (window.location.href = mailbox.slackConnectUrl)} variant="subtle">
+        <Button onClick={() => (window.location.href = connectUrl)} variant="subtle">
           <SlackSvg className="mr-2 h-4 w-4" />
           Add to Slack
         </Button>

@@ -112,7 +112,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       label: "Knowledge",
       id: "knowledge",
       icon: BookOpenIcon,
-      content: <KnowledgeSetting />,
+      content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
     },
     {
       label: "Customers",
@@ -188,7 +188,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
     },
   ];
 
-  if (showBilling) {
+  if (mailbox.billingEnabled && showBilling) {
     items.push({
       label: "Billing",
       id: "billing",

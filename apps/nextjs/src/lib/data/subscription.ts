@@ -15,6 +15,8 @@ export const createStripeCheckoutSessionUrl = async ({
   slug: string;
   clerkOrganizationId: string;
 }) => {
+  if (!stripe) return null;
+
   const email = gmailSupportEmailId
     ? (
         await db.query.gmailSupportEmails.findFirst({
@@ -45,6 +47,8 @@ export const createStripeCheckoutSessionUrl = async ({
 };
 
 export const createStripeSubscription = async (session: Stripe.Checkout.Session) => {
+  if (!stripe) throw new Error("Stripe environment variables are not set");
+
   const clerkOrganizationId = session.client_reference_id;
   if (!clerkOrganizationId) {
     throw new Error("`client_reference_id` is required");
@@ -79,6 +83,8 @@ export const createStripeSubscription = async (session: Stripe.Checkout.Session)
 };
 
 export const getCurrentBillingPeriodUsage = async (stripeCustomerId: string) => {
+  if (!stripe) throw new Error("Stripe environment variables are not set");
+
   const upcomingInvoice = await stripe.invoices.retrieveUpcoming({ customer: stripeCustomerId });
   const totalUsage = upcomingInvoice.lines.data.reduce((sum, lineItem) => {
     if (lineItem.price?.recurring?.usage_type === "metered") {
@@ -90,6 +96,8 @@ export const getCurrentBillingPeriodUsage = async (stripeCustomerId: string) => 
 };
 
 export const createStripeCustomerPortalUrl = async (stripeCustomerId: string) => {
+  if (!stripe) throw new Error("Stripe environment variables are not set");
+
   const session = await stripe.billingPortal.sessions.create({
     customer: stripeCustomerId,
     return_url: new URL(getBaseUrl()).origin,
