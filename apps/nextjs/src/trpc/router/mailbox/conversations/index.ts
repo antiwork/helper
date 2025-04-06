@@ -174,20 +174,6 @@ export const conversationsRouter = {
         byUserId: ctx.session.userId,
         message: input.message ?? null,
       });
-
-      if (input.assignedToAI) {
-        const message = await db.query.conversationMessages.findFirst({
-          where: eq(conversationMessages.conversationId, ctx.conversation.id),
-          orderBy: desc(conversationMessages.createdAt),
-        });
-
-        if (message?.role === "user") {
-          await inngest.send({
-            name: "conversations/auto-response.create",
-            data: { messageId: message.id },
-          });
-        }
-      }
     }),
   bulkUpdate: mailboxProcedure
     .input(

@@ -4,7 +4,6 @@ import { useUser } from "@clerk/nextjs";
 import { UserIcon } from "@heroicons/react/24/outline";
 import { Bot } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useAssignTicket";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { Button } from "@/components/ui/button";
@@ -23,26 +22,18 @@ export const AssignPopoverButton = ({
   assignedToAI?: boolean;
 }) => {
   const { assignTicket } = useAssignTicket();
-  const { setState: setLayoutState } = useLayoutInfo();
   const [showAssignModal, setShowAssignModal] = useState(false);
   const { data: orgMembers = [] } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
-  const { state: layoutState } = useLayoutInfo();
   const { user: currentUser } = useUser();
 
   const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null;
 
   useEffect(() => {
-    // Only set assigned to an org member if not assigned to AI
-    if (!assignedToAI) {
-      setAssignedTo(orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null);
-    } else {
-      // Set to a special value for AI
-      setAssignedTo({ id: "ai", displayName: "Helper agent" });
-    }
+    setAssignedTo(assignedToAI ? { ai: true } : (orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null));
   }, [initialAssignedToClerkId, orgMembers, assignedToAI]);
 
   const toggleAssignModal = (open: boolean) => {
@@ -110,7 +101,7 @@ export const AssignPopoverButton = ({
               selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
               onChange={handleAssignSelectChange}
               aiOption
-              aiOptionSelected={assignedToAI}
+              aiOptionSelected={!!(assignedTo && "ai" in assignedTo)}
             />
 
             <div className="grid gap-1">

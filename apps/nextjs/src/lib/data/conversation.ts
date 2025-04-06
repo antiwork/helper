@@ -82,8 +82,17 @@ export const updateConversation = async (
   tx: Transaction | typeof db = db,
 ) => {
   const current = assertDefined(await tx.query.conversations.findFirst({ where: eq(conversations.id, id) }));
+  if (dbUpdates.assignedToAI) {
+    dbUpdates.status = "closed";
+  }
   if (current.status !== "closed" && dbUpdates.status === "closed") {
     dbUpdates.closedAt = new Date();
+  }
+  if (current.assignedToAI && dbUpdates.assignedToClerkId) {
+    dbUpdates.assignedToAI = false;
+  }
+  if (current.assignedToClerkId && dbUpdates.assignedToAI) {
+    dbUpdates.assignedToClerkId = null;
   }
 
   const updatedConversation = await tx
@@ -92,7 +101,7 @@ export const updateConversation = async (
     .where(eq(conversations.id, id))
     .returning()
     .then(takeUniqueOrThrow);
-  const updatesToLog = (["status", "assignedToClerkId"] as const).filter(
+  const updatesToLog = (["status", "assignedToClerkId", "assignedToAI"] as const).filter(
     (key) => current[key] !== updatedConversation[key],
   );
   if (updatesToLog.length > 0) {
@@ -105,9 +114,6 @@ export const updateConversation = async (
     });
   }
   if (updatedConversation.assignedToClerkId && current.assignedToClerkId !== updatedConversation.assignedToClerkId) {
-    if (current.assignedToAI) {
-      await tx.update(conversations).set({ assignedToAI: false }).where(eq(conversations.id, id));
-    }
     await inngest.send({
       name: "conversations/assigned",
       data: {
@@ -119,6 +125,18 @@ export const updateConversation = async (
         },
       },
     });
+  }
+  if (!current.assignedToAI && updatedConversation.assignedToAI) {
+    const message = await tx.query.conversationMessages.findFirst({
+      where: eq(conversationMessages.conversationId, updatedConversation.id),
+      orderBy: desc(conversationMessages.createdAt),
+    });
+    if (message?.role === "user") {
+      await inngest.send({
+        name: "conversations/auto-response.create",
+        data: { messageId: message.id },
+      });
+    }
   }
 
   if (current.status !== "closed" && updatedConversation?.status === "closed") {

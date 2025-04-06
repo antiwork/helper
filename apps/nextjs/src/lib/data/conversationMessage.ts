@@ -163,6 +163,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         assignedToUser: event.changes.assignedToClerkId
           ? (membersById[event.changes.assignedToClerkId]?.fullName ?? null)
           : event.changes.assignedToClerkId,
+        assignedToAI: event.changes.assignedToAI,
       },
       byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.fullName ?? null) : null,
       eventType: event.type,
