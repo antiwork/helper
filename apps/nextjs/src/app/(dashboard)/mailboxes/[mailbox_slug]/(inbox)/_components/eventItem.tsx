@@ -40,6 +40,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
               : "unassigned"
             : null,
           event.changes.assignedToAI ? "assigned to Helper agent" : null,
+          event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
         ]
           .filter(Boolean)
           .join(" and ");
