@@ -19,17 +19,6 @@ export const useAssigneesPage = ({
     heading: "Assignees",
     items: [
       {
-        id: "helper-agent",
-        label: "Helper agent",
-        icon: Bot,
-        onSelect: () => {
-          if (onAssignTicket) {
-            onAssignTicket({ ai: true });
-            onOpenChange(false);
-          }
-        },
-      },
-      {
         id: "unassign",
         label: "Unassign",
         icon: UserIcon,
@@ -39,6 +28,29 @@ export const useAssigneesPage = ({
             onOpenChange(false);
           }
         },
+        preview: (
+          <div className="p-4">
+            <h3 className="font-medium mb-2">Unassign Ticket</h3>
+            <p className="text-sm text-muted-foreground">Remove the current assignee from this conversation.</p>
+          </div>
+        ),
+      },
+      {
+        id: "helper-agent",
+        label: "Helper agent",
+        icon: Bot,
+        onSelect: () => {
+          if (onAssignTicket) {
+            onAssignTicket({ ai: true });
+            onOpenChange(false);
+          }
+        },
+        preview: (
+          <div className="p-4">
+            <h3 className="font-medium mb-2">Assign to Helper agent</h3>
+            <p className="text-sm text-muted-foreground">Assign this conversation to be handled by the Helper agent.</p>
+          </div>
+        ),
       },
       ...(orgMembers?.map((member) => ({
         id: member.id,
@@ -50,6 +62,14 @@ export const useAssigneesPage = ({
             onOpenChange(false);
           }
         },
+        preview: (
+          <div className="p-4">
+            <h3 className="font-medium mb-2">Assign to {member.displayName}</h3>
+            <p className="text-sm text-muted-foreground">
+              Transfer ownership of this conversation to {member.displayName}.
+            </p>
+          </div>
+        ),
       })) || []),
     ],
   },
