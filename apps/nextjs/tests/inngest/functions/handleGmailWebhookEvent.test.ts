@@ -385,7 +385,7 @@ describe("handleGmailWebhookEvent", () => {
       expect(updatedGmailSupportEmail?.historyId).toBe(DATA_HISTORY_ID);
     });
 
-    it("creates an email record and re-opens the conversation for a new email on an existing Gmail thread", async () => {
+    it("creates an email record for a new email on an existing Gmail thread", async () => {
       const { mailbox } = await setupGmailSupportEmail();
       const { conversation } = await conversationFactory.create(mailbox.id, {
         conversationProvider: "gmail",
@@ -418,11 +418,6 @@ describe("handleGmailWebhookEvent", () => {
           where: (c, { ne }) => ne(c.id, conversation.id),
         }),
       ).toBeUndefined();
-      expect(
-        await db.query.conversations.findFirst({
-          where: (c, { eq, and }) => and(eq(c.id, conversation.id), eq(c.status, "open")),
-        }),
-      ).toBeDefined();
 
       expect(
         await db

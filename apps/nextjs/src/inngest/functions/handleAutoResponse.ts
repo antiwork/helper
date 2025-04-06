@@ -5,7 +5,7 @@ import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { checkTokenCountAndSummarizeIfNeeded, respondWithAI } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
-import { updateConversation } from "@/lib/data/conversation";
+import { updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
@@ -48,7 +48,10 @@ export const handleAutoResponse = async (messageId: number) => {
     }
   }
 
-  if (!message.conversation.mailbox.autoRespondEmailToChat) return { message: "Skipped - auto respond is disabled" };
+  if (!message.conversation.mailbox.autoRespondEmailToChat) {
+    await updateOriginalConversation(message.conversationId, { set: { status: "open" } });
+    return { message: "Skipped - auto respond is disabled" };
+  }
 
   const emailText = (await getTextWithConversationSubject(message.conversation, message)).trim();
   if (emailText.length === 0) return { message: "Skipped - email text is empty" };

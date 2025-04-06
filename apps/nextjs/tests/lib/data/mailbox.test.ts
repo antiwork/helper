@@ -45,15 +45,17 @@ test("getMailboxInfo", async () => {
     vipChannelId: null,
     vipExpectedResponseHours: null,
     disableAutoResponseForVips: false,
-    githubConnectUrl: "https://github.com/apps/undefined/installations/new",
+    githubConnectUrl: null,
     githubConnected: false,
     githubRepoName: null,
     githubRepoOwner: null,
     autoCloseDaysOfInactivity: 14,
     autoCloseEnabled: false,
+    firecrawlEnabled: false,
+    billingEnabled: false,
   });
 
-  const slackConnectUrl = new URL(info.slackConnectUrl);
+  const slackConnectUrl = new URL(info.slackConnectUrl!);
   expect(slackConnectUrl.origin).toBe("https://slack.com");
   expect(slackConnectUrl.pathname).toBe("/oauth/v2/authorize");
   const params = new URLSearchParams(slackConnectUrl.search);

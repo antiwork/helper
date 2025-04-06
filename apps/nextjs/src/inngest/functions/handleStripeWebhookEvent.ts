@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import type Stripe from "stripe";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { gmailSupportEmails, mailboxes, subscriptions } from "@/db/schema";
 import { inngest } from "@/inngest/client";
@@ -73,7 +74,7 @@ const handleInvoicePaymentSucceeded = async (invoice: Stripe.Invoice) => {
   }
   const stripeSubscriptionId =
     typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription.id;
-  const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  const subscription = await assertDefined(stripe).subscriptions.retrieve(stripeSubscriptionId);
   await updateSubscription(subscription);
 };
 
@@ -83,7 +84,7 @@ const handleInvoicePaymentFailed = async (invoice: Stripe.Invoice) => {
   }
   const stripeSubscriptionId =
     typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription.id;
-  const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  const subscription = await assertDefined(stripe).subscriptions.retrieve(stripeSubscriptionId);
   await updateSubscription(subscription, "past_due");
 };
 

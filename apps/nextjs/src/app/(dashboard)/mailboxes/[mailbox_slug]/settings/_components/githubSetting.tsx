@@ -133,6 +133,9 @@ const GitHubSetting = ({
       ? `${mailbox.githubRepoOwner}/${mailbox.githubRepoName}`
       : undefined;
 
+  const connectUrl = mailbox.githubConnectUrl;
+  if (!connectUrl) return null;
+
   return (
     <SectionWrapper title="GitHub Integration" description="Create and track GitHub issues from conversations.">
       {isGitHubConnected ? (
@@ -187,7 +190,7 @@ const GitHubSetting = ({
           </div>
         </>
       ) : (
-        <Button onClick={() => router.push(mailbox.githubConnectUrl)} variant="subtle">
+        <Button onClick={() => router.push(connectUrl)} variant="subtle">
           <GitHubSvg className="mr-2 h-4 w-4" />
           Connect to GitHub
         </Button>

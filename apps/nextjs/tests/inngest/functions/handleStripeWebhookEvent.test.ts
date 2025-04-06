@@ -11,7 +11,13 @@ import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
 import { stripe } from "@/lib/stripe/client";
 
 vi.mock("@/lib/gmail/client");
-vi.mock("@/lib/stripe/client");
+vi.mock("@/lib/stripe/client", () => ({
+  stripe: {
+    subscriptions: {
+      retrieve: vi.fn(),
+    },
+  },
+}));
 
 describe("handleStripeEvent", () => {
   describe("checkout.session.completed", () => {
@@ -31,7 +37,7 @@ describe("handleStripeEvent", () => {
         data: { object: checkoutSession },
       } as Stripe.Event;
 
-      stripe.subscriptions.retrieve = vi.fn().mockResolvedValue({
+      stripe!.subscriptions.retrieve = vi.fn().mockResolvedValue({
         id: "sub_123",
         status: "active",
         current_period_end: dayjs().add(1, "day").unix(),
@@ -74,7 +80,7 @@ describe("handleStripeEvent", () => {
         data: { object: checkoutSession },
       } as Stripe.Event;
 
-      stripe.subscriptions.retrieve = vi.fn().mockResolvedValue({
+      stripe!.subscriptions.retrieve = vi.fn().mockResolvedValue({
         id: "sub_new",
         status: "active",
         current_period_end: dayjs().add(1, "day").unix(),
@@ -172,7 +178,7 @@ describe("handleStripeEvent", () => {
       data: { object: invoice },
     } as Stripe.Event;
 
-    stripe.subscriptions.retrieve = vi.fn().mockResolvedValue({
+    stripe!.subscriptions.retrieve = vi.fn().mockResolvedValue({
       id: subscription.stripeSubscriptionId,
       status: "active",
       current_period_end: dayjs().add(1, "day").unix(),
@@ -207,7 +213,7 @@ describe("handleStripeEvent", () => {
       data: { object: invoice },
     } as Stripe.Event;
 
-    stripe.subscriptions.retrieve = vi.fn().mockResolvedValue({
+    stripe!.subscriptions.retrieve = vi.fn().mockResolvedValue({
       id: subscription.stripeSubscriptionId,
       status: "past_due",
       current_period_end: dayjs().add(1, "day").unix(),
