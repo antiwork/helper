@@ -32,6 +32,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     return Response.json({ error: "Conversation not found" }, { status: 404 });
   }
 
+  const originalConversation =
+    (conversation?.mergedIntoId &&
+      (await db.query.conversations.findFirst({
+        where: eq(conversations.id, conversation.mergedIntoId),
+      }))) ||
+    conversation;
+
   const attachments = await loadScreenshotAttachments(conversation.messages);
 
   const formattedMessages = await Promise.all(
@@ -47,7 +54,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     })),
   );
 
-  return Response.json({ messages: formattedMessages, isEscalated: !conversation.assignedToAI });
+  return Response.json({ messages: formattedMessages, isEscalated: !originalConversation.assignedToAI });
 }
 
 const getUserAnnotation = cache(async (userId: string) => {

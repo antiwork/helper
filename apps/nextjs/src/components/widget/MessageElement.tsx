@@ -105,7 +105,11 @@ export default function MessageElement({
             ),
           }}
         >
-          {message.content}
+          {message.parts?.find(
+            (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
+          )
+            ? "_Escalated to a human! You will be contacted soon by email._"
+            : message.content}
         </ReactMarkdown>
       ) : (
         <div className="relative h-4 w-20 overflow-hidden rounded-lg">
