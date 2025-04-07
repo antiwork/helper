@@ -76,6 +76,7 @@ export default function ConversationView() {
               Linking.openURL(data.url);
             } else if (data.type === "conversationUpdated") {
               utils.mailbox.conversations.list.invalidate();
+              utils.mailbox.conversations.listWithPreview.invalidate();
             }
           }}
         />
