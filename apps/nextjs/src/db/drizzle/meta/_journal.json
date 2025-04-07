@@ -512,6 +512,13 @@
       "when": 1743473751117,
       "tag": "0072_misty_valeria_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1744047633390,
+      "tag": "0073_blushing_wolverine",
+      "breakpoints": true
     }
   ]
 }

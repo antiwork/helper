@@ -18,6 +18,7 @@ import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
 import { metadataEndpointRouter } from "./metadataEndpoint";
+import { preferencesRouter } from "./preferences";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
@@ -163,4 +164,5 @@ export const mailboxRouter = {
       message: "Auto-close job triggered successfully",
     };
   }),
+  preferences: preferencesRouter,
 } satisfies TRPCRouterRecord;

@@ -3,6 +3,7 @@
 import { useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
+  Cog6ToothIcon,
   ComputerDesktopIcon,
   CreditCardIcon,
   LinkIcon,
@@ -33,6 +34,7 @@ import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
 import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
+import PreferencesSetting, { PreferencesUpdates } from "./preferencesSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
@@ -50,6 +52,7 @@ export type PendingUpdates = {
   };
   customer?: CustomerUpdates;
   autoClose?: AutoCloseUpdates;
+  preferences?: PreferencesUpdates;
 };
 
 type SettingsProps = {
@@ -94,7 +97,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
     Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
     Boolean(pendingUpdates.customer) ||
-    Boolean(pendingUpdates.autoClose);
+    Boolean(pendingUpdates.autoClose) ||
+    Boolean(pendingUpdates.preferences);
 
   const handleSignOut = async () => {
     try {
@@ -184,6 +188,21 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
           />
           <ConnectSupportEmail supportAccount={supportAccount} />
         </>
+      ),
+    },
+    {
+      label: "Preferences",
+      id: "preferences",
+      icon: Cog6ToothIcon,
+      content: (
+        <PreferencesSetting
+          onChange={(updates) =>
+            setPendingUpdates({
+              ...pendingUpdates,
+              preferences: updates,
+            })
+          }
+        />
       ),
     },
   ];

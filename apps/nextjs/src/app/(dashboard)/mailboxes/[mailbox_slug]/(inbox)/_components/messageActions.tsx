@@ -4,6 +4,7 @@ import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import type { DraftedEmail } from "@/serverActions/messages";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import type { ConfettiUpdates } from "../../settings/_components/confettiSetting";
 import { useUndoneEmailStore } from "./conversation";
 import { useConversationListContext } from "./conversationListContext";
 import { useConversationsListInput } from "./shared/queries";
@@ -46,6 +48,21 @@ export const MessageActions = () => {
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
+
+  const { data: mailboxPreferences } = api.mailbox.preferences.get.useQuery({
+    mailboxSlug,
+  });
+
+  const handleConfetti = (eventType: NonNullable<ConfettiUpdates>["confettiEvents"][number]) => {
+    if (!mailboxPreferences?.preferences?.confetti) return;
+    if (!mailboxPreferences.preferences.confettiEvents.includes(eventType)) return;
+
+    const target = eventType === "reply" ? "reply" : "reply-and-close";
+    triggerConfetti({
+      target,
+      intensity: mailboxPreferences.preferences.confettiIntensity,
+    });
+  };
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -146,8 +163,11 @@ export const MessageActions = () => {
       setInitialMessageObject({ content: "" });
       resetFiles([]);
       setStoredMessage("");
+      if (!assign && !close) handleConfetti("reply");
+
       if (conversation.status === "open" && close) {
         updateStatus("closed");
+        if (!assign) handleConfetti("close");
       }
       toast({
         title: "Message sent!",
@@ -220,13 +240,14 @@ export const MessageActions = () => {
             </Button>
           ) : (
             <>
-              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
+              <Button id="reply-and-close" onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
                 {sending ? "Replying..." : "Reply and close"}
                 {!sending && isMacOS() && (
                   <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
                 )}
               </Button>
               <Button
+                id="reply"
                 variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}
