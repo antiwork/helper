@@ -1,19 +1,19 @@
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
 import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/shared/queries";
 import { toast } from "@/components/hooks/use-toast";
-import { assertDefined } from "@/components/utils/assert";
 import { api } from "@/trpc/react";
 
 export const useAssignTicket = () => {
-  const { mutate: update } = api.mailbox.conversations.update.useMutation();
   const utils = api.useUtils();
   const { input } = useConversationsListInput();
-  const { mailboxSlug, currentConversationSlug, conversationListData, moveToNextConversation, removeConversation } =
+  const { currentConversationSlug, conversationListData, moveToNextConversation, removeConversation } =
     useConversationListContext();
+  const { updateConversation } = useConversationContext();
 
   const assignTicket = (assignedTo: { id: string; displayName: string } | null, message?: string | null) => {
     const assignedToId = assignedTo?.id ?? null;
-    update({ mailboxSlug, conversationSlug: assertDefined(currentConversationSlug), assignedToId, message });
+    updateConversation({ assignedToId, message });
 
     utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
       if (!data) return data;

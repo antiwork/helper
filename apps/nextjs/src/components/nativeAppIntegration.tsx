@@ -19,9 +19,11 @@ export function NativeAppIntegration() {
     if (!tauriPlatform && !window.ReactNativeWebView) return;
     if (tauriPlatform && getCurrentWebview().label === "tab_bar") return;
 
-    listen<string>("tab-context-menu", (event) => {
-      setRecentlyClosedTabs(event.payload ? JSON.parse(event.payload) : null);
-    });
+    if (tauriPlatform) {
+      listen<string>("tab-context-menu", (event) => {
+        setRecentlyClosedTabs(event.payload ? JSON.parse(event.payload) : null);
+      });
+    }
 
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
