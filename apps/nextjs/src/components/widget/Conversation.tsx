@@ -62,6 +62,9 @@ export default function Conversation({
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
       }
+      if (toolCall.toolName === "request_human_support") {
+        setIsEscalated(true);
+      }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
       return {
