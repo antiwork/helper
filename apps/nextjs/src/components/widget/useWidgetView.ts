@@ -1,28 +1,29 @@
-import { useState } from "react";
+import { create } from "zustand";
 
 type View = "chat" | "previous";
 
-export function useWidgetView() {
-  const [currentView, setCurrentView] = useState<View>("chat");
-  const [isNewConversation, setIsNewConversation] = useState(false);
+type WidgetViewState = {
+  currentView: View;
+  isNewConversation: boolean;
+  setCurrentView: (view: View) => void;
+  setIsNewConversation: (isNew: boolean) => void;
+  handleSelectConversation: (slug: string) => string;
+  handleNewConversation: () => void;
+};
 
-  const handleSelectConversation = (slug: string) => {
-    setCurrentView("chat");
-    setIsNewConversation(false);
+export const useWidgetView = create<WidgetViewState>((set) => ({
+  currentView: "chat",
+  isNewConversation: false,
+
+  setCurrentView: (view) => set({ currentView: view }),
+  setIsNewConversation: (isNew) => set({ isNewConversation: isNew }),
+
+  handleSelectConversation: (slug) => {
+    set({ currentView: "chat", isNewConversation: false });
     return slug;
-  };
+  },
 
-  const handleNewConversation = () => {
-    setCurrentView("chat");
-    setIsNewConversation(true);
-  };
-
-  return {
-    currentView,
-    isNewConversation,
-    setCurrentView,
-    setIsNewConversation,
-    handleSelectConversation,
-    handleNewConversation,
-  };
-}
+  handleNewConversation: () => {
+    set({ currentView: "chat", isNewConversation: true });
+  },
+}));

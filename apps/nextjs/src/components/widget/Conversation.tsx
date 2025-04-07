@@ -10,6 +10,7 @@ import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
+import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
@@ -36,6 +37,7 @@ export default function Conversation({
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isEscalated, setIsEscalated] = useState(false);
+  const { setIsNewConversation } = useWidgetView();
 
   useEffect(() => {
     if (conversationSlug) {
@@ -154,6 +156,7 @@ export default function Conversation({
       }
 
       if (currentSlug) {
+        setIsNewConversation(false);
         handleAISubmit(undefined, {
           experimental_attachments: screenshotData
             ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
