@@ -18,6 +18,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
 import Toolbar from "./toolbar";
+import Head from "next/head";
 
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
@@ -186,7 +187,25 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     const editorContentContainerRef = useRef<HTMLDivElement | null>(null);
 
     useImperativeHandle(ref, () => ({
-      focus: () => editorRef.current?.commands.focus(),
+      focus: () => {
+        editorRef.current?.commands.focus();
+        // Scroll cursor into view after focusing
+        setTimeout(() => {
+          const selection = window.getSelection();
+          if (selection?.rangeCount) {
+            const range = selection.getRangeAt(0);
+            range.collapse(false);
+            const rect = range.getBoundingClientRect();
+            const container = editorContentContainerRef.current;
+            if (container) {
+              const containerRect = container.getBoundingClientRect();
+              if (rect.bottom > containerRect.bottom) {
+                container.scrollTop += rect.bottom - containerRect.bottom + 20;
+              }
+            }
+          }
+        }, 0);
+      },
       scrollTo: (top: number) =>
         editorContentContainerRef.current?.scrollTo({
           top,
@@ -197,6 +216,22 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     const focusEditor = () => {
       if (editor) {
         editor.view.focus();
+        // Scroll cursor into view after focusing
+        setTimeout(() => {
+          const selection = window.getSelection();
+          if (selection?.rangeCount) {
+            const range = selection.getRangeAt(0);
+            range.collapse(false);
+            const rect = range.getBoundingClientRect();
+            const container = editorContentContainerRef.current;
+            if (container) {
+              const containerRect = container.getBoundingClientRect();
+              if (rect.bottom > containerRect.bottom) {
+                container.scrollTop += rect.bottom - containerRect.bottom + 20;
+              }
+            }
+          }
+        }, 0);
       }
     };
 
@@ -241,67 +276,72 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     }
 
     return (
-      <div
-        className={cn(
-          "relative flex flex-col h-full rounded border border-border bg-background",
-          toolbarOpen && "pb-14",
-          className,
-        )}
-        aria-label={ariaLabel}
-      >
-        <Toolbar
-          {...{
-            open: toolbarOpen,
-            setOpen: setToolbarOpen,
-            editor,
-            uploadFileAttachments,
-            uploadInlineImages,
-            customToolbar,
-            enableImageUpload,
-            enableFileUpload,
-          }}
-        />
-
+      <>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        </Head>
         <div
-          className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
-          onClick={focusEditor}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            const files = [...(event.dataTransfer.files ?? [])];
-            if (!files.length) return false;
-            uploadFiles.current(files);
-          }}
-          ref={editorContentContainerRef}
+          className={cn(
+            "relative flex flex-col h-full rounded border border-border bg-background",
+            toolbarOpen && "pb-14",
+            className,
+          )}
+          aria-label={ariaLabel}
         >
-          <div className="flex-grow">
-            <EditorContent editor={editor} onKeyDown={handleModEnter} />
-          </div>
-          {signature}
-          {attachments.length > 0 ? (
-            <div className="flex w-full flex-wrap gap-2 pt-4">
-              {attachments.map((fileInfo, idx) => (
-                <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        {editor && editorContentContainerRef.current && (
-          <BubbleMenu
-            editor={editor}
-            tippyOptions={{
-              duration: 100,
-              placement: "bottom-start",
-              appendTo: editorContentContainerRef.current,
+          <Toolbar
+            {...{
+              open: toolbarOpen,
+              setOpen: setToolbarOpen,
+              editor,
+              uploadFileAttachments,
+              uploadInlineImages,
+              customToolbar,
+              enableImageUpload,
+              enableFileUpload,
             }}
-            shouldShow={({ editor }) => editor.state.selection.content().size > 0 && !editor.isActive("image")}
-            className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+          />
+
+          <div
+            className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
+            onClick={focusEditor}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              const files = [...(event.dataTransfer.files ?? [])];
+              if (!files.length) return false;
+              uploadFiles.current(files);
+            }}
+            ref={editorContentContainerRef}
           >
-            Hint: Paste URL to create link
-          </BubbleMenu>
-        )}
-      </div>
+            <div className="flex-grow">
+              <EditorContent editor={editor} onKeyDown={handleModEnter} />
+            </div>
+            {signature}
+            {attachments.length > 0 ? (
+              <div className="flex w-full flex-wrap gap-2 pt-4">
+                {attachments.map((fileInfo, idx) => (
+                  <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {editor && editorContentContainerRef.current && (
+            <BubbleMenu
+              editor={editor}
+              tippyOptions={{
+                duration: 100,
+                placement: "bottom-start",
+                appendTo: editorContentContainerRef.current,
+              }}
+              shouldShow={({ editor }) => editor.state.selection.content().size > 0 && !editor.isActive("image")}
+              className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+            >
+              Hint: Paste URL to create link
+            </BubbleMenu>
+          )}
+        </div>
+      </>
     );
   },
 );
