@@ -30,7 +30,13 @@ export const createOrganizationInvitation = async (
   });
 };
 
-export type UserRole = "core" | "nonCore" | "afk";
+export const UserRoles = {
+  CORE: "core",
+  NON_CORE: "nonCore",
+  AFK: "afk",
+} as const;
+
+export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
 
 type MailboxAccess = {
   role: UserRole;
