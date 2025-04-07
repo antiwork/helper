@@ -99,6 +99,8 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
     DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
+
+    SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
   },
 
   /**
@@ -113,6 +115,8 @@ export const env = createEnv({
       z.enum(["development", "preview", "production"]) as any,
       "development",
     ),
+
+    NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -123,6 +127,7 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
   skipValidation: process.env.npm_lifecycle_event === "lint" || process.env.NODE_ENV === "test",
 });
