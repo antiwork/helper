@@ -99,8 +99,6 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
     DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
-
-    SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
   },
 
   /**

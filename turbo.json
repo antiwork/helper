@@ -102,8 +102,7 @@
     "APPLE_TEAM_ID",
     "APPLE_PRIVATE_KEY",
     "APPLE_PRIVATE_KEY_IDENTIFIER",
-    "NEXT_PUBLIC_SENTRY_DSN",
-    "SENTRY_DSN"
+    "NEXT_PUBLIC_SENTRY_DSN"
   ],
   "globalPassThroughEnv": [
     "CI",
