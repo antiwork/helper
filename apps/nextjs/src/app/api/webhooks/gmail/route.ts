@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
 import { inngest } from "@/inngest/client";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 // https://app.inngest.com/env/production/manage/webhooks/20cb171c-b095-4df3-8e50-30e4989e9f48
 // This doesn't transform anything - it forwards the request body + headers to Inngest so that
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     return new NextResponse(null, { status: 204 });
   } catch (e) {
-    console.error(e);
+    captureExceptionAndLog(e);
     return new NextResponse(null, { status: 500 });
   }
 }

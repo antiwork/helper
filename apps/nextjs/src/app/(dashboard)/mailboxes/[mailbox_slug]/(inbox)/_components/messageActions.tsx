@@ -198,7 +198,7 @@ export const MessageActions = () => {
                     variant: "success",
                   });
                 } catch (e) {
-                  console.error(e);
+                  captureExceptionAndLog(e);
                   toast({
                     variant: "destructive",
                     title: "Failed to unsend email",

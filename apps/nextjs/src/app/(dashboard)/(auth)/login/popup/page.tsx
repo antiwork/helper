@@ -5,6 +5,7 @@ import { OAuthStrategy } from "@clerk/types";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export default function PopupPage() {
   const { signIn } = useSignIn();
@@ -27,7 +28,7 @@ export default function PopupPage() {
         if (err instanceof Error && (err as any).errors?.[0]?.code === "session_exists") {
           window.location.replace("/login/popup/complete");
         } else {
-          console.error("OAuth error:", err);
+          captureExceptionAndLog(err);
           window.close();
         }
       }

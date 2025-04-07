@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { URLSearchParams } from "url";
 import { z } from "zod";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const METADATA_API_TIMEOUT_SECONDS = 15;
 const METADATA_API_MAX_LENGTH = 5000; // ~1000 tokens (GPT-3.5/GPT-4)
@@ -50,7 +51,7 @@ export async function getMetadata(endpoint: { url: string; hmacSecret: string },
     if (error instanceof Error && error.message.includes("is not valid JSON")) {
       throw new MetadataAPIError("Endpoint did not return JSON response");
     }
-    console.error(`getMetadata failed: ${error}`);
+    captureExceptionAndLog(error);
     throw new MetadataAPIError("Unexpected server error");
   }
 }

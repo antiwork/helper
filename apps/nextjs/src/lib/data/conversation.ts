@@ -15,7 +15,7 @@ import { extractAddresses } from "@/lib/emails";
 import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";
 import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
-import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
 import { getMailboxById } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
@@ -47,7 +47,7 @@ export const createConversation = async (conversation: NewConversation): Promise
 
     return newConversation;
   } catch (error) {
-    console.error("Error creating conversation:", error);
+    captureExceptionAndLog(error);
     throw new Error("Failed to create conversation");
   }
 };
@@ -150,7 +150,7 @@ export const updateConversation = async (
         }
         await Promise.all(events);
       } catch (error) {
-        captureExceptionAndLogIfDevelopment(error);
+        captureExceptionAndLog(error);
       }
     };
     publishEvents();

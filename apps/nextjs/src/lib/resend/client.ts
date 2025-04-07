@@ -9,6 +9,7 @@ export const sendEmail = async (
   options?: Parameters<typeof resend.emails.send>[1],
 ) => {
   if (env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
     console.log(`'sendEmail' only runs in production: ${JSON.stringify(payload)}`);
     return;
   }

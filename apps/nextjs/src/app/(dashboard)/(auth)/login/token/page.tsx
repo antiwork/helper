@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
 import { Button } from "@/components/ui/button";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const validateRedirectUrl = (redirectUrl: string | null) => {
   if (!redirectUrl) return null;
@@ -70,8 +71,7 @@ export default function Page() {
           setError("Token sign in failed");
         }
       } catch (error: any) {
-        Sentry.captureException(error);
-        console.error(error);
+        captureExceptionAndLog(error);
         setError(error.message ?? "Something went wrong");
       } finally {
         setLoading(false);

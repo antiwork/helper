@@ -6,6 +6,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { toolApis, tools as toolsTable } from "@/db/schema";
 import { fetchOpenApiSpec, importToolsFromSpec } from "@/lib/data/tools";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import type { ToolFormatted } from "@/types/tools";
 import { mailboxProcedure } from "./procedure";
 
@@ -57,7 +58,7 @@ export const toolsRouter = {
         ),
       }));
     } catch (error) {
-      console.error(error);
+      captureExceptionAndLog(error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: error instanceof Error ? error.message : "Failed to fetch APIs",
@@ -115,7 +116,7 @@ export const toolsRouter = {
 
         return { success: true };
       } catch (error) {
-        console.error(error);
+        captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error instanceof Error ? error.message : "Failed to import API spec",
@@ -196,7 +197,7 @@ export const toolsRouter = {
 
         return { success: true };
       } catch (error) {
-        console.error(error);
+        captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error instanceof Error ? error.message : "Failed to refresh API spec",

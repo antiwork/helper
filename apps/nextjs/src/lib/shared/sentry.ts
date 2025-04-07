@@ -14,6 +14,7 @@ export const captureExceptionAndLogIfDevelopment = (
   hint?: Parameters<typeof Sentry.captureException>[1],
 ) => {
   Sentry.captureException(error, hint);
+  // eslint-disable-next-line no-console
   if (env.NODE_ENV === "development" || env.NODE_ENV === "test") console.error(error);
 };
 
@@ -22,5 +23,6 @@ export const captureExceptionAndLog = (
   hint?: Parameters<typeof Sentry.captureException>[1],
 ) => {
   Sentry.captureException(error, hint);
+  // eslint-disable-next-line no-console
   console.error(error);
 };

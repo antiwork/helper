@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getTauriPlatform } from "@/components/useNativePlatform";
 import { useRunOnce } from "@/components/useRunOnce";
 import { env } from "@/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export function DeepLinkRedirect() {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -46,7 +47,7 @@ export function DeepLinkRedirect() {
           setShowOverlay(true);
         }
       } catch (error) {
-        console.error("Failed to open desktop app:", error);
+        captureExceptionAndLog(error);
       }
     };
 

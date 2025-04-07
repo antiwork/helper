@@ -8,6 +8,7 @@ import { InformationCircleIcon, LinkIcon } from "react-native-heroicons/outline"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { useAuthenticatedUrl } from "@/components/useGenerateUrl";
+import { api } from "@/utils/api";
 import { backgroundColor, cssIconInterop } from "@/utils/css";
 
 cssIconInterop(InformationCircleIcon);
@@ -32,6 +33,8 @@ export default function ConversationView() {
   const { id, mailboxSlug } = useLocalSearchParams<{ id: string; mailboxSlug: string }>();
   const webViewRef = useRef<WebView>(null);
   const navigation = useNavigation();
+
+  const utils = api.useUtils();
 
   const url = useAuthenticatedUrl(`/mailboxes/${mailboxSlug}/conversations?id=${id}`);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,6 +74,9 @@ export default function ConversationView() {
               });
             } else if (data.type === "openUrl" && data.url) {
               Linking.openURL(data.url);
+            } else if (data.type === "conversationUpdated") {
+              utils.mailbox.conversations.list.invalidate();
+              utils.mailbox.conversations.listWithPreview.invalidate();
             }
           }}
         />
