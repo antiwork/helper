@@ -134,7 +134,6 @@ export const parseMessagesWithMocks = (input: string) => {
 };
 
 export const runAIQuery = async (input: string, reasoning = false) => {
-  console.log("Running AI query for input:", input);
   const { messages, mailbox } = parseMessagesWithMocks(input);
 
   const result = await generateAIResponse({

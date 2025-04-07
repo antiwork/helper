@@ -27,7 +27,6 @@ export function useBreakpoint<K extends string>(breakpointKey: K) {
   let breakpointValue = breakpoints[breakpointKey as keyof typeof breakpoints];
   if (typeof breakpointValue !== "string") {
     const message = `'useBreakpoint' does not support breakpoints of type ${typeof breakpointValue}`;
-    console.error(message);
     if (env.NODE_ENV === "development") {
       throw new Error(message);
     } else {
