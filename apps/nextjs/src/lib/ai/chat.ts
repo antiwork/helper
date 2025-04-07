@@ -26,7 +26,7 @@ import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { createConversationMessage, disableAIResponse, getMessagesOnly } from "@/lib/data/conversationMessage";
+import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getCachedSubscriptionStatus } from "@/lib/data/organization";
@@ -541,6 +541,10 @@ export const respondWithAI = async ({
     traceId: string | null = null,
     reasoning: string | null = null,
   ) => {
+    if (!humanSupportRequested) {
+      await updateOriginalConversation(conversation.id, { set: { assignedToAI: true } });
+    }
+
     const assistantMessage = await createAssistantMessage(conversation.id, messageId, text, {
       traceId,
       reasoning,
@@ -556,10 +560,7 @@ export const respondWithAI = async ({
     return assistantMessage;
   };
 
-  if (
-    (await disableAIResponse(conversation.id, mailbox, platformCustomer)) &&
-    (!isPromptConversation || !isFirstMessage)
-  ) {
+  if (!conversation.assignedToAI && (!isPromptConversation || !isFirstMessage)) {
     await updateOriginalConversation(conversation.id, { set: { status: "open" } });
     if (
       messages.length === 1 ||

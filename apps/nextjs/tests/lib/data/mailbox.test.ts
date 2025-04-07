@@ -44,7 +44,6 @@ test("getMailboxInfo", async () => {
     vipThreshold: null,
     vipChannelId: null,
     vipExpectedResponseHours: null,
-    disableAutoResponseForVips: false,
     githubConnectUrl: null,
     githubConnected: false,
     githubRepoName: null,

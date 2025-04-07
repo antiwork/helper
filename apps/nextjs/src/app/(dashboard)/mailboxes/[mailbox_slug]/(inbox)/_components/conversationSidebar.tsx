@@ -111,7 +111,10 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             <Badge>{conversation.status || "open"}</Badge>
           </div>
           <span className="text-muted-foreground">Assignee</span>
-          <AssignPopoverButton initialAssignedToClerkId={conversation.assignedToClerkId} />
+          <AssignPopoverButton
+            initialAssignedToClerkId={conversation.assignedToClerkId}
+            assignedToAI={conversation.assignedToAI}
+          />
         </div>
       </div>
 

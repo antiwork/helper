@@ -34,6 +34,7 @@ export const conversations = pgTable(
     githubRepoName: text(),
     isPrompt: boolean().notNull().default(false),
     isVisitor: boolean().notNull().default(false),
+    assignedToAI: boolean().notNull().default(false),
     mergedIntoId: bigint({ mode: "number" }),
     suggestedActions: jsonb().$type<
       (

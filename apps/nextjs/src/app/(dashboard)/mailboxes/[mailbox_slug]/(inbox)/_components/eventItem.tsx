@@ -8,6 +8,7 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 import { upperFirst } from "lodash";
+import { Bot } from "lucide-react";
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -39,11 +40,13 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
     ? eventDescriptions[event.eventType]
     : [
         event.changes.status ? statusVerbs[event.changes.status] : null,
-        event.changes.assignedToUser !== undefined
+        !event.changes.assignedToAI && event.changes.assignedToUser !== undefined
           ? event.changes.assignedToUser
             ? `assigned to ${event.changes.assignedToUser}`
             : "unassigned"
           : null,
+        event.changes.assignedToAI ? "assigned to Helper agent" : null,
+        event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
       ]
         .filter(Boolean)
         .join(" and ");
@@ -52,9 +55,11 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const Icon =
     event.eventType === "resolved_by_ai"
       ? CheckCircleIcon
-      : event.changes.status
-        ? statusIcons[event.changes.status]
-        : UserIcon;
+      : event.changes.assignedToAI
+        ? Bot
+        : event.changes.status
+          ? statusIcons[event.changes.status]
+          : UserIcon;
 
   return (
     <div className="flex flex-col mx-auto">

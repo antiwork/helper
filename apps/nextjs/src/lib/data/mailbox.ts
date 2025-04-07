@@ -91,7 +91,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     vipThreshold: mailbox.vipThreshold,
     vipChannelId: mailbox.vipChannelId,
     vipExpectedResponseHours: mailbox.vipExpectedResponseHours,
-    disableAutoResponseForVips: mailbox.disableAutoResponseForVips,
     autoCloseEnabled: mailbox.autoCloseEnabled,
     autoCloseDaysOfInactivity: mailbox.autoCloseDaysOfInactivity,
     firecrawlEnabled: !!env.FIRECRAWL_API_KEY,

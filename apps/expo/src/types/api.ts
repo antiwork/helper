@@ -115,7 +115,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipThreshold: number | null;
           vipChannelId: string | null;
           vipExpectedResponseHours: number | null;
-          disableAutoResponseForVips: boolean;
           autoCloseEnabled: boolean;
           autoCloseDaysOfInactivity: number;
           firecrawlEnabled: boolean;
@@ -135,7 +134,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           vipThreshold?: number | undefined;
           vipChannelId?: string | undefined;
           vipExpectedResponseHours?: number | undefined;
-          disableAutoResponseForVips?: boolean | undefined;
           autoCloseEnabled?: boolean | undefined;
           autoCloseDaysOfInactivity?: number | undefined;
         };
@@ -195,6 +193,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               closedAt: Date | null;
               lastUserEmailCreatedAt: Date | null;
               assignedToClerkId: string | null;
+              assignedToAI: boolean;
               platformCustomer: {
                 isVip: boolean;
                 value: string | null;
@@ -258,6 +257,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               closedAt: Date | null;
               lastUserEmailCreatedAt: Date | null;
               assignedToClerkId: string | null;
+              assignedToAI: boolean;
               platformCustomer: {
                 isVip: boolean;
                 value: string | null;
@@ -381,6 +381,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   isNew: boolean;
                   changes: {
                     assignedToUser: string | null | undefined;
+                    assignedToAI: boolean | undefined;
                     status?: "open" | "closed" | "spam" | undefined;
                     assignedToClerkId?: string | null | undefined;
                     isVisible?: boolean | undefined;
@@ -411,6 +412,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             closedAt: Date | null;
             lastUserEmailCreatedAt: Date | null;
             assignedToClerkId: string | null;
+            assignedToAI: boolean;
             platformCustomer: {
               isVip: boolean;
               value: string | null;
@@ -537,6 +539,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
                   isNew: boolean;
                   changes: {
                     assignedToUser: string | null | undefined;
+                    assignedToAI: boolean | undefined;
                     status?: "open" | "closed" | "spam" | undefined;
                     assignedToClerkId?: string | null | undefined;
                     isVisible?: boolean | undefined;
@@ -567,6 +570,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             closedAt: Date | null;
             lastUserEmailCreatedAt: Date | null;
             assignedToClerkId: string | null;
+            assignedToAI: boolean;
             platformCustomer: {
               isVip: boolean;
               value: string | null;
@@ -611,6 +615,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             message?: string | null | undefined;
             status?: "open" | "closed" | "spam" | undefined;
             assignedToId?: string | null | undefined;
+            assignedToAI?: boolean | undefined;
           };
           output: void;
         }>;
@@ -674,6 +679,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             closedAt: Date | null;
             lastUserEmailCreatedAt: Date | null;
             assignedToClerkId: string | null;
+            assignedToAI: boolean;
             platformCustomer: {
               isVip: boolean;
               value: string | null;
@@ -901,6 +907,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
               closedAt: Date | null;
               lastUserEmailCreatedAt: Date | null;
               assignedToClerkId: string | null;
+              assignedToAI: boolean;
               platformCustomer: {
                 isVip: boolean;
                 value: string | null;
