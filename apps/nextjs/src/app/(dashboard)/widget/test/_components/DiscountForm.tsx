@@ -12,7 +12,7 @@ export function DiscountForm() {
     name: "",
     code: "",
     products: "",
-    value: 0,
+    value: "",
   });
 
   const handleInputChange = (field: keyof typeof formValues, value: string | number) => {

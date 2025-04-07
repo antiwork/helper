@@ -10,13 +10,83 @@ const fetchElementByXpath = (xpath: string) => {
 };
 
 const isVisible = (element: HTMLElement) => {
+  // Check if element exists
+  if (!element) return false;
+
+  // Check if element has zero dimensions
+  if (element.offsetWidth === 0 || element.offsetHeight === 0) {
+    return false;
+  }
+
+  // Check computed styles for visibility
+  const computedStyle = window.getComputedStyle(element);
+  if (computedStyle.display === "none" || computedStyle.visibility === "hidden" || computedStyle.opacity === "0") {
+    return false;
+  }
+
+  // Check if element is outside the document bounds
   const rect = element.getBoundingClientRect();
-  return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
+  if (
+    rect.bottom < 0 ||
+    rect.top > (window.innerHeight || document.documentElement.clientHeight) ||
+    rect.right < 0 ||
+    rect.left > (window.innerWidth || document.documentElement.clientWidth)
+  ) {
+    return false;
+  }
+
+  // Check if any parent is hiding overflow or has zero dimensions
+  let parent = element.parentElement;
+  while (parent) {
+    const parentStyle = window.getComputedStyle(parent);
+
+    // Check if parent is hidden
+    if (
+      parentStyle.display === "none" ||
+      parentStyle.visibility === "hidden" ||
+      parentStyle.opacity === "0" ||
+      parent.offsetWidth === 0 ||
+      parent.offsetHeight === 0
+    ) {
+      return false;
+    }
+
+    // For scrollable parents, check if element is within scrollable area
+    const isScrollable =
+      ["auto", "scroll"].includes(parentStyle.overflowY) || ["auto", "scroll"].includes(parentStyle.overflowX);
+
+    if (isScrollable) {
+      const parentRect = parent.getBoundingClientRect();
+
+      // Calculate the visible boundaries of the scrollable parent
+      const visibleTop = Math.max(parentRect.top, 0);
+      const visibleBottom = Math.min(parentRect.bottom, window.innerHeight);
+      const visibleLeft = Math.max(parentRect.left, 0);
+      const visibleRight = Math.min(parentRect.right, window.innerWidth);
+
+      // Check if element is outside of parent's visible boundaries
+      if (
+        rect.bottom < visibleTop ||
+        rect.top > visibleBottom ||
+        rect.right < visibleLeft ||
+        rect.left > visibleRight
+      ) {
+        // Check if element is outside parent's scrollable area
+        if (
+          rect.bottom < parent.scrollTop ||
+          rect.top > parent.scrollTop + parent.clientHeight ||
+          rect.right < parent.scrollLeft ||
+          rect.left > parent.scrollLeft + parent.clientWidth
+        ) {
+          return false;
+        }
+      }
+    }
+
+    parent = parent.parentElement;
+  }
+
+  return true;
 };
 
 export class GuideManager {
@@ -78,14 +148,15 @@ export class GuideManager {
       }
 
       // Only scroll if element is not visible
+      console.log("element is visible", isVisible(element));
       if (!isVisible(element)) {
         console.log("scrolling to element", element);
         scrollIntoView(element, {
-          behavior: "smooth",
+          behavior: "auto",
           block: "center",
           inline: "center",
         });
-        await wait(1500);
+        await wait(2000);
       }
 
       element = fetchElementByXpath(domTrackingElement.xpath);
@@ -162,8 +233,7 @@ export class GuideManager {
     console.log("input text element", element);
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      userEvent.click(element);
-      userEvent.keyboard(text);
+      userEvent.type(element, text);
       return true;
     }
 

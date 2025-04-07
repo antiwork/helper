@@ -27,9 +27,9 @@ Example:
 {"current_state": {"evaluation_previous_goal": "Success|Failed|Unknown - Analyze the current elements and the image to check if the previous goals/action are successful like intended by the task. Mention if something unexpected happened. Shortly state why/why not",
 "memory": "Description of what has been done and what you need to remember. Be very specific. Count here ALWAYS how many times you have done something and how many remain. E.g. 0 out of 10 websites analyzed. Continue with abc and xyz",
 "next_goal": "What needs to be done with the next immediate action"},
-"action":[{"one_action_name": {// action-specific parameter}}]}
+"action":{"type": "action-type", "parameters": {// action-specific parameter}}}
 
-2. ACTION: You can specify only one action.
+2. ACTION: Single action is allowed.
 Common action sequences:
 - Form filling: [{"input_text": {"index": 1, "text": "username"}}, {"input_text": {"index": 2, "text": "password"}}, {"click_element": {"index": 3}}]
 - Navigation and extraction: [{"go_to_url": {"url": "https://example.com"}}, {"extract_content": {"goal": "extract the names"}}]
@@ -177,27 +177,6 @@ export async function POST(request: Request) {
         },
         onFinish: () => {
           console.log("finished AI stream");
-        },
-        experimental_repairToolCall: async ({ toolCall, tools, parameterSchema, error }) => {
-          if (NoSuchToolError.isInstance(error)) {
-            return null; // do not attempt to fix invalid tool names
-          }
-
-          const tool = tools[toolCall.toolName as keyof typeof tools];
-
-          const { object: repairedArgs } = await generateObject({
-            model: openai("gpt-4o", { structuredOutputs: true }),
-            schema: tool.parameters,
-            prompt: [
-              `The model tried to call the tool "${toolCall.toolName}" with the following arguments:`,
-              JSON.stringify(toolCall.args),
-              `The tool accepts the following schema:`,
-              JSON.stringify(parameterSchema(toolCall)),
-              "Please fix the arguments. Only one action is allowed.",
-            ].join("\n"),
-          });
-
-          return { ...toolCall, args: JSON.stringify(repairedArgs) };
         },
       });
       result.mergeIntoDataStream(dataStream);

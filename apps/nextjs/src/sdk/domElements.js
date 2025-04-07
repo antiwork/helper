@@ -692,6 +692,7 @@ export function domElements(
    * Checks if an element is the topmost element at its position.
    */
   function isTopElement(element) {
+    return true;
     const rect = getCachedBoundingRect(element);
 
     // If element is not in viewport, consider it top
