@@ -148,15 +148,13 @@ export class GuideManager {
       }
 
       // Only scroll if element is not visible
-      console.log("element is visible", isVisible(element));
       if (!isVisible(element)) {
-        console.log("scrolling to element", element);
         scrollIntoView(element, {
           behavior: "auto",
           block: "center",
           inline: "center",
         });
-        await wait(2000);
+        await wait(1500);
       }
 
       element = fetchElementByXpath(domTrackingElement.xpath);
@@ -201,7 +199,7 @@ export class GuideManager {
     return element as HTMLElement;
   }
 
-  public async executeDOMAction(actionType: string, params: any): Promise<boolean> {
+  public async executeDOMAction(actionType: string, params: any): Promise<boolean | string> {
     switch (actionType) {
       case "click_element":
         return await this.clickElement(params.index);
@@ -209,11 +207,12 @@ export class GuideManager {
         return await this.selectDropdownOption(params.index, params.text);
       case "input_text":
         return await this.inputText(params.index, params.text);
-      case "scroll_down":
-      case "scroll_up":
-      case "scroll_to_text":
-      case "extract_content":
       case "get_dropdown_options":
+        return this.getDropdownOptions(params.index);
+      case "send_keys":
+        return await this.sendKeys(params.index, params.text);
+      case "scroll_to_element":
+        return await this.scrollToElement(params.index);
       case "go_back":
         window.history.back();
         return true;
@@ -223,6 +222,36 @@ export class GuideManager {
     }
     console.warn(`Unknown action type: ${actionType}`);
     return false;
+  }
+
+  public getDropdownOptions(index: number): string | boolean {
+    const element = this.fetchElementByIndex(index);
+    if (!element) return false;
+
+    if (element instanceof HTMLSelectElement) {
+      const options = Array.from(element.options);
+      return options.map((option) => option.text).join(", ");
+    }
+    return false;
+  }
+
+  public async scrollToElement(index: number): Promise<boolean> {
+    const element = this.fetchElementByIndex(index);
+    if (!element) return false;
+
+    scrollIntoView(element, { behavior: "auto", block: "center", inline: "center" });
+    await wait(1500);
+
+    return true;
+  }
+
+  public async sendKeys(index: number, text: string): Promise<boolean> {
+    const element = this.fetchElementByIndex(index);
+    if (!element) return false;
+
+    await this.animateHandToElementAndScroll(index);
+    userEvent.type(element, text);
+    return true;
   }
 
   public async inputText(index: number, text: string): Promise<boolean> {

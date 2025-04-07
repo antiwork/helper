@@ -112,9 +112,6 @@ export async function POST(request: Request) {
               text: z.string(),
               success: z.boolean(),
             }),
-            // z.object({
-            //   type: z.literal("go_back"),
-            // }),
             z.object({
               type: z.literal("wait"),
               seconds: z.number().int().default(3),
@@ -134,26 +131,19 @@ export async function POST(request: Request) {
             //   type: z.literal("extract_content"),
             //   goal: z.string(),
             // }),
-            // z.object({
-            //   type: z.literal("scroll_down"),
-            //   amount: z.number().int().nullable().optional(),
-            // }),
-            // z.object({
-            //   type: z.literal("scroll_up"),
-            //   amount: z.number().int().nullable().optional(),
-            // }),
-            // z.object({
-            //   type: z.literal("send_keys"),
-            //   keys: z.string(),
-            // }),
-            // z.object({
-            //   type: z.literal("scroll_to_text"),
-            //   text: z.string(),
-            // }),
-            // z.object({
-            //   type: z.literal("get_dropdown_options"),
-            //   index: z.number().int(),
-            // }),
+            z.object({
+              type: z.literal("send_keys"),
+              index: z.number().int(),
+              text: z.string(),
+            }),
+            z.object({
+              type: z.literal("scroll_to_element"),
+              index: z.number().int(),
+            }),
+            z.object({
+              type: z.literal("get_dropdown_options"),
+              index: z.number().int(),
+            }),
             z.object({
               type: z.literal("select_dropdown_option"),
               index: z.number().int(),
