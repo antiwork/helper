@@ -61,6 +61,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
           <p>Note: {ROLE_DISPLAY_NAMES.core} members are assigned tickets in a round-robin style.</p>
           <p>{ROLE_DISPLAY_NAMES.nonCore} members are only assigned if the ticket tags match their keywords.</p>
           <p>{ROLE_DISPLAY_NAMES.afk} members do not receive any ticket assignments.</p>
+          <p>Only {ROLE_DISPLAY_NAMES.core} support team members will be mentioned explicitly in weekly reports</p>
         </div>
       </div>
     </>
