@@ -1,10 +1,9 @@
-import { ExternalAccount, Organization, User } from "@clerk/nextjs/server";
+import { Organization, User } from "@clerk/nextjs/server";
 import { db } from "@/db/client";
 import { inngest } from "@/inngest/client";
 import { createGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
-import { createOrganization } from "@/lib/data/organization";
 import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog, captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { createInitialMailbox } from "./account";
 import { GMAIL_SCOPES } from "./constants";
 
@@ -43,7 +42,7 @@ export const setupOrganizationForNewUser = async (organization: Organization, us
 export const gmailScopesGranted = (scopes: string[]) => {
   const missingScopes = GMAIL_SCOPES.filter((s) => !scopes.includes(s));
   if (missingScopes.length) {
-    console.log(`Missing scopes: ${missingScopes.join(", ")}`);
+    captureExceptionAndLog(new Error(`Missing scopes: ${missingScopes.join(", ")}`));
     return false;
   }
   return true;

@@ -10,6 +10,7 @@ import {
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
 
 export const getSlackPermalink = async (token: string, channel: string, ts: string) => {
@@ -18,7 +19,7 @@ export const getSlackPermalink = async (token: string, channel: string, ts: stri
     const response = await client.chat.getPermalink({ channel, message_ts: ts });
     return response.permalink ?? null;
   } catch (error) {
-    console.error(error);
+    captureExceptionAndLog(error);
     return null;
   }
 };
@@ -252,7 +253,7 @@ export const listSlackUsers = async (token: string) => {
 
 export const getSlackUsersByEmail = async (token: string) => {
   const slackUsers = await listSlackUsers(token).catch((error) => {
-    console.error("Failed to list Slack users", error);
+    captureExceptionAndLog(error);
     return [];
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));

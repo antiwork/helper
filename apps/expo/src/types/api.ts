@@ -1399,31 +1399,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
       input: void;
       output: boolean;
     }>;
-    testing: import("@trpc/server").TRPCQueryProcedure<{
-      input: void;
-      output: (
-        | {
-            id: number;
-            name: string;
-            createdAt: Date;
-            isActive: boolean;
-            tags: string[];
-            nested?: undefined;
-          }
-        | {
-            id: number;
-            name: string;
-            createdAt: Date;
-            isActive: boolean;
-            nested: {
-              value: bigint;
-              map: Map<string, string>;
-              set: Set<number>;
-            };
-            tags?: undefined;
-          }
-      )[];
-    }>;
   }
 >;
 export type API = typeof appRouter;
