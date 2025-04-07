@@ -1,7 +1,8 @@
 import { ChatBubbleLeftRightIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
 import { UIMessage } from "ai";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useState } from "react";
+import { useState } from "react";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type Props = {
   conversationSlug: string | null;
@@ -57,7 +58,7 @@ export default function SupportButtons({
         }, 1000);
       }
     } catch (error) {
-      console.error("Failed to mark conversation as resolved:", error);
+      captureExceptionAndLog(error);
     }
 
     setTimeout(() => setIsHelpfulAnimating(false), 1000);

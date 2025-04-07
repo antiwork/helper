@@ -21,6 +21,7 @@ import { renderMessageBody } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(i
 import { toast } from "@/components/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 
 function getPreviewUrl(file: AttachedFile): string {
@@ -147,7 +148,7 @@ const MessageItem = ({
       router.push(`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`);
     },
     onError: (e) => {
-      console.error(e);
+      captureExceptionAndLog(e);
       toast({
         title: "Failed to split conversation",
         variant: "destructive",

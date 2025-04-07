@@ -10,6 +10,7 @@ import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
 
@@ -95,7 +96,7 @@ export default function Conversation({
         },
       });
       if (!response.ok) {
-        console.error("Failed to fetch conversation:", response.statusText);
+        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.statusText}`));
         onLoadFailed();
         return null;
       }
@@ -153,7 +154,6 @@ export default function Conversation({
       }
 
       if (currentSlug) {
-        console.log("submitting with currentSlug", currentSlug);
         handleAISubmit(undefined, {
           experimental_attachments: screenshotData
             ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
@@ -162,7 +162,7 @@ export default function Conversation({
         });
       }
     } catch (error) {
-      console.error("Error submitting message:", error);
+      captureExceptionAndLog(error);
     }
   };
 
