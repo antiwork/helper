@@ -9,11 +9,16 @@ import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
-import { getClerkUserList } from "@/lib/data/user";
+import { getClerkUserList, UserRoles } from "@/lib/data/user";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/data/user", () => ({
   getClerkUserList: vi.fn(),
+  UserRoles: {
+    CORE: "core",
+    NON_CORE: "nonCore",
+    AFK: "afk",
+  },
 }));
 
 vi.mock("@/lib/data/organization", () => ({
@@ -144,18 +149,21 @@ describe("mailboxRouter", () => {
           email: user.emailAddresses[0]?.emailAddress,
           displayName: user.fullName,
           replyCount: 0,
+          role: UserRoles.AFK,
         },
         {
           id: user3.id,
           email: user3.emailAddresses[0]?.emailAddress,
           displayName: user3.fullName,
           replyCount: 1,
+          role: UserRoles.AFK,
         },
         {
           id: user2.id,
           email: user2.emailAddresses[0]?.emailAddress,
           displayName: user2.fullName,
           replyCount: 2,
+          role: UserRoles.AFK,
         },
       ]);
 
