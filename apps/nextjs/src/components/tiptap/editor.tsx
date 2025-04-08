@@ -33,6 +33,7 @@ type TipTapEditorProps = {
   editable?: boolean;
   ariaLabel?: string;
   className?: string;
+  showToolbar?: boolean;
 };
 
 declare module "@tiptap/core" {
@@ -52,8 +53,7 @@ const NonInclusiveLink = Link.extend({ inclusive: false }).configure({
 const HardBreakIgnoreModEnter = HardBreak.extend({
   addKeyboardShortcuts() {
     return {
-      ...this.parent?.(),
-      "Mod-Enter": () => true,
+      "Mod-Enter": () => false,
     };
   },
 });
@@ -61,6 +61,7 @@ const HardBreakIgnoreModEnter = HardBreak.extend({
 export type TipTapEditorRef = {
   focus: () => void;
   scrollTo: (y: number) => void;
+  editor: Editor | null;
 };
 
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
@@ -79,6 +80,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       editable,
       ariaLabel,
       className,
+      showToolbar = true,
     },
     ref,
   ) => {
@@ -211,27 +213,12 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
           top,
           behavior: "smooth",
         }),
+      editor: editorRef.current,
     }));
 
     const focusEditor = () => {
       if (editor) {
         editor.view.focus();
-        // Scroll cursor into view after focusing
-        setTimeout(() => {
-          const selection = window.getSelection();
-          if (selection?.rangeCount) {
-            const range = selection.getRangeAt(0);
-            range.collapse(false);
-            const rect = range.getBoundingClientRect();
-            const container = editorContentContainerRef.current;
-            if (container) {
-              const containerRect = container.getBoundingClientRect();
-              if (rect.bottom > containerRect.bottom) {
-                container.scrollTop += rect.bottom - containerRect.bottom + 20;
-              }
-            }
-          }
-        }, 0);
       }
     };
 
@@ -283,23 +270,25 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
         <div
           className={cn(
             "relative flex flex-col h-full rounded border border-border bg-background",
-            toolbarOpen && "pb-14",
+            toolbarOpen && showToolbar && "pb-14",
             className,
           )}
           aria-label={ariaLabel}
         >
-          <Toolbar
-            {...{
-              open: toolbarOpen,
-              setOpen: setToolbarOpen,
-              editor,
-              uploadFileAttachments,
-              uploadInlineImages,
-              customToolbar,
-              enableImageUpload,
-              enableFileUpload,
-            }}
-          />
+          {showToolbar && (
+            <Toolbar
+              {...{
+                open: toolbarOpen,
+                setOpen: setToolbarOpen,
+                editor,
+                uploadFileAttachments,
+                uploadInlineImages,
+                customToolbar,
+                enableImageUpload,
+                enableFileUpload,
+              }}
+            />
+          )}
 
           <div
             className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"

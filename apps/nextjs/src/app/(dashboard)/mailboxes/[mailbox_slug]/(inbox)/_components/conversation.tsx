@@ -11,7 +11,7 @@ import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -170,6 +170,11 @@ const ScrollToTopButton = ({
 const ConversationContent = () => {
   const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error, refetch } = useConversationContext();
   const { minimize } = useConversationListContext();
+  const { nativePlatform } = useNativePlatform();
+  const [showCommandBar, setShowCommandBar] = useState(false);
+  const commandInputRef = useRef<HTMLInputElement>(null);
+  const [showCc, setShowCc] = useState(false);
+
   useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
     utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
       data ? { ...data, ...event.data } : null,
@@ -249,7 +254,6 @@ const ConversationContent = () => {
     scrollToBottom({ animation: "instant" });
   }, [contentRef]);
 
-  const { nativePlatform } = useNativePlatform();
   const { isAboveSm } = useBreakpoint("sm");
 
   const defaultSize = Number(localStorage.getItem("conversationHeightRange") ?? 65);
@@ -269,6 +273,15 @@ const ConversationContent = () => {
       });
     }
   }, [nativePlatform, conversationInfo?.subject]);
+
+  const handleInsertReply = (content: string) => {
+    // This will be handled by the MessageActions component
+    setShowCommandBar(false);
+  };
+
+  const onToggleCc = () => {
+    setShowCc(!showCc);
+  };
 
   return (
     <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
@@ -426,7 +439,6 @@ const ConversationContent = () => {
             <div
               className="h-full bg-muted px-4 pb-4"
               onKeyDown={(e) => {
-                // Prevent keypress events from triggering the global inbox view keyboard shortcuts
                 e.stopPropagation();
               }}
             >

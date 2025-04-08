@@ -22,6 +22,9 @@ import { useUndoneEmailStore } from "./conversation";
 import { useConversationListContext } from "./conversationListContext";
 import { useConversationsListInput } from "./shared/queries";
 import { TicketCommandBar } from "./ticketCommandBar";
+import Toolbar from "@/components/tiptap/toolbar";
+import { partition } from "lodash";
+import { imageFileTypes } from "@/components/tiptap/image";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
 
@@ -46,6 +49,7 @@ export const MessageActions = () => {
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
+  const [toolbarOpen, setToolbarOpen] = useState(false);
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -211,7 +215,7 @@ export const MessageActions = () => {
 
   const actionButtons = (
     <>
-      <div className="flex items-center gap-4">
+      <div className={cn("flex items-center gap-4 ml-auto", toolbarOpen && "hidden")}>
         {(conversation?.status ?? searchParams.status) !== "spam" &&
           ((conversation?.status ?? searchParams.status) === "closed" ? (
             <Button variant="outlined" onClick={() => updateStatus("open")}>
@@ -220,18 +224,18 @@ export const MessageActions = () => {
             </Button>
           ) : (
             <>
-              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
-                {sending ? "Replying..." : "Reply and close"}
-                {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
-                )}
-              </Button>
               <Button
                 variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}
               >
                 Reply
+              </Button>
+              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
+                {sending ? "Replying..." : "Reply and close"}
+                {!sending && isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
+                )}
               </Button>
             </>
           ))}
@@ -266,6 +270,8 @@ export const MessageActions = () => {
       initialMessage={initialMessageObject}
       updateEmail={updateDraftedEmail}
       handleInsertReply={handleInsertReply}
+      toolbarOpen={toolbarOpen}
+      setToolbarOpen={setToolbarOpen}
     />
   );
 };
@@ -279,14 +285,17 @@ const EmailEditorComponent = React.forwardRef<
     onSend: () => void;
     updateEmail: (changes: Partial<DraftedEmail>) => void;
     handleInsertReply: (content: string) => void;
+    toolbarOpen: boolean;
+    setToolbarOpen: (open: boolean) => void;
   }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
+>(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply, toolbarOpen, setToolbarOpen }, ref) => {
   const [showCommandBar, setShowCommandBar] = useState(false);
   const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
   const ccRef = useRef<HTMLInputElement>(null);
   const bccRef = useRef<HTMLInputElement>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
+  const editorRef = ref as React.MutableRefObject<TipTapEditorRef | null>;
 
   const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
 
@@ -333,6 +342,7 @@ const EmailEditorComponent = React.forwardRef<
           onSlashKey={() => commandInputRef.current?.focus()}
           enableImageUpload
           enableFileUpload
+          showToolbar={false}
           signature={
             user?.firstName ? (
               <div className="mt-6 text-muted-foreground">
@@ -347,8 +357,64 @@ const EmailEditorComponent = React.forwardRef<
             ) : null
           }
         />
+        <div className="absolute bottom-4 right-4 hidden md:block">
+          <Toolbar
+            editor={editorRef.current?.editor ?? null}
+            open={toolbarOpen}
+            setOpen={setToolbarOpen}
+            uploadInlineImages={(files: File[]) => {
+              const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
+              if (images.length && editorRef.current?.editor) {
+                const commands = editorRef.current.editor.commands as { uploadInlineImages?: (files: File[]) => void };
+                if (commands.uploadInlineImages) {
+                  commands.uploadInlineImages(images);
+                }
+              }
+            }}
+            uploadFileAttachments={(files: File[]) => {
+              const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
+              if (nonImages.length && editorRef.current?.editor) {
+                const commands = editorRef.current.editor.commands as { uploadFileAttachments?: (files: File[]) => void };
+                if (commands.uploadFileAttachments) {
+                  commands.uploadFileAttachments(nonImages);
+                }
+              }
+            }}
+            enableImageUpload
+            enableFileUpload
+          />
+        </div>
       </div>
-      <div className={showCommandBar ? "hidden" : ""}>{actionButtons}</div>
+      <div className={cn("flex items-center gap-4", showCommandBar ? "hidden" : "")}>
+        <div className="md:hidden">
+          <Toolbar
+            editor={editorRef.current?.editor ?? null}
+            open={toolbarOpen}
+            setOpen={setToolbarOpen}
+            uploadInlineImages={(files: File[]) => {
+              const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
+              if (images.length && editorRef.current?.editor) {
+                const commands = editorRef.current.editor.commands as { uploadInlineImages?: (files: File[]) => void };
+                if (commands.uploadInlineImages) {
+                  commands.uploadInlineImages(images);
+                }
+              }
+            }}
+            uploadFileAttachments={(files: File[]) => {
+              const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
+              if (nonImages.length && editorRef.current?.editor) {
+                const commands = editorRef.current.editor.commands as { uploadFileAttachments?: (files: File[]) => void };
+                if (commands.uploadFileAttachments) {
+                  commands.uploadFileAttachments(nonImages);
+                }
+              }
+            }}
+            enableImageUpload
+            enableFileUpload
+          />
+        </div>
+        {actionButtons}
+      </div>
     </div>
   );
 });

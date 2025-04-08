@@ -88,12 +88,18 @@ const Toolbar = ({
   }
 
   return (
-    <div
-      className={cn(
-        "absolute z-10 bottom-3 right-3 flex flex-wrap gap-1 rounded-t border rounded-sm bg-background p-1",
-        open && "left-3",
-      )}
-    >
+    <div className="flex items-center gap-2">
+      <button 
+        type="button" 
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen(!open);
+          editor?.commands.focus();
+        }} 
+        className={cn(baseToolbarStyles)}
+      >
+        {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
+      </button>
       {open && (
         <>
           <button
@@ -175,7 +181,10 @@ const Toolbar = ({
             </label>
           )}
           {enableFileUpload && (
-            <label htmlFor={fileFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
+            <label 
+              htmlFor={fileFieldId} 
+              className={`${baseToolbarStyles} cursor-pointer`}
+            >
               <input
                 aria-label="Insert attachments"
                 multiple
@@ -194,9 +203,6 @@ const Toolbar = ({
           )}
         </>
       )}
-      <button type="button" onClick={() => setOpen(!open)} className={cn(baseToolbarStyles, "ml-auto")}>
-        {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
-      </button>
     </div>
   );
 };
