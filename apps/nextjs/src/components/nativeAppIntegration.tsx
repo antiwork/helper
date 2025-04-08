@@ -13,6 +13,7 @@ import { getTauriPlatform } from "@/components/useNativePlatform";
 export function NativeAppIntegration() {
   const router = useRouter();
   const [recentlyClosedTabs, setRecentlyClosedTabs] = useState<{ url: string; title: string }[] | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; target: HTMLAnchorElement } | null>(null);
 
   useEffect(() => {
     const tauriPlatform = getTauriPlatform();
@@ -63,6 +64,17 @@ export function NativeAppIntegration() {
           }
         }
       }
+    };
+
+    const handleContextMenu = (event: MouseEvent) => {
+      if (!tauriPlatform) return;
+
+      const target = event.target as HTMLElement;
+      const anchor = target.closest("a");
+      if (!anchor?.href.startsWith(window.location.origin)) return;
+
+      event.preventDefault();
+      setContextMenu({ x: event.clientX, y: event.clientY, target: anchor });
     };
 
     const setupTitleObserver = () => {
@@ -116,49 +128,84 @@ export function NativeAppIntegration() {
 
     const titleObserver = setupTitleObserver();
     document.addEventListener("click", handleLinkClick);
+    document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       document.removeEventListener("click", handleLinkClick);
+      document.removeEventListener("contextmenu", handleContextMenu);
       titleObserver?.disconnect();
     };
   }, []);
 
-  return recentlyClosedTabs ? (
-    <div className="fixed -top-4 right-1">
-      <Popover open={true} onOpenChange={(open) => !open && invoke("toggle_tab_context_menu", { tabs: "" })}>
-        <PopoverTrigger>
-          <div />
-        </PopoverTrigger>
-        <PopoverContent align="end" className="p-1">
-          {recentlyClosedTabs.length === 0 ? (
-            <div className="flex h-32 items-center justify-center text-center text-xs text-muted-foreground px-10">
-              Recently closed tabs will appear here.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              <div className="px-3 py-2 text-xs font-medium text-muted-foreground">Recently closed tabs</div>
-              {recentlyClosedTabs
-                .filter((tab) => tab.url && tab.title)
-                .map((tab) => (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="block w-full text-left truncate"
-                    key={tab.url}
-                    onClick={() => {
-                      invoke("add_tab", { url: tab.url });
-                      invoke("toggle_tab_context_menu", { tabs: "" });
-                    }}
-                  >
-                    {tab.title}
-                  </Button>
-                ))}
-            </div>
-          )}
-        </PopoverContent>
-      </Popover>
-    </div>
-  ) : null;
+  return (
+    <>
+      {recentlyClosedTabs ? (
+        <div className="fixed -top-4 right-1">
+          <Popover open={true} onOpenChange={(open) => !open && invoke("toggle_tab_context_menu", { tabs: "" })}>
+            <PopoverTrigger>
+              <div />
+            </PopoverTrigger>
+            <PopoverContent align="end" className="p-1">
+              {recentlyClosedTabs.length === 0 ? (
+                <div className="flex h-32 items-center justify-center text-center text-xs text-muted-foreground px-10">
+                  Recently closed tabs will appear here.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <div className="px-3 py-2 text-xs font-medium text-muted-foreground">Recently closed tabs</div>
+                  {recentlyClosedTabs
+                    .filter((tab) => tab.url && tab.title)
+                    .map((tab) => (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="block w-full text-left truncate"
+                        key={tab.url}
+                        onClick={() => {
+                          invoke("add_tab", { url: tab.url });
+                          invoke("toggle_tab_context_menu", { tabs: "" });
+                        }}
+                      >
+                        {tab.title}
+                      </Button>
+                    ))}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
+      ) : null}
+      {contextMenu && (
+        <div className="fixed" style={{ top: contextMenu.y - 8, left: contextMenu.x }}>
+          <Popover open={true} onOpenChange={(open) => !open && setContextMenu(null)}>
+            <PopoverTrigger>
+              <div />
+            </PopoverTrigger>
+            <PopoverContent className="p-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="block w-full text-left truncate focus-visible:ring-0"
+                onClick={() => {
+                  invoke("add_tab", { url: contextMenu.target.href });
+                }}
+              >
+                Open in new tab
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="block w-full text-left truncate focus-visible:ring-0"
+                onClick={() => navigator.clipboard.writeText(contextMenu.target.href)}
+              >
+                Copy link
+              </Button>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default NativeAppIntegration;
