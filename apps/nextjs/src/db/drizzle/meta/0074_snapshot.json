@@ -1,6 +1,6 @@
 {
-  "id": "4b572e6b-552f-4953-90ad-a0bee4fbe4a3",
-  "prevId": "30732531-b810-4d3b-9aa6-cbfedbb4cd2b",
+  "id": "0d633de7-67b6-4640-9c22-ac8f414f1a84",
+  "prevId": "4b572e6b-552f-4953-90ad-a0bee4fbe4a3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1781,13 +1781,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "disable_auto_response_for_vips": {
-          "name": "disable_auto_response_for_vips",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "onboarding_metadata": {
           "name": "onboarding_metadata",
           "type": "jsonb",
@@ -1809,6 +1802,13 @@
           "notNull": true,
           "default": 14
         },
+        "disable_auto_response_for_vips": {
+          "name": "disable_auto_response_for_vips",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "response_generator_prompt": {
           "name": "response_generator_prompt",
           "type": "jsonb",
@@ -1826,6 +1826,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "preferences": {
+          "name": "preferences",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"confetti\":false,\"confettiEvents\":[\"reply\",\"close\"],\"confettiIntensity\":\"medium\"}'::jsonb"
         }
       },
       "indexes": {

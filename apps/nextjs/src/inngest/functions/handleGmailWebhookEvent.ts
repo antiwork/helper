@@ -46,7 +46,7 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
     const ccStaffUser = await findUserByEmail(mailbox.clerkOrganizationId, ccAddress);
     if (ccStaffUser) {
       await updateConversation(conversationId, {
-        set: { assignedToClerkId: ccStaffUser.id },
+        set: { assignedToClerkId: ccStaffUser.id, assignedToAI: false },
         message: "Auto-assigned based on CC",
         skipAblyEvents: true,
       });
@@ -268,6 +268,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
             source: "email",
             isPrompt: false,
             isVisitor: false,
+            assignedToAI: mailbox.autoRespondEmailToChat,
           })
           .returning({ id: conversations.id, slug: conversations.slug, status: conversations.status })
           .then(takeUniqueOrThrow);

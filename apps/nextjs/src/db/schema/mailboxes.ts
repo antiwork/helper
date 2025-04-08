@@ -34,12 +34,12 @@ export const mailboxes = pgTable(
     vipThreshold: bigint({ mode: "number" }),
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
-    disableAutoResponseForVips: boolean().notNull().default(false),
     onboardingMetadata: jsonb().$type<OnboardingMetadata>().default({
       completed: false,
     }),
     autoCloseEnabled: boolean().notNull().default(false),
     autoCloseDaysOfInactivity: integer().notNull().default(14),
+    unused_disableAutoResponseForVips: boolean("disable_auto_response_for_vips").notNull().default(false),
     unused_responseGeneratorPrompt: jsonb("response_generator_prompt").$type<string[]>(),
     unused_escalationEmailBody: text("escalation_email_body"),
     unused_escalationExpectedResolutionHours: integer("escalation_expected_resolution_hours"),

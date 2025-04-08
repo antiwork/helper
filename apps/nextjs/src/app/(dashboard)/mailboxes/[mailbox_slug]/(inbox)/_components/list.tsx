@@ -3,6 +3,7 @@ import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChannelProvider } from "ably/react";
 import { capitalize } from "lodash";
+import { Bot } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
@@ -511,13 +512,14 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {conversation.assignedToClerkId && (
+            {(conversation.assignedToClerkId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(
                   "shrink-0 break-all flex items-center gap-1 text-xs font-sundry-regular",
                   variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
                 )}
                 assignedToClerkId={conversation.assignedToClerkId}
+                assignedToAI={conversation.assignedToAI}
               />
             )}
             {conversation.platformCustomer?.isVip && (
@@ -556,9 +558,11 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
 
 export const AssignedToLabel = ({
   assignedToClerkId,
+  assignedToAI,
   className,
 }: {
-  assignedToClerkId: string;
+  assignedToClerkId: string | null;
+  assignedToAI?: boolean;
   className?: string;
 }) => {
   const { data: members } = api.organization.getMembers.useQuery(undefined, {
@@ -566,6 +570,14 @@ export const AssignedToLabel = ({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  if (assignedToAI) {
+    return (
+      <div className={className} title="Assigned to Helper agent">
+        <Bot className="h-3 w-3" />
+      </div>
+    );
+  }
 
   const displayName = members?.find((m) => m.id === assignedToClerkId)?.displayName?.split(" ")[0];
 

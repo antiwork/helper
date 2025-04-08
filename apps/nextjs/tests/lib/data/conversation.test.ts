@@ -66,6 +66,7 @@ describe("createConversation", () => {
       status: "open",
       slug: "test-conversation",
       source: "email",
+      assignedToAI: false,
     });
 
     expect(conversation).toHaveProperty("id");
