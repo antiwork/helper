@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { formatParameter } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/toolItem";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { formatParameter } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/toolItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
