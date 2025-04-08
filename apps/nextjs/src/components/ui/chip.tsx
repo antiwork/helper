@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import * as React from "react";
+import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type ChipVariant = "sidebar" | "mobile";
@@ -54,7 +55,7 @@ export const Chip = React.forwardRef<HTMLAnchorElement, ChipProps>(
               isActive ? styles.count : styles.count,
             )}
           >
-            {count}
+            {formatNumber(count)}
           </span>
         )}
       </Link>

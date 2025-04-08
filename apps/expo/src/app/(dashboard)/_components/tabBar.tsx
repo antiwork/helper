@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { cn, cssIconInterop } from "@/utils/css";
+import { formatNumber } from "@/lib/format";
 
 cssIconInterop(ChartBarIcon);
 cssIconInterop(UserIcon);
@@ -25,7 +26,7 @@ cssIconInterop(UserIconSolid);
 function Badge({ count }: { count: number }) {
   return (
     <View className="absolute -top-1 -right-2 bg-bright rounded-full min-w-4 h-4 justify-center items-center">
-      <Text className="text-xs text-medium text-bright-foreground px-1">{count}</Text>
+      <Text className="text-xs text-medium text-bright-foreground px-1">{formatNumber(count)}</Text>
     </View>
   );
 }
