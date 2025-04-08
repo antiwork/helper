@@ -1,7 +1,6 @@
 "use client";
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
-import { formatNumber } from "@/lib/format";
 
 type Props = {
   trend: { direction: string; percentageChange: number; previousCount: number } | null;
@@ -28,7 +27,7 @@ export function TrendIndicator({ trend }: Props) {
           {showPercentage && <span className={`text-sm ${color}`}>{trend.percentageChange.toFixed(1)}%</span>}
         </div>
         {trend.previousCount > 0 ? (
-          <span className="text-xs text-muted-foreground">prev. {formatNumber(trend.previousCount)}</span>
+          <span className="text-xs text-muted-foreground">prev. {trend.previousCount.toLocaleString()}</span>
         ) : (
           <span className="text-xs text-muted-foreground">-</span>
         )}
