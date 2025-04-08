@@ -27,7 +27,7 @@ export default function HelpingHand({
   } | null>(null);
 
   const { messages, append, addToolResult } = useChat({
-    api: "/api/ai-guide",
+    api: "/api/guide/action",
     maxSteps: 10,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
     onToolCall({ toolCall }) {
