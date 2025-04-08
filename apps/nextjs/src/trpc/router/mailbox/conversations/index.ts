@@ -8,9 +8,15 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
+import { generateDraftResponse } from "@/lib/ai/generateResponse";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
 import { searchConversations, searchSchema } from "@/lib/data/conversation/search";
-import { createReply, getLastAiGeneratedDraft, serializeResponseAiDraft } from "@/lib/data/conversationMessage";
+import {
+  createAiDraft,
+  createReply,
+  getLastAiGeneratedDraft,
+  serializeResponseAiDraft,
+} from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { getOrganizationMembers } from "@/lib/data/organization";
 import { findSimilarConversations } from "@/lib/data/retrieval";
@@ -198,10 +204,34 @@ export const conversationsRouter = {
       return { updatedImmediately: false };
     }),
   refreshDraft: conversationProcedure.mutation(async ({ ctx }) => {
-    await inngest.send({
-      name: "conversations/draft.refresh",
-      data: { conversationSlug: ctx.conversation.slug },
+    const lastUserMessage = await db.query.conversationMessages.findFirst({
+      where: and(eq(conversationMessages.conversationId, ctx.conversation.id), eq(conversationMessages.role, "user")),
+      orderBy: desc(conversationMessages.createdAt),
+      with: {
+        conversation: {
+          columns: {
+            subject: true,
+          },
+        },
+      },
     });
+    if (!lastUserMessage) throw new TRPCError({ code: "NOT_FOUND", message: "No user message found" });
+    const metadata: object = lastUserMessage?.metadata ?? {};
+
+    const oldDraft = await getLastAiGeneratedDraft(ctx.conversation.id);
+    const { draftResponse, promptInfo } = await generateDraftResponse(ctx.mailbox.id, lastUserMessage, metadata);
+
+    const newDraft = await db.transaction(async (tx) => {
+      if (oldDraft) {
+        await tx
+          .update(conversationMessages)
+          .set({ status: "discarded" })
+          .where(eq(conversationMessages.id, oldDraft.id));
+      }
+      return await createAiDraft(ctx.conversation.id, draftResponse, lastUserMessage.id, promptInfo, tx);
+    });
+
+    return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
     const email = await db.query.conversationMessages.findFirst({
