@@ -232,6 +232,9 @@ export const MessageActions = () => {
                 disabled={sendDisabled}
               >
                 Reply
+                {!sending && isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌥⏎</KeyboardShortcut>
+                )}
               </Button>
             </>
           ))}
@@ -261,6 +264,7 @@ export const MessageActions = () => {
     <EmailEditorComponent
       ref={editorRef}
       onSend={() => handleSend({ assign: false })}
+      onOptionSend={() => handleSend({ assign: false, close: false })}
       actionButtons={actionButtons}
       draftedEmail={draftedEmail}
       initialMessage={initialMessageObject}
@@ -277,10 +281,11 @@ const EmailEditorComponent = React.forwardRef<
     initialMessage: { content: string };
     actionButtons: React.ReactNode;
     onSend: () => void;
+    onOptionSend: () => void;
     updateEmail: (changes: Partial<DraftedEmail>) => void;
     handleInsertReply: (content: string) => void;
   }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
+>(({ draftedEmail, initialMessage, actionButtons, onSend, onOptionSend, updateEmail, handleInsertReply }, ref) => {
   const [showCommandBar, setShowCommandBar] = useState(false);
   const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
   const ccRef = useRef<HTMLInputElement>(null);
@@ -330,6 +335,7 @@ const EmailEditorComponent = React.forwardRef<
           editable={true}
           onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
           onModEnter={onSend}
+          onOptionEnter={onOptionSend}
           onSlashKey={() => commandInputRef.current?.focus()}
           enableImageUpload
           enableFileUpload
