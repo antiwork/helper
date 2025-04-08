@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
 import { cn, cssIconInterop } from "@/utils/css";
-import { formatNumber } from "@/lib/format";
+import { formatNumber } from "@/utils/format";
 
 cssIconInterop(ChartBarIcon);
 cssIconInterop(UserIcon);
