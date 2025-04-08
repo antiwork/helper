@@ -25,6 +25,7 @@ import { TicketCommandBar } from "./ticketCommandBar";
 import Toolbar from "@/components/tiptap/toolbar";
 import { partition } from "lodash";
 import { imageFileTypes } from "@/components/tiptap/image";
+import { useBreakpoint } from "@/components/useBreakpoint";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
 
@@ -215,7 +216,7 @@ export const MessageActions = () => {
 
   const actionButtons = (
     <>
-      <div className={cn("flex items-center gap-4 ml-auto", toolbarOpen && "hidden")}>
+      <div className="flex items-center gap-4">
         {(conversation?.status ?? searchParams.status) !== "spam" &&
           ((conversation?.status ?? searchParams.status) === "closed" ? (
             <Button variant="outlined" onClick={() => updateStatus("open")}>
@@ -270,8 +271,6 @@ export const MessageActions = () => {
       initialMessage={initialMessageObject}
       updateEmail={updateDraftedEmail}
       handleInsertReply={handleInsertReply}
-      toolbarOpen={toolbarOpen}
-      setToolbarOpen={setToolbarOpen}
     />
   );
 };
@@ -285,17 +284,21 @@ const EmailEditorComponent = React.forwardRef<
     onSend: () => void;
     updateEmail: (changes: Partial<DraftedEmail>) => void;
     handleInsertReply: (content: string) => void;
-    toolbarOpen: boolean;
-    setToolbarOpen: (open: boolean) => void;
   }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply, toolbarOpen, setToolbarOpen }, ref) => {
+>(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
   const [showCommandBar, setShowCommandBar] = useState(false);
   const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
+  const [toolbarOpen, setToolbarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
+    }
+    return true;
+  });
   const ccRef = useRef<HTMLInputElement>(null);
   const bccRef = useRef<HTMLInputElement>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
-  const editorRef = ref as React.MutableRefObject<TipTapEditorRef | null>;
+  const { isAboveMd } = useBreakpoint("md");
 
   const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
 
@@ -304,6 +307,10 @@ const EmailEditorComponent = React.forwardRef<
       ccRef.current?.focus();
     }
   }, [showCc]);
+
+  useEffect(() => {
+    localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
+  }, [toolbarOpen]);
 
   return (
     <div className="flex flex-col h-full pt-4">
@@ -342,7 +349,6 @@ const EmailEditorComponent = React.forwardRef<
           onSlashKey={() => commandInputRef.current?.focus()}
           enableImageUpload
           enableFileUpload
-          showToolbar={false}
           signature={
             user?.firstName ? (
               <div className="mt-6 text-muted-foreground">
@@ -357,63 +363,36 @@ const EmailEditorComponent = React.forwardRef<
             ) : null
           }
         />
-        <div className="absolute bottom-4 right-4 hidden md:block">
-          <Toolbar
-            editor={editorRef.current?.editor ?? null}
-            open={toolbarOpen}
-            setOpen={setToolbarOpen}
-            uploadInlineImages={(files: File[]) => {
-              const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
-              if (images.length && editorRef.current?.editor) {
-                const commands = editorRef.current.editor.commands as { uploadInlineImages?: (files: File[]) => void };
-                if (commands.uploadInlineImages) {
-                  commands.uploadInlineImages(images);
-                }
-              }
-            }}
-            uploadFileAttachments={(files: File[]) => {
-              const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
-              if (nonImages.length && editorRef.current?.editor) {
-                const commands = editorRef.current.editor.commands as { uploadFileAttachments?: (files: File[]) => void };
-                if (commands.uploadFileAttachments) {
-                  commands.uploadFileAttachments(nonImages);
-                }
-              }
-            }}
-            enableImageUpload
-            enableFileUpload
-          />
-        </div>
       </div>
-      <div className={cn("flex items-center gap-4", showCommandBar ? "hidden" : "")}>
-        <div className="md:hidden">
-          <Toolbar
-            editor={editorRef.current?.editor ?? null}
-            open={toolbarOpen}
-            setOpen={setToolbarOpen}
-            uploadInlineImages={(files: File[]) => {
-              const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
-              if (images.length && editorRef.current?.editor) {
-                const commands = editorRef.current.editor.commands as { uploadInlineImages?: (files: File[]) => void };
-                if (commands.uploadInlineImages) {
-                  commands.uploadInlineImages(images);
+      <div className={cn("flex items-center gap-4", showCommandBar && "hidden")}>
+        {!isAboveMd && (
+          <div className="flex-1">
+            <Toolbar
+              editor={ref.current?.editor ?? null}
+              open={toolbarOpen}
+              setOpen={setToolbarOpen}
+              uploadInlineImages={(files: File[]) => {
+                const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
+                if (images.length && ref.current?.editor) {
+                  ref.current.editor.commands.setImage?.({
+                    src: URL.createObjectURL(images[0]),
+                    upload: Promise.resolve({ url: URL.createObjectURL(images[0]) }),
+                  });
                 }
-              }
-            }}
-            uploadFileAttachments={(files: File[]) => {
-              const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
-              if (nonImages.length && editorRef.current?.editor) {
-                const commands = editorRef.current.editor.commands as { uploadFileAttachments?: (files: File[]) => void };
-                if (commands.uploadFileAttachments) {
-                  commands.uploadFileAttachments(nonImages);
-                }
-              }
-            }}
-            enableImageUpload
-            enableFileUpload
-          />
+              }}
+              uploadFileAttachments={(files: File[]) => {
+                const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
+                // Handle file attachments
+              }}
+              enableImageUpload
+              enableFileUpload
+              variant="mobile"
+            />
+          </div>
+        )}
+        <div className="flex items-center gap-4 ml-auto">
+          {!toolbarOpen && actionButtons}
         </div>
-        {actionButtons}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
 import LinkModal from "@/components/tiptap/linkModal";
 import { cn } from "@/lib/utils";
+import { useBreakpoint } from "@/components/useBreakpoint";
 import ToolbarBlockquote from "./icons/blockquote.svg";
 import ToolbarBold from "./icons/bold.svg";
 import ToolbarBulletList from "./icons/bullet-list.svg";
@@ -13,6 +14,8 @@ import ToolbarImage from "./icons/image.svg";
 import ToolbarItalic from "./icons/italic.svg";
 import ToolbarLink from "./icons/link.svg";
 import ToolbarOrderedList from "./icons/ordered-list.svg";
+import { Button } from "@/components/ui/button";
+import { PlusIcon, MinusIcon } from "lucide-react";
 
 type ToolbarProps = {
   editor: Editor | null;
@@ -23,6 +26,7 @@ type ToolbarProps = {
   enableImageUpload?: boolean;
   enableFileUpload?: boolean;
   customToolbar?: () => React.ReactNode;
+  variant?: "desktop" | "mobile";
 };
 
 const Toolbar = ({
@@ -34,6 +38,7 @@ const Toolbar = ({
   enableImageUpload,
   enableFileUpload,
   customToolbar,
+  variant = "desktop",
 }: ToolbarProps) => {
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
   const [linkData, setLinkData] = useState({ url: "", text: "" });
@@ -87,19 +92,8 @@ const Toolbar = ({
     return null;
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <button 
-        type="button" 
-        onClick={(e) => {
-          e.preventDefault();
-          setOpen(!open);
-          editor?.commands.focus();
-        }} 
-        className={cn(baseToolbarStyles)}
-      >
-        {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
-      </button>
+  const toolbarContent = (
+    <>
       {open && (
         <>
           <button
@@ -137,54 +131,34 @@ const Toolbar = ({
           >
             <ToolbarBlockquote />
           </button>
-          <Popover
-            className="absolute top-9 z-20"
-            open={isLinkModalOpen}
-            onToggle={toggleLinkModal}
-            trigger={(aria) => (
-              <div
-                {...aria}
-                className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
-              >
-                <ToolbarLink />
-              </div>
-            )}
+          <button
+            type="button"
+            onClick={() => setLinkModalOpen(true)}
+            className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
           >
-            <LinkModal
-              isLinkModalOpen={isLinkModalOpen}
-              setLinkModalOpen={setLinkModalOpen}
-              linkData={linkData}
-              setLinkData={setLinkData}
-              setLink={setLink}
-            />
-          </Popover>
+            <ToolbarLink />
+          </button>
           {enableImageUpload && (
-            <label
-              htmlFor={imageFieldId}
-              className={`${baseToolbarStyles} cursor-pointer ${editor.isActive("image") ? "bg-muted hover:bg-muted" : ""}`}
-            >
+            <label htmlFor={imageFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
               <input
-                aria-label="Insert images"
+                aria-label="Insert image"
                 multiple
                 type="file"
                 id={imageFieldId}
                 className="hidden"
+                accept={imageFileTypes.join(",")}
                 onChange={(e) => {
                   const files = [...(e.target.files || [])];
                   if (!files.length) return;
                   uploadInlineImages(files);
                   e.target.value = "";
                 }}
-                accept={imageFileTypes.join(",")}
               />
               <ToolbarImage />
             </label>
           )}
           {enableFileUpload && (
-            <label 
-              htmlFor={fileFieldId} 
-              className={`${baseToolbarStyles} cursor-pointer`}
-            >
+            <label htmlFor={fileFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
               <input
                 aria-label="Insert attachments"
                 multiple
@@ -203,6 +177,50 @@ const Toolbar = ({
           )}
         </>
       )}
+    </>
+  );
+
+  return (
+    <div className="flex items-center gap-2">
+      {variant === "mobile" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          onClick={(e) => {
+            e.preventDefault();
+            editor?.commands.focus();
+            setOpen(!open);
+          }}
+          className={cn(
+            "h-8 w-8 p-0",
+            open ? "bg-muted border border-border hover:border-primary" : "border border-border hover:border-primary"
+          )}
+        >
+          {open ? <MinusIcon className="h-4 w-4" /> : <ALargeSmall className="h-4 w-4" />}
+          <span className="sr-only">{open ? "Close toolbar" : "Open toolbar"}</span>
+        </Button>
+      )}
+      <div
+        className={cn(
+          "flex flex-wrap gap-1",
+          variant === "desktop" && "absolute z-10 bottom-3 right-3 rounded-t border rounded-sm bg-background p-1",
+          variant === "mobile" && "relative gap-2",
+          open && variant === "desktop" && "left-3",
+          !open && variant === "mobile" && "hidden"
+        )}
+      >
+        {toolbarContent}
+        {variant === "desktop" && (
+          <button 
+            type="button" 
+            onClick={() => setOpen(!open)} 
+            className={cn(baseToolbarStyles, "ml-auto")}
+          >
+            {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

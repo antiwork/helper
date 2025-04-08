@@ -17,8 +17,8 @@ import "./editor.css";
 import { toast } from "@/components/hooks/use-toast";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
+import { useBreakpoint } from "@/components/useBreakpoint";
 import Toolbar from "./toolbar";
-import Head from "next/head";
 
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
@@ -33,7 +33,6 @@ type TipTapEditorProps = {
   editable?: boolean;
   ariaLabel?: string;
   className?: string;
-  showToolbar?: boolean;
 };
 
 declare module "@tiptap/core" {
@@ -53,7 +52,8 @@ const NonInclusiveLink = Link.extend({ inclusive: false }).configure({
 const HardBreakIgnoreModEnter = HardBreak.extend({
   addKeyboardShortcuts() {
     return {
-      "Mod-Enter": () => false,
+      ...this.parent?.(),
+      "Mod-Enter": () => true,
     };
   },
 });
@@ -80,10 +80,10 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       editable,
       ariaLabel,
       className,
-      showToolbar = true,
     },
     ref,
   ) => {
+    const { isAboveMd } = useBreakpoint("md");
     const [isMacOS, setIsMacOS] = React.useState(false);
     const [toolbarOpen, setToolbarOpen] = React.useState(() => {
       if (typeof window !== "undefined") {
@@ -189,25 +189,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     const editorContentContainerRef = useRef<HTMLDivElement | null>(null);
 
     useImperativeHandle(ref, () => ({
-      focus: () => {
-        editorRef.current?.commands.focus();
-        // Scroll cursor into view after focusing
-        setTimeout(() => {
-          const selection = window.getSelection();
-          if (selection?.rangeCount) {
-            const range = selection.getRangeAt(0);
-            range.collapse(false);
-            const rect = range.getBoundingClientRect();
-            const container = editorContentContainerRef.current;
-            if (container) {
-              const containerRect = container.getBoundingClientRect();
-              if (rect.bottom > containerRect.bottom) {
-                container.scrollTop += rect.bottom - containerRect.bottom + 20;
-              }
-            }
-          }
-        }, 0);
-      },
+      focus: () => editorRef.current?.commands.focus(),
       scrollTo: (top: number) =>
         editorContentContainerRef.current?.scrollTo({
           top,
@@ -258,82 +240,80 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     });
     const attachments = unsavedFiles.filter((f) => !f.inline);
 
+    const isAboveMdRef = useRef(isAboveMd);
+    useEffect(() => {
+      isAboveMdRef.current = isAboveMd;
+    }, [isAboveMd]);
+
     if (!editor) {
       return null;
     }
 
     return (
-      <>
-        <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        </Head>
-        <div
-          className={cn(
-            "relative flex flex-col h-full rounded border border-border bg-background",
-            toolbarOpen && showToolbar && "pb-14",
-            className,
-          )}
-          aria-label={ariaLabel}
-        >
-          {showToolbar && (
-            <Toolbar
-              {...{
-                open: toolbarOpen,
-                setOpen: setToolbarOpen,
-                editor,
-                uploadFileAttachments,
-                uploadInlineImages,
-                customToolbar,
-                enableImageUpload,
-                enableFileUpload,
-              }}
-            />
-          )}
-
-          <div
-            className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
-            onClick={focusEditor}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              const files = [...(event.dataTransfer.files ?? [])];
-              if (!files.length) return false;
-              uploadFiles.current(files);
+      <div
+        className={cn(
+          "relative flex flex-col h-full rounded border border-border bg-background",
+          toolbarOpen && isAboveMd && "pb-14",
+          className,
+        )}
+        aria-label={ariaLabel}
+      >
+        {isAboveMd && (
+          <Toolbar
+            {...{
+              open: toolbarOpen,
+              setOpen: setToolbarOpen,
+              editor,
+              uploadFileAttachments,
+              uploadInlineImages,
+              customToolbar,
+              enableImageUpload,
+              enableFileUpload,
+              variant: "desktop",
             }}
-            ref={editorContentContainerRef}
-          >
-            <div className="flex-grow">
-              <EditorContent editor={editor} onKeyDown={handleModEnter} />
-            </div>
-            {signature}
-            {attachments.length > 0 ? (
-              <div className="flex w-full flex-wrap gap-2 pt-4">
-                {attachments.map((fileInfo, idx) => (
-                  <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
-                ))}
-              </div>
-            ) : null}
-          </div>
+          />
+        )}
 
-          {editor && editorContentContainerRef.current && (
-            <BubbleMenu
-              editor={editor}
-              tippyOptions={{
-                duration: 100,
-                placement: "bottom-start",
-                appendTo: editorContentContainerRef.current,
-              }}
-              shouldShow={({ editor }) => {
-                const isMobile = window.innerWidth < 768;
-                return !isMobile && editor.state.selection.content().size > 0 && !editor.isActive("image");
-              }}
-              className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
-            >
-              Hint: Paste URL to create link
-            </BubbleMenu>
-          )}
+        <div
+          className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
+          onClick={focusEditor}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            const files = [...(event.dataTransfer.files ?? [])];
+            if (!files.length) return false;
+            uploadFiles.current(files);
+          }}
+          ref={editorContentContainerRef}
+        >
+          <div className="flex-grow">
+            <EditorContent editor={editor} onKeyDown={handleModEnter} />
+          </div>
+          {signature}
+          {attachments.length > 0 ? (
+            <div className="flex w-full flex-wrap gap-2 pt-4">
+              {attachments.map((fileInfo, idx) => (
+                <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
+              ))}
+            </div>
+          ) : null}
         </div>
-      </>
+
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            tippyOptions={{
+              duration: 100,
+              placement: "bottom-start",
+              appendTo: editorContentContainerRef.current || "parent",
+            }}
+            shouldShow={({ editor }) => isAboveMdRef.current && editor.state.selection.content().size > 0 && !editor.isActive("image")}
+            className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+          >
+            Hint: Paste URL to create link
+          </BubbleMenu>
+        )}
+      </div>
     );
   },
 );
