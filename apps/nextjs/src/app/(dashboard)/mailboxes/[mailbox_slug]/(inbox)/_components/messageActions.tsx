@@ -4,7 +4,7 @@ import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
-import { useFileUpload } from "@/components/fileUploadContext";
+import { useFileUpload, UploadStatus } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
@@ -45,12 +45,156 @@ export const useSendDisabled = (message: string | undefined) => {
   return { sendDisabled, sending, setSending };
 };
 
+const EmailEditorComponent = React.forwardRef<
+  TipTapEditorRef,
+  {
+    draftedEmail: DraftedEmail;
+    initialMessage: { content: string };
+    actionButtons: React.ReactNode;
+    onSend: () => void;
+    updateEmail: (changes: Partial<DraftedEmail>) => void;
+    handleInsertReply: (content: string) => void;
+  }
+>(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, forwardedRef) => {
+  const [showCommandBar, setShowCommandBar] = useState(false);
+  const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
+  const [toolbarOpen, setToolbarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
+    }
+    return true;
+  });
+  const ccRef = useRef<HTMLInputElement>(null);
+  const bccRef = useRef<HTMLInputElement>(null);
+  const commandInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useUser();
+  const { isAboveMd } = useBreakpoint("md");
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+
+  useEffect(() => {
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(editorRef.current);
+    } else if (forwardedRef) {
+      forwardedRef.current = editorRef.current;
+    }
+  }, [forwardedRef]);
+
+  const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
+
+  useEffect(() => {
+    if (showCc) {
+      ccRef.current?.focus();
+    }
+  }, [showCc]);
+
+  useEffect(() => {
+    localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
+  }, [toolbarOpen]);
+
+  return (
+    <div className="flex flex-col h-full pt-4">
+      <TicketCommandBar
+        open={showCommandBar}
+        onOpenChange={setShowCommandBar}
+        onInsertReply={handleInsertReply}
+        onToggleCc={onToggleCc}
+        inputRef={commandInputRef}
+      />
+      <div className={cn("flex-shrink-0 flex flex-col gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
+        <LabeledInput
+          ref={ccRef}
+          name="CC"
+          value={draftedEmail.cc}
+          onChange={(cc) => updateEmail({ cc })}
+          onModEnter={() => {}}
+        />
+        <LabeledInput
+          ref={bccRef}
+          name="BCC"
+          value={draftedEmail.bcc}
+          onChange={(bcc) => updateEmail({ bcc })}
+          onModEnter={() => {}}
+        />
+      </div>
+      <div className={cn("flex-grow overflow-auto relative my-2 md:my-4", showCommandBar && "hidden")}>
+        <TipTapEditor
+          ref={editorRef}
+          ariaLabel="Conversation editor"
+          placeholder="Type your reply here..."
+          defaultContent={initialMessage}
+          editable={true}
+          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
+          onModEnter={onSend}
+          onSlashKey={() => commandInputRef.current?.focus()}
+          enableImageUpload
+          enableFileUpload
+          signature={
+            user?.firstName ? (
+              <div className="mt-6 text-muted-foreground">
+                Best,
+                <br />
+                {user.firstName}
+                <div className="text-xs mt-2">
+                  Note: This signature will be automatically included in email responses, but not in live chat
+                  conversations.
+                </div>
+              </div>
+            ) : null
+          }
+        />
+      </div>
+      <div className={cn("flex items-center gap-4", showCommandBar && "hidden")}>
+        {!isAboveMd && (
+          <div className="flex-1">
+            <Toolbar
+              editor={editorRef.current?.editor ?? null}
+              open={toolbarOpen}
+              setOpen={setToolbarOpen}
+              uploadInlineImages={(files: File[]) => {
+                const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
+                if (images.length && editorRef.current?.editor) {
+                  const image = images[0];
+                  if (image) {
+                    const blobUrl = URL.createObjectURL(image);
+                    editorRef.current.editor.commands.setImage?.({
+                      src: blobUrl,
+                      upload: Promise.resolve({
+                        file: image,
+                        blobUrl,
+                        status: UploadStatus.UPLOADED,
+                        slug: '',
+                        inline: true,
+                        url: blobUrl
+                      }),
+                    });
+                  }
+                }
+              }}
+              uploadFileAttachments={(files: File[]) => {
+                const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
+                // Handle file attachments
+              }}
+              enableImageUpload
+              enableFileUpload
+              variant="mobile"
+            />
+          </div>
+        )}
+        <div className="flex items-center gap-4 ml-auto">
+          {!toolbarOpen && actionButtons}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+EmailEditorComponent.displayName = "EmailEditor";
+
 export const MessageActions = () => {
   const { navigateToConversation } = useConversationListContext();
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
-  const [toolbarOpen, setToolbarOpen] = useState(false);
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -257,145 +401,19 @@ export const MessageActions = () => {
     }));
     setInitialMessageObject({ content });
     setStoredMessage(content);
-    setTimeout(() => editorRef.current?.focus(), 0);
   };
 
-  const editorRef = useRef<TipTapEditorRef>(null);
+  const editorRef = useRef<TipTapEditorRef | null>(null);
 
   return (
     <EmailEditorComponent
       ref={editorRef}
-      onSend={() => handleSend({ assign: false })}
-      actionButtons={actionButtons}
       draftedEmail={draftedEmail}
       initialMessage={initialMessageObject}
+      actionButtons={actionButtons}
+      onSend={() => handleSend({ assign: false })}
       updateEmail={updateDraftedEmail}
       handleInsertReply={handleInsertReply}
     />
   );
 };
-
-const EmailEditorComponent = React.forwardRef<
-  TipTapEditorRef,
-  {
-    draftedEmail: DraftedEmail;
-    initialMessage: { content: string };
-    actionButtons: React.ReactNode;
-    onSend: () => void;
-    updateEmail: (changes: Partial<DraftedEmail>) => void;
-    handleInsertReply: (content: string) => void;
-  }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
-  const [showCommandBar, setShowCommandBar] = useState(false);
-  const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
-  const [toolbarOpen, setToolbarOpen] = useState(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
-    }
-    return true;
-  });
-  const ccRef = useRef<HTMLInputElement>(null);
-  const bccRef = useRef<HTMLInputElement>(null);
-  const commandInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useUser();
-  const { isAboveMd } = useBreakpoint("md");
-
-  const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
-
-  useEffect(() => {
-    if (showCc) {
-      ccRef.current?.focus();
-    }
-  }, [showCc]);
-
-  useEffect(() => {
-    localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
-  }, [toolbarOpen]);
-
-  return (
-    <div className="flex flex-col h-full pt-4">
-      <TicketCommandBar
-        open={showCommandBar}
-        onOpenChange={setShowCommandBar}
-        onInsertReply={handleInsertReply}
-        onToggleCc={onToggleCc}
-        inputRef={commandInputRef}
-      />
-      <div className={cn("flex-shrink-0 flex flex-col gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
-        <LabeledInput
-          ref={ccRef}
-          name="CC"
-          value={draftedEmail.cc}
-          onChange={(cc) => updateEmail({ cc })}
-          onModEnter={() => {}}
-        />
-        <LabeledInput
-          ref={bccRef}
-          name="BCC"
-          value={draftedEmail.bcc}
-          onChange={(bcc) => updateEmail({ bcc })}
-          onModEnter={() => {}}
-        />
-      </div>
-      <div className={cn("flex-grow overflow-auto relative my-2 md:my-4", showCommandBar && "hidden")}>
-        <TipTapEditor
-          ref={ref}
-          ariaLabel="Conversation editor"
-          placeholder="Type your reply here..."
-          defaultContent={initialMessage}
-          editable={true}
-          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
-          onModEnter={onSend}
-          onSlashKey={() => commandInputRef.current?.focus()}
-          enableImageUpload
-          enableFileUpload
-          signature={
-            user?.firstName ? (
-              <div className="mt-6 text-muted-foreground">
-                Best,
-                <br />
-                {user.firstName}
-                <div className="text-xs mt-2">
-                  Note: This signature will be automatically included in email responses, but not in live chat
-                  conversations.
-                </div>
-              </div>
-            ) : null
-          }
-        />
-      </div>
-      <div className={cn("flex items-center gap-4", showCommandBar && "hidden")}>
-        {!isAboveMd && (
-          <div className="flex-1">
-            <Toolbar
-              editor={ref.current?.editor ?? null}
-              open={toolbarOpen}
-              setOpen={setToolbarOpen}
-              uploadInlineImages={(files: File[]) => {
-                const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
-                if (images.length && ref.current?.editor) {
-                  ref.current.editor.commands.setImage?.({
-                    src: URL.createObjectURL(images[0]),
-                    upload: Promise.resolve({ url: URL.createObjectURL(images[0]) }),
-                  });
-                }
-              }}
-              uploadFileAttachments={(files: File[]) => {
-                const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
-                // Handle file attachments
-              }}
-              enableImageUpload
-              enableFileUpload
-              variant="mobile"
-            />
-          </div>
-        )}
-        <div className="flex items-center gap-4 ml-auto">
-          {!toolbarOpen && actionButtons}
-        </div>
-      </div>
-    </div>
-  );
-});
-
-EmailEditorComponent.displayName = "EmailEditor";

@@ -138,6 +138,17 @@ const Toolbar = ({
           >
             <ToolbarLink />
           </button>
+          {isLinkModalOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-2">
+              <LinkModal
+                isLinkModalOpen={isLinkModalOpen}
+                linkData={linkData}
+                setLinkData={setLinkData}
+                setLinkModalOpen={setLinkModalOpen}
+                setLink={setLink}
+              />
+            </div>
+          )}
           {enableImageUpload && (
             <label htmlFor={imageFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
               <input
