@@ -323,7 +323,10 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
                 placement: "bottom-start",
                 appendTo: editorContentContainerRef.current,
               }}
-              shouldShow={({ editor }) => editor.state.selection.content().size > 0 && !editor.isActive("image")}
+              shouldShow={({ editor }) => {
+                const isMobile = window.innerWidth < 768;
+                return !isMobile && editor.state.selection.content().size > 0 && !editor.isActive("image");
+              }}
               className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
             >
               Hint: Paste URL to create link
