@@ -22,7 +22,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatCurrency } from "@/components/utils/currency";
 import { conversationsListChannelId } from "@/lib/ably/channels";
 import { useAblyEvent } from "@/lib/ably/hooks";
-import { formatNumber } from "@/lib/format";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -179,7 +178,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
             label:
               status.status === "closed" || status.status === "spam"
                 ? capitalize(status.status)
-                : `${formatNumber(status.count)} ${capitalize(status.status)}`,
+                : `${status.count.toLocaleString()} ${capitalize(status.status)}`,
             selected: searchParams.status ? searchParams.status == status.status : status.status === "open",
           }
         : [],
