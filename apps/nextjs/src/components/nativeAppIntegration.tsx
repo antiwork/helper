@@ -27,6 +27,8 @@ export function NativeAppIntegration() {
     }
 
     const handleLinkClick = (event: MouseEvent) => {
+      if (event.defaultPrevented) return;
+
       const target = event.target as HTMLElement;
       const anchor = target.closest("a");
 

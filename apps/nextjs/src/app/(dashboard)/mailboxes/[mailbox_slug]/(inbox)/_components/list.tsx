@@ -443,7 +443,8 @@ const NewConversationModal = () => {
 };
 
 const ListItem = ({ conversation, isActive, onSelectConversation, variant }: ListItemProps) => {
-  const listItemRef = useRef<HTMLDivElement>(null);
+  const listItemRef = useRef<HTMLAnchorElement>(null);
+  const { mailboxSlug } = useConversationListContext();
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -457,7 +458,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
 
   return (
     <div className="px-2 py-0.5">
-      <div
+      <a
         ref={listItemRef}
         className={cn(
           "flex w-full cursor-pointer flex-col gap-0.5 px-2 py-2 rounded-lg transition-colors",
@@ -469,7 +470,13 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
               ? "bg-accent"
               : "hover:bg-accent/50",
         )}
-        onClick={() => onSelectConversation(conversation.slug)}
+        href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
+        onClick={(e) => {
+          if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            e.preventDefault();
+            onSelectConversation(conversation.slug);
+          }
+        }}
         style={{ overflowAnchor: "none" }}
       >
         <div className="flex justify-between gap-2">
@@ -551,7 +558,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             ) : null}
           </div>
         </div>
-      </div>
+      </a>
     </div>
   );
 };
