@@ -9,12 +9,11 @@ import {
   SparklesIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/ticketCommandBar/toolForm";
 import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
-import { useToolExecution } from "@/hooks/useToolExecution";
 import { api } from "@/trpc/react";
 import GitHubSvg from "../../_components/icons/github.svg";
 import { CommandGroup } from "./types";
@@ -35,17 +34,37 @@ export const useMainPage = ({
   setSelectedTool,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
+  const utils = api.useUtils();
 
+  const dismissToastRef = useRef<() => void>(() => {});
   const { mutate: generateDraft } = api.mailbox.conversations.refreshDraft.useMutation({
+    onMutate: () => {
+      dismissToastRef.current = toast({
+        title: "Generating draft...",
+        duration: 30_000,
+      }).dismiss;
+    },
+    onSuccess: (draft) => {
+      dismissToastRef.current?.();
+      if (draft) {
+        utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
+          data ? { ...data, draft } : data,
+        );
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error generating draft",
+        });
+      }
+    },
     onError: () => {
+      dismissToastRef.current?.();
       toast({
         variant: "destructive",
         title: "Error generating draft",
       });
     },
   });
-
-  const { handleToolExecution } = useToolExecution();
 
   const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
     { mailboxSlug, conversationSlug },
@@ -147,10 +166,6 @@ export const useMainPage = ({
             onSelect: () => {
               if (conversation?.slug) {
                 generateDraft({ mailboxSlug, conversationSlug: conversation.slug });
-                toast({
-                  title: "Generating draft...",
-                  variant: "success",
-                });
               }
               onOpenChange(false);
             },

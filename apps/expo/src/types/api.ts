@@ -652,7 +652,12 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             mailboxSlug: string;
             conversationSlug: string;
           };
-          output: void;
+          output: {
+            id: number;
+            responseToId: number;
+            body: string | null;
+            isStale: boolean;
+          } | null;
         }>;
         undo: import("@trpc/server").TRPCMutationProcedure<{
           input: {
