@@ -80,14 +80,6 @@ export const useMainPage = ({
               onOpenChange(false);
             },
             shortcut: "C",
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Close Ticket</h3>
-                <p className="text-sm text-muted-foreground">
-                  Mark this conversation as resolved and move it to the closed state.
-                </p>
-              </div>
-            ),
             hidden: conversation?.status === "closed" || conversation?.status === "spam",
           },
           {
@@ -99,12 +91,6 @@ export const useMainPage = ({
               onOpenChange(false);
             },
             shortcut: "Z",
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Reopen Ticket</h3>
-                <p className="text-sm text-muted-foreground">Set this conversation back to the open state.</p>
-              </div>
-            ),
             hidden: conversation?.status === "open",
           },
           {
@@ -116,14 +102,6 @@ export const useMainPage = ({
               setSelectedItemId(null);
             },
             shortcut: "A",
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Assign Ticket</h3>
-                <p className="text-sm text-muted-foreground">
-                  Transfer ownership of this conversation to another team member.
-                </p>
-              </div>
-            ),
           },
           {
             id: "spam",
@@ -134,14 +112,6 @@ export const useMainPage = ({
               onOpenChange(false);
             },
             shortcut: "S",
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Mark as Spam</h3>
-                <p className="text-sm text-muted-foreground">
-                  Mark this conversation as spam and move it to the spam folder.
-                </p>
-              </div>
-            ),
             hidden: conversation?.status === "spam",
           },
           {
@@ -153,14 +123,6 @@ export const useMainPage = ({
               setSelectedItemId(null);
             },
             shortcut: "N",
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Add Internal Note</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add a private note to this conversation that is only visible to your team.
-                </p>
-              </div>
-            ),
           },
           {
             id: "github-issue",
@@ -171,23 +133,6 @@ export const useMainPage = ({
               setSelectedItemId(null);
             },
             shortcut: "G",
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">GitHub Issue</h3>
-                {(conversation as any)?.githubIssueNumber ? (
-                  <>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      This conversation is linked to GitHub issue #{(conversation as any).githubIssueNumber}.
-                    </p>
-                    <p className="text-sm text-muted-foreground">You can view the issue details, close or reopen it.</p>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Create a new GitHub issue or link an existing one to this conversation.
-                  </p>
-                )}
-              </div>
-            ),
             hidden: !isGitHubConnected,
           },
         ],
@@ -209,14 +154,6 @@ export const useMainPage = ({
               }
               onOpenChange(false);
             },
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Generate AI Draft</h3>
-                <p className="text-sm text-muted-foreground">
-                  Use AI to generate a response based on the conversation context and your previous replies.
-                </p>
-              </div>
-            ),
           },
           {
             id: "previous-replies",
@@ -226,14 +163,6 @@ export const useMainPage = ({
               setPage("previous-replies");
               setSelectedItemId(null);
             },
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Previous Replies</h3>
-                <p className="text-sm text-muted-foreground">
-                  Browse and reuse responses from your previous conversations to maintain consistency.
-                </p>
-              </div>
-            ),
           },
           {
             id: "toggle-cc-bcc",
@@ -243,14 +172,6 @@ export const useMainPage = ({
               onToggleCc();
               onOpenChange(false);
             },
-            preview: (
-              <div className="p-4">
-                <h3 className="font-medium mb-2">Add CC or BCC</h3>
-                <p className="text-sm text-muted-foreground">
-                  Show CC and BCC fields to add recipients to the email reply.
-                </p>
-              </div>
-            ),
           },
         ],
       },
@@ -263,12 +184,6 @@ export const useMainPage = ({
                 label: tool.name,
                 icon: PlayIcon,
                 onSelect: () => setSelectedTool(tool),
-                preview: (
-                  <div className="p-4">
-                    <h3 className="font-medium mb-2">{tool.name}</h3>
-                    {tool.description && <p className="text-sm text-muted-foreground">{tool.description}</p>}
-                  </div>
-                ),
               })),
             },
           ]
