@@ -13,6 +13,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { isValidEmailAddress } from "@/components/utils/email";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { DraftedEmail } from "@/serverActions/messages";
 import { RouterInputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -54,7 +55,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
       onSubmit();
     },
     onError: (e) => {
-      console.error(e);
+      captureExceptionAndLog(e);
       toast({
         title: "Failed to create conversation",
         variant: "destructive",

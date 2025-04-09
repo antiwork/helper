@@ -50,7 +50,6 @@ export function LoginForm() {
       listen<{ code: string; firstName: string | null; lastName: string | null }>(
         "apple-sign-in-complete",
         async (event) => {
-          console.log("apple-sign-in-complete", event);
           const token = await appleSignInMutation.mutateAsync({
             code: event.payload.code,
             firstName: event.payload.firstName ?? "",
@@ -63,6 +62,7 @@ export function LoginForm() {
       });
 
       listen("apple-sign-in-error", (event) => {
+        // eslint-disable-next-line no-console
         console.error("apple-sign-in-error", event);
         setError("An error occurred during sign in. Please try again.");
         setLoading(false);
@@ -116,7 +116,7 @@ export function LoginForm() {
           redirectUrlComplete: "/mailboxes",
         });
       } catch (err) {
-        console.error("OAuth error:", err);
+        captureExceptionAndLog(err);
         setError("An error occurred during sign in. Please try again.");
       } finally {
         setLoading(false);
@@ -138,10 +138,12 @@ export function LoginForm() {
         await setActive({ session: signInAttempt.createdSessionId });
         router.push(isTauri ? desktopRedirectUrl : "/mailboxes");
       } else {
+        // eslint-disable-next-line no-console
         console.error("Sign in not complete:", signInAttempt);
         setError("Failed to sign in with dev account");
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("Dev sign in error:", err);
       setError("Failed to sign in with dev account");
     } finally {

@@ -30,6 +30,10 @@ export default function Message({ message, conversationSlug, token, data, color,
     )?.id ?? null;
   const persistedId = idFromAnnotation ?? (!message.id.startsWith("client_") ? message.id : null);
 
+  const reasoningStarted = data?.some(
+    (item) => typeof item === "object" && item !== null && "event" in item && item.event === "reasoningStarted",
+  );
+
   let reasoning =
     message.annotations?.find(
       (annotation): annotation is { reasoning: { message: string; reasoningTimeSeconds: number } } =>
@@ -70,7 +74,7 @@ export default function Message({ message, conversationSlug, token, data, color,
 
   const showGuidePrompt = hasGuide && !hasCanceledGuide;
 
-  if (!conversationSlug) {
+  if (!conversationSlug || (!message.content && !reasoningStarted)) {
     return null;
   }
 

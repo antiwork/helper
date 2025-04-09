@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     source: "chat",
     isPrompt,
     isVisitor,
+    assignedToAI: true,
   });
 
   return corsResponse({ conversationSlug: newConversation.slug });

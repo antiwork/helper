@@ -15,7 +15,7 @@ import { extractAddresses } from "@/lib/emails";
 import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";
 import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
-import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
 import { getMailboxById } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
@@ -25,6 +25,7 @@ type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
 type NewConversation = Omit<typeof conversations.$inferInsert, OptionalConversationAttributes | "source"> &
   Partial<Pick<typeof conversations.$inferInsert, OptionalConversationAttributes>> & {
     source: NonNullable<(typeof conversations.$inferInsert)["source"]>;
+    assignedToAI: boolean;
     isPrompt?: boolean;
     isVisitor?: boolean;
   };
@@ -47,7 +48,7 @@ export const createConversation = async (conversation: NewConversation): Promise
 
     return newConversation;
   } catch (error) {
-    console.error("Error creating conversation:", error);
+    captureExceptionAndLog(error);
     throw new Error("Failed to create conversation");
   }
 };
@@ -81,6 +82,12 @@ export const updateConversation = async (
   tx: Transaction | typeof db = db,
 ) => {
   const current = assertDefined(await tx.query.conversations.findFirst({ where: eq(conversations.id, id) }));
+  if (dbUpdates.assignedToAI) {
+    dbUpdates.status = "closed";
+    dbUpdates.assignedToClerkId = null;
+  } else if (dbUpdates.assignedToClerkId) {
+    dbUpdates.assignedToAI = false;
+  }
   if (current.status !== "closed" && dbUpdates.status === "closed") {
     dbUpdates.closedAt = new Date();
   }
@@ -91,7 +98,7 @@ export const updateConversation = async (
     .where(eq(conversations.id, id))
     .returning()
     .then(takeUniqueOrThrow);
-  const updatesToLog = (["status", "assignedToClerkId"] as const).filter(
+  const updatesToLog = (["status", "assignedToClerkId", "assignedToAI"] as const).filter(
     (key) => current[key] !== updatedConversation[key],
   );
   if (updatesToLog.length > 0) {
@@ -115,6 +122,18 @@ export const updateConversation = async (
         },
       },
     });
+  }
+  if (!current.assignedToAI && updatedConversation.assignedToAI) {
+    const message = await tx.query.conversationMessages.findFirst({
+      where: eq(conversationMessages.conversationId, updatedConversation.id),
+      orderBy: desc(conversationMessages.createdAt),
+    });
+    if (message?.role === "user") {
+      await inngest.send({
+        name: "conversations/auto-response.create",
+        data: { messageId: message.id },
+      });
+    }
   }
 
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
@@ -150,7 +169,7 @@ export const updateConversation = async (
         }
         await Promise.all(events);
       } catch (error) {
-        captureExceptionAndLogIfDevelopment(error);
+        captureExceptionAndLog(error);
       }
     };
     publishEvents();
@@ -175,6 +194,7 @@ export const serializeConversation = (
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
     assignedToClerkId: conversation.assignedToClerkId,
+    assignedToAI: conversation.assignedToAI,
     platformCustomer: platformCustomer
       ? {
           ...platformCustomer,

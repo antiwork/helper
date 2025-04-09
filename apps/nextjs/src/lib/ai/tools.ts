@@ -66,7 +66,7 @@ const requestHumanSupport = async (
   }
 
   await updateOriginalConversation(conversation.id, {
-    set: { status: "open" },
+    set: { status: "open", assignedToAI: false },
     message: reason,
     type: "request_human_support",
   });

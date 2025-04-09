@@ -132,7 +132,7 @@ const billAIResolution = async (conversationId: number, mailbox: Mailbox) => {
   });
 
   if (subscription?.stripeCustomerId) {
-    await stripe.billing.meterEvents.create({
+    await assertDefined(stripe).billing.meterEvents.create({
       event_name: "ai_resolutions",
       identifier: `ai_resolution_${conversationId}_${Math.floor(Date.now() / 1000)}`,
       payload: { value: "1", stripe_customer_id: subscription.stripeCustomerId },

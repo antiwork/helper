@@ -78,6 +78,7 @@ class HelperWidget {
       if (await this.createSession()) return;
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
+    // eslint-disable-next-line no-console
     console.error("Failed to create Helper session after 3 attempts");
   }
 
@@ -97,6 +98,7 @@ class HelperWidget {
 
   private async createSession() {
     if (!this.validateConfig()) {
+      // eslint-disable-next-line no-console
       console.error("Invalid config, missing required fields", this.config);
       return;
     }
@@ -109,6 +111,7 @@ class HelperWidget {
 
       if (!this.isAnonymous()) {
         if (!this.config.email_hash || !this.config.timestamp) {
+          // eslint-disable-next-line no-console
           console.error("Email authentication fields missing");
           return;
         }
@@ -128,6 +131,7 @@ class HelperWidget {
       });
 
       if (!response.ok) {
+        // eslint-disable-next-line no-console
         console.error("Session creation failed");
         return;
       }
@@ -149,6 +153,7 @@ class HelperWidget {
       }
       return true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to create Helper session:", error);
       return false;
     }
@@ -182,6 +187,7 @@ class HelperWidget {
 
   private validateConfig(): boolean {
     if (!this.config.mailbox_slug) {
+      // eslint-disable-next-line no-console
       console.error("Invalid config, missing required fields", this.config);
       return false;
     }
@@ -672,6 +678,7 @@ class HelperWidget {
       const screenshot = await domToPng(this.screenshotContext);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: screenshot });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to take screenshot:", error);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: null });
     }
@@ -837,6 +844,7 @@ class HelperWidget {
         body: JSON.stringify({ status }),
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to update notification status:", error);
     }
   }

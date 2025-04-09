@@ -5,8 +5,8 @@ import { env } from "@/env";
 // Ensures that `env` is not an unused variable. Importing `env` during build-time
 // ensures that the project never gets deployed unless all environment variables
 // have been properly configured.
-if (!env.STRIPE_WEBHOOK_SECRET) {
-  throw new Error("STRIPE_WEBHOOK_SECRET is not set");
+if (!env.GOOGLE_CLIENT_ID) {
+  throw new Error("GOOGLE_CLIENT_ID is not set");
 }
 
 const nextConfig: NextConfig = {

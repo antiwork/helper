@@ -26,7 +26,6 @@ export const handleAutoResponse = async (messageId: number) => {
     .then(assertDefined);
 
   if (message.conversation.status === "spam") return { message: "Skipped - conversation is spam" };
-  if (!message.gmailMessageId) return { message: "Skipped - message is not an email" };
 
   await ensureCleanedUpText(message);
 
@@ -48,7 +47,7 @@ export const handleAutoResponse = async (messageId: number) => {
     }
   }
 
-  if (!message.conversation.mailbox.autoRespondEmailToChat) return { message: "Skipped - auto respond is disabled" };
+  if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   const emailText = (await getTextWithConversationSubject(message.conversation, message)).trim();
   if (emailText.length === 0) return { message: "Skipped - email text is empty" };

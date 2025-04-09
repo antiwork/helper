@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { assertDefined } from "@/components/utils/assert";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 
 export enum UploadStatus {
@@ -137,7 +138,7 @@ export const FileUploadProvider = ({
           prevFiles.map((f) => (f.file === unsavedFileInfo.file ? { ...f, status: UploadStatus.FAILED } : f)),
         );
         if (e instanceof Error && e.message) {
-          console.error(e.message);
+          captureExceptionAndLog(e);
           reject(e.message);
         } else reject(null);
       }

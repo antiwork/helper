@@ -33,7 +33,7 @@ describe("POST /api/webhooks/stripe", () => {
     const payload = JSON.stringify({ type: "checkout.session.completed", data: { object: {} } });
     const signature = "valid_signature";
 
-    vi.mocked(stripe.webhooks.constructEvent).mockReturnValue({
+    vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue({
       type: "checkout.session.completed",
       data: { object: {} },
     } as any);
@@ -49,7 +49,7 @@ describe("POST /api/webhooks/stripe", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(204);
-    expect(stripe.webhooks.constructEvent).toHaveBeenCalledWith(payload, signature, env.STRIPE_WEBHOOK_SECRET);
+    expect(stripe!.webhooks.constructEvent).toHaveBeenCalledWith(payload, signature, env.STRIPE_WEBHOOK_SECRET);
     expect(inngestMock.send).toHaveBeenCalledWith({
       name: "stripe/webhook",
       data: {
@@ -65,7 +65,7 @@ describe("POST /api/webhooks/stripe", () => {
     const payload = JSON.stringify({ type: "checkout.session.completed", data: { object: {} } });
     const signature = "invalid_signature";
 
-    vi.mocked(stripe.webhooks.constructEvent).mockImplementation(() => {
+    vi.mocked(stripe!.webhooks.constructEvent).mockImplementation(() => {
       throw new Error("Invalid signature");
     });
 
@@ -80,7 +80,7 @@ describe("POST /api/webhooks/stripe", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(400);
-    expect(stripe.webhooks.constructEvent).toHaveBeenCalledWith(payload, signature, env.STRIPE_WEBHOOK_SECRET);
+    expect(stripe!.webhooks.constructEvent).toHaveBeenCalledWith(payload, signature, env.STRIPE_WEBHOOK_SECRET);
     expect(inngestMock.send).not.toHaveBeenCalled();
   });
 
@@ -88,7 +88,7 @@ describe("POST /api/webhooks/stripe", () => {
     const payload = JSON.stringify({ type: "non.allowed.event", data: { object: {} } });
     const signature = "valid_signature";
 
-    vi.mocked(stripe.webhooks.constructEvent).mockReturnValue({
+    vi.mocked(stripe!.webhooks.constructEvent).mockReturnValue({
       type: "non.allowed.event",
       data: { object: {} },
     } as any);
@@ -104,7 +104,7 @@ describe("POST /api/webhooks/stripe", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(204);
-    expect(stripe.webhooks.constructEvent).toHaveBeenCalledWith(payload, signature, env.STRIPE_WEBHOOK_SECRET);
+    expect(stripe!.webhooks.constructEvent).toHaveBeenCalledWith(payload, signature, env.STRIPE_WEBHOOK_SECRET);
     expect(inngestMock.send).not.toHaveBeenCalled();
   });
 });

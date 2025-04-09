@@ -54,7 +54,7 @@ export const Chip = React.forwardRef<HTMLAnchorElement, ChipProps>(
               isActive ? styles.count : styles.count,
             )}
           >
-            {count}
+            {count.toLocaleString()}
           </span>
         )}
       </Link>

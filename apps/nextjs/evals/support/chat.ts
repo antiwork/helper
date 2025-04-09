@@ -114,12 +114,12 @@ export const parseMessagesWithMocks = (input: string) => {
     vipThreshold: null,
     vipChannelId: null,
     vipExpectedResponseHours: null,
-    disableAutoResponseForVips: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     githubInstallationId: null,
     githubRepoOwner: null,
     githubRepoName: null,
+    unused_disableAutoResponseForVips: false,
     unused_responseGeneratorPrompt: [],
     unused_escalationEmailBody: null,
     unused_escalationExpectedResolutionHours: null,
@@ -134,7 +134,6 @@ export const parseMessagesWithMocks = (input: string) => {
 };
 
 export const runAIQuery = async (input: string, reasoning = false) => {
-  console.log("Running AI query for input:", input);
   const { messages, mailbox } = parseMessagesWithMocks(input);
 
   const result = await generateAIResponse({

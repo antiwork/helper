@@ -31,7 +31,9 @@ export const resetMailboxPromptUpdatedAt = async (tx: Transaction, mailboxId: nu
 
 export type Mailbox = typeof mailboxes.$inferSelect;
 
-const getSlackConnectUrl = (mailboxSlug: string): string => {
+const getSlackConnectUrl = (mailboxSlug: string): string | null => {
+  if (!env.SLACK_CLIENT_ID) return null;
+
   const params = new URLSearchParams({
     scope: REQUIRED_SCOPES.join(","),
     redirect_uri: SLACK_REDIRECT_URI,
@@ -73,10 +75,10 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     hasMetadataEndpoint: !!metadataEndpoint,
     metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
-    slackConnectUrl: getSlackConnectUrl(mailbox.slug),
+    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl(mailbox.slug) : null,
     slackAlertChannel: mailbox.slackAlertChannel,
     githubConnected: !!mailbox.githubInstallationId,
-    githubConnectUrl: getGitHubInstallUrl(),
+    githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
     githubRepoOwner: mailbox.githubRepoOwner,
     githubRepoName: mailbox.githubRepoName,
     clerkOrganizationId: mailbox.clerkOrganizationId,
@@ -89,9 +91,10 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     vipThreshold: mailbox.vipThreshold,
     vipChannelId: mailbox.vipChannelId,
     vipExpectedResponseHours: mailbox.vipExpectedResponseHours,
-    disableAutoResponseForVips: mailbox.disableAutoResponseForVips,
     autoCloseEnabled: mailbox.autoCloseEnabled,
     autoCloseDaysOfInactivity: mailbox.autoCloseDaysOfInactivity,
+    firecrawlEnabled: !!env.FIRECRAWL_API_KEY,
+    billingEnabled: !!env.STRIPE_PRICE_ID,
   };
 };
 

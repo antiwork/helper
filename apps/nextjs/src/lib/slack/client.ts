@@ -10,6 +10,7 @@ import {
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
 
 export const getSlackPermalink = async (token: string, channel: string, ts: string) => {
@@ -18,7 +19,7 @@ export const getSlackPermalink = async (token: string, channel: string, ts: stri
     const response = await client.chat.getPermalink({ channel, message_ts: ts });
     return response.permalink ?? null;
   } catch (error) {
-    console.error(error);
+    captureExceptionAndLog(error);
     return null;
   }
 };
@@ -40,7 +41,12 @@ export const verifySlackRequest = (body: string, headers: Headers) => {
   const timestamp = headers.get("x-slack-request-timestamp");
   const slackSigningSecret = env.SLACK_SIGNING_SECRET;
 
-  if (!slackSignature || !timestamp || new Date(Number(timestamp) * 1000).getTime() < Date.now() - 300 * 1000) {
+  if (
+    !slackSignature ||
+    !slackSigningSecret ||
+    !timestamp ||
+    new Date(Number(timestamp) * 1000).getTime() < Date.now() - 300 * 1000
+  ) {
     return Promise.resolve(false);
   }
 
@@ -154,6 +160,9 @@ export const openSlackModal = async ({
 };
 
 export const uninstallSlackApp = async (token: string) => {
+  if (!env.SLACK_CLIENT_ID || !env.SLACK_CLIENT_SECRET)
+    throw new Error("SLACK_CLIENT_ID or SLACK_CLIENT_SECRET is not set");
+
   const client = new WebClient(token);
   const response = await client.apps.uninstall({
     client_id: env.SLACK_CLIENT_ID,
@@ -185,6 +194,9 @@ export const listSlackChannels = async (token: string) => {
 };
 
 export const getSlackAccessToken = async (code: string) => {
+  if (!env.SLACK_CLIENT_ID || !env.SLACK_CLIENT_SECRET)
+    throw new Error("SLACK_CLIENT_ID or SLACK_CLIENT_SECRET is not set");
+
   const client = new WebClient();
   const response = await client.oauth.v2.access({
     client_id: env.SLACK_CLIENT_ID,
@@ -241,7 +253,7 @@ export const listSlackUsers = async (token: string) => {
 
 export const getSlackUsersByEmail = async (token: string) => {
   const slackUsers = await listSlackUsers(token).catch((error) => {
-    console.error("Failed to list Slack users", error);
+    captureExceptionAndLog(error);
     return [];
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));

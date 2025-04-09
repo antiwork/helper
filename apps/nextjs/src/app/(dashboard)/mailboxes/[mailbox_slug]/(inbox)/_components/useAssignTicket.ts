@@ -1,19 +1,23 @@
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
 import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/shared/queries";
 import { toast } from "@/components/hooks/use-toast";
-import { assertDefined } from "@/components/utils/assert";
 import { api } from "@/trpc/react";
 
 export const useAssignTicket = () => {
-  const { mutate: update } = api.mailbox.conversations.update.useMutation();
   const utils = api.useUtils();
   const { input } = useConversationsListInput();
-  const { mailboxSlug, currentConversationSlug, conversationListData, moveToNextConversation, removeConversation } =
+  const { currentConversationSlug, conversationListData, moveToNextConversation, removeConversation } =
     useConversationListContext();
+  const { updateConversation } = useConversationContext();
 
-  const assignTicket = (assignedTo: { id: string; displayName: string } | null, message?: string | null) => {
-    const assignedToId = assignedTo?.id ?? null;
-    update({ mailboxSlug, conversationSlug: assertDefined(currentConversationSlug), assignedToId, message });
+  const assignTicket = (
+    assignedTo: { id: string; displayName: string } | { ai: true } | null,
+    message?: string | null,
+  ) => {
+    const assignedToId = !!assignedTo && "id" in assignedTo ? assignedTo.id : null;
+    const assignedToAI = !!assignedTo && "ai" in assignedTo;
+    updateConversation({ assignedToId, assignedToAI, message });
 
     utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
       if (!data) return data;
@@ -22,18 +26,22 @@ export const useAssignTicket = () => {
         pages: data.pages.map((page) => ({
           ...page,
           conversations: page.conversations.map((c) =>
-            c.slug === currentConversationSlug ? { ...c, assignedToClerkId: assignedToId ?? null } : c,
+            c.slug === currentConversationSlug ? { ...c, assignedToClerkId: assignedToId, assignedToAI } : c,
           ),
         })),
       };
     });
     toast({
-      title: assignedTo ? `Assigned ${assignedTo.displayName}` : "Unassigned ticket",
+      title: assignedToAI
+        ? "Assigned to Helper agent"
+        : assignedTo
+          ? `Assigned ${assignedTo.displayName}`
+          : "Unassigned ticket",
     });
     if (
-      (input.category === "mine" && assignedTo?.id !== conversationListData?.assignedToClerkIds?.[0]) ||
-      (input.category === "unassigned" && assignedTo) ||
-      (input.category === "assigned" && !assignedTo)
+      (input.category === "mine" && assignedToId !== conversationListData?.assignedToClerkIds?.[0]) ||
+      (input.category === "unassigned" && assignedToId) ||
+      (input.category === "assigned" && !assignedToId)
     ) {
       removeConversation();
     } else {

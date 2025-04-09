@@ -12,7 +12,6 @@ import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
-import { PlatformCustomer } from "@/lib/data/platformCustomer";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { createPresignedDownloadUrl } from "@/s3/utils";
@@ -29,7 +28,6 @@ const isAiDraftStale = (draft: typeof conversationMessages.$inferSelect, mailbox
 export const serializeResponseAiDraft = (
   draft: typeof conversationMessages.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user?: User,
 ) => {
   if (!draft?.responseToId) {
     return null;
@@ -37,16 +35,9 @@ export const serializeResponseAiDraft = (
   return {
     id: draft.id,
     responseToId: draft.responseToId,
-    body: bodyWithSignature(draft.body, user),
+    body: draft.body,
     isStale: isAiDraftStale(draft, mailbox),
   };
-};
-
-export const bodyWithSignature = (body?: string | null, user?: User) => {
-  if (body && user?.firstName) {
-    return `${body}<br><br>Best,<br>${user?.firstName}`;
-  }
-  return body ?? "";
 };
 
 export const getMessagesOnly = async (conversationId: number) => {
@@ -172,6 +163,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         assignedToUser: event.changes.assignedToClerkId
           ? (membersById[event.changes.assignedToClerkId]?.fullName ?? null)
           : event.changes.assignedToClerkId,
+        assignedToAI: event.changes.assignedToAI,
       },
       byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.fullName ?? null) : null,
       eventType: event.type,
@@ -325,7 +317,11 @@ export const createReply = async (
 
   return tx0.transaction(async (tx) => {
     if (shouldAutoAssign && user && !conversation.assignedToClerkId) {
-      await updateConversation(conversationId, { set: { assignedToClerkId: user.id }, byUserId: null }, tx);
+      await updateConversation(
+        conversationId,
+        { set: { assignedToClerkId: user.id, assignedToAI: false }, byUserId: null },
+        tx,
+      );
     }
 
     const createdMessage = await createConversationMessage(
@@ -354,8 +350,7 @@ export const createReply = async (
 
     const lastAiDraft = await getLastAiGeneratedDraft(conversationId, tx);
     if (lastAiDraft?.body) {
-      const draftBody = user ? bodyWithSignature(lastAiDraft.body, user) : lastAiDraft.body;
-      if (message && cleanupMessage(draftBody) === cleanupMessage(message)) {
+      if (message && cleanupMessage(lastAiDraft.body) === cleanupMessage(message)) {
         await tx
           .update(conversationMessages)
           .set({ isPerfect: true })
@@ -571,30 +566,4 @@ const generateCleanedUpText = (html: string) => {
     .split(/\s*\n\s*/)
     .filter((p) => p.trim().replace(/\s+/g, " "));
   return paragraphs.join("\n\n");
-};
-
-export const hasStaffMessages = async (conversationId: number, tx: Transaction | typeof db = db): Promise<boolean> => {
-  const staffMessage = await tx.query.conversationMessages.findFirst({
-    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "staff")),
-  });
-  return !!staffMessage;
-};
-
-export const disableAIResponse = async (
-  conversationId: number,
-  mailbox: Pick<typeof mailboxes.$inferSelect, "disableAutoResponseForVips">,
-  platformCustomer: PlatformCustomer | null,
-) => {
-  const requestHumanSupportEvent = await db.query.conversationEvents.findFirst({
-    where: and(
-      eq(conversationEvents.conversationId, conversationId),
-      eq(conversationEvents.type, "request_human_support"),
-    ),
-  });
-
-  return (
-    !!requestHumanSupportEvent ||
-    (platformCustomer?.isVip && mailbox.disableAutoResponseForVips) ||
-    (await hasStaffMessages(conversationId))
-  );
 };

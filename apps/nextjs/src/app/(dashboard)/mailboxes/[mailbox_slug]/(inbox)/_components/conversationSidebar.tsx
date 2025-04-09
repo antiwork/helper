@@ -3,6 +3,7 @@ import { ArrowTopRightOnSquareIcon, CurrencyDollarIcon, EnvelopeIcon } from "@he
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { AssignPopoverButton } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/assignPopoverButton";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { Conversation } from "@/app/types/global";
 import { toast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
@@ -30,11 +31,7 @@ interface ConversationItemProps {
   status: "open" | "closed" | "spam" | null;
   mailboxSlug: string;
   navigateToConversation: (slug: string) => void;
-  removeConversation: () => void;
-  updateConversation: (
-    params: { mailboxSlug: string; conversationSlug: string; status: "open" | "closed" | "spam" },
-    options: { onSuccess: () => void; onError: () => void },
-  ) => void;
+  updateStatus: (status: "closed" | "spam" | "open") => void;
 }
 
 const ConversationItem = ({
@@ -46,8 +43,7 @@ const ConversationItem = ({
   status,
   mailboxSlug,
   navigateToConversation,
-  removeConversation,
-  updateConversation,
+  updateStatus,
 }: ConversationItemProps) => (
   <div
     key={slug}
@@ -72,18 +68,7 @@ const ConversationItem = ({
           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
-            updateConversation(
-              { mailboxSlug, conversationSlug: slug, status: "closed" },
-              {
-                onSuccess: () => {
-                  removeConversation();
-                  toast({ title: "Conversation closed" });
-                },
-                onError: () => {
-                  toast({ variant: "destructive", title: "Failed to close conversation" });
-                },
-              },
-            );
+            updateStatus("closed");
           }}
         >
           <ArrowUturnLeftIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
@@ -99,8 +84,8 @@ const ConversationItem = ({
 );
 
 const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarProps) => {
-  const { navigateToConversation, removeConversation } = useConversationListContext();
-  const { mutate: updateConversation } = api.mailbox.conversations.update.useMutation();
+  const { navigateToConversation } = useConversationListContext();
+  const { updateStatus } = useConversationContext();
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
 
@@ -126,7 +111,10 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             <Badge>{conversation.status || "open"}</Badge>
           </div>
           <span className="text-muted-foreground">Assignee</span>
-          <AssignPopoverButton initialAssignedToClerkId={conversation.assignedToClerkId} />
+          <AssignPopoverButton
+            initialAssignedToClerkId={conversation.assignedToClerkId}
+            assignedToAI={conversation.assignedToAI}
+          />
         </div>
       </div>
 
@@ -214,8 +202,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
                       status={conv.status}
                       mailboxSlug={mailboxSlug}
                       navigateToConversation={navigateToConversation}
-                      removeConversation={removeConversation}
-                      updateConversation={updateConversation}
+                      updateStatus={updateStatus}
                     />
                   ))
                 )}
@@ -247,8 +234,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
                       similarity={similarConversations?.similarityMap?.[conv.slug]}
                       mailboxSlug={mailboxSlug}
                       navigateToConversation={navigateToConversation}
-                      removeConversation={removeConversation}
-                      updateConversation={updateConversation}
+                      updateStatus={updateStatus}
                     />
                   ))
                 )}

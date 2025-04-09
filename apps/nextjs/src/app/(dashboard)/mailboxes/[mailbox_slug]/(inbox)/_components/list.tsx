@@ -3,6 +3,7 @@ import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChannelProvider } from "ably/react";
 import { capitalize } from "lodash";
+import { Bot } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
@@ -21,7 +22,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatCurrency } from "@/components/utils/currency";
 import { conversationsListChannelId } from "@/lib/ably/channels";
 import { useAblyEvent } from "@/lib/ably/hooks";
-import { formatNumber } from "@/lib/format";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -178,7 +178,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
             label:
               status.status === "closed" || status.status === "spam"
                 ? capitalize(status.status)
-                : `${formatNumber(status.count)} ${capitalize(status.status)}`,
+                : `${status.count.toLocaleString()} ${capitalize(status.status)}`,
             selected: searchParams.status ? searchParams.status == status.status : status.status === "open",
           }
         : [],
@@ -442,7 +442,8 @@ const NewConversationModal = () => {
 };
 
 const ListItem = ({ conversation, isActive, onSelectConversation, variant }: ListItemProps) => {
-  const listItemRef = useRef<HTMLDivElement>(null);
+  const listItemRef = useRef<HTMLAnchorElement>(null);
+  const { mailboxSlug } = useConversationListContext();
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -456,7 +457,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
 
   return (
     <div className="px-2 py-0.5">
-      <div
+      <a
         ref={listItemRef}
         className={cn(
           "flex w-full cursor-pointer flex-col gap-0.5 px-2 py-2 rounded-lg transition-colors",
@@ -468,7 +469,13 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
               ? "bg-accent"
               : "hover:bg-accent/50",
         )}
-        onClick={() => onSelectConversation(conversation.slug)}
+        href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
+        onClick={(e) => {
+          if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            e.preventDefault();
+            onSelectConversation(conversation.slug);
+          }
+        }}
         style={{ overflowAnchor: "none" }}
       >
         <div className="flex justify-between gap-2">
@@ -511,13 +518,14 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {conversation.assignedToClerkId && (
+            {(conversation.assignedToClerkId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(
                   "shrink-0 break-all flex items-center gap-1 text-xs font-sundry-regular",
                   variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
                 )}
                 assignedToClerkId={conversation.assignedToClerkId}
+                assignedToAI={conversation.assignedToAI}
               />
             )}
             {conversation.platformCustomer?.isVip && (
@@ -549,16 +557,18 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             ) : null}
           </div>
         </div>
-      </div>
+      </a>
     </div>
   );
 };
 
 export const AssignedToLabel = ({
   assignedToClerkId,
+  assignedToAI,
   className,
 }: {
-  assignedToClerkId: string;
+  assignedToClerkId: string | null;
+  assignedToAI?: boolean;
   className?: string;
 }) => {
   const { data: members } = api.organization.getMembers.useQuery(undefined, {
@@ -566,6 +576,14 @@ export const AssignedToLabel = ({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  if (assignedToAI) {
+    return (
+      <div className={className} title="Assigned to Helper agent">
+        <Bot className="h-3 w-3" />
+      </div>
+    );
+  }
 
   const displayName = members?.find((m) => m.id === assignedToClerkId)?.displayName?.split(" ")[0];
 

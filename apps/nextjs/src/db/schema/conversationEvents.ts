@@ -19,6 +19,7 @@ export const conversationEvents = pgTable(
       .$type<{
         status?: "open" | "closed" | "spam";
         assignedToClerkId?: string | null;
+        assignedToAI?: boolean;
         isVisible?: boolean;
       }>()
       .notNull(),
