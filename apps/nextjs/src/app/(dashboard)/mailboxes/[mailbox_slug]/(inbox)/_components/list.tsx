@@ -137,14 +137,14 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
 
   const conversations = conversationListData?.conversations ?? [];
   const total = conversationListData?.total ?? 0;
-  const { data: countData } = api.mailbox.countByStatus.useQuery({ mailboxSlug: input.mailboxSlug });
-  const status = countData
-    ? (["open", "closed", "spam"] as const)
-        .map((status) => ({
-          status,
-          count: countData[category][status] ?? 0,
-        }))
-        .filter((c) => c.count > 0 || c.status === "open")
+  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
+
+  const status = openCount
+    ? [
+        { status: "open", count: openCount[category] },
+        { status: "closed", count: 0 },
+        { status: "spam", count: 0 },
+      ]
     : [];
   const defaultSort = conversationListData?.defaultSort;
 
@@ -171,27 +171,18 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const statusOptions = useMemo(() => {
-    const statuses = status.flatMap((status) =>
-      status.status
-        ? {
-            value: status.status,
-            label:
-              status.status === "closed" || status.status === "spam"
-                ? capitalize(status.status)
-                : `${status.count.toLocaleString()} ${capitalize(status.status)}`,
-            selected: searchParams.status ? searchParams.status == status.status : status.status === "open",
-          }
-        : [],
-    );
+    const statuses = status.flatMap((s) => ({
+      value: s.status as StatusOption,
+      label: s.status === "open" ? `${s.count.toLocaleString()} ${capitalize(s.status)}` : capitalize(s.status),
+      selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
+    }));
 
     if (searchParams.status) {
       if (!statuses.some((s) => s.value === searchParams.status)) {
         statuses.push({
-          value: searchParams.status,
+          value: searchParams.status as StatusOption,
           label:
-            searchParams.status === "closed" || searchParams.status === "spam"
-              ? capitalize(searchParams.status)
-              : `0 ${capitalize(searchParams.status)}`,
+            searchParams.status === "open" ? `0 ${capitalize(searchParams.status)}` : capitalize(searchParams.status),
           selected: true,
         });
       }

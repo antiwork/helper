@@ -74,7 +74,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const [showNativeAppModal, setShowNativeAppModal] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
-  const { data: countByStatus } = api.mailbox.countByStatus.useQuery({ mailboxSlug });
+  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug });
 
   const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
@@ -176,7 +176,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
           </div>
         ) : (
           <>
-            <CategoryNav countByStatus={countByStatus} mailboxSlug={mailboxSlug} variant="sidebar" />
+            <CategoryNav openCount={openCount} mailboxSlug={mailboxSlug} variant="sidebar" />
             <ConversationList mailboxSlug={mailboxSlug} />
           </>
         )}
