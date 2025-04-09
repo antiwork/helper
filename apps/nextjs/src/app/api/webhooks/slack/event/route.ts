@@ -5,9 +5,10 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
+import { findMailboxForEvent } from "@/lib/slack/agent/findMailbox";
 import { handleNewAppMention } from "@/lib/slack/agent/handleAppMention";
 import { assistantThreadMessage, handleNewAssistantMessage } from "@/lib/slack/agent/handleMessages";
-import { mailboxForEvent, verifySlackRequest } from "@/lib/slack/client";
+import { verifySlackRequest } from "@/lib/slack/client";
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -33,7 +34,7 @@ export const POST = async (request: Request) => {
   }
 
   const event = data.event as SlackEvent;
-  const mailbox = await mailboxForEvent(event);
+  const mailbox = await findMailboxForEvent(event);
 
   if (!mailbox) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 

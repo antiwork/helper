@@ -6,36 +6,13 @@ import {
   KnownBlock,
   MessageAttachment,
   ModalView,
-  SlackEvent,
   WebClient,
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { CoreMessage } from "ai";
-import { eq } from "drizzle-orm";
-import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
 import { env } from "@/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
-
-export const mailboxForEvent = async (event: SlackEvent) => {
-  if (!("tokens" in event) || !("team_id" in event)) {
-    captureExceptionAndLog(new Error("Slack event does not have tokens or team_id"), {
-      extra: { event },
-    });
-    return null;
-  }
-
-  for (const userId of event.tokens.bot ?? []) {
-    const mailbox = await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.slackTeamId, String(event.team_id)) && eq(mailboxes.slackBotUserId, userId),
-    });
-
-    if (mailbox) return mailbox;
-  }
-
-  return null;
-};
 
 export const getSlackPermalink = async (token: string, channel: string, ts: string) => {
   try {
