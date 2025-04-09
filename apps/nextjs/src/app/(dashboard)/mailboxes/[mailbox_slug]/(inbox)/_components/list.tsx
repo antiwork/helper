@@ -1,7 +1,6 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
-import { ChannelProvider } from "ably/react";
 import { capitalize } from "lodash";
 import { Bot } from "lucide-react";
 import Link from "next/link";
@@ -125,7 +124,7 @@ const SearchBar = ({
   );
 };
 
-const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
+export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -276,32 +275,6 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
       };
     });
   });
-  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.statusChanged", (message) => {
-    console.log("conversation.statusChanged", message.data, input.category);
-    const statusChanged = searchParams.status !== message.data.status;
-    const assigneeChanged =
-      (input.category === "assigned" && message.data.assignedToClerkId === null) ||
-      (input.category === "unassigned" && message.data.assignedToClerkId !== null) ||
-      (input.category === "mine" && message.data.assignedToClerkId !== conversationListData?.assignedToClerkIds?.[0]);
-    if (!statusChanged && !assigneeChanged) return;
-    console.log("removing conversation", message.data.id);
-
-    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
-      if (!data) return undefined;
-      return {
-        ...data,
-        pages: data.pages.map((page) => {
-          const updatedConversations = page.conversations.filter((c) => c.id !== message.data.id);
-          if (updatedConversations.length === page.conversations.length) return page;
-          return {
-            ...page,
-            conversations: updatedConversations,
-            total: page.total - 1,
-          };
-        }),
-      };
-    });
-  });
 
   const searchBar = (
     <SearchBar
@@ -353,14 +326,6 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
         )}
       </div>
     </>
-  );
-};
-
-export const List = ({ mailboxSlug, variant = "desktop" }: { mailboxSlug: string; variant?: "desktop" | "mobile" }) => {
-  return (
-    <ChannelProvider channelName={conversationsListChannelId(mailboxSlug)}>
-      <ListContent variant={variant} />
-    </ChannelProvider>
   );
 };
 
