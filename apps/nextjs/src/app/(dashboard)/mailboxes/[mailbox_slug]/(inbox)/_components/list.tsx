@@ -12,7 +12,6 @@ import scrollIntoView from "scroll-into-view-if-needed";
 import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import NewConversationModalContent from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/newConversationModal";
 import { ConversationListItem } from "@/app/types/global";
-import { DEFAULT_CONVERSATIONS_PER_PAGE } from "@/components/constants";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Badge } from "@/components/ui/badge";
@@ -223,7 +222,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     const sort = searchParams.sort ?? defaultSort;
     if (!sort) return;
 
-    utils.mailbox.conversations.list.setInfiniteData({ ...input, limit: DEFAULT_CONVERSATIONS_PER_PAGE }, (data) => {
+    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
       if (!data) return undefined;
       const firstPage = data.pages[0];
       if (!firstPage) return data;
@@ -278,33 +277,28 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     });
   });
   useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.statusChanged", (message) => {
+    console.log("conversation.statusChanged", message.data, input.category);
     const statusChanged = searchParams.status !== message.data.status;
     const assigneeChanged =
       (input.category === "assigned" && message.data.assignedToClerkId === null) ||
       (input.category === "unassigned" && message.data.assignedToClerkId !== null) ||
       (input.category === "mine" && message.data.assignedToClerkId !== conversationListData?.assignedToClerkIds?.[0]);
     if (!statusChanged && !assigneeChanged) return;
+    console.log("removing conversation", message.data.id);
 
-    utils.mailbox.conversations.list.setInfiniteData({ ...input, limit: DEFAULT_CONVERSATIONS_PER_PAGE }, (data) => {
+    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
       if (!data) return undefined;
-      const firstPage = data.pages[0];
-      if (!firstPage) return data;
-
-      const updatedPages = data.pages.map((page) => {
-        const updatedConversations = page.conversations.filter((c) => c.id !== message.data.id);
-        if (updatedConversations.length === page.conversations.length) return page;
-
-        return {
-          ...page,
-          conversations: updatedConversations,
-          total: page.total - 1,
-          // Status is now handled by statusCounts query
-        };
-      });
-
       return {
         ...data,
-        pages: updatedPages,
+        pages: data.pages.map((page) => {
+          const updatedConversations = page.conversations.filter((c) => c.id !== message.data.id);
+          if (updatedConversations.length === page.conversations.length) return page;
+          return {
+            ...page,
+            conversations: updatedConversations,
+            total: page.total - 1,
+          };
+        }),
       };
     });
   });
