@@ -90,7 +90,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
   const [similarExpanded, setSimilarExpanded] = useState(false);
 
   const { data: customerConversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery(
-    { mailboxSlug, customer: [conversation.emailFrom ?? ""] },
+    { mailboxSlug, customer: [conversation.emailFrom ?? ""], sort: "newest" },
     { enabled: !!conversation.emailFrom && previousExpanded },
   );
 
