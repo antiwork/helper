@@ -85,8 +85,6 @@ const Page = async (props: { params: Promise<PageProps> }) => {
           mailboxSlug: params.mailbox_slug,
           preferences: {
             confetti: pendingUpdates?.preferences?.confettiSetting?.confetti ?? false,
-            confettiEvents: pendingUpdates?.preferences?.confettiSetting?.confettiEvents ?? [],
-            confettiIntensity: pendingUpdates?.preferences?.confettiSetting?.confettiIntensity ?? "medium",
           },
         });
       } catch (e) {

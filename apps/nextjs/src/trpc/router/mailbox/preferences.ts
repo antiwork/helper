@@ -23,8 +23,6 @@ export const preferencesRouter = {
       z.object({
         preferences: z.object({
           confetti: z.boolean(),
-          confettiEvents: z.array(z.enum(["reply", "close"])),
-          confettiIntensity: z.enum(["low", "medium", "high"]),
         }),
       }),
     )

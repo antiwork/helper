@@ -2,29 +2,9 @@ import confetti from "canvas-confetti";
 
 interface ConfettiOptions {
   target?: string;
-  intensity?: "low" | "medium" | "high";
 }
 
-const confettiConfig = {
-  low: {
-    particleCount: 50,
-    spread: 40,
-    origin: { y: 0.6 },
-  },
-  medium: {
-    particleCount: 70,
-    spread: 60,
-    origin: { y: 0.6 },
-  },
-  high: {
-    particleCount: 150,
-    spread: 70,
-    origin: { y: 0.6 },
-  },
-};
-
-export const triggerConfetti = ({ target, intensity = "medium" }: ConfettiOptions = {}) => {
-  const config = confettiConfig[intensity];
+export const triggerConfetti = ({ target }: ConfettiOptions = {}) => {
   const targetElement = target ? document.getElementById(target) : null;
   const rect = targetElement?.getBoundingClientRect();
 
@@ -33,16 +13,13 @@ export const triggerConfetti = ({ target, intensity = "medium" }: ConfettiOption
         x: (rect.left + rect.width / 2) / window.innerWidth,
         y: (rect.top + rect.height / 2) / window.innerHeight,
       }
-    : config.origin;
+    : { y: 0.7, x: 0.5 };
 
   confetti({
-    ...config,
-    disableForReducedMotion: true,
-    scalar: 0.5,
-    gravity: 0.85,
-    decay: 0.75,
-    ticks: 100,
     origin,
-    shapes: ["square", "circle"],
+    particleCount: 150,
+    spread: 100,
+    disableForReducedMotion: true,
+    scalar: 0.6,
   });
 };

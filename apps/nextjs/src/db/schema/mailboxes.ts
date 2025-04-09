@@ -46,13 +46,9 @@ export const mailboxes = pgTable(
     preferences: jsonb()
       .$type<{
         confetti: boolean;
-        confettiEvents: ("reply" | "close")[];
-        confettiIntensity: "low" | "medium" | "high";
       }>()
       .default({
         confetti: false,
-        confettiEvents: ["reply", "close"],
-        confettiIntensity: "medium",
       }),
   },
   (table) => {

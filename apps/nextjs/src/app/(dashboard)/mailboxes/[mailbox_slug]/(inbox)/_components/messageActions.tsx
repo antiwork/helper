@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import type { DraftedEmail } from "@/serverActions/messages";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import type { ConfettiUpdates } from "../../settings/_components/confettiSetting";
 import { useUndoneEmailStore } from "./conversation";
 import { useConversationListContext } from "./conversationListContext";
 import { useConversationsListInput } from "./shared/queries";
@@ -53,15 +52,9 @@ export const MessageActions = () => {
     mailboxSlug,
   });
 
-  const handleConfetti = (eventType: NonNullable<ConfettiUpdates>["confettiEvents"][number]) => {
+  const handleConfetti = () => {
     if (!mailboxPreferences?.preferences?.confetti) return;
-    if (!mailboxPreferences.preferences.confettiEvents.includes(eventType)) return;
-
-    const target = eventType === "reply" ? "reply" : "reply-and-close";
-    triggerConfetti({
-      target,
-      intensity: mailboxPreferences.preferences.confettiIntensity,
-    });
+    triggerConfetti();
   };
 
   useKeyboardShortcut("z", () => {
@@ -163,11 +156,10 @@ export const MessageActions = () => {
       setInitialMessageObject({ content: "" });
       resetFiles([]);
       setStoredMessage("");
-      if (!assign && !close) handleConfetti("reply");
 
       if (conversation.status === "open" && close) {
         updateStatus("closed");
-        if (!assign) handleConfetti("close");
+        if (!assign) handleConfetti();
       }
       toast({
         title: "Message sent!",
@@ -240,14 +232,13 @@ export const MessageActions = () => {
             </Button>
           ) : (
             <>
-              <Button id="reply-and-close" onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
+              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
                 {sending ? "Replying..." : "Reply and close"}
                 {!sending && isMacOS() && (
                   <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
                 )}
               </Button>
               <Button
-                id="reply"
                 variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}

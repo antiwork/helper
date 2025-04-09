@@ -1,6 +1,6 @@
 {
-  "id": "0d633de7-67b6-4640-9c22-ac8f414f1a84",
-  "prevId": "4b572e6b-552f-4953-90ad-a0bee4fbe4a3",
+  "id": "41cdf333-5ccf-4b66-83c8-4a504a17f18e",
+  "prevId": "0d633de7-67b6-4640-9c22-ac8f414f1a84",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1832,7 +1832,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false,
-          "default": "'{\"confetti\":false,\"confettiEvents\":[\"reply\",\"close\"],\"confettiIntensity\":\"medium\"}'::jsonb"
+          "default": "'{\"confetti\":false}'::jsonb"
         }
       },
       "indexes": {
