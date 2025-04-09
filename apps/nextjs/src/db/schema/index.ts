@@ -11,6 +11,7 @@ export * from "./files";
 export * from "./notes";
 export * from "./escalations";
 export * from "./aiUsageEvents";
+export * from "./guideSession";
 
 export * from "./messageNotifications";
 export * from "./websites";
