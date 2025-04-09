@@ -1,3 +1,4 @@
+import autoAssignConversation from "@/inngest/functions/autoAssignConversation";
 import autoCloseInactiveConversationsFunctions from "./autoCloseInactiveConversations";
 import bulkEmbeddingClosedConversations from "./bulkEmbeddingClosedConversations";
 import bulkUpdateConversations from "./bulkUpdateConversations";
@@ -64,4 +65,5 @@ export default [
   checkConversationResolution,
   ...autoCloseInactiveConversationsFunctions,
   updateSuggestedActions,
+  autoAssignConversation,
 ];
