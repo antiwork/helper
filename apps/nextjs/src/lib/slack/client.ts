@@ -6,12 +6,36 @@ import {
   KnownBlock,
   MessageAttachment,
   ModalView,
+  SlackEvent,
   WebClient,
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
+import { CoreMessage } from "ai";
+import { eq } from "drizzle-orm";
+import { db } from "@/db/client";
+import { mailboxes } from "@/db/schema";
 import { env } from "@/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
+
+export const mailboxForEvent = async (event: SlackEvent) => {
+  if (!("tokens" in event) || !("team_id" in event)) {
+    captureExceptionAndLog(new Error("Slack event does not have tokens or team_id"), {
+      extra: { event },
+    });
+    return null;
+  }
+
+  for (const userId of event.tokens.bot ?? []) {
+    const mailbox = await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.slackTeamId, String(event.team_id)) && eq(mailboxes.slackBotUserId, userId),
+    });
+
+    if (mailbox) return mailbox;
+  }
+
+  return null;
+};
 
 export const getSlackPermalink = async (token: string, channel: string, ts: string) => {
   try {
@@ -258,3 +282,40 @@ export const getSlackUsersByEmail = async (token: string) => {
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
 };
+
+export async function getThreadMessages(
+  token: string,
+  channelId: string,
+  threadTs: string,
+  botUserId: string,
+): Promise<CoreMessage[]> {
+  const client = new WebClient(token);
+  const { messages } = await client.conversations.replies({
+    channel: channelId,
+    ts: threadTs,
+    limit: 50,
+  });
+
+  if (!messages) throw new Error("No messages found in thread");
+
+  const result = messages.flatMap((message) => {
+    const isBot = !!message.bot_id;
+    if (!message.text) return [];
+
+    // For app mentions, remove the mention prefix
+    // For IM messages, keep the full text
+    let content = message.text;
+    if (!isBot && content.includes(`<@${botUserId}>`)) {
+      content = content.replace(`<@${botUserId}> `, "");
+    }
+
+    return [
+      {
+        role: isBot ? "assistant" : "user",
+        content,
+      } satisfies CoreMessage,
+    ];
+  });
+
+  return result;
+}
