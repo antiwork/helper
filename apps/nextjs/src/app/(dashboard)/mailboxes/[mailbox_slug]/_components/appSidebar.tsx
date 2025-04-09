@@ -367,7 +367,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
 const ConversationListContent = ({ mailboxSlug }: { mailboxSlug: string }) => (
   <div className="flex-1 overflow-hidden flex h-full flex-col">
     <InboxProvider>
-      <List mailboxSlug={mailboxSlug} />
+      <List variant="desktop" />
     </InboxProvider>
   </div>
 );
