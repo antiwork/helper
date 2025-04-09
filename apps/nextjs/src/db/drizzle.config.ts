@@ -1,7 +1,7 @@
 import type { Config } from "drizzle-kit";
 import { env } from "@/env";
 
-const parsedUrl = new URL(env.POSTGRES_URL);
+const parsedUrl = new URL(env.DATABASE_URL || env.POSTGRES_URL);
 // https://github.com/drizzle-team/drizzle-orm/discussions/881
 // `sslmode=require` results in a `Error: self-signed certificate` error when
 // attempting to run migrations during a production build.
