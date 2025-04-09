@@ -93,6 +93,7 @@ class HelperWidget {
       doHighlightElements,
       focusHighlightIndex,
       viewportExpansion,
+      onlyVisibleElements: true,
     });
   }
 
