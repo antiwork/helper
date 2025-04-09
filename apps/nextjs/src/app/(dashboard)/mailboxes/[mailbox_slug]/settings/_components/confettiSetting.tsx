@@ -42,7 +42,7 @@ const ConfettiSetting = ({
   return (
     <SectionWrapper
       title="Confetti Settings"
-      description="Enable full-page confetti animations when closing a ticket"
+      description="Enable full-page confetti animation when closing a ticket"
       initialSwitchChecked={confettiData?.confetti ?? false}
       onSwitchChange={handleSwitchChange}
     >

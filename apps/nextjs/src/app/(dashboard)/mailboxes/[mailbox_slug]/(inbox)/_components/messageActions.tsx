@@ -156,7 +156,6 @@ export const MessageActions = () => {
       setInitialMessageObject({ content: "" });
       resetFiles([]);
       setStoredMessage("");
-
       if (conversation.status === "open" && close) {
         updateStatus("closed");
         if (!assign) handleConfetti();
