@@ -7,7 +7,7 @@ import {
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 import { Chip, ChipContainer, ChipVariant } from "@/components/ui/chip";
-import { SidebarInfo } from "./getSidebarInfo";
+import { RouterOutputs } from "@/trpc";
 
 export const CATEGORY_LABELS = {
   all: "All",
@@ -23,7 +23,7 @@ export const CategoryNav = ({
   prefix,
   className,
 }: {
-  countByStatus?: SidebarInfo["countByStatus"];
+  countByStatus?: RouterOutputs["mailbox"]["countByStatus"];
   mailboxSlug: string;
   variant: ChipVariant;
   prefix?: ReactNode;

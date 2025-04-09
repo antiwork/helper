@@ -93,6 +93,18 @@ export const ConversationListContextProvider = ({
         };
       });
     }
+    if (!input.status || input.status[0] === "open") {
+      utils.mailbox.countByStatus.setData({ mailboxSlug: input.mailboxSlug }, (data) => {
+        if (!data) return data;
+        return {
+          ...data,
+          [input.category]: {
+            ...data[input.category],
+            open: data[input.category].open - 1,
+          },
+        };
+      });
+    }
   };
 
   const removeConversationKeepActive = () => {

@@ -65,7 +65,7 @@ declare global {
 }
 
 export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
-  const { countByStatus, mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
+  const { mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
   const pathname = usePathname();
   const { isMobile } = useSidebar();
   const { signOut } = useClerk();
@@ -73,6 +73,8 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const { user } = useUser();
   const [showNativeAppModal, setShowNativeAppModal] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const { data: countByStatus } = api.mailbox.countByStatus.useQuery({ mailboxSlug });
 
   const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
