@@ -287,8 +287,12 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     });
   });
   useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.statusChanged", (message) => {
-    const currentStatus = searchParams.status;
-    if (message.data.status === currentStatus) return;
+    const statusChanged = searchParams.status !== message.data.status;
+    const assigneeChanged =
+      (input.category === "assigned" && message.data.assignedToClerkId === null) ||
+      (input.category === "unassigned" && message.data.assignedToClerkId !== null) ||
+      (input.category === "mine" && message.data.assignedToClerkId !== conversationListData?.assignedToClerkIds?.[0]);
+    if (!statusChanged && !assigneeChanged) return;
 
     utils.mailbox.conversations.list.setInfiniteData({ ...input, limit: DEFAULT_CONVERSATIONS_PER_PAGE }, (data) => {
       if (!data) return undefined;
