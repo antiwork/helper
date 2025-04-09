@@ -171,15 +171,12 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const statusOptions = useMemo(() => {
-    const statuses = status.flatMap((status) =>
-      status.status
+    const statuses = status.flatMap((s) =>
+      s.status
         ? {
-            value: status.status,
-            label:
-              status.status === "open"
-                ? `${status.count.toLocaleString()} ${capitalize(status.status)}`
-                : capitalize(status.status),
-            selected: searchParams.status ? searchParams.status == status.status : status.status === "open",
+            value: s.status as StatusOption,
+            label: s.status === "open" ? `${s.count.toLocaleString()} ${capitalize(s.status)}` : capitalize(s.status),
+            selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
           }
         : [],
     );
@@ -187,7 +184,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (searchParams.status) {
       if (!statuses.some((s) => s.value === searchParams.status)) {
         statuses.push({
-          value: searchParams.status,
+          value: searchParams.status as StatusOption,
           label:
             searchParams.status === "open" ? `0 ${capitalize(searchParams.status)}` : capitalize(searchParams.status),
           selected: true,
