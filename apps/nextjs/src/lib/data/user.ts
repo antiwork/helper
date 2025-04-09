@@ -33,13 +33,13 @@ export const findUserViaSlack = cache(async (organizationId: string, token: stri
       user.emailAddresses.some((address) => address.emailAddress === slackUser?.profile?.email),
     ) ?? null
   );
-};
+});
 
-export const getOAuthAccessToken = async (clerkUserId: string, provider: "oauth_google" | "oauth_slack") => {
+export const getOAuthAccessToken = cache(async (clerkUserId: string, provider: "oauth_google" | "oauth_slack") => {
   const tokens = await clerkClient.users.getUserOauthAccessToken(clerkUserId, provider);
   return tokens.data[0]?.token;
-};
+});
 
-export const setPrivateMetadata = async (user: User, metadata: UserPrivateMetadata) => {
+export const setPrivateMetadata = cache(async (user: User, metadata: UserPrivateMetadata) => {
   await clerkClient.users.updateUserMetadata(user.id, { privateMetadata: metadata });
-};
+});
