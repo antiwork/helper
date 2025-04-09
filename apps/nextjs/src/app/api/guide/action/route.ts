@@ -1,8 +1,8 @@
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, generateObject, NoSuchToolError, streamText, tool } from "ai";
 import { z } from "zod";
+import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { authenticateWidget, corsResponse } from "../widget/utils";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
 

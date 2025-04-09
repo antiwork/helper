@@ -16,6 +16,7 @@ import { ReadPageToolConfig } from "@/sdk/types";
 
 type GuideInstructions = {
   instructions: string;
+  title: string;
   callId: string | null;
 };
 
@@ -75,8 +76,8 @@ export default function Conversation({
       }
 
       if (toolCall.toolName === "guide_user") {
-        const args = toolCall.args as { instructions: string };
-        setGuideInstructions({ instructions: args.instructions, callId: toolCall.toolCallId });
+        const args = toolCall.args as { instructions: string; title: string };
+        setGuideInstructions({ instructions: args.instructions, title: args.title, callId: toolCall.toolCallId });
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
@@ -93,12 +94,12 @@ export default function Conversation({
     },
   });
 
-  const cancelGuide = () => {
+  const cancelGuide = (toolCallId: string) => {
     setGuideInstructions(null);
-    if (guideInstructions?.callId) {
+    if (toolCallId) {
       addToolResult({
-        toolCallId: guideInstructions.callId,
-        result: "Cancelled, return the text result",
+        toolCallId,
+        result: "cancelled, return text instructions",
       });
     }
   };
@@ -240,36 +241,24 @@ export default function Conversation({
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
+        startGuide={startGuide}
+        cancelGuide={cancelGuide}
       />
-      {guideInstructions ? (
-        <div className="border-t border-black p-4 flex flex-col gap-2">
-          <span className="text-xs text-gray-500">{guideInstructions.instructions}</span>
-          <div className="flex justify-end gap-2">
-            <Button variant="outlined" onClick={cancelGuide}>
-              Cancel Guide
-            </Button>
-            <Button onClick={startGuide}>Start Guide</Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <SupportButtons
-            conversationSlug={conversationSlug}
-            token={token}
-            messageStatus={status}
-            lastMessage={lastAIMessage}
-            onTalkToTeamClick={handleTalkToTeamClick}
-            isEscalated={isEscalated}
-          />
-          <ChatInput
-            input={input}
-            inputRef={inputRef}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
-        </>
-      )}
+      <SupportButtons
+        conversationSlug={conversationSlug}
+        token={token}
+        messageStatus={status}
+        lastMessage={lastAIMessage}
+        onTalkToTeamClick={handleTalkToTeamClick}
+        isEscalated={isEscalated}
+      />
+      <ChatInput
+        input={input}
+        inputRef={inputRef}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
     </>
   );
 }

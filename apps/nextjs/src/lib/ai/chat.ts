@@ -330,13 +330,6 @@ export const generateAIResponse = async ({
     };
   }
 
-  tools.guide_user = {
-    description: "call this tool to guide the user in the interface instead of returning a text response",
-    parameters: z.object({
-      instructions: z.string(),
-    }),
-  };
-
   const traceId = randomUUID();
   const finalMessages = [...systemMessages, ...coreMessages];
 

@@ -130,6 +130,14 @@ export const buildTools = async (
     }),
   };
 
+  tools.guide_user = {
+    description: "call this tool to guide the user in the interface instead of returning a text response",
+    parameters: z.object({
+      title: z.string().describe("title of the guide that will be displayed to the user"),
+      instructions: z.string().describe("instructions for the guide based on the current page and knowledge base"),
+    }),
+  };
+
   if (!email) {
     tools.set_user_email = tool({
       description: "Set the email address for the current anonymous user, so that the user can be contacted later",

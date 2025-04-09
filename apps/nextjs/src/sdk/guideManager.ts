@@ -122,7 +122,8 @@ export class GuideManager {
     return this.helperHandElement;
   }
 
-  public animateHandToElementAndScroll(index: number): Promise<boolean> {
+  // eslint-disable-next-line require-await
+  public async animateHandToElementAndScroll(index: number): Promise<boolean> {
     return new Promise(async (resolve) => {
       const domTracking = this.lastDomTracking;
       if (!domTracking) {
@@ -147,17 +148,17 @@ export class GuideManager {
         return;
       }
 
-      // Only scroll if element is not visible
       if (!isVisible(element)) {
         scrollIntoView(element, {
           behavior: "auto",
           block: "center",
           inline: "center",
         });
-        await wait(1500);
+        await wait(2000);
       }
 
       element = fetchElementByXpath(domTrackingElement.xpath);
+      console.log("element after scroll", element.getBoundingClientRect());
 
       const hand = this.createHelperHand();
       const rect = element.getBoundingClientRect();
@@ -263,6 +264,7 @@ export class GuideManager {
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
       userEvent.type(element, text);
+      await wait(1000);
       return true;
     }
 
