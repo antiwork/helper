@@ -65,7 +65,7 @@ declare global {
 }
 
 export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
-  const { countByStatus, mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
+  const { openCount, mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
   const pathname = usePathname();
   const { isMobile } = useSidebar();
   const { signOut } = useClerk();
@@ -174,7 +174,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
           </div>
         ) : (
           <>
-            <CategoryNav countByStatus={countByStatus} mailboxSlug={mailboxSlug} variant="sidebar" />
+            <CategoryNav openCount={openCount} mailboxSlug={mailboxSlug} variant="sidebar" />
             <ConversationList mailboxSlug={mailboxSlug} />
           </>
         )}
