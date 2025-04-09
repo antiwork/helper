@@ -73,7 +73,7 @@ export const ConversationListContextProvider = ({
     router.refresh();
 
     utils.mailbox.conversations.list.invalidate();
-    utils.mailbox.countByStatus.invalidate();
+    utils.mailbox.openCount.invalidate();
   }, 1000);
 
   const removeConversationFromList = () => {

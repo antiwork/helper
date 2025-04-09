@@ -52,31 +52,15 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           slug: string;
         }[];
       }>;
-      countByStatus: import("@trpc/server").TRPCQueryProcedure<{
+      openCount: import("@trpc/server").TRPCQueryProcedure<{
         input: {
           mailboxSlug: string;
         };
         output: {
-          conversations: {
-            open: number;
-            closed: number;
-            spam: number;
-          };
-          mine: {
-            open: number;
-            closed: number;
-            spam: number;
-          };
-          assigned: {
-            open: number;
-            closed: number;
-            spam: number;
-          };
-          unassigned: {
-            open: number;
-            closed: number;
-            spam: number;
-          };
+          conversations: number;
+          mine: number;
+          assigned: number;
+          unassigned: number;
         };
       }>;
       get: import("@trpc/server").TRPCQueryProcedure<{

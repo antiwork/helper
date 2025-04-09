@@ -17,13 +17,13 @@ export const CATEGORY_LABELS = {
 };
 
 export const CategoryNav = ({
-  countByStatus,
+  openCount,
   mailboxSlug,
   variant,
   prefix,
   className,
 }: {
-  countByStatus?: SidebarInfo["countByStatus"];
+  openCount?: SidebarInfo["openCount"];
   mailboxSlug: string;
   variant: ChipVariant;
   prefix?: ReactNode;
@@ -36,7 +36,7 @@ export const CategoryNav = ({
       label: CATEGORY_LABELS.mine,
       icon: HeroUser,
       href: `/mailboxes/${mailboxSlug}/mine`,
-      count: countByStatus?.mine?.open ?? 0,
+      count: openCount?.mine ?? 0,
     },
     {
       label: CATEGORY_LABELS.all,
@@ -47,13 +47,13 @@ export const CategoryNav = ({
       label: CATEGORY_LABELS.assigned,
       icon: HeroUsers,
       href: `/mailboxes/${mailboxSlug}/assigned`,
-      count: countByStatus?.assigned?.open ?? 0,
+      count: openCount?.assigned ?? 0,
     },
     {
       label: CATEGORY_LABELS.unassigned,
       icon: HeroUserMinus,
       href: `/mailboxes/${mailboxSlug}/unassigned`,
-      count: countByStatus?.unassigned?.open ?? 0,
+      count: openCount?.unassigned ?? 0,
     },
   ];
 

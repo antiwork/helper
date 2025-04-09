@@ -46,32 +46,33 @@ export const mailboxRouter = {
     }
     return allMailboxes;
   }),
-  countByStatus: mailboxProcedure.query(async ({ ctx }) => {
-    const countByStatus = async (where?: SQL) => {
+  openCount: mailboxProcedure.query(async ({ ctx }) => {
+    const countOpenStatus = async (where?: SQL) => {
       const result = await db
-        .select({ status: conversations.status, count: count() })
+        .select({ count: count() })
         .from(conversations)
-        .where(and(eq(conversations.mailboxId, ctx.mailbox.id), isNull(conversations.mergedIntoId), where))
-        .groupBy(conversations.status);
-      return {
-        open: result.find((c) => c.status === "open")?.count ?? 0,
-        closed: result.find((c) => c.status === "closed")?.count ?? 0,
-        spam: result.find((c) => c.status === "spam")?.count ?? 0,
-      };
+        .where(
+          and(
+            eq(conversations.mailboxId, ctx.mailbox.id),
+            eq(conversations.status, "open"),
+            isNull(conversations.mergedIntoId),
+            where,
+          ),
+        );
+      return result[0]?.count ?? 0;
     };
 
-    const [all, mine, assigned, unassigned] = await Promise.all([
-      countByStatus(),
-      countByStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
-      countByStatus(isNotNull(conversations.assignedToClerkId)),
-      countByStatus(isNull(conversations.assignedToClerkId)),
+    const [all, mine, assigned] = await Promise.all([
+      countOpenStatus(),
+      countOpenStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
+      countOpenStatus(isNotNull(conversations.assignedToClerkId)),
     ]);
 
     return {
       conversations: all,
       mine,
       assigned,
-      unassigned,
+      unassigned: all - assigned,
     };
   }),
   get: mailboxProcedure.query(async ({ ctx }) => {
