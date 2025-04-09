@@ -53,11 +53,7 @@ export async function generateMailboxReport(mailboxId: number) {
 
   const openTicketCount = await db.$count(
     conversations,
-    and(
-      eq(conversations.mailboxId, mailbox.id), 
-      eq(conversations.status, "open"),
-      isNull(conversations.mergedIntoId)
-    ),
+    and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "open"), isNull(conversations.mergedIntoId)),
   );
 
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
