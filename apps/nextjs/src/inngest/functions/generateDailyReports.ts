@@ -1,6 +1,6 @@
 import { KnownBlock } from "@slack/web-api";
 import { subHours } from "date-fns";
-import { aliasedTable, and, eq, gt, isNotNull, lt, sql } from "drizzle-orm";
+import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
