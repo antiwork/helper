@@ -23,9 +23,9 @@ export const setPrivateMetadata = async (organizationId: string, metadata: Recor
   return await clerkClient.organizations.updateOrganizationMetadata(organizationId, { privateMetadata: metadata });
 };
 
-export const getOrganizationMembers = async (organizationId: string, limit = 100) => {
+export const getOrganizationMembers = cache(async (organizationId: string, limit = 100) => {
   return await clerkClient.organizations.getOrganizationMembershipList({ organizationId, limit });
-};
+});
 
 export const getOrganizationAdminUsers = async (organizationId: string) => {
   const members = await getOrganizationMembers(organizationId);
