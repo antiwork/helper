@@ -1,22 +1,25 @@
 import { ClerkClient, createClerkClient, User } from "@clerk/backend";
+import { cache } from "react";
 import { env } from "@/env";
 import { getSlackUser } from "../slack/client";
 
 export const clerkClient = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
 
-export const getClerkUser = (userId: string | null) => (userId ? clerkClient.users.getUser(userId) : null);
+export const getClerkUser = cache((userId: string | null) => (userId ? clerkClient.users.getUser(userId) : null));
 
-export const getClerkUserList = (
-  organizationId: string,
-  { limit = 100, ...params }: NonNullable<Parameters<ClerkClient["users"]["getUserList"]>[0]> = {},
-) => clerkClient.users.getUserList({ limit, ...params, organizationId: [organizationId] });
+export const getClerkUserList = cache(
+  (
+    organizationId: string,
+    { limit = 100, ...params }: NonNullable<Parameters<ClerkClient["users"]["getUserList"]>[0]> = {},
+  ) => clerkClient.users.getUserList({ limit, ...params, organizationId: [organizationId] }),
+);
 
-export const findUserByEmail = async (organizationId: string, email: string) => {
+export const findUserByEmail = cache(async (organizationId: string, email: string) => {
   const { data } = await clerkClient.users.getUserList({ organizationId: [organizationId], emailAddress: [email] });
   return data[0] ?? null;
-};
+});
 
-export const findUserViaSlack = async (organizationId: string, token: string, slackUserId: string) => {
+export const findUserViaSlack = cache(async (organizationId: string, token: string, slackUserId: string) => {
   const allUsers = await getClerkUserList(organizationId);
 
   const matchingUser = allUsers.data.find((user) =>
