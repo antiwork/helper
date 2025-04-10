@@ -128,6 +128,9 @@ export const parseMessagesWithMocks = (input: string) => {
     onboardingMetadata: {
       completed: true,
     },
+    preferences: {
+      confetti: false,
+    },
   };
 
   return { messages, mailbox };
