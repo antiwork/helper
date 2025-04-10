@@ -1,6 +1,5 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { inngest } from "@/inngest/client";
 import { updateConversation } from "@/lib/data/conversation";
@@ -12,16 +11,10 @@ import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 const REDIS_ROUND_ROBIN_KEY_PREFIX = "auto-assign-message-queue";
 
-/**
- * Finds core team members for round-robin assignment
- */
 const getCoreTeamMembers = (teamMembers: UserWithMailboxAccessData[]): UserWithMailboxAccessData[] => {
   return teamMembers.filter((member) => member.role === UserRoles.CORE);
 };
 
-/**
- * Finds non-core team members that have keywords matching the conversation content
- */
 const getNonCoreTeamMembersWithMatchingKeywords = (
   teamMembers: UserWithMailboxAccessData[],
   conversationContent: string,
@@ -37,9 +30,6 @@ const getNonCoreTeamMembersWithMatchingKeywords = (
     });
 };
 
-/**
- * Gets the next team member in round-robin rotation for a specific mailbox
- */
 const getNextCoreTeamMemberInRotation = async (
   coreTeamMembers: UserWithMailboxAccessData[],
   mailboxId: number,
@@ -48,7 +38,6 @@ const getNextCoreTeamMemberInRotation = async (
 
   const redisKey = `${REDIS_ROUND_ROBIN_KEY_PREFIX}:${mailboxId}`;
 
-  // Get the last assigned index from redis
   let lastAssignedIndex = 0;
   try {
     const lastAssignedIndexStr = await redis.get(redisKey);
@@ -64,10 +53,8 @@ const getNextCoreTeamMemberInRotation = async (
     captureExceptionAndLogIfDevelopment(error);
   }
 
-  // Calculate the next index
   const nextIndex = (lastAssignedIndex + 1) % coreTeamMembers.length;
 
-  // Store the new index
   try {
     await redis.set(redisKey, nextIndex.toString());
   } catch (error) {
@@ -79,9 +66,6 @@ const getNextCoreTeamMemberInRotation = async (
   return nextMember;
 };
 
-/**
- * Get the most relevant content from conversation messages for keyword matching
- */
 const getConversationContent = (conversationData: {
   messages?: {
     role: string;
@@ -93,7 +77,6 @@ const getConversationContent = (conversationData: {
     return conversationData.subject || "";
   }
 
-  // Filter for user messages and get their content
   const userMessages = conversationData.messages
     .filter((msg) => msg.role === "user")
     .map((msg) => msg.cleanedUpText || "")
@@ -108,26 +91,20 @@ const getConversationContent = (conversationData: {
   return contentParts.join(" ");
 };
 
-/**
- * Main function to determine which team member should be assigned to a conversation
- */
 const getNextTeamMember = async (
   teamMembers: UserWithMailboxAccessData[],
   conversation: any,
   mailboxId: number,
 ): Promise<UserWithMailboxAccessData | null> => {
-  // First check for non-core members with matching keywords
   const conversationContent = getConversationContent(conversation);
   const matchingNonCoreMembers = getNonCoreTeamMembersWithMatchingKeywords(teamMembers, conversationContent);
 
   if (matchingNonCoreMembers.length > 0) {
-    // If we have multiple matching non-core members, pick one randomly
     const randomIndex = Math.floor(Math.random() * matchingNonCoreMembers.length);
     const selectedMember = matchingNonCoreMembers[randomIndex];
     return selectedMember || null;
   }
 
-  // If no matching non-core members, use round-robin for core members
   const coreMembers = getCoreTeamMembers(teamMembers);
   return await getNextCoreTeamMemberInRotation(coreMembers, mailboxId);
 };
@@ -161,7 +138,6 @@ export default inngest.createFunction(
       await getUsersWithMailboxAccess(mailbox.clerkOrganizationId, mailbox.id),
     );
 
-    // Filter out AFK members - they should not receive assignments
     const activeTeamMembers = teamMembers.filter(
       (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,
     );
