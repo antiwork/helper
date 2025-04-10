@@ -65,6 +65,8 @@ Common action sequences:
 7. Extraction:
 - If your task is to find information - call extract_content on the specific pages to get and store the information.
 Your responses must be always JSON with the specified format.
+  
+IMPORTANT: Only call one action at a time.
 
 Current user email: {{USER_EMAIL}}`;
 
@@ -79,22 +81,10 @@ export async function POST(request: Request) {
   const { session, mailbox } = authResult;
   const userEmail = session.isAnonymous ? null : session.email || null;
 
-  let systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user").replace(
+  const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user").replace(
     "{{MAILBOX_NAME}}",
     mailbox.name,
   );
-
-  const query = messages[messages.length - 1].content;
-
-  if (false && query && query.length > 0) {
-    const { knowledgeBank, websitePagesPrompt } = await fetchPromptRetrievalData(mailbox, query, null);
-    if (knowledgeBank) {
-      systemPrompt += `\n${knowledgeBank}`;
-    }
-    if (websitePagesPrompt) {
-      systemPrompt += `\n${websitePagesPrompt}`;
-    }
-  }
 
   const tools = {
     AgentOutput: tool({

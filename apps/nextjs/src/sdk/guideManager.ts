@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import userEvent from "@testing-library/user-event";
 import confetti from "canvas-confetti";
 import scrollIntoView from "scroll-into-view-if-needed";
@@ -154,7 +155,7 @@ export class GuideManager {
           block: "center",
           inline: "center",
         });
-        await wait(2000);
+        await wait(1500);
       }
 
       element = fetchElementByXpath(domTrackingElement.xpath);
@@ -264,7 +265,6 @@ export class GuideManager {
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
       userEvent.type(element, text);
-      await wait(1000);
       return true;
     }
 
