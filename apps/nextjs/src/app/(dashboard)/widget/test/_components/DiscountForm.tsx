@@ -8,6 +8,7 @@ export function DiscountForm() {
   const [minimumQuantity, setMinimumQuantity] = useState(false);
   const [allProducts, setAllProducts] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string }>({});
   const [formValues, setFormValues] = useState({
     name: "",
     code: "",
@@ -17,11 +18,28 @@ export function DiscountForm() {
 
   const handleInputChange = (field: keyof typeof formValues, value: string | number) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
+
+    // Clear error when user types in the name field
+    if (field === "name" && errors.name) {
+      setErrors((prev) => ({ ...prev, name: undefined }));
+    }
   };
 
   const handleSubmit = () => {
-    // In a real app, this would send data to an API
-    setIsSuccess(true);
+    // Validate form
+    const newErrors: { name?: string } = {};
+
+    if (!formValues.name.trim()) {
+      newErrors.name = "Discount name is required";
+    }
+
+    setErrors(newErrors);
+
+    // Only proceed if no errors
+    if (Object.keys(newErrors).length === 0) {
+      // In a real app, this would send data to an API
+      setIsSuccess(true);
+    }
   };
 
   if (isSuccess) {
@@ -121,8 +139,9 @@ export function DiscountForm() {
             placeholder="Black Friday"
             value={formValues.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
-            className="w-full border border-gray-300 rounded p-2 text-gray-800"
+            className={`w-full border ${errors.name ? "border-red-500" : "border-gray-300"} rounded p-2 text-gray-800`}
           />
+          {errors.name && <p className="mt-1 text-red-500 text-sm">{errors.name}</p>}
         </div>
 
         <div>

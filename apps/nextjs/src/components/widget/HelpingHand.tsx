@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
 import { closeWidget, executeGuideAction, fetchCurrentPageDetails, guideDone } from "@/lib/widget/messages";
@@ -13,11 +14,11 @@ Current Page Title: {{CURRENT_PAGE_TITLE}}
 
 export default function HelpingHand({
   instructions,
-  callId,
+  conversationSlug,
   token,
 }: {
   instructions: string;
-  callId: string | null;
+  conversationSlug: string | null;
   token: string;
 }) {
   const [toolPending, setToolPending] = useState<{
@@ -25,6 +26,8 @@ export default function HelpingHand({
     toolName: string;
     params: Record<string, any>;
   } | null>(null);
+  const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const { messages, append, addToolResult } = useChat({
     api: "/api/guide/action",
@@ -49,6 +52,7 @@ export default function HelpingHand({
       return {
         id,
         messages,
+        sessionId: guideSessionId,
         ...requestBody,
       };
     },
@@ -91,6 +95,33 @@ export default function HelpingHand({
     }
   };
 
+  const initializeGuideSession = async () => {
+    try {
+      setIsInitializing(true);
+      const response = await fetch("/api/guide/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          instructions,
+          conversationSlug,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create guide session");
+      }
+
+      const data = await response.json();
+      setGuideSessionId(data.sessionId);
+      setIsInitializing(false);
+    } catch (error) {
+      setIsInitializing(false);
+    }
+  };
+
   const sendInitialPrompt = async () => {
     const pageDetails = await fetchCurrentPageDetails();
     console.log(pageDetails);
@@ -122,9 +153,19 @@ export default function HelpingHand({
 
   useEffect(() => {
     if (instructions && instructions.length > 0) {
-      sendInitialPrompt();
+      initializeGuideSession();
     }
   }, [instructions]);
+
+  useEffect(() => {
+    if (guideSessionId && !isInitializing) {
+      sendInitialPrompt();
+    }
+  }, [guideSessionId, isInitializing]);
+
+  if (isInitializing) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-72 w-full items-center px-4 text-sm text-gray-500 overflow-y-auto">

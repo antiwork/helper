@@ -1,32 +1,12 @@
-import { openai } from "@ai-sdk/openai";
-import { generateObject } from "ai";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
-import { db } from "@/db/client";
-import { guideSessionEvents, guideSessionEventTypeEnum, guideSessions } from "@/db/schema";
+import { assertDefined } from "@/components/utils/assert";
+import { generateGuidePlan } from "@/lib/ai/guide";
+import { createConversation, getConversationBySlug } from "@/lib/data/conversation";
+import { createGuideSession, createGuideSessionEvent } from "@/lib/data/guide";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
-import { assertDefined } from "../../../../components/utils/assert";
-
-const PROMPT = `You are an AI guide planner for Helper. Your task is to create a concise, clear 5-step guide plan based on the user's request.
-
-# RULES:
-1. Create MAX of 5 steps
-2. Steps should be specific and actionable
-3. Focus on the core workflow, avoiding unnecessary details
-4. Make steps sequential and logical
-5. Use natural, friendly language
-6. Remember this is for a browser automation guide
-
-# USER REQUEST:
-{{TITLE}}
-{{INSTRUCTIONS}}
-
-Respond using the GuidePlan tool with your steps plan.
-`;
 
 export async function POST(request: Request) {
-  const { title, instructions, conversationId } = await request.json();
+  const { title, instructions, conversationSlug } = await request.json();
 
   const authResult = await authenticateWidget(request);
   if (!authResult.success) {
@@ -39,47 +19,55 @@ export async function POST(request: Request) {
     await findOrCreatePlatformCustomerByEmail(mailbox.id, assertDefined(session.email)),
   );
 
-  const systemPrompt = PROMPT.replace("{{TITLE}}", title).replace("{{INSTRUCTIONS}}", instructions);
-
   try {
-    const result = await generateObject({
-      model: openai("gpt-4o"),
-      system: systemPrompt,
-      schema: z.object({
-        steps: z.array(z.string()).max(5).describe("The steps that AI will take to complete the guide (max 5 steps)"),
-      }),
-    });
+    const result = await generateGuidePlan(title, instructions, mailbox);
+    let conversationId: number | null = null;
 
-    const [guideSession] = await db
-      .insert(guideSessions)
-      .values({
-        platformCustomerId: platformCustomer.id,
-        title,
-        instructions,
-        conversationId,
-        status: "planning",
-        steps: result.object.steps.map((description) => ({ description, completed: false })),
-      })
-      .returning();
+    if (conversationSlug) {
+      const conversation = await getConversationBySlug(conversationSlug);
+      conversationId = conversation?.id ?? null;
+    } else {
+      const conversation = await createConversation({
+        emailFrom: session.email,
+        isPrompt: false,
+        mailboxId: mailbox.id,
+        source: "chat",
+        assignedToAI: true,
+        status: "closed",
+        closedAt: new Date(),
+        subject: result.title,
+      });
 
-    if (!guideSession) {
-      throw new Error("Failed to create guide session");
+      conversationId = conversation.id;
     }
 
-    // Create the initial session started event
-    await db.insert(guideSessionEvents).values({
+    const guideSession = await createGuideSession({
+      platformCustomerId: platformCustomer.id,
+      title: result.title,
+      instructions,
+      conversationId: assertDefined(conversationId),
+      steps: result.next_steps.map((description) => ({ description, completed: false })),
+    });
+
+    await createGuideSessionEvent({
       guideSessionId: guideSession.id,
       type: "session_started",
-      data: { steps: guideSession.steps },
-      timestamp: new Date(),
+      data: {
+        steps: result.next_steps,
+        state_analysis: result.state_analysis,
+        progress_evaluation: result.progress_evaluation,
+        challenges: result.challenges,
+        reasoning: result.reasoning,
+      },
     });
 
     return corsResponse({
       sessionId: guideSession.uuid,
-      steps: result.object.steps,
+      steps: result.next_steps,
+      conversationId,
     });
   } catch (error) {
-    console.error("Guide session creation error:", error);
+    console.error(error);
     return corsResponse({ error: "Failed to create guide session" }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
+/* eslint-disable no-console */
 import { openai } from "@ai-sdk/openai";
-import { createDataStreamResponse, generateObject, NoSuchToolError, streamText, tool } from "ai";
+import { createDataStreamResponse, streamText, tool } from "ai";
 import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
@@ -65,8 +66,7 @@ Common action sequences:
 - If your task is to find information - call extract_content on the specific pages to get and store the information.
 Your responses must be always JSON with the specified format.
 
-Current user email: {{USER_EMAIL}}
-`;
+Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
   const { messages } = await request.json();
@@ -127,10 +127,6 @@ export async function POST(request: Request) {
               text: z.string(),
               xpath: z.string().nullable().optional(),
             }),
-            // z.object({
-            //   type: z.literal("extract_content"),
-            //   goal: z.string(),
-            // }),
             z.object({
               type: z.literal("send_keys"),
               index: z.number().int(),
@@ -158,7 +154,8 @@ export async function POST(request: Request) {
     execute: (dataStream) => {
       const result = streamText({
         system: systemPrompt,
-        model: openai("gpt-4o"),
+        model: openai("gpt-4o", { parallelToolCalls: false }),
+        temperature: 0.1,
         messages,
         tools,
         toolChoice: "required",

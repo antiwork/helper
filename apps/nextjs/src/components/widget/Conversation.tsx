@@ -30,7 +30,6 @@ type Props = {
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
   isAnonymous: boolean;
-  guideInstructions: GuideInstructions | null;
   setIsGuidingUser: (isGuidingUser: boolean) => void;
   setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
 };
@@ -43,7 +42,6 @@ export default function Conversation({
   readPageTool,
   onLoadFailed,
   isAnonymous,
-  guideInstructions,
   setIsGuidingUser,
   setGuideInstructions,
 }: Props) {

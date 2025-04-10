@@ -195,7 +195,6 @@ export default function Page() {
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
-                  guideInstructions={guideInstructions}
                   setIsGuidingUser={setIsGuidingUser}
                   setGuideInstructions={setGuideInstructions}
                 />
@@ -205,7 +204,11 @@ export default function Page() {
         </div>
       </div>
       {isGuidingUser && guideInstructions && (
-        <HelpingHand instructions={guideInstructions.instructions} callId={guideInstructions.callId} token={token} />
+        <HelpingHand
+          instructions={guideInstructions.instructions}
+          token={token}
+          conversationSlug={selectedConversationSlug}
+        />
       )}
     </QueryClientProvider>
   );
