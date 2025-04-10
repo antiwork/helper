@@ -1281,6 +1281,29 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           message: string;
         };
       }>;
+      preferences: {
+        get: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output:
+            | {
+                preferences: {
+                  confetti: boolean;
+                } | null;
+              }
+            | undefined;
+        }>;
+        update: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            preferences: {
+              confetti: boolean;
+            };
+          };
+          output: void;
+        }>;
+      };
     };
     organization: {
       createDefaultOrganization: import("@trpc/server").TRPCMutationProcedure<{

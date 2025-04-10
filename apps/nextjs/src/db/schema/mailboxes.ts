@@ -43,6 +43,13 @@ export const mailboxes = pgTable(
     unused_responseGeneratorPrompt: jsonb("response_generator_prompt").$type<string[]>(),
     unused_escalationEmailBody: text("escalation_email_body"),
     unused_escalationExpectedResolutionHours: integer("escalation_expected_resolution_hours"),
+    preferences: jsonb()
+      .$type<{
+        confetti: boolean;
+      }>()
+      .default({
+        confetti: false,
+      }),
   },
   (table) => {
     return {
