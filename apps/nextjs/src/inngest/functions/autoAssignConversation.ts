@@ -133,19 +133,13 @@ const getNextTeamMember = async (
 
 export default inngest.createFunction(
   { id: "auto-assign-conversation" },
-  { event: "conversations/message.created" },
+  { event: "conversations/human-support-requested" },
   async ({ event }) => {
-    const { messageId } = event.data;
+    const { conversationId } = event.data;
 
     const conversation = assertDefinedOrRaiseNonRetriableError(
       await db.query.conversations.findFirst({
-        where: inArray(
-          conversations.id,
-          db
-            .select({ id: conversationMessages.conversationId })
-            .from(conversationMessages)
-            .where(eq(conversationMessages.id, messageId)),
-        ),
+        where: eq(conversations.id, conversationId),
         with: {
           messages: {
             columns: {
