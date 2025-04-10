@@ -52,7 +52,7 @@ export const MessageActions = () => {
     mailboxSlug,
   });
 
-  const handleConfetti = () => {
+  const triggerMailboxConfetti = () => {
     if (!mailboxPreferences?.preferences?.confetti) return;
     triggerConfetti();
   };
@@ -158,7 +158,7 @@ export const MessageActions = () => {
       setStoredMessage("");
       if (conversation.status === "open" && close) {
         updateStatus("closed");
-        if (!assign) handleConfetti();
+        if (!assign) triggerMailboxConfetti();
       }
       toast({
         title: "Message sent!",
