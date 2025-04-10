@@ -34,6 +34,7 @@ export const POST = async (request: Request) => {
   }
 
   const event = data.event as SlackEvent;
+  console.log("got event", event);
   const mailbox = await findMailboxForEvent(event);
 
   if (!mailbox) return NextResponse.json({ error: "Invalid request" }, { status: 400 });

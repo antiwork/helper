@@ -28,6 +28,9 @@ export const findMailboxForEvent = async (event: SlackEvent) => {
     );
   } else if ("team" in event && "text" in event) {
     const userIds = [...(event.text ?? "").matchAll(/<@(U[A-Z0-9]+)>/g)].flatMap(([_, id]) => (id ? [id] : [])) ?? [];
+    if ("parent_user_id" in event && event.parent_user_id) {
+      userIds.push(event.parent_user_id);
+    }
     conditions = and(eq(mailboxes.slackTeamId, String(event.team)), inArray(mailboxes.slackBotUserId, userIds));
   }
 
