@@ -1,40 +1,38 @@
 import "server-only";
-import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  exists,
+  gt,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  or,
+  SQL,
+  sql,
+} from "drizzle-orm";
 import { z } from "zod";
-import { DEFAULT_CONVERSATIONS_PER_PAGE } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
+import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
-
-export const searchSchema = z.object({
-  cursor: z.string().nullish(),
-  limit: z.number().min(1).max(100).default(DEFAULT_CONVERSATIONS_PER_PAGE),
-  sort: z.enum(["newest", "oldest", "highest_value"]).catch("oldest").nullish(),
-  category: z.enum(["conversations", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
-  search: z.string().nullish(),
-  status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),
-  assignee: z.array(z.string()).optional(),
-  createdAfter: z.string().datetime().optional(),
-  createdBefore: z.string().datetime().optional(),
-  repliedBy: z.array(z.string()).optional(),
-  customer: z.array(z.string()).optional(),
-  isVip: z.boolean().optional(),
-  isPrompt: z.boolean().optional(),
-  reactionType: z.enum(["thumbs-up", "thumbs-down"]).optional(),
-  events: z.array(z.enum(["request_human_support", "resolved_by_ai"])).optional(),
-});
 
 export const searchConversations = async (
   mailbox: typeof mailboxes.$inferSelect,
   filters: z.infer<typeof searchSchema>,
-  currentUserId: string,
+  currentUserId?: string,
 ) => {
   if (filters.category && !filters.search && !filters.status?.length) {
     filters.status = ["open"];
   }
-  if (filters.category === "mine") {
+  if (filters.category === "mine" && currentUserId) {
     filters.assignee = [currentUserId];
   }
   if (filters.category === "unassigned") {
@@ -154,4 +152,20 @@ export const searchConversations = async (
     where,
     metadataEnabled,
   };
+};
+
+export const countSearchResults = async (where: Record<string, SQL>) => {
+  const [total] = await db
+    .select({ count: count() })
+    .from(conversations)
+    .leftJoin(
+      platformCustomers,
+      and(
+        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.emailFrom, platformCustomers.email),
+      ),
+    )
+    .where(and(...Object.values(where)));
+
+  return total?.count ?? 0;
 };

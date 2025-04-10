@@ -41,6 +41,7 @@ export async function handleNewAssistantMessage(event: GenericMessageEvent, mail
     new WebClient(assertDefined(mailbox.slackBotToken)),
     "is thinking...",
     event,
+    /(?:^|\s)!debug(?:$|\s)/.test(event.text ?? ""),
   );
 
   const messages = await getThreadMessages(
@@ -49,7 +50,7 @@ export async function handleNewAssistantMessage(event: GenericMessageEvent, mail
     thread_ts,
     assertDefined(mailbox.slackBotUserId),
   );
-  const result = await generateResponse(messages, updateStatus);
+  const result = await generateResponse(messages, mailbox, updateStatus);
 
   updateStatus(result);
 }
