@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { inngest } from "@/inngest/client";
+import { updateConversation } from "@/lib/data/conversation";
 import { getMailboxById } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
 import { redis } from "@/lib/redis/client";
@@ -178,10 +179,7 @@ export default inngest.createFunction(
       };
     }
 
-    await db
-      .update(conversations)
-      .set({ assignedToClerkId: nextTeamMember.id })
-      .where(eq(conversations.id, conversation.id));
+    await updateConversation(conversation.id, { set: { assignedToClerkId: nextTeamMember.id } });
 
     return {
       message: `Assigned conversation ${conversation.id} to ${nextTeamMember.displayName} (${nextTeamMember.id})`,
