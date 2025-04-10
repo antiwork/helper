@@ -1,14 +1,38 @@
-import { SlackEvent } from "@slack/web-api";
+import { SlackEvent, WebClient, type GenericMessageEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { disconnectSlack } from "@/lib/data/mailbox";
+import { disconnectSlack, type Mailbox } from "@/lib/data/mailbox";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailbox";
 import { handleNewAppMention } from "@/lib/slack/agent/handleAppMention";
 import { assistantThreadMessage, handleNewAssistantMessage } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
+
+async function isAgentThread(event: GenericMessageEvent, mailbox: Mailbox) {
+  if (!mailbox.slackBotToken || !mailbox.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
+    return false;
+  }
+
+  console.log("checking if thread is an agent thread", event);
+
+  if (event.text?.includes("(aside)")) return false;
+
+  const client = new WebClient(mailbox.slackBotToken);
+  const { messages } = await client.conversations.replies({
+    channel: event.channel,
+    ts: event.thread_ts,
+    limit: 50,
+  });
+
+  for (const message of messages ?? []) {
+    console.log("message", message.user, mailbox.slackBotUserId);
+    if (message.user === mailbox.slackBotUserId) return true;
+  }
+
+  return false;
+}
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -52,10 +76,11 @@ export const POST = async (request: Request) => {
   if (
     event.type === "message" &&
     !event.subtype &&
-    event.channel_type === "im" &&
     !event.bot_id &&
-    !event.bot_profile
+    !event.bot_profile &&
+    (event.channel_type === "im" || (await isAgentThread(event, mailbox)))
   ) {
+    console.log("handling new assistant message", event);
     waitUntil(handleNewAssistantMessage(event, mailbox));
     return new Response("Success!", { status: 200 });
   }

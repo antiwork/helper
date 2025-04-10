@@ -1,5 +1,5 @@
 import { SlackEvent, WebClient } from "@slack/web-api";
-import { and, eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
@@ -21,21 +21,14 @@ export const findMailboxForEvent = async (event: SlackEvent) => {
   console.log("event", event);
 
   let conditions;
-  if ("tokens" in event && "team_id" in event) {
-    conditions = and(
-      eq(mailboxes.slackTeamId, String(event.team_id)),
-      inArray(mailboxes.slackBotUserId, event.tokens.bot ?? []),
-    );
-  } else if ("team" in event && "text" in event) {
-    const userIds = [...(event.text ?? "").matchAll(/<@(U[A-Z0-9]+)>/g)].flatMap(([_, id]) => (id ? [id] : [])) ?? [];
-    if ("parent_user_id" in event && event.parent_user_id) {
-      userIds.push(event.parent_user_id);
-    }
-    conditions = and(eq(mailboxes.slackTeamId, String(event.team)), inArray(mailboxes.slackBotUserId, userIds));
+  if ("team_id" in event) {
+    conditions = eq(mailboxes.slackTeamId, String(event.team_id));
+  } else if ("team" in event) {
+    conditions = eq(mailboxes.slackTeamId, String(event.team));
   }
 
   if (!conditions) {
-    captureExceptionAndLog(new Error("Slack event does not have tokens or team_id"), {
+    captureExceptionAndLog(new Error("Slack event does not have team_id or team"), {
       extra: { event },
     });
     return null;
