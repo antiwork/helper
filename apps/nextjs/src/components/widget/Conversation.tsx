@@ -2,6 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -12,8 +13,14 @@ import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { sendConversationUpdate } from "@/lib/widget/messages";
+import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
+
+type GuideInstructions = {
+  instructions: string;
+  title: string;
+  callId: string | null;
+};
 
 type Props = {
   token: string | null;
@@ -23,6 +30,9 @@ type Props = {
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
   isAnonymous: boolean;
+  guideInstructions: GuideInstructions | null;
+  setIsGuidingUser: (isGuidingUser: boolean) => void;
+  setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
 };
 
 export default function Conversation({
@@ -33,6 +43,9 @@ export default function Conversation({
   readPageTool,
   onLoadFailed,
   isAnonymous,
+  guideInstructions,
+  setIsGuidingUser,
+  setGuideInstructions,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -55,12 +68,18 @@ export default function Conversation({
     append,
     setMessages,
     status,
+    stop,
+    addToolResult,
   } = useChat({
     maxSteps: 3,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
     onToolCall({ toolCall }) {
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
+      }
+      if (toolCall.toolName === "guide_user") {
+        const args = toolCall.args as { instructions: string; title: string };
+        setGuideInstructions({ instructions: args.instructions, title: args.title, callId: toolCall.toolCallId });
       }
       if (toolCall.toolName === "request_human_support") {
         setIsEscalated(true);
@@ -71,6 +90,7 @@ export default function Conversation({
         id,
         readPageTool,
         message: messages[messages.length - 1],
+        conversationSlug,
         ...requestBody,
       };
     },
@@ -78,6 +98,23 @@ export default function Conversation({
       Authorization: `Bearer ${token}`,
     },
   });
+
+  const cancelGuide = (toolCallId: string) => {
+    setGuideInstructions(null);
+    if (toolCallId) {
+      addToolResult({
+        toolCallId,
+        result: "cancelled, return text instructions",
+      });
+    }
+  };
+
+  const startGuide = async () => {
+    minimizeWidget();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsGuidingUser(true);
+    stop();
+  };
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {
@@ -210,6 +247,8 @@ export default function Conversation({
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
+        startGuide={startGuide}
+        cancelGuide={cancelGuide}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

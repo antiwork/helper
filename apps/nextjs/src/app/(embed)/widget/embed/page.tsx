@@ -4,18 +4,64 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cx from "classnames";
 import { domAnimation, LazyMotion, m } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
+// import { AISteps } from "@/components/widget/ai-steps";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
+import HelpingHand from "@/components/widget/HelpingHand";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
-import { MESSAGE_TYPE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
+import { MESSAGE_TYPE, minimizeWidget, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
 
 const queryClient = new QueryClient();
 const GUMROAD_MAILBOX_SLUG = "gumroad";
+
+type GuideInstructions = {
+  instructions: string;
+  callId: string | null;
+};
+
+const steps = [
+  {
+    id: "1",
+    description: "Navigate to the Discounts tab on the Checkout page.",
+    status: "completed" as const,
+    details: {
+      function: "navigate_to",
+      params: { path: "/checkout/discounts" },
+    },
+  },
+  {
+    id: "2",
+    description: "Click 'New discount' button.",
+    status: "completed" as const,
+    details: {
+      function: "click_element",
+      params: { selector: "button[data-testid='new-discount-button']" },
+    },
+  },
+  {
+    id: "3",
+    description: "Select 'All products' option.",
+    status: "completed" as const,
+    details: {
+      function: "select_option",
+      params: { name: "discount_scope", value: "all_products" },
+    },
+  },
+  {
+    id: "4",
+    description: "Enter '50%' as the discount amount.",
+    status: "loading" as const,
+    details: {
+      function: "input_text",
+      params: { field: "discount_amount", value: "50%" },
+    },
+  },
+];
 
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
@@ -25,6 +71,9 @@ export default function Page() {
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
   const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
+  const [isGuidingUser, setIsGuidingUser] = useState(false);
+  const [guideInstructions, setGuideInstructions] = useState<GuideInstructions | null>(null);
+
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
 
   const {
@@ -74,6 +123,10 @@ export default function Page() {
         } else {
           messageQueue.push(content as string);
         }
+      } else if (action === "START_GUIDE") {
+        minimizeWidget();
+        setGuideInstructions({ instructions: content as string, callId: null });
+        setIsGuidingUser(true);
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -107,6 +160,7 @@ export default function Page() {
         className={cx("flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
           "bg-gumroad-bg": isGumroadTheme,
           "bg-white": !isGumroadTheme,
+          hidden: isGuidingUser,
         })}
       >
         <Header
@@ -141,12 +195,18 @@ export default function Page() {
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
+                  guideInstructions={guideInstructions}
+                  setIsGuidingUser={setIsGuidingUser}
+                  setGuideInstructions={setGuideInstructions}
                 />
               </div>
             </m.div>
           </LazyMotion>
         </div>
       </div>
+      {isGuidingUser && guideInstructions && (
+        <HelpingHand instructions={guideInstructions.instructions} callId={guideInstructions.callId} token={token} />
+      )}
     </QueryClientProvider>
   );
 }

@@ -8,9 +8,19 @@ type Props = {
   conversationSlug: string | null;
   isGumroadTheme: boolean;
   token: string | null;
+  startGuide: () => void;
+  cancelGuide: (toolCallId: string) => void;
 };
 
-export default function MessagesList({ data, messages, conversationSlug, isGumroadTheme, token }: Props) {
+export default function MessagesList({
+  data,
+  messages,
+  conversationSlug,
+  isGumroadTheme,
+  token,
+  startGuide,
+  cancelGuide,
+}: Props) {
   const { scrollRef, contentRef } = useStickToBottom();
 
   return (
@@ -24,6 +34,8 @@ export default function MessagesList({ data, messages, conversationSlug, isGumro
             token={token}
             data={index === messages.length - 1 ? data : null}
             color={isGumroadTheme ? "gumroad-pink" : "black"}
+            startGuide={startGuide}
+            cancelGuide={cancelGuide}
           />
         ))}
       </div>
