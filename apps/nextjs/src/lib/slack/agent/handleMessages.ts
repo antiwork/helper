@@ -50,7 +50,7 @@ export async function handleNewAssistantMessage(event: GenericMessageEvent, mail
     thread_ts,
     assertDefined(mailbox.slackBotUserId),
   );
-  const result = await generateResponse(messages, mailbox, updateStatus);
+  const result = await generateResponse(messages, mailbox, event.user, updateStatus);
 
   updateStatus(result);
 }

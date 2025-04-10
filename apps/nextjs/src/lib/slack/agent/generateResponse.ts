@@ -1,7 +1,9 @@
 import { openai } from "@ai-sdk/openai";
+import { WebClient } from "@slack/web-api";
 import { CoreMessage, generateText, tool } from "ai";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
+import { assertDefined } from "@/components/utils/assert";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { Mailbox } from "@/lib/data/mailbox";
@@ -11,6 +13,7 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 export const generateResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
+  slackUserId: string | undefined,
   updateStatus?: (status: string, debugContent?: string) => void,
 ) => {
   const searchToolSchema = searchSchema.omit({
@@ -25,16 +28,35 @@ export const generateResponse = async (
     messages,
     maxSteps: 10,
     tools: {
+      getCurrentSlackUser: tool({
+        description: "Get the current Slack user",
+        parameters: z.object({}),
+        execute: async () => {
+          updateStatus?.(`is getting user...`, JSON.stringify({ slackUserId }, null, 2));
+          if (!slackUserId) return { error: "User not found" };
+          const client = new WebClient(assertDefined(mailbox.slackBotToken));
+          const { user } = await client.users.info({ user: slackUserId });
+          if (user) {
+            return {
+              id: user.id,
+              name: user.profile?.real_name,
+              email: user.profile?.email,
+            };
+          }
+          return { error: "User not found" };
+        },
+      }),
       getMembers: tool({
         description: "Get IDs, names and emails of all team members",
         parameters: z.object({}),
         execute: async () => {
+          updateStatus?.(`is getting members...`);
           const members = await getClerkUserList(mailbox.clerkOrganizationId);
           return members.data.map((member) => ({
             id: member.id,
             firstName: member.firstName,
             lastName: member.lastName,
-            email: member.emailAddresses[0]?.emailAddress,
+            emails: member.emailAddresses.map((email) => email.emailAddress),
           }));
         },
       }),

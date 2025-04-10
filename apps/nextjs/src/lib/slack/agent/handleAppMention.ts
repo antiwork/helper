@@ -56,10 +56,15 @@ export async function handleNewAppMention(event: AppMentionEvent, mailbox: Mailb
         thread_ts,
         assertDefined(mailbox.slackBotUserId),
       );
-      const result = await generateResponse(messages, mailbox, updateMessage);
+      const result = await generateResponse(messages, mailbox, event.user, updateMessage);
       updateMessage(result);
     } else {
-      const result = await generateResponse([{ role: "user", content: event.text }], mailbox, updateMessage);
+      const result = await generateResponse(
+        [{ role: "user", content: event.text }],
+        mailbox,
+        event.user,
+        updateMessage,
+      );
       updateMessage(result);
     }
   } catch (e: unknown) {

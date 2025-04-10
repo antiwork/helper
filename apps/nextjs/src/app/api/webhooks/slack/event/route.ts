@@ -59,9 +59,19 @@ export const POST = async (request: Request) => {
 
   const event = data.event as SlackEvent;
   console.log("got event", event);
-  const mailbox = await findMailboxForEvent(event);
 
+  if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
+    // Not messages we need to handle
+    return new Response("Success!", { status: 200 });
+  }
+
+  const mailbox = await findMailboxForEvent(event);
   if (!mailbox) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  if (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, mailbox)))) {
+    waitUntil(handleNewAssistantMessage(event, mailbox));
+    return new Response("Success!", { status: 200 });
+  }
 
   if (event.type === "app_mention") {
     waitUntil(handleNewAppMention(event, mailbox));
@@ -70,18 +80,6 @@ export const POST = async (request: Request) => {
 
   if (event.type === "assistant_thread_started") {
     waitUntil(assistantThreadMessage(event, mailbox));
-    return new Response("Success!", { status: 200 });
-  }
-
-  if (
-    event.type === "message" &&
-    !event.subtype &&
-    !event.bot_id &&
-    !event.bot_profile &&
-    (event.channel_type === "im" || (await isAgentThread(event, mailbox)))
-  ) {
-    console.log("handling new assistant message", event);
-    waitUntil(handleNewAssistantMessage(event, mailbox));
     return new Response("Success!", { status: 200 });
   }
 
