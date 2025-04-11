@@ -15,15 +15,12 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
 
   return (
-    <>
-      <SectionWrapper
-        title="Manage Team Members"
-        description="Add and organize team members for efficient ticket assignment"
-      >
-        <></>
-      </SectionWrapper>
-
-      <div className="w-full space-y-6 mt-8">
+    <SectionWrapper
+      title="Manage Team Members"
+      description="Add and organize team members for efficient ticket assignment"
+      fullWidth
+    >
+      <div className="w-full space-y-6">
         <TeamInvite mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
         <div className="rounded-md border">
           <Table>
@@ -32,7 +29,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
-                <TableHead>Auto-assign keywords</TableHead>
+                <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -58,13 +55,16 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">
-          <p>Note: {ROLE_DISPLAY_NAMES.core} members are assigned tickets in a round-robin style.</p>
-          <p>{ROLE_DISPLAY_NAMES.nonCore} members are only assigned if the ticket tags match their keywords.</p>
-          <p>{ROLE_DISPLAY_NAMES.afk} members do not receive any ticket assignments.</p>
-          <p>Only {ROLE_DISPLAY_NAMES.core} support team members will be mentioned explicitly in weekly reports</p>
+          <p>Note:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>{ROLE_DISPLAY_NAMES.core} members are assigned tickets in a round-robin style.</li>
+            <li>{ROLE_DISPLAY_NAMES.nonCore} members are only assigned if the ticket tags match their keywords.</li>
+            <li>{ROLE_DISPLAY_NAMES.afk} members do not receive any ticket assignments.</li>
+            <li>Only {ROLE_DISPLAY_NAMES.core} support team members will be mentioned explicitly in weekly reports.</li>
+          </ul>
         </div>
       </div>
-    </>
+    </SectionWrapper>
   );
 };
 

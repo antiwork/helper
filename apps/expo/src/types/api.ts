@@ -1005,7 +1005,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         update: import("@trpc/server").TRPCMutationProcedure<{
           input: {
             mailboxSlug: string;
-            role: "Core" | "Non-core" | "AFK";
+            role: "core" | "nonCore" | "afk";
             userId: string;
             keywords?: string[] | undefined;
           };
@@ -1023,12 +1023,7 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             period: "24h" | "7d" | "30d" | "1y";
             customDate?: Date | undefined;
           };
-          output: {
-            id: string;
-            email: string | undefined;
-            displayName: string | null;
-            replyCount: number;
-          }[];
+          output: import("../lib/data/stats").MemberStats;
         }>;
       };
       slack: {

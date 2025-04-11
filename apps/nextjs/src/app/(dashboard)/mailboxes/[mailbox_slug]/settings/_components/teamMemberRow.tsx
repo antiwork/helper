@@ -46,12 +46,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
 
   const { mutate: updateTeamMember } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
-      toast({
-        title: "Team member updated",
-        variant: "success",
-      });
-
-      // Optimistically update the cache with the new data
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((m) =>
@@ -72,7 +66,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
         variant: "destructive",
       });
 
-      // Reset to previous state on error
       setKeywordsInput(member.keywords.join(", "));
       setRole(member.role);
     },
@@ -137,13 +130,12 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
         </Select>
       </TableCell>
       <TableCell>
-        {role === "nonCore" && (
-          <Input
-            value={keywordsInput}
-            onChange={(e) => handleKeywordsChange(e.target.value)}
-            placeholder="Enter keywords separated by commas"
-          />
-        )}
+        <Input
+          value={keywordsInput}
+          onChange={(e) => handleKeywordsChange(e.target.value)}
+          placeholder="Enter keywords separated by commas"
+          className={role === "nonCore" ? "" : "invisible"}
+        />
       </TableCell>
     </TableRow>
   );
