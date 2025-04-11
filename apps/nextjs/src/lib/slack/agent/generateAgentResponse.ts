@@ -29,6 +29,8 @@ export const generateAgentResponse = async (
     model: openai("gpt-4o"),
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
+You are currently in the mailbox: ${mailbox.name}.
+
 IMPORTANT GUIDELINES:
 - Always identify as "Helper" (never as "Helper AI" or any other variation)
 - Do not tag users in responses

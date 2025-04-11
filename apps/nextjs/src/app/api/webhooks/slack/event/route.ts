@@ -1,41 +1,18 @@
-import { SlackEvent, WebClient, type GenericMessageEvent } from "@slack/web-api";
+import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { disconnectSlack, type Mailbox } from "@/lib/data/mailbox";
-import { findMailboxForEvent } from "@/lib/slack/agent/findMailbox";
+import { disconnectSlack } from "@/lib/data/mailbox";
+import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
 import {
   handleAssistantThreadMessage,
   handleNewAppMention,
   handleNewAssistantMessage,
+  isAgentThread,
 } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
-
-async function isAgentThread(event: GenericMessageEvent, mailbox: Mailbox) {
-  if (!mailbox.slackBotToken || !mailbox.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
-    return false;
-  }
-
-  console.log("checking if thread is an agent thread", event);
-
-  if (event.text?.includes("(aside)")) return false;
-
-  const client = new WebClient(mailbox.slackBotToken);
-  const { messages } = await client.conversations.replies({
-    channel: event.channel,
-    ts: event.thread_ts,
-    limit: 50,
-  });
-
-  for (const message of messages ?? []) {
-    console.log("message", message.user, mailbox.slackBotUserId);
-    if (message.user === mailbox.slackBotUserId) return true;
-  }
-
-  return false;
-}
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -67,21 +44,21 @@ export const POST = async (request: Request) => {
     return new Response("Success!", { status: 200 });
   }
 
-  const mailbox = await findMailboxForEvent(event);
-  if (!mailbox) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const mailboxInfo = await findMailboxForEvent(event);
+  if (!mailboxInfo.mailboxes.length) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  if (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, mailbox)))) {
-    waitUntil(handleNewAssistantMessage(event, mailbox));
+  if (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, mailboxInfo)))) {
+    waitUntil(handleNewAssistantMessage(event, mailboxInfo));
     return new Response("Success!", { status: 200 });
   }
 
   if (event.type === "app_mention") {
-    waitUntil(handleNewAppMention(event, mailbox));
+    waitUntil(handleNewAppMention(event, mailboxInfo));
     return new Response("Success!", { status: 200 });
   }
 
   if (event.type === "assistant_thread_started") {
-    waitUntil(handleAssistantThreadMessage(event, mailbox));
+    waitUntil(handleAssistantThreadMessage(event, mailboxInfo));
     return new Response("Success!", { status: 200 });
   }
 

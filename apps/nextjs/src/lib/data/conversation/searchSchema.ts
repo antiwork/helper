@@ -14,6 +14,7 @@ export const searchSchema = z.object({
   search: z.string().nullish().describe("Search term to look for in tickets"),
   status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),
   assignee: z.array(z.string()).optional().describe("ID of team members currently assigned to the conversation"),
+  isAssigned: z.boolean().optional().describe("Filter tickets assigned to any team member or unassigned"),
   createdAfter: z.string().datetime().optional().describe("Filter tickets created after this date"),
   createdBefore: z.string().datetime().optional().describe("Filter tickets created before this date"),
   repliedAfter: z.string().datetime().optional().describe("Filter tickets where a human has replied after this date"),

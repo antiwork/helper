@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { Mailbox } from "@/lib/data/mailbox";
 import { redis } from "@/lib/redis/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -17,9 +18,12 @@ const cachedChannelInfo = async (token: string, teamId: string, channelId: strin
   return info;
 };
 
-export const findMailboxForEvent = async (event: SlackEvent) => {
-  console.log("event", event);
+export type SlackMailboxInfo = {
+  mailboxes: Mailbox[];
+  currentMailbox: Mailbox | null;
+};
 
+export const findMailboxForEvent = async (event: SlackEvent): Promise<SlackMailboxInfo> => {
   let conditions;
   if ("team_id" in event) {
     conditions = eq(mailboxes.slackTeamId, String(event.team_id));
@@ -31,7 +35,7 @@ export const findMailboxForEvent = async (event: SlackEvent) => {
     captureExceptionAndLog(new Error("Slack event does not have team_id or team"), {
       extra: { event },
     });
-    return null;
+    return { mailboxes: [], currentMailbox: null };
   }
 
   const matchingMailboxes = await db.query.mailboxes.findMany({
@@ -41,9 +45,9 @@ export const findMailboxForEvent = async (event: SlackEvent) => {
     captureExceptionAndLog(new Error("No mailbox found for Slack event"), {
       extra: { event },
     });
-    return null;
+    return { mailboxes: [], currentMailbox: null };
   }
-  if (matchingMailboxes.length === 1) return matchingMailboxes[0];
+  if (matchingMailboxes.length === 1) return { mailboxes: matchingMailboxes, currentMailbox: matchingMailboxes[0] };
 
   const channelInfo =
     "channel" in event && typeof event.channel === "string"
@@ -55,8 +59,9 @@ export const findMailboxForEvent = async (event: SlackEvent) => {
       : null;
 
   for (const mailbox of matchingMailboxes) {
-    if ("text" in event && event.text?.includes(mailbox.name)) return mailbox;
-    if (channelInfo?.includes(mailbox.name)) return mailbox;
+    if ("text" in event && event.text?.includes(mailbox.name))
+      return { mailboxes: matchingMailboxes, currentMailbox: mailbox };
+    if (channelInfo?.includes(mailbox.name)) return { mailboxes: matchingMailboxes, currentMailbox: mailbox };
   }
-  return matchingMailboxes[0];
+  return { mailboxes: matchingMailboxes, currentMailbox: null };
 };

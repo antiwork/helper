@@ -36,7 +36,10 @@ export const searchConversations = async (
     filters.assignee = [currentUserId];
   }
   if (filters.category === "unassigned") {
-    filters.assignee = [];
+    filters.isAssigned = false;
+  }
+  if (filters.category === "assigned") {
+    filters.isAssigned = true;
   }
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id) : [];
@@ -46,8 +49,8 @@ export const searchConversations = async (
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToClerkId, filters.assignee) } : {}),
-    ...(filters.category === "assigned" ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
-    ...(filters.category === "unassigned" ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
+    ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
+    ...(filters.isAssigned === false ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
     ...(filters.isVip && mailbox.vipThreshold
       ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
       : {}),
