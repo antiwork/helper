@@ -1,9 +1,17 @@
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { guideSessionReplays, guideSessions } from "@/db/schema";
+import { guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
+import { createGuideSessionEvent, updateGuideSession } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+
+const eventSchema = z.object({
+  type: z.enum(guideSessionEventTypeEnum.enumValues),
+  timestamp: z.number().transform((val) => new Date(val)),
+  data: z.record(z.string(), z.unknown()),
+});
 
 export async function POST(request: Request) {
   try {
@@ -36,6 +44,25 @@ export async function POST(request: Request) {
             metadata: metadata || {},
           }),
         ),
+      );
+    } else {
+      await Promise.all(
+        events.map(async (event: any) => {
+          const eventData = eventSchema.parse(event);
+
+          if (eventData.type === "completed") {
+            await updateGuideSession(guideSession.id, {
+              set: { status: "completed" },
+            });
+          }
+
+          return createGuideSessionEvent({
+            guideSessionId: guideSession.id,
+            type: eventData.type,
+            data: eventData.data,
+            timestamp: eventData.timestamp,
+          });
+        }),
       );
     }
 

@@ -60,7 +60,7 @@ export default function HelpingHand({
       console.log("Next goal:", params.current_state.next_goal);
 
       if (params.action) {
-        handleAction(params.action, toolCall.toolCallId);
+        handleAction(params.action, toolCall.toolCallId, params.current_state);
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
@@ -91,7 +91,7 @@ export default function HelpingHand({
     return true;
   };
 
-  const handleAction = async (action: any, toolCallId: string) => {
+  const handleAction = async (action: any, toolCallId: string, context: any) => {
     const type = action.type;
     if (!type) return;
 
@@ -105,7 +105,7 @@ export default function HelpingHand({
     }
 
     // General handler for all action types
-    const result = await executeGuideAction(type, params);
+    const result = await executeGuideAction(type, params, context);
     console.log(`${type} result:`, result);
 
     if (result && toolCallId) {

@@ -1,13 +1,19 @@
 import "server-only";
-import { db } from "@/db/client";
+
+import { eq } from "drizzle-orm";
+
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { db, type Transaction } from "@/db/client";
 import {
   guideSessionEvents,
   guideSessionEventTypeEnum,
   guideSessionReplays,
   guideSessions,
+  guideSessionStatusEnum,
   platformCustomers,
 } from "@/db/schema";
 import { type PlanResult } from "@/lib/ai/guide";
+
 import { captureExceptionAndLog } from "../shared/sentry";
 
 export type GuideSession = typeof guideSessions.$inferSelect;
@@ -62,14 +68,41 @@ export const createGuideSession = async ({
   }
 };
 
+export const updateGuideSession = async (
+  guideSessionId: number,
+  {
+    set: dbUpdates = {},
+  }: {
+    set?: Partial<typeof guideSessions.$inferInsert>;
+  },
+  tx: Transaction | typeof db = db,
+): Promise<GuideSession | null> => {
+  try {
+    const guideSession = await tx
+      .update(guideSessions)
+      .set(dbUpdates)
+      .where(eq(guideSessions.id, guideSessionId))
+      .returning()
+      .then(takeUniqueOrThrow);
+
+    return guideSession;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    return null;
+  }
+};
+
 export const createGuideSessionEvent = async ({
   guideSessionId,
   type,
   data,
+  timestamp,
 }: {
   guideSessionId: number;
   type: (typeof guideSessionEventTypeEnum.enumValues)[number];
   data: GuideSessionEventData;
+  timestamp?: Date;
+  metadata?: Record<string, unknown>;
 }): Promise<GuideSessionEvent> => {
   try {
     const [event] = await db
@@ -78,7 +111,7 @@ export const createGuideSessionEvent = async ({
         guideSessionId,
         type,
         data,
-        timestamp: new Date(),
+        timestamp: timestamp || new Date(),
       })
       .returning();
 

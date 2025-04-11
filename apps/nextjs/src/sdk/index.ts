@@ -310,14 +310,12 @@ class HelperWidget {
             }
 
             if (action === "EXECUTE_GUIDE_ACTION") {
-              const { actionType, params } = content;
-              response = await this.guideManager.executeDOMAction(actionType, params);
+              const { actionType, params, currentState } = content;
+              response = await this.guideManager.executeDOMAction(actionType, params, currentState);
             }
 
             if (action === "GUIDE_DONE") {
-              this.guideManager.stopRecording();
-              this.guideManager.hideHelperHand();
-              this.guideManager.celebrateGuideDone();
+              this.guideManager.done();
               HelperWidget.hide();
             }
 
@@ -373,7 +371,9 @@ class HelperWidget {
               }
               break;
             case GUIDE_START:
-              this.guideManager.start(this.sessionToken, content.sessionId);
+              if (this.sessionToken && content.sessionId) {
+                this.guideManager.start(this.sessionToken, content.sessionId);
+              }
               break;
             case SCREENSHOT_ACTION:
               this.takeScreenshot();

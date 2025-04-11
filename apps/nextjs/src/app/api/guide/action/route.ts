@@ -26,7 +26,6 @@ Example:
 # Response Rules
 1. RESPONSE FORMAT: You must ALWAYS respond calling the AgentOutput tool with the following parameters:
 {"current_state": {"evaluation_previous_goal": "Success|Failed|Unknown - Analyze the current elements and the image to check if the previous goals/action are successful like intended by the task. Mention if something unexpected happened. Shortly state why/why not",
-"memory": "Description of what has been done and what you need to remember. Be very specific. Count here ALWAYS how many times you have done something and how many remain. E.g. 0 out of 10 websites analyzed. Continue with abc and xyz",
 "next_goal": "What needs to be done with the next immediate action"},
 "action":{"type": "action-type", "parameters": {// action-specific parameter}}}
 
@@ -55,7 +54,6 @@ Common action sequences:
 - Use the done action as the last action as soon as the ultimate task is complete
 - Dont use "done" before you are done with everything the user asked you, except you reach the last step of max_steps. 
 - If you reach your last step, use the done action even if the task is not fully finished. Provide all the information you have gathered so far. If the ultimate task is completly finished set success to true. If not everything the user asked for is completed set success in done to false!
-- If you have to do something repeatedly for example the task says for "each", or "for all", or "x times", count always inside "memory" how many times you have done it and how many remain. Don't stop until you have completed like the task asked you. Only call done after the last step.
 - Don't hallucinate action
 - Make sure you include everything you found out for the ultimate task in the done text parameter. Do not just say you are done, but include the requested information of the task. 
 
@@ -93,7 +91,6 @@ export async function POST(request: Request) {
         .object({
           current_state: z.object({
             evaluation_previous_goal: z.string(),
-            memory: z.string(),
             next_goal: z.string(),
           }),
           action: z
@@ -131,11 +128,13 @@ export async function POST(request: Request) {
                 type: z.literal("get_dropdown_options"),
                 index: z.number().int(),
               }),
-              z.object({
-                type: z.literal("select_dropdown_option"),
-                index: z.number().int(),
-                text: z.string(),
-              }),
+              z
+                .object({
+                  type: z.literal("select_option"),
+                  index: z.number().int(),
+                  text: z.string(),
+                })
+                .describe("Select an option from a dropdown <select> element"),
             ])
             .describe("Only call one action at a time."),
         })

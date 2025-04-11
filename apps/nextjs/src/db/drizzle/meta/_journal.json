@@ -547,6 +547,13 @@
       "when": 1744395184151,
       "tag": "0077_heavy_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1744406620178,
+      "tag": "0078_burly_speed",
+      "breakpoints": true
     }
   ]
 }

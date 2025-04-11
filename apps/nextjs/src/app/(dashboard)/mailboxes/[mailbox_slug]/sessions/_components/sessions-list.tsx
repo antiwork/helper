@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Calendar, Clock, Play } from "lucide-react";
+import { Calendar, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,6 @@ export default function SessionsList({ mailbox, guideSessions }: SessionsListPro
 
   const handleViewSession = (session: GuideSession) => {
     router.push(`/mailboxes/${mailbox.slug}/sessions/${session.id}`);
-  };
-
-  const handleViewReplay = (session: GuideSession) => {
-    router.push(`/mailboxes/${mailbox.slug}/sessions/${session.id}/replay`);
   };
 
   return (
@@ -85,12 +81,8 @@ export default function SessionsList({ mailbox, guideSessions }: SessionsListPro
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button size="sm" variant="outlined" onClick={() => handleViewSession(session)}>
-                            <Clock className="mr-1 h-4 w-4" />
-                            Events
-                          </Button>
-                          <Button size="sm" onClick={() => handleViewReplay(session)}>
-                            <Play className="mr-1 h-4 w-4" />
-                            Replay
+                            <Eye className="mr-1 h-4 w-4" />
+                            View
                           </Button>
                         </div>
                       </TableCell>

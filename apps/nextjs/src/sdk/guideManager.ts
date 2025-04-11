@@ -4,6 +4,7 @@ import type { eventWithTime } from "@rrweb/types";
 import userEvent from "@testing-library/user-event";
 import confetti from "canvas-confetti";
 import scrollIntoView from "scroll-into-view-if-needed";
+import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -213,11 +214,33 @@ export class GuideManager {
     return element as HTMLElement;
   }
 
-  public async executeDOMAction(actionType: string, params: any): Promise<boolean | string> {
+  public async executeDOMAction(actionType: string, params: any, currentState: any): Promise<boolean | string> {
+    const supported = [
+      "click_element",
+      "select_option",
+      "input_text",
+      "get_dropdown_options",
+      "send_keys",
+      "scroll_to_element",
+      "go_back",
+      "wait",
+    ];
+
+    if (!supported.includes(actionType)) {
+      console.warn(`Unknown action type: ${actionType}`);
+      return false;
+    }
+
+    await this.sendGuideEvent("action_performed", {
+      actionType,
+      params,
+      currentState,
+    });
+
     switch (actionType) {
       case "click_element":
         return await this.clickElement(params.index);
-      case "select_dropdown_option":
+      case "select_option":
         return await this.selectDropdownOption(params.index, params.text);
       case "input_text":
         return await this.inputText(params.index, params.text);
@@ -234,7 +257,7 @@ export class GuideManager {
         await wait(params.seconds * 1000);
         return true;
     }
-    console.warn(`Unknown action type: ${actionType}`);
+
     return false;
   }
 
@@ -371,6 +394,16 @@ export class GuideManager {
     })();
   }
 
+  public done(): void {
+    this.sendGuideEvent("completed", {
+      title: document.title,
+      url: window.location.href,
+    });
+    this.stopRecording();
+    this.hideHelperHand();
+    this.celebrateGuideDone();
+  }
+
   public startRecording(): Promise<void> {
     if (this.stopFn) {
       return Promise.resolve();
@@ -390,7 +423,7 @@ export class GuideManager {
         blockClass: "helper-block",
         ignoreClass: "helper-ignore",
         maskTextClass: "helper-mask",
-        maskAllInputs: true,
+        maskAllInputs: false,
         inlineStylesheet: true,
         recordCanvas: false,
         collectFonts: false,
@@ -508,6 +541,45 @@ export class GuideManager {
 
     if (this.isRecording) {
       this.stopRecording().catch(console.error);
+    }
+  }
+
+  public async sendGuideEvent(
+    type: (typeof guideSessionEventTypeEnum.enumValues)[number],
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    if (!this.sessionId || !this.sessionToken) {
+      console.error("Cannot send guide event: session not started.");
+      return;
+    }
+
+    const eventPayload = {
+      type,
+      timestamp: Date.now(),
+      data,
+    };
+
+    try {
+      const response = await fetch("/api/guide/event", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.sessionToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isRecording: false,
+          sessionId: this.sessionId,
+          events: [eventPayload],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      console.log("Guide event sent successfully:", type);
+    } catch (error) {
+      console.error("Failed to send guide event:", error);
     }
   }
 }

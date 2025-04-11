@@ -12,6 +12,7 @@ export const SCREENSHOT_ACTION = "SCREENSHOT";
 export const MINIMIZE_ACTION = "MINIMIZE";
 export const MESSAGE_TYPE = "HELPER_WIDGET_MESSAGE";
 export const GUIDE_START = "GUIDE_START";
+export const EXECUTE_GUIDE_ACTION = "EXECUTE_GUIDE_ACTION";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
   window.parent.postMessage(
@@ -100,8 +101,12 @@ export const fetchCurrentPageDetails = async (): Promise<{
   return await sendRequestToParent("FETCH_PAGE_DETAILS");
 };
 
-export const executeGuideAction = async (actionType: string, params: Record<string, any>) => {
-  return await sendRequestToParent("EXECUTE_GUIDE_ACTION", { actionType, params });
+export const executeGuideAction = async (
+  actionType: string,
+  params: Record<string, any>,
+  currentState: Record<string, any>,
+) => {
+  return await sendRequestToParent(EXECUTE_GUIDE_ACTION, { actionType, params, currentState });
 };
 
 export const guideDone = async () => {

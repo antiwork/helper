@@ -13,6 +13,17 @@ export const guideSessionStatusEnum = pgEnum("guide_session_status", [
   "paused",
 ]);
 
+export const guideSessionEventTypeEnum = pgEnum("guide_session_event_type", [
+  "session_started",
+  "step_added",
+  "step_completed",
+  "step_updated",
+  "action_performed",
+  "completed",
+  "abandoned",
+  "paused",
+]);
+
 export type GuideSessionStep = {
   description: string;
   completed: boolean;
@@ -24,7 +35,7 @@ export const guideSessions = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     uuid: uuid("uuid").notNull().defaultRandom(),
-    platformCustomerId: bigint({ mode: "number" }),
+    platformCustomerId: bigint({ mode: "number" }).notNull(),
     conversationId: bigint({ mode: "number" }),
     status: guideSessionStatusEnum("status").notNull().default("started"),
     title: text().notNull(),
@@ -42,17 +53,6 @@ export const guideSessions = pgTable(
     unique("guide_sessions_uuid_unique").on(table.uuid),
   ],
 );
-
-export const guideSessionEventTypeEnum = pgEnum("guide_session_event_type", [
-  "session_started",
-  "status_changed",
-  "step_added",
-  "step_completed",
-  "step_updated",
-  "completed",
-  "abandoned",
-  "paused",
-]);
 
 export const guideSessionEvents = pgTable(
   "guide_session_events",
