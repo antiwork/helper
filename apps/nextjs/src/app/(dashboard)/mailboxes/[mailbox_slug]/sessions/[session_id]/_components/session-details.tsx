@@ -129,10 +129,11 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
   // Prepare events for the new Timeline component
   const timelineEvents: TimelineEvent[] = session.events.map((event) => {
     let details = "No data available";
+    const eventData = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+
     try {
       if (event.data) {
-        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-        details = JSON.stringify(data, null, 2);
+        details = JSON.stringify(eventData, null, 2);
       }
     } catch (error) {
       details = "Error parsing event data";
@@ -142,7 +143,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
       id: event.id,
       title: event.type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()), // Format title
       date: formatDistanceToNow(new Date(event.timestamp), { addSuffix: true }),
-      summary: `Event ${event.type}`, // Add required summary property
+      summary: eventData?.actionType,
       details,
     };
   });
