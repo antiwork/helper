@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
 import {
   handleAssistantThreadMessage,
@@ -44,23 +45,41 @@ export const POST = async (request: Request) => {
     return new Response("Success!", { status: 200 });
   }
 
-  const mailboxInfo = await findMailboxForEvent(event);
-  if (!mailboxInfo.mailboxes.length) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const mailboxInfo = await handleSlackErrors(findMailboxForEvent(event));
+  if (!mailboxInfo?.mailboxes.length) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  if (event.type === "message" && (event.channel_type === "im" || (await isAgentThread(event, mailboxInfo)))) {
-    waitUntil(handleNewAssistantMessage(event, mailboxInfo));
+  if (
+    event.type === "message" &&
+    (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo))))
+  ) {
+    waitUntil(handleSlackErrors(handleNewAssistantMessage(event, mailboxInfo)));
     return new Response("Success!", { status: 200 });
   }
 
   if (event.type === "app_mention") {
-    waitUntil(handleNewAppMention(event, mailboxInfo));
+    waitUntil(handleSlackErrors(handleNewAppMention(event, mailboxInfo)));
     return new Response("Success!", { status: 200 });
   }
 
   if (event.type === "assistant_thread_started") {
-    waitUntil(handleAssistantThreadMessage(event, mailboxInfo));
+    waitUntil(handleSlackErrors(handleAssistantThreadMessage(event, mailboxInfo)));
     return new Response("Success!", { status: 200 });
   }
 
   return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+};
+
+const handleSlackErrors = async <T>(operation: Promise<T>) => {
+  try {
+    return await operation;
+  } catch (error) {
+    if (error instanceof Error && "data" in error) {
+      captureExceptionAndLog(error, {
+        extra: {
+          slackResponse: error.data,
+        },
+      });
+    }
+    captureExceptionAndLog(error);
+  }
 };

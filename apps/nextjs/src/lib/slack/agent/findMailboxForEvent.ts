@@ -34,6 +34,8 @@ export const findMailboxForEvent = async (event: SlackEvent): Promise<SlackMailb
     conditions = eq(mailboxes.slackTeamId, String(event.team_id));
   } else if ("team" in event) {
     conditions = eq(mailboxes.slackTeamId, String(event.team));
+  } else if ("assistant_thread" in event) {
+    conditions = eq(mailboxes.slackTeamId, String(event.assistant_thread.context.team_id));
   }
 
   if (!conditions) {
