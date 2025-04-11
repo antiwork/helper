@@ -15,7 +15,7 @@ import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustom
 import { getClerkUserList } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
-export const generateResponse = async (
+export const generateAgentResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
   slackUserId: string | undefined,

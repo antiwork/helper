@@ -6,8 +6,11 @@ import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack, type Mailbox } from "@/lib/data/mailbox";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailbox";
-import { handleNewAppMention } from "@/lib/slack/agent/handleAppMention";
-import { assistantThreadMessage, handleNewAssistantMessage } from "@/lib/slack/agent/handleMessages";
+import {
+  handleAssistantThreadMessage,
+  handleNewAppMention,
+  handleNewAssistantMessage,
+} from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
 
 async function isAgentThread(event: GenericMessageEvent, mailbox: Mailbox) {
@@ -58,7 +61,6 @@ export const POST = async (request: Request) => {
   }
 
   const event = data.event as SlackEvent;
-  console.log("got event", event);
 
   if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
     // Not messages we need to handle
@@ -79,7 +81,7 @@ export const POST = async (request: Request) => {
   }
 
   if (event.type === "assistant_thread_started") {
-    waitUntil(assistantThreadMessage(event, mailbox));
+    waitUntil(handleAssistantThreadMessage(event, mailbox));
     return new Response("Success!", { status: 200 });
   }
 
