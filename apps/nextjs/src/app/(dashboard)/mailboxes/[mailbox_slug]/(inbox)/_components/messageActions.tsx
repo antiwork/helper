@@ -1,19 +1,16 @@
 import { useUser } from "@clerk/nextjs";
 import { ArrowUturnUpIcon } from "@heroicons/react/20/solid";
 import { isMacOS } from "@tiptap/core";
-import { partition } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { triggerConfetti } from "@/components/confetti";
-import { UploadStatus, useFileUpload } from "@/components/fileUploadContext";
+import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
-import { imageFileTypes } from "@/components/tiptap/image";
-import Toolbar from "@/components/tiptap/toolbar";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
@@ -122,73 +119,34 @@ const EmailEditorComponent = React.forwardRef<
             onModEnter={() => {}}
           />
         </div>
-        <div className={cn("flex-grow overflow-auto relative my-2 md:my-4", showCommandBar && "hidden")}>
-          <TipTapEditor
-            ref={editorRef}
-            ariaLabel="Conversation editor"
-            placeholder="Type your reply here..."
-            defaultContent={initialMessage}
-            editable={true}
-            onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
-            onModEnter={onSend}
-            onOptionEnter={onOptionSend}
-            onSlashKey={() => commandInputRef.current?.focus()}
-            enableImageUpload
-            enableFileUpload
-            signature={
-              user?.firstName ? (
-                <div className="mt-6 text-muted-foreground">
-                  Best,
-                  <br />
-                  {user.firstName}
-                  <div className="text-xs mt-2">
-                    Note: This signature will be automatically included in email responses, but not in live chat
-                    conversations.
-                  </div>
+        <TipTapEditor
+          ref={editorRef}
+          className={cn("flex-grow my-2 md:my-4", showCommandBar && "hidden")}
+          ariaLabel="Conversation editor"
+          placeholder="Type your reply here..."
+          defaultContent={initialMessage}
+          editable={true}
+          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
+          onModEnter={onSend}
+          onOptionEnter={onOptionSend}
+          onSlashKey={() => commandInputRef.current?.focus()}
+          enableImageUpload
+          enableFileUpload
+          actionButtons={actionButtons}
+          signature={
+            user?.firstName ? (
+              <div className="mt-6 text-muted-foreground">
+                Best,
+                <br />
+                {user.firstName}
+                <div className="text-xs mt-2">
+                  Note: This signature will be automatically included in email responses, but not in live chat
+                  conversations.
                 </div>
-              ) : null
-            }
-          />
-        </div>
-        <div className={cn("flex items-center gap-4", showCommandBar && "hidden")}>
-          {!isAboveMd && (
-            <div className="flex-1">
-              <Toolbar
-                editor={editorRef.current?.editor ?? null}
-                open={toolbarOpen}
-                setOpen={setToolbarOpen}
-                uploadInlineImages={(files: File[]) => {
-                  const [images] = partition(files, (file) => imageFileTypes.includes(file.type));
-                  if (images.length && editorRef.current?.editor) {
-                    const image = images[0];
-                    if (image) {
-                      const blobUrl = URL.createObjectURL(image);
-                      editorRef.current.editor.commands.setImage?.({
-                        src: blobUrl,
-                        upload: Promise.resolve({
-                          file: image,
-                          blobUrl,
-                          status: UploadStatus.UPLOADED,
-                          slug: "",
-                          inline: true,
-                          url: blobUrl,
-                        }),
-                      });
-                    }
-                  }
-                }}
-                uploadFileAttachments={(files: File[]) => {
-                  const [, nonImages] = partition(files, (file) => imageFileTypes.includes(file.type));
-                  // Handle file attachments
-                }}
-                enableImageUpload
-                enableFileUpload
-                variant="mobile"
-              />
-            </div>
-          )}
-          <div className="flex items-center gap-4 ml-auto">{!toolbarOpen && actionButtons}</div>
-        </div>
+              </div>
+            ) : null
+          }
+        />
       </div>
     );
   },
@@ -201,6 +159,7 @@ export const MessageActions = () => {
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
+  const { isAboveMd } = useBreakpoint("md");
 
   const { data: mailboxPreferences } = api.mailbox.preferences.get.useQuery({
     mailboxSlug,
@@ -376,7 +335,7 @@ export const MessageActions = () => {
 
   const actionButtons = (
     <>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 md:flex-row-reverse">
         {(conversation?.status ?? searchParams.status) !== "spam" &&
           ((conversation?.status ?? searchParams.status) === "closed" ? (
             <Button variant="outlined" onClick={() => updateStatus("open")}>
@@ -386,6 +345,7 @@ export const MessageActions = () => {
           ) : (
             <>
               <Button
+                size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}
@@ -395,7 +355,11 @@ export const MessageActions = () => {
                   <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
                 )}
               </Button>
-              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
+              <Button
+                size={isAboveMd ? "default" : "sm"}
+                onClick={() => handleSend({ assign: false })}
+                disabled={sendDisabled}
+              >
                 {sending ? "Replying..." : "Reply and close"}
                 {!sending && isMacOS() && (
                   <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>

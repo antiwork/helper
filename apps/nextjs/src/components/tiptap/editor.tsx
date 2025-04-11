@@ -34,6 +34,7 @@ type TipTapEditorProps = {
   editable?: boolean;
   ariaLabel?: string;
   className?: string;
+  actionButtons?: React.ReactNode;
 };
 
 declare module "@tiptap/core" {
@@ -82,6 +83,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       editable,
       ariaLabel,
       className,
+      actionButtons,
     },
     ref,
   ) => {
@@ -255,69 +257,71 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     }
 
     return (
-      <div
-        className={cn(
-          "relative flex flex-col h-full rounded border border-border bg-background",
-          toolbarOpen && "pb-14",
-          className,
-        )}
-        aria-label={ariaLabel}
-      >
-        <Toolbar
-          {...{
-            open: toolbarOpen,
-            setOpen: setToolbarOpen,
-            editor,
-            uploadFileAttachments,
-            uploadInlineImages,
-            customToolbar,
-            enableImageUpload,
-            enableFileUpload,
-            variant: "desktop",
-          }}
-        />
-
+      <div className={cn("relative flex flex-col gap-4", className)}>
         <div
-          className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
-          onClick={focusEditor}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            const files = [...(event.dataTransfer.files ?? [])];
-            if (!files.length) return false;
-            uploadFiles.current(files);
-          }}
-          ref={editorContentContainerRef}
+          className={cn(
+            "flex-grow flex flex-col h-full rounded border border-border bg-background",
+            toolbarOpen && isAboveMd && "pb-14",
+          )}
+          aria-label={ariaLabel}
         >
-          <div className="flex-grow">
-            <EditorContent editor={editor} onKeyDown={handleModEnter} />
-          </div>
-          {signature}
-          {attachments.length > 0 ? (
-            <div className="flex w-full flex-wrap gap-2 pt-4">
-              {attachments.map((fileInfo, idx) => (
-                <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        {editor && (
-          <BubbleMenu
-            editor={editor}
-            tippyOptions={{
-              duration: 100,
-              placement: "bottom-start",
-              appendTo: editorContentContainerRef.current || "parent",
+          <div
+            className="flex-grow flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
+            onClick={focusEditor}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              const files = [...(event.dataTransfer.files ?? [])];
+              if (!files.length) return false;
+              uploadFiles.current(files);
             }}
-            shouldShow={({ editor }) =>
-              isAboveMd && editor.state.selection.content().size > 0 && !editor.isActive("image")
-            }
-            className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+            ref={editorContentContainerRef}
           >
-            Hint: Paste URL to create link
-          </BubbleMenu>
-        )}
+            <div className="flex-grow">
+              <EditorContent editor={editor} onKeyDown={handleModEnter} />
+            </div>
+            {signature}
+            {attachments.length > 0 ? (
+              <div className="flex w-full flex-wrap gap-2 pt-4">
+                {attachments.map((fileInfo, idx) => (
+                  <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {editor && (
+            <BubbleMenu
+              editor={editor}
+              tippyOptions={{
+                duration: 100,
+                placement: "bottom-start",
+                appendTo: editorContentContainerRef.current || "parent",
+              }}
+              shouldShow={({ editor }) =>
+                isAboveMd && editor.state.selection.content().size > 0 && !editor.isActive("image")
+              }
+              className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+            >
+              Hint: Paste URL to create link
+            </BubbleMenu>
+          )}
+        </div>
+        <div className="flex justify-between md:justify-start">
+          <Toolbar
+            {...{
+              open: toolbarOpen,
+              setOpen: setToolbarOpen,
+              editor,
+              uploadFileAttachments,
+              uploadInlineImages,
+              customToolbar,
+              enableImageUpload,
+              enableFileUpload,
+            }}
+          />
+          {toolbarOpen && !isAboveMd ? null : actionButtons}
+        </div>
       </div>
     );
   },

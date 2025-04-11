@@ -1,12 +1,12 @@
 import type { Editor } from "@tiptap/react";
-import { ALargeSmall, Minus } from "lucide-react";
+import { ALargeSmall, Minus, MinusIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Popover } from "@/components/popover";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
 import LinkModal from "@/components/tiptap/linkModal";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/components/useBreakpoint";
+import { cn } from "@/lib/utils";
 import ToolbarBlockquote from "./icons/blockquote.svg";
 import ToolbarBold from "./icons/bold.svg";
 import ToolbarBulletList from "./icons/bullet-list.svg";
@@ -14,8 +14,6 @@ import ToolbarImage from "./icons/image.svg";
 import ToolbarItalic from "./icons/italic.svg";
 import ToolbarLink from "./icons/link.svg";
 import ToolbarOrderedList from "./icons/ordered-list.svg";
-import { Button } from "@/components/ui/button";
-import { PlusIcon, MinusIcon } from "lucide-react";
 
 type ToolbarProps = {
   editor: Editor | null;
@@ -25,8 +23,6 @@ type ToolbarProps = {
   uploadFileAttachments: (nonImages: File[]) => void;
   enableImageUpload?: boolean;
   enableFileUpload?: boolean;
-  customToolbar?: () => React.ReactNode;
-  variant?: "desktop" | "mobile";
 };
 
 const Toolbar = ({
@@ -37,9 +33,8 @@ const Toolbar = ({
   uploadFileAttachments,
   enableImageUpload,
   enableFileUpload,
-  customToolbar,
-  variant = "desktop",
 }: ToolbarProps) => {
+  const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
   const [linkData, setLinkData] = useState({ url: "", text: "" });
   useEffect(() => setLinkData({ url: "", text: "" }), [editor]);
@@ -193,7 +188,7 @@ const Toolbar = ({
 
   return (
     <div className="flex items-center gap-2">
-      {variant === "mobile" && (
+      {!isAboveMd && (
         <Button
           variant="ghost"
           size="sm"
@@ -205,7 +200,7 @@ const Toolbar = ({
           }}
           className={cn(
             "h-8 w-8 p-0",
-            open ? "bg-muted border border-border hover:border-primary" : "border border-border hover:border-primary"
+            open ? "bg-muted border border-border hover:border-primary" : "border border-border hover:border-primary",
           )}
         >
           {open ? <MinusIcon className="h-4 w-4" /> : <ALargeSmall className="h-4 w-4" />}
@@ -215,19 +210,16 @@ const Toolbar = ({
       <div
         className={cn(
           "flex flex-wrap gap-1",
-          variant === "desktop" && "absolute z-10 bottom-3 right-3 rounded-t border rounded-sm bg-background p-1",
-          variant === "mobile" && "relative gap-2",
-          open && variant === "desktop" && "left-3",
-          !open && variant === "mobile" && "hidden"
+          isAboveMd
+            ? "absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
+            : "relative gap-2",
+          open && isAboveMd && "left-3",
+          !open && !isAboveMd && "hidden",
         )}
       >
         {toolbarContent}
-        {variant === "desktop" && (
-          <button 
-            type="button" 
-            onClick={() => setOpen(!open)} 
-            className={cn(baseToolbarStyles, "ml-auto")}
-          >
+        {isAboveMd && (
+          <button type="button" onClick={() => setOpen(!open)} className={cn(baseToolbarStyles, "ml-auto")}>
             {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
           </button>
         )}
