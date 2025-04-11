@@ -1,7 +1,9 @@
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
 import { inngest } from "@/inngest/client";
+import { runAIObjectQuery } from "@/lib/ai";
 import { updateConversation } from "@/lib/data/conversation";
 import { getMailboxById } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
@@ -15,19 +17,92 @@ const getCoreTeamMembers = (teamMembers: UserWithMailboxAccessData[]): UserWithM
   return teamMembers.filter((member) => member.role === UserRoles.CORE);
 };
 
-const getNonCoreTeamMembersWithMatchingKeywords = (
+const getNonCoreTeamMembersWithMatchingKeywords = async (
   teamMembers: UserWithMailboxAccessData[],
   conversationContent: string,
-): UserWithMailboxAccessData[] => {
+  mailbox: any,
+): Promise<UserWithMailboxAccessData[]> => {
   if (!conversationContent) return [];
 
-  const contentLowerCase = conversationContent.toLowerCase();
+  const membersWithKeywords = teamMembers.filter(
+    (member) => member.role === UserRoles.NON_CORE && member.keywords.length > 0,
+  );
 
-  return teamMembers
-    .filter((member) => member.role === UserRoles.NON_CORE && member.keywords.length > 0)
-    .filter((member) => {
-      return member.keywords.some((keyword) => contentLowerCase.includes(keyword.toLowerCase()));
-    });
+  if (membersWithKeywords.length === 0) return [];
+
+  const memberKeywords = membersWithKeywords.reduce<Record<string, string[]>>((acc, member) => {
+    acc[member.id] = member.keywords;
+    return acc;
+  }, {});
+
+  const result = await runAIObjectQuery({
+    mailbox,
+    // note: do we need a new qyery type for this?
+    queryType: "reasoning",
+    schema: z.object({
+      matches: z.record(z.string(), z.boolean()),
+      reasoning: z.string(),
+      confidenceScore: z.number().optional(),
+    }),
+    // alternative to A\B test
+    //     system: `You are a Support Ticket Routing Expert who specializes in matching customer conversations to the right team members based on their expertise keywords.
+
+    // When evaluating if a conversation matches a team member's keywords:
+    // 1. Identify the core issues and topics in the conversation
+    // 2. Look for semantic connections, not just literal keyword matches
+    // 3. Consider technical domains and specialized terminology
+    // 4. Evaluate both explicit and implicit needs in the customer's message
+    // 5. Determine relevance based on who would be best equipped to solve the problem
+
+    // Example matches:
+    // - "My payment was declined yesterday" → matches "billing" and "payment issues"
+    // - "The API is giving 403 errors" → matches "technical support" and "developer tools"
+    // - "We need to move our site to a new domain" → matches "tech" and "DNS configuration"
+    // - "Can't access my account after password reset" → matches "login problems" and "security"
+
+    // For each team member, determine TRUE if their keywords represent expertise needed to properly address the issue, or FALSE if their expertise is not strongly relevant.`
+    system: `You are an Intelligent Support Routing System that connects customer inquiries to team members with the most relevant expertise.
+
+Your task is to analyze the semantic meaning of conversations and determine which team members' expertise keywords align with the customer's needs, even when there's no exact keyword match.
+
+For each potential match, consider:
+- Direct relevance: Is the keyword directly related to the topic?
+- Implied needs: Does the customer's issue typically require this expertise?
+- Domain knowledge: Would someone with this keyword expertise be equipped to help?
+- Technical depth: Does the conversation's complexity match the expertise level?
+
+When determining matches, provide clear reasoning about why each team member's keywords do or don't align with the conversation. Be especially attentive to technical topics that may use different terminology but relate to the same domain.
+
+A strong match occurs when the team member's expertise would be valuable in addressing the core problem, not just peripheral aspects of the conversation.`,
+    messages: [
+      {
+        role: "user",
+        content: `CUSTOMER CONVERSATION: "${conversationContent}"
+
+TEAM MEMBER EXPERTISE:
+${Object.entries(memberKeywords)
+  .map(([id, keywords]) => `Team Member ID: ${id}\nExpertise Keywords: ${keywords.join(", ")}`)
+  .join("\n")}
+
+TASK:
+Analyze the customer conversation and determine which team members have the expertise needed to best address this issue.
+
+For each team member, evaluate if their expertise keywords semantically relate to the conversation's core problem - even if the exact terms don't appear in the text.
+
+Return a JSON object with:
+1. "matches": Record mapping team member IDs to boolean values (true if their expertise aligns with the conversation)
+2. "reasoning": Brief explanation of your matching decisions
+3. "confidenceScore": Number between 0-1 indicating overall confidence in your matching
+
+Focus on understanding the customer's underlying needs rather than just surface-level keyword matching.`,
+      },
+    ],
+    // 0.1 to allow some flexibility in matching, set to 0 to force more exact matches
+    temperature: 0.1,
+    functionId: "auto-assign-keyword-matching",
+  });
+
+  return membersWithKeywords.filter((member) => result.matches[member.id]);
 };
 
 const getNextCoreTeamMemberInRotation = async (
@@ -94,10 +169,14 @@ const getConversationContent = (conversationData: {
 const getNextTeamMember = async (
   teamMembers: UserWithMailboxAccessData[],
   conversation: any,
-  mailboxId: number,
+  mailbox: any,
 ): Promise<UserWithMailboxAccessData | null> => {
   const conversationContent = getConversationContent(conversation);
-  const matchingNonCoreMembers = getNonCoreTeamMembersWithMatchingKeywords(teamMembers, conversationContent);
+  const matchingNonCoreMembers = await getNonCoreTeamMembersWithMatchingKeywords(
+    teamMembers,
+    conversationContent,
+    mailbox,
+  );
 
   if (matchingNonCoreMembers.length > 0) {
     const randomIndex = Math.floor(Math.random() * matchingNonCoreMembers.length);
@@ -106,7 +185,7 @@ const getNextTeamMember = async (
   }
 
   const coreMembers = getCoreTeamMembers(teamMembers);
-  return await getNextCoreTeamMemberInRotation(coreMembers, mailboxId);
+  return await getNextCoreTeamMemberInRotation(coreMembers, mailbox.id);
 };
 
 export default inngest.createFunction(
@@ -146,7 +225,7 @@ export default inngest.createFunction(
       return { message: "Skipped: no active team members available for assignment" };
     }
 
-    const nextTeamMember = await getNextTeamMember(activeTeamMembers, conversation, mailbox.id);
+    const nextTeamMember = await getNextTeamMember(activeTeamMembers, conversation, mailbox);
 
     if (!nextTeamMember) {
       return {
