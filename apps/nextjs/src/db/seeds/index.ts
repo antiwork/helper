@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { env } from "@/env";
 import { seedDatabase } from "./seedDatabase";
 

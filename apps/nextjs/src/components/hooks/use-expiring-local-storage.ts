@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const STORAGE_PREFIX = "helper_";
 
@@ -22,7 +23,7 @@ function cleanupExpiredItems() {
       }
     }
   } catch (error) {
-    console.warn("Error during localStorage cleanup:", error);
+    captureExceptionAndLog(error);
   }
 }
 
@@ -66,7 +67,7 @@ export function useExpiringLocalStorage<T>(
 
       return parsed.value;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${storageKey}":`, error);
+      captureExceptionAndLog(error);
       return undefined;
     }
   }, [storageKey]);
@@ -96,7 +97,7 @@ export function useExpiringLocalStorage<T>(
           window.localStorage.setItem(storageKey, JSON.stringify(item));
         }
       } catch (error) {
-        console.warn(`Error setting localStorage key "${storageKey}":`, error);
+        captureExceptionAndLog(error);
       }
     },
     [storageKey, expirationTime, shouldStore, storedValue],

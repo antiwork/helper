@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import path from "path";
 import { fileURLToPath } from "url";
 import { sql } from "drizzle-orm";

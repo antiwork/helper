@@ -2,11 +2,19 @@ import { User } from "@clerk/nextjs/server";
 import { subscriptionFactory } from "@tests/support/factories/subscriptions";
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, inject, it, vi } from "vitest";
 import { SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT } from "@/components/constants";
 import { getClerkOrganization } from "@/lib/data/organization";
 import * as userLib from "@/lib/data/user";
 import { createCaller } from "@/trpc";
+
+vi.mock("@/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    ABLY_API_KEY: "test_key",
+    STRIPE_PRICE_ID: "price_1234567890",
+  },
+}));
 
 vi.mock("@/lib/data/user", async () => {
   const actual = await vi.importActual("@/lib/data/user");

@@ -3,6 +3,7 @@
 import { useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
+  Cog6ToothIcon,
   ComputerDesktopIcon,
   CreditCardIcon,
   LinkIcon,
@@ -34,6 +35,7 @@ import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
 import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
+import PreferencesSetting, { PreferencesUpdates } from "./preferencesSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
@@ -52,6 +54,7 @@ export type PendingUpdates = {
   };
   customer?: CustomerUpdates;
   autoClose?: AutoCloseUpdates;
+  preferences?: PreferencesUpdates;
 };
 
 type SettingsProps = {
@@ -96,11 +99,12 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
     Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
     Boolean(pendingUpdates.customer) ||
-    Boolean(pendingUpdates.autoClose);
+    Boolean(pendingUpdates.autoClose) ||
+    Boolean(pendingUpdates.preferences);
 
   const handleSignOut = async () => {
     try {
-      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -114,7 +118,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       label: "Knowledge",
       id: "knowledge",
       icon: BookOpenIcon,
-      content: <KnowledgeSetting />,
+      content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
     },
     {
       label: "Team",
@@ -194,9 +198,24 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
         </>
       ),
     },
+    {
+      label: "Preferences",
+      id: "preferences",
+      icon: Cog6ToothIcon,
+      content: (
+        <PreferencesSetting
+          onChange={(updates) =>
+            setPendingUpdates({
+              ...pendingUpdates,
+              preferences: updates,
+            })
+          }
+        />
+      ),
+    },
   ];
 
-  if (showBilling) {
+  if (mailbox.billingEnabled && showBilling) {
     items.push({
       label: "Billing",
       id: "billing",

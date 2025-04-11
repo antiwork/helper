@@ -1,9 +1,13 @@
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { createContext, useContext, useEffect, useMemo } from "react";
+import { ConversationListItem } from "@/app/types/global";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { getExpoPlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
+import { conversationsListChannelId } from "@/lib/ably/channels";
+import { useAblyEvent } from "@/lib/ably/hooks";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "./shared/queries";
@@ -52,6 +56,7 @@ export const ConversationListContextProvider = ({
 
   const moveToNextConversation = () => {
     if (!conversations.length) return setId(null);
+    if (getExpoPlatform()) return; // In Expo the conversation is effectively a modal so it's confusing to navigate within it
 
     let nextConversation;
     const currentIndex = conversations.findIndex((c) => c.slug === currentConversationSlug);
@@ -71,13 +76,12 @@ export const ConversationListContextProvider = ({
     router.refresh();
 
     utils.mailbox.conversations.list.invalidate();
-    utils.mailbox.countByStatus.invalidate();
+    utils.mailbox.openCount.invalidate();
   }, 1000);
 
-  const removeConversationFromList = () => {
+  const removeConversationFromList = (condition: (conversation: ConversationListItem) => boolean) => {
     const updatedTotal = lastPage ? lastPage.total - 1 : 0;
 
-    debouncedInvalidate();
     if (currentConversationSlug) {
       utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
         if (!data) return data;
@@ -85,22 +89,44 @@ export const ConversationListContextProvider = ({
           ...data,
           pages: data.pages.map((page) => ({
             ...page,
-            conversations: page.conversations.filter((c) => c.slug !== currentConversationSlug),
+            conversations: page.conversations.filter((c) => !condition(c)),
             total: updatedTotal,
           })),
+        };
+      });
+    }
+    if (!input.status || input.status[0] === "open") {
+      utils.mailbox.openCount.setData({ mailboxSlug: input.mailboxSlug }, (data) => {
+        if (!data) return data;
+        return {
+          ...data,
+          [input.category]: data[input.category] - 1,
         };
       });
     }
   };
 
   const removeConversationKeepActive = () => {
-    removeConversationFromList();
+    debouncedInvalidate();
+    removeConversationFromList((c) => c.slug === currentConversationSlug);
   };
 
   const removeConversation = () => {
-    removeConversationFromList();
+    debouncedInvalidate();
+    removeConversationFromList((c) => c.slug === currentConversationSlug);
     moveToNextConversation();
   };
+
+  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.statusChanged", (message) => {
+    const statusChanged = searchParams.status !== message.data.status;
+    const assigneeChanged =
+      (input.category === "assigned" && message.data.assignedToClerkId === null) ||
+      (input.category === "unassigned" && message.data.assignedToClerkId !== null) ||
+      (input.category === "mine" && message.data.assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0]);
+    if (!statusChanged && !assigneeChanged) return;
+
+    removeConversationFromList((c) => c.id === message.data.id);
+  });
 
   const value = useMemo(
     () => ({

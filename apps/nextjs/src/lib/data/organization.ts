@@ -3,7 +3,6 @@ import { addDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { cache } from "react";
 import { FREE_TRIAL_PERIOD_DAYS } from "@/auth/lib/account";
-import { SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT } from "@/components/constants";
 import { db } from "@/db/client";
 import { subscriptions } from "@/db/schema";
 import { env } from "@/env";
@@ -24,9 +23,9 @@ export const setPrivateMetadata = async (organizationId: string, metadata: Recor
   return await clerkClient.organizations.updateOrganizationMetadata(organizationId, { privateMetadata: metadata });
 };
 
-export const getOrganizationMembers = async (organizationId: string, limit = 100) => {
+export const getOrganizationMembers = cache(async (organizationId: string, limit = 100) => {
   return await clerkClient.organizations.getOrganizationMembershipList({ organizationId, limit });
-};
+});
 
 export const getOrganizationAdminUsers = async (organizationId: string) => {
   const members = await getOrganizationMembers(organizationId);
@@ -56,7 +55,7 @@ export const createOrganization = async (user: User) => {
 export type SubscriptionStatus = "paid" | "free_trial" | "free_trial_expired";
 
 export const getSubscriptionStatus = async (organization: Organization): Promise<SubscriptionStatus> => {
-  if (ADDITIONAL_PAID_ORGANIZATION_IDS.includes(organization.id)) {
+  if (!env.STRIPE_PRICE_ID || ADDITIONAL_PAID_ORGANIZATION_IDS.includes(organization.id)) {
     return "paid";
   }
 
@@ -84,30 +83,5 @@ export const getCachedSubscriptionStatus = async (organizationId: string): Promi
   return status;
 };
 
-export const canSendAutomatedReplies = async (organization: Organization): Promise<boolean> => {
-  if (ADDITIONAL_PAID_ORGANIZATION_IDS.includes(organization.id)) return true;
-
-  const subscription = await db.query.subscriptions.findFirst({
-    where: eq(subscriptions.clerkOrganizationId, organization.id),
-    orderBy: desc(subscriptions.createdAt),
-  });
-  if (!subscription) {
-    console.error(`No subscription found for organization ${organization.id}`);
-    return false;
-  }
-
-  // TODO: Configure subscription grace period when payment fails
-  return (
-    (isFreeTrial(organization) &&
-      (organization.privateMetadata.automatedRepliesCount ?? 0) < SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT) ||
-    (subscription && isBillable(subscription))
-  );
-};
-
 export const isFreeTrial = (organization: Organization): boolean =>
   !!organization.privateMetadata.freeTrialEndsAt && new Date(organization.privateMetadata.freeTrialEndsAt) > new Date();
-
-const isBillable = (subscription: typeof subscriptions.$inferSelect): boolean => {
-  if (!subscription.currentPeriodEnd) return false;
-  return subscription.currentPeriodEnd > new Date() && subscription.status === "active";
-};

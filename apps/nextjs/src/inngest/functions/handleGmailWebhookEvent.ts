@@ -46,7 +46,7 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
     const ccStaffUser = await findUserByEmail(mailbox.clerkOrganizationId, ccAddress);
     if (ccStaffUser) {
       await updateConversation(conversationId, {
-        set: { assignedToClerkId: ccStaffUser.id },
+        set: { assignedToClerkId: ccStaffUser.id, assignedToAI: false },
         message: "Auto-assigned based on CC",
         skipAblyEvents: true,
       });
@@ -268,8 +268,14 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
             source: "email",
             isPrompt: false,
             isVisitor: false,
+            assignedToAI: mailbox.autoRespondEmailToChat,
           })
-          .returning({ id: conversations.id, slug: conversations.slug, status: conversations.status })
+          .returning({
+            id: conversations.id,
+            slug: conversations.slug,
+            status: conversations.status,
+            assignedToAI: conversations.assignedToAI,
+          })
           .then(takeUniqueOrThrow);
       };
 
@@ -286,6 +292,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
                 id: true,
                 slug: true,
                 status: true,
+                assignedToAI: true,
               },
             },
           },
@@ -293,9 +300,6 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         // If a conversation doesn't already exist for this email, create one anyway
         // (since we likely dropped the initial email).
         conversation = previousEmail?.conversation ?? (await createNewConversation());
-      }
-      if (conversation.status === "closed" && !shouldIgnore) {
-        await updateConversation(conversation.id, { set: { status: "open" } });
       }
 
       const newEmail = await createMessageAndProcessAttachments(
@@ -306,6 +310,9 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         conversation,
         staffUser,
       );
+      if (conversation.status === "closed" && !conversation.assignedToAI && !shouldIgnore) {
+        await updateConversation(conversation.id, { set: { status: "open" } });
+      }
 
       if (!shouldIgnore) {
         await inngest.send({

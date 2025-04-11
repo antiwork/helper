@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MessageWithReaction } from "@/components/widget/Message";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type Reasoning = {
   message: string;
@@ -61,7 +62,7 @@ export default function MessageElement({
         }),
       });
     } catch (error) {
-      console.error("Failed to track reasoning toggle:", error);
+      captureExceptionAndLog(error);
     }
   };
 
@@ -104,7 +105,11 @@ export default function MessageElement({
             ),
           }}
         >
-          {message.content}
+          {message.parts?.find(
+            (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
+          )
+            ? "_Escalated to a human! You will be contacted soon by email._"
+            : message.content}
         </ReactMarkdown>
       ) : (
         <div className="relative h-4 w-20 overflow-hidden rounded-lg">

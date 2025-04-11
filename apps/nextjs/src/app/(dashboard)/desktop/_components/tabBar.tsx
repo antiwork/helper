@@ -27,7 +27,7 @@ export const TabBar = ({ initialTabUrl }: { initialTabUrl?: string }) => {
       activeTab: string;
     }>("tab-bar-update", async (event) => {
       if (event.payload.tabs.length === 0) {
-        if (await checkSignedIn()) {
+        if ((await checkSignedIn()).data) {
           invoke("add_tab", { url: `${window.location.origin}/mailboxes` });
         } else {
           router.push("/login");

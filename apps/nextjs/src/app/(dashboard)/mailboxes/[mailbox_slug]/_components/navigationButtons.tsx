@@ -17,7 +17,6 @@ export const NavigationButtons = () => {
   const [canGoForward, setCanGoForward] = useState(false);
 
   const updateButtonState = () => {
-    console.log(historyRef.current, historyIndexRef.current);
     setCanGoBack(historyIndexRef.current > 0);
     setCanGoForward(historyIndexRef.current < historyRef.current.length - 1);
   };

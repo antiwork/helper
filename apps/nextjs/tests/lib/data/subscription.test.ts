@@ -49,7 +49,7 @@ describe("createStripeCheckoutSessionUrl", () => {
       cancel_url: `http://localhost:3010/mailboxes/${mailbox.slug}/settings?tab=billing`,
     };
 
-    expect(stripe.checkout.sessions.create).toHaveBeenCalledWith({
+    expect(stripe!.checkout.sessions.create).toHaveBeenCalledWith({
       ...baseExpectedArgs,
       customer_email: undefined,
     });
@@ -73,7 +73,7 @@ describe("createStripeCheckoutSessionUrl", () => {
         clerkOrganizationId: organization.id,
       }),
     ).toBe("https://mocked.url");
-    expect(stripe.checkout.sessions.create).toHaveBeenCalledWith({
+    expect(stripe!.checkout.sessions.create).toHaveBeenCalledWith({
       ...baseExpectedArgs,
       customer_email: "test@example.com",
     });

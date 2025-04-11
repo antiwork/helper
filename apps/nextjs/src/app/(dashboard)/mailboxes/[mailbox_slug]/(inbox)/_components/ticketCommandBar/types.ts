@@ -4,7 +4,6 @@ export type CommandItem = {
   icon: React.ComponentType<{ className?: string }>;
   onSelect: () => void;
   shortcut?: string;
-  preview?: React.ReactNode;
   hidden?: boolean;
 };
 

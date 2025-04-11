@@ -1,4 +1,4 @@
-import { and, eq, isNull, lt, not } from "drizzle-orm";
+import { and, eq, isNull, not } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { CrawlMetadata, websiteCrawls, websitePages } from "@/db/schema";
@@ -10,6 +10,7 @@ export async function POST(request: Request) {
   const crawlIdentifier = searchParams.get("identifier");
   const { type, id: firecrawlJobId, data, success, error } = body;
 
+  // eslint-disable-next-line no-console
   console.log(`Processing webhook (${type} - ${firecrawlJobId}) for crawl ${crawlIdentifier}`);
 
   const crawl = assertDefined(

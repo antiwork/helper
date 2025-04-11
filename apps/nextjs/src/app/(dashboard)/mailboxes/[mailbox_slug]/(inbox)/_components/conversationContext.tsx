@@ -15,6 +15,7 @@ export type ConversationContextType = {
   error: { message: string } | null;
   refetch: () => void;
   updateStatus: (status: "closed" | "spam" | "open") => void;
+  updateConversation: (inputs: Partial<RouterInputs["mailbox"]["conversations"]["update"]>) => void;
 };
 
 const ConversationContext = createContext<ConversationContextType | null>(null);
@@ -52,7 +53,11 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
     refetch,
   } = assertDefined(useConversationQuery(mailboxSlug, currentConversationSlug));
 
-  const { mutate: updateConversation } = api.mailbox.conversations.update.useMutation();
+  const { mutate: updateConversation } = api.mailbox.conversations.update.useMutation({
+    onSuccess: () => {
+      window.ReactNativeWebView?.postMessage(JSON.stringify({ type: "conversationUpdated" }));
+    },
+  });
   const update = (inputs: Partial<RouterInputs["mailbox"]["conversations"]["update"]>) =>
     updateConversation({ mailboxSlug, conversationSlug, ...inputs });
 
@@ -106,7 +111,16 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
 
   return (
     <ConversationContext.Provider
-      value={{ conversationSlug, mailboxSlug, data, isPending, error, refetch, updateStatus }}
+      value={{
+        conversationSlug,
+        mailboxSlug,
+        data,
+        isPending,
+        error,
+        refetch,
+        updateStatus,
+        updateConversation: update,
+      }}
     >
       {children}
     </ConversationContext.Provider>

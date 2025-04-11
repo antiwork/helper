@@ -61,7 +61,6 @@ const Page = async (props: { params: Promise<PageProps> }) => {
           vipThreshold: pendingUpdates.customer.vipThreshold ? Number(pendingUpdates.customer.vipThreshold) : undefined,
           vipChannelId: pendingUpdates.customer.vipChannelId ?? undefined,
           vipExpectedResponseHours: pendingUpdates.customer.vipExpectedResponseHours ?? undefined,
-          disableAutoResponseForVips: pendingUpdates.customer.disableAutoResponseForVips ?? false,
         });
       } catch (e) {
         throw new Error("Failed to update customer settings");
@@ -80,6 +79,18 @@ const Page = async (props: { params: Promise<PageProps> }) => {
       }
     }
 
+    if (pendingUpdates.preferences) {
+      try {
+        await api.mailbox.preferences.update({
+          mailboxSlug: params.mailbox_slug,
+          preferences: {
+            confetti: pendingUpdates?.preferences?.confettiSetting?.confetti ?? false,
+          },
+        });
+      } catch (e) {
+        throw new Error("Failed to update preferences settings");
+      }
+    }
     revalidatePath(settingsPath);
   };
 

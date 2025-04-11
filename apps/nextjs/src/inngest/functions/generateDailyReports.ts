@@ -1,6 +1,6 @@
 import { KnownBlock } from "@slack/web-api";
 import { subHours } from "date-fns";
-import { aliasedTable, and, eq, gt, isNotNull, lt, sql } from "drizzle-orm";
+import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
@@ -53,7 +53,7 @@ export async function generateMailboxReport(mailboxId: number) {
 
   const openTicketCount = await db.$count(
     conversations,
-    and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "open")),
+    and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "open"), isNull(conversations.mergedIntoId)),
   );
 
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };

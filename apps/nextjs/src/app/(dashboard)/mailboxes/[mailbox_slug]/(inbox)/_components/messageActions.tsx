@@ -1,8 +1,10 @@
+import { useUser } from "@clerk/nextjs";
 import { ArrowUturnUpIcon } from "@heroicons/react/20/solid";
 import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
@@ -45,6 +47,15 @@ export const MessageActions = () => {
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
+
+  const { data: mailboxPreferences } = api.mailbox.preferences.get.useQuery({
+    mailboxSlug,
+  });
+
+  const triggerMailboxConfetti = () => {
+    if (!mailboxPreferences?.preferences?.confetti) return;
+    triggerConfetti();
+  };
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -147,6 +158,7 @@ export const MessageActions = () => {
       setStoredMessage("");
       if (conversation.status === "open" && close) {
         updateStatus("closed");
+        if (!assign) triggerMailboxConfetti();
       }
       toast({
         title: "Message sent!",
@@ -177,7 +189,7 @@ export const MessageActions = () => {
                     variant: "success",
                   });
                 } catch (e) {
-                  console.error(e);
+                  captureExceptionAndLog(e);
                   toast({
                     variant: "destructive",
                     title: "Failed to unsend email",
@@ -285,6 +297,7 @@ const EmailEditorComponent = React.forwardRef<
   const ccRef = useRef<HTMLInputElement>(null);
   const bccRef = useRef<HTMLInputElement>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useUser();
 
   const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
 
@@ -331,6 +344,19 @@ const EmailEditorComponent = React.forwardRef<
           onSlashKey={() => commandInputRef.current?.focus()}
           enableImageUpload
           enableFileUpload
+          signature={
+            user?.firstName ? (
+              <div className="mt-6 text-muted-foreground">
+                Best,
+                <br />
+                {user.firstName}
+                <div className="text-xs mt-2">
+                  Note: This signature will be automatically included in email responses, but not in live chat
+                  conversations.
+                </div>
+              </div>
+            ) : null
+          }
         />
       </div>
       <div className={showCommandBar ? "hidden" : ""}>{actionButtons}</div>

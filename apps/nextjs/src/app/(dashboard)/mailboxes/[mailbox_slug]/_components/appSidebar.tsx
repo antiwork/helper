@@ -9,7 +9,7 @@ import {
   UserProfile,
   useUser,
 } from "@clerk/nextjs";
-import { BookOpenIcon, ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
+import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { ChevronsUpDown, ChevronUp, Download, Settings, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -65,7 +65,7 @@ declare global {
 }
 
 export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
-  const { countByStatus, mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
+  const { mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
   const pathname = usePathname();
   const { isMobile } = useSidebar();
   const { signOut } = useClerk();
@@ -73,6 +73,8 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   const { user } = useUser();
   const [showNativeAppModal, setShowNativeAppModal] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug });
 
   const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
     onSuccess: (data) => {
@@ -88,7 +90,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     try {
       // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
       window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/desktop/signed-out" : "/" });
+      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -174,7 +176,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
           </div>
         ) : (
           <>
-            <CategoryNav countByStatus={countByStatus} mailboxSlug={mailboxSlug} variant="sidebar" />
+            <CategoryNav openCount={openCount} mailboxSlug={mailboxSlug} variant="sidebar" />
             <ConversationList mailboxSlug={mailboxSlug} />
           </>
         )}
@@ -365,7 +367,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
 const ConversationListContent = ({ mailboxSlug }: { mailboxSlug: string }) => (
   <div className="flex-1 overflow-hidden flex h-full flex-col">
     <InboxProvider>
-      <List mailboxSlug={mailboxSlug} />
+      <List variant="desktop" />
     </InboxProvider>
   </div>
 );

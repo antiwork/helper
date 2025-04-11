@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
 import { formatParameter } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/toolItem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,19 @@ type ToolFormProps = {
 };
 
 export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
-  const [parameters, setParameters] = useState<Record<string, string | number>>({});
+  const { data: conversationInfo } = useConversationContext();
+  const [parameters, setParameters] = useState<Record<string, string | number>>(() => {
+    const initialParams: Record<string, string | number> = {};
+    const emailFrom = conversationInfo?.emailFrom;
+    if (typeof emailFrom === "string") {
+      tool.parameterTypes.forEach((param) => {
+        if (param.name === "email") {
+          initialParams[param.name] = emailFrom;
+        }
+      });
+    }
+    return initialParams;
+  });
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
 
   const { isExecuting, handleToolExecution } = useToolExecution();

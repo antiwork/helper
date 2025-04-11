@@ -27,6 +27,10 @@ export default function Message({ message, conversationSlug, token, data, color 
     )?.id ?? null;
   const persistedId = idFromAnnotation ?? (!message.id.startsWith("client_") ? message.id : null);
 
+  const reasoningStarted = data?.some(
+    (item) => typeof item === "object" && item !== null && "event" in item && item.event === "reasoningStarted",
+  );
+
   let reasoning =
     message.annotations?.find(
       (annotation): annotation is { reasoning: { message: string; reasoningTimeSeconds: number } } =>
@@ -47,7 +51,12 @@ export default function Message({ message, conversationSlug, token, data, color 
     }
   }
 
-  if (!conversationSlug) {
+  const userAnnotation = message.annotations?.find(
+    (annotation): annotation is { user: { firstName: string } } =>
+      typeof annotation === "object" && annotation !== null && "user" in annotation,
+  );
+
+  if (!conversationSlug || (!message.content && !reasoningStarted)) {
     return null;
   }
 
@@ -64,6 +73,11 @@ export default function Message({ message, conversationSlug, token, data, color 
           "border border-black bg-white text-black": message.role !== USER_ROLE,
         })}
       >
+        {userAnnotation ? (
+          <div className="p-4 pb-0 flex items-center text-muted-foreground text-xs font-bold">
+            {userAnnotation.user.firstName}
+          </div>
+        ) : null}
         <MessageElement
           messageId={persistedId?.toString()}
           conversationSlug={conversationSlug}

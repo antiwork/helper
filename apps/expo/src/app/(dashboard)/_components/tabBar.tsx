@@ -25,7 +25,7 @@ cssIconInterop(UserIconSolid);
 function Badge({ count }: { count: number }) {
   return (
     <View className="absolute -top-1 -right-2 bg-bright rounded-full min-w-4 h-4 justify-center items-center">
-      <Text className="text-xs text-medium text-bright-foreground px-1">{count}</Text>
+      <Text className="text-xs text-medium text-bright-foreground px-1">{count.toLocaleString()}</Text>
     </View>
   );
 }

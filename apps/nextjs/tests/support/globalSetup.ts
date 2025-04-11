@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { GlobalSetupContext } from "vitest/node";
 import { setupDockerTestDb } from "./setupDatabase";
 

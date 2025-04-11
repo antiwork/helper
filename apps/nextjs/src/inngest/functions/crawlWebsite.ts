@@ -1,4 +1,4 @@
-import FirecrawlApp, { type CrawlResponse } from "@mendable/firecrawl-js";
+import FirecrawlApp from "@mendable/firecrawl-js";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { websiteCrawls, websites } from "@/db/schema";
@@ -8,9 +8,13 @@ import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 const CONCURRENCY_LIMIT = 3;
 const PAGE_LIMIT = 150;
-const firecrawl = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY });
+const firecrawl = env.FIRECRAWL_API_KEY ? new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY }) : null;
 
 export const crawlWebsite = async (websiteId: number, crawlId: number): Promise<void> => {
+  if (!firecrawl) {
+    throw new Error("FIRECRAWL_API_KEY is not set");
+  }
+
   const website = assertDefinedOrRaiseNonRetriableError(
     await db.query.websites.findFirst({
       where: eq(websites.id, websiteId),

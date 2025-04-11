@@ -10,6 +10,8 @@ import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
+import { useWidgetView } from "@/components/widget/useWidgetView";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
 
@@ -35,6 +37,7 @@ export default function Conversation({
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isEscalated, setIsEscalated] = useState(false);
+  const { setIsNewConversation } = useWidgetView();
 
   useEffect(() => {
     if (conversationSlug) {
@@ -58,6 +61,9 @@ export default function Conversation({
     onToolCall({ toolCall }) {
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
+      }
+      if (toolCall.toolName === "request_human_support") {
+        setIsEscalated(true);
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
@@ -95,7 +101,7 @@ export default function Conversation({
         },
       });
       if (!response.ok) {
-        console.error("Failed to fetch conversation:", response.statusText);
+        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.statusText}`));
         onLoadFailed();
         return null;
       }
@@ -112,6 +118,7 @@ export default function Conversation({
             createdAt: new Date(message.createdAt),
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
+            annotations: message.annotations,
             experimental_attachments: message.experimental_attachments,
           })),
           isEscalated: data.isEscalated,
@@ -152,7 +159,7 @@ export default function Conversation({
       }
 
       if (currentSlug) {
-        console.log("submitting with currentSlug", currentSlug);
+        setIsNewConversation(false);
         handleAISubmit(undefined, {
           experimental_attachments: screenshotData
             ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
@@ -161,7 +168,7 @@ export default function Conversation({
         });
       }
     } catch (error) {
-      console.error("Error submitting message:", error);
+      captureExceptionAndLog(error);
     }
   };
 

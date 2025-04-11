@@ -29,6 +29,9 @@ const mockCompletionResponse = {
   experimental_providerMetadata: {},
   request: {},
   reasoning: "",
+  reasoningDetails: [],
+  sources: [],
+  providerMetadata: {},
 } satisfies GenerateTextResult<Record<string, CoreTool>, undefined>;
 
 describe("runAIQuery", () => {
@@ -107,6 +110,9 @@ describe("runAIQuery", () => {
         },
       },
       reasoning: "",
+      reasoningDetails: [],
+      sources: [],
+      providerMetadata: {},
       experimental_output: undefined as never,
       toolCalls: [],
       toolResults: [],
@@ -170,6 +176,7 @@ describe("runAIObjectQuery", () => {
         throw new Error("Not implemented");
       },
       ...mockCompletionResponse,
+      providerMetadata: {},
     });
   });
 
@@ -202,6 +209,7 @@ describe("runAIObjectQuery", () => {
           cachedPromptTokens: 100,
         },
       },
+      providerMetadata: {},
       logprobs: [],
       toJsonResponse: () => {
         throw new Error("Not implemented");

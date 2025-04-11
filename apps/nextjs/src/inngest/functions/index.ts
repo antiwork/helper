@@ -25,7 +25,6 @@ import notifyVipMessage from "./notifyVipMessage";
 import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
 import publishNewConversationEvent from "./publishNewConversationEvent";
-import refreshConversationDraft from "./refreshConversationDraft";
 import renewMailboxWatches from "./renewMailboxWatches";
 import scheduledWebsiteCrawl from "./scheduledWebsiteCrawl";
 import suggestKnowledgeBankChanges from "./suggestKnowledgeBankChanges";
@@ -37,7 +36,6 @@ export default [
   embeddingConversation,
   bulkEmbeddingClosedConversations,
   embeddingFaq,
-  refreshConversationDraft,
   generateFilePreview,
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,

@@ -33,7 +33,9 @@ export type ConversationEvent = Extract<Conversation["messages"][number], { type
 
 export type AttachedFile = Message["files"][number];
 
-export type ConversationListItem = RouterOutputs["mailbox"]["conversations"]["list"]["conversations"][number];
+export type ConversationListItem = RouterOutputs["mailbox"]["conversations"]["list"]["conversations"][number] & {
+  assignedToAI?: boolean;
+};
 
 export type Pagination = {
   next_page: number | null;
