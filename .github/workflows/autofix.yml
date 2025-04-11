@@ -36,6 +36,9 @@ jobs:
         run: bin/format --write
         shell: bash
 
+      - name: Generate tRPC types
+        run: npm run expo:trpc:generate
+
       - name: Typecheck
         shell: bash
         env:
@@ -43,8 +46,5 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
         run: bin/typecheck
-
-      - name: Generate tRPC types
-        run: npm run expo:trpc:generate
 
       - uses: autofix-ci/action@ff86a557419858bb967097bfc916833f5647fa8c
