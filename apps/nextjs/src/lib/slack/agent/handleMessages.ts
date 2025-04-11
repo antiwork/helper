@@ -6,17 +6,16 @@ import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findM
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
 
-export async function handleNewAppMention(event: AppMentionEvent, mailboxInfo: SlackMailboxInfo) {
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, mailboxInfo: SlackMailboxInfo) {
   if (!mailboxInfo.currentMailbox) {
     await askWhichMailbox(event, mailboxInfo.mailboxes);
     return;
   }
-  if (event.bot_id || event.bot_profile) return;
-
   const mailbox = mailboxInfo.currentMailbox;
-  const client = new WebClient(assertDefined(mailbox.slackBotToken));
+  if (event.bot_id || event.bot_id === mailbox.slackBotUserId || event.bot_profile) return;
+
   const { thread_ts, channel } = event;
-  const { showStatus, showResult } = await replyHandler(client, event);
+  const { showStatus, showResult } = await replyHandler(new WebClient(assertDefined(mailbox.slackBotToken)), event);
 
   const messages = thread_ts
     ? await getThreadMessages(
@@ -25,29 +24,7 @@ export async function handleNewAppMention(event: AppMentionEvent, mailboxInfo: S
         thread_ts,
         assertDefined(mailbox.slackBotUserId),
       )
-    : ([{ role: "user", content: event.text }] satisfies CoreMessage[]);
-
-  const result = await generateAgentResponse(messages, mailbox, event.user, showStatus);
-  showResult(result);
-}
-
-export async function handleNewAssistantMessage(event: GenericMessageEvent, mailboxInfo: SlackMailboxInfo) {
-  if (!mailboxInfo.currentMailbox) {
-    await askWhichMailbox(event, mailboxInfo.mailboxes);
-    return;
-  }
-  const mailbox = mailboxInfo.currentMailbox;
-  if (event.bot_id || event.bot_id === mailbox.slackBotUserId || event.bot_profile || !event.thread_ts) return;
-
-  const { thread_ts, channel } = event;
-  const { showStatus, showResult } = await replyHandler(new WebClient(assertDefined(mailbox.slackBotToken)), event);
-
-  const messages = await getThreadMessages(
-    assertDefined(mailbox.slackBotToken),
-    channel,
-    thread_ts,
-    assertDefined(mailbox.slackBotUserId),
-  );
+    : ([{ role: "user", content: event.text ?? "" }] satisfies CoreMessage[]);
   const result = await generateAgentResponse(messages, mailbox, event.user, showStatus);
   showResult(result);
 }

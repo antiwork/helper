@@ -7,12 +7,7 @@ import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
-import {
-  handleAssistantThreadMessage,
-  handleNewAppMention,
-  handleNewAssistantMessage,
-  isAgentThread,
-} from "@/lib/slack/agent/handleMessages";
+import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
 
 export const POST = async (request: Request) => {
@@ -49,15 +44,11 @@ export const POST = async (request: Request) => {
   if (!mailboxInfo?.mailboxes.length) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   if (
-    event.type === "message" &&
-    (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo))))
+    event.type === "app_mention" ||
+    (event.type === "message" &&
+      (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo)))))
   ) {
-    waitUntil(handleSlackErrors(handleNewAssistantMessage(event, mailboxInfo)));
-    return new Response("Success!", { status: 200 });
-  }
-
-  if (event.type === "app_mention") {
-    waitUntil(handleSlackErrors(handleNewAppMention(event, mailboxInfo)));
+    waitUntil(handleSlackErrors(handleMessage(event, mailboxInfo)));
     return new Response("Success!", { status: 200 });
   }
 
