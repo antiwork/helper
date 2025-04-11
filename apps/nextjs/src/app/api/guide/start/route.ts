@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { generateGuidePlan } from "@/lib/ai/guide";
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
       platformCustomerId: platformCustomer.id,
       title: result.title,
       instructions,
+      mailboxId: mailbox.id,
       conversationId: assertDefined(conversationId),
       steps: result.next_steps.map((description) => ({ description, completed: false })),
     });

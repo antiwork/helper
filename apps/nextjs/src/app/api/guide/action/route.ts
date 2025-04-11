@@ -96,46 +96,48 @@ export async function POST(request: Request) {
             memory: z.string(),
             next_goal: z.string(),
           }),
-          action: z.discriminatedUnion("type", [
-            z.object({
-              type: z.literal("done"),
-              text: z.string(),
-              success: z.boolean(),
-            }),
-            z.object({
-              type: z.literal("wait"),
-              seconds: z.number().int().default(3),
-            }),
-            z.object({
-              type: z.literal("click_element"),
-              index: z.number().int(),
-              xpath: z.string().nullable().optional(),
-            }),
-            z.object({
-              type: z.literal("input_text"),
-              index: z.number().int(),
-              text: z.string(),
-              xpath: z.string().nullable().optional(),
-            }),
-            z.object({
-              type: z.literal("send_keys"),
-              index: z.number().int(),
-              text: z.string(),
-            }),
-            z.object({
-              type: z.literal("scroll_to_element"),
-              index: z.number().int(),
-            }),
-            z.object({
-              type: z.literal("get_dropdown_options"),
-              index: z.number().int(),
-            }),
-            z.object({
-              type: z.literal("select_dropdown_option"),
-              index: z.number().int(),
-              text: z.string(),
-            }),
-          ]),
+          action: z
+            .discriminatedUnion("type", [
+              z.object({
+                type: z.literal("done"),
+                text: z.string(),
+                success: z.boolean(),
+              }),
+              z.object({
+                type: z.literal("wait"),
+                seconds: z.number().int().default(3),
+              }),
+              z.object({
+                type: z.literal("click_element"),
+                index: z.number().int(),
+                xpath: z.string().nullable().optional(),
+              }),
+              z.object({
+                type: z.literal("input_text"),
+                index: z.number().int(),
+                text: z.string(),
+                xpath: z.string().nullable().optional(),
+              }),
+              z.object({
+                type: z.literal("send_keys"),
+                index: z.number().int(),
+                text: z.string(),
+              }),
+              z.object({
+                type: z.literal("scroll_to_element"),
+                index: z.number().int(),
+              }),
+              z.object({
+                type: z.literal("get_dropdown_options"),
+                index: z.number().int(),
+              }),
+              z.object({
+                type: z.literal("select_dropdown_option"),
+                index: z.number().int(),
+                text: z.string(),
+              }),
+            ])
+            .describe("Only call one action at a time."),
         })
         .passthrough(),
     }),

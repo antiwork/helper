@@ -1,6 +1,12 @@
 import "server-only";
 import { db } from "@/db/client";
-import { guideSessionEvents, guideSessionEventTypeEnum, guideSessions } from "@/db/schema";
+import {
+  guideSessionEvents,
+  guideSessionEventTypeEnum,
+  guideSessionReplays,
+  guideSessions,
+  platformCustomers,
+} from "@/db/schema";
 import { type PlanResult } from "@/lib/ai/guide";
 import { captureExceptionAndLog } from "../shared/sentry";
 
@@ -21,12 +27,14 @@ export const createGuideSession = async ({
   title,
   instructions,
   conversationId,
+  mailboxId,
   steps,
 }: {
   platformCustomerId: number;
   title: string;
   instructions: string;
   conversationId: string | number;
+  mailboxId: number;
   steps: { description: string; completed: boolean }[];
 }): Promise<GuideSession> => {
   try {
@@ -37,6 +45,7 @@ export const createGuideSession = async ({
         title,
         instructions,
         conversationId: typeof conversationId === "string" ? null : conversationId,
+        mailboxId,
         status: "planning",
         steps,
       })
@@ -81,5 +90,35 @@ export const createGuideSessionEvent = async ({
   } catch (error) {
     captureExceptionAndLog(error);
     throw new Error("Failed to create guide session event");
+  }
+};
+
+export const getGuideSessionsForMailbox = async (mailboxId: number): Promise<GuideSession[]> => {
+  try {
+    const sessions = await db.query.guideSessions.findMany({
+      where: (gs, { eq }) => eq(gs.mailboxId, mailboxId),
+      orderBy: (gs, { desc }) => [desc(gs.createdAt)],
+    });
+
+    return sessions;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw new Error("Failed to fetch guide sessions");
+  }
+};
+
+export const getGuideSessionReplays = async (
+  sessionId: number,
+): Promise<(typeof guideSessionReplays.$inferSelect)[]> => {
+  try {
+    const replays = await db.query.guideSessionReplays.findMany({
+      where: (gsr, { eq }) => eq(gsr.guideSessionId, sessionId),
+      orderBy: (gsr, { asc }) => [asc(gsr.timestamp)],
+    });
+
+    return replays;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw new Error("Failed to fetch guide session replays");
   }
 };

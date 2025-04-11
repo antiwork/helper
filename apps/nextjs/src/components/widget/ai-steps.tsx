@@ -9,7 +9,8 @@ export type StepStatus = "completed" | "loading" | "pending";
 export interface Step {
   id: string;
   description: string;
-  status: StepStatus;
+  completed: boolean;
+  active: boolean;
   details?: {
     function?: string;
     params?: Record<string, any>;
@@ -45,7 +46,7 @@ export function AISteps({ steps, onToggleStep }: AIStepsProps) {
               <p className="text-sm font-normal">{step.description}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <StatusIcon status={step.status} />
+              <StatusIcon status={step.completed ? "completed" : step.active ? "loading" : "pending"} />
               <button onClick={() => toggleStep(step.id)} className="text-zinc-400 hover:text-white transition-colors">
                 {expandedSteps[step.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>

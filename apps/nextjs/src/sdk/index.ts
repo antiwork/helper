@@ -1,9 +1,9 @@
-import confetti from "canvas-confetti";
 import { Context } from "modern-screenshot";
 import type { NotificationStatus } from "@/db/schema/messageNotifications";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
+  GUIDE_START,
   MINIMIZE_ACTION,
   READY_ACTION,
   SCREENSHOT_ACTION,
@@ -315,6 +315,7 @@ class HelperWidget {
             }
 
             if (action === "GUIDE_DONE") {
+              this.guideManager.stopRecording();
               this.guideManager.hideHelperHand();
               this.guideManager.celebrateGuideDone();
               HelperWidget.hide();
@@ -370,6 +371,9 @@ class HelperWidget {
                   localStorage.setItem(this.CONVERSATION_STORAGE_KEY, content.conversationSlug || "");
                 }
               }
+              break;
+            case GUIDE_START:
+              this.guideManager.start(this.sessionToken, content.sessionId);
               break;
             case SCREENSHOT_ACTION:
               this.takeScreenshot();

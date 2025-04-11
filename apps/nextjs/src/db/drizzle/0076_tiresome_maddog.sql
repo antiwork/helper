@@ -1,0 +1,1 @@
+ALTER TABLE "guide_session_replays" ALTER COLUMN "data" SET DATA TYPE text;

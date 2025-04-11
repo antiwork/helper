@@ -11,6 +11,7 @@ export const CONVERSATION_UPDATE_ACTION = "CONVERSATION_UPDATE";
 export const SCREENSHOT_ACTION = "SCREENSHOT";
 export const MINIMIZE_ACTION = "MINIMIZE";
 export const MESSAGE_TYPE = "HELPER_WIDGET_MESSAGE";
+export const GUIDE_START = "GUIDE_START";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
   window.parent.postMessage(
@@ -105,4 +106,8 @@ export const executeGuideAction = async (actionType: string, params: Record<stri
 
 export const guideDone = async () => {
   return await sendRequestToParent("GUIDE_DONE");
+};
+
+export const sendStartGuide = (sessionId: string) => {
+  sendMessageToParent({ action: GUIDE_START, content: { sessionId } });
 };

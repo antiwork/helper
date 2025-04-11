@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import { record } from "@rrweb/record";
+import type { eventWithTime } from "@rrweb/types";
 import userEvent from "@testing-library/user-event";
 import confetti from "canvas-confetti";
 import scrollIntoView from "scroll-into-view-if-needed";
@@ -93,6 +95,16 @@ const isVisible = (element: HTMLElement) => {
 export class GuideManager {
   private helperHandElement: HTMLDivElement | null = null;
   private lastDomTracking: any = null;
+  private events: eventWithTime[] = [];
+  private stopFn: ReturnType<typeof record> | null = null;
+  private flushInterval: number | null = null;
+  private sessionId: string | null = null;
+  private sessionToken: string | null = null;
+  private isRecording = false;
+
+  // Constants for recording
+  private readonly SEND_FREQUENCY = 5000; // 5 seconds
+  private readonly MAX_EVENTS_BEFORE_FLUSH = 50;
 
   constructor() {
     this.helperHandElement = null;
@@ -264,7 +276,8 @@ export class GuideManager {
     console.log("input text element", element);
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      userEvent.type(element, text);
+      userEvent.type(element, `${text}[Tab]`);
+      await wait(1000);
       return true;
     }
 
@@ -330,7 +343,6 @@ export class GuideManager {
   }
 
   public celebrateGuideDone(): void {
-    // Fire some celebratory confetti
     const duration = 2000;
     const end = Date.now() + duration;
 
@@ -359,9 +371,143 @@ export class GuideManager {
     })();
   }
 
+  public startRecording(): Promise<void> {
+    if (this.stopFn) {
+      return Promise.resolve();
+    }
+
+    this.isRecording = true;
+
+    try {
+      this.stopFn = record({
+        emit: (event: eventWithTime) => {
+          this.events.push(event);
+
+          if (this.events.length >= this.MAX_EVENTS_BEFORE_FLUSH) {
+            this.flush().catch(console.error);
+          }
+        },
+        blockClass: "helper-block",
+        ignoreClass: "helper-ignore",
+        maskTextClass: "helper-mask",
+        maskAllInputs: true,
+        inlineStylesheet: true,
+        recordCanvas: false,
+        collectFonts: false,
+      });
+
+      this.startAutoFlush();
+
+      console.log("Recording started with sessionId:", this.sessionId);
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      this.isRecording = false;
+      this.stopFn = null;
+      return Promise.reject(error);
+    }
+  }
+
+  public async stopRecording(): Promise<void> {
+    if (!this.stopFn) {
+      return; // Not recording
+    }
+
+    // Stop recording
+    this.stopFn();
+    this.stopFn = null;
+    this.isRecording = false;
+
+    // Stop auto-flush
+    this.stopAutoFlush();
+
+    // Flush remaining events
+    if (this.events.length > 0) {
+      await this.flush();
+    }
+
+    console.log("Recording stopped");
+  }
+
+  private startAutoFlush(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+    }
+
+    this.flushInterval = window.setInterval(() => {
+      if (this.events.length > 0) {
+        this.flush().catch(console.error);
+      }
+    }, this.SEND_FREQUENCY);
+  }
+
+  private stopAutoFlush(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
+    }
+  }
+
+  public async flush(): Promise<void> {
+    if (this.events.length === 0 || !this.sessionId) {
+      return;
+    }
+
+    const eventsToSend = [...this.events];
+
+    try {
+      const response = await fetch("/api/guide/event", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.sessionToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isRecording: true,
+          sessionId: this.sessionId,
+          events: eventsToSend,
+          metadata: {
+            url: window.location.href,
+            title: document.title,
+            userAgent: navigator.userAgent,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      this.events = this.events.slice(eventsToSend.length);
+      console.log("Events sent successfully:", eventsToSend.length);
+    } catch (error) {
+      console.error("Failed to send events:", error);
+      throw error;
+    }
+  }
+
+  public start(sessionToken: string, sessionId: string): void {
+    this.sessionToken = sessionToken;
+    this.sessionId = sessionId;
+    this.startRecording().catch(console.error);
+  }
+
+  public isCurrentlyRecording(): boolean {
+    return this.isRecording;
+  }
+
+  public getSessionId(): string | null {
+    return this.sessionId;
+  }
+
   public destroy(): void {
     if (this.helperHandElement) {
       document.body.removeChild(this.helperHandElement);
+    }
+
+    if (this.isRecording) {
+      this.stopRecording().catch(console.error);
     }
   }
 }
