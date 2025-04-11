@@ -1,12 +1,12 @@
-import { openai } from "@ai-sdk/openai";
 import { WebClient } from "@slack/web-api";
-import { CoreMessage, generateText, tool } from "ai";
+import { CoreMessage, tool } from "ai";
 import { and, eq, isNull, notInArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, DRAFT_STATUSES } from "@/db/schema";
+import { runAIQuery } from "@/lib/ai";
 import { Conversation, getConversationById, getConversationBySlug } from "@/lib/data/conversation";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -25,8 +25,10 @@ export const generateAgentResponse = async (
     category: true,
   });
 
-  const { text } = await generateText({
-    model: openai("gpt-4o"),
+  const text = await runAIQuery({
+    mailbox,
+    queryType: "agent_response",
+    model: "gpt-4o",
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
 You are currently in the mailbox: ${mailbox.name}.
