@@ -128,7 +128,7 @@ const Toolbar = ({
           </button>
           <button
             type="button"
-            onClick={() => setLinkModalOpen(true)}
+            onClick={() => toggleLinkModal(true)}
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
           >
             <ToolbarLink />
