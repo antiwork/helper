@@ -20,6 +20,7 @@ export const aiUsageEvents = pgTable(
         | "reasoning"
         | "conversation_resolution"
         | "suggest_knowledge_bank_changes"
+        | "auto_assign_conversation"
       >(),
     inputTokensCount: integer().notNull(),
     outputTokensCount: integer().notNull(),

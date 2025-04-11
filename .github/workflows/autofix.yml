@@ -36,6 +36,9 @@ jobs:
         run: bin/format --write
         shell: bash
 
+      - name: Generate tRPC types
+        run: npm run expo:trpc:generate
+
       - name: Typecheck
         shell: bash
         env:

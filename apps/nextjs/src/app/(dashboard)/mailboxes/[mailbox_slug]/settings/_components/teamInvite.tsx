@@ -10,11 +10,10 @@ import { api } from "@/trpc/react";
 
 type TeamInviteProps = {
   mailboxSlug: string;
-  teamMembers: Array<{ id: string; email?: string }>;
-  onInviteSuccess?: () => void;
+  teamMembers: { id: string; email?: string }[];
 };
 
-export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamInviteProps) {
+export function TeamInvite({ mailboxSlug, teamMembers }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
 
   const utils = api.useUtils();
@@ -29,11 +28,7 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
 
       setEmailInput("");
 
-      // Invalidate the members list query to refresh data after new invite
       utils.mailbox.members.list.invalidate({ mailboxSlug });
-
-      // Notify the parent component
-      onInviteSuccess?.();
     },
     onError: (error) => {
       toast({
@@ -49,11 +44,9 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
       return;
     }
 
-    // Check if email already exists in the organization
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      // User already exists in organization
       toast({
         title: "Member already exists",
         description: "This user is already in your organization",
@@ -70,43 +63,38 @@ export function TeamInvite({ mailboxSlug, teamMembers, onInviteSuccess }: TeamIn
   const canAddMember = isValidEmail && !isInviting;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label htmlFor="email-input">Invite New Member</Label>
-        <div className="relative">
-          <Input
-            id="email-input"
-            placeholder="Enter email..."
-            value={emailInput}
-            onChange={(e) => setEmailInput(e.target.value)}
+    <div className="flex gap-4">
+      <div className="relative flex-1">
+        <Label className="sr-only" htmlFor="email-input">
+          Invite New Member
+        </Label>
+        <Input
+          id="email-input"
+          placeholder="Enter email..."
+          value={emailInput}
+          onChange={(e) => setEmailInput(e.target.value)}
+          disabled={isInviting}
+        />
+        {emailInput && (
+          <button
+            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            onClick={() => setEmailInput("")}
             disabled={isInviting}
-          />
-          {emailInput && (
-            <button
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
-              onClick={() => setEmailInput("")}
-              disabled={isInviting}
-            >
-              <XMarkIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
-            </button>
-          )}
-        </div>
+          >
+            <XMarkIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+          </button>
+        )}
       </div>
-      <div className="space-y-2 flex items-end">
-        <Button onClick={inviteMember} disabled={!canAddMember} className="w-full">
-          {isInviting ? (
-            <span className="flex items-center">
-              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
-              Inviting...
-            </span>
-          ) : (
-            <>
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
-              Invite New Member
-            </>
-          )}
-        </Button>
-      </div>
+      <Button onClick={inviteMember} disabled={!canAddMember}>
+        {isInviting ? (
+          <>Inviting...</>
+        ) : (
+          <>
+            <PlusCircleIcon className="mr-2 h-4 w-4" />
+            Invite New Member
+          </>
+        )}
+      </Button>
     </div>
   );
 }
