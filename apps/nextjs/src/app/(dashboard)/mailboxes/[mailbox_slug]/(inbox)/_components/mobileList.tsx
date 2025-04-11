@@ -15,7 +15,7 @@ export const MobileList = () => {
   const [conversationSlug] = useQueryState("id");
   const { nativePlatform, isLegacyTauri } = useNativePlatform();
 
-  const { data: countData } = api.mailbox.countByStatus.useQuery(
+  const { data: openCount } = api.mailbox.openCount.useQuery(
     { mailboxSlug },
     {
       staleTime: 0,
@@ -33,7 +33,7 @@ export const MobileList = () => {
       {nativePlatform === "macos" && isLegacyTauri && <TauriDragArea className="top-0 inset-x-0 h-8" />}
       <AppInstallBanner />
       <CategoryNav
-        countByStatus={countData}
+        openCount={openCount}
         mailboxSlug={mailboxSlug}
         variant="mobile"
         className={cn("flex items-center h-14 px-4", nativePlatform === "macos" && "mt-8")}
@@ -43,7 +43,7 @@ export const MobileList = () => {
           </div>
         }
       />
-      <List mailboxSlug={mailboxSlug} variant="mobile" />
+      <List variant="mobile" />
     </div>
   );
 };

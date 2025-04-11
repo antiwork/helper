@@ -202,24 +202,6 @@ describe("conversationsRouter", () => {
     });
   });
 
-  describe("refreshDraft", () => {
-    it("sends an inngest event to refresh the draft", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
-
-      const caller = createCaller(createTestTRPCContext(user, organization));
-      const result = await caller.mailbox.conversations.refreshDraft({
-        mailboxSlug: mailbox.slug,
-        conversationSlug: conversation.slug,
-      });
-
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "conversations/draft.refresh",
-        data: { conversationSlug: conversation.slug },
-      });
-    });
-  });
-
   describe("undo", () => {
     it("undoes the provided email", async () => {
       const { user, mailbox, organization } = await userFactory.createRootUser();

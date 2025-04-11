@@ -28,6 +28,7 @@ export const env = createEnv({
       // Same as POSTGRES_URL unless using a cloud database provider with built-in pooling
       "postgresql://username:password@127.0.0.1:5435/helperai_development",
     ),
+    DATABASE_URL: z.string().url().optional(),
     KV_UPSTASH_KV_REST_API_URL: defaultUnlessDeployed(z.string().url(), "http://localhost:8089"),
     KV_UPSTASH_KV_REST_API_TOKEN: defaultUnlessDeployed(z.string().min(1), "example_token"),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),

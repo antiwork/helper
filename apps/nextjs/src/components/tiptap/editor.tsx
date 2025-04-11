@@ -24,6 +24,7 @@ type TipTapEditorProps = {
   defaultContent: Record<string, string>;
   onUpdate: (text: string, isEmpty: boolean) => void;
   onModEnter?: () => void;
+  onOptionEnter?: () => void;
   onSlashKey?: () => void;
   customToolbar?: () => React.ReactNode;
   enableImageUpload?: boolean;
@@ -70,6 +71,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       defaultContent,
       onUpdate,
       onModEnter,
+      onOptionEnter,
       onSlashKey,
       autoFocus,
       customToolbar,
@@ -155,9 +157,17 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     });
 
     const handleModEnter = (event: React.KeyboardEvent) => {
-      if (!onModEnter) return;
       if ((isMacOS && event.metaKey && event.key === "Enter") || (!isMacOS && event.ctrlKey && event.key === "Enter")) {
-        onModEnter();
+        if (onModEnter) {
+          onModEnter();
+          return;
+        }
+      }
+
+      if (event.altKey && event.key === "Enter") {
+        if (onOptionEnter) {
+          onOptionEnter();
+        }
       }
     };
 

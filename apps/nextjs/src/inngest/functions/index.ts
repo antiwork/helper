@@ -1,3 +1,4 @@
+import autoAssignConversation from "@/inngest/functions/autoAssignConversation";
 import autoCloseInactiveConversationsFunctions from "./autoCloseInactiveConversations";
 import bulkEmbeddingClosedConversations from "./bulkEmbeddingClosedConversations";
 import bulkUpdateConversations from "./bulkUpdateConversations";
@@ -24,7 +25,6 @@ import notifyVipMessage from "./notifyVipMessage";
 import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
 import publishNewConversationEvent from "./publishNewConversationEvent";
-import refreshConversationDraft from "./refreshConversationDraft";
 import renewMailboxWatches from "./renewMailboxWatches";
 import scheduledWebsiteCrawl from "./scheduledWebsiteCrawl";
 import suggestKnowledgeBankChanges from "./suggestKnowledgeBankChanges";
@@ -36,7 +36,6 @@ export default [
   embeddingConversation,
   bulkEmbeddingClosedConversations,
   embeddingFaq,
-  refreshConversationDraft,
   generateFilePreview,
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,
@@ -64,4 +63,5 @@ export default [
   checkConversationResolution,
   ...autoCloseInactiveConversationsFunctions,
   updateSuggestedActions,
+  autoAssignConversation,
 ];

@@ -45,9 +45,8 @@ const getSlackConnectUrl = (mailboxSlug: string): string | null => {
 };
 
 export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
-  const organization = await getClerkOrganization(mailbox.clerkOrganizationId);
   const subscription = await db.query.subscriptions.findFirst({
-    where: and(eq(subscriptions.clerkOrganizationId, organization.id)),
+    where: and(eq(subscriptions.clerkOrganizationId, mailbox.clerkOrganizationId)),
     columns: {
       canceledAt: true,
       status: true,

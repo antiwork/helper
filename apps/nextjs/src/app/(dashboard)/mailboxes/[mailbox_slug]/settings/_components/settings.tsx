@@ -3,10 +3,12 @@
 import { useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
+  Cog6ToothIcon,
   ComputerDesktopIcon,
   CreditCardIcon,
   LinkIcon,
   UserGroupIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronUp } from "lucide-react";
 import React, { useState, useTransition } from "react";
@@ -33,9 +35,11 @@ import CustomerSetting, { type CustomerUpdates } from "./customerSetting";
 import GitHubSetting, { type GitHubUpdates } from "./githubSetting";
 import KnowledgeSetting from "./knowledgeSetting";
 import MetadataEndpointSetting from "./metadataEndpointSetting";
+import PreferencesSetting, { PreferencesUpdates } from "./preferencesSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
+import TeamSetting from "./teamSetting";
 import ToolSetting from "./toolSetting";
 
 export type PendingUpdates = {
@@ -50,6 +54,7 @@ export type PendingUpdates = {
   };
   customer?: CustomerUpdates;
   autoClose?: AutoCloseUpdates;
+  preferences?: PreferencesUpdates;
 };
 
 type SettingsProps = {
@@ -94,7 +99,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
     Boolean(pendingUpdates.github) ||
     Boolean(pendingUpdates.widget) ||
     Boolean(pendingUpdates.customer) ||
-    Boolean(pendingUpdates.autoClose);
+    Boolean(pendingUpdates.autoClose) ||
+    Boolean(pendingUpdates.preferences);
 
   const handleSignOut = async () => {
     try {
@@ -113,6 +119,12 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       id: "knowledge",
       icon: BookOpenIcon,
       content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
+    },
+    {
+      label: "Team",
+      id: "team",
+      icon: UsersIcon,
+      content: <TeamSetting mailboxSlug={mailbox.slug} />,
     },
     {
       label: "Customers",
@@ -184,6 +196,21 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
           />
           <ConnectSupportEmail supportAccount={supportAccount} />
         </>
+      ),
+    },
+    {
+      label: "Preferences",
+      id: "preferences",
+      icon: Cog6ToothIcon,
+      content: (
+        <PreferencesSetting
+          onChange={(updates) =>
+            setPendingUpdates({
+              ...pendingUpdates,
+              preferences: updates,
+            })
+          }
+        />
       ),
     },
   ];
