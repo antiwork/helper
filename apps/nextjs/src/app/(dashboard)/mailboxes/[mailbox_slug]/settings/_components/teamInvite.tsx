@@ -87,10 +87,7 @@ export function TeamInvite({ mailboxSlug, teamMembers }: TeamInviteProps) {
       </div>
       <Button onClick={inviteMember} disabled={!canAddMember}>
         {isInviting ? (
-          <span className="flex items-center">
-            <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
-            Inviting...
-          </span>
+          <>Inviting...</>
         ) : (
           <>
             <PlusCircleIcon className="mr-2 h-4 w-4" />
