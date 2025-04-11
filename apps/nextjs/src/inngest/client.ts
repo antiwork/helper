@@ -2,7 +2,7 @@ import { sentryMiddleware } from "@inngest/middleware-sentry";
 import { EventSchemas, Inngest } from "inngest";
 import type Stripe from "stripe";
 import { z } from "zod";
-import { searchSchema } from "@/lib/data/conversation/search";
+import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
 export const assignEventSchema = z.object({
   assignedToId: z.string().nullable(),

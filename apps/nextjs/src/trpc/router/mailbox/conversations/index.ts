@@ -10,7 +10,8 @@ import { inngest } from "@/inngest/client";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { generateDraftResponse } from "@/lib/ai/generateResponse";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
-import { searchConversations, searchSchema } from "@/lib/data/conversation/search";
+import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
+import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import {
   createAiDraft,
   createReply,
@@ -34,24 +35,11 @@ export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
     const { list, where, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
 
-    const [{ results, nextCursor }, total] = await Promise.all([
-      list,
-      db
-        .select({ count: count() })
-        .from(conversations)
-        .leftJoin(
-          platformCustomers,
-          and(
-            eq(conversations.mailboxId, platformCustomers.mailboxId),
-            eq(conversations.emailFrom, platformCustomers.email),
-          ),
-        )
-        .where(and(...Object.values(where))),
-    ]);
+    const [{ results, nextCursor }, total] = await Promise.all([list, countSearchResults(where)]);
 
     return {
       conversations: results,
-      total: total[0]?.count ?? 0,
+      total,
       defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
       hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       assignedToClerkIds: input.assignee ?? null,
