@@ -59,7 +59,7 @@ export default function SessionEvents({ mailbox, session }: SessionEventsProps) 
           <AccordionItem value="details">
             <AccordionTrigger>View Event Details</AccordionTrigger>
             <AccordionContent>
-              <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">{JSON.stringify(data, null, 2)}</pre>
+              <pre className="p-4 rounded-md overflow-auto text-sm">{JSON.stringify(data, null, 2)}</pre>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -108,7 +108,7 @@ export default function SessionEvents({ mailbox, session }: SessionEventsProps) 
           <CardContent>
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-2">Instructions</h3>
-              <div className="bg-gray-50 p-4 rounded-md">{session.instructions}</div>
+              <div className=" p-4 rounded-md">{session.instructions}</div>
             </div>
 
             <h3 className="text-lg font-medium mb-4">Timeline</h3>
