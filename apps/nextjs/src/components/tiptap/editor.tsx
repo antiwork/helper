@@ -15,9 +15,9 @@ import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
 import "./editor.css";
 import { toast } from "@/components/hooks/use-toast";
+import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
-import { useBreakpoint } from "@/components/useBreakpoint";
 import Toolbar from "./toolbar";
 
 type TipTapEditorProps = {
@@ -250,11 +250,6 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     });
     const attachments = unsavedFiles.filter((f) => !f.inline);
 
-    const isAboveMdRef = useRef(isAboveMd);
-    useEffect(() => {
-      isAboveMdRef.current = isAboveMd;
-    }, [isAboveMd]);
-
     if (!editor) {
       return null;
     }
@@ -263,26 +258,24 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       <div
         className={cn(
           "relative flex flex-col h-full rounded border border-border bg-background",
-          toolbarOpen && isAboveMd && "pb-14",
+          toolbarOpen && "pb-14",
           className,
         )}
         aria-label={ariaLabel}
       >
-        {isAboveMd && (
-          <Toolbar
-            {...{
-              open: toolbarOpen,
-              setOpen: setToolbarOpen,
-              editor,
-              uploadFileAttachments,
-              uploadInlineImages,
-              customToolbar,
-              enableImageUpload,
-              enableFileUpload,
-              variant: "desktop",
-            }}
-          />
-        )}
+        <Toolbar
+          {...{
+            open: toolbarOpen,
+            setOpen: setToolbarOpen,
+            editor,
+            uploadFileAttachments,
+            uploadInlineImages,
+            customToolbar,
+            enableImageUpload,
+            enableFileUpload,
+            variant: "desktop",
+          }}
+        />
 
         <div
           className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
@@ -317,7 +310,9 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               placement: "bottom-start",
               appendTo: editorContentContainerRef.current || "parent",
             }}
-            shouldShow={({ editor }) => isAboveMdRef.current && editor.state.selection.content().size > 0 && !editor.isActive("image")}
+            shouldShow={({ editor }) =>
+              isAboveMd && editor.state.selection.content().size > 0 && !editor.isActive("image")
+            }
             className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
           >
             Hint: Paste URL to create link

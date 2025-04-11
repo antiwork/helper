@@ -62,19 +62,19 @@ const EmailEditorComponent = React.forwardRef<
     { draftedEmail, initialMessage, actionButtons, onSend, onOptionSend, updateEmail, handleInsertReply },
     forwardedRef,
   ) => {
+    const { isAboveMd } = useBreakpoint("md");
     const [showCommandBar, setShowCommandBar] = useState(false);
     const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
     const [toolbarOpen, setToolbarOpen] = useState(() => {
       if (typeof window !== "undefined") {
-        return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
+        return (localStorage.getItem("editorToolbarOpen") ?? isAboveMd.toString()) === "true";
       }
-      return true;
+      return isAboveMd;
     });
     const ccRef = useRef<HTMLInputElement>(null);
     const bccRef = useRef<HTMLInputElement>(null);
     const commandInputRef = useRef<HTMLInputElement>(null);
     const { user } = useUser();
-    const { isAboveMd } = useBreakpoint("md");
     const editorRef = useRef<TipTapEditorRef | null>(null);
 
     useEffect(() => {
