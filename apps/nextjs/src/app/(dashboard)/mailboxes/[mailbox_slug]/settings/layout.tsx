@@ -17,7 +17,7 @@ async function SettingsLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
+      <div className="flex h-dvh w-full">
         <div className="md:hidden">
           <AppSidebar mailboxSlug={mailbox_slug} sidebarInfo={sidebarInfo} />
         </div>

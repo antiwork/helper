@@ -87,7 +87,7 @@ export default function Page() {
 
   if (error) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center p-10">
+      <div className="flex flex-col h-dvh items-center justify-center p-10">
         <h1 className="text-xl mb-2">Couldn't sign in</h1>
         <p className="text-sm mb-10">{error}</p>
         <Button onClick={() => router.push("/login")}>Go to login</Button>

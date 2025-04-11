@@ -7,7 +7,7 @@ export default async function LoginPage() {
   if (userId) return redirect("/mailboxes");
 
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center gap-3 px-6">
+    <div className="flex h-dvh w-screen flex-col items-center justify-center gap-3 px-6">
       <LoginForm />
     </div>
   );

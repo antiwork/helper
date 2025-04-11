@@ -14,7 +14,7 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <main
       className={cn(
-        "flex flex-col min-h-screen text-foreground w-full",
+        "flex flex-col h-dvh text-foreground w-full",
         nativePlatform === "macos" && isLegacyTauri && "pt-6",
       )}
     >

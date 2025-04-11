@@ -7,7 +7,7 @@ export default async function SSOCallback({
 }) {
   const { popup } = await searchParams;
   return (
-    <div className={popup ? "h-screen bg-white" : ""}>
+    <div className={popup ? "h-dvh bg-white" : ""}>
       <AuthenticateWithRedirectCallback signUpForceRedirectUrl={popup ? "/login/popup/complete" : "/mailboxes"} />
     </div>
   );
