@@ -8,7 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Timeline, TimelineItem } from "@/components/ui/timeline";
+import { Timeline, Event as TimelineEvent } from "@/components/ui/timeline";
 import { guideSessionReplays } from "@/db/schema";
 import { GuideSession, GuideSessionEvent } from "@/lib/data/guide";
 import { RouterOutputs } from "@/trpc";
@@ -40,17 +40,6 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerInstanceRef = useRef<any>(null);
 
-  const eventIcons: Record<string, React.ReactNode> = {
-    session_started: "🚀",
-    status_changed: "🔄",
-    step_added: "➕",
-    step_completed: "✅",
-    step_updated: "📝",
-    completed: "🏁",
-    abandoned: "🛑",
-    paused: "⏸️",
-  };
-
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case "completed":
@@ -61,27 +50,6 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
         return "default";
       default:
         return "default";
-    }
-  };
-
-  const formatEventData = (event: GuideSessionEvent) => {
-    try {
-      if (!event.data) return null;
-
-      const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-
-      return (
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="details">
-            <AccordionTrigger>View Event Details</AccordionTrigger>
-            <AccordionContent>
-              <pre className="p-4 rounded-md overflow-auto text-sm">{JSON.stringify(data, null, 2)}</pre>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      );
-    } catch (error) {
-      return <p className="text-destructive">Error parsing event data</p>;
     }
   };
 
@@ -141,7 +109,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
               showController: true,
               autoPlay: false, // Start paused initially
               width: playerContainerRef.current?.clientWidth,
-              height: (playerContainerRef.current?.clientHeight - 80) || 500,
+              height: (playerContainerRef.current?.clientHeight || 500) - 80,
             },
           });
         })
@@ -158,6 +126,27 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
     };
   }, [isReplayReady, rrwebEvents]);
 
+  // Prepare events for the new Timeline component
+  const timelineEvents: TimelineEvent[] = session.events.map((event) => {
+    let details = "No data available";
+    try {
+      if (event.data) {
+        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        details = JSON.stringify(data, null, 2);
+      }
+    } catch (error) {
+      details = "Error parsing event data";
+    }
+
+    return {
+      id: event.id,
+      title: event.type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()), // Format title
+      date: formatDistanceToNow(new Date(event.timestamp), { addSuffix: true }),
+      summary: `Event ${event.type}`, // Add required summary property
+      details,
+    };
+  });
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between">
@@ -170,54 +159,41 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
-        <Card className="mx-auto max-w-4xl mb-6">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>{session.title}</CardTitle>
-                <CardDescription>
-                  Created {formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}
-                </CardDescription>
+      <div className="flex-1 overflow-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Session Details Section */}
+        <div className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>{session.title}</CardTitle>
+                  <CardDescription className="mt-2">
+                    Created {formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}
+                  </CardDescription>
+                </div>
+                <Badge variant={getStatusBadgeVariant(session.status)}>{session.status}</Badge>
               </div>
-              <Badge variant={getStatusBadgeVariant(session.status)}>{session.status}</Badge>
-            </div>
-          </CardHeader>
+            </CardHeader>
 
-          <CardContent>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2">Instructions</h3>
-              <div className=" p-4 rounded-md">{session.instructions}</div>
-            </div>
+            <CardContent>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-2">Instructions</h3>
+                <div className=" p-4 rounded-md">{session.instructions}</div>
+              </div>
 
-            <h3 className="text-lg font-medium mb-4">Timeline</h3>
+              <h3 className="text-lg font-medium mb-4">Timeline</h3>
 
-            {session.events.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No events recorded for this session</p>
-            ) : (
-              <Timeline>
-                {session.events.map((event, index) => (
-                  <TimelineItem key={event.id}>
-                    <TimelineItem.Content>
-                      <div className="flex flex-col mb-4">
-                        <div className="flex items-center mb-1">
-                          <h4 className="font-medium capitalize">{event.type.replace(/_/g, " ")}</h4>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
-                          </span>
-                        </div>
-                        {formatEventData(event)}
-                      </div>
-                    </TimelineItem.Content>
-                  </TimelineItem>
-                ))}
-              </Timeline>
-            )}
-          </CardContent>
-        </Card>
+              {session.events.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">No events recorded for this session</p>
+              ) : (
+                <Timeline events={timelineEvents} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Session Replay Card */}
-        <Card className="mx-auto max-w-4xl">
+        {/* Session Replay Section */}
+        <Card className="lg:col-span-1 flex flex-col">
           <CardHeader>
             <CardTitle>Session Replay</CardTitle>
             <CardDescription>Replay of user actions during this guide session</CardDescription>
