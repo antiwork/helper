@@ -161,7 +161,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
         }
       }
 
-      if ((isMacOS && event.altKey && event.key === "Enter") || (!isMacOS && event.altKey && event.key === "Enter")) {
+      if (event.altKey && event.key === "Enter") {
         if (onOptionEnter) {
           onOptionEnter();
         }
