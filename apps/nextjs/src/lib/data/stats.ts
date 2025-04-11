@@ -2,18 +2,19 @@ import { and, count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
-import { getClerkUserList } from "@/lib/data/user";
+import { getClerkUserList, UserRole, UserRoles } from "@/lib/data/user";
 
 type DateRange = {
   startDate?: Date;
   endDate?: Date;
 };
 
-type MemberStats = {
+export type MemberStats = {
   id: string;
   email: string | undefined;
   displayName: string | null;
   replyCount: number;
+  role: UserRole;
 }[];
 
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
@@ -51,11 +52,17 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
   }, {});
 
   return allUsers
-    .map((user) => ({
-      id: user.id,
-      email: user.emailAddresses[0]?.emailAddress,
-      displayName: user.fullName,
-      replyCount: replyCounts[user.id] || 0,
-    }))
+    .map((user) => {
+      const mailboxAccess = user.publicMetadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
+      const mailboxRole = mailboxAccess?.[mailbox.id.toString()]?.role || UserRoles.AFK;
+
+      return {
+        id: user.id,
+        email: user.emailAddresses[0]?.emailAddress,
+        displayName: user.fullName,
+        replyCount: replyCounts[user.id] || 0,
+        role: mailboxRole,
+      };
+    })
     .sort((a, b) => b.replyCount - a.replyCount);
 }

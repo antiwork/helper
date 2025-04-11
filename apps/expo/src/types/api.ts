@@ -123,19 +123,6 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
         output: void;
       }>;
-      members: import("@trpc/server").TRPCQueryProcedure<{
-        input: {
-          mailboxSlug: string;
-          period: "24h" | "7d" | "30d" | "1y";
-          customDate?: Date | undefined;
-        };
-        output: {
-          id: string;
-          email: string | undefined;
-          displayName: string | null;
-          replyCount: number;
-        }[];
-      }>;
       latestEvents: import("@trpc/server").TRPCQueryProcedure<{
         input: {
           mailboxSlug: string;
@@ -734,8 +721,8 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
           reactionCount: import("@trpc/server").TRPCQueryProcedure<{
             input: {
               mailboxSlug: string;
-              period: "hourly" | "daily" | "monthly";
               startDate: Date;
+              period: "hourly" | "daily" | "monthly";
             };
             output: {
               count: number;
@@ -1012,6 +999,36 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
             id: number;
           };
           output: void;
+        }>;
+      };
+      members: {
+        update: import("@trpc/server").TRPCMutationProcedure<{
+          input: {
+            mailboxSlug: string;
+            role: "Core" | "Non-core" | "AFK";
+            userId: string;
+            keywords?: string[] | undefined;
+          };
+          output: import("../lib/data/user").UserWithMailboxAccessData;
+        }>;
+        list: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+          };
+          output: import("../lib/data/user").UserWithMailboxAccessData[];
+        }>;
+        stats: import("@trpc/server").TRPCQueryProcedure<{
+          input: {
+            mailboxSlug: string;
+            period: "24h" | "7d" | "30d" | "1y";
+            customDate?: Date | undefined;
+          };
+          output: {
+            id: string;
+            email: string | undefined;
+            displayName: string | null;
+            replyCount: number;
+          }[];
         }>;
       };
       slack: {
@@ -1328,7 +1345,16 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         output: {
           id: string;
           displayName: string;
+          email: string | undefined;
         }[];
+      }>;
+      inviteMember: import("@trpc/server").TRPCMutationProcedure<{
+        input: {
+          email: string;
+        };
+        output: {
+          invitationId: string;
+        };
       }>;
     };
     user: {

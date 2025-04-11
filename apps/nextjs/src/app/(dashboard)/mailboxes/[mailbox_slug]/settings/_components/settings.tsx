@@ -8,6 +8,7 @@ import {
   CreditCardIcon,
   LinkIcon,
   UserGroupIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronUp } from "lucide-react";
 import React, { useState, useTransition } from "react";
@@ -38,6 +39,7 @@ import PreferencesSetting, { PreferencesUpdates } from "./preferencesSetting";
 import SlackSetting, { type SlackUpdates } from "./slackSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
+import TeamSetting from "./teamSetting";
 import ToolSetting from "./toolSetting";
 
 export type PendingUpdates = {
@@ -117,6 +119,12 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       id: "knowledge",
       icon: BookOpenIcon,
       content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
+    },
+    {
+      label: "Team",
+      id: "team",
+      icon: UsersIcon,
+      content: <TeamSetting mailboxSlug={mailbox.slug} />,
     },
     {
       label: "Customers",
