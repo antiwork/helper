@@ -107,9 +107,9 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             props: {
               events: rrwebEvents,
               showController: true,
-              autoPlay: false, // Start paused initially
+              autoPlay: true,
               width: playerContainerRef.current?.clientWidth,
-              height: (playerContainerRef.current?.clientHeight || 500) - 80,
+              height: (playerContainerRef.current?.clientHeight || 500) - 80, // Use full height
             },
           });
         })
@@ -199,9 +199,9 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             <CardDescription>Replay of user actions during this guide session</CardDescription>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="flex flex-col flex-1">
             {isReplayLoading && (
-              <div className="flex justify-center items-center py-16">
+              <div className="flex justify-center items-center py-16 flex-1">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
               </div>
             )}
@@ -214,8 +214,8 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
 
             <div
               ref={playerContainerRef}
-              className="aspect-video w-full min-h-[500px] bg-muted rounded-md"
-              style={{ display: isReplayReady && rrwebEvents.length > 0 && !replayError ? "block" : "none" }}
+              className="w-full min-h-[500px] bg-muted rounded-md flex-1"
+              style={{ display: isReplayReady && rrwebEvents.length > 0 && !replayError ? "flex" : "none" }}
             />
           </CardContent>
         </Card>
