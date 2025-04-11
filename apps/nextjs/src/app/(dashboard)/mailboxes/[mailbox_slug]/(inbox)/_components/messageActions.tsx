@@ -233,7 +233,7 @@ export const MessageActions = () => {
               >
                 Reply
                 {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌥⏎</KeyboardShortcut>
+                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
                 )}
               </Button>
             </>
