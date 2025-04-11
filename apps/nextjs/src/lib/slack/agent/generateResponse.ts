@@ -19,7 +19,7 @@ export const generateResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
   slackUserId: string | undefined,
-  updateStatus?: (status: string, debugContent?: string) => void,
+  showStatus?: (status: string, debugContent?: string) => void,
 ) => {
   const searchToolSchema = searchSchema.omit({
     category: true,
@@ -50,7 +50,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Get the current Slack user",
         parameters: z.object({}),
         execute: async () => {
-          updateStatus?.(`is getting user...`, JSON.stringify({ slackUserId }, null, 2));
+          showStatus?.(`Checking user...`, JSON.stringify({ slackUserId }, null, 2));
           if (!slackUserId) return { error: "User not found" };
           const client = new WebClient(assertDefined(mailbox.slackBotToken));
           const { user } = await client.users.info({ user: slackUserId });
@@ -68,7 +68,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Get IDs, names and emails of all team members",
         parameters: z.object({}),
         execute: async () => {
-          updateStatus?.(`is getting members...`);
+          showStatus?.(`Checking members...`);
           const members = await getClerkUserList(mailbox.clerkOrganizationId);
           return members.data.map((member) => ({
             id: member.id,
@@ -82,7 +82,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Search tickets/conversations with various filtering options",
         parameters: searchToolSchema,
         execute: async (input) => {
-          updateStatus?.(`is searching tickets...`, JSON.stringify(input, null, 2));
+          showStatus?.(`Searching tickets...`, JSON.stringify(input, null, 2));
           try {
             const { list } = await searchConversations(mailbox, input);
             return {
@@ -101,7 +101,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Count the number of tickets matching the search criteria",
         parameters: searchToolSchema.omit({ cursor: true, limit: true }),
         execute: async (input) => {
-          updateStatus?.(`is counting tickets...`, JSON.stringify(input, null, 2));
+          showStatus?.(`Counting tickets...`, JSON.stringify(input, null, 2));
           const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
           return await countSearchResults(where);
         },
@@ -116,6 +116,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             ),
         }),
         execute: async ({ id }) => {
+          showStatus?.(`Checking ticket...`, JSON.stringify({ id }, null, 2));
           const conversation = await findConversation(id.toString(), mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
@@ -133,6 +134,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             ),
         }),
         execute: async ({ id }) => {
+          showStatus?.(`Reading ticket...`, JSON.stringify({ id }, null, 2));
           const conversation = await findConversation(id.toString(), mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const messages = await db.query.conversationMessages.findMany({

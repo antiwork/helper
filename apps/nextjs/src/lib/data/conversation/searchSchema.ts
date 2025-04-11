@@ -14,11 +14,15 @@ export const searchSchema = z.object({
   search: z.string().nullish().describe("Search term to look for in tickets"),
   status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),
   assignee: z.array(z.string()).optional().describe("ID of team members currently assigned to the conversation"),
-  createdAfter: z.string().datetime().optional().describe("Filter by tickets created after this date"),
-  createdBefore: z.string().datetime().optional().describe("Filter by tickets created before this date"),
+  createdAfter: z.string().datetime().optional().describe("Filter tickets created after this date"),
+  createdBefore: z.string().datetime().optional().describe("Filter tickets created before this date"),
+  repliedAfter: z.string().datetime().optional().describe("Filter tickets where a human has replied after this date"),
+  repliedBefore: z.string().datetime().optional().describe("Filter tickets where a human has replied before this date"),
   repliedBy: z.array(z.string()).optional().describe("ID of team members who have replied to the conversation"),
   customer: z.array(z.string()).optional().describe("Email address of the customer who opened the ticket"),
   isVip: z.boolean().optional().describe("Filter by VIP customers"),
+  minValueDollars: z.number().optional().describe("Filter by customers with a minimum value"),
+  maxValueDollars: z.number().optional().describe("Filter by customers with a maximum value"),
   isPrompt: z.boolean().optional().describe("Filter by tickets which were created from a fixed prompt"),
   reactionType: z
     .enum(["thumbs-up", "thumbs-down"])

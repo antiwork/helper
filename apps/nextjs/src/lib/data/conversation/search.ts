@@ -51,19 +51,30 @@ export const searchConversations = async (
     ...(filters.isVip && mailbox.vipThreshold
       ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
       : {}),
+    ...(filters.minValueDollars
+      ? { minValue: gt(platformCustomers.value, (filters.minValueDollars * 100).toString()) }
+      : {}),
+    ...(filters.maxValueDollars
+      ? { maxValue: lt(platformCustomers.value, (filters.maxValueDollars * 100).toString()) }
+      : {}),
     ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
-    ...(filters.repliedBy?.length
+    ...(filters.repliedBy?.length || filters.repliedAfter || filters.repliedBefore
       ? {
-          repliedBy: exists(
+          reply: exists(
             db
               .select()
               .from(conversationMessages)
               .where(
                 and(
                   eq(conversationMessages.conversationId, conversations.id),
-                  inArray(conversationMessages.clerkUserId, filters.repliedBy),
+                  eq(conversationMessages.role, "staff"),
+                  filters.repliedBy?.length ? inArray(conversationMessages.clerkUserId, filters.repliedBy) : undefined,
+                  filters.repliedAfter ? gt(conversationMessages.createdAt, new Date(filters.repliedAfter)) : undefined,
+                  filters.repliedBefore
+                    ? lt(conversationMessages.createdAt, new Date(filters.repliedBefore))
+                    : undefined,
                 ),
               ),
           ),

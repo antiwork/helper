@@ -1,4 +1,5 @@
 import { AppMentionEvent, WebClient } from "@slack/web-api";
+import { CoreMessage } from "ai";
 import { assertDefined } from "@/components/utils/assert";
 import { Mailbox } from "@/lib/data/mailbox";
 import { generateResponse } from "@/lib/slack/agent/generateResponse";
@@ -6,70 +7,66 @@ import { getThreadMessages } from "@/lib/slack/client";
 
 export const updateStatusUtil = async (
   client: WebClient,
-  initialStatus: string,
-  event: { channel: string; thread_ts?: string; ts: string },
-  debug = false,
+  event: { channel: string; thread_ts?: string; ts: string; text?: string },
 ) => {
-  const initialMessage = await client.chat.postMessage({
+  const debug = event.text && /(?:^|\s)!debug(?:$|\s)/.test(event.text);
+  const statusMessage = await client.chat.postMessage({
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
-    text: initialStatus,
+    text: "_Thinking ..._",
   });
 
-  if (!initialMessage?.ts) throw new Error("Failed to post initial message");
+  if (!statusMessage?.ts) throw new Error("Failed to post initial message");
 
-  const updateMessage = async (status: string, debugContent?: string) => {
+  const showStatus = async (status: string, debugContent?: string) => {
     if (debug) {
       await client.chat.postMessage({
         channel: event.channel,
         thread_ts: event.thread_ts ?? event.ts,
-        text: debugContent ? `${status}\n\n*Debug:*\n\`\`\`\n${debugContent}\n\`\`\`` : status,
+        text: debugContent ? `_${status}_\n\n*Debug:*\n\`\`\`\n${debugContent}\n\`\`\`` : `_${status}_`,
       });
     } else {
       await client.chat.update({
         channel: event.channel,
-        ts: initialMessage.ts!,
-        text: status,
+        ts: statusMessage.ts!,
+        text: `_${status}_`,
       });
     }
   };
-  return updateMessage;
+
+  const showResult = async (result: string) => {
+    await client.chat.postMessage({
+      channel: event.channel,
+      thread_ts: event.thread_ts ?? event.ts,
+      text: result,
+    });
+    if (!debug) {
+      await client.chat.delete({
+        channel: event.channel,
+        ts: statusMessage.ts!,
+      });
+    }
+  };
+
+  return { showStatus, showResult };
 };
 
 export async function handleNewAppMention(event: AppMentionEvent, mailbox: Mailbox) {
   if (event.bot_id || event.bot_profile) return;
 
-  try {
-    const client = new WebClient(assertDefined(mailbox.slackBotToken));
-    const { thread_ts, channel } = event;
-    const updateMessage = await updateStatusUtil(
-      client,
-      "is thinking...",
-      event,
-      /(?:^|\s)!debug(?:$|\s)/.test(event.text ?? ""),
-    );
+  const client = new WebClient(assertDefined(mailbox.slackBotToken));
+  const { thread_ts, channel } = event;
+  const { showStatus, showResult } = await updateStatusUtil(client, event);
 
-    if (thread_ts) {
-      const messages = await getThreadMessages(
+  const messages = thread_ts
+    ? await getThreadMessages(
         assertDefined(mailbox.slackBotToken),
         channel,
         thread_ts,
         assertDefined(mailbox.slackBotUserId),
-      );
-      const result = await generateResponse(messages, mailbox, event.user, updateMessage);
-      updateMessage(result);
-    } else {
-      const result = await generateResponse(
-        [{ role: "user", content: event.text }],
-        mailbox,
-        event.user,
-        updateMessage,
-      );
-      updateMessage(result);
-    }
-  } catch (e: unknown) {
-    // Fix linter error by properly typing the catch variable
-    console.error(e instanceof Error && "data" in e ? (e as any).data : null);
-    console.error(e);
-  }
+      )
+    : ([{ role: "user", content: event.text }] satisfies CoreMessage[]);
+
+  const result = await generateResponse(messages, mailbox, event.user, showStatus);
+  showResult(result);
 }
