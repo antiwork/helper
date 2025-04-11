@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import SlackSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/icons/slack.svg";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
@@ -177,9 +178,11 @@ const SlackSetting = ({
           </div>
         </>
       ) : (
-        <Button onClick={() => (window.location.href = connectUrl)} variant="subtle">
-          <SlackSvg className="mr-2 h-4 w-4" />
-          Add to Slack
+        <Button asChild variant="subtle">
+          <Link href={connectUrl}>
+            <SlackSvg className="mr-2 h-4 w-4" />
+            Add to Slack
+          </Link>
         </Button>
       )}
     </SectionWrapper>

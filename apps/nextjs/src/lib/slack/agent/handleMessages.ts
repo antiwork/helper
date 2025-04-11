@@ -2,7 +2,7 @@ import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebC
 import { CoreMessage } from "ai";
 import { assertDefined } from "@/components/utils/assert";
 import { Mailbox } from "@/lib/data/mailbox";
-import { SlackMailboxInfo } from "@/lib/slack/agent/findMailboxForEvent";
+import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findMailboxForEvent";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/client";
 
@@ -155,6 +155,6 @@ const askWhichMailbox = async (event: GenericMessageEvent | AppMentionEvent, mai
   await client.chat.postMessage({
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
-    text: `Which mailbox is this about? (${mailboxes.map((m) => m.name).join("/")})`,
+    text: `${WHICH_MAILBOX_MESSAGE} (${mailboxes.map((m) => m.name).join("/")})`,
   });
 };

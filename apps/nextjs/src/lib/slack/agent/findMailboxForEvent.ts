@@ -6,6 +6,9 @@ import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { redis } from "@/lib/redis/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { getThreadMessages } from "@/lib/slack/client";
+
+export const WHICH_MAILBOX_MESSAGE = "Which mailbox is this about?";
 
 const cachedChannelInfo = async (token: string, teamId: string, channelId: string) => {
   const cachedValue = await redis.get<string>(`slack:channel:${teamId}:${channelId}`);
@@ -23,6 +26,8 @@ export type SlackMailboxInfo = {
   currentMailbox: Mailbox | null;
 };
 
+// Multiple mailboxes can be connected to the same Slack team, so we need to find the right one.
+// Some actions may be possible without selecting a mailbox, so we also return all matching mailboxes.
 export const findMailboxForEvent = async (event: SlackEvent): Promise<SlackMailboxInfo> => {
   let conditions;
   if ("team_id" in event) {
@@ -58,10 +63,33 @@ export const findMailboxForEvent = async (event: SlackEvent): Promise<SlackMailb
         )
       : null;
 
+  let messageTextToCheck = "text" in event ? (event.text ?? "") : "";
+  // If the user is replying to a thread with the assistant, either find the place they replied to the "which mailbox?" question or check all messages
+  if ("thread_ts" in event && event.thread_ts && "ts" in event && event.ts !== event.thread_ts) {
+    const threadMessages = await getThreadMessages(
+      assertDefined(matchingMailboxes[0].slackBotToken),
+      event.channel,
+      event.thread_ts,
+      assertDefined(matchingMailboxes[0].slackBotUserId),
+    );
+    const askedIndex = threadMessages.findLastIndex(
+      (message) => message.role === "assistant" && message.content.toString().startsWith(WHICH_MAILBOX_MESSAGE),
+    );
+    if (askedIndex !== -1) {
+      messageTextToCheck = threadMessages[askedIndex + 1]?.content.toString() ?? "";
+    } else {
+      messageTextToCheck = threadMessages
+        .filter((message) => message.role === "user")
+        .map((message) => message.content.toString())
+        .join("\n");
+    }
+  }
+
   for (const mailbox of matchingMailboxes) {
-    if ("text" in event && event.text?.includes(mailbox.name))
+    if (messageTextToCheck.toLowerCase().includes(mailbox.name.toLowerCase()))
       return { mailboxes: matchingMailboxes, currentMailbox: mailbox };
-    if (channelInfo?.includes(mailbox.name)) return { mailboxes: matchingMailboxes, currentMailbox: mailbox };
+    if (channelInfo?.toLowerCase().includes(mailbox.name.toLowerCase()))
+      return { mailboxes: matchingMailboxes, currentMailbox: mailbox };
   }
   return { mailboxes: matchingMailboxes, currentMailbox: null };
 };
