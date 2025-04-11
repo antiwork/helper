@@ -178,10 +178,19 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             <CardContent>
               <div className="mb-6">
                 <h3 className="text-lg font-medium mb-2">Instructions</h3>
-                <div className=" p-4 rounded-md">{session.instructions}</div>
+                <div className=" p-4 rounded-md border border-white/10">{session.instructions}</div>
               </div>
 
-              <h3 className="text-lg font-medium mb-4">Timeline</h3>
+              <h2 className="text-lg font-medium mb-4">Steps</h2>
+              <div className="flex flex-col gap-2 ">
+                {session.steps?.map((step, index) => (
+                  <div key={index} className="p-2 rounded-md bg-muted">
+                    <p className="text-sm font-medium">{step.description}</p>
+                  </div>
+                ))}
+              </div>
+
+              <h3 className="text-lg font-medium mt-8 mb-4">Timeline</h3>
 
               {session.events.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground">No events recorded for this session</p>
