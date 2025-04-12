@@ -109,7 +109,6 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
               showController: true,
               autoPlay: true,
               width: playerContainerRef.current?.clientWidth,
-              height: (playerContainerRef.current?.clientHeight || 500) - 80, // Use full height
             },
           });
         })
@@ -160,10 +159,9 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Session Details Section */}
-        <div className="flex flex-col gap-6">
-          <Card>
+      <div className="flex-1 overflow-auto p-4 grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 lg:items-start">
+        <div className="flex flex-col gap-6 h-full min-h-0">
+          <Card className="flex flex-col h-full">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -176,40 +174,42 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
               </div>
             </CardHeader>
 
-            <CardContent>
-              <div className="mb-6">
+            <CardContent className="flex flex-col flex-1 overflow-hidden">
+              <div className="mb-6 flex-shrink-0">
                 <h3 className="text-lg font-medium mb-2">Instructions</h3>
-                <div className=" p-4 rounded-md border border-white/10">{session.instructions}</div>
+                <div className=" p-4 text-sm rounded-md border border-white/10">{session.instructions}</div>
               </div>
 
-              <h2 className="text-lg font-medium mb-4">Steps</h2>
-              <div className="flex flex-col gap-2 ">
-                {session.steps?.map((step, index) => (
-                  <div key={index} className="p-2 rounded-md bg-muted">
-                    <p className="text-sm font-medium">{step.description}</p>
-                  </div>
-                ))}
+              <div className="flex-shrink-0">
+                <h2 className="text-lg font-medium mb-4">Steps</h2>
+                <div className="flex flex-col gap-2 ">
+                  {session.steps?.map((step, index) => (
+                    <div key={index} className="p-2 rounded-md bg-muted">
+                      <p className="text-sm font-medium">{step.description}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <h3 className="text-lg font-medium mt-8 mb-4">Timeline</h3>
-
-              {session.events.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">No events recorded for this session</p>
-              ) : (
-                <Timeline events={timelineEvents} />
-              )}
+              <h3 className="text-lg font-medium mt-8 mb-4 flex-shrink-0">Timeline</h3>
+              <div className="flex-1 overflow-auto">
+                {session.events.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">No events recorded for this session</p>
+                ) : (
+                  <Timeline events={timelineEvents} />
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Session Replay Section */}
-        <Card className="lg:col-span-1 flex flex-col">
+        <Card className="lg:col-span-1 flex flex-col min-h-0 h-full">
           <CardHeader>
             <CardTitle>Session Replay</CardTitle>
             <CardDescription>Replay of user actions during this guide session</CardDescription>
           </CardHeader>
 
-          <CardContent className="flex flex-col flex-1">
+          <CardContent className="flex flex-col flex-1 overflow-auto">
             {isReplayLoading && (
               <div className="flex justify-center items-center py-16 flex-1">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -224,8 +224,8 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
 
             <div
               ref={playerContainerRef}
-              className="w-full min-h-[500px] bg-muted rounded-md flex-1"
-              style={{ display: isReplayReady && rrwebEvents.length > 0 && !replayError ? "flex" : "none" }}
+              className="w-full bg-muted rounded-md"
+              style={{ display: isReplayReady && rrwebEvents.length > 0 && !replayError ? "block" : "none" }}
             />
           </CardContent>
         </Card>
