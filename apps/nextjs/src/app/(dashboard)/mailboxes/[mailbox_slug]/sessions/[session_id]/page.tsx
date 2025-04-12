@@ -20,7 +20,6 @@ export default async function SessionPage(props: { params: PageProps }) {
     return redirect(`/mailboxes/${mailbox_slug}/sessions`);
   }
 
-  // Get the session, its events, and its replay events
   const session = await db.query.guideSessions.findFirst({
     where: eq(guideSessions.id, sessionId),
     with: {
@@ -37,7 +36,6 @@ export default async function SessionPage(props: { params: PageProps }) {
     notFound();
   }
 
-  // Ensure replays array exists, even if empty
   const replayEvents = session.replays ?? [];
 
   return <SessionDetails mailbox={mailboxData} session={session} replayEvents={replayEvents} />;

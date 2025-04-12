@@ -159,6 +159,31 @@ export declare const appRouter: import("@trpc/server/unstable-core-do-not-import
         };
         output: any;
       }>;
+      getSessionsPaginated: import("@trpc/server").TRPCQueryProcedure<{
+        input: {
+          mailboxSlug: string;
+          limit?: number | undefined;
+          cursor?: number | null | undefined;
+        };
+        output: {
+          items: {
+            status: "completed" | "started" | "planning" | "active" | "abandoned" | "paused";
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            mailboxId: number;
+            conversationId: number | null;
+            metadata: unknown;
+            platformCustomerId: number;
+            uuid: string;
+            title: string;
+            instructions: string | null;
+            steps: import("../db/schema").GuideSessionStep[] | null;
+          }[];
+          totalCount: number;
+          nextCursor: number | null;
+        };
+      }>;
       conversations: {
         list: import("@trpc/server").TRPCQueryProcedure<{
           input: {

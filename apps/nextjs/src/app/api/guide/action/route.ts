@@ -43,11 +43,8 @@ Common action sequences:
 
 4. NAVIGATION & ERROR HANDLING:
 - If no suitable elements exist, use other functions to complete the task
-- If stuck, try alternative approaches - like going back to a previous page, new search, new tab etc.
 - Handle popups/cookies by accepting or closing them
 - Use scroll to find elements you are looking for
-- If you want to research something, open a new tab instead of using the current tab
-- If captcha pops up, try to solve it - else try a different approach
 - If the page is not fully loaded, use wait action
 
 5. TASK COMPLETION:

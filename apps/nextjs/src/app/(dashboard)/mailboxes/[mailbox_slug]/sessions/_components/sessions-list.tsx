@@ -1,32 +1,74 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Calendar, Eye } from "lucide-react";
+import { Calendar, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useInView } from "react-intersection-observer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { GuideSession } from "@/lib/data/guide";
 import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 
 type MailboxData = RouterOutputs["mailbox"]["get"];
 
 interface SessionsListProps {
   mailbox: MailboxData;
-  guideSessions: GuideSession[];
+  limit: number;
 }
 
-export default function SessionsList({ mailbox, guideSessions }: SessionsListProps) {
+export default function SessionsList({ mailbox, limit }: SessionsListProps) {
   const router = useRouter();
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+    error,
+  } = api.mailbox.getSessionsPaginated.useInfiniteQuery(
+    {
+      mailboxSlug: mailbox.slug,
+      limit,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  const sessions = data?.pages.flatMap((page) => page.items) ?? [];
+  const totalCount = data?.pages[0]?.totalCount ?? 0;
+
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  });
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleViewSession = (session: GuideSession) => {
     router.push(`/mailboxes/${mailbox.slug}/sessions/${session.id}`);
   };
 
+  if (error) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center p-4">
+        <p className="text-destructive">Error loading sessions: {error.message}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="border-b px-4 py-3">
+      <div className="border-b px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">Guide Sessions</h1>
         </div>
@@ -35,15 +77,23 @@ export default function SessionsList({ mailbox, guideSessions }: SessionsListPro
       <div className="flex-1 overflow-auto p-4">
         <Card>
           <CardHeader>
-            <CardTitle>All Guide Sessions</CardTitle>
+            <CardTitle>All Guide Sessions ({totalCount})</CardTitle>
             <CardDescription>View and manage guide sessions for {mailbox.name}</CardDescription>
           </CardHeader>
           <CardContent>
-            {guideSessions.length === 0 ? (
+            {isLoading && sessions.length === 0 && (
+              <div className="flex justify-center items-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!isLoading && sessions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <p className="text-muted-foreground mb-4">No guide sessions found</p>
               </div>
-            ) : (
+            )}
+
+            {sessions.length > 0 && (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -55,7 +105,7 @@ export default function SessionsList({ mailbox, guideSessions }: SessionsListPro
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {guideSessions.map((session) => (
+                  {sessions.map((session) => (
                     <TableRow key={session.id}>
                       <TableCell className="font-medium">{session.title}</TableCell>
                       <TableCell>
@@ -90,6 +140,14 @@ export default function SessionsList({ mailbox, guideSessions }: SessionsListPro
                   ))}
                 </TableBody>
               </Table>
+            )}
+            {(isFetchingNextPage || hasNextPage) && (
+              <div ref={ref} className="flex justify-center items-center py-4">
+                {isFetchingNextPage && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+                {!isFetchingNextPage && hasNextPage && (
+                  <span className="text-sm text-muted-foreground">Scroll to load more</span>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

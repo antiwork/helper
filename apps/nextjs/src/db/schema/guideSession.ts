@@ -62,11 +62,13 @@ export const guideSessionEvents = pgTable(
     type: guideSessionEventTypeEnum("type").notNull(),
     data: jsonb().default({}),
     timestamp: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
+    mailboxId: bigint({ mode: "number" }).notNull(),
   },
   (table) => [
     index("guide_session_events_timestamp_idx").on(table.timestamp),
     index("guide_session_events_guide_session_id_idx").on(table.guideSessionId),
     index("guide_session_events_type_idx").on(table.type),
+    index("guide_session_events_mailbox_id_idx").on(table.mailboxId),
   ],
 );
 
@@ -79,10 +81,12 @@ export const guideSessionReplays = pgTable(
     data: text().notNull(),
     timestamp: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
     metadata: jsonb().default({}),
+    mailboxId: bigint({ mode: "number" }).notNull(),
   },
   (table) => [
     index("guide_session_replays_guide_session_id_idx").on(table.guideSessionId),
     index("guide_session_replays_timestamp_idx").on(table.timestamp),
+    index("guide_session_replays_mailbox_id_idx").on(table.mailboxId),
   ],
 );
 

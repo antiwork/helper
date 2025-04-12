@@ -9,6 +9,7 @@ import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
+import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
 import { getMemberStats } from "@/lib/data/stats";
@@ -119,9 +120,32 @@ export const mailboxRouter = {
   latestEvents: mailboxProcedure
     .input(z.object({ cursor: z.date().optional() }))
     .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
+  getSessionsPaginated: mailboxProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).default(10),
+        cursor: z.number().nullish(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { limit, cursor } = input;
+      const { id: mailboxId } = ctx.mailbox;
+      const page = cursor || 1;
+
+      const result = await getGuideSessionsForMailbox(mailboxId, page, limit);
+      const sessions = Array.isArray(result?.sessions) ? result.sessions : [];
+      const totalCount = result?.totalCount ?? 0;
+
+      const nextCursor = sessions.length === limit ? page + 1 : null;
+
+      return {
+        items: sessions,
+        totalCount,
+        nextCursor,
+      };
+    }),
   conversations: conversationsRouter,
   faqs: faqsRouter,
-
   slack: slackRouter,
   github: githubRouter,
   tools: toolsRouter,

@@ -1,20 +1,9 @@
 import "server-only";
-
-import { eq } from "drizzle-orm";
-
+import { count, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, type Transaction } from "@/db/client";
-import {
-  guideSessionEvents,
-  guideSessionEventTypeEnum,
-  guideSessionReplays,
-  guideSessions,
-  guideSessionStatusEnum,
-  platformCustomers,
-} from "@/db/schema";
-import { type PlanResult } from "@/lib/ai/guide";
-
-import { captureExceptionAndLog } from "../shared/sentry";
+import { guideSessionEvents, guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export type GuideSession = typeof guideSessions.$inferSelect;
 export type GuideSessionEvent = typeof guideSessionEvents.$inferSelect;
@@ -97,11 +86,13 @@ export const createGuideSessionEvent = async ({
   type,
   data,
   timestamp,
+  mailboxId,
 }: {
   guideSessionId: number;
   type: (typeof guideSessionEventTypeEnum.enumValues)[number];
   data: GuideSessionEventData;
   timestamp?: Date;
+  mailboxId: number;
   metadata?: Record<string, unknown>;
 }): Promise<GuideSessionEvent> => {
   try {
@@ -111,6 +102,7 @@ export const createGuideSessionEvent = async ({
         guideSessionId,
         type,
         data,
+        mailboxId,
         timestamp: timestamp || new Date(),
       })
       .returning();
@@ -126,14 +118,28 @@ export const createGuideSessionEvent = async ({
   }
 };
 
-export const getGuideSessionsForMailbox = async (mailboxId: number): Promise<GuideSession[]> => {
+export const getGuideSessionsForMailbox = async (
+  mailboxId: number,
+  page = 1,
+  limit = 10,
+): Promise<{ sessions: GuideSession[]; totalCount: number }> => {
   try {
+    const offset = (page - 1) * limit;
+
+    const totalResult = await db
+      .select({ count: count() })
+      .from(guideSessions)
+      .where(eq(guideSessions.mailboxId, mailboxId));
+    const totalCount = totalResult[0]?.count || 0;
+
     const sessions = await db.query.guideSessions.findMany({
       where: (gs, { eq }) => eq(gs.mailboxId, mailboxId),
       orderBy: (gs, { desc }) => [desc(gs.createdAt)],
+      limit,
+      offset,
     });
 
-    return sessions;
+    return { sessions, totalCount };
   } catch (error) {
     captureExceptionAndLog(error);
     throw new Error("Failed to fetch guide sessions");
