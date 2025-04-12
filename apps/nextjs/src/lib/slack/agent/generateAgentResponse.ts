@@ -8,6 +8,7 @@ import { db } from "@/db/client";
 import { conversationMessages, DRAFT_STATUSES } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
 import { Conversation, getConversationById, getConversationBySlug } from "@/lib/data/conversation";
+import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { Mailbox } from "@/lib/data/mailbox";
@@ -20,7 +21,7 @@ export const generateAgentResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
   slackUserId: string | undefined,
-  showStatus?: (status: string, debugContent?: string) => void,
+  showStatus?: (status: string | null, debugContent?: any) => void,
 ) => {
   const searchToolSchema = searchSchema.omit({
     category: true,
@@ -55,7 +56,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Get the current Slack user",
         parameters: z.object({}),
         execute: async () => {
-          showStatus?.(`Checking user...`, JSON.stringify({ slackUserId }, null, 2));
+          showStatus?.(`Checking user...`, { slackUserId });
           if (!slackUserId) return { error: "User not found" };
           const client = new WebClient(assertDefined(mailbox.slackBotToken));
           const { user } = await client.users.info({ user: slackUserId });
@@ -90,7 +91,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           endDate: z.string().datetime(),
         }),
         execute: async ({ startDate, endDate }) => {
-          showStatus?.(`Checking member stats...`, JSON.stringify({ startDate, endDate }, null, 2));
+          showStatus?.(`Checking member stats...`, { startDate, endDate });
           return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
         },
       }),
@@ -98,14 +99,15 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Search tickets/conversations with various filtering options",
         parameters: searchToolSchema,
         execute: async (input) => {
-          showStatus?.(`Searching tickets...`, JSON.stringify(input, null, 2));
+          showStatus?.(`Searching tickets...`, input);
           try {
             const { list } = await searchConversations(mailbox, input);
+            const { results, nextCursor } = await list;
             return {
-              tickets: list.results.map((conversation) =>
+              tickets: results.map((conversation) =>
                 formatConversation(conversation, mailbox, conversation.platformCustomer),
               ),
-              nextCursor: list.nextCursor,
+              nextCursor,
             };
           } catch (error) {
             captureExceptionAndLog(error);
@@ -117,9 +119,31 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Count the number of tickets matching the search criteria",
         parameters: searchToolSchema.omit({ cursor: true, limit: true }),
         execute: async (input) => {
-          showStatus?.(`Counting tickets...`, JSON.stringify(input, null, 2));
+          showStatus?.(`Counting tickets...`, input);
           const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
           return await countSearchResults(where);
+        },
+      }),
+      getAverageResponseTime: tool({
+        description: "Get the average response time for tickets in a given time period",
+        parameters: z.object({
+          startDate: z.string().datetime(),
+          endDate: z.string().datetime(),
+          filters: searchToolSchema.omit({ cursor: true, limit: true }),
+        }),
+        execute: async ({ startDate, endDate, filters }) => {
+          showStatus?.(`Checking average response time...`, { startDate, endDate, filters });
+          const averageResponseTimeSeconds = await getAverageResponseTime(
+            mailbox,
+            new Date(startDate),
+            new Date(endDate),
+            filters,
+          );
+          showStatus?.(null, { averageResponseTimeSeconds });
+          if (averageResponseTimeSeconds) {
+            return { averageResponseTimeSeconds };
+          }
+          return { message: "No tickets answered in the given time period" };
         },
       }),
       getTicket: tool({
@@ -132,7 +156,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             ),
         }),
         execute: async ({ id }) => {
-          showStatus?.(`Checking ticket...`, JSON.stringify({ id }, null, 2));
+          showStatus?.(`Checking ticket...`, { id });
           const conversation = await findConversation(id.toString(), mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
@@ -150,7 +174,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             ),
         }),
         execute: async ({ id }) => {
-          showStatus?.(`Reading ticket...`, JSON.stringify({ id }, null, 2));
+          showStatus?.(`Reading ticket...`, { id });
           const conversation = await findConversation(id.toString(), mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const messages = await db.query.conversationMessages.findMany({

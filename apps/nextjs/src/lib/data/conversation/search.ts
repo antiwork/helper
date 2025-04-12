@@ -16,6 +16,7 @@ import {
   SQL,
   sql,
 } from "drizzle-orm";
+import { memoize } from "lodash";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
@@ -138,31 +139,36 @@ export const searchConversations = async (
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
 
-  const list = await db
-    .select()
-    .from(conversations)
-    .leftJoin(
-      platformCustomers,
-      and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
-        eq(conversations.emailFrom, platformCustomers.email),
-      ),
-    )
-    .where(and(...Object.values(where)))
-    .orderBy(...orderBy)
-    .limit(filters.limit + 1) // Get one extra to determine if there's a next page
-    .offset(filters.cursor ? parseInt(filters.cursor) : 0)
-    .then((results) => ({
-      results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
-        ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-        matchedMessageText:
-          matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+  const list = memoize(() =>
+    db
+      .select()
+      .from(conversations)
+      .leftJoin(
+        platformCustomers,
+        and(
+          eq(conversations.mailboxId, platformCustomers.mailboxId),
+          eq(conversations.emailFrom, platformCustomers.email),
+        ),
+      )
+      .where(and(...Object.values(where)))
+      .orderBy(...orderBy)
+      .limit(filters.limit + 1) // Get one extra to determine if there's a next page
+      .offset(filters.cursor ? parseInt(filters.cursor) : 0)
+      .then((results) => ({
+        results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
+          ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+          matchedMessageText:
+            matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+        })),
+        nextCursor:
+          results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
       })),
-      nextCursor: results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
-    }));
+  );
 
   return {
-    list,
+    get list() {
+      return list();
+    },
     where,
     metadataEnabled,
   };

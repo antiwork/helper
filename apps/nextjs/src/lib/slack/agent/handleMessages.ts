@@ -94,14 +94,16 @@ const replyHandler = async (
 
   if (!statusMessage?.ts) throw new Error("Failed to post initial message");
 
-  const showStatus = async (status: string, debugContent?: string) => {
+  const showStatus = async (status: string | null, debugContent?: any) => {
     if (debug) {
       await client.chat.postMessage({
         channel: event.channel,
         thread_ts: event.thread_ts ?? event.ts,
-        text: debugContent ? `_${status}_\n\n*Debug:*\n\`\`\`\n${debugContent}\n\`\`\`` : `_${status}_`,
+        text: debugContent
+          ? `_${status ?? "..."}_\n\n*Debug:*\n\`\`\`\n${JSON.stringify(debugContent, null, 2)}\n\`\`\``
+          : `_${status ?? "..."}_`,
       });
-    } else {
+    } else if (status) {
       await client.chat.update({
         channel: event.channel,
         ts: statusMessage.ts!,

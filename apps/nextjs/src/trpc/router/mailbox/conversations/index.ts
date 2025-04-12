@@ -49,6 +49,7 @@ export const conversationsRouter = {
 
   listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
     const { list } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
+    const { results, nextCursor } = await list;
 
     const messages = await db
       .select({
@@ -61,13 +62,13 @@ export const conversationsRouter = {
       .where(
         inArray(
           conversationMessages.conversationId,
-          list.results.map((c) => c.id),
+          results.map((c) => c.id),
         ),
       )
       .orderBy(desc(conversationMessages.createdAt));
 
     return {
-      conversations: list.results.map((conversation) => {
+      conversations: results.map((conversation) => {
         const lastUserMessage = messages.find((m) => m.role === "user" && m.conversationId === conversation.id);
         const lastStaffMessage = messages.find((m) => m.role === "staff" && m.conversationId === conversation.id);
 
@@ -80,7 +81,7 @@ export const conversationsRouter = {
               : null,
         };
       }),
-      nextCursor: list.nextCursor,
+      nextCursor,
     };
   }),
 
