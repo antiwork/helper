@@ -92,7 +92,7 @@ export default function NotFound() {
         className="w-full h-[10vh] px-12 transition-colors duration-300 flex items-center"
         style={{ backgroundColor: footerBgColor }}
       >
-        <div className=" flex justify-between items-center w-full">
+        <div className="flex justify-between items-center w-full">
           <div className="flex items-center">
             <div className="flex flex-col items-start">
               <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
