@@ -9,6 +9,9 @@ import {
   conversations,
   faqs,
   files,
+  guideSessionEvents,
+  guideSessionReplays,
+  guideSessions,
   mailboxes,
   messageNotifications,
   notes,
@@ -26,7 +29,7 @@ const getRelationsReferencingConversationRecords = () => {
   return relationsReferencingConversationRecords;
 };
 
-const EXPECTED_RELATION_COUNT = 11;
+const EXPECTED_RELATION_COUNT = 12;
 export const hardDeleteRecordsForNonPayingOrgs = async () => {
   // When this assert fails, please manually consider whether
   // this code needs to be updated. For example, if a new table is
@@ -130,6 +133,10 @@ export const hardDeleteRecordsForNonPayingOrgs = async () => {
       .with(mailboxConversations)
       .delete(conversations)
       .where(inArray(conversations.id, sql`(SELECT id FROM ${mailboxConversations})`));
+
+    await db.delete(guideSessions).where(eq(guideSessions.mailboxId, mailbox.id));
+    await db.delete(guideSessionEvents).where(eq(guideSessionEvents.mailboxId, mailbox.id));
+    await db.delete(guideSessionReplays).where(eq(guideSessionReplays.mailboxId, mailbox.id));
   }
 };
 
