@@ -7,7 +7,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, DRAFT_STATUSES } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
-import { Conversation, getConversationById, getConversationBySlug } from "@/lib/data/conversation";
+import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -60,9 +60,17 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           if (!slackUserId) return { error: "User not found" };
           const client = new WebClient(assertDefined(mailbox.slackBotToken));
           const { user } = await client.users.info({ user: slackUserId });
+          const members = await getClerkUserList(mailbox.clerkOrganizationId);
           if (user) {
             return {
               id: user.id,
+              clerkUserId: members.data.find((member) => {
+                const slackAccount = member.externalAccounts.find((account) => account.provider === "oauth_slack");
+                return (
+                  slackAccount?.externalId === slackUserId ||
+                  member.emailAddresses.some((email) => email.emailAddress === user.profile?.email)
+                );
+              })?.id,
               name: user.profile?.real_name,
               email: user.profile?.email,
             };
@@ -124,6 +132,29 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           return await countSearchResults(where);
         },
       }),
+      assignTickets: tool({
+        description: "Assign tickets to a team member or the current user",
+        parameters: z.object({
+          clerkUserId: z.string().regex(/^user_(\w+)$/),
+          ticketIds: z.array(z.union([z.string(), z.number()])),
+        }),
+        execute: async ({ clerkUserId, ticketIds }) => {
+          showStatus?.(`Assigning tickets...`, { clerkUserId, ticketIds });
+          const conversations = await Promise.all(
+            ticketIds.map(async (ticketId) => {
+              const conversation = await findConversation(ticketId, mailbox);
+              if (!conversation) return null;
+              return await updateConversation(conversation.id, {
+                set: { assignedToClerkId: clerkUserId },
+                message: "Assigned by agent",
+              });
+            }),
+          );
+          return conversations.flatMap((conversation) =>
+            conversation ? formatConversation(conversation, mailbox) : [],
+          );
+        },
+      }),
       getAverageResponseTime: tool({
         description: "Get the average response time for tickets in a given time period",
         parameters: z.object({
@@ -157,7 +188,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         }),
         execute: async ({ id }) => {
           showStatus?.(`Checking ticket...`, { id });
-          const conversation = await findConversation(id.toString(), mailbox);
+          const conversation = await findConversation(id, mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
           return formatConversation(conversation, mailbox, platformCustomer);
@@ -175,7 +206,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         }),
         execute: async ({ id }) => {
           showStatus?.(`Reading ticket...`, { id });
-          const conversation = await findConversation(id.toString(), mailbox);
+          const conversation = await findConversation(id, mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const messages = await db.query.conversationMessages.findMany({
             where: and(
@@ -206,7 +237,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
   return text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*");
 };
 
-const findConversation = async (id: string, mailbox: Mailbox) => {
+const findConversation = async (id: string | number, mailbox: Mailbox) => {
   const conversation = /^\d+$/.test(id.toString())
     ? await getConversationById(Number(id))
     : await getConversationBySlug(id.toString());
@@ -233,6 +264,6 @@ const formatConversation = (
     assignedTo: conversation.assignedToClerkId,
     assignedToAI: conversation.assignedToAI,
     isVip: platformCustomer?.isVip || false,
-    url: `${getBaseUrl()}/mailbox/${mailbox.slug}/conversations?id=${conversation.slug}`,
+    url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,
   };
 };
