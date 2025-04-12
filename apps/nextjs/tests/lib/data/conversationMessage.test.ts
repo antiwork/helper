@@ -109,7 +109,6 @@ describe("getMessages", () => {
           fullName: user.fullName,
         } as User,
       ],
-      totalCount: 1,
     });
 
     const { message: message1 } = await conversationMessagesFactory.create(conversation.id, {
@@ -166,7 +165,6 @@ describe("getMessages", () => {
           fullName: user.fullName,
         } as User,
       ],
-      totalCount: 1,
     });
 
     await conversationMessagesFactory.create(conversation.id, {
@@ -195,7 +193,6 @@ describe("getMessages", () => {
 
     vi.mocked(getClerkUserList).mockResolvedValueOnce({
       data: [],
-      totalCount: 0,
     });
 
     const result = await getMessages(conversation.id, mailbox);

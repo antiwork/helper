@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 type SectionWrapperProps = {
   title: string;
   description: string | React.ReactNode;
+  fullWidth?: boolean;
   initialSwitchChecked?: boolean;
   onSwitchChange?: (checked: boolean) => void;
   children: React.ReactNode;
@@ -15,6 +17,7 @@ type SectionWrapperProps = {
 const SectionWrapper = ({
   title,
   description,
+  fullWidth,
   initialSwitchChecked,
   onSwitchChange,
   children,
@@ -44,7 +47,7 @@ const SectionWrapper = ({
           <Switch aria-label={`${title} Switch`} checked={isSwitchChecked} onCheckedChange={handleSwitchChange} />
         )}
       </div>
-      <div className="max-w-xl flex-grow">{children}</div>
+      <div className={cn("flex-grow", !fullWidth && "max-w-xl")}>{children}</div>
     </section>
   );
 };

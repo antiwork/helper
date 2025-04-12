@@ -1,5 +1,5 @@
 // https://docs.expo.dev/guides/using-eslint/
 module.exports = {
   extends: ["expo"],
-  ignorePatterns: [".expo/**", "dist/**", "src/types/api.ts"],
+  ignorePatterns: [".expo/**", "dist/**", "src/trpc-types"],
 };

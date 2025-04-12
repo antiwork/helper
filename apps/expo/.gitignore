@@ -24,3 +24,5 @@ expo-env.d.ts
 .env*.local
 
 eas.json
+
+src/trpc-types/
