@@ -11,7 +11,7 @@ export const getClerkUserList = cache(
   (
     organizationId: string,
     { limit = 100, ...params }: NonNullable<Parameters<ClerkClient["users"]["getUserList"]>[0]> = {},
-  ) => clerkClient.users.getUserList({ limit, ...params, organizationId: [organizationId] }),
+  ): Promise<{ data: User[] }> => clerkClient.users.getUserList({ limit, ...params, organizationId: [organizationId] }),
 );
 
 export const findUserByEmail = cache(async (organizationId: string, email: string) => {
