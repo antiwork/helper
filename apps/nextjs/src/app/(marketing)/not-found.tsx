@@ -1,12 +1,12 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
+import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
 import { ArrowLeft, MapPin, Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@clerk/nextjs";
-import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -137,13 +137,7 @@ export default function NotFound() {
       <main className="flex-grow flex flex-col items-center justify-center p-6 md:p-12">
         <div className="text-center max-w-3xl mx-auto">
           <div className="flex justify-center mb-8">
-            <Image
-              src="/logo_icon.svg"
-              alt="Helper"
-              width={96}
-              height={96}
-              className="md:w-128 md:h-128"
-            />
+            <Image src="/logo_icon.svg" alt="Helper" width={96} height={96} className="md:w-128 md:h-128" />
           </div>
           <h1 className="font-sundry-narrow-bold text-4xl md:text-6xl lg:text-8xl font-bold mb-6 text-secondary dark:text-foreground">
             Page not found
@@ -165,30 +159,30 @@ export default function NotFound() {
         style={{ backgroundColor: footerBgColor }}
       >
         <div className=" flex justify-between items-center w-full">
-              <div className="flex items-center">
-                <div className="flex flex-col items-start">
-                  <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
-                    <Image
-                      src="/logo.svg"
-                      alt="Helper"
-                      width={100}
-                      height={32}
-                      className="transition-opacity duration-300 ease-in-out opacity-100"
-                    />
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Button
-                  onClick={generateRandomColors}
-                  className="transition-colors duration-300"
-                  iconOnly
-                  style={{ backgroundColor: footerTextColor, color: footerBgColor }}
-                >
-                  <Shuffle className="w-5 h-5" />
-                </Button>
-              </div>
+          <div className="flex items-center">
+            <div className="flex flex-col items-start">
+              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
+                <Image
+                  src="/logo.svg"
+                  alt="Helper"
+                  width={100}
+                  height={32}
+                  className="transition-opacity duration-300 ease-in-out opacity-100"
+                />
+              </a>
             </div>
+          </div>
+          <div className="flex items-center">
+            <Button
+              onClick={generateRandomColors}
+              className="transition-colors duration-300"
+              iconOnly
+              style={{ backgroundColor: footerTextColor, color: footerBgColor }}
+            >
+              <Shuffle className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
       </footer>
     </div>
   );
