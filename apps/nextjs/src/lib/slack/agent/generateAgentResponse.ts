@@ -12,6 +12,7 @@ import { countSearchResults, searchConversations } from "@/lib/data/conversation
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
+import { getMemberStats } from "@/lib/data/stats";
 import { getClerkUserList } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -80,6 +81,17 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             lastName: member.lastName,
             emails: member.emailAddresses.map((email) => email.emailAddress),
           }));
+        },
+      }),
+      getMemberStats: tool({
+        description: "Check how many replies members sent to tickets in a given time period",
+        parameters: z.object({
+          startDate: z.string().datetime(),
+          endDate: z.string().datetime(),
+        }),
+        execute: async ({ startDate, endDate }) => {
+          showStatus?.(`Checking member stats...`, JSON.stringify({ startDate, endDate }, null, 2));
+          return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
         },
       }),
       searchTickets: tool({
