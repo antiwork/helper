@@ -33,7 +33,9 @@ export const POST = async (request: Request) => {
     return new Response(null, { status: 200 });
   }
 
-  const event = data.event as SlackEvent;
+  const event = data.event as SlackEvent | undefined;
+
+  if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
   if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
     // Not messages we need to handle
