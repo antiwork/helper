@@ -1,7 +1,6 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
-import { ChannelProvider } from "ably/react";
 import { capitalize } from "lodash";
 import { Bot } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +11,6 @@ import scrollIntoView from "scroll-into-view-if-needed";
 import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/useLayoutInfo";
 import NewConversationModalContent from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/newConversationModal";
 import { ConversationListItem } from "@/app/types/global";
-import { DEFAULT_CONVERSATIONS_PER_PAGE } from "@/components/constants";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Badge } from "@/components/ui/badge";
@@ -126,7 +124,7 @@ const SearchBar = ({
   );
 };
 
-const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
+export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -223,7 +221,7 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
     const sort = searchParams.sort ?? defaultSort;
     if (!sort) return;
 
-    utils.mailbox.conversations.list.setInfiniteData({ ...input, limit: DEFAULT_CONVERSATIONS_PER_PAGE }, (data) => {
+    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
       if (!data) return undefined;
       const firstPage = data.pages[0];
       if (!firstPage) return data;
@@ -274,33 +272,6 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
       return {
         ...data,
         pages: [{ ...firstPage, conversations: newConversations }, ...data.pages.slice(1)],
-      };
-    });
-  });
-  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.statusChanged", (message) => {
-    const currentStatus = searchParams.status;
-    if (message.data.status === currentStatus) return;
-
-    utils.mailbox.conversations.list.setInfiniteData({ ...input, limit: DEFAULT_CONVERSATIONS_PER_PAGE }, (data) => {
-      if (!data) return undefined;
-      const firstPage = data.pages[0];
-      if (!firstPage) return data;
-
-      const updatedPages = data.pages.map((page) => {
-        const updatedConversations = page.conversations.filter((c) => c.id !== message.data.id);
-        if (updatedConversations.length === page.conversations.length) return page;
-
-        return {
-          ...page,
-          conversations: updatedConversations,
-          total: page.total - 1,
-          // Status is now handled by statusCounts query
-        };
-      });
-
-      return {
-        ...data,
-        pages: updatedPages,
       };
     });
   });
@@ -355,14 +326,6 @@ const ListContent = ({ variant }: { variant: "desktop" | "mobile" }) => {
         )}
       </div>
     </>
-  );
-};
-
-export const List = ({ mailboxSlug, variant = "desktop" }: { mailboxSlug: string; variant?: "desktop" | "mobile" }) => {
-  return (
-    <ChannelProvider channelName={conversationsListChannelId(mailboxSlug)}>
-      <ListContent variant={variant} />
-    </ChannelProvider>
   );
 };
 

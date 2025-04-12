@@ -4,6 +4,7 @@ import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
@@ -46,6 +47,15 @@ export const MessageActions = () => {
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
+
+  const { data: mailboxPreferences } = api.mailbox.preferences.get.useQuery({
+    mailboxSlug,
+  });
+
+  const triggerMailboxConfetti = () => {
+    if (!mailboxPreferences?.preferences?.confetti) return;
+    triggerConfetti();
+  };
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -148,6 +158,7 @@ export const MessageActions = () => {
       setStoredMessage("");
       if (conversation.status === "open" && close) {
         updateStatus("closed");
+        if (!assign) triggerMailboxConfetti();
       }
       toast({
         title: "Message sent!",
@@ -232,6 +243,9 @@ export const MessageActions = () => {
                 disabled={sendDisabled}
               >
                 Reply
+                {!sending && isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
+                )}
               </Button>
             </>
           ))}
@@ -261,6 +275,7 @@ export const MessageActions = () => {
     <EmailEditorComponent
       ref={editorRef}
       onSend={() => handleSend({ assign: false })}
+      onOptionSend={() => handleSend({ assign: false, close: false })}
       actionButtons={actionButtons}
       draftedEmail={draftedEmail}
       initialMessage={initialMessageObject}
@@ -277,10 +292,11 @@ const EmailEditorComponent = React.forwardRef<
     initialMessage: { content: string };
     actionButtons: React.ReactNode;
     onSend: () => void;
+    onOptionSend: () => void;
     updateEmail: (changes: Partial<DraftedEmail>) => void;
     handleInsertReply: (content: string) => void;
   }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
+>(({ draftedEmail, initialMessage, actionButtons, onSend, onOptionSend, updateEmail, handleInsertReply }, ref) => {
   const [showCommandBar, setShowCommandBar] = useState(false);
   const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
   const ccRef = useRef<HTMLInputElement>(null);
@@ -330,6 +346,7 @@ const EmailEditorComponent = React.forwardRef<
           editable={true}
           onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
           onModEnter={onSend}
+          onOptionEnter={onOptionSend}
           onSlashKey={() => commandInputRef.current?.focus()}
           enableImageUpload
           enableFileUpload

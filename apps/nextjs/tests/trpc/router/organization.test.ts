@@ -118,9 +118,13 @@ describe("organizationRouter", () => {
           {
             id: user.id,
             fullName: `${user.firstName} ${user.lastName}`,
+            emailAddresses: [
+              {
+                emailAddress: user.emailAddresses[0]?.emailAddress,
+              },
+            ],
           } as User,
         ],
-        totalCount: 1,
       });
 
       const result = await caller.organization.getMembers();
@@ -129,6 +133,7 @@ describe("organizationRouter", () => {
         {
           id: user.id,
           displayName: `${user.firstName} ${user.lastName}`,
+          email: user.emailAddresses[0]?.emailAddress,
         },
       ]);
       expect(userLib.getClerkUserList).toHaveBeenCalledWith(organization.id);

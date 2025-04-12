@@ -21,6 +21,7 @@ export const aiUsageEvents = pgTable(
         | "conversation_resolution"
         | "suggest_knowledge_bank_changes"
         | "agent_response"
+        | "auto_assign_conversation"
       >(),
     inputTokensCount: integer().notNull(),
     outputTokensCount: integer().notNull(),

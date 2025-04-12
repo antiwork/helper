@@ -43,7 +43,7 @@ export const MobileList = () => {
           </div>
         }
       />
-      <List mailboxSlug={mailboxSlug} variant="mobile" />
+      <List variant="mobile" />
     </div>
   );
 };
