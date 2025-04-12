@@ -54,6 +54,7 @@ export async function POST(request: Request) {
     await createGuideSessionEvent({
       guideSessionId: guideSession.id,
       type: "session_started",
+      mailboxId: mailbox.id,
       data: {
         steps: result.next_steps,
         state_analysis: result.state_analysis,
