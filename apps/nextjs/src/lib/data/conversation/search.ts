@@ -43,24 +43,14 @@ export const searchConversations = async (
     filters.isAssigned = true;
   }
 
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id) : [];
-
-  const where = {
+  // Filters on conversations and messages that we can pass to searchEmailsByKeywords
+  let where: Record<string, SQL> = {
     mailboxId: eq(conversations.mailboxId, mailbox.id),
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToClerkId, filters.assignee) } : {}),
     ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
     ...(filters.isAssigned === false ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
-    ...(filters.isVip && mailbox.vipThreshold
-      ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
-      : {}),
-    ...(filters.minValueDollars
-      ? { minValue: gt(platformCustomers.value, (filters.minValueDollars * 100).toString()) }
-      : {}),
-    ...(filters.maxValueDollars
-      ? { maxValue: lt(platformCustomers.value, (filters.maxValueDollars * 100).toString()) }
-      : {}),
     ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
@@ -115,6 +105,22 @@ export const searchConversations = async (
               ),
           ),
         }
+      : {}),
+  };
+
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id, Object.values(where)) : [];
+
+  // Additional filters we can't pass to searchEmailsByKeywords
+  where = {
+    ...where,
+    ...(filters.isVip && mailbox.vipThreshold
+      ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
+      : {}),
+    ...(filters.minValueDollars
+      ? { minValue: gt(platformCustomers.value, (filters.minValueDollars * 100).toString()) }
+      : {}),
+    ...(filters.maxValueDollars
+      ? { maxValue: lt(platformCustomers.value, (filters.maxValueDollars * 100).toString()) }
       : {}),
     ...(filters.search
       ? {
