@@ -169,6 +169,11 @@ export const updateConversation = async (
                 status: updatedConversation.status,
                 assignedToAI: updatedConversation.assignedToAI,
                 assignedToClerkId: updatedConversation.assignedToClerkId,
+                previousValues: {
+                  status: current.status,
+                  assignedToAI: current.assignedToAI,
+                  assignedToClerkId: current.assignedToClerkId,
+                },
               },
             }),
           );
