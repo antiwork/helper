@@ -7,7 +7,7 @@ import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { getExpoPlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
 import { conversationsListChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { useAblyEventOnce } from "@/lib/ably/hooks";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "./shared/queries";
@@ -117,7 +117,7 @@ export const ConversationListContextProvider = ({
     moveToNextConversation();
   };
 
-  useAblyEvent<{
+  useAblyEventOnce<{
     id: number;
     status: string;
     assignedToClerkId: string | null;

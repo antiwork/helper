@@ -145,6 +145,7 @@ export const updateConversation = async (
     });
   }
   if (updatedConversation && !skipAblyEvents) {
+    console.log("publishing events for conversation", updatedConversation.id);
     const publishEvents = async () => {
       try {
         const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
