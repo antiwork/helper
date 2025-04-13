@@ -82,19 +82,17 @@ export const ConversationListContextProvider = ({
   const removeConversationFromList = (condition: (conversation: ConversationListItem) => boolean) => {
     const updatedTotal = lastPage ? lastPage.total - 1 : 0;
 
-    if (currentConversationSlug) {
-      utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
-        if (!data) return data;
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            conversations: page.conversations.filter((c) => !condition(c)),
-            total: updatedTotal,
-          })),
-        };
-      });
-    }
+    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
+      if (!data) return data;
+      return {
+        ...data,
+        pages: data.pages.map((page) => ({
+          ...page,
+          conversations: page.conversations.filter((c) => !condition(c)),
+          total: updatedTotal,
+        })),
+      };
+    });
     if (!input.status || input.status[0] === "open") {
       utils.mailbox.openCount.setData({ mailboxSlug: input.mailboxSlug }, (data) => {
         if (!data) return data;
