@@ -117,16 +117,39 @@ export const ConversationListContextProvider = ({
     moveToNextConversation();
   };
 
-  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.statusChanged", (message) => {
-    const statusChanged = searchParams.status !== message.data.status;
-    const assigneeChanged =
-      (input.category === "assigned" && message.data.assignedToClerkId === null) ||
-      (input.category === "unassigned" && message.data.assignedToClerkId !== null) ||
-      (input.category === "mine" && message.data.assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0]);
-    if (!statusChanged && !assigneeChanged) return;
+  useAblyEvent<{
+    id: number;
+    status: string;
+    assignedToClerkId: string | null;
+    assignedToAI: boolean;
+    previousValues: {
+      status: string;
+      assignedToClerkId: string | null;
+      assignedToAI: boolean;
+    };
+  }>(
+    conversationsListChannelId(input.mailboxSlug),
+    "conversation.statusChanged",
+    ({ data: { id, status, assignedToClerkId, previousValues } }) => {
+      // Currently this just removes and decrements the count; ideally we should also insert and increment the count when added to the current category
+      // Check the conversation used to be in the current category
+      const selectedStatus = input.status?.[0] ?? "open";
+      if (previousValues.status !== selectedStatus) return;
+      if (input.category === "assigned" && previousValues.assignedToClerkId === null) return;
+      if (input.category === "unassigned" && previousValues.assignedToClerkId !== null) return;
+      if (input.category === "mine" && previousValues.assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0])
+        return;
 
-    removeConversationFromList((c) => c.id === message.data.id);
-  });
+      // Check the conversation is no longer in the current category
+      if (
+        status !== selectedStatus ||
+        (input.category === "assigned" && assignedToClerkId === null) ||
+        (input.category === "unassigned" && assignedToClerkId !== null) ||
+        (input.category === "mine" && assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0])
+      )
+        removeConversationFromList((c) => c.id === id);
+    },
+  );
 
   const value = useMemo(
     () => ({

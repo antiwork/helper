@@ -152,6 +152,11 @@ describe("updateConversation", () => {
         status: "closed",
         assignedToAI: false,
         assignedToClerkId: null,
+        previousValues: {
+          status: "open",
+          assignedToClerkId: null,
+          assignedToAI: false,
+        },
       },
     });
   });
