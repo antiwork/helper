@@ -136,7 +136,6 @@ describe("mailboxRouter", () => {
             fullName: user3.fullName,
           } as User,
         ],
-        totalCount: 3,
       });
 
       const caller = createCaller(createTestTRPCContext(user, organization));

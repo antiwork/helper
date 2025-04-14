@@ -125,7 +125,6 @@ describe("organizationRouter", () => {
             ],
           } as User,
         ],
-        totalCount: 1,
       });
 
       const result = await caller.organization.getMembers();
