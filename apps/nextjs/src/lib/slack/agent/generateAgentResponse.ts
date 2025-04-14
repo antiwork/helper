@@ -38,7 +38,7 @@ You are currently in the mailbox: ${mailbox.name}.
 IMPORTANT GUIDELINES:
 - Always identify as "Helper" (never as "Helper AI" or any other variation)
 - Do not tag users in responses
-- Current date is: ${new Date().toISOString().split("T")[0]}
+- Current time is: ${new Date().toISOString()}
 - Stay focused on customer support related inquiries
 - Only provide information you're confident about
 - If you can't answer a question with confidence or if the request is outside your capabilities, apologize politely and explain that you're unable to help with that specific request
@@ -254,7 +254,7 @@ const formatConversation = (
   platformCustomer?: PlatformCustomer | null,
 ) => {
   return {
-    standardSlackFormat: `*<${getBaseUrl()}/mailbox/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
+    standardSlackFormat: `*<${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
     id: conversation.id,
     slug: conversation.slug,
     subject: conversation.subject,
