@@ -96,7 +96,7 @@ export default function MessageElement({
       )}
       {hasContent ? (
         <ReactMarkdown
-          className={`prose prose-sm max-w-none text-base ${message.role === "user" ? "text-white" : "text-black"}`}
+          className={`prose prose-sm max-w-none text-base ${message.role === "user" ? "text-white [&_*]:text-white" : "text-black [&_*]:text-black"}`}
           components={{
             a: ({ children, ...props }: any) => (
               <a target="_blank" rel="noopener noreferrer" {...props}>
