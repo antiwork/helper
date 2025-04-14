@@ -263,7 +263,7 @@ export const serializeMessage = async (
   };
 };
 
-const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
+export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
     inputFiles.map(async (file) =>
       file.isInline

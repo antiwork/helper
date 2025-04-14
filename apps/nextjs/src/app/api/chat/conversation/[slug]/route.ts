@@ -1,11 +1,11 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
-import { loadScreenshotAttachments } from "@/lib/ai/chat";
+import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { getClerkUser } from "@/lib/data/user";
+import { createPresignedDownloadUrl } from "@/s3/utils";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -39,7 +39,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       }))) ||
     conversation;
 
-  const attachments = await loadScreenshotAttachments(conversation.messages);
+  const attachments = await db.query.files.findMany({
+    where: and(
+      inArray(
+        files.messageId,
+        conversation.messages.map((m) => m.id),
+      ),
+      eq(files.isInline, false),
+    ),
+  });
 
   const formattedMessages = await Promise.all(
     conversation.messages.map(async (message) => ({
@@ -50,11 +58,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,
       annotations: message.clerkUserId ? await getUserAnnotation(message.clerkUserId) : undefined,
-      experimental_attachments: attachments.filter((a) => a.messageId === message.id),
+      experimental_attachments: (message.metadata as MessageMetadata)?.includesScreenshot
+        ? attachments.filter((a) => a.messageId === message.id)
+        : [],
     })),
   );
 
-  return Response.json({ messages: formattedMessages, isEscalated: !originalConversation.assignedToAI });
+  return Response.json({
+    messages: formattedMessages,
+    // We don't want to include staff-uploaded attachments in the AI messages, but we need to show them in the UI
+    allAttachments: await Promise.all(
+      attachments.map(async (a) => ({
+        messageId: a.messageId?.toString(),
+        name: a.name,
+        presignedUrl: await createPresignedDownloadUrl(a.url),
+      })),
+    ),
+    isEscalated: !originalConversation.assignedToAI,
+  });
 }
 
 const getUserAnnotation = cache(async (userId: string) => {

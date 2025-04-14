@@ -1,16 +1,25 @@
 import { JSONValue } from "ai";
 import { useStickToBottom } from "use-stick-to-bottom";
+import { Attachment } from "@/components/widget/Conversation";
 import Message, { MessageWithReaction } from "@/components/widget/Message";
 
 type Props = {
   data: JSONValue[] | null;
   messages: MessageWithReaction[];
+  allAttachments: Attachment[];
   conversationSlug: string | null;
   isGumroadTheme: boolean;
   token: string | null;
 };
 
-export default function MessagesList({ data, messages, conversationSlug, isGumroadTheme, token }: Props) {
+export default function MessagesList({
+  data,
+  messages,
+  allAttachments,
+  conversationSlug,
+  isGumroadTheme,
+  token,
+}: Props) {
   const { scrollRef, contentRef } = useStickToBottom();
 
   return (
@@ -20,6 +29,7 @@ export default function MessagesList({ data, messages, conversationSlug, isGumro
           <Message
             key={index}
             message={message}
+            attachments={allAttachments.filter((a) => a.messageId === message.id)}
             conversationSlug={conversationSlug}
             token={token}
             data={index === messages.length - 1 ? data : null}
