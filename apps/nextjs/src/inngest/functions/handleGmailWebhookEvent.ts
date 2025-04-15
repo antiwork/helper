@@ -280,7 +280,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
 
       const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
-      
+
       let isAutoResponseOrThankYou = false;
       try {
         const emailContent = htmlToText(parsedEmail.html || parsedEmail.textAsHtml || parsedEmail.text || "");
@@ -288,7 +288,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       } catch (error) {
         captureExceptionAndLogIfDevelopment(error);
       }
-      
+
       const shouldIgnore =
         (!!staffUser && !isFirstMessage) ||
         labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
