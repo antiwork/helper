@@ -380,49 +380,111 @@ const MergedContent = ({
   );
 };
 
-const ConversationLayout = ({
-  mailboxSlug,
-  scrollRef,
-  contentRef,
-  scrollToBottom,
-  conversationInfo,
-  isPending,
-  error,
-  refetch,
-  setLayoutState,
-  setPreviewFileIndex,
-  setPreviewFiles,
-  previewFileIndex,
-  previewFiles,
-  minimize,
-  conversationMetadata,
-  nativePlatform,
-  defaultSize,
-  isAboveSm,
-  sidebarVisible,
-  setSidebarVisible,
-}: {
-  mailboxSlug: string;
-  scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
-  contentRef: React.MutableRefObject<HTMLElement | null>;
-  scrollToBottom: (options?: { animation?: "smooth" | "instant" }) => void;
-  conversationInfo: ConversationWithNewMessages | null;
-  isPending: boolean;
-  error: any;
-  refetch: () => void;
-  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
-  setPreviewFileIndex: (index: number) => void;
-  setPreviewFiles: (files: AttachedFile[]) => void;
-  previewFileIndex: number;
-  previewFiles: AttachedFile[];
-  minimize: () => void;
-  conversationMetadata: any;
-  nativePlatform: string | null | undefined;
-  defaultSize: number;
-  isAboveSm: boolean;
-  sidebarVisible: boolean;
-  setSidebarVisible: (visible: boolean) => void;
-}) => {
+
+
+const ConversationContent = () => {
+  const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error, refetch } = useConversationContext();
+  const { minimize } = useConversationListContext();
+  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
+    utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
+      data ? { ...data, ...event.data } : null,
+    );
+  });
+  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
+    const message = { ...event.data, createdAt: new Date(event.data.createdAt) } as Awaited<
+      ReturnType<typeof serializeMessage>
+    >;
+    utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) => {
+      if (!data) return undefined;
+      if (data.messages.some((m) => m.id === message.id)) return data;
+
+      return { ...data, messages: [...data.messages, { ...message, isNew: true }] };
+    });
+    scrollToBottom({ animation: "smooth" });
+  });
+
+  const { input } = useConversationsListInput();
+
+  const utils = api.useUtils();
+  const conversationListInfo = utils.mailbox.conversations.list
+    .getData(input)
+    ?.conversations.find((c) => c.slug === conversationSlug);
+
+  const [emailCopied, setEmailCopied] = useState(false);
+  const copyEmailToClipboard = async () => {
+    const email = conversationListInfo?.emailFrom || conversationInfo?.emailFrom;
+    if (email) {
+      await navigator.clipboard.writeText(email);
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    }
+  };
+
+  const conversationMetadata = {
+    emailFrom: (
+      <div className="flex items-center gap-3">
+        <Tooltip open>
+          <TooltipTrigger asChild>
+            <div
+              onClick={copyEmailToClipboard}
+              className="lg:text-base text-sm text-foreground font-sundry-medium responsive-break-words truncate cursor-pointer hover:text-primary"
+            >
+              {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
+            </div>
+          </TooltipTrigger>
+          {emailCopied && <TooltipContent side="right">Copied!</TooltipContent>}
+        </Tooltip>
+        {(conversationListInfo?.conversationProvider || conversationInfo?.conversationProvider) === "helpscout" && (
+          <Badge variant="dark">Help Scout</Badge>
+        )}
+        {conversationInfo?.customerMetadata?.isVip && (
+          <Badge variant="bright" className="no-underline">
+            VIP
+          </Badge>
+        )}
+      </div>
+    ),
+    subject: (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)"),
+  };
+  const { setState: setLayoutState } = useLayoutInfo();
+
+  const [previewFileIndex, setPreviewFileIndex] = useState(0);
+  const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
+
+  const { scrollRef, contentRef, scrollToBottom } = useStickToBottom({
+    initial: "instant",
+    resize: {
+      damping: 0.3,
+      stiffness: 0.05,
+      mass: 0.7,
+    },
+  });
+
+  useLayoutEffect(() => {
+    scrollToBottom({ animation: "instant" });
+  }, [contentRef]);
+
+  const { nativePlatform } = useNativePlatform();
+  const { isAboveSm } = useBreakpoint("sm");
+
+  const defaultSize = Number(localStorage.getItem("conversationHeightRange") ?? 65);
+
+  const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
+
+  useEffect(() => {
+    if ((nativePlatform === "ios" || nativePlatform === "android") && conversationInfo?.subject) {
+      window.ReactNativeWebView?.postMessage(
+        JSON.stringify({
+          type: "conversationLoaded",
+          subject: conversationInfo?.subject,
+        }),
+      );
+      window.__EXPO__?.onToggleSidebar(() => {
+        setSidebarVisible((prev) => !prev);
+      });
+    }
+  }, [nativePlatform, conversationInfo?.subject]);
+
   if (isAboveSm) {
     return (
       <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
@@ -547,135 +609,6 @@ const ConversationLayout = ({
         </div>
       ) : null}
     </div>
-  );
-};
-
-const ConversationContent = () => {
-  const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error, refetch } = useConversationContext();
-  const { minimize } = useConversationListContext();
-  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
-    utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
-      data ? { ...data, ...event.data } : null,
-    );
-  });
-  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
-    const message = { ...event.data, createdAt: new Date(event.data.createdAt) } as Awaited<
-      ReturnType<typeof serializeMessage>
-    >;
-    utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) => {
-      if (!data) return undefined;
-      if (data.messages.some((m) => m.id === message.id)) return data;
-
-      return { ...data, messages: [...data.messages, { ...message, isNew: true }] };
-    });
-    scrollToBottom({ animation: "smooth" });
-  });
-
-  const { input } = useConversationsListInput();
-
-  const utils = api.useUtils();
-  const conversationListInfo = utils.mailbox.conversations.list
-    .getData(input)
-    ?.conversations.find((c) => c.slug === conversationSlug);
-
-  const [emailCopied, setEmailCopied] = useState(false);
-  const copyEmailToClipboard = async () => {
-    const email = conversationListInfo?.emailFrom || conversationInfo?.emailFrom;
-    if (email) {
-      await navigator.clipboard.writeText(email);
-      setEmailCopied(true);
-      setTimeout(() => setEmailCopied(false), 2000);
-    }
-  };
-
-  const conversationMetadata = {
-    emailFrom: (
-      <div className="flex items-center gap-3">
-        <Tooltip open>
-          <TooltipTrigger asChild>
-            <div
-              onClick={copyEmailToClipboard}
-              className="lg:text-base text-sm text-foreground font-sundry-medium responsive-break-words truncate cursor-pointer hover:text-primary"
-            >
-              {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
-            </div>
-          </TooltipTrigger>
-          {emailCopied && <TooltipContent side="right">Copied!</TooltipContent>}
-        </Tooltip>
-        {(conversationListInfo?.conversationProvider || conversationInfo?.conversationProvider) === "helpscout" && (
-          <Badge variant="dark">Help Scout</Badge>
-        )}
-        {conversationInfo?.customerMetadata?.isVip && (
-          <Badge variant="bright" className="no-underline">
-            VIP
-          </Badge>
-        )}
-      </div>
-    ),
-    subject: (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)"),
-  };
-  const { setState: setLayoutState } = useLayoutInfo();
-
-  const [previewFileIndex, setPreviewFileIndex] = useState(0);
-  const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
-
-  const { scrollRef, contentRef, scrollToBottom } = useStickToBottom({
-    initial: "instant",
-    resize: {
-      damping: 0.3,
-      stiffness: 0.05,
-      mass: 0.7,
-    },
-  });
-
-  useLayoutEffect(() => {
-    scrollToBottom({ animation: "instant" });
-  }, [contentRef]);
-
-  const { nativePlatform } = useNativePlatform();
-  const { isAboveSm } = useBreakpoint("sm");
-
-  const defaultSize = Number(localStorage.getItem("conversationHeightRange") ?? 65);
-
-  const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
-
-  useEffect(() => {
-    if ((nativePlatform === "ios" || nativePlatform === "android") && conversationInfo?.subject) {
-      window.ReactNativeWebView?.postMessage(
-        JSON.stringify({
-          type: "conversationLoaded",
-          subject: conversationInfo?.subject,
-        }),
-      );
-      window.__EXPO__?.onToggleSidebar(() => {
-        setSidebarVisible((prev) => !prev);
-      });
-    }
-  }, [nativePlatform, conversationInfo?.subject]);
-
-  return (
-    <ConversationLayout
-      mailboxSlug={mailboxSlug}
-      scrollRef={scrollRef}
-      contentRef={contentRef}
-      scrollToBottom={scrollToBottom}
-      conversationInfo={conversationInfo}
-      isPending={isPending}
-      error={error}
-      refetch={refetch}
-      setLayoutState={setLayoutState}
-      setPreviewFileIndex={setPreviewFileIndex}
-      setPreviewFiles={setPreviewFiles}
-      previewFileIndex={previewFileIndex}
-      previewFiles={previewFiles}
-      minimize={minimize}
-      conversationMetadata={conversationMetadata}
-      nativePlatform={nativePlatform}
-      defaultSize={defaultSize}
-      isAboveSm={isAboveSm}
-      sidebarVisible={sidebarVisible}
-      setSidebarVisible={setSidebarVisible}
-    />
   );
 };
 
