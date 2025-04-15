@@ -380,8 +380,6 @@ const MergedContent = ({
   );
 };
 
-
-
 const ConversationContent = () => {
   const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error, refetch } = useConversationContext();
   const { minimize } = useConversationListContext();
