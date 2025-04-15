@@ -14,6 +14,8 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
 import { env } from "@/env";
 import { inngest } from "@/inngest/client";
+import { runAIQuery } from "@/lib/ai";
+import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, finishFileUpload } from "@/lib/data/files";
@@ -30,6 +32,35 @@ import { generateFilePreview } from "./generateFilePreview";
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
 
 const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
+
+const isThankYouOrAutoResponse = async (
+  mailbox: typeof mailboxes.$inferSelect,
+  emailContent: string,
+): Promise<boolean> => {
+  try {
+    const content = await runAIQuery({
+      system: [
+        "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
+        "Respond with 'yes' if the email is EITHER:",
+        "1. Just a thank you message with no follow-up questions",
+        "2. Clearly an auto-response (e.g., 'Thanks for your message. We'll respond to you as soon as we can.' or an 'out of office' message)",
+        "Respond with 'no' if the email contains any substantive content, questions, or requires a response.",
+      ].join("\n"),
+      mailbox,
+      temperature: 0,
+      messages: [{ role: "user", content: emailContent }],
+      queryType: "reasoning",
+      model: GPT_4O_MINI_MODEL,
+      functionId: "email-auto-ignore-detector",
+      maxTokens: 10,
+    });
+
+    return content.toLowerCase().trim() === "yes";
+  } catch (error) {
+    captureExceptionAndLogIfDevelopment(error);
+    return false;
+  }
+};
 
 const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailCc: string) => {
   const mailbox = await db.query.mailboxes.findFirst({
@@ -249,10 +280,20 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
 
       const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
+      
+      let isAutoResponseOrThankYou = false;
+      try {
+        const emailContent = htmlToText(parsedEmail.html || parsedEmail.textAsHtml || parsedEmail.text || "");
+        isAutoResponseOrThankYou = await isThankYouOrAutoResponse(mailbox, emailContent);
+      } catch (error) {
+        captureExceptionAndLogIfDevelopment(error);
+      }
+      
       const shouldIgnore =
         (!!staffUser && !isFirstMessage) ||
         labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
-        matchesTransactionalEmailAddress(parsedEmailFrom.address);
+        matchesTransactionalEmailAddress(parsedEmailFrom.address) ||
+        isAutoResponseOrThankYou;
 
       const createNewConversation = async () => {
         return await db
@@ -321,13 +362,21 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         });
       }
 
-      results.push({
-        message: `Created message ${newEmail.id}`,
-        messageId: newEmail.id,
-        responded: !shouldIgnore,
-        gmailMessageId,
-        gmailThreadId,
-      });
+      if (isAutoResponseOrThankYou) {
+        results.push({
+          message: `Skipped - message ${gmailMessageId} is a thank you or auto-response email`,
+          gmailMessageId,
+          gmailThreadId,
+        });
+      } else {
+        results.push({
+          message: `Created message ${newEmail.id}`,
+          messageId: newEmail.id,
+          responded: !shouldIgnore,
+          gmailMessageId,
+          gmailThreadId,
+        });
+      }
     } catch (error) {
       captureExceptionAndThrowIfDevelopment(error);
       results.push({ message: `Error processing message ${gmailMessageId}: ${error}`, gmailMessageId, gmailThreadId });
