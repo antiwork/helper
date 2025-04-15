@@ -11,7 +11,7 @@ import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -167,6 +167,266 @@ const ScrollToTopButton = ({
   );
 };
 
+const ConversationPanels = ({
+  mailboxSlug,
+  scrollRef,
+  contentRef,
+  scrollToBottom,
+  conversationInfo,
+  isPending,
+  error,
+  refetch,
+  setLayoutState,
+  setPreviewFileIndex,
+  setPreviewFiles,
+  previewFileIndex,
+  previewFiles,
+  minimize,
+  conversationMetadata,
+  nativePlatform,
+  defaultSize,
+  isAboveSm,
+  sidebarVisible,
+  setSidebarVisible,
+  conversationListInfo,
+}: {
+  mailboxSlug: string;
+  scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
+  contentRef: React.MutableRefObject<HTMLElement | null>;
+  scrollToBottom: (options?: { animation?: "smooth" | "instant" }) => void;
+  conversationInfo: ConversationWithNewMessages | null;
+  isPending: boolean;
+  error: Error | null;
+  refetch: () => void;
+  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
+  setPreviewFileIndex: (index: number) => void;
+  setPreviewFiles: (files: AttachedFile[]) => void;
+  previewFileIndex: number;
+  previewFiles: AttachedFile[];
+  minimize: () => void;
+  conversationMetadata: any;
+  nativePlatform: string | null | undefined;
+  defaultSize: number;
+  isAboveSm: boolean;
+  sidebarVisible: boolean;
+  setSidebarVisible: (visible: boolean) => void;
+  conversationListInfo: any;
+}) => {
+  const messageThreadPanel = (
+    <div className="flex-grow overflow-y-auto relative" ref={scrollRef}>
+      <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
+        <ScrollToTopButton scrollRef={scrollRef} />
+        <div className="flex flex-col gap-8 px-4 py-4 h-full">
+          {conversationInfo && (
+            <MessageThread
+              mailboxSlug={mailboxSlug}
+              conversation={conversationInfo}
+              onPreviewAttachment={(message, currentIndex) => {
+                setPreviewFileIndex(currentIndex);
+                setPreviewFiles(message.files);
+              }}
+              onDoubleClickWhiteSpace={() =>
+                setLayoutState((state: Record<string, any>) => ({ ...state, listHidden: !state.listHidden }))
+              }
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const messageActionsPanel = (
+    <div
+      className="h-full bg-muted px-4 pb-4"
+      onKeyDown={(e) => {
+        // Prevent keypress events from triggering the global inbox view keyboard shortcuts
+        e.stopPropagation();
+      }}
+    >
+      <MessageActions />
+    </div>
+  );
+
+  const conversationHeader = (
+    <div
+      className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
+    >
+      <div id="conversation-close" className="sm:hidden">
+        <XMarkIcon
+          aria-label="Minimize conversation"
+          className="text-primary h-5 w-5 cursor-pointer"
+          onClick={minimize}
+        />
+      </div>
+      <div className="hidden sm:block">
+        {conversationInfo?.source === "email" ? (
+          <EnvelopeIcon className="w-4 h-4" />
+        ) : (
+          <ChatBubbleLeftIcon className="w-4 h-4" />
+        )}
+      </div>
+      <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
+      <CopyLinkButton />
+      <div className="flex-1" />
+      {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
+      <Button
+        variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
+        size="sm"
+        className="ml-4"
+        iconOnly
+        onClick={() => setSidebarVisible(!sidebarVisible)}
+      >
+        {isAboveSm ? (
+          sidebarVisible ? (
+            <PanelRightClose className="h-4 w-4" />
+          ) : (
+            <PanelRightOpen className="h-4 w-4" />
+          )
+        ) : (
+          <InformationCircleIcon className="h-5 w-5" />
+        )}
+        <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
+      </Button>
+    </div>
+  );
+
+  const messageContent = error ? (
+    <div className="flex items-center justify-center flex-grow">
+      <Alert variant="destructive" className="max-w-lg text-center">
+        <AlertTitle>Failed to load conversation</AlertTitle>
+        <AlertDescription className="flex flex-col gap-4">
+          Error loading this conversation: {error.message}
+          <Button variant="destructive_outlined" onClick={() => refetch()}>
+            Try again
+          </Button>
+        </AlertDescription>
+      </Alert>
+    </div>
+  ) : isPending ? (
+    <div className="flex items-center justify-center flex-grow">
+      <LoadingSpinner size="md" />
+    </div>
+  ) : null;
+
+  const carouselPreviewContent = (
+    <CarouselContext.Provider
+      value={{
+        currentIndex: previewFileIndex,
+        setCurrentIndex: setPreviewFileIndex,
+        items: previewFiles,
+      }}
+    >
+      <Carousel>
+        {(currentFile) => (
+          <Dialog open={!!currentFile} onOpenChange={(open) => !open && setPreviewFiles([])}>
+            <DialogContent className="max-w-5xl">
+              <DialogHeader>
+                <DialogTitle>File Preview</DialogTitle>
+              </DialogHeader>
+              <div className="relative bottom-0.5 flex items-center justify-between p-3">
+                <div className="max-w-xs truncate" title={currentFile.name}>
+                  {currentFile.name}
+                </div>
+
+                <div className="mr-6 flex items-center">
+                  <button onClick={() => FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)}>
+                    <ArrowDownTrayIcon className="text-primary h-5 w-5 shrink-0" />
+                    <span className="sr-only">Download</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative flex flex-row items-center justify-center gap-3">
+                <CarouselButton direction={CarouselDirection.LEFT} className="absolute -left-10 md:-left-11" />
+                <PreviewModal file={currentFile} />
+                <CarouselButton direction={CarouselDirection.RIGHT} className="absolute -right-10 md:-right-11" />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </Carousel>
+    </CarouselContext.Provider>
+  );
+
+  const mergedContent = conversationInfo?.mergedInto?.slug && (
+    <div className="absolute inset-0 z-50 bg-background/75 flex flex-col items-center justify-center gap-4 h-full text-lg">
+      Merged into another conversation.
+      <Button variant="subtle" asChild>
+        <Link href={`/mailboxes/${mailboxSlug}/conversations?id=${conversationInfo.mergedInto.slug}`}>View</Link>
+      </Button>
+    </div>
+  );
+
+  if (isAboveSm) {
+    return (
+      <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
+        <ResizablePanel defaultSize={75} minSize={50} maxSize={85}>
+          <ResizablePanelGroup direction="vertical" className="flex w-full flex-col bg-background">
+            <ResizablePanel
+              minSize={20}
+              defaultSize={defaultSize}
+              maxSize={80}
+              onResize={(size) => {
+                localStorage.setItem("conversationHeightRange", Math.floor(size).toString());
+              }}
+            >
+              <div className="flex flex-col h-full">
+                {mergedContent}
+                {carouselPreviewContent}
+                {nativePlatform !== "ios" && nativePlatform !== "android" && conversationHeader}
+                {messageContent || messageThreadPanel}
+              </div>
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={100 - defaultSize} minSize={20}>
+              {messageActionsPanel}
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </ResizablePanel>
+
+        <ResizableHandle className={cn(!sidebarVisible && "hidden")} />
+
+        <ResizablePanel
+          defaultSize={25}
+          minSize={15}
+          maxSize={50}
+          className={cn("hidden lg:block", !sidebarVisible && "!hidden")}
+        >
+          {conversationInfo && sidebarVisible ? (
+            <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
+          ) : null}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    );
+  }
+  return (
+    <div className="flex flex-col h-full w-full bg-background">
+      <div className="flex flex-col h-full relative">
+        {mergedContent}
+        {carouselPreviewContent}
+        {nativePlatform !== "ios" && nativePlatform !== "android" && conversationHeader}
+        {messageContent || (
+          <>
+            <div className="flex-grow overflow-hidden flex flex-col">{messageThreadPanel}</div>
+            <div className="border-t border-border">{messageActionsPanel}</div>
+          </>
+        )}
+      </div>
+
+      {conversationInfo && sidebarVisible ? (
+        <div
+          className={cn(
+            "fixed z-20 inset-0",
+            nativePlatform === "ios" || nativePlatform === "android" ? "top-0" : "top-10",
+          )}
+        >
+          <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const ConversationContent = () => {
   const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error, refetch } = useConversationContext();
   const { minimize } = useConversationListContext();
@@ -271,195 +531,29 @@ const ConversationContent = () => {
   }, [nativePlatform, conversationInfo?.subject]);
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
-      <ResizablePanel defaultSize={75} minSize={50} maxSize={85}>
-        <ResizablePanelGroup direction="vertical" className="flex w-full flex-col bg-background">
-          <ResizablePanel
-            minSize={20}
-            defaultSize={defaultSize}
-            maxSize={80}
-            onResize={(size) => {
-              localStorage.setItem("conversationHeightRange", Math.floor(size).toString());
-            }}
-          >
-            <div className="flex flex-col h-full">
-              {conversationInfo?.mergedInto?.slug && (
-                <div className="absolute inset-0 z-50 bg-background/75 flex flex-col items-center justify-center gap-4 h-full text-lg">
-                  Merged into another conversation.
-                  <Button variant="subtle" asChild>
-                    <Link href={`/mailboxes/${mailboxSlug}/conversations?id=${conversationInfo.mergedInto.slug}`}>
-                      View
-                    </Link>
-                  </Button>
-                </div>
-              )}
-              <CarouselContext.Provider
-                value={{
-                  currentIndex: previewFileIndex,
-                  setCurrentIndex: setPreviewFileIndex,
-                  items: previewFiles,
-                }}
-              >
-                <Carousel>
-                  {(currentFile) => (
-                    <Dialog open={!!currentFile} onOpenChange={(open) => !open && setPreviewFiles([])}>
-                      <DialogContent className="max-w-5xl">
-                        <DialogHeader>
-                          <DialogTitle>File Preview</DialogTitle>
-                        </DialogHeader>
-                        <div className="relative bottom-0.5 flex items-center justify-between p-3">
-                          <div className="max-w-xs truncate" title={currentFile.name}>
-                            {currentFile.name}
-                          </div>
-
-                          <div className="mr-6 flex items-center">
-                            <button onClick={() => FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)}>
-                              <ArrowDownTrayIcon className="text-primary h-5 w-5 shrink-0" />
-                              <span className="sr-only">Download</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="relative flex flex-row items-center justify-center gap-3">
-                          <CarouselButton
-                            direction={CarouselDirection.LEFT}
-                            className="absolute -left-10 md:-left-11"
-                          />
-                          <PreviewModal file={currentFile} />
-                          <CarouselButton
-                            direction={CarouselDirection.RIGHT}
-                            className="absolute -right-10 md:-right-11"
-                          />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </Carousel>
-              </CarouselContext.Provider>
-              {nativePlatform !== "ios" && nativePlatform !== "android" && (
-                <div
-                  className={cn(
-                    "min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4",
-                    !conversationInfo && "hidden",
-                  )}
-                >
-                  <div id="conversation-close" className="sm:hidden">
-                    <XMarkIcon
-                      aria-label="Minimize conversation"
-                      className="text-primary h-5 w-5 cursor-pointer"
-                      onClick={minimize}
-                    />
-                  </div>
-                  <div className="hidden sm:block">
-                    {conversationInfo?.source === "email" ? (
-                      <EnvelopeIcon className="w-4 h-4" />
-                    ) : (
-                      <ChatBubbleLeftIcon className="w-4 h-4" />
-                    )}
-                  </div>
-                  <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
-                  <CopyLinkButton />
-                  <div className="flex-1" />
-                  {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationSlug} />}
-                  <Button
-                    variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
-                    size="sm"
-                    className="ml-4"
-                    iconOnly
-                    onClick={() => setSidebarVisible(!sidebarVisible)}
-                  >
-                    {isAboveSm ? (
-                      sidebarVisible ? (
-                        <PanelRightClose className="h-4 w-4" />
-                      ) : (
-                        <PanelRightOpen className="h-4 w-4" />
-                      )
-                    ) : (
-                      <InformationCircleIcon className="h-5 w-5" />
-                    )}
-                    <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
-                  </Button>
-                </div>
-              )}
-              {error ? (
-                <div className="flex items-center justify-center flex-grow">
-                  <Alert variant="destructive" className="max-w-lg text-center">
-                    <AlertTitle>Failed to load conversation</AlertTitle>
-                    <AlertDescription className="flex flex-col gap-4">
-                      Error loading this conversation: {error.message}
-                      <Button variant="destructive_outlined" onClick={() => refetch()}>
-                        Try again
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              ) : isPending ? (
-                <div className="flex items-center justify-center flex-grow">
-                  <LoadingSpinner size="md" />
-                </div>
-              ) : (
-                <div className="flex-grow overflow-y-auto relative" ref={scrollRef}>
-                  <div ref={contentRef} className="relative">
-                    <ScrollToTopButton scrollRef={scrollRef} />
-                    <div className="flex flex-col gap-8 px-4 py-4 h-full">
-                      {conversationInfo && (
-                        <MessageThread
-                          mailboxSlug={mailboxSlug}
-                          conversation={conversationInfo}
-                          onPreviewAttachment={(message, currentIndex) => {
-                            setPreviewFileIndex(currentIndex);
-                            setPreviewFiles(message.files);
-                          }}
-                          onDoubleClickWhiteSpace={() =>
-                            setLayoutState((state) => ({ ...state, listHidden: !state.listHidden }))
-                          }
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={100 - defaultSize} minSize={20}>
-            <div
-              className="h-full bg-muted px-4 pb-4"
-              onKeyDown={(e) => {
-                // Prevent keypress events from triggering the global inbox view keyboard shortcuts
-                e.stopPropagation();
-              }}
-            >
-              <MessageActions />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </ResizablePanel>
-
-      <ResizableHandle className={cn("max-sm:hidden", !sidebarVisible && "hidden")} />
-
-      {isAboveSm ? (
-        <ResizablePanel
-          defaultSize={25}
-          minSize={15}
-          maxSize={50}
-          className={cn("hidden lg:block", !sidebarVisible && "!hidden")}
-        >
-          {conversationInfo && sidebarVisible ? (
-            <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
-          ) : null}
-        </ResizablePanel>
-      ) : conversationInfo && sidebarVisible ? (
-        <div
-          className={cn(
-            "fixed z-20 inset-0",
-            nativePlatform === "ios" || nativePlatform === "android" ? "top-0" : "top-10",
-          )}
-        >
-          <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
-        </div>
-      ) : null}
-    </ResizablePanelGroup>
+    <ConversationPanels
+      mailboxSlug={mailboxSlug}
+      scrollRef={scrollRef}
+      contentRef={contentRef as React.MutableRefObject<HTMLElement | null>}
+      scrollToBottom={scrollToBottom}
+      conversationInfo={conversationInfo}
+      isPending={isPending}
+      error={error as any}
+      refetch={refetch}
+      setLayoutState={setLayoutState}
+      setPreviewFileIndex={setPreviewFileIndex}
+      setPreviewFiles={setPreviewFiles}
+      previewFileIndex={previewFileIndex}
+      previewFiles={previewFiles}
+      minimize={minimize}
+      conversationMetadata={conversationMetadata}
+      nativePlatform={nativePlatform as string | undefined}
+      defaultSize={defaultSize}
+      isAboveSm={isAboveSm}
+      sidebarVisible={sidebarVisible}
+      setSidebarVisible={setSidebarVisible}
+      conversationListInfo={conversationListInfo}
+    />
   );
 };
 
