@@ -1,19 +1,24 @@
 import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from "react-native-heroicons/outline";
 import { ConversationList } from "@/app/(dashboard)/_components/conversationList";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
-import { cn } from "@/utils/css";
+import { cn, cssIconInterop } from "@/utils/css";
 import { Header } from "../_components/header";
 import { TabBar } from "../_components/tabBar";
+
+cssIconInterop(MagnifyingGlassIcon);
+cssIconInterop(FunnelIcon);
+cssIconInterop(XMarkIcon);
 
 type FilterItem = "unassigned" | { type: "assigned"; userId: string };
 type FilterOption = FilterItem[];
 
 export default function InboxScreen() {
   const { selectedMailbox } = useMailbox();
+  const colorScheme = useColorScheme();
   const [selectedFilters, setSelectedFilters] = useState<FilterOption>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,33 +74,32 @@ export default function InboxScreen() {
       <View className="py-3">
         <Header />
       </View>
-      <View className="px-4 py-2">
-        <Text className="text-xl font-semibold">
-          Inbox ({conversations.length})
-        </Text>
-      </View>
       <View className="px-4 gap-2">
         <View className="flex-row gap-2">
-          <View className="flex-1 flex-row items-center bg-muted rounded-lg px-3 py-2">
-            <MagnifyingGlassIcon className="size-5 text-muted-foreground mr-2" />
+          <View className={cn(
+            "flex-1 flex-row items-center rounded-lg px-3 py-2",
+            colorScheme === "light" ? "border border-border bg-muted" : "bg-muted"
+          )}>
+            <MagnifyingGlassIcon size={20} className="text-muted-foreground mr-2" />
             <TextInput
-              placeholder="Search messages..."
-              placeholderTextColor="#666"
+              placeholder={`Search ${conversations.length.toLocaleString()} messages...`}
+              placeholderTextColor={colorScheme === "dark" ? "hsla(0, 0%, 100%, 0.7)" : "hsla(224, 8%, 46%, 1)"}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              className="flex-1 text-foreground"
+              className="flex-1 text-muted-foreground"
             />
           </View>
           <TouchableOpacity
             onPress={() => setIsFilterOpen(!isFilterOpen)}
             className={cn(
-              "items-center justify-center px-3 bg-muted rounded-lg",
+              "items-center justify-center px-3 rounded-lg",
+              colorScheme === "light" ? "border border-border bg-muted" : "bg-muted",
               selectedFilters.length > 0 && "bg-primary"
             )}
           >
-            <FunnelIcon className={cn(
-              "size-5",
-              selectedFilters.length > 0 ? "text-primary-foreground" : "text-muted-foreground"
+            <FunnelIcon size={20} className={cn(
+              "text-muted-foreground",
+              selectedFilters.length > 0 && "text-primary-foreground"
             )} />
           </TouchableOpacity>
         </View>
