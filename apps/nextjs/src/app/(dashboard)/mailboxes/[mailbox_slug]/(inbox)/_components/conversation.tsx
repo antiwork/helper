@@ -11,7 +11,7 @@ import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -167,52 +167,24 @@ const ScrollToTopButton = ({
   );
 };
 
-const ConversationPanels = ({
+const MessageThreadPanel = ({
   mailboxSlug,
+  conversationInfo,
   scrollRef,
   contentRef,
-  scrollToBottom,
-  conversationInfo,
-  isPending,
-  error,
-  refetch,
-  setLayoutState,
   setPreviewFileIndex,
   setPreviewFiles,
-  previewFileIndex,
-  previewFiles,
-  minimize,
-  conversationMetadata,
-  nativePlatform,
-  defaultSize,
-  isAboveSm,
-  sidebarVisible,
-  setSidebarVisible,
-  conversationListInfo,
+  setLayoutState,
 }: {
   mailboxSlug: string;
+  conversationInfo: ConversationWithNewMessages | null;
   scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
   contentRef: React.MutableRefObject<HTMLElement | null>;
-  scrollToBottom: (options?: { animation?: "smooth" | "instant" }) => void;
-  conversationInfo: ConversationWithNewMessages | null;
-  isPending: boolean;
-  error: Error | null;
-  refetch: () => void;
-  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
-  previewFileIndex: number;
-  previewFiles: AttachedFile[];
-  minimize: () => void;
-  conversationMetadata: any;
-  nativePlatform: string | null | undefined;
-  defaultSize: number;
-  isAboveSm: boolean;
-  sidebarVisible: boolean;
-  setSidebarVisible: (visible: boolean) => void;
-  conversationListInfo: any;
+  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
 }) => {
-  const messageThreadPanel = (
+  return (
     <div className="flex-grow overflow-y-auto relative" ref={scrollRef}>
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
         <ScrollToTopButton scrollRef={scrollRef} />
@@ -225,17 +197,17 @@ const ConversationPanels = ({
                 setPreviewFileIndex(currentIndex);
                 setPreviewFiles(message.files);
               }}
-              onDoubleClickWhiteSpace={() =>
-                setLayoutState((state: Record<string, any>) => ({ ...state, listHidden: !state.listHidden }))
-              }
+              onDoubleClickWhiteSpace={() => setLayoutState((state) => ({ ...state, listHidden: !state.listHidden }))}
             />
           )}
         </div>
       </div>
     </div>
   );
+};
 
-  const messageActionsPanel = (
+const MessageActionsPanel = () => {
+  return (
     <div
       className="h-full bg-muted px-4 pb-4"
       onKeyDown={(e) => {
@@ -246,8 +218,26 @@ const ConversationPanels = ({
       <MessageActions />
     </div>
   );
+};
 
-  const conversationHeader = (
+const ConversationHeader = ({
+  conversationInfo,
+  conversationMetadata,
+  minimize,
+  mailboxSlug,
+  isAboveSm,
+  sidebarVisible,
+  setSidebarVisible,
+}: {
+  conversationInfo: ConversationWithNewMessages | null;
+  conversationMetadata: any;
+  minimize: () => void;
+  mailboxSlug: string;
+  isAboveSm: boolean;
+  sidebarVisible: boolean;
+  setSidebarVisible: (visible: boolean) => void;
+}) => {
+  return (
     <div
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
@@ -289,8 +279,12 @@ const ConversationPanels = ({
       </Button>
     </div>
   );
+};
 
-  const messageContent = error ? (
+const ErrorContent = ({ error, refetch }: { error: any; refetch: () => void }) => {
+  if (!error) return null;
+
+  return (
     <div className="flex items-center justify-center flex-grow">
       <Alert variant="destructive" className="max-w-lg text-center">
         <AlertTitle>Failed to load conversation</AlertTitle>
@@ -302,13 +296,31 @@ const ConversationPanels = ({
         </AlertDescription>
       </Alert>
     </div>
-  ) : isPending ? (
+  );
+};
+
+const LoadingContent = ({ isPending }: { isPending: boolean }) => {
+  if (!isPending) return null;
+
+  return (
     <div className="flex items-center justify-center flex-grow">
       <LoadingSpinner size="md" />
     </div>
-  ) : null;
+  );
+};
 
-  const carouselPreviewContent = (
+const CarouselPreviewContent = ({
+  previewFileIndex,
+  setPreviewFileIndex,
+  previewFiles,
+  setPreviewFiles,
+}: {
+  previewFileIndex: number;
+  setPreviewFileIndex: (index: number) => void;
+  previewFiles: AttachedFile[];
+  setPreviewFiles: (files: AttachedFile[]) => void;
+}) => {
+  return (
     <CarouselContext.Provider
       value={{
         currentIndex: previewFileIndex,
@@ -347,8 +359,18 @@ const ConversationPanels = ({
       </Carousel>
     </CarouselContext.Provider>
   );
+};
 
-  const mergedContent = conversationInfo?.mergedInto?.slug && (
+const MergedContent = ({
+  conversationInfo,
+  mailboxSlug,
+}: {
+  conversationInfo: ConversationWithNewMessages | null;
+  mailboxSlug: string;
+}) => {
+  if (!conversationInfo?.mergedInto?.slug) return null;
+
+  return (
     <div className="absolute inset-0 z-50 bg-background/75 flex flex-col items-center justify-center gap-4 h-full text-lg">
       Merged into another conversation.
       <Button variant="subtle" asChild>
@@ -356,7 +378,51 @@ const ConversationPanels = ({
       </Button>
     </div>
   );
+};
 
+const ConversationLayout = ({
+  mailboxSlug,
+  scrollRef,
+  contentRef,
+  scrollToBottom,
+  conversationInfo,
+  isPending,
+  error,
+  refetch,
+  setLayoutState,
+  setPreviewFileIndex,
+  setPreviewFiles,
+  previewFileIndex,
+  previewFiles,
+  minimize,
+  conversationMetadata,
+  nativePlatform,
+  defaultSize,
+  isAboveSm,
+  sidebarVisible,
+  setSidebarVisible,
+}: {
+  mailboxSlug: string;
+  scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
+  contentRef: React.MutableRefObject<HTMLElement | null>;
+  scrollToBottom: (options?: { animation?: "smooth" | "instant" }) => void;
+  conversationInfo: ConversationWithNewMessages | null;
+  isPending: boolean;
+  error: any;
+  refetch: () => void;
+  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
+  setPreviewFileIndex: (index: number) => void;
+  setPreviewFiles: (files: AttachedFile[]) => void;
+  previewFileIndex: number;
+  previewFiles: AttachedFile[];
+  minimize: () => void;
+  conversationMetadata: any;
+  nativePlatform: string | null | undefined;
+  defaultSize: number;
+  isAboveSm: boolean;
+  sidebarVisible: boolean;
+  setSidebarVisible: (visible: boolean) => void;
+}) => {
   if (isAboveSm) {
     return (
       <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
@@ -371,15 +437,42 @@ const ConversationPanels = ({
               }}
             >
               <div className="flex flex-col h-full">
-                {mergedContent}
-                {carouselPreviewContent}
-                {nativePlatform !== "ios" && nativePlatform !== "android" && conversationHeader}
-                {messageContent || messageThreadPanel}
+                <MergedContent conversationInfo={conversationInfo} mailboxSlug={mailboxSlug} />
+                <CarouselPreviewContent
+                  previewFileIndex={previewFileIndex}
+                  setPreviewFileIndex={setPreviewFileIndex}
+                  previewFiles={previewFiles}
+                  setPreviewFiles={setPreviewFiles}
+                />
+                {nativePlatform !== "ios" && nativePlatform !== "android" && (
+                  <ConversationHeader
+                    conversationInfo={conversationInfo}
+                    conversationMetadata={conversationMetadata}
+                    minimize={minimize}
+                    mailboxSlug={mailboxSlug}
+                    isAboveSm={isAboveSm}
+                    sidebarVisible={sidebarVisible}
+                    setSidebarVisible={setSidebarVisible}
+                  />
+                )}
+                <ErrorContent error={error} refetch={refetch} />
+                <LoadingContent isPending={isPending} />
+                {!error && !isPending && (
+                  <MessageThreadPanel
+                    mailboxSlug={mailboxSlug}
+                    conversationInfo={conversationInfo}
+                    scrollRef={scrollRef}
+                    contentRef={contentRef}
+                    setPreviewFileIndex={setPreviewFileIndex}
+                    setPreviewFiles={setPreviewFiles}
+                    setLayoutState={setLayoutState}
+                  />
+                )}
               </div>
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel defaultSize={100 - defaultSize} minSize={20}>
-              {messageActionsPanel}
+              <MessageActionsPanel />
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
@@ -399,16 +492,46 @@ const ConversationPanels = ({
       </ResizablePanelGroup>
     );
   }
+
   return (
     <div className="flex flex-col h-full w-full bg-background">
       <div className="flex flex-col h-full relative">
-        {mergedContent}
-        {carouselPreviewContent}
-        {nativePlatform !== "ios" && nativePlatform !== "android" && conversationHeader}
-        {messageContent || (
+        <MergedContent conversationInfo={conversationInfo} mailboxSlug={mailboxSlug} />
+        <CarouselPreviewContent
+          previewFileIndex={previewFileIndex}
+          setPreviewFileIndex={setPreviewFileIndex}
+          previewFiles={previewFiles}
+          setPreviewFiles={setPreviewFiles}
+        />
+        {nativePlatform !== "ios" && nativePlatform !== "android" && (
+          <ConversationHeader
+            conversationInfo={conversationInfo}
+            conversationMetadata={conversationMetadata}
+            minimize={minimize}
+            mailboxSlug={mailboxSlug}
+            isAboveSm={isAboveSm}
+            sidebarVisible={sidebarVisible}
+            setSidebarVisible={setSidebarVisible}
+          />
+        )}
+        <ErrorContent error={error} refetch={refetch} />
+        <LoadingContent isPending={isPending} />
+        {!error && !isPending && (
           <>
-            <div className="flex-grow overflow-hidden flex flex-col">{messageThreadPanel}</div>
-            <div className="border-t border-border">{messageActionsPanel}</div>
+            <div className="flex-grow overflow-hidden flex flex-col">
+              <MessageThreadPanel
+                mailboxSlug={mailboxSlug}
+                conversationInfo={conversationInfo}
+                scrollRef={scrollRef}
+                contentRef={contentRef}
+                setPreviewFileIndex={setPreviewFileIndex}
+                setPreviewFiles={setPreviewFiles}
+                setLayoutState={setLayoutState}
+              />
+            </div>
+            <div className="border-t border-border">
+              <MessageActionsPanel />
+            </div>
           </>
         )}
       </div>
@@ -531,14 +654,14 @@ const ConversationContent = () => {
   }, [nativePlatform, conversationInfo?.subject]);
 
   return (
-    <ConversationPanels
+    <ConversationLayout
       mailboxSlug={mailboxSlug}
       scrollRef={scrollRef}
-      contentRef={contentRef as React.MutableRefObject<HTMLElement | null>}
+      contentRef={contentRef}
       scrollToBottom={scrollToBottom}
       conversationInfo={conversationInfo}
       isPending={isPending}
-      error={error as any}
+      error={error}
       refetch={refetch}
       setLayoutState={setLayoutState}
       setPreviewFileIndex={setPreviewFileIndex}
@@ -547,12 +670,11 @@ const ConversationContent = () => {
       previewFiles={previewFiles}
       minimize={minimize}
       conversationMetadata={conversationMetadata}
-      nativePlatform={nativePlatform as string | undefined}
+      nativePlatform={nativePlatform}
       defaultSize={defaultSize}
       isAboveSm={isAboveSm}
       sidebarVisible={sidebarVisible}
       setSidebarVisible={setSidebarVisible}
-      conversationListInfo={conversationListInfo}
     />
   );
 };
