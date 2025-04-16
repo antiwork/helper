@@ -58,6 +58,23 @@ services:
       retries: 3
       start_period: 30s
 
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      if ! /usr/bin/mc ls myminio/helperai-private-storage-dev; then
+        echo 'Bucket helperai-private-storage-dev does not exist. Creating...'
+        /usr/bin/mc mb myminio/helperai-private-storage-dev;
+      else
+        echo 'Bucket helperai-private-storage-dev already exists.';
+      fi;
+      exit 0;
+      "
+
 volumes:
   helperai_pgdata:
   helperai_miniodata:
