@@ -168,22 +168,20 @@ const ScrollToTopButton = ({
 };
 
 const MessageThreadPanel = ({
-  mailboxSlug,
-  conversationInfo,
   scrollRef,
   contentRef,
   setPreviewFileIndex,
   setPreviewFiles,
   setLayoutState,
 }: {
-  mailboxSlug: string;
-  conversationInfo: ConversationWithNewMessages | null;
   scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
   contentRef: React.MutableRefObject<HTMLElement | null>;
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
   setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
 }) => {
+  const { mailboxSlug, data: conversationInfo } = useConversationContext();
+
   return (
     <div className="flex-grow overflow-y-auto relative" ref={scrollRef}>
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
@@ -221,22 +219,19 @@ const MessageActionsPanel = () => {
 };
 
 const ConversationHeader = ({
-  conversationInfo,
   conversationMetadata,
-  minimize,
-  mailboxSlug,
   isAboveSm,
   sidebarVisible,
   setSidebarVisible,
 }: {
-  conversationInfo: ConversationWithNewMessages | null;
   conversationMetadata: any;
-  minimize: () => void;
-  mailboxSlug: string;
   isAboveSm: boolean;
   sidebarVisible: boolean;
   setSidebarVisible: (visible: boolean) => void;
 }) => {
+  const { mailboxSlug, data: conversationInfo } = useConversationContext();
+  const { minimize } = useConversationListContext();
+
   return (
     <div
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
@@ -281,7 +276,8 @@ const ConversationHeader = ({
   );
 };
 
-const ErrorContent = ({ error, refetch }: { error: any; refetch: () => void }) => {
+const ErrorContent = () => {
+  const { error, refetch } = useConversationContext();
   if (!error) return null;
 
   return (
@@ -299,7 +295,8 @@ const ErrorContent = ({ error, refetch }: { error: any; refetch: () => void }) =
   );
 };
 
-const LoadingContent = ({ isPending }: { isPending: boolean }) => {
+const LoadingContent = () => {
+  const { isPending } = useConversationContext();
   if (!isPending) return null;
 
   return (
@@ -361,13 +358,8 @@ const CarouselPreviewContent = ({
   );
 };
 
-const MergedContent = ({
-  conversationInfo,
-  mailboxSlug,
-}: {
-  conversationInfo: ConversationWithNewMessages | null;
-  mailboxSlug: string;
-}) => {
+const MergedContent = () => {
+  const { mailboxSlug, data: conversationInfo } = useConversationContext();
   if (!conversationInfo?.mergedInto?.slug) return null;
 
   return (
@@ -381,8 +373,7 @@ const MergedContent = ({
 };
 
 const ConversationContent = () => {
-  const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error, refetch } = useConversationContext();
-  const { minimize } = useConversationListContext();
+  const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
   useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
     utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
       data ? { ...data, ...event.data } : null,
@@ -497,7 +488,7 @@ const ConversationContent = () => {
               }}
             >
               <div className="flex flex-col h-full">
-                <MergedContent conversationInfo={conversationInfo} mailboxSlug={mailboxSlug} />
+                <MergedContent />
                 <CarouselPreviewContent
                   previewFileIndex={previewFileIndex}
                   setPreviewFileIndex={setPreviewFileIndex}
@@ -506,21 +497,16 @@ const ConversationContent = () => {
                 />
                 {nativePlatform !== "ios" && nativePlatform !== "android" && (
                   <ConversationHeader
-                    conversationInfo={conversationInfo}
                     conversationMetadata={conversationMetadata}
-                    minimize={minimize}
-                    mailboxSlug={mailboxSlug}
                     isAboveSm={isAboveSm}
                     sidebarVisible={sidebarVisible}
                     setSidebarVisible={setSidebarVisible}
                   />
                 )}
-                <ErrorContent error={error} refetch={refetch} />
-                <LoadingContent isPending={isPending} />
+                <ErrorContent />
+                <LoadingContent />
                 {!error && !isPending && (
                   <MessageThreadPanel
-                    mailboxSlug={mailboxSlug}
-                    conversationInfo={conversationInfo}
                     scrollRef={scrollRef}
                     contentRef={contentRef}
                     setPreviewFileIndex={setPreviewFileIndex}
@@ -556,7 +542,7 @@ const ConversationContent = () => {
   return (
     <div className="flex flex-col h-full w-full bg-background">
       <div className="flex flex-col h-full relative">
-        <MergedContent conversationInfo={conversationInfo} mailboxSlug={mailboxSlug} />
+        <MergedContent />
         <CarouselPreviewContent
           previewFileIndex={previewFileIndex}
           setPreviewFileIndex={setPreviewFileIndex}
@@ -565,23 +551,18 @@ const ConversationContent = () => {
         />
         {nativePlatform !== "ios" && nativePlatform !== "android" && (
           <ConversationHeader
-            conversationInfo={conversationInfo}
             conversationMetadata={conversationMetadata}
-            minimize={minimize}
-            mailboxSlug={mailboxSlug}
             isAboveSm={isAboveSm}
             sidebarVisible={sidebarVisible}
             setSidebarVisible={setSidebarVisible}
           />
         )}
-        <ErrorContent error={error} refetch={refetch} />
-        <LoadingContent isPending={isPending} />
+        <ErrorContent />
+        <LoadingContent />
         {!error && !isPending && (
           <>
             <div className="flex-grow overflow-hidden flex flex-col">
               <MessageThreadPanel
-                mailboxSlug={mailboxSlug}
-                conversationInfo={conversationInfo}
                 scrollRef={scrollRef}
                 contentRef={contentRef}
                 setPreviewFileIndex={setPreviewFileIndex}
