@@ -32,9 +32,9 @@ import { generateFilePreview } from "./generateFilePreview";
 
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
 
-const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
+export const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
 
-export const isThankYouOrAutoResponse = async (
+const isThankYouOrAutoResponse = async (
   mailbox: typeof mailboxes.$inferSelect,
   emailContent: string,
 ): Promise<boolean> => {
@@ -176,7 +176,7 @@ export const assertSuccessResponseOrThrow = <T>(response: GaxiosResponse<T>): Ga
   return response;
 };
 
-const getParsedEmailInfo = (parsedEmail: ParsedMail) => {
+export const getParsedEmailInfo = (parsedEmail: ParsedMail) => {
   const parsedEmailFrom = assertDefinedOrRaiseNonRetriableError(parseEmailAddress(parsedEmail.from?.text ?? ""));
   const parsedEmailBody = parseEmailBody(parsedEmail);
   return { parsedEmail, parsedEmailFrom, parsedEmailBody };
@@ -439,7 +439,7 @@ const authorizeGmailRequest = async (
   return GmailWebhookDataSchema.parse(rawData);
 };
 
-const extractQuotations = (html: string) => {
+export const extractQuotations = (html: string) => {
   return extractEmailPartsFromDocument(new JSDOM(html).window.document).mainContent;
 };
 
@@ -495,7 +495,7 @@ const parseEmailBody = (parsedEmail: ParsedMail) => {
   return content;
 };
 
-const extractAndUploadInlineImages = async (html: string) => {
+export const extractAndUploadInlineImages = async (html: string) => {
   const fileSlugs: string[] = [];
   let processedHtml = html;
 
