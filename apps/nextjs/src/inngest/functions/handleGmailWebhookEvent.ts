@@ -1,6 +1,7 @@
 import { User } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
+import { ParsedMailbox } from "email-addresses";
 import { GaxiosResponse } from "gaxios";
 import { OAuth2Client } from "google-auth-library";
 import { htmlToText } from "html-to-text";
@@ -33,7 +34,7 @@ const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CA
 
 const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
 
-const isThankYouOrAutoResponse = async (
+export const isThankYouOrAutoResponse = async (
   mailbox: typeof mailboxes.$inferSelect,
   emailContent: string,
 ): Promise<boolean> => {
@@ -41,15 +42,15 @@ const isThankYouOrAutoResponse = async (
     const content = await runAIQuery({
       system: [
         "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
-        "Respond with 'yes' if the email is EITHER:",
-        "1. Just a thank you message with no follow-up questions",
-        "2. Clearly an auto-response (e.g., 'Thanks for your message. We'll respond to you as soon as we can.' or an 'out of office' message)",
-        "Respond with 'no' if the email contains any substantive content, questions, or requires a response.",
+        "Respond with 'yes' if the email EITHER:",
+        "1. Is just a thank you message with no follow-up questions",
+        "2. Contains wording like 'We'll respond to you as soon as we can.'. Always respond with 'yes' if similar wording to this is present even if there are other instructions present.",
+        "Respond with 'no' followed by a reason if the email contains questions or requires a response.",
       ].join("\n"),
       mailbox,
       temperature: 0,
       messages: [{ role: "user", content: emailContent }],
-      queryType: "reasoning",
+      queryType: "email_auto_ignore",
       model: GPT_4O_MINI_MODEL,
       functionId: "email-auto-ignore-detector",
       maxTokens: 10,
@@ -89,14 +90,15 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
 export const createMessageAndProcessAttachments = async (
   mailboxId: number,
   parsedEmail: ParsedMail,
+  parsedEmailFrom: ParsedMailbox,
+  processedHtml: string,
+  cleanedUpText: string,
+  fileSlugs: string[],
   gmailMessageId: string,
   gmailThreadId: string,
   conversation: { id: number; slug: string },
   staffUser: User | null,
 ) => {
-  const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
-  const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
-
   const references = parsedEmail.references
     ? Array.isArray(parsedEmail.references)
       ? parsedEmail.references.join(" ")
@@ -120,9 +122,7 @@ export const createMessageAndProcessAttachments = async (
     emailCc: emailCc ? extractAddresses(emailCc) : null,
     emailBcc: emailBcc ? extractAddresses(emailBcc) : null,
     body: processedHtml,
-    cleanedUpText: htmlToText(
-      isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
-    ),
+    cleanedUpText,
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
@@ -234,6 +234,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
   const results: {
     message: string;
     responded?: boolean;
+    isAutomatedResponseOrThankYou?: boolean;
     gmailMessageId?: string;
     gmailThreadId?: string;
     messageId?: number;
@@ -266,7 +267,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       const parsedEmail = await simpleParser(
         Buffer.from(assertDefined(response.data.raw), "base64url").toString("utf-8"),
       );
-      const { parsedEmailFrom } = getParsedEmailInfo(parsedEmail);
+      const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
 
       const emailSentFromMailbox = parsedEmailFrom.address === gmailSupportEmail.email;
       if (emailSentFromMailbox) {
@@ -278,22 +279,24 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         continue;
       }
 
+      const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
+      const cleanedUpText = htmlToText(
+        isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
+      );
+
       const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
-      let isAutoResponseOrThankYou = false;
-      try {
-        const emailContent = htmlToText(parsedEmail.html || parsedEmail.textAsHtml || parsedEmail.text || "");
-        isAutoResponseOrThankYou = await isThankYouOrAutoResponse(mailbox, emailContent);
-      } catch (error) {
-        captureExceptionAndLogIfDevelopment(error);
-      }
-
-      const shouldIgnore =
+      let shouldIgnore =
         (!!staffUser && !isFirstMessage) ||
         labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
-        matchesTransactionalEmailAddress(parsedEmailFrom.address) ||
-        isAutoResponseOrThankYou;
+        matchesTransactionalEmailAddress(parsedEmailFrom.address);
+
+      let isAutomatedResponseOrThankYou: boolean | undefined;
+      if (!shouldIgnore) {
+        isAutomatedResponseOrThankYou = await isThankYouOrAutoResponse(mailbox, cleanedUpText);
+        shouldIgnore = isAutomatedResponseOrThankYou;
+      }
 
       const createNewConversation = async () => {
         return await db
@@ -346,6 +349,10 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       const newEmail = await createMessageAndProcessAttachments(
         mailbox.id,
         parsedEmail,
+        parsedEmailFrom,
+        processedHtml,
+        cleanedUpText,
+        fileSlugs,
         gmailMessageId,
         gmailThreadId,
         conversation,
@@ -362,21 +369,14 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         });
       }
 
-      if (isAutoResponseOrThankYou) {
-        results.push({
-          message: `Skipped - message ${gmailMessageId} is a thank you or auto-response email`,
-          gmailMessageId,
-          gmailThreadId,
-        });
-      } else {
-        results.push({
-          message: `Created message ${newEmail.id}`,
-          messageId: newEmail.id,
-          responded: !shouldIgnore,
-          gmailMessageId,
-          gmailThreadId,
-        });
-      }
+      results.push({
+        message: `Created message ${newEmail.id}`,
+        messageId: newEmail.id,
+        responded: !shouldIgnore,
+        isAutomatedResponseOrThankYou,
+        gmailMessageId,
+        gmailThreadId,
+      });
     } catch (error) {
       captureExceptionAndThrowIfDevelopment(error);
       results.push({ message: `Error processing message ${gmailMessageId}: ${error}`, gmailMessageId, gmailThreadId });

@@ -22,6 +22,7 @@ export const aiUsageEvents = pgTable(
         | "suggest_knowledge_bank_changes"
         | "agent_response"
         | "auto_assign_conversation"
+        | "email_auto_ignore"
       >(),
     inputTokensCount: integer().notNull(),
     outputTokensCount: integer().notNull(),
