@@ -74,6 +74,11 @@ export default function InboxScreen() {
       <View className="py-3">
         <Header />
       </View>
+      <View className="px-4 py-2">
+        <Text className="text-xl font-semibold text-foreground">
+          Inbox ({data?.pages[0]?.total.toLocaleString() ?? 0})
+        </Text>
+      </View>
       <View className="px-4 gap-2">
         <View className="flex-row gap-2">
           <View className={cn(
@@ -82,7 +87,7 @@ export default function InboxScreen() {
           )}>
             <MagnifyingGlassIcon size={20} className="text-muted-foreground mr-2" />
             <TextInput
-              placeholder={`Search ${conversations.length.toLocaleString()} messages...`}
+              placeholder="Search messages..."
               placeholderTextColor={colorScheme === "dark" ? "hsla(0, 0%, 100%, 0.7)" : "hsla(224, 8%, 46%, 1)"}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -121,7 +126,7 @@ export default function InboxScreen() {
         )}
         
         {isFilterOpen && (
-          <View className="absolute top-[50px] right-4 w-64 z-10 mt-1 bg-background border border-border rounded-lg divide-y divide-border">
+          <View className="absolute top-[35px] right-4 w-64 z-10 mt-1 bg-background border border-border rounded-lg divide-y divide-border py-2">
             <TouchableOpacity
               onPress={() => {
                 toggleFilter("unassigned");
@@ -135,9 +140,9 @@ export default function InboxScreen() {
               <Text className="text-foreground">Unassigned</Text>
             </TouchableOpacity>
             
-            <View className="py-2 px-4">
+            <View className="py-3 px-4">
               <Text className="text-xs text-muted-foreground mb-2">Assigned to</Text>
-              <View className="gap-1">
+              <View className="gap-1.5">
                 {members?.map((member) => {
                   const isSelected = selectedFilters.some(
                     f => typeof f === "object" && f.userId === member.id
@@ -149,7 +154,7 @@ export default function InboxScreen() {
                         toggleFilter({ type: "assigned", userId: member.id });
                         setIsFilterOpen(false);
                       }}
-                      className={cn("py-1", isSelected && "bg-muted")}
+                      className={cn("py-1.5", isSelected && "bg-muted")}
                     >
                       <Text className="text-foreground">{member.displayName}</Text>
                     </TouchableOpacity>

@@ -1,29 +1,32 @@
-import React, { useMemo } from "react";
-import { View, Text } from "react-native";
-import { UserIcon } from "react-native-heroicons/outline";
+import React, { useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, TextInput, useColorScheme } from "react-native";
+import { UserIcon, MagnifyingGlassIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Conversation, ConversationPreviewList } from "@/app/(dashboard)/_components/conversationPreviewList";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
-import { cssIconInterop } from "@/utils/css";
+import { cn, cssIconInterop } from "@/utils/css";
 import { Header } from "../_components/header";
 import { TabBar } from "../_components/tabBar";
 
 cssIconInterop(UserIcon);
+cssIconInterop(MagnifyingGlassIcon);
 
 export default function AssignedScreen() {
   const { selectedMailbox } = useMailbox();
+  const colorScheme = useColorScheme();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const params = useMemo(
     () => ({
       mailboxSlug: selectedMailbox?.slug ?? "",
       category: "mine",
       sort: "oldest",
-      search: null,
-      status: null,
+      search: searchQuery || null,
+      status: ["open"],
       limit: 25,
     }),
-    [selectedMailbox?.slug],
+    [selectedMailbox?.slug, searchQuery],
   );
 
   const { data, isLoading, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -60,11 +63,26 @@ export default function AssignedScreen() {
         <Header />
       </View>
       <View className="px-4 py-2">
-        <Text className="text-xl font-semibold">
+        <Text className="text-xl font-semibold text-foreground">
           Mine ({conversations.length})
         </Text>
       </View>
-      <View className="flex-1">
+      <View className="px-4 gap-2">
+        <View className={cn(
+          "flex-row items-center rounded-lg px-3 py-2",
+          colorScheme === "light" ? "border border-border bg-muted" : "bg-muted"
+        )}>
+          <MagnifyingGlassIcon size={20} className="text-muted-foreground mr-2" />
+          <TextInput
+            placeholder="Search messages..."
+            placeholderTextColor={colorScheme === "dark" ? "hsla(0, 0%, 100%, 0.7)" : "hsla(224, 8%, 46%, 1)"}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            className="flex-1 text-muted-foreground"
+          />
+        </View>
+      </View>
+      <View className="flex-1 mt-2">
         <ConversationPreviewList
           conversations={conversations}
           onUpdate={handleUpdate}

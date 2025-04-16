@@ -239,7 +239,7 @@ export function ConversationPreviewList({
         onUndo={() => handleReopenConversation(item)}
         onAssign={() => handleAssignConversation(item)}
       >
-        <View className="mx-4 mb-4 rounded-2xl border border-border bg-muted">
+        <View className="mx-4 mb-4 rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-muted">
           <Link href={{ pathname: "/conversations/[id]", params: { id: item.slug, mailboxSlug } }} asChild>
             <TouchableOpacity className="w-full p-4">
               <View className="flex-row items-center justify-between gap-6">
@@ -254,8 +254,8 @@ export function ConversationPreviewList({
                     </View>
                   )}
                   <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? 'bg-amber-400' : 'bg-muted'}`}>
-                    {item.platformCustomer?.isVip && <StarIcon size={14} className="text-background" />}
-                    <Text className={`text-sm font-medium ${item.platformCustomer?.isVip ? 'text-background' : 'text-muted-foreground'}`}>
+                    {item.platformCustomer?.isVip && <StarIcon size={14} className="dark:text-background text-foreground" />}
+                    <Text className={`text-sm font-medium ${item.platformCustomer?.isVip ? 'dark:text-background text-foreground' : 'text-muted-foreground'}`}>
                       ${item.platformCustomer?.value ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2) : '0.00'}
                     </Text>
                   </View>
@@ -331,7 +331,7 @@ export function ConversationPreviewList({
         data={conversations}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        className="pt-4 flex-1"
+        className="pt-2 flex-1"
         refreshControl={onRefresh ? <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} /> : undefined}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
