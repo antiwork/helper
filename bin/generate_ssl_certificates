@@ -18,8 +18,8 @@ cd docker/local-nginx/certs
 
 # Generate certificates
 echo "Generating certificates for helperai.dev..."
-mkcert helperai.dev "*.helperai.dev"
-mv helperai.dev+1.pem helperai_dev.crt
-mv helperai.dev+1-key.pem helperai_dev.key
+mkcert helperai.dev "*.helperai.dev" helperai-private-storage-dev.minio.helperai.dev
+mv helperai.dev+2.pem helperai_dev.crt
+mv helperai.dev+2-key.pem helperai_dev.key
 
 echo "SSL certificates generated successfully in docker/local-nginx/certs/"

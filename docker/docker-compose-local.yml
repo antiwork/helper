@@ -41,7 +41,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   minio:
-    image: minio/minio:RELEASE.2024-07-16T19-05-39Z
+    image: minio/minio
     ports:
       - "9000:9000" # API port
       - "9001:9001" # Console port

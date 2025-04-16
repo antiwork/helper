@@ -2,7 +2,7 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets";
 import { z } from "zod";
 
-const defaultUnlessDeployed = (value: z.ZodString, testingDefault: string) =>
+const defaultUnlessDeployed = <V extends z.ZodString | z.ZodOptional<z.ZodString>>(value: V, testingDefault: string) =>
   ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
 
 const defaultRootUrl =
@@ -52,7 +52,7 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: defaultUnlessDeployed(z.string().min(1), "minioadmin"),
     AWS_DEFAULT_REGION: defaultUnlessDeployed(z.string().min(1), "us-east-1"),
     AWS_PRIVATE_STORAGE_BUCKET_NAME: defaultUnlessDeployed(z.string().min(1), "helperai-private-storage-dev"),
-    AWS_ENDPOINT: defaultUnlessDeployed(z.string().url(), "http://localhost:9000").optional(),
+    AWS_ENDPOINT: defaultUnlessDeployed(z.string().url().optional(), "https://minio.helperai.dev"),
     CLERK_SECRET_KEY: z.string().min(1), // Secret key from https://dashboard.clerk.com
     CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.string().min(1).default("/mailboxes"),
     CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().min(1).default("/mailboxes"),

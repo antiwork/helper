@@ -6,7 +6,7 @@ import { env } from "@/env";
 import { s3Client } from "@/s3/client";
 
 const BUCKET_NAME = env.AWS_PRIVATE_STORAGE_BUCKET_NAME;
-const S3_ENDPOINT = `https://s3.amazonaws.com/${BUCKET_NAME}`;
+const S3_ENDPOINT = `${env.AWS_ENDPOINT ?? "https://s3.amazonaws.com"}/${BUCKET_NAME}`;
 const MAX_KEYS_PER_DELETE = 1000; // Maximum number of keys allowed in a single DeleteObjects request
 
 export const s3UrlToS3Key = (s3Url: string) => s3Url.slice(S3_ENDPOINT.length + 1);
