@@ -130,124 +130,6 @@ Now linking your Gmail account from Settings → Integrations should grant Gmail
 
 </details>
 
-## Optional Integrations
-
-These integrations are optional but can enhance the functionality of Helper.
-
-<details>
-<summary>Slack</summary>
-
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app.
-2. Under "Basic Information", find your app credentials.
-3. Add the following values to your `.env.local` file:
-   - `SLACK_CLIENT_ID`: Client ID from Basic Information
-   - `SLACK_CLIENT_SECRET`: Client Secret from Basic Information
-   - `SLACK_SIGNING_SECRET`: Signing Secret from Basic Information
-4. Under "OAuth & Permissions", add the following scopes:
-   - `chat:write`
-   - `chat:write.public`
-   - `channels:read`
-   - `users:read`
-   - `users:read.email`
-5. Install the app to your workspace.
-
-</details>
-
-<details>
-<summary>GitHub</summary>
-
-1. Go to [github.com/settings/apps](https://github.com/settings/apps) and click "New GitHub App".
-2. Fill in the required fields, including a name for your app.
-3. Set the following permissions:
-   - Repository permissions:
-     - Issues: Read & write
-     - Pull requests: Read & write
-   - Organization permissions:
-     - Members: Read-only
-4. Set the webhook URL to your application's webhook endpoint.
-5. After creating the app, note the App ID and generate a private key.
-6. Add the following values to your `.env.local` file:
-   - `GITHUB_APP_SLUG`: The slug of your GitHub app (from the URL)
-   - `GITHUB_APP_ID`: The App ID found in the app settings
-   - `GITHUB_CLIENT_SECRET`: The Client Secret from the app settings
-   - `GITHUB_PRIVATE_KEY`: The contents of the private key file you downloaded
-
-</details>
-
-<details>
-<summary>Stripe</summary>
-
-1. Go to [dashboard.stripe.com](https://dashboard.stripe.com) and create an account or log in.
-2. Make sure you're in test mode (toggle in the sidebar).
-3. Get your API keys from the Developers section → API keys.
-4. Create a subscription product and price:
-   - Go to Products → Create Product
-   - Add a name and description for your product
-   - In the Pricing section, create a recurring price
-   - Note the Price ID after creation
-5. Add the following values to your `.env.local` file:
-   - `STRIPE_SECRET_KEY`: Secret key from the API keys page
-   - `STRIPE_PRICE_ID`: The ID of the price you created
-   - `STRIPE_WEBHOOK_SECRET`: Create this by setting up a webhook in the Developers → Webhooks section
-6. Optionally, set `ADDITIONAL_PAID_ORGANIZATION_IDS` to comma-separated Clerk organization IDs to consider as paid subscriptions in development.
-
-</details>
-
-<details>
-<summary>Jina</summary>
-
-1. Go to [jina.ai](https://jina.ai) and create an account or log in.
-2. Navigate to the API section to generate an API token.
-3. Add the token to your `.env.local` file as `JINA_API_TOKEN`.
-
-</details>
-
-<details>
-<summary>Firecrawl</summary>
-
-1. Go to [firecrawl.dev](https://www.firecrawl.dev) and create an account or log in.
-2. Generate an API key from your account settings or dashboard.
-3. Add the API key to your `.env.local` file as `FIRECRAWL_API_KEY`.
-
-</details>
-
-<details>
-<summary>Proxy</summary>
-
-1. Set up a proxy server for serving email content assets.
-2. Add the following values to your `.env.local` file:
-   - `PROXY_URL`: The URL of your proxy server
-   - `PROXY_SECRET_KEY`: A secret key for authenticating with your proxy server
-
-</details>
-
-<details>
-<summary>Apple Sign-in</summary>
-
-1. Go to [developer.apple.com](https://developer.apple.com) and log in to your Apple Developer account.
-2. Navigate to Certificates, Identifiers & Profiles → Identifiers and create a new App ID.
-3. Enable "Sign In with Apple" for this App ID.
-4. Go to Certificates, Identifiers & Profiles → Keys and create a new key.
-5. Enable "Sign In with Apple" for this key and configure it with your App ID.
-6. Register a Services ID to use for web authentication with Apple.
-7. Add the following values to your `.env.local` file:
-   - `APPLE_APP_ID`: Your app's identifier (e.g., com.yourcompany.yourapp)
-   - `APPLE_TEAM_ID`: Your Team ID found in the Apple Developer account
-   - `APPLE_PRIVATE_KEY`: The contents of the downloaded private key file
-   - `APPLE_PRIVATE_KEY_IDENTIFIER`: The Key ID from the key you created
-
-</details>
-
-<details>
-<summary>Sentry</summary>
-
-1. Go to [sentry.io](https://sentry.io) and create an account or log in.
-2. Create a new project for a Next.js application.
-3. In the project settings, find the DSN (Data Source Name).
-4. Add the DSN to your `.env.local` file as `NEXT_PUBLIC_SENTRY_DSN`.
-
-</details>
-
 ## Running locally
 
 Run the application and access it at [helperai.dev](https://helperai.dev):
@@ -292,16 +174,181 @@ While email sending/receiving in a customer's inbox happens through Gmail, all o
 
 ![How to send a preview email](images/resend_preview_email.png)
 
-## Langfuse AI Tracing
+## Optional Integrations
 
-To access Langfuse to view AI traces:
+These integrations are optional but add more functionality to Helper.
 
-1. Access the Langfuse UI at: http://localhost:3020
+<details>
+<summary>Slack</summary>
 
-2. Log in with the automatically created user:
-   - Email: dev@helper.ai
-   - Password: password
+Enables various features including messaging channels when tickets are received, messaging users when tickets are assigned, and an AI agent.
 
-This user is automatically created for the Langfuse instance running inside Docker Compose.
+1. Set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or similar to get a public forwarding URL pointing to `localhost:3010`.
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app.
+1. Under "Basic Information", find your app credentials.
+1. Add the following values to your `.env.local` file:
+   - `SLACK_CLIENT_ID`: Client ID from Basic Information
+   - `SLACK_CLIENT_SECRET`: Client Secret from Basic Information
+   - `SLACK_SIGNING_SECRET`: Signing Secret from Basic Information
+1. Under "OAuth & Permissions", add all scopes listed in `apps/nextjs/src/lib/slack/constants.ts`
+1. Under "Event Subscriptions", add `https://<your-forwarding-url>/api/webhooks/slack/event` as the event request URL
+1. Also under "Event Subscriptions", subscribe to the following bot events:
+   - `app_mention`
+   - `assistant_thread_started`
+   - `message.channels`
+   - `message.im`
+   - `tokens_revoked`
+1. Under "Interactivity & Shortcuts", add `https://<your-forwarding-url>/api/webhooks/slack/response` as the interactivity request URL
+1. Under "Agents & AI Apps", check "Agent or Assistant"
+1. Under "App Home", check "Always Show My Bot as Online"
+1. Install the app to your workspace.
 
-You can now view and analyze AI traces for the Helper development project.
+</details>
+
+<details>
+<summary>GitHub</summary>
+
+Enables creating GitHub issues from tickets and replying to the customer when the issue is closed.
+
+1. Go to [github.com/settings/apps](https://github.com/settings/apps) and click "New GitHub App".
+1. Fill in the required fields, including a name for your app.
+1. Set the Callback URL to `https://<your-forwarding-url>/api/connect/github/callback`
+1. Also set the post-installation Setup URL to `https://<your-forwarding-url>/api/connect/github/callback` and check "Redirect on update"
+1. Set the following permissions:
+   - Repository permissions:
+     - Issues: Read & write
+   - Account permissions:
+     - Email addresses: Read-only
+1. After creating the app, note the App ID and generate a private key.
+1. Add the following values to your `.env.local` file:
+   - `GITHUB_APP_SLUG`: The slug of your GitHub app (from the URL; it should be a dasherized version of your app's name)
+   - `GITHUB_APP_ID`: The App ID found in the app settings
+   - `GITHUB_CLIENT_SECRET`: The Client Secret from the app settings
+   - `GITHUB_PRIVATE_KEY`: The contents of the private key file you downloaded
+
+</details>
+
+<details>
+<summary>Jina</summary>
+
+Enables the widget to read the current page for better AI context.
+
+1. Go to [jina.ai](https://jina.ai) and create an account or log in.
+2. Navigate to the API section to generate an API token.
+3. Add the token to your `.env.local` file as `JINA_API_TOKEN`.
+
+</details>
+
+<details>
+<summary>Firecrawl</summary>
+
+Enables linking an existing knowledge base website for the AI to reference.
+
+1. Go to [firecrawl.dev](https://www.firecrawl.dev) and create an account or log in.
+2. Generate an API key from your account settings or dashboard.
+3. Add the API key to your `.env.local` file as `FIRECRAWL_API_KEY`.
+
+</details>
+
+<details>
+<summary>Asset Proxy</summary>
+
+Enables passing email assets through an intermediate server to increase security.
+
+1. Set up a proxy server with HMAC authentication. Use the following CloudFlare Worker script for reference:
+
+```js
+const SECRET_KEY = "<secret key>";
+const EXPIRY_TIME = 300; // Signature expiry time in seconds (5 minutes)
+
+async function verifySignature(request) {
+  const url = new URL(request.url);
+  const targetUrl = url.searchParams.get("url");
+  const passedSignature = url.searchParams.get("verify");
+  const expires = url.searchParams.get("expires");
+
+  if (!targetUrl || !passedSignature || !expires) {
+    return false;
+  }
+
+  const now = Math.floor(Date.now() / 1000); // Current time in seconds
+  if (now > parseInt(expires, 10)) {
+    return false; // Expired request
+  }
+
+  // Compute expected HMAC signature
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(SECRET_KEY),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const dataToSign = `${targetUrl}:${expires}`;
+  const signatureData = encoder.encode(dataToSign);
+  const signatureBuffer = await crypto.subtle.sign("HMAC", key, signatureData);
+  const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, ""); // URL-safe Base64 encoding
+
+  return expectedSignature === passedSignature;
+}
+
+export default {
+  async fetch(request) {
+    if (!(await verifySignature(request))) {
+      return new Response("Forbidden: Invalid or expired signature", { status: 403 });
+    }
+
+    const url = new URL(request.url);
+    const targetUrl = url.searchParams.get("url");
+
+    try {
+      const response = await fetch(targetUrl, {
+        method: request.method,
+        headers: request.headers,
+      });
+
+      const newHeaders = new Headers(response.headers);
+      const allowedOrigins = ["https://helper.ai", "https://helperai.dev"];
+      const origin = request.headers.get("Origin");
+
+      if (allowedOrigins.includes(origin)) {
+        newHeaders.set("Access-Control-Allow-Origin", origin);
+      }
+
+      newHeaders.set("Access-Control-Allow-Methods", "GET");
+      newHeaders.set("Access-Control-Allow-Headers", "*");
+      newHeaders.set("X-Proxy-By", "Helper Content Proxy");
+
+      return new Response(response.body, {
+        status: response.status,
+        headers: newHeaders,
+      });
+    } catch (error) {
+      return new Response(`Error: ${error.message}`, { status: 500 });
+    }
+  },
+};
+```
+
+2. Add the following values to your `.env.local` file:
+   - `PROXY_URL`: The URL of your proxy server
+   - `PROXY_SECRET_KEY`: The same secret key you set in the script
+
+</details>
+
+<details>
+<summary>Sentry</summary>
+
+Enables error reporting and performance tracing.
+
+1. Go to [sentry.io](https://sentry.io) and create an account or log in.
+2. Create a new project for a Next.js application.
+3. In the project settings, find the DSN (Data Source Name).
+4. Add the DSN to your `.env.local` file as `NEXT_PUBLIC_SENTRY_DSN`.
+
+</details>
