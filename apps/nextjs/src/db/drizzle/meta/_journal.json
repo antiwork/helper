@@ -519,48 +519,5 @@
       "when": 1743795018710,
       "tag": "0073_needy_kronos",
       "breakpoints": true
-    },
-    {
-      "idx": 74,
-      "version": "7",
-      "when": 1744238023080,
-      "tag": "0074_sleepy_santa_claus",
-      "breakpoints": true
-    },
-    {
-      "idx": 75,
-      "version": "7",
-      "when": 1744390851724,
-      "tag": "0075_burly_night_thrasher",
-      "breakpoints": true
-    },
-    {
-      "idx": 76,
-      "version": "7",
-      "when": 1744391256203,
-      "tag": "0076_tiresome_maddog",
-      "breakpoints": true
-    },
-    {
-      "idx": 77,
-      "version": "7",
-      "when": 1744395184151,
-      "tag": "0077_heavy_warpath",
-      "breakpoints": true
-    },
-    {
-      "idx": 78,
-      "version": "7",
-      "when": 1744406620178,
-      "tag": "0078_burly_speed",
-      "breakpoints": true
-    },
-    {
-      "idx": 79,
-      "version": "7",
-      "when": 1744420072167,
-      "tag": "0079_pink_supreme_intelligence",
-      "breakpoints": true
     }
-  ]
 }

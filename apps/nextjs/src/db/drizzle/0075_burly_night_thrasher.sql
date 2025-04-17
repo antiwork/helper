@@ -1,1 +1,0 @@
-ALTER TABLE "guide_session_replays" ADD COLUMN "metadata" jsonb DEFAULT '{}'::jsonb;
