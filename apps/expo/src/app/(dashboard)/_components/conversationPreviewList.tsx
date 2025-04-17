@@ -288,7 +288,7 @@ export function ConversationPreviewList({
                         {item.staffMessageText.replace(/\s+/g, " ")}
                       </Text>
                       <Text className="text-xs text-muted-foreground flex-shrink-0">
-                        {humanizeTime(item.lastStaffEmailCreatedAt ?? item.createdAt)}
+                        {humanizeTime(item.lastUserEmailCreatedAt ?? item.createdAt)}
                       </Text>
                     </View>
                   </View>
