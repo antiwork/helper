@@ -100,7 +100,17 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "agent_messages_agent_thread_id_fkey": {
+          "name": "agent_messages_agent_thread_id_fkey",
+          "tableFrom": "agent_messages_message",
+          "tableTo": "agent_threads_thread",
+          "columnsFrom": ["agent_thread_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -197,7 +207,17 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "agent_threads_mailbox_id_fkey": {
+          "name": "agent_threads_mailbox_id_fkey",
+          "tableFrom": "agent_threads_thread",
+          "tableTo": "mailboxes_mailbox",
+          "columnsFrom": ["mailbox_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
