@@ -21,4 +21,10 @@ CREATE TABLE "agent_threads_thread" (
 CREATE INDEX "agent_messages_agent_thread_id_idx" ON "agent_messages_message" USING btree ("agent_thread_id");--> statement-breakpoint
 CREATE INDEX "agent_messages_role_idx" ON "agent_messages_message" USING btree ("role");--> statement-breakpoint
 CREATE INDEX "agent_threads_mailbox_id_idx" ON "agent_threads_thread" USING btree ("mailbox_id");--> statement-breakpoint
-CREATE INDEX "agent_threads_slack_channel_thread_ts_idx" ON "agent_threads_thread" USING btree ("slack_channel","thread_ts");
+CREATE INDEX "agent_threads_slack_channel_thread_ts_idx" ON "agent_threads_thread" USING btree ("slack_channel","thread_ts");--> statement-breakpoint
+
+ALTER TABLE "agent_threads_thread" ADD CONSTRAINT "agent_threads_mailbox_id_fkey" 
+  FOREIGN KEY ("mailbox_id") REFERENCES "mailboxes_mailbox" ("id") ON DELETE CASCADE;--> statement-breakpoint
+
+ALTER TABLE "agent_messages_message" ADD CONSTRAINT "agent_messages_agent_thread_id_fkey" 
+  FOREIGN KEY ("agent_thread_id") REFERENCES "agent_threads_thread" ("id") ON DELETE CASCADE;
