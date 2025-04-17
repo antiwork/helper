@@ -260,13 +260,13 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       <div className={cn("relative flex flex-col gap-4", className)}>
         <div
           className={cn(
-            "flex-grow flex flex-col h-full rounded border border-border bg-background",
+            "flex-grow flex flex-col min-h-0 rounded border border-border bg-background",
             toolbarOpen && isAboveMd && "pb-14",
           )}
           aria-label={ariaLabel}
         >
           <div
-            className="flex-grow flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
+            className="flex-1 flex flex-col min-h-0 overflow-y-auto rounded-b p-3 text-sm text-foreground"
             onClick={focusEditor}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(event) => {

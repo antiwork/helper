@@ -121,7 +121,7 @@ const EmailEditorComponent = React.forwardRef<
         </div>
         <TipTapEditor
           ref={editorRef}
-          className={cn("flex-grow my-2 md:my-4", showCommandBar && "hidden")}
+          className={cn("flex-grow min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
           ariaLabel="Conversation editor"
           placeholder="Type your reply here..."
           defaultContent={initialMessage}
