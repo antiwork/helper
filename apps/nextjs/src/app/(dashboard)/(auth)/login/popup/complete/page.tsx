@@ -31,7 +31,7 @@ export default function CompletePage() {
   }, [userId, signInToken]);
 
   return isOpeningApp ? (
-    <div className="h-screen flex flex-col items-center justify-center bg-background">
+    <div className="h-dvh flex flex-col items-center justify-center bg-background">
       <LoadingSpinner size="lg" />
       <p className="text-lg font-medium my-6 text-center max-w-sm">
         Logging you into the desktop app. You can close this window when you're done.
