@@ -75,7 +75,7 @@ export const isAgentThread = async (event: GenericMessageEvent, mailboxInfo: Sla
   });
 
   for (const message of messages ?? []) {
-    if (message.user === mailbox.slackBotUserId) return true;
+    if (message.user !== mailbox.slackBotUserId && message.text?.includes(`<@${mailbox.slackBotUserId}>`)) return true;
   }
 
   return false;
