@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", "public/sdk.js"]
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", "public/sdk*.js"]
     },
     "dev": {
       "persistent": true

@@ -150,6 +150,13 @@ describe("updateConversation", () => {
       data: {
         id: conversation.id,
         status: "closed",
+        assignedToAI: false,
+        assignedToClerkId: null,
+        previousValues: {
+          status: "open",
+          assignedToClerkId: null,
+          assignedToAI: false,
+        },
       },
     });
   });

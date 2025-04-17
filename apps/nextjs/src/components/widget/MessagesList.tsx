@@ -1,10 +1,12 @@
 import { JSONValue } from "ai";
 import { useStickToBottom } from "use-stick-to-bottom";
+import { Attachment } from "@/components/widget/Conversation";
 import Message, { MessageWithReaction } from "@/components/widget/Message";
 
 type Props = {
   data: JSONValue[] | null;
   messages: MessageWithReaction[];
+  allAttachments: Attachment[];
   conversationSlug: string | null;
   isGumroadTheme: boolean;
   token: string | null;
@@ -16,6 +18,7 @@ export default function MessagesList({
   data,
   messages,
   conversationSlug,
+  allAttachments,
   isGumroadTheme,
   token,
   startGuide,
@@ -30,6 +33,7 @@ export default function MessagesList({
           <Message
             key={index}
             message={message}
+            attachments={allAttachments.filter((a) => a.messageId === message.id)}
             conversationSlug={conversationSlug}
             token={token}
             data={index === messages.length - 1 ? data : null}

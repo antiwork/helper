@@ -155,7 +155,11 @@ export const updateConversation = async (
             data: serializeConversation(mailbox, updatedConversation),
           }),
         ];
-        if (current.status !== updatedConversation?.status) {
+        if (
+          current.status !== updatedConversation.status ||
+          current.assignedToAI !== updatedConversation.assignedToAI ||
+          current.assignedToClerkId !== updatedConversation.assignedToClerkId
+        ) {
           events.push(
             publishToAbly({
               channel: conversationsListChannelId(mailbox.slug),
@@ -163,6 +167,13 @@ export const updateConversation = async (
               data: {
                 id: updatedConversation.id,
                 status: updatedConversation.status,
+                assignedToAI: updatedConversation.assignedToAI,
+                assignedToClerkId: updatedConversation.assignedToClerkId,
+                previousValues: {
+                  status: current.status,
+                  assignedToAI: current.assignedToAI,
+                  assignedToClerkId: current.assignedToClerkId,
+                },
               },
             }),
           );

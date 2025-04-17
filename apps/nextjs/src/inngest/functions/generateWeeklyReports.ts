@@ -6,7 +6,8 @@ import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { REPORT_HOUR, TIME_ZONE } from "@/inngest/functions/generateDailyReports";
-import { getMemberStats } from "@/lib/data/stats";
+import { getMemberStats, MemberStats } from "@/lib/data/stats";
+import { UserRoles } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 const formatDateRange = (start: Date, end: Date) => {
@@ -85,6 +86,13 @@ export async function generateMailboxReport({
   }
 
   const slackUsersByEmail = await getSlackUsersByEmail(slackBotToken);
+  const coreMembers = stats.filter((member) => member.role === UserRoles.CORE);
+  const nonCoreMembers = stats.filter((member) => member.role === UserRoles.NON_CORE);
+
+  // Process each team member group
+  const coreData = processRoleGroup(coreMembers, slackUsersByEmail);
+  const nonCoreData = processRoleGroup(nonCoreMembers, slackUsersByEmail);
+
   const tableData: { name: string; count: number; slackUserId?: string }[] = [];
 
   for (const member of stats) {
@@ -98,30 +106,11 @@ export async function generateMailboxReport({
     });
   }
 
-  const inactiveUsers = stats.filter((member) => member.replyCount === 0);
   const humanUsers = tableData.sort((a, b) => b.count - a.count);
   const totalTicketsResolved = tableData.reduce((sum, agent) => sum + agent.count, 0);
   const activeUserCount = humanUsers.filter((user) => user.count > 0).length;
 
-  const userLines = humanUsers
-    .filter((user) => user.count > 0)
-    .map((user) => {
-      const formattedCount = user.count.toLocaleString();
-      const userName = user.slackUserId ? `<@${user.slackUserId}>` : user.name;
-      return `• ${userName}: ${formattedCount}`;
-    });
-
   const peopleText = activeUserCount === 1 ? "person" : "people";
-
-  const inactiveUserMentions = inactiveUsers
-    .map((user) => {
-      const slackUserId = slackUsersByEmail.get(assertDefined(user.email));
-      if (slackUserId) {
-        return `<@${slackUserId}>`;
-      }
-      return user.displayName || user.email;
-    })
-    .join(", ");
 
   const blocks: any[] = [
     {
@@ -134,40 +123,77 @@ export async function generateMailboxReport({
     },
   ];
 
-  if (userLines.length > 0) {
+  // core members stats section
+  if (coreMembers.length > 0) {
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: userLines.join("\n"),
+        text: "*Core members:*",
       },
     });
-    blocks.push({
-      type: "divider",
-    });
-  }
 
-  const summaryParts = [];
-  if (totalTicketsResolved > 0) {
-    summaryParts.push("*Total replies:*");
-    summaryParts.push(`${totalTicketsResolved.toLocaleString()} from ${activeUserCount} ${peopleText}`);
-  }
-  if (inactiveUserMentions) {
-    if (totalTicketsResolved > 0) {
+    if (coreData.activeLines.length > 0) {
       blocks.push({
         type: "section",
         text: {
           type: "mrkdwn",
-          text: summaryParts.join("\n"),
+          text: coreData.activeLines.join("\n"),
         },
       });
-      blocks.push({
-        type: "divider",
-      });
-      summaryParts.length = 0;
     }
-    summaryParts.push("*People who didn't answer a support ticket:*");
-    summaryParts.push(inactiveUserMentions);
+
+    if (coreData.inactiveList) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*No tickets answered:* ${coreData.inactiveList}`,
+        },
+      });
+    }
+
+    blocks.push({ type: "divider" });
+  }
+
+  // non-core members stats section
+  if (nonCoreMembers.length > 0) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*Non-core members:*",
+      },
+    });
+
+    if (nonCoreData.activeLines.length > 0) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: nonCoreData.activeLines.join("\n"),
+        },
+      });
+    }
+
+    if (nonCoreData.inactiveList) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*No tickets answered:* ${nonCoreData.inactiveList}`,
+        },
+      });
+    }
+
+    blocks.push({ type: "divider" });
+  }
+
+  // totals section
+  const summaryParts = [];
+  if (totalTicketsResolved > 0) {
+    summaryParts.push("*Total replies:*");
+    summaryParts.push(`${totalTicketsResolved.toLocaleString()} from ${activeUserCount} ${peopleText}`);
   }
 
   if (summaryParts.length > 0) {
@@ -187,4 +213,37 @@ export async function generateMailboxReport({
   });
 
   return "Report sent";
+}
+
+function processRoleGroup(members: MemberStats, slackUsersByEmail: Map<string, string>) {
+  const activeMembers = members.filter((member) => member.replyCount > 0).sort((a, b) => b.replyCount - a.replyCount);
+  const inactiveMembers = members.filter((member) => member.replyCount === 0);
+
+  const activeLines = activeMembers.map((member) => {
+    const formattedCount = member.replyCount.toLocaleString();
+    const slackUserId = slackUsersByEmail.get(member.email!);
+    const userName =
+      member.role === UserRoles.CORE && slackUserId
+        ? `<@${slackUserId}>`
+        : member.displayName || member.email || "Unknown";
+
+    return `• ${userName}: ${formattedCount}`;
+  });
+
+  const inactiveList =
+    inactiveMembers.length > 0
+      ? inactiveMembers
+          .map((member) => {
+            const slackUserId = slackUsersByEmail.get(member.email!);
+            const userName =
+              member.role === UserRoles.CORE && slackUserId
+                ? `<@${slackUserId}>`
+                : member.displayName || member.email || "Unknown";
+
+            return userName;
+          })
+          .join(", ")
+      : "";
+
+  return { activeLines, inactiveList };
 }

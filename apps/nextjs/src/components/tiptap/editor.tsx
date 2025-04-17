@@ -15,6 +15,7 @@ import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
 import "./editor.css";
 import { toast } from "@/components/hooks/use-toast";
+import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
 import Toolbar from "./toolbar";
@@ -23,6 +24,7 @@ type TipTapEditorProps = {
   defaultContent: Record<string, string>;
   onUpdate: (text: string, isEmpty: boolean) => void;
   onModEnter?: () => void;
+  onOptionEnter?: () => void;
   onSlashKey?: () => void;
   customToolbar?: () => React.ReactNode;
   enableImageUpload?: boolean;
@@ -32,6 +34,7 @@ type TipTapEditorProps = {
   editable?: boolean;
   ariaLabel?: string;
   className?: string;
+  actionButtons?: React.ReactNode;
 };
 
 declare module "@tiptap/core" {
@@ -60,6 +63,7 @@ const HardBreakIgnoreModEnter = HardBreak.extend({
 export type TipTapEditorRef = {
   focus: () => void;
   scrollTo: (y: number) => void;
+  editor: Editor | null;
 };
 
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
@@ -68,6 +72,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       defaultContent,
       onUpdate,
       onModEnter,
+      onOptionEnter,
       onSlashKey,
       autoFocus,
       customToolbar,
@@ -78,9 +83,11 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       editable,
       ariaLabel,
       className,
+      actionButtons,
     },
     ref,
   ) => {
+    const { isAboveMd } = useBreakpoint("md");
     const [isMacOS, setIsMacOS] = React.useState(false);
     const [toolbarOpen, setToolbarOpen] = React.useState(() => {
       if (typeof window !== "undefined") {
@@ -152,9 +159,17 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     });
 
     const handleModEnter = (event: React.KeyboardEvent) => {
-      if (!onModEnter) return;
       if ((isMacOS && event.metaKey && event.key === "Enter") || (!isMacOS && event.ctrlKey && event.key === "Enter")) {
-        onModEnter();
+        if (onModEnter) {
+          onModEnter();
+          return;
+        }
+      }
+
+      if (event.altKey && event.key === "Enter") {
+        if (onOptionEnter) {
+          onOptionEnter();
+        }
       }
     };
 
@@ -192,6 +207,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
           top,
           behavior: "smooth",
         }),
+      editor: editorRef.current,
     }));
 
     const focusEditor = () => {
@@ -241,66 +257,71 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     }
 
     return (
-      <div
-        className={cn(
-          "relative flex flex-col h-full rounded border border-border bg-background",
-          toolbarOpen && "pb-14",
-          className,
-        )}
-        aria-label={ariaLabel}
-      >
-        <Toolbar
-          {...{
-            open: toolbarOpen,
-            setOpen: setToolbarOpen,
-            editor,
-            uploadFileAttachments,
-            uploadInlineImages,
-            customToolbar,
-            enableImageUpload,
-            enableFileUpload,
-          }}
-        />
-
+      <div className={cn("relative flex flex-col gap-4", className)}>
         <div
-          className="flex-grow relative flex flex-col overflow-y-auto rounded-b p-3 text-sm text-foreground"
-          onClick={focusEditor}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            const files = [...(event.dataTransfer.files ?? [])];
-            if (!files.length) return false;
-            uploadFiles.current(files);
-          }}
-          ref={editorContentContainerRef}
+          className={cn(
+            "flex-grow flex flex-col min-h-0 rounded border border-border bg-background",
+            toolbarOpen && isAboveMd && "pb-14",
+          )}
+          aria-label={ariaLabel}
         >
-          <div className="flex-grow">
-            <EditorContent editor={editor} onKeyDown={handleModEnter} />
-          </div>
-          {signature}
-          {attachments.length > 0 ? (
-            <div className="flex w-full flex-wrap gap-2 pt-4">
-              {attachments.map((fileInfo, idx) => (
-                <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        {editor && editorContentContainerRef.current && (
-          <BubbleMenu
-            editor={editor}
-            tippyOptions={{
-              duration: 100,
-              placement: "bottom-start",
-              appendTo: editorContentContainerRef.current,
+          <div
+            className="flex-1 flex flex-col min-h-0 overflow-y-auto rounded-b p-3 text-sm text-foreground"
+            onClick={focusEditor}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              const files = [...(event.dataTransfer.files ?? [])];
+              if (!files.length) return false;
+              uploadFiles.current(files);
             }}
-            shouldShow={({ editor }) => editor.state.selection.content().size > 0 && !editor.isActive("image")}
-            className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+            ref={editorContentContainerRef}
           >
-            Hint: Paste URL to create link
-          </BubbleMenu>
-        )}
+            <div className="flex-grow">
+              <EditorContent editor={editor} onKeyDown={handleModEnter} />
+            </div>
+            {signature}
+            {attachments.length > 0 ? (
+              <div className="flex w-full flex-wrap gap-2 pt-4">
+                {attachments.map((fileInfo, idx) => (
+                  <FileAttachment key={idx} fileInfo={fileInfo} onRetry={retryNonImageUpload} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {editor && (
+            <BubbleMenu
+              editor={editor}
+              tippyOptions={{
+                duration: 100,
+                placement: "bottom-start",
+                appendTo: editorContentContainerRef.current || "parent",
+              }}
+              shouldShow={({ editor }) =>
+                isAboveMd && editor.state.selection.content().size > 0 && !editor.isActive("image")
+              }
+              className="rounded border border-border bg-background p-2 text-xs text-muted-foreground"
+            >
+              Hint: Paste URL to create link
+            </BubbleMenu>
+          )}
+        </div>
+        <div className="flex justify-between md:justify-start">
+          <Toolbar
+            {...{
+              open: toolbarOpen,
+              setOpen: setToolbarOpen,
+              editor,
+              uploadFileAttachments,
+              uploadInlineImages,
+              customToolbar,
+              enableImageUpload,
+              enableFileUpload,
+            }}
+          />
+          {toolbarOpen && !isAboveMd ? null : actionButtons}
+        </div>
       </div>
     );
   },

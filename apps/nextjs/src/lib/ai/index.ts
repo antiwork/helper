@@ -1,5 +1,5 @@
 import { retry } from "@lifeomic/attempt";
-import { CoreMessage, GenerateTextResult } from "ai";
+import { CoreMessage, GenerateTextResult, Tool } from "ai";
 import { z } from "zod";
 import { aiUsageEvents } from "@/db/schema/aiUsageEvents";
 import { mailboxes } from "@/db/schema/mailboxes";
@@ -35,9 +35,11 @@ export const runAIQuery = async ({
   system,
   temperature = 0.0,
   maxTokens = 500,
+  maxSteps,
+  tools,
   functionId,
   shortenPromptBy,
-}: CommonAIQueryOptions): Promise<string> => {
+}: CommonAIQueryOptions & { maxSteps?: number; tools?: Record<string, Tool> }): Promise<string> => {
   const response = await runWithRetry(
     () =>
       generateCompletion({
@@ -46,6 +48,8 @@ export const runAIQuery = async ({
         system,
         temperature,
         maxTokens,
+        maxSteps,
+        tools,
         functionId,
         shortenPromptBy,
         metadata: {

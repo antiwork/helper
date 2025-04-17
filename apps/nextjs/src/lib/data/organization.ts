@@ -1,4 +1,4 @@
-import { Organization, User } from "@clerk/nextjs/server";
+import { Organization, OrganizationMembership, User } from "@clerk/nextjs/server";
 import { addDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { cache } from "react";
@@ -23,9 +23,11 @@ export const setPrivateMetadata = async (organizationId: string, metadata: Recor
   return await clerkClient.organizations.updateOrganizationMetadata(organizationId, { privateMetadata: metadata });
 };
 
-export const getOrganizationMembers = async (organizationId: string, limit = 100) => {
-  return await clerkClient.organizations.getOrganizationMembershipList({ organizationId, limit });
-};
+export const getOrganizationMembers = cache(
+  async (organizationId: string, limit = 100): Promise<{ data: OrganizationMembership[] }> => {
+    return await clerkClient.organizations.getOrganizationMembershipList({ organizationId, limit });
+  },
+);
 
 export const getOrganizationAdminUsers = async (organizationId: string) => {
   const members = await getOrganizationMembers(organizationId);
@@ -37,7 +39,7 @@ export const getOrganizationAdminUsers = async (organizationId: string) => {
   return admins.data;
 };
 
-export const getOrganizationMemberships = async (userId: string) => {
+export const getOrganizationMemberships = async (userId: string): Promise<{ data: OrganizationMembership[] }> => {
   return await clerkClient.users.getOrganizationMembershipList({ userId });
 };
 

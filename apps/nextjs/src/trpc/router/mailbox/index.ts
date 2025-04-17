@@ -1,6 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { subHours } from "date-fns";
 import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { setupOrganizationForNewUser } from "@/auth/lib/authService";
@@ -12,13 +11,14 @@ import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
-import { getMemberStats } from "@/lib/data/stats";
 import { protectedProcedure } from "@/trpc/trpc";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
+import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
+import { preferencesRouter } from "./preferences";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
@@ -47,32 +47,33 @@ export const mailboxRouter = {
     }
     return allMailboxes;
   }),
-  countByStatus: mailboxProcedure.query(async ({ ctx }) => {
-    const countByStatus = async (where?: SQL) => {
+  openCount: mailboxProcedure.query(async ({ ctx }) => {
+    const countOpenStatus = async (where?: SQL) => {
       const result = await db
-        .select({ status: conversations.status, count: count() })
+        .select({ count: count() })
         .from(conversations)
-        .where(and(eq(conversations.mailboxId, ctx.mailbox.id), isNull(conversations.mergedIntoId), where))
-        .groupBy(conversations.status);
-      return {
-        open: result.find((c) => c.status === "open")?.count ?? 0,
-        closed: result.find((c) => c.status === "closed")?.count ?? 0,
-        spam: result.find((c) => c.status === "spam")?.count ?? 0,
-      };
+        .where(
+          and(
+            eq(conversations.mailboxId, ctx.mailbox.id),
+            eq(conversations.status, "open"),
+            isNull(conversations.mergedIntoId),
+            where,
+          ),
+        );
+      return result[0]?.count ?? 0;
     };
 
-    const [all, mine, assigned, unassigned] = await Promise.all([
-      countByStatus(),
-      countByStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
-      countByStatus(isNotNull(conversations.assignedToClerkId)),
-      countByStatus(isNull(conversations.assignedToClerkId)),
+    const [all, mine, assigned] = await Promise.all([
+      countOpenStatus(),
+      countOpenStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
+      countOpenStatus(isNotNull(conversations.assignedToClerkId)),
     ]);
 
     return {
       conversations: all,
       mine,
       assigned,
-      unassigned,
+      unassigned: all - assigned,
     };
   }),
   get: mailboxProcedure.query(async ({ ctx }) => {
@@ -98,25 +99,7 @@ export const mailboxRouter = {
     .mutation(async ({ ctx, input }) => {
       await db.update(mailboxes).set(input).where(eq(mailboxes.id, ctx.mailbox.id));
     }),
-  members: mailboxProcedure
-    .input(
-      z.object({
-        period: z.enum(["24h", "7d", "30d", "1y"]),
-        customDate: z.date().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const now = new Date();
-      const periodInHours = {
-        "24h": 24,
-        "7d": 24 * 7,
-        "30d": 24 * 30,
-        "1y": 24 * 365,
-      } as const;
 
-      const startDate = input.customDate || subHours(now, periodInHours[input.period]);
-      return await getMemberStats(ctx.mailbox, { startDate, endDate: now });
-    }),
   latestEvents: mailboxProcedure
     .input(z.object({ cursor: z.date().optional() }))
     .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
@@ -146,6 +129,7 @@ export const mailboxRouter = {
     }),
   conversations: conversationsRouter,
   faqs: faqsRouter,
+  members: membersRouter,
   slack: slackRouter,
   github: githubRouter,
   tools: toolsRouter,
@@ -186,4 +170,5 @@ export const mailboxRouter = {
       message: "Auto-close job triggered successfully",
     };
   }),
+  preferences: preferencesRouter,
 } satisfies TRPCRouterRecord;

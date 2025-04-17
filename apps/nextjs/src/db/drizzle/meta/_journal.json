@@ -519,5 +519,19 @@
       "when": 1743795018710,
       "tag": "0073_needy_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1744162910053,
+      "tag": "0074_shiny_nebula",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1744420730731,
+      "tag": "0075_tense_blink",
+      "breakpoints": true
     }
 }

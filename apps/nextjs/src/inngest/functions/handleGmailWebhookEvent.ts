@@ -1,6 +1,7 @@
 import { User } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
+import { ParsedMailbox } from "email-addresses";
 import { GaxiosResponse } from "gaxios";
 import { OAuth2Client } from "google-auth-library";
 import { htmlToText } from "html-to-text";
@@ -14,6 +15,8 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
 import { env } from "@/env";
 import { inngest } from "@/inngest/client";
+import { runAIQuery } from "@/lib/ai";
+import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, finishFileUpload } from "@/lib/data/files";
@@ -29,7 +32,36 @@ import { generateFilePreview } from "./generateFilePreview";
 
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
 
-const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
+export const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
+
+const isThankYouOrAutoResponse = async (
+  mailbox: typeof mailboxes.$inferSelect,
+  emailContent: string,
+): Promise<boolean> => {
+  try {
+    const content = await runAIQuery({
+      system: [
+        "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
+        "Respond with 'yes' if the email EITHER:",
+        "1. Is just a thank you message with no follow-up questions",
+        "2. Contains wording like 'We'll respond to you as soon as we can.'. Always respond with 'yes' if similar wording to this is present even if there are other instructions present.",
+        "Respond with 'no' followed by a reason if the email contains questions or requires a response.",
+      ].join("\n"),
+      mailbox,
+      temperature: 0,
+      messages: [{ role: "user", content: emailContent }],
+      queryType: "email_auto_ignore",
+      model: GPT_4O_MINI_MODEL,
+      functionId: "email-auto-ignore-detector",
+      maxTokens: 10,
+    });
+
+    return content.toLowerCase().trim() === "yes";
+  } catch (error) {
+    captureExceptionAndLogIfDevelopment(error);
+    return false;
+  }
+};
 
 const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailCc: string) => {
   const mailbox = await db.query.mailboxes.findFirst({
@@ -58,14 +90,15 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
 export const createMessageAndProcessAttachments = async (
   mailboxId: number,
   parsedEmail: ParsedMail,
+  parsedEmailFrom: ParsedMailbox,
+  processedHtml: string,
+  cleanedUpText: string,
+  fileSlugs: string[],
   gmailMessageId: string,
   gmailThreadId: string,
   conversation: { id: number; slug: string },
   staffUser: User | null,
 ) => {
-  const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
-  const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
-
   const references = parsedEmail.references
     ? Array.isArray(parsedEmail.references)
       ? parsedEmail.references.join(" ")
@@ -89,9 +122,7 @@ export const createMessageAndProcessAttachments = async (
     emailCc: emailCc ? extractAddresses(emailCc) : null,
     emailBcc: emailBcc ? extractAddresses(emailBcc) : null,
     body: processedHtml,
-    cleanedUpText: htmlToText(
-      isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
-    ),
+    cleanedUpText,
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
@@ -145,7 +176,7 @@ export const assertSuccessResponseOrThrow = <T>(response: GaxiosResponse<T>): Ga
   return response;
 };
 
-const getParsedEmailInfo = (parsedEmail: ParsedMail) => {
+export const getParsedEmailInfo = (parsedEmail: ParsedMail) => {
   const parsedEmailFrom = assertDefinedOrRaiseNonRetriableError(parseEmailAddress(parsedEmail.from?.text ?? ""));
   const parsedEmailBody = parseEmailBody(parsedEmail);
   return { parsedEmail, parsedEmailFrom, parsedEmailBody };
@@ -203,6 +234,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
   const results: {
     message: string;
     responded?: boolean;
+    isAutomatedResponseOrThankYou?: boolean;
     gmailMessageId?: string;
     gmailThreadId?: string;
     messageId?: number;
@@ -235,7 +267,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       const parsedEmail = await simpleParser(
         Buffer.from(assertDefined(response.data.raw), "base64url").toString("utf-8"),
       );
-      const { parsedEmailFrom } = getParsedEmailInfo(parsedEmail);
+      const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
 
       const emailSentFromMailbox = parsedEmailFrom.address === gmailSupportEmail.email;
       if (emailSentFromMailbox) {
@@ -247,12 +279,24 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         continue;
       }
 
+      const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
+      const cleanedUpText = htmlToText(
+        isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
+      );
+
       const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
-      const shouldIgnore =
+
+      let shouldIgnore =
         (!!staffUser && !isFirstMessage) ||
         labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id)) ||
         matchesTransactionalEmailAddress(parsedEmailFrom.address);
+
+      let isAutomatedResponseOrThankYou: boolean | undefined;
+      if (!shouldIgnore) {
+        isAutomatedResponseOrThankYou = await isThankYouOrAutoResponse(mailbox, cleanedUpText);
+        shouldIgnore = isAutomatedResponseOrThankYou;
+      }
 
       const createNewConversation = async () => {
         return await db
@@ -270,7 +314,12 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
             isVisitor: false,
             assignedToAI: mailbox.autoRespondEmailToChat,
           })
-          .returning({ id: conversations.id, slug: conversations.slug, status: conversations.status })
+          .returning({
+            id: conversations.id,
+            slug: conversations.slug,
+            status: conversations.status,
+            assignedToAI: conversations.assignedToAI,
+          })
           .then(takeUniqueOrThrow);
       };
 
@@ -287,6 +336,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
                 id: true,
                 slug: true,
                 status: true,
+                assignedToAI: true,
               },
             },
           },
@@ -299,11 +349,18 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       const newEmail = await createMessageAndProcessAttachments(
         mailbox.id,
         parsedEmail,
+        parsedEmailFrom,
+        processedHtml,
+        cleanedUpText,
+        fileSlugs,
         gmailMessageId,
         gmailThreadId,
         conversation,
         staffUser,
       );
+      if (conversation.status === "closed" && !conversation.assignedToAI && !shouldIgnore) {
+        await updateConversation(conversation.id, { set: { status: "open" } });
+      }
 
       if (!shouldIgnore) {
         await inngest.send({
@@ -316,6 +373,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         message: `Created message ${newEmail.id}`,
         messageId: newEmail.id,
         responded: !shouldIgnore,
+        isAutomatedResponseOrThankYou,
         gmailMessageId,
         gmailThreadId,
       });
@@ -381,7 +439,7 @@ const authorizeGmailRequest = async (
   return GmailWebhookDataSchema.parse(rawData);
 };
 
-const extractQuotations = (html: string) => {
+export const extractQuotations = (html: string) => {
   return extractEmailPartsFromDocument(new JSDOM(html).window.document).mainContent;
 };
 
@@ -437,7 +495,7 @@ const parseEmailBody = (parsedEmail: ParsedMail) => {
   return content;
 };
 
-const extractAndUploadInlineImages = async (html: string) => {
+export const extractAndUploadInlineImages = async (html: string) => {
   const fileSlugs: string[] = [];
   let processedHtml = html;
 

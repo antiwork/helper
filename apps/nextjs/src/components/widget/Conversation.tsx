@@ -34,6 +34,12 @@ type Props = {
   setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
 };
 
+export type Attachment = {
+  messageId: string;
+  name: string;
+  presignedUrl: string;
+};
+
 export default function Conversation({
   token,
   isGumroadTheme,
@@ -125,6 +131,7 @@ export default function Conversation({
 
   const { data: conversation, isLoading: isLoadingConversation } = useQuery<{
     messages: MessageWithReaction[];
+    allAttachments: Attachment[];
     isEscalated: boolean;
   } | null>({
     queryKey: ["conversation", conversationSlug],
@@ -156,6 +163,7 @@ export default function Conversation({
             annotations: message.annotations,
             experimental_attachments: message.experimental_attachments,
           })),
+          allAttachments: data.allAttachments,
           isEscalated: data.isEscalated,
         };
       }
@@ -242,6 +250,7 @@ export default function Conversation({
       <MessagesList
         data={data ?? null}
         messages={[...(conversationMessages ?? []), ...(messages as MessageWithReaction[])]}
+        allAttachments={conversation?.allAttachments ?? []}
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}

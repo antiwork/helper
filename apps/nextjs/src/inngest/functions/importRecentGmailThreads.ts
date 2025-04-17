@@ -1,5 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { gmail_v1 } from "googleapis";
+import { htmlToText } from "html-to-text";
 import { simpleParser } from "mailparser";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
@@ -10,7 +11,14 @@ import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
-import { assertSuccessResponseOrThrow, createMessageAndProcessAttachments } from "./handleGmailWebhookEvent";
+import {
+  assertSuccessResponseOrThrow,
+  createMessageAndProcessAttachments,
+  extractAndUploadInlineImages,
+  extractQuotations,
+  getParsedEmailInfo,
+  isNewThread,
+} from "./handleGmailWebhookEvent";
 
 export default inngest.createFunction(
   {
@@ -143,11 +151,22 @@ export const processGmailThreadWithClient = async (
     const parsedEmail = await simpleParser(
       Buffer.from(assertDefinedOrRaiseNonRetriableError(message.data.raw), "base64url").toString("utf-8"),
     );
+    const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
+    const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
+    const cleanedUpText = htmlToText(
+      isNewThread(assertDefinedOrRaiseNonRetriableError(message.data.id), gmailThreadId)
+        ? processedHtml
+        : extractQuotations(processedHtml),
+    );
     // Process messages serially since we rely on the database ID for message ordering
     const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
     await createMessageAndProcessAttachments(
       mailbox.id,
       parsedEmail,
+      parsedEmailFrom,
+      processedHtml,
+      cleanedUpText,
+      fileSlugs,
       assertDefinedOrRaiseNonRetriableError(message.data.id),
       gmailThreadId,
       conversation,

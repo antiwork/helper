@@ -1,10 +1,13 @@
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { createContext, useContext, useEffect, useMemo } from "react";
+import { ConversationListItem } from "@/app/types/global";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { getExpoPlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
+import { conversationsListChannelId } from "@/lib/ably/channels";
+import { useAblyEventOnce } from "@/lib/ably/hooks";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "./shared/queries";
@@ -73,36 +76,78 @@ export const ConversationListContextProvider = ({
     router.refresh();
 
     utils.mailbox.conversations.list.invalidate();
-    utils.mailbox.countByStatus.invalidate();
+    utils.mailbox.openCount.invalidate();
   }, 1000);
 
-  const removeConversationFromList = () => {
+  const removeConversationFromList = (condition: (conversation: ConversationListItem) => boolean) => {
     const updatedTotal = lastPage ? lastPage.total - 1 : 0;
 
-    debouncedInvalidate();
-    if (currentConversationSlug) {
-      utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
+    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
+      if (!data) return data;
+      return {
+        ...data,
+        pages: data.pages.map((page) => ({
+          ...page,
+          conversations: page.conversations.filter((c) => !condition(c)),
+          total: updatedTotal,
+        })),
+      };
+    });
+    if (!input.status || input.status[0] === "open") {
+      utils.mailbox.openCount.setData({ mailboxSlug: input.mailboxSlug }, (data) => {
         if (!data) return data;
         return {
           ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            conversations: page.conversations.filter((c) => c.slug !== currentConversationSlug),
-            total: updatedTotal,
-          })),
+          [input.category]: data[input.category] - 1,
         };
       });
     }
   };
 
   const removeConversationKeepActive = () => {
-    removeConversationFromList();
+    debouncedInvalidate();
+    removeConversationFromList((c) => c.slug === currentConversationSlug);
   };
 
   const removeConversation = () => {
-    removeConversationFromList();
+    debouncedInvalidate();
+    removeConversationFromList((c) => c.slug === currentConversationSlug);
     moveToNextConversation();
   };
+
+  useAblyEventOnce<{
+    id: number;
+    status: string;
+    assignedToClerkId: string | null;
+    assignedToAI: boolean;
+    previousValues: {
+      status: string;
+      assignedToClerkId: string | null;
+      assignedToAI: boolean;
+    };
+  }>(
+    conversationsListChannelId(input.mailboxSlug),
+    "conversation.statusChanged",
+    ({ data: { id, status, assignedToClerkId, previousValues } }) => {
+      // Currently this just removes and decrements the count; ideally we should also insert and increment the count when added to the current category
+      // Check the conversation used to be in the current category
+      const selectedStatus = input.status?.[0] ?? "open";
+      if (previousValues.status !== selectedStatus) return;
+      if (input.category === "assigned" && previousValues.assignedToClerkId === null) return;
+      if (input.category === "unassigned" && previousValues.assignedToClerkId !== null) return;
+      if (input.category === "mine" && previousValues.assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0])
+        return;
+
+      // Check the conversation is no longer in the current category
+      if (
+        status !== selectedStatus ||
+        (input.category === "assigned" && assignedToClerkId === null) ||
+        (input.category === "unassigned" && assignedToClerkId !== null) ||
+        (input.category === "mine" && assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0])
+      )
+        removeConversationFromList((c) => c.id === id);
+    },
+  );
 
   const value = useMemo(
     () => ({

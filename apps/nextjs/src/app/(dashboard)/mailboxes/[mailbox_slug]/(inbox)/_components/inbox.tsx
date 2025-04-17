@@ -1,6 +1,6 @@
 "use client";
 
-import { AblyProvider } from "ably/react";
+import { AblyProvider, ChannelProvider } from "ably/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -19,6 +19,7 @@ import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
+import { conversationsListChannelId } from "@/lib/ably/channels";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -110,11 +111,13 @@ export const InboxProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AblyProvider client={getGlobalAblyClient(mailboxSlug)}>
-      <ConversationListContextProvider currentConversationSlug={conversationSlug}>
-        <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug ?? undefined}>
-          {children}
-        </FileUploadProvider>
-      </ConversationListContextProvider>
+      <ChannelProvider channelName={conversationsListChannelId(mailboxSlug)}>
+        <ConversationListContextProvider currentConversationSlug={conversationSlug}>
+          <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug ?? undefined}>
+            {children}
+          </FileUploadProvider>
+        </ConversationListContextProvider>
+      </ChannelProvider>
     </AblyProvider>
   );
 };

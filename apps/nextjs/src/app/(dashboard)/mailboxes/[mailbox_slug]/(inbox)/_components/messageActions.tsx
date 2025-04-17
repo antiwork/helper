@@ -4,6 +4,7 @@ import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
@@ -12,6 +13,7 @@ import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
+import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
@@ -41,11 +43,132 @@ export const useSendDisabled = (message: string | undefined) => {
   return { sendDisabled, sending, setSending };
 };
 
+const EmailEditorComponent = React.forwardRef<
+  TipTapEditorRef,
+  {
+    draftedEmail: DraftedEmail;
+    initialMessage: { content: string };
+    actionButtons: React.ReactNode;
+    onSend: () => void;
+    onOptionSend: () => void;
+    updateEmail: (changes: Partial<DraftedEmail>) => void;
+    handleInsertReply: (content: string) => void;
+  }
+>(
+  (
+    { draftedEmail, initialMessage, actionButtons, onSend, onOptionSend, updateEmail, handleInsertReply },
+    forwardedRef,
+  ) => {
+    const { isAboveMd } = useBreakpoint("md");
+    const [showCommandBar, setShowCommandBar] = useState(false);
+    const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
+    const [toolbarOpen, setToolbarOpen] = useState(() => {
+      if (typeof window !== "undefined") {
+        return (localStorage.getItem("editorToolbarOpen") ?? isAboveMd.toString()) === "true";
+      }
+      return isAboveMd;
+    });
+    const ccRef = useRef<HTMLInputElement>(null);
+    const bccRef = useRef<HTMLInputElement>(null);
+    const commandInputRef = useRef<HTMLInputElement>(null);
+    const { user } = useUser();
+    const editorRef = useRef<TipTapEditorRef | null>(null);
+
+    useEffect(() => {
+      if (typeof forwardedRef === "function") {
+        forwardedRef(editorRef.current);
+      } else if (forwardedRef) {
+        forwardedRef.current = editorRef.current;
+      }
+    }, [forwardedRef]);
+
+    const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
+
+    useEffect(() => {
+      if (showCc) {
+        ccRef.current?.focus();
+      }
+    }, [showCc]);
+
+    useEffect(() => {
+      localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
+    }, [toolbarOpen]);
+
+    return (
+      <div className="flex flex-col h-full pt-4">
+        <TicketCommandBar
+          open={showCommandBar}
+          onOpenChange={setShowCommandBar}
+          onInsertReply={handleInsertReply}
+          onToggleCc={onToggleCc}
+          inputRef={commandInputRef}
+        />
+        <div className={cn("flex-shrink-0 flex flex-col gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
+          <LabeledInput
+            ref={ccRef}
+            name="CC"
+            value={draftedEmail.cc}
+            onChange={(cc) => updateEmail({ cc })}
+            onModEnter={() => {}}
+          />
+          <LabeledInput
+            ref={bccRef}
+            name="BCC"
+            value={draftedEmail.bcc}
+            onChange={(bcc) => updateEmail({ bcc })}
+            onModEnter={() => {}}
+          />
+        </div>
+        <TipTapEditor
+          ref={editorRef}
+          className={cn("flex-grow min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
+          ariaLabel="Conversation editor"
+          placeholder="Type your reply here..."
+          defaultContent={initialMessage}
+          editable={true}
+          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
+          onModEnter={onSend}
+          onOptionEnter={onOptionSend}
+          onSlashKey={() => commandInputRef.current?.focus()}
+          enableImageUpload
+          enableFileUpload
+          actionButtons={actionButtons}
+          signature={
+            user?.firstName ? (
+              <div className="mt-6 text-muted-foreground">
+                Best,
+                <br />
+                {user.firstName}
+                <div className="text-xs mt-2">
+                  Note: This signature will be automatically included in email responses, but not in live chat
+                  conversations.
+                </div>
+              </div>
+            ) : null
+          }
+        />
+      </div>
+    );
+  },
+);
+
+EmailEditorComponent.displayName = "EmailEditor";
+
 export const MessageActions = () => {
   const { navigateToConversation } = useConversationListContext();
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
+  const { isAboveMd } = useBreakpoint("md");
+
+  const { data: mailboxPreferences } = api.mailbox.preferences.get.useQuery({
+    mailboxSlug,
+  });
+
+  const triggerMailboxConfetti = () => {
+    if (!mailboxPreferences?.preferences?.confetti) return;
+    triggerConfetti();
+  };
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -148,6 +271,7 @@ export const MessageActions = () => {
       setStoredMessage("");
       if (conversation.status === "open" && close) {
         updateStatus("closed");
+        if (!assign) triggerMailboxConfetti();
       }
       toast({
         title: "Message sent!",
@@ -211,7 +335,7 @@ export const MessageActions = () => {
 
   const actionButtons = (
     <>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 md:flex-row-reverse">
         {(conversation?.status ?? searchParams.status) !== "spam" &&
           ((conversation?.status ?? searchParams.status) === "closed" ? (
             <Button variant="outlined" onClick={() => updateStatus("open")}>
@@ -220,18 +344,26 @@ export const MessageActions = () => {
             </Button>
           ) : (
             <>
-              <Button onClick={() => handleSend({ assign: false })} disabled={sendDisabled}>
-                {sending ? "Replying..." : "Reply and close"}
-                {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
-                )}
-              </Button>
               <Button
+                size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}
               >
                 Reply
+                {!sending && isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
+                )}
+              </Button>
+              <Button
+                size={isAboveMd ? "default" : "sm"}
+                onClick={() => handleSend({ assign: false })}
+                disabled={sendDisabled}
+              >
+                {sending ? "Replying..." : "Reply and close"}
+                {!sending && isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
+                )}
               </Button>
             </>
           ))}
@@ -252,105 +384,20 @@ export const MessageActions = () => {
     }));
     setInitialMessageObject({ content });
     setStoredMessage(content);
-    setTimeout(() => editorRef.current?.focus(), 0);
   };
 
-  const editorRef = useRef<TipTapEditorRef>(null);
+  const editorRef = useRef<TipTapEditorRef | null>(null);
 
   return (
     <EmailEditorComponent
       ref={editorRef}
-      onSend={() => handleSend({ assign: false })}
-      actionButtons={actionButtons}
       draftedEmail={draftedEmail}
       initialMessage={initialMessageObject}
+      actionButtons={actionButtons}
+      onSend={() => handleSend({ assign: false })}
+      onOptionSend={() => handleSend({ assign: false, close: false })}
       updateEmail={updateDraftedEmail}
       handleInsertReply={handleInsertReply}
     />
   );
 };
-
-const EmailEditorComponent = React.forwardRef<
-  TipTapEditorRef,
-  {
-    draftedEmail: DraftedEmail;
-    initialMessage: { content: string };
-    actionButtons: React.ReactNode;
-    onSend: () => void;
-    updateEmail: (changes: Partial<DraftedEmail>) => void;
-    handleInsertReply: (content: string) => void;
-  }
->(({ draftedEmail, initialMessage, actionButtons, onSend, updateEmail, handleInsertReply }, ref) => {
-  const [showCommandBar, setShowCommandBar] = useState(false);
-  const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
-  const ccRef = useRef<HTMLInputElement>(null);
-  const bccRef = useRef<HTMLInputElement>(null);
-  const commandInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useUser();
-
-  const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
-
-  useEffect(() => {
-    if (showCc) {
-      ccRef.current?.focus();
-    }
-  }, [showCc]);
-
-  return (
-    <div className="flex flex-col h-full pt-4">
-      <TicketCommandBar
-        open={showCommandBar}
-        onOpenChange={setShowCommandBar}
-        onInsertReply={handleInsertReply}
-        onToggleCc={onToggleCc}
-        inputRef={commandInputRef}
-      />
-      <div className={cn("flex-shrink-0 flex flex-col gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
-        <LabeledInput
-          ref={ccRef}
-          name="CC"
-          value={draftedEmail.cc}
-          onChange={(cc) => updateEmail({ cc })}
-          onModEnter={() => {}}
-        />
-        <LabeledInput
-          ref={bccRef}
-          name="BCC"
-          value={draftedEmail.bcc}
-          onChange={(bcc) => updateEmail({ bcc })}
-          onModEnter={() => {}}
-        />
-      </div>
-      <div className={cn("flex-grow overflow-auto relative my-2 md:my-4", showCommandBar && "hidden")}>
-        <TipTapEditor
-          ref={ref}
-          ariaLabel="Conversation editor"
-          placeholder="Type your reply here..."
-          defaultContent={initialMessage}
-          editable={true}
-          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
-          onModEnter={onSend}
-          onSlashKey={() => commandInputRef.current?.focus()}
-          enableImageUpload
-          enableFileUpload
-          signature={
-            user?.firstName ? (
-              <div className="mt-6 text-muted-foreground">
-                Best,
-                <br />
-                {user.firstName}
-                <div className="text-xs mt-2">
-                  Note: This signature will be automatically included in email responses, but not in live chat
-                  conversations.
-                </div>
-              </div>
-            ) : null
-          }
-        />
-      </div>
-      <div className={showCommandBar ? "hidden" : ""}>{actionButtons}</div>
-    </div>
-  );
-});
-
-EmailEditorComponent.displayName = "EmailEditor";

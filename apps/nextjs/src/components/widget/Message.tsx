@@ -1,7 +1,9 @@
+import { PaperClipIcon } from "@heroicons/react/24/outline";
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
 import ReactMarkdown from "react-markdown";
 import HumanizedTime from "@/components/humanizedTime";
+import { Attachment } from "@/components/widget/Conversation";
 import MessageElement from "@/components/widget/MessageElement";
 
 const USER_ROLE = "user";
@@ -17,12 +19,22 @@ type Props = {
   conversationSlug: string | null;
   token: string | null;
   data: JSONValue[] | null;
+  attachments: Attachment[];
   color: "black" | "gumroad-pink";
   startGuide: () => void;
   cancelGuide: (toolCallId: string) => void;
 };
 
-export default function Message({ message, conversationSlug, token, data, color, startGuide, cancelGuide }: Props) {
+export default function Message({
+  message,
+  conversationSlug,
+  token,
+  data,
+  color,
+  attachments,
+  startGuide,
+  cancelGuide,
+}: Props) {
   const idFromAnnotation =
     message.annotations?.find(
       (annotation): annotation is { id: string | number } =>
@@ -92,7 +104,7 @@ export default function Message({ message, conversationSlug, token, data, color,
         })}
       >
         {userAnnotation ? (
-          <div className="p-4 pb-0 flex items-center text-muted-foreground text-xs font-bold">
+          <div className="p-4 pb-0 flex items-center text-gray-500 text-xs font-bold">
             {userAnnotation.user.firstName}
           </div>
         ) : null}
@@ -143,6 +155,16 @@ export default function Message({ message, conversationSlug, token, data, color,
             <img className="w-full rounded-lg" src={attachment.url} alt={attachment.name} />
           </a>
         ))}
+        {!message.experimental_attachments?.length && attachments.length > 0 && (
+          <div className="p-4 pt-0 flex flex-col gap-2">
+            {attachments.map((attachment) => (
+              <a className="flex items-center gap-2" href={attachment.presignedUrl} target="_blank" download>
+                <PaperClipIcon className="h-4 w-4 shrink-0" />
+                <span className="flex-1 min-w-0 truncate underline">{attachment.name}</span>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-400" title={message.createdAt ? message.createdAt.toLocaleString() : ""}>

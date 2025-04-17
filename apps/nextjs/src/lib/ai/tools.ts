@@ -152,7 +152,11 @@ export const buildTools = async (
     tools.request_human_support = tool({
       description: REQUEST_HUMAN_SUPPORT_DESCRIPTION,
       parameters: z.object({
-        reason: z.string().describe("reason for escalation"),
+        reason: z
+          .string()
+          .describe(
+            "Escalation reasons must include specific details about the issue. Simply stating a human is needed without context is not acceptable, even if the user stated several times or said it's urgent.",
+          ),
         email: email
           ? z.string().optional()
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
