@@ -86,7 +86,7 @@ export default function SupportButtons({
           <button
             onClick={handleHelpfulClick}
             className={`flex items-center gap-2 rounded-full border ${
-              isHelpful ? "border-green-500 bg-green-100 text-green-700" : "border-gray-400"
+              isHelpful ? "border-green-500 bg-green-100 text-green-700" : "border-gray-400 text-black"
             } px-4 py-2 text-sm ${isHelpful ? "" : "hover:bg-gray-100"} transition-colors duration-200`}
           >
             <motion.div
@@ -113,7 +113,7 @@ export default function SupportButtons({
           </button>
           <button
             onClick={handleTalkToTeamClick}
-            className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
+            className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200 text-black"
           >
             <motion.div
               className="w-4 h-4 origin-center"

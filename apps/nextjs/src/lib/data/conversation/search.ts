@@ -1,71 +1,74 @@
 import "server-only";
-import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  exists,
+  gt,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  or,
+  SQL,
+  sql,
+} from "drizzle-orm";
+import { memoize } from "lodash";
 import { z } from "zod";
-import { DEFAULT_CONVERSATIONS_PER_PAGE } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
+import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
-
-export const searchSchema = z.object({
-  cursor: z.string().nullish(),
-  limit: z.number().min(1).max(100).default(DEFAULT_CONVERSATIONS_PER_PAGE),
-  sort: z.enum(["newest", "oldest", "highest_value"]).catch("oldest").nullish(),
-  category: z.enum(["conversations", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
-  search: z.string().nullish(),
-  status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),
-  assignee: z.array(z.string()).optional(),
-  createdAfter: z.string().datetime().optional(),
-  createdBefore: z.string().datetime().optional(),
-  repliedBy: z.array(z.string()).optional(),
-  customer: z.array(z.string()).optional(),
-  isVip: z.boolean().optional(),
-  isPrompt: z.boolean().optional(),
-  reactionType: z.enum(["thumbs-up", "thumbs-down"]).optional(),
-  events: z.array(z.enum(["request_human_support", "resolved_by_ai"])).optional(),
-});
 
 export const searchConversations = async (
   mailbox: typeof mailboxes.$inferSelect,
   filters: z.infer<typeof searchSchema>,
-  currentUserId: string,
+  currentUserId?: string,
 ) => {
   if (filters.category && !filters.search && !filters.status?.length) {
     filters.status = ["open"];
   }
-  if (filters.category === "mine") {
+  if (filters.category === "mine" && currentUserId) {
     filters.assignee = [currentUserId];
   }
   if (filters.category === "unassigned") {
-    filters.assignee = [];
+    filters.isAssigned = false;
+  }
+  if (filters.category === "assigned") {
+    filters.isAssigned = true;
   }
 
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id) : [];
-
-  const where = {
+  // Filters on conversations and messages that we can pass to searchEmailsByKeywords
+  let where: Record<string, SQL> = {
     mailboxId: eq(conversations.mailboxId, mailbox.id),
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToClerkId, filters.assignee) } : {}),
-    ...(filters.category === "assigned" ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
-    ...(filters.category === "unassigned" ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
-    ...(filters.isVip && mailbox.vipThreshold
-      ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
-      : {}),
+    ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
+    ...(filters.isAssigned === false ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
     ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
-    ...(filters.repliedBy?.length
+    ...(filters.repliedBy?.length || filters.repliedAfter || filters.repliedBefore
       ? {
-          repliedBy: exists(
+          reply: exists(
             db
               .select()
               .from(conversationMessages)
               .where(
                 and(
                   eq(conversationMessages.conversationId, conversations.id),
-                  inArray(conversationMessages.clerkUserId, filters.repliedBy),
+                  eq(conversationMessages.role, "staff"),
+                  filters.repliedBy?.length ? inArray(conversationMessages.clerkUserId, filters.repliedBy) : undefined,
+                  filters.repliedAfter ? gt(conversationMessages.createdAt, new Date(filters.repliedAfter)) : undefined,
+                  filters.repliedBefore
+                    ? lt(conversationMessages.createdAt, new Date(filters.repliedBefore))
+                    : undefined,
                 ),
               ),
           ),
@@ -103,6 +106,22 @@ export const searchConversations = async (
           ),
         }
       : {}),
+  };
+
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id, Object.values(where)) : [];
+
+  // Additional filters we can't pass to searchEmailsByKeywords
+  where = {
+    ...where,
+    ...(filters.isVip && mailbox.vipThreshold
+      ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
+      : {}),
+    ...(filters.minValueDollars
+      ? { minValue: gt(platformCustomers.value, (filters.minValueDollars * 100).toString()) }
+      : {}),
+    ...(filters.maxValueDollars
+      ? { maxValue: lt(platformCustomers.value, (filters.maxValueDollars * 100).toString()) }
+      : {}),
     ...(filters.search
       ? {
           search: or(
@@ -126,8 +145,44 @@ export const searchConversations = async (
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
 
-  const list = await db
-    .select()
+  const list = memoize(() =>
+    db
+      .select()
+      .from(conversations)
+      .leftJoin(
+        platformCustomers,
+        and(
+          eq(conversations.mailboxId, platformCustomers.mailboxId),
+          eq(conversations.emailFrom, platformCustomers.email),
+        ),
+      )
+      .where(and(...Object.values(where)))
+      .orderBy(...orderBy)
+      .limit(filters.limit + 1) // Get one extra to determine if there's a next page
+      .offset(filters.cursor ? parseInt(filters.cursor) : 0)
+      .then((results) => ({
+        results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
+          ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+          matchedMessageText:
+            matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+        })),
+        nextCursor:
+          results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
+      })),
+  );
+
+  return {
+    get list() {
+      return list();
+    },
+    where,
+    metadataEnabled,
+  };
+};
+
+export const countSearchResults = async (where: Record<string, SQL>) => {
+  const [total] = await db
+    .select({ count: count() })
     .from(conversations)
     .leftJoin(
       platformCustomers,
@@ -136,22 +191,7 @@ export const searchConversations = async (
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
-    .where(and(...Object.values(where)))
-    .orderBy(...orderBy)
-    .limit(filters.limit + 1) // Get one extra to determine if there's a next page
-    .offset(filters.cursor ? parseInt(filters.cursor) : 0)
-    .then((results) => ({
-      results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
-        ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-        matchedMessageText:
-          matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-      })),
-      nextCursor: results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
-    }));
+    .where(and(...Object.values(where)));
 
-  return {
-    list,
-    where,
-    metadataEnabled,
-  };
+  return total?.count ?? 0;
 };
