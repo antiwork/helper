@@ -82,7 +82,7 @@ export function TabBar() {
           <UserIcon className="size-6 text-muted-foreground" />
         )}
         <Text className={cn("text-xs mt-[3px]", pathname === "/assigned" ? "text-primary" : "text-muted-foreground")}>
-          Assigned
+          Mine
         </Text>
       </TouchableOpacity>
 
@@ -93,7 +93,7 @@ export function TabBar() {
           <InboxIcon className="size-6 text-muted-foreground" />
         )}
         <Text className={cn("text-xs mt-[3px]", pathname === "/inbox" ? "text-primary" : "text-muted-foreground")}>
-          Inbox
+          All
         </Text>
       </TouchableOpacity>
     </SafeAreaView>
