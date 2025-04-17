@@ -130,6 +130,124 @@ Now linking your Gmail account from Settings → Integrations should grant Gmail
 
 </details>
 
+## Optional Integrations
+
+These integrations are optional but can enhance the functionality of Helper.
+
+<details>
+<summary>Slack</summary>
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app.
+2. Under "Basic Information", find your app credentials.
+3. Add the following values to your `.env.local` file:
+   - `SLACK_CLIENT_ID`: Client ID from Basic Information
+   - `SLACK_CLIENT_SECRET`: Client Secret from Basic Information
+   - `SLACK_SIGNING_SECRET`: Signing Secret from Basic Information
+4. Under "OAuth & Permissions", add the following scopes:
+   - `chat:write`
+   - `chat:write.public`
+   - `channels:read`
+   - `users:read`
+   - `users:read.email`
+5. Install the app to your workspace.
+
+</details>
+
+<details>
+<summary>GitHub</summary>
+
+1. Go to [github.com/settings/apps](https://github.com/settings/apps) and click "New GitHub App".
+2. Fill in the required fields, including a name for your app.
+3. Set the following permissions:
+   - Repository permissions:
+     - Issues: Read & write
+     - Pull requests: Read & write
+   - Organization permissions:
+     - Members: Read-only
+4. Set the webhook URL to your application's webhook endpoint.
+5. After creating the app, note the App ID and generate a private key.
+6. Add the following values to your `.env.local` file:
+   - `GITHUB_APP_SLUG`: The slug of your GitHub app (from the URL)
+   - `GITHUB_APP_ID`: The App ID found in the app settings
+   - `GITHUB_CLIENT_SECRET`: The Client Secret from the app settings
+   - `GITHUB_PRIVATE_KEY`: The contents of the private key file you downloaded
+
+</details>
+
+<details>
+<summary>Stripe</summary>
+
+1. Go to [dashboard.stripe.com](https://dashboard.stripe.com) and create an account or log in.
+2. Make sure you're in test mode (toggle in the sidebar).
+3. Get your API keys from the Developers section → API keys.
+4. Create a subscription product and price:
+   - Go to Products → Create Product
+   - Add a name and description for your product
+   - In the Pricing section, create a recurring price
+   - Note the Price ID after creation
+5. Add the following values to your `.env.local` file:
+   - `STRIPE_SECRET_KEY`: Secret key from the API keys page
+   - `STRIPE_PRICE_ID`: The ID of the price you created
+   - `STRIPE_WEBHOOK_SECRET`: Create this by setting up a webhook in the Developers → Webhooks section
+6. Optionally, set `ADDITIONAL_PAID_ORGANIZATION_IDS` to comma-separated Clerk organization IDs to consider as paid subscriptions in development.
+
+</details>
+
+<details>
+<summary>Jina</summary>
+
+1. Go to [jina.ai](https://jina.ai) and create an account or log in.
+2. Navigate to the API section to generate an API token.
+3. Add the token to your `.env.local` file as `JINA_API_TOKEN`.
+
+</details>
+
+<details>
+<summary>Firecrawl</summary>
+
+1. Go to [firecrawl.dev](https://www.firecrawl.dev) and create an account or log in.
+2. Generate an API key from your account settings or dashboard.
+3. Add the API key to your `.env.local` file as `FIRECRAWL_API_KEY`.
+
+</details>
+
+<details>
+<summary>Proxy</summary>
+
+1. Set up a proxy server for serving email content assets.
+2. Add the following values to your `.env.local` file:
+   - `PROXY_URL`: The URL of your proxy server
+   - `PROXY_SECRET_KEY`: A secret key for authenticating with your proxy server
+
+</details>
+
+<details>
+<summary>Apple Sign-in</summary>
+
+1. Go to [developer.apple.com](https://developer.apple.com) and log in to your Apple Developer account.
+2. Navigate to Certificates, Identifiers & Profiles → Identifiers and create a new App ID.
+3. Enable "Sign In with Apple" for this App ID.
+4. Go to Certificates, Identifiers & Profiles → Keys and create a new key.
+5. Enable "Sign In with Apple" for this key and configure it with your App ID.
+6. Register a Services ID to use for web authentication with Apple.
+7. Add the following values to your `.env.local` file:
+   - `APPLE_APP_ID`: Your app's identifier (e.g., com.yourcompany.yourapp)
+   - `APPLE_TEAM_ID`: Your Team ID found in the Apple Developer account
+   - `APPLE_PRIVATE_KEY`: The contents of the downloaded private key file
+   - `APPLE_PRIVATE_KEY_IDENTIFIER`: The Key ID from the key you created
+
+</details>
+
+<details>
+<summary>Sentry</summary>
+
+1. Go to [sentry.io](https://sentry.io) and create an account or log in.
+2. Create a new project for a Next.js application.
+3. In the project settings, find the DSN (Data Source Name).
+4. Add the DSN to your `.env.local` file as `NEXT_PUBLIC_SENTRY_DSN`.
+
+</details>
+
 ## Running locally
 
 Run the application and access it at [helperai.dev](https://helperai.dev):
