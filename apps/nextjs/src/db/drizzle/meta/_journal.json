@@ -540,6 +540,13 @@
       "when": 1744928150178,
       "tag": "0076_add_agent_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1744930091025,
+      "tag": "0077_military_ma_gnuci",
+      "breakpoints": true
     }
   ]
 }
