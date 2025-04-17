@@ -2,7 +2,7 @@ import { Link } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Animated, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
-import { UserIcon, StarIcon } from "react-native-heroicons/outline";
+import { StarIcon, UserIcon } from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
 import { humanizeTime } from "@/utils/humanizeTime";
@@ -82,10 +82,19 @@ export function ConversationList({
                       <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
                     </View>
                   )}
-                  <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? 'bg-amber-400' : 'bg-muted'}`}>
-                    {item.platformCustomer?.isVip && <StarIcon size={14} className="dark:text-background text-foreground" />}
-                    <Text className={`text-sm font-medium ${item.platformCustomer?.isVip ? 'dark:text-background text-foreground' : 'text-muted-foreground'}`}>
-                      ${item.platformCustomer?.value ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2) : '0.00'}
+                  <View
+                    className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? "bg-amber-400" : "bg-muted"}`}
+                  >
+                    {item.platformCustomer?.isVip && (
+                      <StarIcon size={14} className="dark:text-background text-foreground" />
+                    )}
+                    <Text
+                      className={`text-sm font-medium ${item.platformCustomer?.isVip ? "dark:text-background text-foreground" : "text-muted-foreground"}`}
+                    >
+                      $
+                      {item.platformCustomer?.value
+                        ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2)
+                        : "0.00"}
                     </Text>
                   </View>
                   <Text className="text-sm text-muted-foreground">{humanizeTime(item.createdAt)}</Text>

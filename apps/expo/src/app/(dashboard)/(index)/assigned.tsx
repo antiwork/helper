@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, TextInput, useColorScheme } from "react-native";
-import { UserIcon, MagnifyingGlassIcon } from "react-native-heroicons/outline";
+import React, { useMemo, useState } from "react";
+import { Text, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
+import { MagnifyingGlassIcon, UserIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Conversation, ConversationPreviewList } from "@/app/(dashboard)/_components/conversationPreviewList";
 import { useMailbox } from "@/components/mailboxContext";
@@ -63,15 +63,15 @@ export default function AssignedScreen() {
         <Header />
       </View>
       <View className="px-4 py-2">
-        <Text className="text-xl font-semibold text-foreground">
-          Mine ({conversations.length})
-        </Text>
+        <Text className="text-xl font-semibold text-foreground">Mine ({conversations.length})</Text>
       </View>
       <View className="px-4 gap-2">
-        <View className={cn(
-          "flex-row items-center rounded-lg px-3 py-2",
-          colorScheme === "light" ? "border border-border bg-muted" : "bg-muted"
-        )}>
+        <View
+          className={cn(
+            "flex-row items-center rounded-lg px-3 py-2",
+            colorScheme === "light" ? "border border-border bg-muted" : "bg-muted",
+          )}
+        >
           <MagnifyingGlassIcon size={20} className="text-muted-foreground mr-2" />
           <TextInput
             placeholder="Search messages..."

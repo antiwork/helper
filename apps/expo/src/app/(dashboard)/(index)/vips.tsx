@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, TextInput, useColorScheme } from "react-native";
-import { StarIcon, MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from "react-native-heroicons/outline";
+import React, { useMemo, useState } from "react";
+import { Text, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
+import { FunnelIcon, MagnifyingGlassIcon, StarIcon, XMarkIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMailbox } from "@/components/mailboxContext";
 import { api } from "@/utils/api";
@@ -37,7 +37,7 @@ export default function VIPsScreen() {
       limit: 25,
       assignee: selectedFilters
         .filter((f): f is { type: "assigned"; userId: string } => typeof f === "object")
-        .map(f => f.userId),
+        .map((f) => f.userId),
     }),
     [selectedMailbox?.slug, searchQuery, selectedFilters],
   );
@@ -71,14 +71,13 @@ export default function VIPsScreen() {
   };
 
   const toggleFilter = (filter: FilterItem) => {
-    setSelectedFilters(current => {
-      const filterExists = current.find(f => 
-        f === filter || 
-        (typeof f === "object" && typeof filter === "object" && f.userId === filter.userId)
+    setSelectedFilters((current) => {
+      const filterExists = current.find(
+        (f) => f === filter || (typeof f === "object" && typeof filter === "object" && f.userId === filter.userId),
       );
-      
+
       if (filterExists) {
-        return current.filter(f => f !== filterExists);
+        return current.filter((f) => f !== filterExists);
       } else {
         return [...current, filter];
       }
@@ -91,16 +90,16 @@ export default function VIPsScreen() {
         <Header />
       </View>
       <View className="px-4 py-2">
-        <Text className="text-xl font-semibold text-foreground">
-          VIP ({conversations.length})
-        </Text>
+        <Text className="text-xl font-semibold text-foreground">VIP ({conversations.length})</Text>
       </View>
       <View className="px-4 gap-2">
         <View className="flex-row gap-2">
-          <View className={cn(
-            "flex-1 flex-row items-center rounded-lg px-3 py-2",
-            colorScheme === "light" ? "border border-border bg-muted" : "bg-muted"
-          )}>
+          <View
+            className={cn(
+              "flex-1 flex-row items-center rounded-lg px-3 py-2",
+              colorScheme === "light" ? "border border-border bg-muted" : "bg-muted",
+            )}
+          >
             <MagnifyingGlassIcon size={20} className="text-muted-foreground mr-2" />
             <TextInput
               placeholder="Search messages..."
@@ -115,23 +114,22 @@ export default function VIPsScreen() {
             className={cn(
               "items-center justify-center px-3 rounded-lg",
               colorScheme === "light" ? "border border-border bg-muted" : "bg-muted",
-              selectedFilters.length > 0 && "bg-primary"
+              selectedFilters.length > 0 && "bg-primary",
             )}
           >
-            <FunnelIcon size={20} className={cn(
-              "text-muted-foreground",
-              selectedFilters.length > 0 && "text-primary-foreground"
-            )} />
+            <FunnelIcon
+              size={20}
+              className={cn("text-muted-foreground", selectedFilters.length > 0 && "text-primary-foreground")}
+            />
           </TouchableOpacity>
         </View>
-        
+
         {selectedFilters.length > 0 && (
           <View className="flex-row flex-wrap gap-2">
             {selectedFilters.map((filter, index) => (
               <View key={index} className="flex-row items-center bg-muted rounded-full px-3 py-1.5">
                 <Text className="text-sm text-foreground mr-2">
-                  {filter === "unassigned" ? "Unassigned" : 
-                    members?.find(m => filter.userId === m.id)?.displayName}
+                  {filter === "unassigned" ? "Unassigned" : members?.find((m) => filter.userId === m.id)?.displayName}
                 </Text>
                 <TouchableOpacity onPress={() => toggleFilter(filter)}>
                   <XMarkIcon className="size-4 text-muted-foreground" />
@@ -140,7 +138,7 @@ export default function VIPsScreen() {
             ))}
           </View>
         )}
-        
+
         {isFilterOpen && (
           <View className="absolute top-[35px] right-4 w-64 z-10 mt-1 bg-background border border-border rounded-lg divide-y divide-border py-2">
             <TouchableOpacity
@@ -148,21 +146,16 @@ export default function VIPsScreen() {
                 toggleFilter("unassigned");
                 setIsFilterOpen(false);
               }}
-              className={cn(
-                "py-2 px-4",
-                selectedFilters.includes("unassigned") && "bg-muted"
-              )}
+              className={cn("py-2 px-4", selectedFilters.includes("unassigned") && "bg-muted")}
             >
               <Text className="text-foreground">Unassigned</Text>
             </TouchableOpacity>
-            
+
             <View className="py-3 px-4">
               <Text className="text-xs text-muted-foreground mb-2">Assigned to</Text>
               <View className="gap-1.5">
                 {members?.map((member) => {
-                  const isSelected = selectedFilters.some(
-                    f => typeof f === "object" && f.userId === member.id
-                  );
+                  const isSelected = selectedFilters.some((f) => typeof f === "object" && f.userId === member.id);
                   return (
                     <TouchableOpacity
                       key={member.id}

@@ -1,27 +1,27 @@
 import { Link } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
+  LayoutAnimation,
   Linking,
   Modal,
   RefreshControl,
   Text,
   TouchableOpacity,
   View,
-  Animated,
-  LayoutAnimation,
 } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import {
+  ArrowUturnLeftIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EnvelopeIcon,
   StarIcon,
   UserIcon,
   XMarkIcon,
-  EnvelopeIcon,
-  ArrowUturnLeftIcon,
 } from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
@@ -63,7 +63,7 @@ const SwipeToClose = ({
     setIsClosed(true);
     setShowMessage(true);
     onClose();
-    
+
     setTimeout(() => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setShowMessage(false);
@@ -116,7 +116,7 @@ const SwipeToClose = ({
 
           return (
             <View className="mx-4 mb-4">
-              <Animated.View 
+              <Animated.View
                 style={{ opacity }}
                 className="h-full bg-destructive items-center justify-center rounded-xl overflow-hidden"
               >
@@ -141,7 +141,7 @@ const SwipeToClose = ({
 
           return (
             <View className="mx-4 mb-4">
-              <Animated.View 
+              <Animated.View
                 style={{ opacity }}
                 className="h-full bg-bright items-center justify-center rounded-xl overflow-hidden"
               >
@@ -155,7 +155,7 @@ const SwipeToClose = ({
           );
         }}
         onSwipeableOpen={(direction) => {
-          if (direction === 'left') {
+          if (direction === "left") {
             handleAssign();
           } else {
             handleSwipe();
@@ -253,10 +253,19 @@ export function ConversationPreviewList({
                       <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
                     </View>
                   )}
-                  <View className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? 'bg-amber-400' : 'bg-muted'}`}>
-                    {item.platformCustomer?.isVip && <StarIcon size={14} className="dark:text-background text-foreground" />}
-                    <Text className={`text-sm font-medium ${item.platformCustomer?.isVip ? 'dark:text-background text-foreground' : 'text-muted-foreground'}`}>
-                      ${item.platformCustomer?.value ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2) : '0.00'}
+                  <View
+                    className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? "bg-amber-400" : "bg-muted"}`}
+                  >
+                    {item.platformCustomer?.isVip && (
+                      <StarIcon size={14} className="dark:text-background text-foreground" />
+                    )}
+                    <Text
+                      className={`text-sm font-medium ${item.platformCustomer?.isVip ? "dark:text-background text-foreground" : "text-muted-foreground"}`}
+                    >
+                      $
+                      {item.platformCustomer?.value
+                        ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2)
+                        : "0.00"}
                     </Text>
                   </View>
                 </View>
