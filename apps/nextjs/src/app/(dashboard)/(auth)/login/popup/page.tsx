@@ -38,7 +38,7 @@ export default function PopupPage() {
   }, [signIn, strategy]);
 
   return (
-    <div className="h-screen flex items-center justify-center">
+    <div className="h-dvh flex items-center justify-center">
       <LoadingSpinner size="lg" />
     </div>
   );

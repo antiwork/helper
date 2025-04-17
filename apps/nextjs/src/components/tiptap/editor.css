@@ -1,6 +1,17 @@
 .ProseMirror:focus {
   outline: none;
 }
+
+.ProseMirror {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+.ProseMirror p {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 .ProseMirror ul {
   list-style-type: disc;
   padding-left: 2em;

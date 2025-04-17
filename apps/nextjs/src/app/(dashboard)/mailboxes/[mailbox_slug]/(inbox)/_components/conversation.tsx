@@ -393,6 +393,7 @@ const ConversationContent = () => {
   });
 
   const { input } = useConversationsListInput();
+  const { nativePlatform } = useNativePlatform();
 
   const utils = api.useUtils();
   const conversationListInfo = utils.mailbox.conversations.list
@@ -453,7 +454,6 @@ const ConversationContent = () => {
     scrollToBottom({ animation: "instant" });
   }, [contentRef]);
 
-  const { nativePlatform } = useNativePlatform();
   const { isAboveSm } = useBreakpoint("sm");
 
   const defaultSize = Number(localStorage.getItem("conversationHeightRange") ?? 65);

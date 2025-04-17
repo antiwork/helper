@@ -2,7 +2,7 @@ import { UserProfile } from "@clerk/nextjs";
 
 export default function MobileProfilePage() {
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex h-dvh w-full flex-col">
       <UserProfile
         routing="hash"
         appearance={{
