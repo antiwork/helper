@@ -21,7 +21,7 @@ export const generateAgentResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
   slackUserId: string | undefined,
-  showStatus?: (status: string | null, debugContent?: any) => void,
+  showStatus?: (status: string | null, debugContent?: any, toolName?: string) => void,
 ) => {
   const searchToolSchema = searchSchema.omit({
     category: true,
