@@ -142,7 +142,7 @@ export async function POST(request: Request) {
     execute: (dataStream) => {
       const result = streamText({
         system: systemPrompt,
-        model: openai("gpt-4o", { parallelToolCalls: false }),
+        model: openai("gpt-4.1", { parallelToolCalls: false }),
         temperature: 0.1,
         messages,
         tools,
