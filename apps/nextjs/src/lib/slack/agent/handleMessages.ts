@@ -89,7 +89,7 @@ const replyHandler = async (
   const statusMessage = await client.chat.postMessage({
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
-    text: "_Thinking ..._",
+    text: "_Thinking..._",
   });
 
   if (!statusMessage?.ts) throw new Error("Failed to post initial message");
