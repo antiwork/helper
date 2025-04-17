@@ -6,7 +6,7 @@ import { agentThreads } from "./agentThreads";
 export type AgentMessageRole = "user" | "assistant" | "tool";
 
 export const agentMessages = pgTable(
-  "agent_messages",
+  "agent_messages_message",
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),

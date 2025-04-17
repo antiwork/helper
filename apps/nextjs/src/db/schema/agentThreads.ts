@@ -4,7 +4,7 @@ import { withTimestamps } from "../lib/with-timestamps";
 import { mailboxes } from "./mailboxes";
 
 export const agentThreads = pgTable(
-  "agent_threads",
+  "agent_threads_thread",
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
