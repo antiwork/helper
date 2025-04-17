@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Text, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
+import { Text, TextInput, useColorScheme, View } from "react-native";
 import { MagnifyingGlassIcon, UserIcon } from "react-native-heroicons/outline";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Conversation, ConversationPreviewList } from "@/app/(dashboard)/_components/conversationPreviewList";

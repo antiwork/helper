@@ -5,7 +5,6 @@ import {
   Animated,
   FlatList,
   LayoutAnimation,
-  Linking,
   Modal,
   RefreshControl,
   Text,
@@ -43,6 +42,45 @@ type Member = {
   displayName: string;
 };
 
+const SwipeableActionView = ({
+  progress,
+  backgroundColor,
+  textColor,
+  icon: Icon,
+  text,
+}: {
+  progress: Animated.AnimatedInterpolation<number>;
+  backgroundColor: string;
+  textColor: string;
+  icon: React.ComponentType<{ size: number; className: string }>;
+  text: string;
+}) => {
+  const opacity = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  const scale = progress.interpolate({
+    inputRange: [0.5, 1],
+    outputRange: [0.8, 1],
+  });
+
+  return (
+    <View className="mx-4 mb-4">
+      <Animated.View
+        style={{ opacity }}
+        className={`h-full ${backgroundColor} items-center justify-center rounded-xl overflow-hidden`}
+      >
+        <View className="w-32 items-center">
+          <Animated.View className="flex-row items-center gap-1" style={{ transform: [{ scale }] }}>
+            <Icon size={20} className={textColor} />
+            <Text className={`${textColor} text-sm`}>{text}</Text>
+          </Animated.View>
+        </View>
+      </Animated.View>
+    </View>
+  );
+};
+
 const SwipeToClose = ({
   onClose,
   onUndo,
@@ -58,7 +96,7 @@ const SwipeToClose = ({
   const [showMessage, setShowMessage] = useState(false);
   const swipeableRef = useRef<Swipeable>(null);
 
-  const handleSwipe = () => {
+  const handleClose = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsClosed(true);
     setShowMessage(true);
@@ -105,60 +143,32 @@ const SwipeToClose = ({
       <Swipeable
         ref={swipeableRef}
         renderRightActions={(progress) => {
-          const opacity = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 1],
-          });
-          const scale = progress.interpolate({
-            inputRange: [0.5, 1],
-            outputRange: [0.8, 1],
-          });
-
           return (
-            <View className="mx-4 mb-4">
-              <Animated.View
-                style={{ opacity }}
-                className="h-full bg-destructive items-center justify-center rounded-xl overflow-hidden"
-              >
-                <View className="w-16 items-center">
-                  <Animated.View style={{ transform: [{ scale }] }}>
-                    <XMarkIcon size={20} className="text-destructive-foreground" />
-                  </Animated.View>
-                </View>
-              </Animated.View>
-            </View>
+            <SwipeableActionView
+              progress={progress}
+              backgroundColor="bg-destructive"
+              textColor="text-destructive-foreground"
+              icon={XMarkIcon}
+              text="Close"
+            />
           );
         }}
         renderLeftActions={(progress) => {
-          const opacity = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 1],
-          });
-          const scale = progress.interpolate({
-            inputRange: [0.5, 1],
-            outputRange: [0.8, 1],
-          });
-
           return (
-            <View className="mx-4 mb-4">
-              <Animated.View
-                style={{ opacity }}
-                className="h-full bg-bright items-center justify-center rounded-xl overflow-hidden"
-              >
-                <View className="w-16 items-center">
-                  <Animated.View style={{ transform: [{ scale }] }}>
-                    <UserIcon size={20} className="text-bright-foreground" />
-                  </Animated.View>
-                </View>
-              </Animated.View>
-            </View>
+            <SwipeableActionView
+              progress={progress}
+              backgroundColor="bg-bright"
+              textColor="text-bright-foreground"
+              icon={UserIcon}
+              text="Assign"
+            />
           );
         }}
         onSwipeableOpen={(direction) => {
           if (direction === "left") {
             handleAssign();
           } else {
-            handleSwipe();
+            handleClose();
           }
         }}
         rightThreshold={40}
@@ -365,20 +375,6 @@ export function ConversationPreviewList({
     </View>
   );
 }
-
-const ActionButton = ({ label, onPress }: { label: string; onPress: () => void }) => {
-  return (
-    <TouchableOpacity
-      className="rounded-md py-2 px-3 flex-row items-center gap-1"
-      onPress={(e) => {
-        e.stopPropagation();
-        onPress();
-      }}
-    >
-      <Text className="text-xs font-medium text-muted-foreground">{label}</Text>
-    </TouchableOpacity>
-  );
-};
 
 const MemberSelector = ({
   visible,
