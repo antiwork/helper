@@ -23,22 +23,16 @@ interface SessionsListProps {
 export default function SessionsList({ mailbox, limit }: SessionsListProps) {
   const router = useRouter();
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isLoading,
-    isFetchingNextPage,
-    error,
-  } = api.mailbox.getSessionsPaginated.useInfiniteQuery(
-    {
-      mailboxSlug: mailbox.slug,
-      limit,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
-  );
+  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, error } =
+    api.mailbox.getSessionsPaginated.useInfiniteQuery(
+      {
+        mailboxSlug: mailbox.slug,
+        limit,
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    );
 
   const sessions = data?.pages.flatMap((page) => page.items) ?? [];
   const totalCount = data?.pages[0]?.totalCount ?? 0;
