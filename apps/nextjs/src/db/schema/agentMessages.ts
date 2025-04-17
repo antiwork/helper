@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, pgTable, text, jsonb } from "drizzle-orm/pg-core";
+import { bigint, index, jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 import { agentThreads } from "./agentThreads";
 
