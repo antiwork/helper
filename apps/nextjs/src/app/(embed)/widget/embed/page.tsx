@@ -24,45 +24,6 @@ type GuideInstructions = {
   callId: string | null;
 };
 
-const steps = [
-  {
-    id: "1",
-    description: "Navigate to the Discounts tab on the Checkout page.",
-    status: "completed" as const,
-    details: {
-      function: "navigate_to",
-      params: { path: "/checkout/discounts" },
-    },
-  },
-  {
-    id: "2",
-    description: "Click 'New discount' button.",
-    status: "completed" as const,
-    details: {
-      function: "click_element",
-      params: { selector: "button[data-testid='new-discount-button']" },
-    },
-  },
-  {
-    id: "3",
-    description: "Select 'All products' option.",
-    status: "completed" as const,
-    details: {
-      function: "select_option",
-      params: { name: "discount_scope", value: "all_products" },
-    },
-  },
-  {
-    id: "4",
-    description: "Enter '50%' as the discount amount.",
-    status: "loading" as const,
-    details: {
-      function: "input_text",
-      params: { field: "discount_amount", value: "50%" },
-    },
-  },
-];
-
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
   const [config, setConfig] = useState<HelperWidgetConfig | null>(null);

@@ -44,7 +44,7 @@ export async function generateGuidePlan(title: string, instructions: string, mai
 
   try {
     const result = await generateObject({
-      model: openai("gpt-4o"),
+      model: openai("gpt-4.1"),
       system: PLAN_PROMPT,
       prompt,
       schema: z.object({

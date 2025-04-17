@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { waitUntil } from "@vercel/functions";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { generateGuidePlan } from "@/lib/ai/guide";
@@ -51,18 +52,20 @@ export async function POST(request: Request) {
       steps: result.next_steps.map((description) => ({ description, completed: false })),
     });
 
-    await createGuideSessionEvent({
-      guideSessionId: guideSession.id,
-      type: "session_started",
-      mailboxId: mailbox.id,
-      data: {
-        steps: result.next_steps,
-        state_analysis: result.state_analysis,
-        progress_evaluation: result.progress_evaluation,
-        challenges: result.challenges,
-        reasoning: result.reasoning,
-      },
-    });
+    waitUntil(
+      createGuideSessionEvent({
+        guideSessionId: guideSession.id,
+        type: "session_started",
+        mailboxId: mailbox.id,
+        data: {
+          steps: result.next_steps,
+          state_analysis: result.state_analysis,
+          progress_evaluation: result.progress_evaluation,
+          challenges: result.challenges,
+          reasoning: result.reasoning,
+        },
+      }),
+    );
 
     return corsResponse({
       sessionId: guideSession.uuid,

@@ -95,7 +95,7 @@ export async function POST(request: Request) {
               z.object({
                 type: z.literal("done"),
                 text: z.string(),
-                success: z.boolean(),
+                success: z.boolean().default(true).optional(),
               }),
               z.object({
                 type: z.literal("wait"),

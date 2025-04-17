@@ -784,6 +784,7 @@ class HelperWidget {
         interactiveElements,
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to construct DOM tree:", error);
       return { currentPageDetails, domTracking };
     }
