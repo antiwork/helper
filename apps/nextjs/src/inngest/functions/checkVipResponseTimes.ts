@@ -55,7 +55,7 @@ export default inngest.createFunction(
           text: {
             type: "mrkdwn",
             text: [
-              `🚨 *${overdueVipConversations.length} VIPs have been waiting over ${
+              `🚨 *${overdueVipConversations.length} ${overdueVipConversations.length === 1 ? "VIP" : "VIPs"} ${overdueVipConversations.length === 1 ? "has" : "have"} been waiting over ${
                 mailbox.vipExpectedResponseHours ?? 0
               } ${mailbox.vipExpectedResponseHours === 1 ? "hour" : "hours"}*\n`,
               ...overdueVipConversations
