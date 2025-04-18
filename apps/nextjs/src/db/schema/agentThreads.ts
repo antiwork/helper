@@ -1,10 +1,11 @@
 import { relations } from "drizzle-orm";
 import { bigint, index, pgTable, text } from "drizzle-orm/pg-core";
+import { agentMessages } from "@/db/schema/agentMessages";
 import { withTimestamps } from "../lib/with-timestamps";
 import { mailboxes } from "./mailboxes";
 
 export const agentThreads = pgTable(
-  "agent_threads_thread",
+  "agent_threads",
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
@@ -28,4 +29,5 @@ export const agentThreadsRelations = relations(agentThreads, ({ one, many }) => 
     fields: [agentThreads.mailboxId],
     references: [mailboxes.id],
   }),
+  messages: many(agentMessages),
 }));

@@ -1,6 +1,7 @@
 import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
 import { CoreMessage } from "ai";
 import { and, eq } from "drizzle-orm";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
@@ -95,23 +96,22 @@ const replyHandler = async (
 ) => {
   const debug = event.text && /(?:^|\s)!debug(?:$|\s)/.test(event.text);
 
-  let agentThread = await db.query.agentThreads.findFirst({
+  const existingThread = await db.query.agentThreads.findFirst({
     where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
   });
+  const agentThread = existingThread
+    ? existingThread
+    : await db
+        .insert(agentThreads)
+        .values({
+          mailboxId: mailbox.id,
+          slackChannel: event.channel,
+          threadTs: event.thread_ts ?? event.ts,
+        })
+        .returning()
+        .then(takeUniqueOrThrow);
 
-  if (!agentThread) {
-    const [newThread] = await db
-      .insert(agentThreads)
-      .values({
-        mailboxId: mailbox.id,
-        slackChannel: event.channel,
-        threadTs: event.thread_ts ?? event.ts,
-      })
-      .returning();
-    agentThread = newThread;
-  }
-
-  if (event.text && agentThread) {
+  if (event.text) {
     await db.insert(agentMessages).values({
       agentThreadId: agentThread.id,
       role: "user",
@@ -127,14 +127,16 @@ const replyHandler = async (
 
   if (!statusMessage?.ts) throw new Error("Failed to post initial message");
 
-  const showStatus = async (status: string | null, debugContent?: any, toolName?: string) => {
-    if (status && agentThread) {
+  const showStatus = async (
+    status: string | null,
+    tool?: { toolName: string; parameters: Record<string, unknown> },
+  ) => {
+    if (tool && agentThread) {
       await db.insert(agentMessages).values({
         agentThreadId: agentThread.id,
         role: "tool",
-        content: status,
-        toolName,
-        metadata: debugContent ? { debug: debugContent } : undefined,
+        content: status ?? "",
+        metadata: tool,
       });
     }
 
@@ -142,8 +144,8 @@ const replyHandler = async (
       await client.chat.postMessage({
         channel: event.channel,
         thread_ts: event.thread_ts ?? event.ts,
-        text: debugContent
-          ? `_${status ?? "..."}_\n\n*Debug:*\n\`\`\`\n${JSON.stringify(debugContent, null, 2)}\n\`\`\``
+        text: tool
+          ? `_${status ?? "..."}_\n\n*Parameters:*\n\`\`\`\n${JSON.stringify(tool.parameters, null, 2)}\n\`\`\``
           : `_${status ?? "..."}_`,
       });
     } else if (status) {
