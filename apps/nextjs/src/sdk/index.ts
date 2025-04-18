@@ -775,9 +775,6 @@ class HelperWidget {
       const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
       const interactiveElements = findInteractiveElements(domTree.root);
 
-      // eslint-disable-next-line no-console
-      console.log("clickableElements", clickableElements);
-
       return {
         currentPageDetails,
         domTracking,
