@@ -21,7 +21,7 @@ export const generateAgentResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
   slackUserId: string | undefined,
-  showStatus?: (status: string | null, debugContent?: any) => void,
+  showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
 ) => {
   const searchToolSchema = searchSchema.omit({
     category: true,
@@ -56,7 +56,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Get the current Slack user",
         parameters: z.object({}),
         execute: async () => {
-          showStatus?.(`Checking user...`, { slackUserId });
+          showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
           if (!slackUserId) return { error: "User not found" };
           const client = new WebClient(assertDefined(mailbox.slackBotToken));
           const { user } = await client.users.info({ user: slackUserId });
@@ -82,7 +82,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Get IDs, names and emails of all team members",
         parameters: z.object({}),
         execute: async () => {
-          showStatus?.(`Checking members...`);
+          showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
           const members = await getClerkUserList(mailbox.clerkOrganizationId);
           return members.data.map((member) => ({
             id: member.id,
@@ -99,7 +99,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           endDate: z.string().datetime(),
         }),
         execute: async ({ startDate, endDate }) => {
-          showStatus?.(`Checking member stats...`, { startDate, endDate });
+          showStatus(`Checking member stats...`, { toolName: "getMemberStats", parameters: { startDate, endDate } });
           return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
         },
       }),
@@ -107,7 +107,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Search tickets/conversations with various filtering options",
         parameters: searchToolSchema,
         execute: async (input) => {
-          showStatus?.(`Searching tickets...`, input);
+          showStatus(`Searching tickets...`, { toolName: "searchTickets", parameters: input });
           try {
             const { list } = await searchConversations(mailbox, input);
             const { results, nextCursor } = await list;
@@ -127,7 +127,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         description: "Count the number of tickets matching the search criteria",
         parameters: searchToolSchema.omit({ cursor: true, limit: true }),
         execute: async (input) => {
-          showStatus?.(`Counting tickets...`, input);
+          showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
           const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
           return await countSearchResults(where);
         },
@@ -139,7 +139,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           ticketIds: z.array(z.union([z.string(), z.number()])),
         }),
         execute: async ({ clerkUserId, ticketIds }) => {
-          showStatus?.(`Assigning tickets...`, { clerkUserId, ticketIds });
+          showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ticketIds } });
           const conversations = await Promise.all(
             ticketIds.map(async (ticketId) => {
               const conversation = await findConversation(ticketId, mailbox);
@@ -163,14 +163,16 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           filters: searchToolSchema.omit({ cursor: true, limit: true }),
         }),
         execute: async ({ startDate, endDate, filters }) => {
-          showStatus?.(`Checking average response time...`, { startDate, endDate, filters });
+          showStatus(`Checking average response time...`, {
+            toolName: "getAverageResponseTime",
+            parameters: { startDate, endDate, filters },
+          });
           const averageResponseTimeSeconds = await getAverageResponseTime(
             mailbox,
             new Date(startDate),
             new Date(endDate),
             filters,
           );
-          showStatus?.(null, { averageResponseTimeSeconds });
           if (averageResponseTimeSeconds) {
             return { averageResponseTimeSeconds };
           }
@@ -187,7 +189,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             ),
         }),
         execute: async ({ id }) => {
-          showStatus?.(`Checking ticket...`, { id });
+          showStatus(`Checking ticket...`, { toolName: "getTicket", parameters: { id } });
           const conversation = await findConversation(id, mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
@@ -205,7 +207,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
             ),
         }),
         execute: async ({ id }) => {
-          showStatus?.(`Reading ticket...`, { id });
+          showStatus(`Reading ticket...`, { toolName: "getTicketMessages", parameters: { id } });
           const conversation = await findConversation(id, mailbox);
           if (!conversation) return { error: "Ticket not found" };
           const messages = await db.query.conversationMessages.findMany({
