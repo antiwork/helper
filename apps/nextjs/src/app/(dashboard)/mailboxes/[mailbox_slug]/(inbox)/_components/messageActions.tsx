@@ -96,15 +96,13 @@ const EmailEditorComponent = React.forwardRef<
 
     return (
       <div className="flex flex-col h-full pt-4">
-        <div className="flex-0">
-          <TicketCommandBar
-            open={showCommandBar}
-            onOpenChange={setShowCommandBar}
-            onInsertReply={handleInsertReply}
-            onToggleCc={onToggleCc}
-            inputRef={commandInputRef}
-          />
-        </div>
+        <TicketCommandBar
+          open={showCommandBar}
+          onOpenChange={setShowCommandBar}
+          onInsertReply={handleInsertReply}
+          onToggleCc={onToggleCc}
+          inputRef={commandInputRef}
+        />
         <div className={cn("flex-shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
           <LabeledInput
             ref={ccRef}
@@ -123,7 +121,7 @@ const EmailEditorComponent = React.forwardRef<
         </div>
         <TipTapEditor
           ref={editorRef}
-          className={cn("flex-grow min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
+          className={cn("flex-1 min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
           ariaLabel="Conversation editor"
           placeholder="Type your reply here..."
           defaultContent={initialMessage}
