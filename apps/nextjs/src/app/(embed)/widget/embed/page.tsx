@@ -14,14 +14,10 @@ import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { MESSAGE_TYPE, minimizeWidget, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
+import { GuideInstructions } from "@/types/guide";
 
 const queryClient = new QueryClient();
 const GUMROAD_MAILBOX_SLUG = "gumroad";
-
-type GuideInstructions = {
-  instructions: string;
-  callId: string | null;
-};
 
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
@@ -85,7 +81,7 @@ export default function Page() {
         }
       } else if (action === "START_GUIDE") {
         minimizeWidget();
-        setGuideInstructions({ instructions: content as string, callId: null });
+        setGuideInstructions({ instructions: content as string, title: null, callId: null });
         setIsGuidingUser(true);
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);

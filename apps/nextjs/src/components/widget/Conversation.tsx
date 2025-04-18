@@ -12,15 +12,11 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
+import { GUIDE_USER_TOOL_NAME } from "@/lib/ai/tools";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
-
-type GuideInstructions = {
-  instructions: string;
-  title: string;
-  callId: string | null;
-};
+import { GuideInstructions } from "@/types/guide";
 
 type Props = {
   token: string | null;
@@ -81,7 +77,7 @@ export default function Conversation({
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
       }
-      if (toolCall.toolName === "guide_user") {
+      if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
         const args = toolCall.args as { instructions: string; title: string };
         setGuideInstructions({ instructions: args.instructions, title: args.title, callId: toolCall.toolCallId });
       }

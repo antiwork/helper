@@ -109,8 +109,10 @@ export const executeGuideAction = async (
   return await sendRequestToParent(EXECUTE_GUIDE_ACTION, { actionType, params, currentState });
 };
 
-export const guideDone = async () => {
-  return await sendRequestToParent("GUIDE_DONE");
+export const guideDone = async (success = true) => {
+  return await sendRequestToParent("GUIDE_DONE", {
+    success,
+  });
 };
 
 export const sendStartGuide = (sessionId: string) => {

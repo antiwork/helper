@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
 import {
@@ -49,15 +48,12 @@ export default function HelpingHand({
     maxSteps: 10,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
     onToolCall({ toolCall }) {
-      console.log("toolCall", toolCall);
       const params = toolCall.args as Record<string, any>;
       setToolPending({
         toolCallId: toolCall.toolCallId,
         toolName: toolCall.toolName,
         params,
       });
-
-      console.log("Next goal:", params.current_state.next_goal);
 
       if (params.action) {
         handleAction(params.action, toolCall.toolCallId, params.current_state);
@@ -78,9 +74,8 @@ export default function HelpingHand({
 
   const trackToolResult = (toolCallId: string, result: string) => {
     if (toolResultCount >= 10) {
-      console.log("Maximum tool results reached (10). Closing widget.");
       closeWidget();
-      guideDone();
+      guideDone(false);
       return false;
     }
     setToolResultCount((prevCount) => prevCount + 1);
@@ -95,7 +90,6 @@ export default function HelpingHand({
     const type = action.type;
     if (!type) return;
 
-    // everything (key,value) is in the action object other than the type
     const params = Object.fromEntries(Object.entries(action).filter(([key]) => key !== "type"));
 
     if (type === "done") {
@@ -104,9 +98,7 @@ export default function HelpingHand({
       return;
     }
 
-    // General handler for all action types
     const result = await executeGuideAction(type, params, context);
-    console.log(`${type} result:`, result);
 
     if (result && toolCallId) {
       const pageDetails = await fetchCurrentPageDetails();
@@ -159,7 +151,6 @@ export default function HelpingHand({
 
   const sendInitialPrompt = async () => {
     const pageDetails = await fetchCurrentPageDetails();
-    console.log(pageDetails);
     append({
       role: "user",
       content: INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)

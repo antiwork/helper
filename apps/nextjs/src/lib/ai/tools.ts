@@ -13,6 +13,8 @@ import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
+export const GUIDE_USER_TOOL_NAME = "guide_user";
+
 const fetchUserInformation = async (email: string, mailboxSlug: string, reason: string) => {
   try {
     const metadata = await fetchMetadata(email, mailboxSlug);
@@ -130,13 +132,13 @@ export const buildTools = async (
     }),
   };
 
-  tools.guide_user = {
+  tools[GUIDE_USER_TOOL_NAME] = tool({
     description: "call this tool to guide the user in the interface instead of returning a text response",
     parameters: z.object({
       title: z.string().describe("title of the guide that will be displayed to the user"),
       instructions: z.string().describe("instructions for the guide based on the current page and knowledge base"),
     }),
-  };
+  });
 
   if (!email) {
     tools.set_user_email = tool({
