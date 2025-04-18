@@ -1,6 +1,18 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
+/**
+ * This file is derived from browser-use (https://github.com/browser-use/browser-use),
+ * original copyright © 2024 Gregor Zunic – MIT License.
+ * Changes made by Helper authors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ */
 export function domElements(
   args = {
     doHighlightElements: true,

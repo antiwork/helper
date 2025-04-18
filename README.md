@@ -19,6 +19,7 @@ Helper is an open-source AI-powered customer support automation platform. It hel
 - [Integrations Guide](docs/integrations.md)
 - [Deployment Guide](docs/deployment.md)
 - [AI Evaluation Guide](docs/evaluation.md)
+- [Helping Hand Guide](docs/helping-hand.md)
 
 ## Project Structure
 
