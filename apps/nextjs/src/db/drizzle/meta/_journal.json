@@ -533,27 +533,6 @@
       "when": 1744420730731,
       "tag": "0075_tense_blink",
       "breakpoints": true
-    },
-    {
-      "idx": 76,
-      "version": "7",
-      "when": 1744928150178,
-      "tag": "0076_add_agent_tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 77,
-      "version": "7",
-      "when": 1744930091025,
-      "tag": "0077_military_ma_gnuci",
-      "breakpoints": true
-    },
-    {
-      "idx": 78,
-      "version": "7",
-      "when": 1744930960723,
-      "tag": "0078_silky_nebula",
-      "breakpoints": true
     }
   ]
 }
