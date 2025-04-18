@@ -316,7 +316,6 @@ class HelperWidget {
 
             if (action === "GUIDE_DONE") {
               this.guideManager.done();
-              HelperWidget.hide();
             }
 
             // Send the response back to the iframe
@@ -542,7 +541,11 @@ class HelperWidget {
   }
 
   private startGuideInternal(prompt: string): void {
+    this.minimizeInternal();
     this.sendMessageToEmbed({ action: "START_GUIDE", content: prompt });
+    setTimeout(() => {
+      this.showInternal();
+    }, 1000);
   }
 
   private showInternal(): void {
@@ -613,7 +616,7 @@ class HelperWidget {
   }
 
   private minimizeInternal(): void {
-    if (this.iframeWrapper && this.isVisible) {
+    if (this.iframeWrapper) {
       this.iframeWrapper.classList.add("minimized");
       if (this.overlay) {
         this.overlay.classList.remove("visible");
@@ -626,7 +629,7 @@ class HelperWidget {
   }
 
   private maximizeInternal(): void {
-    if (this.iframeWrapper && this.isVisible) {
+    if (this.iframeWrapper) {
       this.iframeWrapper.classList.remove("minimized");
       if (this.overlay) {
         this.overlay.classList.add("visible");

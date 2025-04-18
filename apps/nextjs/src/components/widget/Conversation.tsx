@@ -111,9 +111,8 @@ export default function Conversation({
     }
   };
 
-  const startGuide = async () => {
+  const startGuide = () => {
     minimizeWidget();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsGuidingUser(true);
     stop();
   };

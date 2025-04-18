@@ -29,13 +29,16 @@
   width: 390px !important;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.7) !important;
-  right: 20px !important;
   bottom: 20px !important;
   top: auto !important;
   left: auto !important;
   position: fixed !important;
   overflow: hidden;
   box-shadow: none !important;
+}
+
+.helper-widget-wrapper.minimized.visible {
+  right: 20px !important;
 }
 
 .helper-widget-toggle-button.with-minimized-widget {

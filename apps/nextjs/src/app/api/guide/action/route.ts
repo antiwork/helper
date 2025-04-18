@@ -31,7 +31,6 @@ Example:
 2. ACTION: Single action is allowed.
 Common action sequences:
 - Form filling: [{"input_text": {"index": 1, "text": "username"}}, {"input_text": {"index": 2, "text": "password"}}, {"click_element": {"index": 3}}]
-- Navigation and extraction: [{"go_to_url": {"url": "https://example.com"}}, {"extract_content": {"goal": "extract the names"}}]
 - Actions are executed in the given order
 - If the page changes after an action, the sequence is interrupted and you get the new state.
 - Only provide the action sequence until an action which changes the page state significantly.
@@ -43,7 +42,6 @@ Common action sequences:
 4. NAVIGATION & ERROR HANDLING:
 - If no suitable elements exist, use other functions to complete the task
 - Handle popups/cookies by accepting or closing them
-- Use scroll to find elements you are looking for
 - If the page is not fully loaded, use wait action
 
 5. TASK COMPLETION:
@@ -56,16 +54,17 @@ Common action sequences:
 6. Form filling:
 - If you fill an input field and your action sequence is interrupted, most often something changed e.g. suggestions popped up under the field.
 
-7. Extraction:
-- If your task is to find information - call extract_content on the specific pages to get and store the information.
 Your responses must be always JSON with the specified format.
   
 IMPORTANT: Only call one action at a time.
+  
+Previous steps:
+{{PREVIOUS_STEPS}}
 
 Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
-  const { messages } = await request.json();
+  const { messages, steps } = await request.json();
 
   const authResult = await authenticateWidget(request);
   if (!authResult.success) {
@@ -75,10 +74,10 @@ export async function POST(request: Request) {
   const { session, mailbox } = authResult;
   const userEmail = session.isAnonymous ? null : session.email || null;
 
-  const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user").replace(
-    "{{MAILBOX_NAME}}",
-    mailbox.name,
-  );
+  const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
+  const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
+    .replace("{{MAILBOX_NAME}}", mailbox.name)
+    .replace("{{PREVIOUS_STEPS}}", formattedSteps);
 
   const tools = {
     AgentOutput: tool({
@@ -88,6 +87,9 @@ export async function POST(request: Request) {
           current_state: z.object({
             evaluation_previous_goal: z.string(),
             next_goal: z.string(),
+            completed_steps: z
+              .array(z.number().int())
+              .describe("List of steps that have been completed, empty array if none, index starts at 1"),
           }),
           action: z
             .discriminatedUnion("type", [

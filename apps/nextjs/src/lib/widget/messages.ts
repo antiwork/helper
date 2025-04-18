@@ -12,6 +12,7 @@ export const SCREENSHOT_ACTION = "SCREENSHOT";
 export const MINIMIZE_ACTION = "MINIMIZE";
 export const MESSAGE_TYPE = "HELPER_WIDGET_MESSAGE";
 export const GUIDE_START = "GUIDE_START";
+export const GUIDE_DONE = "GUIDE_DONE";
 export const EXECUTE_GUIDE_ACTION = "EXECUTE_GUIDE_ACTION";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
@@ -110,7 +111,7 @@ export const executeGuideAction = async (
 };
 
 export const guideDone = async (success = true) => {
-  return await sendRequestToParent("GUIDE_DONE", {
+  return await sendRequestToParent(GUIDE_DONE, {
     success,
   });
 };

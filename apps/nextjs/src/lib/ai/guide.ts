@@ -11,6 +11,7 @@ const PLAN_PROMPT = `You are a planning agent that helps break down tasks into s
 2. Evaluate progress towards the ultimate goal
 3. Identify potential challenges or roadblocks
 4. Suggest the next high-level steps to take
+5. Don't use more than 6 words for each step
 
 ## Knowledge base
 {{KNOWLEDGE_BASE}}

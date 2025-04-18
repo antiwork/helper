@@ -9,6 +9,7 @@ import {
   sendStartGuide,
 } from "@/lib/widget/messages";
 import { AISteps } from "./ai-steps";
+import LoadingSpinner from "../loadingSpinner";
 
 type Step = {
   description: string;
@@ -34,6 +35,7 @@ export default function HelpingHand({
   const [isInitializing, setIsInitializing] = useState(true);
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
+  const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
 
   const { append, addToolResult } = useChat({
     api: "/api/guide/action",
@@ -50,12 +52,23 @@ export default function HelpingHand({
       if (params.action) {
         handleAction(params.action, toolCall.toolCallId, params.current_state);
       }
+
+      if (params.current_state) {
+        const completedSteps = params.current_state.completed_steps || [];
+        setSteps(
+          steps.map((step, index) => ({
+            ...step,
+            completed: completedSteps.includes(index + 1),
+          })),
+        );
+      }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
       return {
         id,
         messages,
         sessionId: guideSessionId,
+        steps,
         ...requestBody,
       };
     },
@@ -66,8 +79,8 @@ export default function HelpingHand({
 
   const trackToolResult = (toolCallId: string, result: string) => {
     if (toolResultCount >= 10) {
-      closeWidget();
       guideDone(false);
+      setDone({ success: false, message: "Failed to complete the task, too many attempts" });
       return false;
     }
     setToolResultCount((prevCount) => prevCount + 1);
@@ -85,8 +98,8 @@ export default function HelpingHand({
     const params = Object.fromEntries(Object.entries(action).filter(([key]) => key !== "type"));
 
     if (type === "done") {
-      closeWidget();
-      await guideDone();
+      await guideDone(action.success);
+      setDone({ success: action.success, message: action.text });
       return;
     }
 
@@ -182,19 +195,24 @@ export default function HelpingHand({
     return null;
   }
 
-  return (
-    <div className="flex flex-col h-72 w-full items-center px-4 text-sm text-gray-500 overflow-y-auto">
-      <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
-
-      <div className="flex flex-col gap-2 w-full">
-        <div className="flex flex-col gap-2 rounded-lg p-2 border border-gray-200">
-          <div className="text-sm text-gray-500">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded-md" onClick={handleActionDone}>
-              Done
-            </button>
-          </div>
-        </div>
+  if (done) {
+    return (
+      <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto text-white">
+        <p>{done.message}</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto text-white">
+      {steps.length > 0 ? (
+        <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
+      ) : (
+        <div className="flex flex-col gap-2">
+          <LoadingSpinner />
+          <p>Thinking...</p>
+        </div>
+      )}
     </div>
   );
 }

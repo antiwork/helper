@@ -170,8 +170,6 @@ export class GuideManager {
       }
 
       element = fetchElementByXpath(domTrackingElement.xpath);
-      console.log("element after scroll", element.getBoundingClientRect());
-
       const hand = this.createHelperHand();
       const rect = element.getBoundingClientRect();
 
@@ -315,7 +313,6 @@ export class GuideManager {
     if (!element || !(element instanceof HTMLElement)) return false;
 
     await this.animateHandToElementAndScroll(index);
-    console.log("input text element", element);
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -368,8 +365,6 @@ export class GuideManager {
     if (!element) return false;
 
     await this.animateHandToElementAndScroll(index);
-
-    console.log("clicking element", element);
     element.click();
     return true;
   }
@@ -446,7 +441,6 @@ export class GuideManager {
 
       this.startAutoFlush();
 
-      console.log("Recording started with sessionId:", this.sessionId);
       return Promise.resolve();
     } catch (error) {
       console.error("Failed to start recording:", error);
@@ -473,8 +467,6 @@ export class GuideManager {
     if (this.events.length > 0) {
       await this.flush();
     }
-
-    console.log("Recording stopped");
   }
 
   private startAutoFlush(): void {
@@ -528,7 +520,6 @@ export class GuideManager {
       }
 
       this.events = this.events.slice(eventsToSend.length);
-      console.log("Events sent successfully:", eventsToSend.length);
     } catch (error) {
       console.error("Failed to send events:", error);
       throw error;
@@ -592,7 +583,6 @@ export class GuideManager {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log("Guide event sent successfully:", type);
     } catch (error) {
       console.error("Failed to send guide event:", error);
     }

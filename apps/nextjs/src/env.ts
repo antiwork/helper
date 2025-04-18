@@ -12,7 +12,7 @@ export const env = createEnv({
   extends: [vercel()],
   shared: {
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-    DISABLE_STRICT_MODE: z.boolean().default(false),
+    DISABLE_STRICT_MODE: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
   },
   /**
    * Specify your server-side environment variables schema here.
@@ -124,6 +124,7 @@ export const env = createEnv({
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
