@@ -12,6 +12,7 @@ export const env = createEnv({
   extends: [vercel()],
   shared: {
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    DISABLE_STRICT_MODE: z.boolean().default(false),
   },
   /**
    * Specify your server-side environment variables schema here.

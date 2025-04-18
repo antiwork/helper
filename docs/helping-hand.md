@@ -12,6 +12,18 @@ The "Helping Hand" is an interactive guide feature within Helper designed to ass
 6.  **Error Handling**: If the user deviates or an unexpected state occurs, the guide attempts to recover or provides feedback.
 7.  **Completion**: Once all steps are completed, the guide concludes, confirming the task is finished.
 
+## Important Note: React Strict Mode
+
+For the "Helping Hand" feature to function correctly, especially during development, **React Strict Mode must be disabled**. This is because Strict Mode can intentionally double-invoke certain functions (like component render phases and effects), which interferes with the guide's step-by-step DOM interaction and state management.
+
+To disable it, ensure the following environment variable is set:
+
+```
+DISABLE_STRICT_MODE=true
+```
+
+This is typically configured in your environment file (e.g., `.env.local`) or when starting the development server with `DISABLE_STRICT_MODE=true bin/dev`.
+
 ## Key Components
 
 -   **Guide Planning (`lib/ai/guide.ts`)**: Generates the sequence of steps required for a task.
