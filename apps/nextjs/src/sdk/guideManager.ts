@@ -1,8 +1,6 @@
 /* eslint-disable no-console */
 import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
-import userEvent from "@testing-library/user-event";
-import confetti from "canvas-confetti";
 import scrollIntoView from "scroll-into-view-if-needed";
 import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
 
@@ -284,22 +282,74 @@ export class GuideManager {
 
   public async sendKeys(index: number, text: string): Promise<boolean> {
     const element = this.fetchElementByIndex(index);
-    if (!element) return false;
+    if (!element || !(element instanceof HTMLElement)) return false;
 
     await this.animateHandToElementAndScroll(index);
-    userEvent.type(element, text);
+
+    element.focus();
+
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        element instanceof HTMLInputElement ? window.HTMLInputElement.prototype : window.HTMLTextAreaElement.prototype,
+        "value",
+      )?.set;
+      if (!nativeInputValueSetter) {
+        console.error("Could not get native value setter");
+        return false;
+      }
+
+      const newValue = element.value + text;
+      nativeInputValueSetter.call(element, newValue);
+
+      element.dispatchEvent(new Event("input", { bubbles: true, cancelable: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true, cancelable: false }));
+    } else {
+      console.warn("sendKeys called on non-input/textarea element:", element);
+      return false;
+    }
     return true;
   }
 
   public async inputText(index: number, text: string): Promise<boolean> {
     const element = this.fetchElementByIndex(index);
-    if (!element) return false;
+    if (!element || !(element instanceof HTMLElement)) return false;
 
     await this.animateHandToElementAndScroll(index);
     console.log("input text element", element);
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      userEvent.type(element, `${text}[Tab]`);
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        element instanceof HTMLInputElement ? window.HTMLInputElement.prototype : window.HTMLTextAreaElement.prototype,
+        "value",
+      )?.set;
+
+      if (!nativeInputValueSetter) {
+        console.error("Could not get native value setter");
+        return false;
+      }
+
+      element.focus();
+      const hasTab = text.endsWith("[Tab]");
+      const actualText = hasTab ? text.slice(0, -5) : text;
+
+      nativeInputValueSetter.call(element, actualText);
+      element.dispatchEvent(new Event("input", { bubbles: true, cancelable: true }));
+      element.dispatchEvent(new Event("change", { bubbles: true, cancelable: false }));
+
+      if (hasTab) {
+        const focusableSelector = 'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])';
+        const focusableElements = Array.from(document.querySelectorAll(focusableSelector)).filter(
+          (el): el is HTMLElement => el instanceof HTMLElement && el.offsetParent !== null,
+        );
+
+        const currentIndex = focusableElements.indexOf(element);
+        if (currentIndex !== -1 && currentIndex + 1 < focusableElements.length) {
+          focusableElements[currentIndex + 1]?.focus();
+        } else if (focusableElements.length > 0) {
+          focusableElements[0]?.focus();
+        }
+      }
+
       await wait(1000);
       return true;
     }
@@ -329,19 +379,15 @@ export class GuideManager {
     const element = this.fetchElementByIndex(index);
     if (!element) return false;
 
-    // Check if it's a select element
     if (element instanceof HTMLSelectElement) {
       await this.animateHandToElementAndScroll(index);
 
-      // Find the option with matching text
       const options = Array.from(element.options);
       const option = options.find((opt) => opt.text === text || opt.value === text);
 
       if (option) {
-        // Set the value and dispatch change event
         element.value = option.value;
 
-        // Dispatch change event to trigger any listeners
         const event = new Event("change", { bubbles: true });
         element.dispatchEvent(event);
         return true;
@@ -349,7 +395,6 @@ export class GuideManager {
       return false;
     }
 
-    // For non-select elements (like custom dropdowns), fall back to click
     await this.animateHandToElementAndScroll(index);
     element.click();
     return true;
@@ -365,35 +410,6 @@ export class GuideManager {
     element.addEventListener("click", (event: Event) => callback(event as MouseEvent));
   }
 
-  public celebrateGuideDone(): void {
-    const duration = 2000;
-    const end = Date.now() + duration;
-
-    const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
-
-    (function frame() {
-      confetti({
-        particleCount: 7,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors,
-      });
-
-      confetti({
-        particleCount: 7,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors,
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    })();
-  }
-
   public done(): void {
     this.sendGuideEvent("completed", {
       title: document.title,
@@ -401,7 +417,6 @@ export class GuideManager {
     });
     this.stopRecording();
     this.hideHelperHand();
-    this.celebrateGuideDone();
   }
 
   public startRecording(): Promise<void> {
