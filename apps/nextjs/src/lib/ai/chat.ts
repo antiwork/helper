@@ -23,7 +23,7 @@ import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
-import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
@@ -127,6 +127,7 @@ export const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
+  guideEnabled = false,
 ): Promise<{
   messages: CoreMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
@@ -138,7 +139,9 @@ export const buildPromptMessages = async (
       "{{CURRENT_DATE}}",
       new Date().toISOString(),
     ),
-  ];
+    guideEnabled ? GUIDE_INSTRUCTIONS : null,
+  ].filter(Boolean);
+
   let systemPrompt = prompt.join("\n");
   if (knowledgeBank) {
     systemPrompt += `\n${knowledgeBank}`;
@@ -322,7 +325,7 @@ export const generateAIResponse = async ({
   const query = lastMessage?.content || "";
 
   const coreMessages = convertToCoreMessages(messages, { tools: {} });
-  const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query);
+  const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query, guideEnabled);
 
   const tools = await buildTools(conversationId, email, mailbox, true, guideEnabled);
   if (readPageTool) {
