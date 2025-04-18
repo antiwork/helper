@@ -233,6 +233,62 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           }));
         },
       }),
+      closeTickets: tool({
+        description: "Close tickets/conversations matching various filtering options",
+        parameters: searchToolSchema.omit({ cursor: true, limit: true }),
+        execute: async (input) => {
+          showStatus(`Finding tickets to close...`, { toolName: "closeTickets", parameters: input });
+          try {
+            const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
+            const count = await countSearchResults(where);
+
+            if (count === 0) {
+              return { message: "No tickets found matching the criteria" };
+            }
+
+            if (count > 1000) {
+              return { error: `Too many tickets (${count}) found. Maximum allowed is 1000.` };
+            }
+
+            const results = await db.query.conversations.findMany({
+              columns: { id: true, slug: true, subject: true, status: true },
+              where: and(...Object.values(where)),
+            });
+
+            const ticketsToClose = results.filter((conversation) => conversation.status !== "spam");
+
+            if (ticketsToClose.length === 0) {
+              return { message: "No tickets found that can be closed (excluding spam tickets)" };
+            }
+
+            let successCount = 0;
+            for (let i = 0; i < ticketsToClose.length; i++) {
+              const conversation = ticketsToClose[i];
+              if (conversation) {
+                showStatus(`Closing conversation ${i + 1} out of ${ticketsToClose.length}...`, {
+                  toolName: "closeTickets",
+                  parameters: { ...input, conversationId: conversation.id },
+                });
+
+                await updateConversation(conversation.id, {
+                  set: { status: "closed" },
+                  message: "Closed by agent",
+                });
+
+                successCount++;
+              }
+            }
+
+            return {
+              message: `Successfully closed ${successCount} tickets`,
+              count: successCount,
+            };
+          } catch (error) {
+            captureExceptionAndLog(error);
+            return { error: "Failed to close tickets" };
+          }
+        },
+      }),
     },
   });
 
