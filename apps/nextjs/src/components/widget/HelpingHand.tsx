@@ -1,5 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
+import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import {
   closeWidget,
   executeGuideAction,
@@ -8,15 +9,6 @@ import {
   sendStartGuide,
 } from "@/lib/widget/messages";
 import { AISteps } from "./ai-steps";
-
-const INITIAL_PROMPT = `
-Your ultimate task is: """INSTRUCTIONS""". 
-If you achieved your ultimate task, stop everything and use the done action in the next step to complete the task. If not, continue as usual.
-    
-Current URL: {{CURRENT_URL}}
-Current Page Title: {{CURRENT_PAGE_TITLE}}
-
-{{PAGE_DETAILS}}`;
 
 type Step = {
   description: string;
@@ -153,7 +145,7 @@ export default function HelpingHand({
     const pageDetails = await fetchCurrentPageDetails();
     append({
       role: "user",
-      content: INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)
+      content: GUIDE_INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)
         .replace("{{CURRENT_URL}}", pageDetails.currentPageDetails.url)
         .replace("{{CURRENT_PAGE_TITLE}}", pageDetails.currentPageDetails.title)
         .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements)),

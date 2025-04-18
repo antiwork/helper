@@ -3,7 +3,7 @@ import { CoreMessage, tool, type Tool } from "ai";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { inngest } from "@/inngest/client";
-import { REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
+import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
@@ -12,8 +12,6 @@ import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval"
 import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
-
-export const GUIDE_USER_TOOL_NAME = "guide_user";
 
 const fetchUserInformation = async (email: string, mailboxSlug: string, reason: string) => {
   try {
