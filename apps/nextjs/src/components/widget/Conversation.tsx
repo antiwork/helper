@@ -27,6 +27,7 @@ type Props = {
   isAnonymous: boolean;
   setIsGuidingUser: (isGuidingUser: boolean) => void;
   setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
+  guideEnabled: boolean;
 };
 
 export type Attachment = {
@@ -45,6 +46,7 @@ export default function Conversation({
   isAnonymous,
   setIsGuidingUser,
   setGuideInstructions,
+  guideEnabled,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -88,6 +90,7 @@ export default function Conversation({
       return {
         id,
         readPageTool,
+        guideEnabled,
         message: messages[messages.length - 1],
         conversationSlug,
         ...requestBody,

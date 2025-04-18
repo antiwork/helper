@@ -104,6 +104,7 @@ export const buildTools = async (
   email: string | null,
   mailbox: Mailbox,
   includeHumanSupport = true,
+  guideEnabled = false,
   includeMailboxTools = true,
   reasoningMiddlewarePrompt?: string,
 ): Promise<Record<string, Tool>> => {
@@ -129,14 +130,17 @@ export const buildTools = async (
       execute: ({ query }, { messages }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox), messages),
     }),
   };
+  console.log("guideEnabled", guideEnabled);
 
-  tools[GUIDE_USER_TOOL_NAME] = tool({
-    description: "call this tool to guide the user in the interface instead of returning a text response",
-    parameters: z.object({
-      title: z.string().describe("title of the guide that will be displayed to the user"),
-      instructions: z.string().describe("instructions for the guide based on the current page and knowledge base"),
-    }),
-  });
+  if (guideEnabled) {
+    tools[GUIDE_USER_TOOL_NAME] = tool({
+      description: "call this tool to guide the user in the interface instead of returning a text response",
+      parameters: z.object({
+        title: z.string().describe("title of the guide that will be displayed to the user"),
+        instructions: z.string().describe("instructions for the guide based on the current page and knowledge base"),
+      }),
+    });
+  }
 
   if (!email) {
     tools.set_user_email = tool({

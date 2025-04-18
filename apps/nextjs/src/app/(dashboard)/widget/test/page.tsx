@@ -23,6 +23,7 @@ export default async function WidgetTest({
     ...helperAuth,
     title: "Support & Help",
     experimental_read_page: false,
+    guide_enabled: true,
     customer_metadata: {
       name: "John Doe",
       value: isVip ? 1000_00 : 100,

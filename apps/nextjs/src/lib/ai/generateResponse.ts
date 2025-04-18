@@ -97,7 +97,14 @@ export const generateDraftResponse = async (
     system: systemPrompt,
     prompt: await buildPromptWithMessages(conversationId),
     maxSteps: 5,
-    tools: await buildTools(conversationId, lastUserEmail.emailFrom ?? "", mailbox, false, options.enableMailboxTools),
+    tools: await buildTools(
+      conversationId,
+      lastUserEmail.emailFrom ?? "",
+      mailbox,
+      false,
+      false,
+      options.enableMailboxTools,
+    ),
     functionId: "generate-draft-response",
     metadata: {
       sessionId: conversationId,
