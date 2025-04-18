@@ -1,9 +1,8 @@
-/* eslint-disable no-console */
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText, tool } from "ai";
 import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
-import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
+import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
 
@@ -148,10 +147,7 @@ export async function POST(request: Request) {
         tools,
         toolChoice: "required",
         onError: (error) => {
-          console.error("AI stream error", error);
-        },
-        onFinish: () => {
-          console.log("finished AI stream");
+          captureExceptionAndLogIfDevelopment(error);
         },
       });
       result.mergeIntoDataStream(dataStream);

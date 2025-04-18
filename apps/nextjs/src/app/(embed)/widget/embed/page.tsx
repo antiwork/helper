@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cx from "classnames";
 import { domAnimation, LazyMotion, m } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
-// import { AISteps } from "@/components/widget/ai-steps";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";

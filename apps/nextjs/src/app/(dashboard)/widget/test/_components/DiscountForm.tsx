@@ -19,14 +19,12 @@ export function DiscountForm() {
   const handleInputChange = (field: keyof typeof formValues, value: string | number) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
 
-    // Clear error when user types in the name field
     if (field === "name" && errors.name) {
       setErrors((prev) => ({ ...prev, name: undefined }));
     }
   };
 
   const handleSubmit = () => {
-    // Validate form
     const newErrors: { name?: string } = {};
 
     if (!formValues.name.trim()) {
@@ -35,9 +33,7 @@ export function DiscountForm() {
 
     setErrors(newErrors);
 
-    // Only proceed if no errors
     if (Object.keys(newErrors).length === 0) {
-      // In a real app, this would send data to an API
       setIsSuccess(true);
     }
   };
