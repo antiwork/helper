@@ -19,6 +19,18 @@ const clearDatabase = async () => {
   for (const { tableName } of publicTables) {
     await db.execute(sql`DROP TABLE IF EXISTS ${sql.identifier(tableName)} CASCADE`);
   }
+  console.log("Public tables dropped successfully.");
+
+  const publicEnums = await db
+    .select({ enumName: sql<string>`t.typname` })
+    .from(sql`pg_type t`)
+    .innerJoin(sql`pg_namespace n`, sql`n.oid = t.typnamespace`)
+    .where(sql`t.typtype = 'e' AND n.nspname = 'public'`);
+
+  for (const { enumName } of publicEnums) {
+    await db.execute(sql`DROP TYPE IF EXISTS ${sql.identifier(enumName)} CASCADE`);
+  }
+  console.log("Public enums dropped successfully.");
 
   // Clear drizzle schema
   const drizzleTables = await db
