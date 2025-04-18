@@ -96,14 +96,16 @@ const EmailEditorComponent = React.forwardRef<
 
     return (
       <div className="flex flex-col h-full pt-4">
-        <TicketCommandBar
-          open={showCommandBar}
-          onOpenChange={setShowCommandBar}
-          onInsertReply={handleInsertReply}
-          onToggleCc={onToggleCc}
-          inputRef={commandInputRef}
-        />
-        <div className={cn("flex-shrink-0 flex flex-col gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
+        <div className="flex-0">
+          <TicketCommandBar
+            open={showCommandBar}
+            onOpenChange={setShowCommandBar}
+            onInsertReply={handleInsertReply}
+            onToggleCc={onToggleCc}
+            inputRef={commandInputRef}
+          />
+        </div>
+        <div className={cn("flex-shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
           <LabeledInput
             ref={ccRef}
             name="CC"

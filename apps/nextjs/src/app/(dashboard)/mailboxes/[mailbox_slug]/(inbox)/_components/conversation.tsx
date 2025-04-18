@@ -570,7 +570,7 @@ const ConversationContent = () => {
                 setLayoutState={setLayoutState}
               />
             </div>
-            <div className="max-h-[45vh] border-t border-border">
+            <div className="max-h-[50vh] border-t border-border">
               <MessageActionsPanel />
             </div>
           </>

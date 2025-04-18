@@ -103,6 +103,7 @@ export const mailboxRouter = {
   latestEvents: mailboxProcedure
     .input(z.object({ cursor: z.date().optional() }))
     .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
+
   getSessionsPaginated: mailboxProcedure
     .input(
       z.object({

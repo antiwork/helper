@@ -1,17 +1,17 @@
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { guideSessionReplays, guideSessions } from "@/db/schema";
+import { guideSessions } from "@/db/schema";
 import { api } from "@/trpc/server";
-import SessionDetails from "./_components/session-details";
+import SessionDetails from "./_components/sessionDetails";
 
 type PageProps = {
   mailbox_slug: string;
   session_id: string;
 };
 
-export default async function SessionPage(props: { params: PageProps }) {
-  const { mailbox_slug, session_id } = props.params;
+export default async function SessionPage(props: { params: Promise<PageProps> }) {
+  const { mailbox_slug, session_id } = await props.params;
 
   const mailboxData = await api.mailbox.get({ mailboxSlug: mailbox_slug });
   const sessionId = parseInt(session_id, 10);

@@ -2,7 +2,7 @@ import { Link } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Animated, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
-import { UserIcon } from "react-native-heroicons/outline";
+import { StarIcon, UserIcon } from "react-native-heroicons/outline";
 import { api, RouterOutputs } from "@/utils/api";
 import { cssIconInterop } from "@/utils/css";
 import { humanizeTime } from "@/utils/humanizeTime";
@@ -82,11 +82,21 @@ export function ConversationList({
                       <Text className="text-sm text-muted-foreground">{assigneeName}</Text>
                     </View>
                   )}
-                  {item.platformCustomer?.isVip && (
-                    <View className="bg-yellow-200 px-2 py-0.5 rounded">
-                      <Text className="text-xs text-yellow-800 font-medium">VIP</Text>
-                    </View>
-                  )}
+                  <View
+                    className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full ${item.platformCustomer?.isVip ? "bg-amber-400" : "bg-muted"}`}
+                  >
+                    {item.platformCustomer?.isVip && (
+                      <StarIcon size={14} className="dark:text-background text-foreground" />
+                    )}
+                    <Text
+                      className={`text-sm font-medium ${item.platformCustomer?.isVip ? "dark:text-background text-foreground" : "text-muted-foreground"}`}
+                    >
+                      $
+                      {item.platformCustomer?.value
+                        ? (parseFloat(item.platformCustomer.value) / 100).toFixed(2)
+                        : "0.00"}
+                    </Text>
+                  </View>
                   <Text className="text-sm text-muted-foreground">{humanizeTime(item.createdAt)}</Text>
                 </View>
               </View>
@@ -94,11 +104,6 @@ export function ConversationList({
                 <Text numberOfLines={1} className="text-sm text-muted-foreground flex-1">
                   {item.subject}
                 </Text>
-                {item.platformCustomer?.value && parseFloat(item.platformCustomer.value) > 0 && (
-                  <Text className="text-sm text-muted-foreground flex-shrink-0">
-                    ${(parseFloat(item.platformCustomer.value) / 100).toFixed(2)}
-                  </Text>
-                )}
               </View>
             </TouchableOpacity>
           </Link>
