@@ -1,8 +1,9 @@
 import { openai } from "@ai-sdk/openai";
-import { createDataStreamResponse, streamText, tool } from "ai";
+import { createDataStreamResponse, generateText, streamText, tool } from "ai";
 import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { consoleIntegration } from "@sentry/nextjs";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
 
@@ -139,17 +140,66 @@ export async function POST(request: Request) {
         .passthrough(),
     }),
   };
+
+  const model = openai("gpt-4.1", { parallelToolCalls: false });
+
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({
         system: systemPrompt,
-        model: openai("gpt-4.1", { parallelToolCalls: false }),
+        model,
         temperature: 0.1,
         messages,
         tools,
         toolChoice: "required",
         onError: (error) => {
           captureExceptionAndLogIfDevelopment(error);
+        },
+        experimental_repairToolCall: async ({ toolCall, tools, error, messages, system }) => {
+          // eslint-disable-next-line no-console
+          console.log("Fixing tool call: ", error);
+
+          const result = await generateText({
+            model,
+            system,
+            messages: [
+              ...messages,
+              {
+                role: "assistant",
+                content: [
+                  {
+                    type: "tool-call",
+                    toolCallId: toolCall.toolCallId,
+                    toolName: toolCall.toolName,
+                    args: toolCall.args,
+                  },
+                ],
+              },
+              {
+                role: "tool" as const,
+                content: [
+                  {
+                    type: "tool-result",
+                    toolCallId: toolCall.toolCallId,
+                    toolName: toolCall.toolName,
+                    result: error.message,
+                  },
+                ],
+              },
+            ],
+            tools,
+          });
+
+          const newToolCall = result.toolCalls.find((newToolCall) => newToolCall.toolName === toolCall.toolName);
+
+          return newToolCall != null
+            ? {
+                toolCallType: "function" as const,
+                toolCallId: toolCall.toolCallId,
+                toolName: toolCall.toolName,
+                args: JSON.stringify(newToolCall.args),
+              }
+            : null;
         },
       });
       result.mergeIntoDataStream(dataStream);
