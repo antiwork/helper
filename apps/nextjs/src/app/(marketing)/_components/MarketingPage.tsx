@@ -87,7 +87,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
     case "styleLinter":
       return (
         <div className="p-6">
-          <div className="max-w-xl flex-grow">
+          <div className="max-w-xl grow">
             <div className="mb-4">
               <Input
                 type="text"
@@ -135,7 +135,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
     case "autoDraft":
       return (
         <div className="p-6">
-          <div className="max-w-xl flex-grow">
+          <div className="max-w-xl grow">
             <div className="mb-4 pr-10">
               <div className="inline-block rounded-lg p-4 bg-muted">
                 <div className="lg:text-base text-sm prose">
@@ -145,7 +145,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
             </div>
             <div className="mb-4">
               <textarea
-                className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-none focus:ring-muted-foreground dark:text-primary-foreground"
+                className="w-full rounded-lg border-border text-sm focus:border-transparent focus:outline-hidden focus:ring-muted-foreground dark:text-primary-foreground"
                 rows={5}
                 placeholder="Auto-generated response will appear here"
                 defaultValue={`Thank you for your refund request. To process this, we'll need your order number and a reason for the refund.
@@ -175,7 +175,7 @@ Please reply with this information. We'll review your request within 1-2 busines
     case "pinnedReplies":
       return (
         <div className="p-6">
-          <div className="max-w-xl flex-grow">
+          <div className="max-w-xl grow">
             <div className="relative">
               <Input
                 type="text"
@@ -206,7 +206,7 @@ Please reply with this information. We'll review your request within 1-2 busines
     case "promptConfig":
       return (
         <div className="p-6">
-          <div className="max-w-xl flex-grow">
+          <div className="max-w-xl grow">
             <div>
               <div className="mb-2 flex flex-col gap-2">
                 {[
@@ -215,17 +215,17 @@ Please reply with this information. We'll review your request within 1-2 busines
                   "Keep replies under 3 paragraphs at all times",
                 ].map((prompt, index) => (
                   <div key={index} className="flex gap-2">
-                    <div className="transition-height h-10 w-full truncate rounded-lg border border-border px-3 py-2 text-sm outline-none duration-300 focus:border-border focus:outline-none">
+                    <div className="transition-height h-10 w-full truncate rounded-lg border border-border px-3 py-2 text-sm outline-hidden duration-300 focus:border-border focus:outline-hidden">
                       {prompt}
                     </div>
-                    <button className="inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-primary hover:bg-secondary h-10 rounded text-xs w-10 px-0">
+                    <button className="inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-primary hover:bg-secondary h-10 rounded text-xs w-10 px-0">
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
               </div>
             </div>
-            <button className="inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-primary hover:bg-secondary h-10 rounded-md px-4 text-sm">
+            <button className="inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-primary hover:bg-secondary h-10 rounded-md px-4 text-sm">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -349,7 +349,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                 onClick={() => sendPrompt("Hello! What's Helper?")}
               >
                 <span className="relative z-10">SEE IT IN ACTION</span>
-                <div className="absolute inset-0 w-[200%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%]" />
+                <div className="absolute inset-0 w-[200%] transition-transform duration-1000 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%]" />
               </Button>
             </div>
           </div>

@@ -260,7 +260,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       <div className={cn("relative flex flex-col gap-4", className)}>
         <div
           className={cn(
-            "flex-grow flex flex-col min-h-0 rounded border border-border bg-background",
+            "grow flex flex-col min-h-0 rounded border border-border bg-background",
             toolbarOpen && isAboveMd && "pb-14",
           )}
           aria-label={ariaLabel}
@@ -277,7 +277,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             }}
             ref={editorContentContainerRef}
           >
-            <div className="flex-grow">
+            <div className="grow">
               <EditorContent editor={editor} onKeyDown={handleModEnter} />
             </div>
             {signature}

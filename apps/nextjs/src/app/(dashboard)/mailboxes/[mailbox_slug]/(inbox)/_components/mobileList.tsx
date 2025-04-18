@@ -38,7 +38,7 @@ export const MobileList = () => {
         variant="mobile"
         className={cn("flex items-center h-14 px-4", nativePlatform === "macos" && "mt-8")}
         prefix={
-          <div className="flex-shrink-0 mr-2">
+          <div className="shrink-0 mr-2">
             <AppSidebarOpen mailboxSlug={mailboxSlug} />
           </div>
         }

@@ -138,7 +138,7 @@ const MessageItem = ({
       renderMessageBody({
         body: message.body,
         isMarkdown: isChatMessage || message.type === "note" || isAIMessage,
-        className: "lg:prose-base prose-sm [&_*]:!text-foreground [&_*]:!bg-transparent",
+        className: "lg:prose-base prose-sm **:text-foreground! **:bg-transparent!",
       }),
     [message.body, message.type, isAIMessage],
   );
@@ -180,7 +180,7 @@ const MessageItem = ({
                   <button
                     onClick={() => setShowQuotedContext(!showQuotedContext)}
                     className={cx(
-                      "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-none transition-colors duration-200",
+                      "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
                       showQuotedContext
                         ? "bg-muted-foreground text-muted-foreground"
                         : "bg-border text-muted-foreground hover:text-muted-foreground",

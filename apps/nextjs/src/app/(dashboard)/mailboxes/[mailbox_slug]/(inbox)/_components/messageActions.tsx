@@ -103,7 +103,7 @@ const EmailEditorComponent = React.forwardRef<
           onToggleCc={onToggleCc}
           inputRef={commandInputRef}
         />
-        <div className={cn("flex-shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
+        <div className={cn("shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
           <LabeledInput
             ref={ccRef}
             name="CC"

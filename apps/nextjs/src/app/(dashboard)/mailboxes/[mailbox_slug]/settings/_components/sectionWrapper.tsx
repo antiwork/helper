@@ -47,7 +47,7 @@ const SectionWrapper = ({
           <Switch aria-label={`${title} Switch`} checked={isSwitchChecked} onCheckedChange={handleSwitchChange} />
         )}
       </div>
-      <div className={cn("flex-grow", !fullWidth && "max-w-xl")}>{children}</div>
+      <div className={cn("grow", !fullWidth && "max-w-xl")}>{children}</div>
     </section>
   );
 };

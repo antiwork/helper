@@ -54,7 +54,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                 >
                   <Icon
                     className={cx(
-                      "mr-2 h-5 w-5 flex-shrink-0",
+                      "mr-2 h-5 w-5 shrink-0",
                       isSelected ? "text-primary-500" : "text-muted-foreground",
                     )}
                   />
@@ -64,7 +64,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
             })}
           </div>
         </div>
-        <div className="flex-grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
+        <div className="grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
       </div>
     );
   }
@@ -93,7 +93,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
               >
                 <Icon
                   className={cx(
-                    "mr-3 h-5 w-5 flex-shrink-0",
+                    "mr-3 h-5 w-5 shrink-0",
                     isSelected ? "text-primary-500" : "text-muted-foreground",
                   )}
                 />

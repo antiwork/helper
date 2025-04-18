@@ -34,7 +34,7 @@ export default function PreviewModal({ file }: PreviewModalProps) {
 
   return (
     <div
-      className={`transition-duration-300 flex w-full flex-grow justify-center transition ${isPdf ? "min-h-[600px]" : "min-h-[300px]"} ${isPreviewSupported ? "rounded-b" : ""}`}
+      className={`transition-duration-300 flex w-full grow justify-center transition ${isPdf ? "min-h-[600px]" : "min-h-[300px]"} ${isPreviewSupported ? "rounded-b" : ""}`}
     >
       {!isLoaded && !error && isPreviewSupported ? (
         <LoadingSpinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />

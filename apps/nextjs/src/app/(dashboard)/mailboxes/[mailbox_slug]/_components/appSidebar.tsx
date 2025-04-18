@@ -113,14 +113,14 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
       )}
     >
       {nativePlatform === "macos" && isLegacyTauri && (
-        <TauriDragArea className="top-0 left-0 w-[--sidebar-width] h-8" />
+        <TauriDragArea className="top-0 left-0 w-(--sidebar-width) h-8" />
       )}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center justify-between">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="only:flex-1 w-auto min-w-0 data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:!p-1.5 h-10">
+                <SidebarMenuButton className="only:flex-1 w-auto min-w-0 data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5! h-10">
                   <div className="flex items-center justify-center">
                     <Avatar src={undefined} fallback={currentMailbox?.name ?? "(no name)"} size="sm" />
                   </div>
@@ -130,7 +130,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                   <ChevronsUpDown className="ml-auto text-sidebar-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[--radix-popper-anchor-width] font-sundry-narrow-medium">
+              <DropdownMenuContent className="w-(--radix-popper-anchor-width) font-sundry-narrow-medium">
                 {mailboxes.map((mailbox) => (
                   <DropdownMenuItem key={mailbox.slug} asChild>
                     <Link href={`/mailboxes/${mailbox.slug}/conversations`} prefetch={false}>
@@ -283,19 +283,19 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   className={cn(
-                    "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:!p-1.5",
+                    "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5!",
                     "md:h-8",
                     "h-10 px-2 mb-2 md:mb-0",
                   )}
                 >
                   <Avatar fallback={avatarName ?? ""} size="sm" />
-                  <span className="flex-grow truncate font-sundry-narrow-medium text-base text-sidebar-foreground">
+                  <span className="grow truncate font-sundry-narrow-medium text-base text-sidebar-foreground">
                     {loggedInName}
                   </span>
                   <ChevronUp className="ml-auto text-sidebar-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+              <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
                 <Dialog>
                   <DialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
