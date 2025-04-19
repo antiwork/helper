@@ -12,6 +12,7 @@
  * @property {Record<string, string> | null} [customer_metadata.links] - Key-value pairs of related links
  * @property {string | null} [icon_color] - Custom color for the Helper icon
  * @property {boolean} [experimental_read_page] - Feature flag for experimental read page
+ * @property {boolean} [guide_enabled] - Feature flag for guide feature / helping hand
  */
 export type HelperConfig = {
   title?: string;
@@ -26,4 +27,5 @@ export type HelperConfig = {
   } | null;
   icon_color?: string | null;
   experimental_read_page?: boolean;
+  guide_enabled?: boolean;
 }; 
