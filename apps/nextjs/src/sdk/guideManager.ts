@@ -4,6 +4,8 @@ import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
 import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
 
+declare const __EMBED_URL__: string;
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fetchElementByXpath = (xpath: string) => {
@@ -493,7 +495,7 @@ export class GuideManager {
     const eventsToSend = [...this.events];
 
     try {
-      const response = await fetch("/api/guide/event", {
+      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/guide/event`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.sessionToken}`,
@@ -563,7 +565,7 @@ export class GuideManager {
     };
 
     try {
-      const response = await fetch("/api/guide/event", {
+      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/guide/event`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.sessionToken}`,
