@@ -452,18 +452,15 @@ export class GuideManager {
 
   public async stopRecording(): Promise<void> {
     if (!this.stopFn) {
-      return; // Not recording
+      return;
     }
 
-    // Stop recording
     this.stopFn();
     this.stopFn = null;
     this.isRecording = false;
 
-    // Stop auto-flush
     this.stopAutoFlush();
 
-    // Flush remaining events
     if (this.events.length > 0) {
       await this.flush();
     }
