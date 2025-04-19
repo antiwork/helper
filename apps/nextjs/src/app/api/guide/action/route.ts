@@ -59,8 +59,8 @@ Your responses must be always JSON with the specified format.
   
 IMPORTANT: Only call one action at a time.
   
-Previous steps:
-{{PREVIOUS_STEPS}}
+Planned steps:
+{{PLANNED_STEPS}}
 
 Current user email: {{USER_EMAIL}}`;
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
   const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
     .replace("{{MAILBOX_NAME}}", mailbox.name)
-    .replace("{{PREVIOUS_STEPS}}", formattedSteps);
+    .replace("{{PLANNED_STEPS}}", formattedSteps);
 
   const tools = {
     AgentOutput: tool({

@@ -78,7 +78,6 @@ export async function POST(request: Request) {
     message.content,
     screenshotData?.replace("data:image/png;base64,", ""),
   );
-  console.log("guideEnabled TOP LEVEL", guideEnabled);
 
   return await respondWithAI({
     conversation,

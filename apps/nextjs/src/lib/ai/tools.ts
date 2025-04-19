@@ -130,7 +130,6 @@ export const buildTools = async (
       execute: ({ query }, { messages }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox), messages),
     }),
   };
-  console.log("guideEnabled", guideEnabled);
 
   if (guideEnabled) {
     tools[GUIDE_USER_TOOL_NAME] = tool({
