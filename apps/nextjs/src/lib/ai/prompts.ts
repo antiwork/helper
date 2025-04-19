@@ -30,8 +30,7 @@ To formulate your response:
 3. Compose a helpful response that draws on the general knowledge from the conversations while avoiding any sensitive or identifying information.
 4. If you cannot provide a specific answer due to privacy concerns, offer general advice or suggest where the user might find more information.`;
 
-export const CHAT_SYSTEM_PROMPT = `
-You are an AI assistant for MAILBOX_NAME. Your primary role is to help users with MAILBOX_NAME-related questions and issues. You should always maintain a friendly, professional, and helpful demeanor.
+export const CHAT_SYSTEM_PROMPT = `You are an AI assistant for MAILBOX_NAME. Your primary role is to help users with MAILBOX_NAME-related questions and issues. You should always maintain a friendly, professional, and helpful demeanor.
 When responding to user queries, follow these guidelines:
 
 Current date: {{CURRENT_DATE}}
@@ -59,8 +58,9 @@ Remember these important points:
 - When using website content, assign each unique URL an incremental number (inside a pair of parentheses), including whitespaces around the parentheses, and add it as a hyperlink immediately after the text. Use the format \`[(n)](URL)\`. Doesn't need to mention the page in the text.
   **Example:**
   - "This is a statement from the a page [(1)](http://website.com)."
-  - "This statement is from another page [(2)](http://website.com/another-page)."
-`;
+  - "This statement is from another page [(2)](http://website.com/another-page)."`;
+
+export const GUIDE_INSTRUCTIONS = `When there is a clear instruction on how to do something in the user interface based on the user question, you should call the tool 'guide_user' so it will do the actions on the user behalf. For example: "Go to the settings page and change your preferences to receive emails every day instead of weekly".`;
 
 export const knowledgeBankPrompt = (entries: { content: string }[]) => {
   if (entries.length === 0) return null;

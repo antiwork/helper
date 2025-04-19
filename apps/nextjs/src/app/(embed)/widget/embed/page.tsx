@@ -7,12 +7,14 @@ import { useCallback, useEffect, useState } from "react";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
+import HelpingHand from "@/components/widget/HelpingHand";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
-import { MESSAGE_TYPE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
+import { MESSAGE_TYPE, minimizeWidget, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
+import { GuideInstructions } from "@/types/guide";
 
 const queryClient = new QueryClient();
 const GUMROAD_MAILBOX_SLUG = "gumroad";
@@ -25,6 +27,9 @@ export default function Page() {
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
   const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
+  const [isGuidingUser, setIsGuidingUser] = useState(false);
+  const [guideInstructions, setGuideInstructions] = useState<GuideInstructions | null>(null);
+
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
 
   const {
@@ -74,6 +79,10 @@ export default function Page() {
         } else {
           messageQueue.push(content as string);
         }
+      } else if (action === "START_GUIDE") {
+        minimizeWidget();
+        setGuideInstructions({ instructions: content as string, title: null, callId: null });
+        setIsGuidingUser(true);
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -107,6 +116,7 @@ export default function Page() {
         className={cx("flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
           "bg-gumroad-bg": isGumroadTheme,
           "bg-white": !isGumroadTheme,
+          hidden: isGuidingUser,
         })}
       >
         <Header
@@ -141,12 +151,22 @@ export default function Page() {
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
+                  setIsGuidingUser={setIsGuidingUser}
+                  setGuideInstructions={setGuideInstructions}
+                  guideEnabled={config.guide_enabled ?? false}
                 />
               </div>
             </m.div>
           </LazyMotion>
         </div>
       </div>
+      {isGuidingUser && guideInstructions && (
+        <HelpingHand
+          instructions={guideInstructions.instructions}
+          token={token}
+          conversationSlug={selectedConversationSlug}
+        />
+      )}
     </QueryClientProvider>
   );
 }
