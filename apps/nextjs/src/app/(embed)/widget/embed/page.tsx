@@ -153,7 +153,7 @@ export default function Page() {
                   isAnonymous={isAnonymous}
                   setIsGuidingUser={setIsGuidingUser}
                   setGuideInstructions={setGuideInstructions}
-                  guideEnabled={config.guide_enabled ?? false}
+                  guideEnabled={config.enable_guide ?? false}
                 />
               </div>
             </m.div>
