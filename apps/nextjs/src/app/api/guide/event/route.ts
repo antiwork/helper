@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
@@ -12,6 +12,10 @@ const eventSchema = z.object({
   timestamp: z.number().transform((val) => new Date(val)),
   data: z.record(z.string(), z.unknown()),
 });
+
+export function OPTIONS() {
+  return corsOptions();
+}
 
 export async function POST(request: Request) {
   try {
