@@ -8,8 +8,8 @@ import {
   guideDone,
   sendStartGuide,
 } from "@/lib/widget/messages";
-import { AISteps } from "./ai-steps";
 import LoadingSpinner from "../loadingSpinner";
+import { AISteps } from "./ai-steps";
 
 type Step = {
   description: string;

@@ -579,7 +579,6 @@ export class GuideManager {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
     } catch (error) {
       console.error("Failed to send guide event:", error);
     }

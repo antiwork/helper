@@ -1,9 +1,9 @@
 import { openai } from "@ai-sdk/openai";
+import { consoleIntegration } from "@sentry/nextjs";
 import { createDataStreamResponse, generateText, streamText, tool } from "ai";
 import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
-import { consoleIntegration } from "@sentry/nextjs";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
 
