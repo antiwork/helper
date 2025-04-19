@@ -11,10 +11,9 @@ import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react"
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
+import { toast } from "@/components/hooks/use-toast";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
-import "./editor.css";
-import { toast } from "@/components/hooks/use-toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";

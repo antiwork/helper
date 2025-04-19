@@ -1,15 +1,13 @@
 import { useMediaQuery } from "react-responsive";
-import resolveConfig from "tailwindcss/resolveConfig";
-import type { Config, ScreensConfig } from "tailwindcss/types/config";
+import defaultTheme from "tailwindcss/defaultTheme";
 import { assertDefined } from "@/components/utils/assert";
 import { env } from "@/env";
-import tailwindConfig from "../../tailwind.config";
 
-const fullConfig = resolveConfig(tailwindConfig as unknown as Config);
-
-const breakpoints: ScreensConfig = fullConfig.theme.screens;
+const breakpoints = defaultTheme.screens;
 
 /**
+ * Use CSS breakpoints in React. IMPORTANT: This only supports default Tailwind breakpoints, not any custom ones.
+ *
  * @usage
  *    import { useBreakpoint } from "@/hooks/useBreakpoint";
  *
@@ -23,8 +21,8 @@ const breakpoints: ScreensConfig = fullConfig.theme.screens;
  *
  * @see https://stackoverflow.com/a/76630444/6543935
  */
-export function useBreakpoint<K extends string>(breakpointKey: K) {
-  let breakpointValue = breakpoints[breakpointKey as keyof typeof breakpoints];
+export function useBreakpoint<K extends keyof typeof breakpoints>(breakpointKey: K) {
+  let breakpointValue = breakpoints[breakpointKey];
   if (typeof breakpointValue !== "string") {
     const message = `'useBreakpoint' does not support breakpoints of type ${typeof breakpointValue}`;
     if (env.NODE_ENV === "development") {

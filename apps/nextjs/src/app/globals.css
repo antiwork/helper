@@ -121,6 +121,8 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
+@import "../components/tiptap/editor.css";
+
 @layer base {
   :root,
   .light {
