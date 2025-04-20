@@ -234,6 +234,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  [role="button"],
+  button {
+    @apply cursor-pointer;
+  }
 }
 
 @utility responsive-break-words {
@@ -268,15 +272,12 @@
   .btn-group :not(:first-child):not(:last-child) .btn-group-item {
     @apply mr-[-1px] rounded-none;
   }
-  .pre.code {
+  pre.code {
     counter-reset: step;
     counter-increment: step 0;
   }
-  .pre.code .token-line::before {
-    @apply text-muted-foreground text-right content-['counter(step)'];
-  }
-  .pre.code .token-line::before {
+  pre.code .token-line::before {
     counter-increment: step;
-    @apply text-muted-foreground mr-4 inline-block w-4 text-right content-['counter(step)'];
+    @apply text-muted-foreground/40 mr-4 inline-block w-4 text-right content-[counter(step)];
   }
 }
