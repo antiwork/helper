@@ -6,7 +6,7 @@ import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, DRAFT_STATUSES } from "@/db/schema";
-import { runAIQuery } from "@/lib/ai";
+import { runAIRawQuery } from "@/lib/ai";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
@@ -22,12 +22,14 @@ export const generateAgentResponse = async (
   mailbox: Mailbox,
   slackUserId: string | undefined,
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
+  confirmedReplyText?: string | null,
 ) => {
+  const client = new WebClient(assertDefined(mailbox.slackBotToken));
   const searchToolSchema = searchSchema.omit({
     category: true,
   });
 
-  const text = await runAIQuery({
+  const result = await runAIRawQuery({
     mailbox,
     queryType: "agent_response",
     model: "gpt-4o",
@@ -58,7 +60,6 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
         execute: async () => {
           showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
           if (!slackUserId) return { error: "User not found" };
-          const client = new WebClient(assertDefined(mailbox.slackBotToken));
           const { user } = await client.users.info({ user: slackUserId });
           const members = await getClerkUserList(mailbox.clerkOrganizationId);
           if (user) {
@@ -130,6 +131,23 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
           const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
           return await countSearchResults(where);
+        },
+      }),
+      confirmReplyText: tool({
+        description: "Confirm the message to reply to a ticket with before sending the reply",
+        parameters: z.object({
+          ticketId: z.union([z.string(), z.number()]),
+          proposedMessage: z
+            .string()
+            .describe("The message to reply to the user with. Set to blank if the desired reply is unclear."),
+        }),
+        // eslint-disable-next-line require-await
+        execute: async ({ ticketId, proposedMessage }) => {
+          showStatus(`Confirming reply text...`, {
+            toolName: "confirmReplyText",
+            parameters: { ticketId, proposedMessage },
+          });
+          return { message: "Confirmation needed before replying. DON'T TAKE ANY FURTHER ACTION." };
         },
       }),
       assignTickets: tool({
@@ -236,7 +254,14 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     },
   });
 
-  return text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*");
+  const confirmReplyText = result.steps
+    ?.flatMap((step) => step.toolCalls ?? [])
+    .find((call) => call.toolName === "confirmReplyText");
+
+  return {
+    text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
+    confirmReplyText,
+  };
 };
 
 const findConversation = async (id: string | number, mailbox: Mailbox) => {

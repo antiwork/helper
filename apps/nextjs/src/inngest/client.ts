@@ -160,6 +160,7 @@ export const inngest = new Inngest({
           currentMailboxId: z.number(),
           statusMessageTs: z.string(),
           agentThreadId: z.number(),
+          confirmedReplyText: z.string().optional(),
         }),
       },
     })
