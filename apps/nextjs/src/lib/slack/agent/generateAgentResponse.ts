@@ -1,21 +1,30 @@
 import { WebClient } from "@slack/web-api";
 import { CoreMessage, tool } from "ai";
-import { and, eq, isNull, notInArray, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, DRAFT_STATUSES } from "@/db/schema";
+import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
 import { runAIRawQuery } from "@/lib/ai";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
-import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
+import { countSearchResults, getSearchResultIds, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { getMemberStats } from "@/lib/data/stats";
 import { getClerkUserList } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { CLOSED_BY_AGENT_MESSAGE, MARKED_AS_SPAM_BY_AGENT_MESSAGE, REOPENED_BY_AGENT_MESSAGE } from "../constants";
+
+const searchToolSchema = searchSchema.omit({
+  category: true,
+});
+
+// Define the schema for filters separately
+const searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true });
+type SearchFiltersInput = z.infer<typeof searchFiltersSchema>;
 
 export const generateAgentResponse = async (
   messages: CoreMessage[],
@@ -251,6 +260,36 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
           }));
         },
       }),
+      closeTickets: tool({
+        description: "Close tickets/conversations matching various filtering options",
+        parameters: z.object({
+          ids: z.array(z.union([z.string(), z.number()])).optional(),
+          filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+        }),
+        execute: async (input) => {
+          return await updateTicketsStatus(mailbox, "closed", input, CLOSED_BY_AGENT_MESSAGE, showStatus);
+        },
+      }),
+      reopenTickets: tool({
+        description: "Reopen tickets/conversations matching various filtering options",
+        parameters: z.object({
+          ids: z.array(z.union([z.string(), z.number()])).optional(),
+          filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+        }),
+        execute: async (input) => {
+          return await updateTicketsStatus(mailbox, "open", input, REOPENED_BY_AGENT_MESSAGE, showStatus);
+        },
+      }),
+      markTicketsAsSpam: tool({
+        description: "Mark tickets/conversations matching various filtering options as spam",
+        parameters: z.object({
+          ids: z.array(z.union([z.string(), z.number()])).optional(),
+          filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+        }),
+        execute: async (input) => {
+          return await updateTicketsStatus(mailbox, "spam", input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, showStatus);
+        },
+      }),
     },
   });
 
@@ -293,4 +332,69 @@ const formatConversation = (
     isVip: platformCustomer?.isVip || false,
     url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,
   };
+};
+
+const updateTicketsStatus = async (
+  mailbox: Mailbox,
+  status: "open" | "closed" | "spam",
+  input: {
+    ids?: (string | number)[];
+    filters?: SearchFiltersInput;
+  },
+  message: string,
+  showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
+) => {
+  showStatus(`Finding tickets to mark ${status}...`, { toolName: `${status}Tickets#search`, parameters: input });
+  try {
+    const { where } = input.filters
+      ? await searchConversations(mailbox, { ...input.filters, limit: 1 })
+      : { where: {} as Record<string, SQL> };
+    if (input.ids) {
+      where.updateIds = assertDefined(
+        or(
+          inArray(conversations.id, input.ids.filter((id) => /^\d+$/.test(id.toString())).map(Number)),
+          inArray(
+            conversations.slug,
+            input.ids.filter((id) => !/^\d+$/.test(id.toString())).map((id) => id.toString()),
+          ),
+        ),
+      );
+    }
+    if (Object.keys(where).length === 0) {
+      return { message: "No search criteria provided" };
+    }
+    where.statusCheck = ne(conversations.status, status);
+    const count = await countSearchResults(where);
+
+    if (count === 0) {
+      return { message: `No tickets found matching the criteria to mark ${status}` };
+    } else if (count > 1000) {
+      return { error: `Too many tickets (${count}) found to mark ${status}. Maximum allowed is 1000.` };
+    }
+
+    const idsToUpdate = await getSearchResultIds(where);
+
+    showStatus(`Marking tickets as ${status}...`, {
+      toolName: `${status}Tickets#update`,
+      parameters: { idsToUpdate },
+    });
+
+    for (let i = 0; i < idsToUpdate.length; i++) {
+      if (i % 10 === 9) {
+        showStatus(`Marking ticket ${i + 1} out of ${idsToUpdate.length} as ${status}...`);
+      }
+      await updateConversation(assertDefined(idsToUpdate[i]), {
+        set: { status },
+        message,
+      });
+    }
+
+    return {
+      message: `Successfully marked ${idsToUpdate.length} tickets as ${status}`,
+      count: idsToUpdate.length,
+    };
+  } catch (error) {
+    captureExceptionAndLog(error);
+    return { error: `Failed to mark tickets as ${status}` };
+  }
 };

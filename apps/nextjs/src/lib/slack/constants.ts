@@ -14,3 +14,7 @@ export const REQUIRED_SCOPES = [
   "users:read.email",
 ];
 export const SLACK_REDIRECT_URI = `${getBaseUrl()}/api/connect/slack/callback`;
+
+export const CLOSED_BY_AGENT_MESSAGE = "Closed by agent";
+export const REOPENED_BY_AGENT_MESSAGE = "Reopened by agent";
+export const MARKED_AS_SPAM_BY_AGENT_MESSAGE = "Marked as spam by agent";
