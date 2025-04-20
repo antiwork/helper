@@ -37,8 +37,6 @@ export const POST = async (request: Request) => {
 
   if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  console.log("event", event);
-
   if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
     // Not messages we need to handle
     return new Response("Success!", { status: 200 });
