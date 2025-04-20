@@ -10,7 +10,7 @@ import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { getMailboxById } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
-import { getThreadMessages } from "@/lib/slack/client";
+import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";
 
 export const handleSlackAgentMessage = async (
   event: GenericMessageEvent | AppMentionEvent,

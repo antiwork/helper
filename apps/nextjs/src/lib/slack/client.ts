@@ -9,8 +9,6 @@ import {
   WebClient,
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
-import { CoreMessage } from "ai";
-import { cache } from "react";
 import { env } from "@/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
@@ -260,37 +258,3 @@ export const getSlackUsersByEmail = async (token: string) => {
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
 };
-
-export const getThreadMessages = cache(
-  async (token: string, channelId: string, threadTs: string, botUserId: string): Promise<CoreMessage[]> => {
-    const client = new WebClient(token);
-    const { messages } = await client.conversations.replies({
-      channel: channelId,
-      ts: threadTs,
-      limit: 50,
-    });
-
-    if (!messages) throw new Error("No messages found in thread");
-
-    const result = messages.flatMap((message) => {
-      const isBot = !!message.bot_id;
-      if (!message.text) return [];
-
-      // For app mentions, remove the mention prefix
-      // For IM messages, keep the full text
-      let content = message.text;
-      if (!isBot && content.includes(`<@${botUserId}>`)) {
-        content = content.replace(`<@${botUserId}> `, "");
-      }
-
-      return [
-        {
-          role: isBot ? "assistant" : "user",
-          content,
-        } satisfies CoreMessage,
-      ];
-    });
-
-    return result;
-  },
-);
