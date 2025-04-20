@@ -1,5 +1,5 @@
 import { WebClient } from "@slack/web-api";
-import { CoreMessage, tool } from "ai";
+import { CoreMessage, Tool, tool } from "ai";
 import { and, eq, inArray, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
@@ -11,10 +11,11 @@ import { Conversation, getConversationById, getConversationBySlug, updateConvers
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, getSearchResultIds, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
+import { createReply } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { getMemberStats } from "@/lib/data/stats";
-import { getClerkUserList } from "@/lib/data/user";
+import { findUserViaSlack, getClerkUserList } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { CLOSED_BY_AGENT_MESSAGE, MARKED_AS_SPAM_BY_AGENT_MESSAGE, REOPENED_BY_AGENT_MESSAGE } from "../constants";
 
@@ -37,6 +38,258 @@ export const generateAgentResponse = async (
   const searchToolSchema = searchSchema.omit({
     category: true,
   });
+
+  const tools: Record<string, Tool> = {
+    getCurrentSlackUser: tool({
+      description: "Get the current Slack user",
+      parameters: z.object({}),
+      execute: async () => {
+        showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
+        if (!slackUserId) return { error: "User not found" };
+        const { user } = await client.users.info({ user: slackUserId });
+        const members = await getClerkUserList(mailbox.clerkOrganizationId);
+        if (user) {
+          return {
+            id: user.id,
+            clerkUserId: members.data.find((member) => {
+              const slackAccount = member.externalAccounts.find((account) => account.provider === "oauth_slack");
+              return (
+                slackAccount?.externalId === slackUserId ||
+                member.emailAddresses.some((email) => email.emailAddress === user.profile?.email)
+              );
+            })?.id,
+            name: user.profile?.real_name,
+            email: user.profile?.email,
+          };
+        }
+        return { error: "User not found" };
+      },
+    }),
+    getMembers: tool({
+      description: "Get IDs, names and emails of all team members",
+      parameters: z.object({}),
+      execute: async () => {
+        showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
+        const members = await getClerkUserList(mailbox.clerkOrganizationId);
+        return members.data.map((member) => ({
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          emails: member.emailAddresses.map((email) => email.emailAddress),
+        }));
+      },
+    }),
+    getMemberStats: tool({
+      description: "Check how many replies members sent to tickets in a given time period",
+      parameters: z.object({
+        startDate: z.string().datetime(),
+        endDate: z.string().datetime(),
+      }),
+      execute: async ({ startDate, endDate }) => {
+        showStatus(`Checking member stats...`, { toolName: "getMemberStats", parameters: { startDate, endDate } });
+        return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
+      },
+    }),
+    searchTickets: tool({
+      description: "Search tickets/conversations with various filtering options",
+      parameters: searchToolSchema,
+      execute: async (input) => {
+        showStatus(`Searching tickets...`, { toolName: "searchTickets", parameters: input });
+        try {
+          const { list } = await searchConversations(mailbox, input);
+          const { results, nextCursor } = await list;
+          return {
+            tickets: results.map((conversation) =>
+              formatConversation(conversation, mailbox, conversation.platformCustomer),
+            ),
+            nextCursor,
+          };
+        } catch (error) {
+          captureExceptionAndLog(error);
+          return { error: "Failed to search tickets" };
+        }
+      },
+    }),
+    countTickets: tool({
+      description: "Count the number of tickets matching the search criteria",
+      parameters: searchToolSchema.omit({ cursor: true, limit: true }),
+      execute: async (input) => {
+        showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
+        const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
+        return await countSearchResults(where);
+      },
+    }),
+    assignTickets: tool({
+      description: "Assign tickets to a team member or the current user",
+      parameters: z.object({
+        clerkUserId: z.string().regex(/^user_(\w+)$/),
+        ticketIds: z.array(z.union([z.string(), z.number()])),
+      }),
+      execute: async ({ clerkUserId, ticketIds }) => {
+        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ticketIds } });
+        const conversations = await Promise.all(
+          ticketIds.map(async (ticketId) => {
+            const conversation = await findConversation(ticketId, mailbox);
+            if (!conversation) return null;
+            return await updateConversation(conversation.id, {
+              set: { assignedToClerkId: clerkUserId },
+              message: "Assigned by agent",
+            });
+          }),
+        );
+        return conversations.flatMap((conversation) => (conversation ? formatConversation(conversation, mailbox) : []));
+      },
+    }),
+    getAverageResponseTime: tool({
+      description: "Get the average response time for tickets in a given time period",
+      parameters: z.object({
+        startDate: z.string().datetime(),
+        endDate: z.string().datetime(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }),
+      }),
+      execute: async ({ startDate, endDate, filters }) => {
+        showStatus(`Checking average response time...`, {
+          toolName: "getAverageResponseTime",
+          parameters: { startDate, endDate, filters },
+        });
+        const averageResponseTimeSeconds = await getAverageResponseTime(
+          mailbox,
+          new Date(startDate),
+          new Date(endDate),
+          filters,
+        );
+        if (averageResponseTimeSeconds) {
+          return { averageResponseTimeSeconds };
+        }
+        return { message: "No tickets answered in the given time period" };
+      },
+    }),
+    getTicket: tool({
+      description: "Get a ticket by ID",
+      parameters: z.object({
+        id: z
+          .union([z.string(), z.number()])
+          .describe(
+            "The ID of the ticket. This can be either the numeric ID from the database or the alphanumeric slug from the URL.",
+          ),
+      }),
+      execute: async ({ id }) => {
+        showStatus(`Checking ticket...`, { toolName: "getTicket", parameters: { id } });
+        const conversation = await findConversation(id, mailbox);
+        if (!conversation) return { error: "Ticket not found" };
+        const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
+        return formatConversation(conversation, mailbox, platformCustomer);
+      },
+    }),
+    getTicketMessages: tool({
+      description:
+        "Get the messages of a ticket by ID. This includes messages from the user and replies from the team.",
+      parameters: z.object({
+        id: z
+          .union([z.string(), z.number()])
+          .describe(
+            "The ID of the ticket. This can be either the numeric ID from the database or the alphanumeric slug from the URL.",
+          ),
+      }),
+      execute: async ({ id }) => {
+        showStatus(`Reading ticket...`, { toolName: "getTicketMessages", parameters: { id } });
+        const conversation = await findConversation(id, mailbox);
+        if (!conversation) return { error: "Ticket not found" };
+        const messages = await db.query.conversationMessages.findMany({
+          where: and(
+            eq(conversationMessages.conversationId, conversation.id),
+            isNull(conversationMessages.deletedAt),
+            or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
+          ),
+          columns: {
+            id: true,
+            cleanedUpText: true,
+            createdAt: true,
+            clerkUserId: true,
+            role: true,
+          },
+        });
+        return messages.map((message) => ({
+          id: message.id,
+          content: message.cleanedUpText,
+          createdAt: message.createdAt,
+          role: message.role,
+          clerkUserId: message.clerkUserId,
+        }));
+      },
+    }),
+    closeTickets: tool({
+      description: "Close tickets/conversations matching various filtering options",
+      parameters: z.object({
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async (input) => {
+        return await updateTicketsStatus(mailbox, "closed", input, CLOSED_BY_AGENT_MESSAGE, showStatus);
+      },
+    }),
+    reopenTickets: tool({
+      description: "Reopen tickets/conversations matching various filtering options",
+      parameters: z.object({
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async (input) => {
+        return await updateTicketsStatus(mailbox, "open", input, REOPENED_BY_AGENT_MESSAGE, showStatus);
+      },
+    }),
+    markTicketsAsSpam: tool({
+      description: "Mark tickets/conversations matching various filtering options as spam",
+      parameters: z.object({
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async (input) => {
+        return await updateTicketsStatus(mailbox, "spam", input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, showStatus);
+      },
+    }),
+  };
+
+  if (confirmedReplyText) {
+    tools.sendReply = tool({
+      description: "Send the confirmed reply to a ticket",
+      parameters: z.object({
+        ticketId: z.union([z.string(), z.number()]),
+      }),
+      execute: async ({ ticketId }) => {
+        const conversation = await findConversation(ticketId, mailbox);
+        if (!conversation) return { error: "Ticket not found" };
+        await createReply({
+          conversationId: conversation.id,
+          message: confirmedReplyText,
+          user: slackUserId
+            ? await findUserViaSlack(mailbox.clerkOrganizationId, assertDefined(mailbox.slackBotToken), slackUserId)
+            : null,
+          close: false,
+          shouldAutoAssign: false,
+        });
+        return { message: "Reply sent" };
+      },
+    });
+  } else {
+    tools.confirmReplyText = tool({
+      description: "Confirm the message to reply to a ticket with before sending the reply",
+      parameters: z.object({
+        ticketId: z.union([z.string(), z.number()]),
+        proposedMessage: z
+          .string()
+          .describe("The message to reply to the user with. Set to blank if the desired reply is unclear."),
+      }),
+      // eslint-disable-next-line require-await
+      execute: async ({ ticketId, proposedMessage }) => {
+        showStatus(`Confirming reply text...`, {
+          toolName: "confirmReplyText",
+          parameters: { ticketId, proposedMessage },
+        });
+        return { message: "Confirmation needed before replying. DON'T TAKE ANY FURTHER ACTION." };
+      },
+    });
+  }
 
   const result = await runAIRawQuery({
     mailbox,
@@ -62,235 +315,7 @@ IMPORTANT GUIDELINES:
 If asked to do something inappropriate, harmful, or outside your capabilities, politely decline and suggest focusing on customer support questions instead.`,
     messages,
     maxSteps: 10,
-    tools: {
-      getCurrentSlackUser: tool({
-        description: "Get the current Slack user",
-        parameters: z.object({}),
-        execute: async () => {
-          showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
-          if (!slackUserId) return { error: "User not found" };
-          const { user } = await client.users.info({ user: slackUserId });
-          const members = await getClerkUserList(mailbox.clerkOrganizationId);
-          if (user) {
-            return {
-              id: user.id,
-              clerkUserId: members.data.find((member) => {
-                const slackAccount = member.externalAccounts.find((account) => account.provider === "oauth_slack");
-                return (
-                  slackAccount?.externalId === slackUserId ||
-                  member.emailAddresses.some((email) => email.emailAddress === user.profile?.email)
-                );
-              })?.id,
-              name: user.profile?.real_name,
-              email: user.profile?.email,
-            };
-          }
-          return { error: "User not found" };
-        },
-      }),
-      getMembers: tool({
-        description: "Get IDs, names and emails of all team members",
-        parameters: z.object({}),
-        execute: async () => {
-          showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
-          const members = await getClerkUserList(mailbox.clerkOrganizationId);
-          return members.data.map((member) => ({
-            id: member.id,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            emails: member.emailAddresses.map((email) => email.emailAddress),
-          }));
-        },
-      }),
-      getMemberStats: tool({
-        description: "Check how many replies members sent to tickets in a given time period",
-        parameters: z.object({
-          startDate: z.string().datetime(),
-          endDate: z.string().datetime(),
-        }),
-        execute: async ({ startDate, endDate }) => {
-          showStatus(`Checking member stats...`, { toolName: "getMemberStats", parameters: { startDate, endDate } });
-          return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
-        },
-      }),
-      searchTickets: tool({
-        description: "Search tickets/conversations with various filtering options",
-        parameters: searchToolSchema,
-        execute: async (input) => {
-          showStatus(`Searching tickets...`, { toolName: "searchTickets", parameters: input });
-          try {
-            const { list } = await searchConversations(mailbox, input);
-            const { results, nextCursor } = await list;
-            return {
-              tickets: results.map((conversation) =>
-                formatConversation(conversation, mailbox, conversation.platformCustomer),
-              ),
-              nextCursor,
-            };
-          } catch (error) {
-            captureExceptionAndLog(error);
-            return { error: "Failed to search tickets" };
-          }
-        },
-      }),
-      countTickets: tool({
-        description: "Count the number of tickets matching the search criteria",
-        parameters: searchToolSchema.omit({ cursor: true, limit: true }),
-        execute: async (input) => {
-          showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
-          const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
-          return await countSearchResults(where);
-        },
-      }),
-      confirmReplyText: tool({
-        description: "Confirm the message to reply to a ticket with before sending the reply",
-        parameters: z.object({
-          ticketId: z.union([z.string(), z.number()]),
-          proposedMessage: z
-            .string()
-            .describe("The message to reply to the user with. Set to blank if the desired reply is unclear."),
-        }),
-        // eslint-disable-next-line require-await
-        execute: async ({ ticketId, proposedMessage }) => {
-          showStatus(`Confirming reply text...`, {
-            toolName: "confirmReplyText",
-            parameters: { ticketId, proposedMessage },
-          });
-          return { message: "Confirmation needed before replying. DON'T TAKE ANY FURTHER ACTION." };
-        },
-      }),
-      assignTickets: tool({
-        description: "Assign tickets to a team member or the current user",
-        parameters: z.object({
-          clerkUserId: z.string().regex(/^user_(\w+)$/),
-          ticketIds: z.array(z.union([z.string(), z.number()])),
-        }),
-        execute: async ({ clerkUserId, ticketIds }) => {
-          showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ticketIds } });
-          const conversations = await Promise.all(
-            ticketIds.map(async (ticketId) => {
-              const conversation = await findConversation(ticketId, mailbox);
-              if (!conversation) return null;
-              return await updateConversation(conversation.id, {
-                set: { assignedToClerkId: clerkUserId },
-                message: "Assigned by agent",
-              });
-            }),
-          );
-          return conversations.flatMap((conversation) =>
-            conversation ? formatConversation(conversation, mailbox) : [],
-          );
-        },
-      }),
-      getAverageResponseTime: tool({
-        description: "Get the average response time for tickets in a given time period",
-        parameters: z.object({
-          startDate: z.string().datetime(),
-          endDate: z.string().datetime(),
-          filters: searchToolSchema.omit({ cursor: true, limit: true }),
-        }),
-        execute: async ({ startDate, endDate, filters }) => {
-          showStatus(`Checking average response time...`, {
-            toolName: "getAverageResponseTime",
-            parameters: { startDate, endDate, filters },
-          });
-          const averageResponseTimeSeconds = await getAverageResponseTime(
-            mailbox,
-            new Date(startDate),
-            new Date(endDate),
-            filters,
-          );
-          if (averageResponseTimeSeconds) {
-            return { averageResponseTimeSeconds };
-          }
-          return { message: "No tickets answered in the given time period" };
-        },
-      }),
-      getTicket: tool({
-        description: "Get a ticket by ID",
-        parameters: z.object({
-          id: z
-            .union([z.string(), z.number()])
-            .describe(
-              "The ID of the ticket. This can be either the numeric ID from the database or the alphanumeric slug from the URL.",
-            ),
-        }),
-        execute: async ({ id }) => {
-          showStatus(`Checking ticket...`, { toolName: "getTicket", parameters: { id } });
-          const conversation = await findConversation(id, mailbox);
-          if (!conversation) return { error: "Ticket not found" };
-          const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
-          return formatConversation(conversation, mailbox, platformCustomer);
-        },
-      }),
-      getTicketMessages: tool({
-        description:
-          "Get the messages of a ticket by ID. This includes messages from the user and replies from the team.",
-        parameters: z.object({
-          id: z
-            .union([z.string(), z.number()])
-            .describe(
-              "The ID of the ticket. This can be either the numeric ID from the database or the alphanumeric slug from the URL.",
-            ),
-        }),
-        execute: async ({ id }) => {
-          showStatus(`Reading ticket...`, { toolName: "getTicketMessages", parameters: { id } });
-          const conversation = await findConversation(id, mailbox);
-          if (!conversation) return { error: "Ticket not found" };
-          const messages = await db.query.conversationMessages.findMany({
-            where: and(
-              eq(conversationMessages.conversationId, conversation.id),
-              isNull(conversationMessages.deletedAt),
-              or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
-            ),
-            columns: {
-              id: true,
-              cleanedUpText: true,
-              createdAt: true,
-              clerkUserId: true,
-              role: true,
-            },
-          });
-          return messages.map((message) => ({
-            id: message.id,
-            content: message.cleanedUpText,
-            createdAt: message.createdAt,
-            role: message.role,
-            clerkUserId: message.clerkUserId,
-          }));
-        },
-      }),
-      closeTickets: tool({
-        description: "Close tickets/conversations matching various filtering options",
-        parameters: z.object({
-          ids: z.array(z.union([z.string(), z.number()])).optional(),
-          filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
-        }),
-        execute: async (input) => {
-          return await updateTicketsStatus(mailbox, "closed", input, CLOSED_BY_AGENT_MESSAGE, showStatus);
-        },
-      }),
-      reopenTickets: tool({
-        description: "Reopen tickets/conversations matching various filtering options",
-        parameters: z.object({
-          ids: z.array(z.union([z.string(), z.number()])).optional(),
-          filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
-        }),
-        execute: async (input) => {
-          return await updateTicketsStatus(mailbox, "open", input, REOPENED_BY_AGENT_MESSAGE, showStatus);
-        },
-      }),
-      markTicketsAsSpam: tool({
-        description: "Mark tickets/conversations matching various filtering options as spam",
-        parameters: z.object({
-          ids: z.array(z.union([z.string(), z.number()])).optional(),
-          filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
-        }),
-        execute: async (input) => {
-          return await updateTicketsStatus(mailbox, "spam", input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, showStatus);
-        },
-      }),
-    },
+    tools,
   });
 
   const confirmReplyText = result.steps
