@@ -18,11 +18,41 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
   const mailbox = mailboxInfo.currentMailbox;
   if (event.bot_id || event.bot_id === mailbox.slackBotUserId || event.bot_profile) return;
 
+  const existingThread = await db.query.agentThreads.findFirst({
+    where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
+  });
+  const agentThread = existingThread
+    ? existingThread
+    : await db
+        .insert(agentThreads)
+        .values({
+          mailboxId: mailbox.id,
+          slackChannel: event.channel,
+          threadTs: event.thread_ts ?? event.ts,
+        })
+        .returning()
+        .then(takeUniqueOrThrow);
+
+  if (event.text) {
+    const [message] = await db
+      .insert(agentMessages)
+      .values({
+        agentThreadId: agentThread.id,
+        role: "user",
+        content: event.text,
+        slackChannel: event.channel,
+        messageTs: event.ts,
+      })
+      .onConflictDoNothing()
+      .returning();
+    if (!message) return;
+  }
+
   const { thread_ts, channel } = event;
   const { showStatus, showResult } = await replyHandler(
     new WebClient(assertDefined(mailbox.slackBotToken)),
     event,
-    mailbox,
+    agentThread,
   );
 
   const messages = thread_ts
@@ -92,32 +122,9 @@ export const isAgentThread = async (event: GenericMessageEvent, mailboxInfo: Sla
 const replyHandler = async (
   client: WebClient,
   event: { channel: string; thread_ts?: string; ts: string; text?: string },
-  mailbox: Mailbox,
+  agentThread: typeof agentThreads.$inferSelect,
 ) => {
   const debug = event.text && /(?:^|\s)!debug(?:$|\s)/.test(event.text);
-
-  const existingThread = await db.query.agentThreads.findFirst({
-    where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
-  });
-  const agentThread = existingThread
-    ? existingThread
-    : await db
-        .insert(agentThreads)
-        .values({
-          mailboxId: mailbox.id,
-          slackChannel: event.channel,
-          threadTs: event.thread_ts ?? event.ts,
-        })
-        .returning()
-        .then(takeUniqueOrThrow);
-
-  if (event.text) {
-    await db.insert(agentMessages).values({
-      agentThreadId: agentThread.id,
-      role: "user",
-      content: event.text,
-    });
-  }
 
   const statusMessage = await client.chat.postMessage({
     channel: event.channel,
@@ -163,6 +170,8 @@ const replyHandler = async (
         agentThreadId: agentThread.id,
         role: "assistant",
         content: result,
+        slackChannel: event.channel,
+        messageTs: event.thread_ts ?? event.ts,
       });
     }
 
