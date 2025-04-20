@@ -1,7 +1,6 @@
 import { AppMentionEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
 import { CoreMessage } from "ai";
-import { and, eq } from "drizzle-orm";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
@@ -16,41 +15,14 @@ export const handleSlackAgentMessage = async (
   event: GenericMessageEvent | AppMentionEvent,
   currentMailboxId: number,
   statusMessageTs: string,
+  agentThreadId: number,
 ) => {
   const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(currentMailboxId));
-
-  if (event.bot_id || event.bot_id === mailbox.slackBotUserId || event.bot_profile) return;
-
-  const existingThread = await db.query.agentThreads.findFirst({
-    where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
-  });
-
-  const agentThread = existingThread
-    ? existingThread
-    : await db
-        .insert(agentThreads)
-        .values({
-          mailboxId: mailbox.id,
-          slackChannel: event.channel,
-          threadTs: event.thread_ts ?? event.ts,
-        })
-        .returning()
-        .then(takeUniqueOrThrow);
-
-  if (event.text) {
-    const [message] = await db
-      .insert(agentMessages)
-      .values({
-        agentThreadId: agentThread.id,
-        role: "user",
-        content: event.text,
-        slackChannel: event.channel,
-        messageTs: event.ts,
-      })
-      .onConflictDoNothing()
-      .returning();
-    if (!message) return;
-  }
+  const agentThread = assertDefinedOrRaiseNonRetriableError(
+    await db.query.agentThreads.findFirst({
+      where: eq(agentThreads.id, agentThreadId),
+    }),
+  );
 
   const { thread_ts, channel } = event;
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
@@ -133,14 +105,27 @@ export const handleSlackAgentMessage = async (
   return result;
 };
 
+// Define the structure for the event data
+interface SlackAgentMessageEventData {
+  event: GenericMessageEvent | AppMentionEvent;
+  currentMailboxId: number;
+  statusMessageTs: string;
+  agentThreadId: number;
+}
+
 export default inngest.createFunction(
   { id: "slack-agent-message-handler" },
   { event: "slack/agent.message" },
   async ({ event, step }) => {
-    const { event: slackEvent, currentMailboxId, statusMessageTs } = event.data;
+    const {
+      event: slackEvent,
+      currentMailboxId,
+      statusMessageTs,
+      agentThreadId,
+    } = event.data as SlackAgentMessageEventData;
 
     const result = await step.run("process-agent-message", async () => {
-      return await handleSlackAgentMessage(slackEvent, currentMailboxId, statusMessageTs);
+      return await handleSlackAgentMessage(slackEvent, currentMailboxId, statusMessageTs, agentThreadId);
     });
 
     return { result };

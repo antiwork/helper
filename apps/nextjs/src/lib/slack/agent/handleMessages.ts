@@ -1,5 +1,9 @@
 import { AppMentionEvent, AssistantThreadStartedEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
+import { and, eq } from "drizzle-orm";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
+import { db } from "@/db/client";
+import { agentMessages, agentThreads } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { Mailbox } from "@/lib/data/mailbox";
 import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findMailboxForEvent";
@@ -12,6 +16,43 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
 
   const mailbox = mailboxInfo.currentMailbox;
   if (event.bot_id || event.bot_id === mailbox.slackBotUserId || event.bot_profile) return;
+
+  const existingThread = await db.query.agentThreads.findFirst({
+    where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
+  });
+
+  const agentThread = existingThread
+    ? existingThread
+    : await db
+        .insert(agentThreads)
+        .values({
+          mailboxId: mailbox.id,
+          slackChannel: event.channel,
+          threadTs: event.thread_ts ?? event.ts,
+        })
+        .returning()
+        .then(takeUniqueOrThrow);
+
+  let message = null;
+  if (event.text) {
+    const [createdMessage] = await db
+      .insert(agentMessages)
+      .values({
+        agentThreadId: agentThread.id,
+        role: "user",
+        content: event.text,
+        slackChannel: event.channel,
+        messageTs: event.ts,
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    message = createdMessage;
+  }
+
+  if (!message || !event.text) {
+    return;
+  }
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
   const statusMessage = await client.chat.postMessage({
@@ -28,6 +69,7 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
       event,
       currentMailboxId: mailbox.id,
       statusMessageTs: statusMessage.ts,
+      agentThreadId: agentThread.id,
     },
   });
 }
