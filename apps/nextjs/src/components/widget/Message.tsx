@@ -1,6 +1,7 @@
 import { PaperClipIcon } from "@heroicons/react/24/outline";
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
+import ReactMarkdown from "react-markdown";
 import HumanizedTime from "@/components/humanizedTime";
 import { Attachment } from "@/components/widget/Conversation";
 import MessageElement from "@/components/widget/MessageElement";
@@ -20,9 +21,20 @@ type Props = {
   data: JSONValue[] | null;
   attachments: Attachment[];
   color: "black" | "gumroad-pink";
+  startGuide: () => void;
+  cancelGuide: (toolCallId: string) => void;
 };
 
-export default function Message({ message, conversationSlug, token, data, color, attachments }: Props) {
+export default function Message({
+  message,
+  conversationSlug,
+  token,
+  data,
+  color,
+  attachments,
+  startGuide,
+  cancelGuide,
+}: Props) {
   const idFromAnnotation =
     message.annotations?.find(
       (annotation): annotation is { id: string | number } =>
@@ -59,6 +71,21 @@ export default function Message({ message, conversationSlug, token, data, color,
       typeof annotation === "object" && annotation !== null && "user" in annotation,
   );
 
+  const hasGuide =
+    message.parts?.some((part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user") ??
+    false;
+
+  const hasCanceledGuide =
+    message.parts?.some(
+      (part) =>
+        part.type === "tool-invocation" &&
+        part.toolInvocation.toolName === "guide_user" &&
+        part.toolInvocation.state === "result" &&
+        part.toolInvocation.result === "cancelled, return text instructions",
+    ) ?? false;
+
+  const showGuidePrompt = hasGuide && !hasCanceledGuide;
+
   if (!conversationSlug || (!message.content && !reasoningStarted)) {
     return null;
   }
@@ -81,14 +108,42 @@ export default function Message({ message, conversationSlug, token, data, color,
             {userAnnotation.user.firstName}
           </div>
         ) : null}
-        <MessageElement
-          messageId={persistedId?.toString()}
-          conversationSlug={conversationSlug}
-          message={message}
-          reasoning={reasoning}
-          token={token}
-          color={color}
-        />
+        {!showGuidePrompt ? (
+          <MessageElement
+            messageId={persistedId?.toString()}
+            conversationSlug={conversationSlug}
+            message={message}
+            reasoning={reasoning}
+            token={token}
+            color={color}
+          />
+        ) : (
+          message.parts?.map((part, index) => {
+            if (part.type === "tool-invocation") {
+              const args = part.toolInvocation.args;
+              const title = args.title ?? "Untitled";
+              const instructions = args.instructions ?? "No instructions";
+              return (
+                <div key={index} className="p-4 space-y-2">
+                  <p className="text-sm font-semibold">Guide - {title}</p>
+                  <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
+                  <div className="flex items-center gap-2">
+                    <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
+                      Do it for me!
+                    </button>
+                    <button
+                      className="text-xs bg-gray-200 px-2 py-1 rounded-md"
+                      onClick={() => cancelGuide(part.toolInvocation.toolCallId)}
+                    >
+                      Receive text instructions
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })
+        )}
         {message.experimental_attachments?.map((attachment) => (
           <a
             key={attachment.url}

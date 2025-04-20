@@ -59,7 +59,7 @@ export const POST = async (request: Request) => {
     return new Response("Success!", { status: 200 });
   }
 
-  return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  return new Response("Not handled", { status: 200 });
 };
 
 const handleSlackErrors = async <T>(operation: Promise<T>) => {

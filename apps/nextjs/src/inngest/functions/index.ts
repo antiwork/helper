@@ -15,6 +15,7 @@ import generateFilePreview from "./generateFilePreview";
 import generateWeeklyReports, { generateMailboxWeeklyReport } from "./generateWeeklyReports";
 import handleAutoResponse from "./handleAutoResponse";
 import handleGmailWebhookEvent from "./handleGmailWebhookEvent";
+import handleSlackAgentMessage from "./handleSlackAgentMessage";
 import handleStripeWebhookEvent from "./handleStripeWebhookEvent";
 import hardDeleteRecordsForNonPayingOrgs from "./hardDeleteRecordsForNonPayingOrgs";
 import importGmailThreads from "./importGmailThreads";
@@ -64,4 +65,5 @@ export default [
   ...autoCloseInactiveConversationsFunctions,
   updateSuggestedActions,
   autoAssignConversation,
+  handleSlackAgentMessage,
 ];

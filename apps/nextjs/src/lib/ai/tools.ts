@@ -3,7 +3,7 @@ import { CoreMessage, tool, type Tool } from "ai";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { inngest } from "@/inngest/client";
-import { REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
+import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
@@ -104,6 +104,7 @@ export const buildTools = async (
   email: string | null,
   mailbox: Mailbox,
   includeHumanSupport = true,
+  guideEnabled = false,
   includeMailboxTools = true,
   reasoningMiddlewarePrompt?: string,
 ): Promise<Record<string, Tool>> => {
@@ -129,6 +130,16 @@ export const buildTools = async (
       execute: ({ query }, { messages }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox), messages),
     }),
   };
+
+  if (guideEnabled) {
+    tools[GUIDE_USER_TOOL_NAME] = tool({
+      description: "call this tool to guide the user in the interface instead of returning a text response",
+      parameters: z.object({
+        title: z.string().describe("title of the guide that will be displayed to the user"),
+        instructions: z.string().describe("instructions for the guide based on the current page and knowledge base"),
+      }),
+    });
+  }
 
   if (!email) {
     tools.set_user_email = tool({

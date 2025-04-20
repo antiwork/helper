@@ -1,7 +1,17 @@
 import { Context } from "modern-screenshot";
 import type { NotificationStatus } from "@/db/schema/messageNotifications";
-import { CLOSE_ACTION, CONVERSATION_UPDATE_ACTION, READY_ACTION, SCREENSHOT_ACTION } from "@/lib/widget/messages";
+import {
+  CLOSE_ACTION,
+  CONVERSATION_UPDATE_ACTION,
+  GUIDE_START,
+  MINIMIZE_ACTION,
+  READY_ACTION,
+  SCREENSHOT_ACTION,
+} from "@/lib/widget/messages";
+import { domElements } from "./domElements";
+import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 import embedStyles from "./embed.css";
+import GuideManager from "./guideManager";
 import type { HelperWidgetConfig } from "./types";
 
 declare const __EMBED_URL__: string;
@@ -34,6 +44,8 @@ class HelperWidget {
   private sessionToken: string | null = null;
   private showWidget = false;
   private showToggleButton: boolean | null = null;
+  private isMinimized = false;
+  private guideManager: GuideManager;
 
   private messageQueue: any[] = [];
   private observer: MutationObserver | null = null;
@@ -46,6 +58,7 @@ class HelperWidget {
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
+    this.guideManager = new GuideManager();
   }
 
   private async setup(): Promise<void> {
@@ -67,6 +80,21 @@ class HelperWidget {
     }
     // eslint-disable-next-line no-console
     console.error("Failed to create Helper session after 3 attempts");
+  }
+
+  private takeDOMSnapshot(
+    debugMode = false,
+    doHighlightElements = false,
+    focusHighlightIndex = -1,
+    viewportExpansion = 0,
+  ) {
+    return domElements({
+      debugMode,
+      doHighlightElements,
+      focusHighlightIndex,
+      viewportExpansion,
+      onlyVisibleElements: true,
+    });
   }
 
   private async createSession() {
@@ -252,35 +280,121 @@ class HelperWidget {
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
+    this.setupStartGuideEventListeners();
     this.setupMutationObserver();
 
     this.overlay?.addEventListener("click", () => HelperWidget.hide());
 
-    window.addEventListener("message", (event: MessageEvent) => {
+    window.addEventListener("message", async (event: MessageEvent) => {
       const embedOrigin = new URL(__EMBED_URL__).origin;
-      if (event.origin === embedOrigin && event.data && event.data.type === this.messageType) {
-        const { action, content } = event.data.payload;
-        switch (action) {
-          case CLOSE_ACTION:
-            HelperWidget.hide();
-            break;
-          case READY_ACTION:
-            this.onIframeReady();
-            break;
-          case CONVERSATION_UPDATE_ACTION:
-            if (content.conversationSlug && content.conversationSlug.length > 0) {
-              this.currentConversationSlug = content.conversationSlug;
-              if (!this.isAnonymous()) {
-                localStorage.setItem(this.CONVERSATION_STORAGE_KEY, content.conversationSlug || "");
-              }
+
+      // Handle messages from our iframe
+      if (event.data && event.data.type === this.messageType) {
+        const { action, requestId, content } = event.data.payload || {};
+
+        // Handle request-response pattern messages (has requestId)
+        if (requestId) {
+          try {
+            let response = null;
+
+            if (action === "FETCH_PAGE_DETAILS") {
+              response = HelperWidget.fetchCurrentPageDetails();
             }
-            break;
-          case SCREENSHOT_ACTION:
-            this.takeScreenshot();
-            break;
+
+            if (action === "CLICK_ELEMENT") {
+              response = await this.guideManager.clickElement(content.index);
+            }
+
+            if (action === "SELECT_DROPDOWN_OPTION") {
+              response = await this.guideManager.selectDropdownOption(content.index, content.text);
+            }
+
+            if (action === "EXECUTE_GUIDE_ACTION") {
+              const { actionType, params, currentState } = content;
+              response = await this.guideManager.executeDOMAction(actionType, params, currentState);
+            }
+
+            if (action === "GUIDE_DONE") {
+              this.guideManager.done();
+            }
+
+            // Send the response back to the iframe
+            if (event.source && "postMessage" in event.source) {
+              (event.source as Window).postMessage(
+                {
+                  type: this.messageType,
+                  payload: {
+                    responseId: requestId,
+                    response,
+                  },
+                },
+                "*",
+              );
+            }
+          } catch (error) {
+            // Send error back to iframe
+            if (event.source && "postMessage" in event.source) {
+              (event.source as Window).postMessage(
+                {
+                  type: this.messageType,
+                  payload: {
+                    responseId: requestId,
+                    error: error instanceof Error ? error.message : String(error),
+                  },
+                },
+                "*",
+              );
+            }
+          }
+          return;
+        }
+
+        if (event.origin === embedOrigin) {
+          const { action, content } = event.data.payload;
+          switch (action) {
+            case CLOSE_ACTION:
+              HelperWidget.hide();
+              break;
+            case MINIMIZE_ACTION:
+              HelperWidget.minimize();
+              break;
+            case READY_ACTION:
+              this.onIframeReady();
+              break;
+            case CONVERSATION_UPDATE_ACTION:
+              if (content.conversationSlug && content.conversationSlug.length > 0) {
+                this.currentConversationSlug = content.conversationSlug;
+                if (!this.isAnonymous()) {
+                  localStorage.setItem(this.CONVERSATION_STORAGE_KEY, content.conversationSlug || "");
+                }
+              }
+              break;
+            case GUIDE_START:
+              if (this.sessionToken && content.sessionId) {
+                this.guideManager.start(this.sessionToken, content.sessionId);
+              }
+              break;
+            case SCREENSHOT_ACTION:
+              this.takeScreenshot();
+              break;
+          }
         }
       }
     });
+  }
+
+  private setupStartGuideEventListeners(): void {
+    this.guideManager.connectExistingStartGuideElements(this.handleStartGuideClick.bind(this));
+  }
+
+  private handleStartGuideClick(event: MouseEvent): void {
+    const startGuideElement = event.currentTarget as HTMLElement;
+    const prompt = startGuideElement.getAttribute("data-helper-start-guide");
+
+    if (prompt) {
+      this.startGuideInternal(prompt);
+      startGuideElement.setAttribute("data-helper-start-guide-sent", "true");
+    }
   }
 
   private onIframeReady(): void {
@@ -363,8 +477,14 @@ class HelperWidget {
               if (node.hasAttribute("data-helper-toggle")) {
                 this.connectToggleElement(node);
               }
+              if (node.hasAttribute("data-helper-start-guide")) {
+                this.guideManager.connectStartGuideElement(node, this.handleStartGuideClick.bind(this));
+              }
               node.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
               node.querySelectorAll("[data-helper-toggle]").forEach(this.connectToggleElement.bind(this));
+              node.querySelectorAll("[data-helper-start-guide]").forEach((el) => {
+                this.guideManager.connectStartGuideElement(el, this.handleStartGuideClick.bind(this));
+              });
             }
           });
         }
@@ -420,13 +540,23 @@ class HelperWidget {
     this.sendMessageToEmbed({ action: "PROMPT", content: prompt });
   }
 
+  private startGuideInternal(prompt: string): void {
+    this.minimizeInternal();
+    this.sendMessageToEmbed({ action: "START_GUIDE", content: prompt });
+    setTimeout(() => {
+      this.showInternal();
+    }, 1000);
+  }
+
   private showInternal(): void {
     if (!this.iframe) {
       this.createIframe();
     }
     if (this.iframeWrapper && this.overlay && !this.isVisible) {
       this.iframeWrapper.classList.add("visible");
-      this.overlay.classList.add("visible");
+      if (!this.isMinimized) {
+        this.overlay.classList.add("visible");
+      }
       if (!this.isIframeReady) {
         this.showLoadingOverlay();
       }
@@ -446,6 +576,9 @@ class HelperWidget {
       // Hide the toggle button when the widget is visible
       if (this.toggleButton) {
         this.toggleButton.classList.remove("visible");
+        if (this.isMinimized) {
+          this.toggleButton.classList.add("with-minimized-widget");
+        }
       }
     }
   }
@@ -453,9 +586,11 @@ class HelperWidget {
   private hideInternal(): void {
     if (this.iframeWrapper && this.overlay && this.isVisible) {
       this.iframeWrapper.classList.remove("visible");
+      this.iframeWrapper.classList.remove("minimized");
       this.overlay.classList.remove("visible");
       this.hideLoadingOverlay();
       this.isVisible = false;
+      this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
 
@@ -466,6 +601,7 @@ class HelperWidget {
         (this.showToggleButton === true || (this.showToggleButton === null && !this.showWidget))
       ) {
         this.toggleButton.classList.add("visible");
+        this.toggleButton.classList.remove("with-minimized-widget");
       }
     }
   }
@@ -477,6 +613,40 @@ class HelperWidget {
       this.showInternal();
     }
     this.updateAllToggleElements();
+  }
+
+  private minimizeInternal(): void {
+    if (this.iframeWrapper) {
+      this.iframeWrapper.classList.add("minimized");
+      if (this.overlay) {
+        this.overlay.classList.remove("visible");
+      }
+      this.isMinimized = true;
+      if (this.toggleButton) {
+        this.toggleButton.classList.add("with-minimized-widget");
+      }
+    }
+  }
+
+  private maximizeInternal(): void {
+    if (this.iframeWrapper) {
+      this.iframeWrapper.classList.remove("minimized");
+      if (this.overlay) {
+        this.overlay.classList.add("visible");
+      }
+      this.isMinimized = false;
+      if (this.toggleButton) {
+        this.toggleButton.classList.remove("with-minimized-widget");
+      }
+    }
+  }
+
+  private toggleMinimize(): void {
+    if (this.isMinimized) {
+      this.maximizeInternal();
+    } else {
+      this.minimizeInternal();
+    }
   }
 
   private updateAllToggleElements(): void {
@@ -499,6 +669,7 @@ class HelperWidget {
       document.body.removeChild(this.notificationContainer);
     }
     this.hideAllNotifications();
+    this.guideManager.destroy();
     if (this.observer) {
       this.observer.disconnect();
     }
@@ -539,10 +710,84 @@ class HelperWidget {
     }
   }
 
+  public static minimize(): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.minimizeInternal();
+    }
+  }
+
+  public static maximize(): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.maximizeInternal();
+    }
+  }
+
+  public static toggleMinimize(): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.toggleMinimize();
+    }
+  }
+
   public static sendPrompt(prompt: string | null): void {
     if (HelperWidget.instance) {
       HelperWidget.instance.sendPromptToEmbed(prompt);
       HelperWidget.instance.showInternal();
+    }
+  }
+
+  public static startGuide(prompt: string): void {
+    if (HelperWidget.instance) {
+      HelperWidget.instance.startGuideInternal(prompt);
+    }
+  }
+
+  public static fetchCurrentPageDetails(): {
+    currentPageDetails: { url: string; title: string };
+    domTracking: any;
+    clickableElements?: string;
+    interactiveElements?: ReturnType<typeof findInteractiveElements>;
+  } | null {
+    if (!HelperWidget.instance) {
+      return null;
+    }
+
+    const domTracking = HelperWidget.instance.takeDOMSnapshot();
+    HelperWidget.instance.guideManager.setDomTracking(domTracking);
+
+    const currentPageDetails = {
+      url: window.location.href,
+      title: document.title,
+    };
+
+    try {
+      const domTree = constructDomTree(domTracking as DomTrackingData);
+
+      const includeAttributes = [
+        "title",
+        "type",
+        "name",
+        "role",
+        "tabindex",
+        "aria-label",
+        "placeholder",
+        "value",
+        "alt",
+        "aria-expanded",
+      ];
+
+      const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
+      const interactiveElements = findInteractiveElements(domTree.root);
+
+      return {
+        currentPageDetails,
+        domTracking,
+        clickableElements,
+        interactiveElements,
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to construct DOM tree:", error);
+      return { currentPageDetails, domTracking };
     }
   }
 

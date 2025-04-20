@@ -67,6 +67,7 @@ export const handleAutoResponse = async (messageId: number) => {
     messageId: message.id,
     readPageTool: null,
     sendEmail: true,
+    guideEnabled: false,
     onResponse: async ({ platformCustomer, humanSupportRequested }) => {
       await db.transaction(async (tx) => {
         if (platformCustomer && !humanSupportRequested) {

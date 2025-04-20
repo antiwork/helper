@@ -6,7 +6,7 @@ import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { redis } from "@/lib/redis/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { getThreadMessages } from "@/lib/slack/client";
+import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";
 
 export const WHICH_MAILBOX_MESSAGE = "Which mailbox is this about?";
 
