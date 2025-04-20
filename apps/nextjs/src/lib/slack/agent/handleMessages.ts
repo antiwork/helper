@@ -113,7 +113,7 @@ export const isAgentThread = async (event: GenericMessageEvent, mailboxInfo: Sla
   if (event.text?.includes("(aside)")) return false;
 
   const client = new WebClient(mailbox.slackBotToken);
-  const { messages } = await client.conversations.replies({
+  const { messages = [] } = await client.conversations.replies({
     channel: event.channel,
     ts: event.thread_ts,
     limit: 50,
@@ -121,6 +121,11 @@ export const isAgentThread = async (event: GenericMessageEvent, mailboxInfo: Sla
 
   for (const message of messages ?? []) {
     if (message.user !== mailbox.slackBotUserId && message.text?.includes(`<@${mailbox.slackBotUserId}>`)) return true;
+  }
+
+  // Also respond to threads started by the bot if no other user is explicitly mentioned
+  if (messages[0]?.user === mailbox.slackBotUserId) {
+    return !messages[1]?.text?.match(/<@[^>]+>/);
   }
 
   return false;
