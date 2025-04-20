@@ -23,6 +23,11 @@ import { conversationEvents, conversationMessages, conversations, mailboxes, pla
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
+import {
+  CLOSED_BY_AGENT_MESSAGE,
+  MARKED_AS_SPAM_BY_AGENT_MESSAGE,
+  REOPENED_BY_AGENT_MESSAGE,
+} from "@/lib/slack/constants";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
 
 export const searchConversations = async (
@@ -93,16 +98,60 @@ export const searchConversations = async (
       : {}),
     ...(filters.events?.length
       ? {
-          events: exists(
-            db
-              .select()
-              .from(conversationEvents)
-              .where(
-                and(
-                  eq(conversationEvents.conversationId, conversations.id),
-                  inArray(conversationEvents.type, filters.events),
-                ),
-              ),
+          events: hasEvent(inArray(conversationEvents.type, filters.events)),
+        }
+      : {}),
+    ...(filters.closedByAgentBefore
+      ? {
+          closedByAgentBefore: hasStatusChangeEvent(
+            "closed",
+            CLOSED_BY_AGENT_MESSAGE,
+            lt(conversationEvents.createdAt, new Date(filters.closedByAgentBefore)),
+          ),
+        }
+      : {}),
+    ...(filters.closedByAgentAfter
+      ? {
+          closedByAgentAfter: hasStatusChangeEvent(
+            "closed",
+            CLOSED_BY_AGENT_MESSAGE,
+            gt(conversationEvents.createdAt, new Date(filters.closedByAgentAfter)),
+          ),
+        }
+      : {}),
+    ...(filters.reopenedByAgentBefore
+      ? {
+          reopenedByAgentBefore: hasStatusChangeEvent(
+            "open",
+            REOPENED_BY_AGENT_MESSAGE,
+            lt(conversationEvents.createdAt, new Date(filters.reopenedByAgentBefore)),
+          ),
+        }
+      : {}),
+    ...(filters.reopenedByAgentAfter
+      ? {
+          reopenedByAgentAfter: hasStatusChangeEvent(
+            "open",
+            REOPENED_BY_AGENT_MESSAGE,
+            gt(conversationEvents.createdAt, new Date(filters.reopenedByAgentAfter)),
+          ),
+        }
+      : {}),
+    ...(filters.markedAsSpamByAgentBefore
+      ? {
+          markedAsSpamByAgentBefore: hasStatusChangeEvent(
+            "spam",
+            MARKED_AS_SPAM_BY_AGENT_MESSAGE,
+            lt(conversationEvents.createdAt, new Date(filters.markedAsSpamByAgentBefore)),
+          ),
+        }
+      : {}),
+    ...(filters.markedAsSpamByAgentAfter
+      ? {
+          markedAsSpamByAgentAfter: hasStatusChangeEvent(
+            "spam",
+            MARKED_AS_SPAM_BY_AGENT_MESSAGE,
+            gt(conversationEvents.createdAt, new Date(filters.markedAsSpamByAgentAfter)),
           ),
         }
       : {}),
@@ -195,3 +244,37 @@ export const countSearchResults = async (where: Record<string, SQL>) => {
 
   return total?.count ?? 0;
 };
+
+export const getSearchResultIds = async (where: Record<string, SQL>) => {
+  const results = await db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .leftJoin(
+      platformCustomers,
+      and(
+        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.emailFrom, platformCustomers.email),
+      ),
+    )
+    .where(and(...Object.values(where)));
+
+  return results.map((result) => result.id);
+};
+
+const hasEvent = (where?: SQL) =>
+  exists(
+    db
+      .select()
+      .from(conversationEvents)
+      .where(and(eq(conversationEvents.conversationId, conversations.id), where)),
+  );
+
+const hasStatusChangeEvent = (status: (typeof conversations.$inferSelect)["status"], reason: string, where?: SQL) =>
+  hasEvent(
+    and(
+      eq(conversationEvents.conversationId, conversations.id),
+      eq(conversationEvents.reason, reason),
+      eq(sql`${conversationEvents.changes}->>'status'`, status),
+      where,
+    ),
+  );
