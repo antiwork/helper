@@ -154,6 +154,13 @@ export const inngest = new Inngest({
           conversationId: z.number(),
         }),
       },
+      "slack/agent.message": {
+        data: z.object({
+          event: z.any(),
+          currentMailboxId: z.number(),
+          statusMessageTs: z.string(),
+        }),
+      },
     })
     .fromUnion<NonZodEvents>(),
   middleware: [sentryMiddleware()],
