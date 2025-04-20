@@ -33,4 +33,36 @@ export const searchSchema = z.object({
     .array(z.enum(["request_human_support", "resolved_by_ai"]))
     .optional()
     .describe("Filter tickets that were escalated to humans or resolved by AI"),
+
+  // So that the agent can undo its own actions
+  closedByAgentBefore: z
+    .string()
+    .datetime()
+    .optional()
+    .describe("Filter tickets closed by the Helper agent before this date"),
+  closedByAgentAfter: z
+    .string()
+    .datetime()
+    .optional()
+    .describe("Filter tickets closed by the Helper agent after this date"),
+  reopenedByAgentBefore: z
+    .string()
+    .datetime()
+    .optional()
+    .describe("Filter tickets reopened by the Helper agent before this date"),
+  reopenedByAgentAfter: z
+    .string()
+    .datetime()
+    .optional()
+    .describe("Filter tickets reopened by the Helper agent after this date"),
+  markedAsSpamByAgentBefore: z
+    .string()
+    .datetime()
+    .optional()
+    .describe("Filter tickets marked as spam by the Helper agent before this date"),
+  markedAsSpamByAgentAfter: z
+    .string()
+    .datetime()
+    .optional()
+    .describe("Filter tickets marked as spam by the Helper agent after this date"),
 });
