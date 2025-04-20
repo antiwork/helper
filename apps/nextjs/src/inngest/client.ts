@@ -159,6 +159,7 @@ export const inngest = new Inngest({
           event: z.any(),
           currentMailboxId: z.number(),
           statusMessageTs: z.string(),
+          agentThreadId: z.number(),
         }),
       },
     })

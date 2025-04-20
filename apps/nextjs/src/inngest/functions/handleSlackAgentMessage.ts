@@ -1,6 +1,7 @@
 import { AppMentionEvent, GenericMessageEvent, WebClient } from "@slack/web-api";
 import { CoreMessage } from "ai";
 import { eq } from "drizzle-orm";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
@@ -69,21 +70,31 @@ export const handleSlackAgentMessage = async (
 
   const result = await generateAgentResponse(messages, mailbox, event.user, showStatus);
 
-  if (agentThread) {
-    await db.insert(agentMessages).values({
+  const assistantMessage = await db
+    .insert(agentMessages)
+    .values({
       agentThreadId: agentThread.id,
       role: "assistant",
       content: result,
-      slackChannel: event.channel,
-      messageTs: event.thread_ts ?? event.ts,
-    });
-  }
+    })
+    .returning()
+    .then(takeUniqueOrThrow);
 
-  await client.chat.postMessage({
+  const { ts } = await client.chat.postMessage({
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
     text: result,
   });
+
+  if (ts) {
+    await db
+      .update(agentMessages)
+      .set({
+        slackChannel: event.channel,
+        messageTs: ts,
+      })
+      .where(eq(agentMessages.id, assistantMessage.id));
+  }
 
   if (!debug) {
     try {
@@ -105,24 +116,11 @@ export const handleSlackAgentMessage = async (
   return result;
 };
 
-// Define the structure for the event data
-interface SlackAgentMessageEventData {
-  event: GenericMessageEvent | AppMentionEvent;
-  currentMailboxId: number;
-  statusMessageTs: string;
-  agentThreadId: number;
-}
-
 export default inngest.createFunction(
   { id: "slack-agent-message-handler" },
   { event: "slack/agent.message" },
   async ({ event, step }) => {
-    const {
-      event: slackEvent,
-      currentMailboxId,
-      statusMessageTs,
-      agentThreadId,
-    } = event.data as SlackAgentMessageEventData;
+    const { event: slackEvent, currentMailboxId, statusMessageTs, agentThreadId } = event.data;
 
     const result = await step.run("process-agent-message", async () => {
       return await handleSlackAgentMessage(slackEvent, currentMailboxId, statusMessageTs, agentThreadId);
