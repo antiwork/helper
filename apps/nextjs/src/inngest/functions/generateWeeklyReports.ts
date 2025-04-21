@@ -110,7 +110,7 @@ export async function generateMailboxReport({
   const totalTicketsResolved = tableData.reduce((sum, agent) => sum + agent.count, 0);
   const activeUserCount = humanUsers.filter((user) => user.count > 0).length;
 
-  const peopleText = activeUserCount === 1 ? "person" : "people";
+  const peopleText = activeUserCount === 1 ? "@Devin" : "people";
 
   const blocks: any[] = [
     {

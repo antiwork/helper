@@ -116,7 +116,7 @@ describe("generateMailboxWeeklyReport", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "*Total replies:*\n5 from 1 person",
+              text: "*Total replies:*\n5 from 1 @Devin",
             },
           },
         ],
