@@ -9,11 +9,11 @@ import { Mailbox } from "@/lib/data/mailbox";
 import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findMailboxForEvent";
 
 export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, mailboxInfo: SlackMailboxInfo) {
+  if (event.bot_id || event.bot_profile) return;
+
   const existingThread = await db.query.agentThreads.findFirst({
     where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
   });
-
-  if (event.bot_id || event.bot_profile) return;
 
   const agentThread = existingThread
     ? existingThread
