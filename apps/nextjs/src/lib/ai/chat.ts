@@ -23,7 +23,7 @@ import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
-import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
@@ -127,6 +127,7 @@ export const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
+  guideEnabled = false,
 ): Promise<{
   messages: CoreMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
@@ -138,7 +139,9 @@ export const buildPromptMessages = async (
       "{{CURRENT_DATE}}",
       new Date().toISOString(),
     ),
-  ];
+    guideEnabled ? GUIDE_INSTRUCTIONS : null,
+  ].filter(Boolean);
+
   let systemPrompt = prompt.join("\n");
   if (knowledgeBank) {
     systemPrompt += `\n${knowledgeBank}`;
@@ -295,12 +298,14 @@ export const generateAIResponse = async ({
   addReasoning = false,
   reasoningModel = REASONING_MODEL,
   evaluation = false,
+  guideEnabled = false,
 }: {
   messages: Message[];
   mailbox: Mailbox;
   conversationId: number;
   email: string | null;
   readPageTool?: ReadPageToolConfig | null;
+  guideEnabled: boolean;
   onFinish?: (params: {
     text: string;
     finishReason: string;
@@ -320,9 +325,9 @@ export const generateAIResponse = async ({
   const query = lastMessage?.content || "";
 
   const coreMessages = convertToCoreMessages(messages, { tools: {} });
-  const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query);
+  const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query, guideEnabled);
 
-  const tools = await buildTools(conversationId, email, mailbox);
+  const tools = await buildTools(conversationId, email, mailbox, true, guideEnabled);
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -506,6 +511,7 @@ export const respondWithAI = async ({
   message,
   messageId,
   readPageTool,
+  guideEnabled,
   onResponse,
 }: {
   conversation: Conversation;
@@ -515,6 +521,7 @@ export const respondWithAI = async ({
   message: Message;
   messageId: number;
   readPageTool: ReadPageToolConfig | null;
+  guideEnabled: boolean;
   onResponse?: (result: {
     messages: Message[];
     platformCustomer: PlatformCustomer | null;
@@ -606,6 +613,7 @@ export const respondWithAI = async ({
         conversationId: conversation.id,
         email: userEmail,
         readPageTool,
+        guideEnabled,
         addReasoning: true,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources }) {

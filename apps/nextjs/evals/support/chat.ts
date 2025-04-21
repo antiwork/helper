@@ -148,6 +148,7 @@ export const runAIQuery = async (input: string, reasoning = false) => {
     email: "marco.costa@gmail.com",
     addReasoning: reasoning,
     evaluation: true,
+    guideEnabled: false,
   });
 
   return result.textStream;

@@ -11,9 +11,11 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
+import { GUIDE_USER_TOOL_NAME } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { sendConversationUpdate } from "@/lib/widget/messages";
+import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
+import { GuideInstructions } from "@/types/guide";
 
 type Props = {
   token: string | null;
@@ -23,6 +25,9 @@ type Props = {
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
   isAnonymous: boolean;
+  setIsGuidingUser: (isGuidingUser: boolean) => void;
+  setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
+  guideEnabled: boolean;
 };
 
 export type Attachment = {
@@ -39,6 +44,9 @@ export default function Conversation({
   readPageTool,
   onLoadFailed,
   isAnonymous,
+  setIsGuidingUser,
+  setGuideInstructions,
+  guideEnabled,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -61,12 +69,18 @@ export default function Conversation({
     append,
     setMessages,
     status,
+    stop,
+    addToolResult,
   } = useChat({
     maxSteps: 3,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
     onToolCall({ toolCall }) {
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
+      }
+      if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
+        const args = toolCall.args as { instructions: string; title: string };
+        setGuideInstructions({ instructions: args.instructions, title: args.title, callId: toolCall.toolCallId });
       }
       if (toolCall.toolName === "request_human_support") {
         setIsEscalated(true);
@@ -76,7 +90,9 @@ export default function Conversation({
       return {
         id,
         readPageTool,
+        guideEnabled,
         message: messages[messages.length - 1],
+        conversationSlug,
         ...requestBody,
       };
     },
@@ -84,6 +100,22 @@ export default function Conversation({
       Authorization: `Bearer ${token}`,
     },
   });
+
+  const cancelGuide = (toolCallId: string) => {
+    setGuideInstructions(null);
+    if (toolCallId) {
+      addToolResult({
+        toolCallId,
+        result: "cancelled, return text instructions",
+      });
+    }
+  };
+
+  const startGuide = () => {
+    minimizeWidget();
+    setIsGuidingUser(true);
+    stop();
+  };
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {
@@ -219,6 +251,8 @@ export default function Conversation({
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
+        startGuide={startGuide}
+        cancelGuide={cancelGuide}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

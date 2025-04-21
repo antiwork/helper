@@ -69,6 +69,7 @@
     "@radix-ui/react-tooltip": "^1.2.3",
     "@react-email/components": "^0.0.25",
     "@readme/openapi-parser": "^2.6.0",
+    "@rrweb/record": "^2.0.0-alpha.18",
     "@sentry/nextjs": "^8",
     "@slack/oauth": "^3.0.1",
     "@slack/web-api": "^7.5.0",

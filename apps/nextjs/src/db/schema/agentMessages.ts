@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { bigint, index, jsonb, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 import { agentThreads } from "./agentThreads";
 
@@ -14,10 +14,13 @@ export const agentMessages = pgTable(
     role: text().$type<AgentMessageRole>().notNull(),
     content: text().notNull(),
     metadata: jsonb().$type<{ toolName: string; parameters: Record<string, unknown> }>(),
+    slackChannel: text(),
+    messageTs: text(),
   },
   (table) => {
     return {
       agentThreadIdIdx: index("agent_messages_agent_thread_id_idx").on(table.agentThreadId),
+      slackMessageUniqueIdx: uniqueIndex("agent_messages_slack_unique_idx").on(table.slackChannel, table.messageTs),
     };
   },
 );
