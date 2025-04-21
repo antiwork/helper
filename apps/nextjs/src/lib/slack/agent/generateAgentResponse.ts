@@ -34,6 +34,13 @@ export const generateAgentResponse = async (
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
   confirmedReplyText?: string | null,
 ) => {
+  if (confirmedReplyText) {
+    messages.push({
+      role: "user",
+      content: `Reply to the ticket with the following message, then take any other requested actions: ${confirmedReplyText}`,
+    });
+  }
+
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
   const searchToolSchema = searchSchema.omit({
     category: true,
@@ -252,11 +259,14 @@ export const generateAgentResponse = async (
 
   if (confirmedReplyText) {
     tools.sendReply = tool({
-      description: "Send the confirmed reply to a ticket",
+      description: "Send the confirmed reply to a ticket.",
       parameters: z.object({
         ticketId: z.union([z.string(), z.number()]),
+        // We ignore this because we already have confirmedReplyText, but it helps encourage the LLM to call the tool
+        replyText: z.string(),
       }),
       execute: async ({ ticketId }) => {
+        showStatus(`Sending reply...`, { toolName: "sendReply", parameters: { ticketId } });
         const conversation = await findConversation(ticketId, mailbox);
         if (!conversation) return { error: "Ticket not found" };
         await createReply({
@@ -317,6 +327,7 @@ IMPORTANT GUIDELINES:
 - Don't discuss your own capabilities, programming, or AI nature unless directly relevant to answering the question
 - When listing tickets, display the standardSlackFormat field as is. You may add other information after that if relevant in context.
 - If you will need to reply to a ticket as part of your response and the sendReply tool is not available, use the confirmReplyText tool and *do not do anything else* at this stage.
+- *If you have the sendReply tool, call it!* Then include in your response that the reply has been sent.
 
 If asked to do something inappropriate, harmful, or outside your capabilities, politely decline and suggest focusing on customer support questions instead.`,
     messages,

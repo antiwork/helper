@@ -143,6 +143,17 @@ const slackImageToMarkdown = (image: ImageBlock): string => {
   return `Slack image: ${image.alt_text} (ID: ${image.slack_file.id})`;
 };
 
+const messageToMarkdown = ({ text, blocks }: { text?: string; blocks?: Block[] }) => {
+  let content = "";
+  if (blocks && blocks.length > 0) {
+    content = convertKnownBlocksToMarkdown(blocks);
+  }
+  if (!content && text) {
+    content = text;
+  }
+  return content;
+};
+
 export const getThreadMessages = cache(
   async (token: string, channelId: string, threadTs: string, botUserId: string): Promise<CoreMessage[]> => {
     const client = new WebClient(token);
@@ -156,14 +167,10 @@ export const getThreadMessages = cache(
 
     const result = messages.flatMap((message) => {
       const isBot = !!message.bot_id;
-      let content = "";
+      let content = messageToMarkdown({ text: message.text, blocks: message.blocks as Block[] });
 
-      if (message.blocks && message.blocks.length > 0) {
-        content = convertKnownBlocksToMarkdown(message.blocks as Block[]);
-      }
-
-      if (!content && message.text) {
-        content = message.text;
+      if (message.attachments && message.attachments.length > 0) {
+        content += `\n\n${message.attachments.map((attachment) => messageToMarkdown({ text: attachment.text, blocks: attachment.blocks as Block[] })).join("\n\n")}`;
       }
 
       if (!content) return [];
