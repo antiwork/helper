@@ -44,18 +44,18 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     message = createdMessage;
   }
 
+  if (!message || !event.text) {
+    return;
+  }
+
   const mailbox = mailboxInfo.currentMailbox;
   if (!mailbox) {
-    if (message) await askWhichMailbox(event, mailboxInfo.mailboxes);
+    await askWhichMailbox(event, mailboxInfo.mailboxes);
     return;
   }
 
   if (!agentThread.mailboxId) {
     await db.update(agentThreads).set({ mailboxId: mailbox.id }).where(eq(agentThreads.id, agentThread.id));
-  }
-
-  if (!message || !event.text) {
-    return;
   }
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
