@@ -30,7 +30,7 @@ type SearchFiltersInput = z.infer<typeof searchFiltersSchema>;
 export const generateAgentResponse = async (
   messages: CoreMessage[],
   mailbox: Mailbox,
-  slackUserId: string | undefined,
+  slackUserId: string | null,
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
   confirmedReplyText?: string | null,
 ) => {

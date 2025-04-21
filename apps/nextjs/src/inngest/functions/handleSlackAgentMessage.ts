@@ -12,7 +12,7 @@ import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";
 
 export const handleSlackAgentMessage = async (
-  slackUserId: string,
+  slackUserId: string | null,
   currentMailboxId: number,
   statusMessageTs: string,
   agentThreadId: number,
