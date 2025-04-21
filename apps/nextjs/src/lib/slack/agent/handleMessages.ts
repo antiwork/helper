@@ -9,24 +9,17 @@ import { Mailbox } from "@/lib/data/mailbox";
 import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findMailboxForEvent";
 
 export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, mailboxInfo: SlackMailboxInfo) {
-  if (!mailboxInfo.currentMailbox) {
-    await askWhichMailbox(event, mailboxInfo.mailboxes);
-    return;
-  }
-
-  const mailbox = mailboxInfo.currentMailbox;
-  if (event.bot_id || event.bot_id === mailbox.slackBotUserId || event.bot_profile) return;
-
   const existingThread = await db.query.agentThreads.findFirst({
     where: and(eq(agentThreads.slackChannel, event.channel), eq(agentThreads.threadTs, event.thread_ts ?? event.ts)),
   });
+
+  if (event.bot_id || event.bot_profile) return;
 
   const agentThread = existingThread
     ? existingThread
     : await db
         .insert(agentThreads)
         .values({
-          mailboxId: mailbox.id,
           slackChannel: event.channel,
           threadTs: event.thread_ts ?? event.ts,
         })
@@ -47,7 +40,18 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
       .onConflictDoNothing()
       .returning();
 
+    // message will be null if we've already handled an event for this message due to the onConflictDoNothing
     message = createdMessage;
+  }
+
+  const mailbox = mailboxInfo.currentMailbox;
+  if (!mailbox) {
+    if (message) await askWhichMailbox(event, mailboxInfo.mailboxes);
+    return;
+  }
+
+  if (!agentThread.mailboxId) {
+    await db.update(agentThreads).set({ mailboxId: mailbox.id }).where(eq(agentThreads.id, agentThread.id));
   }
 
   if (!message || !event.text) {
