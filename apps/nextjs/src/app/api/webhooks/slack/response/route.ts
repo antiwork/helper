@@ -15,14 +15,13 @@ export const POST = async (request: Request) => {
   }
 
   const payload = JSON.parse(new URLSearchParams(body).get("payload") || "{}");
-  console.log(payload);
   const messageTs = payload.view?.private_metadata || payload.container?.message_ts;
 
   if (!messageTs) {
     return Response.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  if (payload.container?.channel_ts) {
+  if (payload.container?.channel_id) {
     const agentMessage = await db.query.agentMessages.findFirst({
       where: and(eq(agentMessages.slackChannel, payload.container.channel_id), eq(agentMessages.messageTs, messageTs)),
       orderBy: desc(agentMessages.createdAt),

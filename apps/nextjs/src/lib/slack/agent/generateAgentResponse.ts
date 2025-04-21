@@ -278,7 +278,9 @@ export const generateAgentResponse = async (
         ticketId: z.union([z.string(), z.number()]),
         proposedMessage: z
           .string()
-          .describe("The message to reply to the user with. Set to blank if the desired reply is unclear."),
+          .describe(
+            "The message to reply to the user with. Don't include a greeting or signature. Set to blank if the desired reply is unclear.",
+          ),
       }),
       // eslint-disable-next-line require-await
       execute: async ({ ticketId, proposedMessage }) => {
@@ -286,7 +288,10 @@ export const generateAgentResponse = async (
           toolName: "confirmReplyText",
           parameters: { ticketId, proposedMessage },
         });
-        return { message: "Confirmation needed before replying. DON'T TAKE ANY FURTHER ACTION." };
+        return {
+          message:
+            "Confirmation needed before replying. DON'T TAKE ANY FURTHER ACTION and don't include the message text in the response.",
+        };
       },
     });
   }
@@ -311,6 +316,7 @@ IMPORTANT GUIDELINES:
 - Never share sensitive information or personal data
 - Don't discuss your own capabilities, programming, or AI nature unless directly relevant to answering the question
 - When listing tickets, display the standardSlackFormat field as is. You may add other information after that if relevant in context.
+- If you will need to reply to a ticket as part of your response and the sendReply tool is not available, use the confirmReplyText tool and *do not do anything else* at this stage.
 
 If asked to do something inappropriate, harmful, or outside your capabilities, politely decline and suggest focusing on customer support questions instead.`,
     messages,
