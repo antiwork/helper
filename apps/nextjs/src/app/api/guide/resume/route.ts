@@ -1,5 +1,6 @@
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
+import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
       return corsResponse({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const conversationId = assertDefined(guideSession.conversationId);
+    const conversation = assertDefined(await getConversationById(assertDefined(guideSession.conversationId)));
 
     return corsResponse({
       sessionId: guideSession.uuid,
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
       instructions: guideSession.instructions,
       steps: guideSession.steps,
       status: guideSession.status,
-      conversationId,
+      conversationSlug: conversation.slug,
     });
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error);

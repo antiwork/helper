@@ -211,6 +211,8 @@ export class GuideManager {
     if (!domTrackingElement) return null;
 
     const xpath = domTrackingElement.xpath;
+    if (!xpath || xpath.trim().length === 0) return null;
+
     const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     return element as HTMLElement;
   }

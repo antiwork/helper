@@ -35,7 +35,7 @@ export default function Page() {
   const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
   const [isGuidingUser, setIsGuidingUser] = useState(false);
   const [guideInstructions, setGuideInstructions] = useState<GuideInstructions | null>(null);
-
+  const [resumedGuideSessionId, setResumedGuideSessionId] = useState<string | null>(null);
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
 
   const {
@@ -96,14 +96,16 @@ export default function Page() {
         });
         setIsGuidingUser(true);
       } else if (action === RESUME_GUIDE) {
+        setResumedGuideSessionId(content.sessionId);
         setIsGuidingUser(true);
         setGuideInstructions({
           instructions: content.instructions,
           title: content.title,
-          callId: content.callId,
+          callId: null,
           steps: content.steps,
           resumed: true,
         });
+        setSelectedConversationSlug(content.conversationSlug);
         minimizeWidget();
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
@@ -189,6 +191,7 @@ export default function Page() {
           conversationSlug={selectedConversationSlug}
           initialSteps={guideInstructions.steps}
           resumed={guideInstructions.resumed}
+          existingSessionId={resumedGuideSessionId}
         />
       )}
     </QueryClientProvider>

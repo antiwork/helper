@@ -12,14 +12,16 @@ export default function HelpingHand({
   token,
   initialSteps,
   resumed,
+  existingSessionId,
 }: {
   instructions: string;
   conversationSlug: string | null;
   token: string;
   initialSteps: Step[];
   resumed: boolean;
+  existingSessionId: string | null;
 }) {
-  const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
+  const [guideSessionId, setGuideSessionId] = useState<string | null>(existingSessionId);
   const [isInitializing, setIsInitializing] = useState(!resumed);
   const [steps, setSteps] = useState<Step[]>(initialSteps);
   const [toolResultCount, setToolResultCount] = useState(0);
@@ -123,6 +125,9 @@ export default function HelpingHand({
       `;
 
       trackToolResult(toolCallId, resultMessage);
+    } else {
+      const pageDetails = await fetchCurrentPageDetails();
+      trackToolResult(toolCallId, `Failed to execute action. Current elements: ${pageDetails.clickableElements}`);
     }
   };
 
@@ -161,26 +166,32 @@ export default function HelpingHand({
     }
   };
 
-  const sendInitialPrompt = async () => {
+  const sendInitialPrompt = async (resumed: boolean) => {
     const pageDetails = await fetchCurrentPageDetails();
+    let content = GUIDE_INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)
+      .replace("{{CURRENT_URL}}", pageDetails.currentPageDetails.url)
+      .replace("{{CURRENT_PAGE_TITLE}}", pageDetails.currentPageDetails.title)
+      .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements));
+
+    if (resumed) {
+      content += `\n\nWe are resuming the guide. Check if the steps are still valid based on the current page details. Elements changed and use the last page details to continue the guide.`;
+    }
+
     append({
       role: "user",
-      content: GUIDE_INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)
-        .replace("{{CURRENT_URL}}", pageDetails.currentPageDetails.url)
-        .replace("{{CURRENT_PAGE_TITLE}}", pageDetails.currentPageDetails.title)
-        .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements)),
+      content,
     });
   };
 
   useEffect(() => {
-    if (instructions && instructions.length > 0) {
+    if (instructions && instructions.length > 0 && !resumed) {
       initializeGuideSession();
     }
-  }, [instructions]);
+  }, [instructions, resumed]);
 
   useEffect(() => {
     if (guideSessionId && !isInitializing) {
-      sendInitialPrompt();
+      sendInitialPrompt(resumed);
     }
   }, [guideSessionId, isInitializing]);
 
