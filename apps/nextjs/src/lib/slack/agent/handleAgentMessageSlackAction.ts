@@ -16,7 +16,8 @@ export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMe
     }),
   );
 
-  const client = new WebClient(assertDefined(agentThread.mailbox.slackBotToken));
+  const mailbox = assertDefined(agentThread.mailbox);
+  const client = new WebClient(assertDefined(mailbox.slackBotToken));
 
   if (payload.actions?.[0]?.action_id === "cancel") {
     await client.chat.postMessage({
@@ -31,7 +32,7 @@ export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMe
         slackUserId: payload.user.id,
         confirmedReplyText: payload.state.values.proposed_message.proposed_message.value,
         agentThreadId: agentMessage.agentThreadId,
-        currentMailboxId: agentThread.mailboxId,
+        currentMailboxId: mailbox.id,
         statusMessageTs: await postThinkingMessage(client, agentThread.slackChannel, agentThread.threadTs),
       },
     });

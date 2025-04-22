@@ -131,15 +131,27 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       id: "customers",
       icon: UserGroupIcon,
       content: (
-        <CustomerSetting
-          mailbox={mailbox}
-          onChange={(customerChanges) =>
-            setPendingUpdates({
-              ...pendingUpdates,
-              customer: customerChanges,
-            })
-          }
-        />
+        <>
+          <CustomerSetting
+            mailbox={mailbox}
+            onChange={(customerChanges) =>
+              setPendingUpdates({
+                ...pendingUpdates,
+                customer: customerChanges,
+              })
+            }
+          />
+          <AutoCloseSetting
+            mailbox={mailbox}
+            onChange={(autoCloseUpdates) => {
+              setPendingUpdates((prev) => ({
+                ...prev,
+                autoClose: autoCloseUpdates,
+              }));
+            }}
+            onSave={handleUpdateSettings}
+          />
+        </>
       ),
     },
     {
@@ -174,16 +186,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
                 slack: slackUpdates,
               }));
             }}
-          />
-          <AutoCloseSetting
-            mailbox={mailbox}
-            onChange={(autoCloseUpdates) => {
-              setPendingUpdates((prev) => ({
-                ...prev,
-                autoClose: autoCloseUpdates,
-              }));
-            }}
-            onSave={handleUpdateSettings}
           />
           <GitHubSetting
             mailbox={mailbox}
