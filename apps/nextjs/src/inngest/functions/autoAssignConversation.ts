@@ -223,7 +223,10 @@ export default inngest.createFunction(
       };
     }
 
-    await updateConversation(conversation.id, { set: { assignedToClerkId: nextTeamMember.id } });
+    await updateConversation(conversation.id, {
+      set: { assignedToClerkId: nextTeamMember.id },
+      message: aiResult ? aiResult.reasoning : "Core member assigned by round robin",
+    });
 
     return {
       message: `Assigned conversation ${conversation.id} to ${nextTeamMember.displayName} (${nextTeamMember.id})`,
