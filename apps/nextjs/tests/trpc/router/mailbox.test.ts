@@ -19,6 +19,7 @@ vi.mock("@/lib/data/user", () => ({
     NON_CORE: "nonCore",
     AFK: "afk",
   },
+  updateUserMailboxData: vi.fn(),
 }));
 
 vi.mock("@/lib/data/organization", () => ({
