@@ -1,19 +1,6 @@
-import {
-  Body,
-  Container,
-  Font,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Preview,
-  Section,
-  Tailwind,
-} from "@react-email/components";
+import { Body, Container, Font, Head, Heading, Hr, Html, Img, Preview, Section } from "@react-email/components";
 import * as React from "react";
 import { getBaseUrl } from "@/components/constants";
-import tailwindConfig from "../../../tailwind.config";
 
 type Props = {
   subject: string;
@@ -85,46 +72,55 @@ export const EmailTemplate: ResendEmail<Props> = ({ subject, previewText, childr
   return (
     <Html>
       <Preview>{previewText}</Preview>
-      <Tailwind config={tailwindConfig}>
-        <Head>
-          <title>{subject}</title>
-          <Font
-            fontFamily="Sundry-Regular"
-            fallbackFontFamily="sans-serif"
-            webFont={{
-              url: `${baseUrl}/fonts/Sundry-Regular.woff2`,
-              format: "woff2",
+      <Head>
+        <title>{subject}</title>
+        <Font
+          fontFamily="Sundry-Regular"
+          fallbackFontFamily="sans-serif"
+          webFont={{
+            url: `${baseUrl}/fonts/Sundry-Regular.woff2`,
+            format: "woff2",
+          }}
+          fontWeight={400}
+          fontStyle="normal"
+        />
+        <style>{globalStyles}</style>
+      </Head>
+      <Body style={{ backgroundColor: "hsl(42 100% 95%)" }} className="helper-email-content">
+        <Container
+          style={{ margin: "0 auto", maxWidth: "600px", padding: "2rem", paddingBottom: "1rem", paddingTop: "2rem" }}
+        >
+          <Section style={{ marginBottom: "1rem" }}>
+            <Img
+              src={`${baseUrl}/logo_mahogany_900_for_email.png`}
+              alt="Helper"
+              style={{ margin: "0 auto", marginTop: "0", marginBottom: "0", height: "2rem", width: "auto" }}
+            />
+          </Section>
+          <Container
+            style={{
+              borderRadius: "0.5rem",
+              border: "1px solid hsl(218 10% 84%)",
+              borderStyle: "solid",
+              backgroundColor: "hsl(0 0% 100%)",
+              padding: "1rem",
+              fontSize: "1rem",
+              lineHeight: "1.5",
             }}
-            fontWeight={400}
-            fontStyle="normal"
-          />
-          <style>{globalStyles}</style>
-        </Head>
-        <Body className="helper-email-content bg-secondary">
-          <Container className="mx-auto max-w-[600px] p-8 pb-4 pt-8">
-            <Section className="mb-4">
-              <Img
-                src={`${baseUrl}/logo_mahogany_900_for_email.png`}
-                alt="Helper"
-                className="mx-auto my-0 h-8 w-auto"
-              />
-            </Section>
-            {/* The extra `border-solid` is needed for the border to appear for some reason */}
-            <Container className="rounded-lg border border-solid border-border bg-background p-4 text-base leading-normal">
-              <Heading as="h1" className="text-2xl">
-                {subject}
-              </Heading>
-              <Section>{children}</Section>
-              {footer && (
-                <>
-                  <Hr />
-                  {footer}
-                </>
-              )}
-            </Container>
+          >
+            <Heading as="h1" style={{ fontSize: "1.5rem" }}>
+              {subject}
+            </Heading>
+            <Section>{children}</Section>
+            {footer && (
+              <>
+                <Hr />
+                {footer}
+              </>
+            )}
           </Container>
-        </Body>
-      </Tailwind>
+        </Container>
+      </Body>
     </Html>
   );
 };
