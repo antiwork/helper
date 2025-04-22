@@ -80,7 +80,13 @@ export default function Conversation({
       }
       if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
         const args = toolCall.args as { instructions: string; title: string };
-        setGuideInstructions({ instructions: args.instructions, title: args.title, callId: toolCall.toolCallId });
+        setGuideInstructions({
+          instructions: args.instructions,
+          title: args.title,
+          callId: toolCall.toolCallId,
+          resumed: false,
+          steps: [],
+        });
       }
       if (toolCall.toolName === "request_human_support") {
         setIsEscalated(true);

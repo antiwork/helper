@@ -1,9 +1,10 @@
 import { openai } from "@ai-sdk/openai";
-import { consoleIntegration } from "@sentry/nextjs";
-import { createDataStreamResponse, generateText, streamText, tool } from "ai";
+import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
 import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { assertDefined } from "../../../../components/utils/assert";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
 
@@ -65,7 +66,7 @@ Planned steps:
 Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
-  const { messages, steps } = await request.json();
+  const { message, steps, sessionId } = await request.json();
 
   const authResult = await authenticateWidget(request);
   if (!authResult.success) {
@@ -74,6 +75,58 @@ export async function POST(request: Request) {
 
   const { session, mailbox } = authResult;
   const userEmail = session.isAnonymous ? null : session.email || null;
+
+  const guideSession = assertDefined(await getGuideSessionByUuid(sessionId));
+  const guideSessionActions = await getGuideSessionActions(guideSession.id);
+
+  const previousMessages: Message[] = guideSessionActions.map((action) => {
+    const actionData = action.data as {
+      currentState: string;
+      actionType: string;
+      params: any;
+      previousPageDetails: { url: string; title: string; elements: string };
+      newPageDetails: { url: string; title: string; elements: string };
+      result: string;
+    };
+
+    let textResult = "";
+    if (actionData.result === "Performed") {
+      textResult = `Successfully performed action ${actionData.actionType}
+      Now, the current URL is: ${actionData.newPageDetails.url}
+      Current Page Title: ${actionData.newPageDetails.title}
+      Elements: ${actionData.newPageDetails.elements}`;
+    } else {
+      textResult = `Failed to perform action ${actionData.actionType}`;
+    }
+
+    return {
+      id: action.id.toString(),
+      role: "assistant",
+      content: "",
+      toolInvocations: [
+        {
+          id: action.id.toString(),
+          toolName: "AgentOutput",
+          step: 0,
+          state: "result",
+          result: textResult,
+          toolCallId: `tool_${action.id}`,
+          args: {
+            current_state: actionData.currentState,
+            action: {
+              type: actionData.actionType,
+              ...actionData.params,
+            },
+          },
+        },
+      ],
+    };
+  });
+
+  const messages = appendClientMessage({
+    messages: previousMessages,
+    message,
+  });
 
   const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
   const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")

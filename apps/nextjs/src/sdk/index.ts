@@ -10,8 +10,6 @@ import {
   RESUME_GUIDE,
   SCREENSHOT_ACTION,
 } from "@/lib/widget/messages";
-import { domElements } from "./domElements";
-import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import type { HelperWidgetConfig } from "./types";
@@ -83,21 +81,6 @@ class HelperWidget {
     }
     // eslint-disable-next-line no-console
     console.error("Failed to create Helper session after 3 attempts");
-  }
-
-  private takeDOMSnapshot(
-    debugMode = false,
-    doHighlightElements = false,
-    focusHighlightIndex = -1,
-    viewportExpansion = 0,
-  ) {
-    return domElements({
-      debugMode,
-      doHighlightElements,
-      focusHighlightIndex,
-      viewportExpansion,
-      onlyVisibleElements: true,
-    });
   }
 
   private async createSession() {
@@ -301,7 +284,7 @@ class HelperWidget {
             let response = null;
 
             if (action === "FETCH_PAGE_DETAILS") {
-              response = HelperWidget.fetchCurrentPageDetails();
+              response = this.guideManager.fetchCurrentPageDetails();
             }
 
             if (action === "CLICK_ELEMENT") {
@@ -742,56 +725,6 @@ class HelperWidget {
   public static startGuide(prompt: string): void {
     if (HelperWidget.instance) {
       HelperWidget.instance.startGuideInternal(prompt);
-    }
-  }
-
-  public static fetchCurrentPageDetails(): {
-    currentPageDetails: { url: string; title: string };
-    domTracking: any;
-    clickableElements?: string;
-    interactiveElements?: ReturnType<typeof findInteractiveElements>;
-  } | null {
-    if (!HelperWidget.instance) {
-      return null;
-    }
-
-    const domTracking = HelperWidget.instance.takeDOMSnapshot();
-    HelperWidget.instance.guideManager.setDomTracking(domTracking);
-
-    const currentPageDetails = {
-      url: window.location.href,
-      title: document.title,
-    };
-
-    try {
-      const domTree = constructDomTree(domTracking as DomTrackingData);
-
-      const includeAttributes = [
-        "title",
-        "type",
-        "name",
-        "role",
-        "tabindex",
-        "aria-label",
-        "placeholder",
-        "value",
-        "alt",
-        "aria-expanded",
-      ];
-
-      const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
-      const interactiveElements = findInteractiveElements(domTree.root);
-
-      return {
-        currentPageDetails,
-        domTracking,
-        clickableElements,
-        interactiveElements,
-      };
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to construct DOM tree:", error);
-      return { currentPageDetails, domTracking };
     }
   }
 

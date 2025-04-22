@@ -96,7 +96,6 @@ export function sendRequestToParent<T>(action: string, content?: any): Promise<T
 
 export const fetchCurrentPageDetails = async (): Promise<{
   currentPageDetails: { url: string; title: string };
-  domTracking: any;
   clickableElements?: string;
   interactiveElements?: ReturnType<typeof findInteractiveElements>;
 }> => {

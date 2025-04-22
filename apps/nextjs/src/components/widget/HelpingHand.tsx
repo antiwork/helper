@@ -19,11 +19,6 @@ export default function HelpingHand({
   initialSteps: Step[];
   resumed: boolean;
 }) {
-  const [toolPending, setToolPending] = useState<{
-    toolCallId: string;
-    toolName: string;
-    params: Record<string, any>;
-  } | null>(null);
   const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(!resumed);
   const [steps, setSteps] = useState<Step[]>(initialSteps);
@@ -54,11 +49,6 @@ export default function HelpingHand({
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
     onToolCall({ toolCall }) {
       const params = toolCall.args as Record<string, any>;
-      setToolPending({
-        toolCallId: toolCall.toolCallId,
-        toolName: toolCall.toolName,
-        params,
-      });
 
       if (params.action) {
         handleAction(params.action, toolCall.toolCallId, params.current_state);
@@ -84,7 +74,7 @@ export default function HelpingHand({
     experimental_prepareRequestBody({ messages, id, requestBody }) {
       return {
         id,
-        messages,
+        message: messages[messages.length - 1],
         sessionId: guideSessionId,
         steps,
         ...requestBody,
@@ -125,8 +115,7 @@ export default function HelpingHand({
 
     if (result && toolCallId) {
       const pageDetails = await fetchCurrentPageDetails();
-      const resultMessage = `
-      Executed the last action: ${type}.
+      const resultMessage = `Executed the last action: ${type}.
 
       Now, the current URL is: ${pageDetails.currentPageDetails.url}
       Current Page Title: ${pageDetails.currentPageDetails.title}

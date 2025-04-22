@@ -184,3 +184,17 @@ export const getGuideSessionByUuid = async (
     return null;
   }
 };
+
+export const getGuideSessionActions = async (guideSessionId: number): Promise<GuideSessionEvent[]> => {
+  try {
+    const events = await db.query.guideSessionEvents.findMany({
+      where: (gs, { eq, and }) => and(eq(gs.guideSessionId, guideSessionId), eq(gs.type, "action_performed")),
+      orderBy: (gs, { asc }) => [asc(gs.timestamp)],
+    });
+
+    return events;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw new Error("Failed to fetch guide session events");
+  }
+};
