@@ -1,5 +1,6 @@
 "use client";
 
+import { PlusCircleIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import SectionWrapper from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/sectionWrapper";
 import { toast } from "@/components/hooks/use-toast";
@@ -34,6 +35,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
         {!showApiForm && (
           <div>
             <Button variant="subtle" onClick={() => setShowApiForm(true)}>
+              <PlusCircleIcon className="mr-2 h-4 w-4" />
               Connect API
             </Button>
           </div>
