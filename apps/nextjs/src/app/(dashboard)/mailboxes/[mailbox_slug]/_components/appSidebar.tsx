@@ -1,17 +1,9 @@
 "use client";
 
-import {
-  ClerkProvider,
-  OrganizationList,
-  OrganizationProfile,
-  useAuth,
-  useClerk,
-  UserProfile,
-  useUser,
-} from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { ChevronsUpDown, ChevronUp, Download, Settings, X } from "lucide-react";
+import { ChevronsUpDown, Download, Settings, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -20,11 +12,9 @@ import type { SidebarInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_co
 import { NavigationButtons } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/navigationButtons";
 import { InboxProvider } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/inbox";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/list";
-import { toast } from "@/components/hooks/use-toast";
 import { TauriDragArea } from "@/components/tauriDragArea";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +34,7 @@ import {
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
+import { AccountDropdown } from "./accountDropdown";
 import { CategoryNav } from "./categoryNav";
 import NativeAppModal, {
   isMac,
@@ -65,11 +56,10 @@ declare global {
 }
 
 export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
-  const { mailboxes, currentMailbox, loggedInName, avatarName, trialInfo } = sidebarInfo;
+  const { mailboxes, currentMailbox, trialInfo } = sidebarInfo;
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const { signOut } = useClerk();
-  const { nativePlatform, isLegacyTauri } = useNativePlatform();
+  const { nativePlatform, isLegacyTauri, isDesktopWeb } = useNativePlatform();
   const { user } = useUser();
   const [showNativeAppModal, setShowNativeAppModal] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -86,24 +76,8 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
     setShowUpgradePrompt(trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt && !getTauriPlatform());
   }, [trialInfo]);
 
-  const handleSignOut = async () => {
-    try {
-      // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
-      window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to sign out",
-      });
-    }
-  };
-
   const isSettings = pathname.endsWith("/settings");
   const isInbox = pathname.includes("/conversations");
-  const isWeb = !nativePlatform;
-  const isDesktopWeb = isWeb && typeof navigator !== "undefined" && !/Android|iPhone|iPad/i.test(navigator.userAgent);
-  const isMobileWeb = isWeb && typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
 
   return (
     <Sidebar
@@ -279,83 +253,19 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
             </>
           )}
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <AccountDropdown
+              setShowNativeAppModal={setShowNativeAppModal}
+              trigger={(children) => (
                 <SidebarMenuButton
                   className={cn(
-                    "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5!",
-                    "md:h-8",
-                    "h-10 px-2 mb-2 md:mb-0",
+                    "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5! text-sidebar-foreground",
+                    "h-10 px-2 mb-2 md:h-8 md:mb-0",
                   )}
                 >
-                  <Avatar fallback={avatarName ?? ""} size="sm" />
-                  <span className="grow truncate font-sundry-narrow-medium text-base text-sidebar-foreground">
-                    {loggedInName}
-                  </span>
-                  <ChevronUp className="ml-auto text-sidebar-foreground" />
+                  {children}
                 </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <span>Account settings</span>
-                    </DropdownMenuItem>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-none w-auto min-w-3xl min-h-2xl p-0 dark:text-background">
-                    <DialogTitle className="sr-only">Account settings</DialogTitle>
-                    <UserProfile routing="virtual" />
-                    {/* Workaround since Clerk doesn't always redirect correctly when the user deletes their account from the profile modal */}
-                    <ClerkProvider dynamic>
-                      <DeleteAccountListener />
-                    </ClerkProvider>
-                  </DialogContent>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <span>Organization settings</span>
-                    </DropdownMenuItem>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-none w-auto min-w-3xl min-h-2xl p-0 dark:text-background">
-                    <DialogTitle className="sr-only">Organization settings</DialogTitle>
-                    <OrganizationProfile routing="virtual" />
-                  </DialogContent>
-                </Dialog>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <span>Switch organization</span>
-                    </DropdownMenuItem>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-none w-auto min-w-3xl min-h-2xl p-0 dark:text-background">
-                    <DialogTitle className="sr-only">Switch organization</DialogTitle>
-                    <OrganizationList hidePersonal hideSlug />
-                  </DialogContent>
-                </Dialog>
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    window.open("http://docs.helper.ai", "_blank", "noopener,noreferrer");
-                  }}
-                >
-                  <span>Documentation</span>
-                </DropdownMenuItem>
-                {isMobileWeb || (isDesktopWeb && user?.unsafeMetadata?.desktopAppPromptDismissed) ? (
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setShowNativeAppModal(true);
-                    }}
-                  >
-                    <span>Download the app</span>
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              )}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

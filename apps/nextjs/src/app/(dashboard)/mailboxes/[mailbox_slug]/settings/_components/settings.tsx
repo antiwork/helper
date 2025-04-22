@@ -10,20 +10,14 @@ import {
   UserGroupIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
-import { ChevronUp } from "lucide-react";
 import React, { useState, useTransition } from "react";
+import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/accountDropdown";
+import NativeAppModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/nativeAppModal";
 import type { SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
-import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { getTauriPlatform } from "@/components/useNativePlatform";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
@@ -65,12 +59,13 @@ type SettingsProps = {
   sidebarInfo: SidebarInfo;
 };
 
-const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: SettingsProps) => {
+const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) => {
   const { signOut } = useClerk();
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdates>({});
   const [showBilling] = useState(() => !getTauriPlatform());
+  const [showNativeAppModal, setShowNativeAppModal] = useState(false);
 
   const handleUpdateSettings = async () => {
     if (!hasPendingUpdates) return;
@@ -240,27 +235,20 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
             items={items}
             footer={
               <div className="border-t border-border">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <AccountDropdown
+                  setShowNativeAppModal={setShowNativeAppModal}
+                  trigger={(children) => (
                     <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                      <Avatar fallback={sidebarInfo.avatarName ?? ""} size="sm" />
-                      <span className="grow truncate text-left font-sundry-narrow-medium">
-                        {sidebarInfo.loggedInName}
-                      </span>
-                      <ChevronUp className="h-4 w-4" />
+                      {children}
                     </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
-                    <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  )}
+                />
               </div>
             }
           />
         </div>
       </FileUploadProvider>
+      <NativeAppModal open={showNativeAppModal} onOpenChange={setShowNativeAppModal} />
     </div>
   );
 };
