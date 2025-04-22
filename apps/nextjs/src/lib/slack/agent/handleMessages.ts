@@ -114,7 +114,7 @@ export const isAgentThread = async (event: GenericMessageEvent, mailboxInfo: Sla
     return false;
   }
 
-  if (event.text?.includes("(aside)")) return false;
+  if (event.text?.toLowerCase().includes("(aside)")) return false;
 
   const client = new WebClient(mailbox.slackBotToken);
   const { messages = [] } = await client.conversations.replies({
