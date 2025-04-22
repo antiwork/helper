@@ -1,30 +1,23 @@
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
-import {
-  closeWidget,
-  executeGuideAction,
-  fetchCurrentPageDetails,
-  guideDone,
-  sendStartGuide,
-} from "@/lib/widget/messages";
+import { executeGuideAction, fetchCurrentPageDetails, guideDone, sendStartGuide } from "@/lib/widget/messages";
+import { Step } from "@/types/guide";
 import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
-
-type Step = {
-  description: string;
-  completed: boolean;
-  active: boolean;
-};
 
 export default function HelpingHand({
   instructions,
   conversationSlug,
   token,
+  initialSteps,
+  resumed,
 }: {
   instructions: string;
   conversationSlug: string | null;
   token: string;
+  initialSteps: Step[];
+  resumed: boolean;
 }) {
   const [toolPending, setToolPending] = useState<{
     toolCallId: string;
@@ -32,10 +25,28 @@ export default function HelpingHand({
     params: Record<string, any>;
   } | null>(null);
   const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [isInitializing, setIsInitializing] = useState(!resumed);
+  const [steps, setSteps] = useState<Step[]>(initialSteps);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
+
+  const updateStepsBackend = async (updatedSteps: Step[]) => {
+    if (!guideSessionId || !token) return;
+
+    try {
+      await fetch("/api/guide/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sessionId: guideSessionId, steps: updatedSteps }),
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to update guide steps:", error);
+    }
+  };
 
   const { append, addToolResult } = useChat({
     api: "/api/guide/action",
@@ -55,12 +66,19 @@ export default function HelpingHand({
 
       if (params.current_state) {
         const completedSteps = params.current_state.completed_steps || [];
-        setSteps(
-          steps.map((step, index) => ({
-            ...step,
-            completed: completedSteps.includes(index + 1),
-          })),
-        );
+        const newSteps = steps.map((step, index) => ({
+          ...step,
+          completed: completedSteps.includes(index + 1),
+          active: false,
+        }));
+
+        const firstIncompleteIndex = newSteps.findIndex((step) => !step.completed);
+        if (firstIncompleteIndex !== -1 && newSteps[firstIncompleteIndex]) {
+          newSteps[firstIncompleteIndex].active = true;
+        }
+
+        setSteps(newSteps);
+        updateStepsBackend(newSteps);
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
@@ -163,20 +181,6 @@ export default function HelpingHand({
         .replace("{{CURRENT_PAGE_TITLE}}", pageDetails.currentPageDetails.title)
         .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements)),
     });
-  };
-
-  const handleActionDone = async () => {
-    if (toolPending) {
-      const pageDetails = await fetchCurrentPageDetails();
-      const result = `
-      Execute the last action.
-
-      Now, the current URL is: ${pageDetails.currentPageDetails.url}
-      Current Page Title: ${pageDetails.currentPageDetails.title}
-      ${JSON.stringify(pageDetails.clickableElements)}
-      `;
-      trackToolResult(toolPending.toolCallId, result);
-    }
   };
 
   useEffect(() => {

@@ -106,6 +106,8 @@ export class GuideManager {
   // Constants for recording
   private readonly SEND_FREQUENCY = 5000; // 5 seconds
   private readonly MAX_EVENTS_BEFORE_FLUSH = 50;
+  private readonly SESSION_ID_STORAGE_KEY = "helper_guide_session_id";
+  private readonly SESSION_TOKEN_STORAGE_KEY = "helper_guide_session_token";
 
   constructor() {
     this.helperHandElement = null;
@@ -414,6 +416,7 @@ export class GuideManager {
     });
     this.stopRecording();
     this.hideHelperHand();
+    this.clearSession();
   }
 
   public startRecording(): Promise<void> {
@@ -528,6 +531,8 @@ export class GuideManager {
   public start(sessionToken: string, sessionId: string): void {
     this.sessionToken = sessionToken;
     this.sessionId = sessionId;
+    localStorage.setItem(this.SESSION_ID_STORAGE_KEY, sessionId);
+    localStorage.setItem(this.SESSION_TOKEN_STORAGE_KEY, sessionToken);
     this.startRecording().catch(console.error);
   }
 
@@ -547,6 +552,21 @@ export class GuideManager {
     if (this.isRecording) {
       this.stopRecording().catch(console.error);
     }
+
+    this.clearSession();
+  }
+
+  public clearSession(): void {
+    localStorage.removeItem(this.SESSION_ID_STORAGE_KEY);
+    localStorage.removeItem(this.SESSION_TOKEN_STORAGE_KEY);
+  }
+
+  public getPreviousSessionId(): string | null {
+    return localStorage.getItem(this.SESSION_ID_STORAGE_KEY);
+  }
+
+  public getPreviousSessionToken(): string | null {
+    return localStorage.getItem(this.SESSION_TOKEN_STORAGE_KEY);
   }
 
   public async sendGuideEvent(

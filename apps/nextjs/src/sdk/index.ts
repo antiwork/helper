@@ -3,9 +3,11 @@ import type { NotificationStatus } from "@/db/schema/messageNotifications";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
+  GUIDE_DONE,
   GUIDE_START,
   MINIMIZE_ACTION,
   READY_ACTION,
+  RESUME_GUIDE,
   SCREENSHOT_ACTION,
 } from "@/lib/widget/messages";
 import { domElements } from "./domElements";
@@ -71,6 +73,7 @@ class HelperWidget {
     await this.createSessionWithRetry();
     this.createToggleButton();
     this.loadPreviousStatusFromLocalStorage();
+    await this.checkForResumableGuideSession();
   }
 
   private async createSessionWithRetry() {
@@ -314,7 +317,7 @@ class HelperWidget {
               response = await this.guideManager.executeDOMAction(actionType, params, currentState);
             }
 
-            if (action === "GUIDE_DONE") {
+            if (action === GUIDE_DONE) {
               this.guideManager.done();
             }
 
@@ -593,6 +596,7 @@ class HelperWidget {
       this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
+      this.guideManager.clearSession();
 
       // Show the toggle button when the widget is hidden (only if it has been opened before)
       if (
@@ -919,6 +923,59 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
+  }
+
+  private async checkForResumableGuideSession(): Promise<void> {
+    const storedSessionId = this.guideManager.getPreviousSessionId();
+    const storedToken = this.guideManager.getPreviousSessionToken();
+
+    if (storedSessionId && storedToken) {
+      // Use the stored token for resuming, might differ from the main session token if it refreshed
+      await this.resumeGuideSession(storedSessionId, storedToken);
+    }
+  }
+
+  private async resumeGuideSession(sessionId: string, token: string): Promise<void> {
+    try {
+      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/guide/resume`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 401 || response.status === 403) {
+          // Session not found or invalid, clear local storage
+          this.guideManager.clearSession();
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return;
+      }
+
+      const sessionData = await response.json();
+
+      this.guideManager.start(token, sessionId);
+
+      this.sendMessageToEmbed({
+        action: RESUME_GUIDE,
+        content: {
+          ...sessionData,
+          token,
+        },
+      });
+
+      this.showInternal();
+      this.minimizeInternal();
+
+      // eslint-disable-next-line no-console
+      console.log("Guide session resumed successfully:", sessionId);
+    } catch (error) {
+      this.guideManager.clearSession();
+    }
   }
 }
 

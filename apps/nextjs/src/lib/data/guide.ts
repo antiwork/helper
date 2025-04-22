@@ -2,7 +2,13 @@ import "server-only";
 import { count, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, type Transaction } from "@/db/client";
-import { guideSessionEvents, guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
+import {
+  guideSessionEvents,
+  guideSessionEventTypeEnum,
+  guideSessionReplays,
+  guideSessions,
+  platformCustomers,
+} from "@/db/schema";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export type GuideSession = typeof guideSessions.$inferSelect;
@@ -159,5 +165,22 @@ export const getGuideSessionReplays = async (
   } catch (error) {
     captureExceptionAndLog(error);
     throw new Error("Failed to fetch guide session replays");
+  }
+};
+
+export const getGuideSessionByUuid = async (
+  uuid: string,
+): Promise<(GuideSession & { platformCustomer: typeof platformCustomers.$inferSelect }) | null> => {
+  try {
+    const session = await db.query.guideSessions.findFirst({
+      where: (gs, { eq }) => eq(gs.uuid, uuid),
+      with: {
+        platformCustomer: true,
+      },
+    });
+    return session ?? null;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    return null;
   }
 };

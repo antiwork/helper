@@ -12,7 +12,13 @@ import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
-import { MESSAGE_TYPE, minimizeWidget, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
+import {
+  MESSAGE_TYPE,
+  minimizeWidget,
+  RESUME_GUIDE,
+  sendConversationUpdate,
+  sendReadyMessage,
+} from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
 import { GuideInstructions } from "@/types/guide";
 
@@ -81,8 +87,24 @@ export default function Page() {
         }
       } else if (action === "START_GUIDE") {
         minimizeWidget();
-        setGuideInstructions({ instructions: content as string, title: null, callId: null });
+        setGuideInstructions({
+          instructions: content as string,
+          title: null,
+          callId: null,
+          steps: [],
+          resumed: false,
+        });
         setIsGuidingUser(true);
+      } else if (action === RESUME_GUIDE) {
+        setIsGuidingUser(true);
+        setGuideInstructions({
+          instructions: content.instructions,
+          title: content.title,
+          callId: content.callId,
+          steps: content.steps,
+          resumed: true,
+        });
+        minimizeWidget();
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -165,6 +187,8 @@ export default function Page() {
           instructions={guideInstructions.instructions}
           token={token}
           conversationSlug={selectedConversationSlug}
+          initialSteps={guideInstructions.steps}
+          resumed={guideInstructions.resumed}
         />
       )}
     </QueryClientProvider>
