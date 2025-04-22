@@ -49,7 +49,6 @@ IMPORTANT GUIDELINES:
 - If you can't answer a question with confidence or if the request is outside your capabilities, apologize politely and explain that you're unable to help with that specific request
 - Avoid making assumptions about customer details if information is missing
 - Prioritize clarity and accuracy over speed
-- Never share sensitive information or personal data
 - Don't discuss your own capabilities, programming, or AI nature unless directly relevant to answering the question
 - When listing tickets, display the standardSlackFormat field as is. You may add other information after that if relevant in context.
 
@@ -296,7 +295,7 @@ const formatConversation = (
     slug: conversation.slug,
     subject: conversation.subject,
     status: conversation.status,
-    from: conversation.emailFrom,
+    emailFrom: conversation.emailFrom,
     lastUserMessageAt: conversation.lastUserEmailCreatedAt,
     assignedTo: conversation.assignedToClerkId,
     assignedToAI: conversation.assignedToAI,
