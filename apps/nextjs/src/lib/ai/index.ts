@@ -28,7 +28,7 @@ type CommonAIQueryOptions = {
 };
 
 export const runAIQuery = async (options: Parameters<typeof runAIRawQuery>[0]): Promise<string> => {
-  const response = await runAIRawQuery(options);
+  const response = await runAIRawQuery({ maxTokens: 500, ...options });
   return response.text;
 };
 
@@ -39,7 +39,7 @@ export const runAIRawQuery = async ({
   model = COMPLETION_MODEL,
   system,
   temperature = 0.0,
-  maxTokens = 500,
+  maxTokens,
   maxSteps,
   tools,
   functionId,

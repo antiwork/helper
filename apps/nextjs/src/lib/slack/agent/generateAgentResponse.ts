@@ -163,7 +163,8 @@ export const generateAgentResponse = async (
       },
     }),
     searchTickets: tool({
-      description: "Search tickets/conversations with various filtering options",
+      description:
+        "Search tickets/conversations with various filtering options. Use `nextCursor` to paginate through results; if it's set then pass it as `cursor` to get the next page of results.",
       parameters: searchToolSchema,
       execute: async (input) => {
         showStatus(`Searching tickets...`, { toolName: "searchTickets", parameters: input });
@@ -189,22 +190,6 @@ export const generateAgentResponse = async (
         showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
         const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
         return await countSearchResults(where);
-      },
-    }),
-    assignTickets: tool({
-      description: "Assign tickets to a team member or the current user",
-      parameters: z.object({
-        clerkUserId: z.string().regex(/^user_(\w+)$/),
-        ticketIds: z.array(z.union([z.string(), z.number()])),
-      }),
-      execute: async ({ clerkUserId, ticketIds }) => {
-        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ticketIds } });
-        return await updateTickets(
-          { assignedToClerkId: clerkUserId },
-          { ids: ticketIds },
-          "Assigned by agent",
-          "assign",
-        );
       },
     }),
     getAverageResponseTime: tool({
@@ -283,6 +268,28 @@ export const generateAgentResponse = async (
           role: message.role,
           clerkUserId: message.clerkUserId,
         }));
+      },
+    }),
+    assignTickets: tool({
+      description: "Assign tickets to a team member or the current user",
+      parameters: z.object({
+        clerkUserId: z.string().regex(/^user_(\w+)$/),
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async ({ clerkUserId, ...input }) => {
+        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ...input } });
+        return await updateTickets({ assignedToClerkId: clerkUserId }, input, "Assigned by agent", "assign");
+      },
+    }),
+    unassignTickets: tool({
+      description: "Unassign tickets from a team member or the current user",
+      parameters: z.object({
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async (input) => {
+        return await updateTickets({ assignedToClerkId: null }, input, "Unassigned by agent", "unassign");
       },
     }),
     closeTickets: tool({
