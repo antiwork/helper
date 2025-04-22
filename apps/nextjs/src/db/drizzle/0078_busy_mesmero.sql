@@ -1,0 +1,1 @@
+ALTER TABLE "agent_threads" ALTER COLUMN "mailbox_id" DROP NOT NULL;
