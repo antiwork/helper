@@ -59,20 +59,13 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
   }
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
-  const statusMessage = await client.chat.postMessage({
-    channel: event.channel,
-    thread_ts: event.thread_ts ?? event.ts,
-    text: "_Thinking..._",
-  });
-
-  if (!statusMessage?.ts) throw new Error("Failed to post initial message");
 
   await inngest.send({
     name: "slack/agent.message",
     data: {
-      event,
+      slackUserId: event.user ?? null,
       currentMailboxId: mailbox.id,
-      statusMessageTs: statusMessage.ts,
+      statusMessageTs: await postThinkingMessage(client, event.channel, event.thread_ts ?? event.ts),
       agentThreadId: agentThread.id,
     },
   });
@@ -133,6 +126,18 @@ export const isAgentThread = async (event: GenericMessageEvent, mailboxInfo: Sla
   }
 
   return false;
+};
+
+export const postThinkingMessage = async (client: WebClient, channel: string, threadTs: string) => {
+  const message = await client.chat.postMessage({
+    channel,
+    thread_ts: threadTs,
+    text: "_Thinking..._",
+  });
+
+  if (!message?.ts) throw new Error("Failed to post initial message");
+
+  return message.ts;
 };
 
 const askWhichMailbox = async (event: GenericMessageEvent | AppMentionEvent, mailboxes: Mailbox[]) => {

@@ -27,7 +27,12 @@ type CommonAIQueryOptions = {
   shortenPromptBy?: ShortenPromptOptions;
 };
 
-export const runAIQuery = async ({
+export const runAIQuery = async (options: Parameters<typeof runAIRawQuery>[0]): Promise<string> => {
+  const response = await runAIRawQuery(options);
+  return response.text;
+};
+
+export const runAIRawQuery = async ({
   messages,
   mailbox,
   queryType,
@@ -39,8 +44,8 @@ export const runAIQuery = async ({
   tools,
   functionId,
   shortenPromptBy,
-}: CommonAIQueryOptions & { maxSteps?: number; tools?: Record<string, Tool> }): Promise<string> => {
-  const response = await runWithRetry(
+}: CommonAIQueryOptions & { maxSteps?: number; tools?: Record<string, Tool> }) =>
+  await runWithRetry(
     () =>
       generateCompletion({
         messages,
@@ -58,8 +63,6 @@ export const runAIQuery = async ({
       }),
     { mailbox, queryType, model },
   );
-  return response.text;
-};
 
 export const runAIObjectQuery = async <T>({
   messages,
