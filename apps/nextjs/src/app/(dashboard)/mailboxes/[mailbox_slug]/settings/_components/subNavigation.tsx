@@ -87,7 +87,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                   "flex h-12 items-center px-4 text-sm transition-colors duration-150 ease-in-out",
                   "overflow-hidden cursor-pointer",
                   isSelected
-                    ? "font-sundry-medium border-l-2 border-bright bg-secondary"
+                    ? "font-sundry-medium bg-secondary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
