@@ -53,10 +53,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                   )}
                 >
                   <Icon
-                    className={cx(
-                      "mr-2 h-5 w-5 shrink-0",
-                      isSelected ? "text-primary-500" : "text-muted-foreground",
-                    )}
+                    className={cx("mr-2 h-5 w-5 shrink-0", isSelected ? "text-primary-500" : "text-muted-foreground")}
                   />
                   <span className={cx("truncate", isSelected ? "text-foreground" : "")}>{item.label}</span>
                 </button>
@@ -92,10 +89,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                 )}
               >
                 <Icon
-                  className={cx(
-                    "mr-3 h-5 w-5 shrink-0",
-                    isSelected ? "text-primary-500" : "text-muted-foreground",
-                  )}
+                  className={cx("mr-3 h-5 w-5 shrink-0", isSelected ? "text-primary-500" : "text-muted-foreground")}
                 />
                 <span className={cx("truncate", isSelected ? "text-foreground" : "")}>{item.label}</span>
               </span>
