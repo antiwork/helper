@@ -81,6 +81,13 @@ const Page = async (props: { params: Promise<PageProps> }) => {
 
     if (pendingUpdates.preferences) {
       try {
+        if (pendingUpdates.preferences.mailboxNameSetting?.name) {
+          await api.mailbox.update({
+            mailboxSlug: params.mailbox_slug,
+            name: pendingUpdates.preferences.mailboxNameSetting.name,
+          });
+        }
+
         await api.mailbox.preferences.update({
           mailboxSlug: params.mailbox_slug,
           preferences: {
