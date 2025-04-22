@@ -11,7 +11,7 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
-  "flex gap-0.5 w-full items-center justify-between rounded-md text-sm focus:outline-none focus:border-border disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+  "flex gap-0.5 w-full items-center justify-between rounded-md text-sm focus:outline-hidden focus:border-border disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
   {
     variants: {
       variant: {
@@ -114,7 +114,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full select-none items-center cursor-pointer rounded-sm py-1.5 pl-8 pr-2 text-sm text-foreground outline-none hover:bg-muted focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full select-none items-center cursor-pointer rounded-sm py-1.5 pl-8 pr-2 text-sm text-foreground outline-hidden hover:bg-muted focus:bg-muted focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
       className,
     )}
     {...props}

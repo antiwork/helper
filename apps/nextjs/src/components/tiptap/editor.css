@@ -27,7 +27,7 @@
 }
 
 .ProseMirror img {
-  @apply max-w-lg rounded border border-border;
+  @apply border-border max-w-lg rounded border;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before,
@@ -40,5 +40,5 @@
 }
 
 .ProseMirror blockquote {
-  @apply my-4 border-l-4 border-border pl-4 italic text-muted-foreground;
+  @apply border-border text-muted-foreground my-4 border-l-4 pl-4 italic;
 }

@@ -11,7 +11,7 @@ type Props = {
 };
 
 const LabeledInput = forwardRef<HTMLInputElement, Props>(({ name, value, onChange, onModEnter }, ref) => (
-  <div className="relative flex flex-grow overflow-hidden rounded border border-border focus-within:border-border">
+  <div className="relative flex grow overflow-hidden rounded border border-border focus-within:border-border">
     <Label
       htmlFor={name}
       className="mb-0 min-w-10 flex items-center justify-center border-r border-border bg-muted p-1 text-sm text-muted-foreground"
@@ -22,7 +22,7 @@ const LabeledInput = forwardRef<HTMLInputElement, Props>(({ name, value, onChang
       ref={ref}
       type="text"
       name={name}
-      className="text-sm border-none rounded-none focus:border-transparent focus:outline-none focus:ring-transparent"
+      className="text-sm border-none rounded-none focus:border-transparent focus:outline-hidden focus:ring-transparent"
       value={value}
       onKeyDown={onModEnter ? onModEnterKeyboardEvent(onModEnter) : undefined}
       onChange={(e) => onChange(e.target.value)}

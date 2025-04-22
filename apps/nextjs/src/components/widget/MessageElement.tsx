@@ -96,7 +96,7 @@ export default function MessageElement({
       )}
       {hasContent ? (
         <ReactMarkdown
-          className={`prose prose-sm max-w-none text-base ${message.role === "user" ? "text-white [&_*]:text-white" : "text-black [&_*]:text-black"}`}
+          className={`prose prose-sm max-w-none text-base ${message.role === "user" ? "text-white **:text-white" : "text-black **:text-black"}`}
           components={{
             a: ({ children, ...props }: any) => (
               <a target="_blank" rel="noopener noreferrer" {...props}>
@@ -123,7 +123,7 @@ export default function MessageElement({
       {uniqueSources && uniqueSources.length > 0 && (
         <div className="mt-2 text-sm text-gray-800 flex flex-col gap-2">
           <span className="font-semibold">Sources:</span>
-          <ol className="list-decimal pl-5 space-y-1">
+          <ol className="list-inside list-decimal pl-5 space-y-1">
             {uniqueSources.map((part) => (
               <li key={`source-${part.source.id}`} value={Number(part.source.id)}>
                 <a href={part.source.url} target="_blank">

@@ -152,7 +152,7 @@ const ScrollToTopButton = ({
           className={cn(
             "absolute bottom-4 left-4 transition-all duration-200 h-8 w-8 p-0 rounded-full",
             "flex items-center justify-center",
-            "bg-background border border-border shadow-sm",
+            "bg-background border border-border shadow-xs",
             "hover:border-primary hover:shadow-md hover:bg-muted",
             show ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none",
           )}
@@ -183,7 +183,7 @@ const MessageThreadPanel = ({
   const { mailboxSlug, data: conversationInfo } = useConversationContext();
 
   return (
-    <div className="flex-grow overflow-y-auto relative" ref={scrollRef}>
+    <div className="grow overflow-y-auto relative" ref={scrollRef}>
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
         <ScrollToTopButton scrollRef={scrollRef} />
         <div className="flex flex-col gap-8 px-4 py-4 h-full">
@@ -281,7 +281,7 @@ const ErrorContent = () => {
   if (!error) return null;
 
   return (
-    <div className="flex items-center justify-center flex-grow">
+    <div className="flex items-center justify-center grow">
       <Alert variant="destructive" className="max-w-lg text-center">
         <AlertTitle>Failed to load conversation</AlertTitle>
         <AlertDescription className="flex flex-col gap-4">
@@ -300,7 +300,7 @@ const LoadingContent = () => {
   if (!isPending) return null;
 
   return (
-    <div className="flex items-center justify-center flex-grow">
+    <div className="flex items-center justify-center grow">
       <LoadingSpinner size="md" />
     </div>
   );
@@ -529,7 +529,7 @@ const ConversationContent = () => {
           defaultSize={25}
           minSize={15}
           maxSize={50}
-          className={cn("hidden lg:block", !sidebarVisible && "!hidden")}
+          className={cn("hidden lg:block", !sidebarVisible && "hidden!")}
         >
           {conversationInfo && sidebarVisible ? (
             <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
@@ -561,7 +561,7 @@ const ConversationContent = () => {
         <LoadingContent />
         {!error && !isPending && (
           <>
-            <div className="flex-grow overflow-hidden flex flex-col">
+            <div className="grow overflow-hidden flex flex-col">
               <MessageThreadPanel
                 scrollRef={scrollRef}
                 contentRef={contentRef}

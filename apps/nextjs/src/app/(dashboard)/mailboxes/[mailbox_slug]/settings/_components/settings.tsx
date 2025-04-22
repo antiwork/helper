@@ -235,7 +235,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
       </PageHeader>
 
       <FileUploadProvider mailboxSlug={mailbox.slug}>
-        <div className="flex-grow overflow-y-auto">
+        <div className="grow overflow-y-auto">
           <SubNavigation
             items={items}
             footer={
@@ -244,13 +244,13 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount, sidebarInfo }: Se
                   <DropdownMenuTrigger asChild>
                     <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                       <Avatar fallback={sidebarInfo.avatarName ?? ""} size="sm" />
-                      <span className="flex-grow truncate text-left font-sundry-narrow-medium">
+                      <span className="grow truncate text-left font-sundry-narrow-medium">
                         {sidebarInfo.loggedInName}
                       </span>
                       <ChevronUp className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                  <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
                     <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
                       <span>Sign out</span>
                     </DropdownMenuItem>

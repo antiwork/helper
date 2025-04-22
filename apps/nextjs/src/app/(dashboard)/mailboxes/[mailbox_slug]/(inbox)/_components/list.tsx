@@ -471,7 +471,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
               {conversation.subject}
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {(conversation.assignedToClerkId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(

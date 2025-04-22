@@ -89,7 +89,7 @@ export default function PreviousConversations({ token, onSelectConversation }: P
             <button
               key={conversation.slug}
               onClick={() => onSelectConversation(conversation.slug)}
-              className="group w-full overflow-hidden rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-black hover:shadow-sm"
+              className="group w-full overflow-hidden rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-black hover:shadow-xs"
             >
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium text-gray-900 group-hover:text-black">{conversation.subject}</div>

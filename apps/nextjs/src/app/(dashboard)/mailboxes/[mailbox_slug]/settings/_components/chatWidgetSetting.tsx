@@ -197,7 +197,7 @@ const ChatWidgetSetting = ({
           </TabsList>
 
           <TabsContent value="react" className="space-y-6">
-            <div className="rounded-lg border p-6 shadow-sm">
+            <div className="rounded-lg border p-6 shadow-xs">
               <h2 className="mb-2 text-lg font-semibold text-foreground">React/Next.js Setup</h2>
               <div className="space-y-6">
                 <div>
@@ -332,7 +332,7 @@ function HelpButton({ prompt }: { prompt: string }) {
           </TabsContent>
 
           <TabsContent value="javascript" className="space-y-6">
-            <div className="rounded-lg border p-6 shadow-sm">
+            <div className="rounded-lg border p-6 shadow-xs">
               <h2 className="mb-2 text-lg font-semibold text-foreground">1. Backend Setup</h2>
               <p className="mb-4 text-sm">
                 First, you'll need to generate an HMAC hash on your server using the secret below:
@@ -346,7 +346,7 @@ function HelpButton({ prompt }: { prompt: string }) {
               <CodeBlock code={NODE_HMAC_SAMPLE_CODE} language="javascript" />
             </div>
 
-            <div className="rounded-lg border p-6 shadow-sm">
+            <div className="rounded-lg border p-6 shadow-xs">
               <h2 className="mb-2 text-lg font-semibold text-foreground">2. Frontend Setup</h2>
               <div className="space-y-6">
                 <div>
