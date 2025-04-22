@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import { CoreMessage, Tool, tool } from "ai";
-import { and, eq, inArray, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
+import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
@@ -45,6 +45,71 @@ export const generateAgentResponse = async (
   const searchToolSchema = searchSchema.omit({
     category: true,
   });
+
+  const updateTickets = async (
+    fields: Partial<typeof conversations.$inferInsert>,
+    input: {
+      ids?: (string | number)[];
+      filters?: SearchFiltersInput;
+    },
+    message: string,
+    verb: string,
+  ) => {
+    showStatus(`Finding tickets to ${verb}...`, { toolName: `updateTickets#search`, parameters: input });
+    try {
+      const { where } = input.filters
+        ? await searchConversations(mailbox, { ...input.filters, limit: 1 })
+        : { where: {} as Record<string, SQL> };
+      if (input.ids) {
+        where.updateIds = assertDefined(
+          or(
+            inArray(conversations.id, input.ids.filter((id) => /^\d+$/.test(id.toString())).map(Number)),
+            inArray(
+              conversations.slug,
+              input.ids.filter((id) => !/^\d+$/.test(id.toString())).map((id) => id.toString()),
+            ),
+          ),
+        );
+      }
+      if (Object.keys(where).length === 0) {
+        return { message: "No search criteria provided" };
+      }
+      const count = await countSearchResults(where);
+
+      if (count === 0) {
+        return { message: `No tickets found matching the criteria to ${verb}` };
+      } else if (count > 1000) {
+        return { error: `Too many tickets (${count}) found to ${verb}. Maximum allowed is 1000.` };
+      }
+
+      const idsToUpdate = await getSearchResultIds(where);
+
+      showStatus(`${verb.charAt(0).toUpperCase() + verb.slice(1)}ing tickets...`, {
+        toolName: `updateTickets#update`,
+        parameters: { idsToUpdate, fields },
+      });
+
+      for (let i = 0; i < idsToUpdate.length; i++) {
+        if (i % 10 === 9) {
+          showStatus(
+            `${verb.charAt(0).toUpperCase() + verb.slice(1)}ing ticket ${i + 1} out of ${idsToUpdate.length}...`,
+          );
+        }
+        await updateConversation(assertDefined(idsToUpdate[i]), {
+          set: fields,
+          message,
+        });
+      }
+
+      return {
+        message: `Successfully ${verb}ed ${idsToUpdate.length} tickets`,
+        count: idsToUpdate.length,
+      };
+    } catch (error) {
+      captureExceptionAndLog(error);
+      return { error: `Failed to ${verb} tickets` };
+    }
+  };
 
   const tools: Record<string, Tool> = {
     getCurrentSlackUser: tool({
@@ -98,7 +163,8 @@ export const generateAgentResponse = async (
       },
     }),
     searchTickets: tool({
-      description: "Search tickets/conversations with various filtering options",
+      description:
+        "Search tickets/conversations with various filtering options. Use `nextCursor` to paginate through results; if it's set then pass it as `cursor` to get the next page of results.",
       parameters: searchToolSchema,
       execute: async (input) => {
         showStatus(`Searching tickets...`, { toolName: "searchTickets", parameters: input });
@@ -124,27 +190,6 @@ export const generateAgentResponse = async (
         showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
         const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
         return await countSearchResults(where);
-      },
-    }),
-    assignTickets: tool({
-      description: "Assign tickets to a team member or the current user",
-      parameters: z.object({
-        clerkUserId: z.string().regex(/^user_(\w+)$/),
-        ticketIds: z.array(z.union([z.string(), z.number()])),
-      }),
-      execute: async ({ clerkUserId, ticketIds }) => {
-        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ticketIds } });
-        const conversations = await Promise.all(
-          ticketIds.map(async (ticketId) => {
-            const conversation = await findConversation(ticketId, mailbox);
-            if (!conversation) return null;
-            return await updateConversation(conversation.id, {
-              set: { assignedToClerkId: clerkUserId },
-              message: "Assigned by agent",
-            });
-          }),
-        );
-        return conversations.flatMap((conversation) => (conversation ? formatConversation(conversation, mailbox) : []));
       },
     }),
     getAverageResponseTime: tool({
@@ -225,6 +270,28 @@ export const generateAgentResponse = async (
         }));
       },
     }),
+    assignTickets: tool({
+      description: "Assign tickets to a team member or the current user",
+      parameters: z.object({
+        clerkUserId: z.string().regex(/^user_(\w+)$/),
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async ({ clerkUserId, ...input }) => {
+        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ...input } });
+        return await updateTickets({ assignedToClerkId: clerkUserId }, input, "Assigned by agent", "assign");
+      },
+    }),
+    unassignTickets: tool({
+      description: "Unassign tickets from a team member or the current user",
+      parameters: z.object({
+        ids: z.array(z.union([z.string(), z.number()])).optional(),
+        filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
+      }),
+      execute: async (input) => {
+        return await updateTickets({ assignedToClerkId: null }, input, "Unassigned by agent", "unassign");
+      },
+    }),
     closeTickets: tool({
       description: "Close tickets/conversations matching various filtering options",
       parameters: z.object({
@@ -232,7 +299,7 @@ export const generateAgentResponse = async (
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
       execute: async (input) => {
-        return await updateTicketsStatus(mailbox, "closed", input, CLOSED_BY_AGENT_MESSAGE, showStatus);
+        return await updateTickets({ status: "closed" }, input, CLOSED_BY_AGENT_MESSAGE, "close");
       },
     }),
     reopenTickets: tool({
@@ -242,7 +309,7 @@ export const generateAgentResponse = async (
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
       execute: async (input) => {
-        return await updateTicketsStatus(mailbox, "open", input, REOPENED_BY_AGENT_MESSAGE, showStatus);
+        return await updateTickets({ status: "open" }, input, REOPENED_BY_AGENT_MESSAGE, "reopen");
       },
     }),
     markTicketsAsSpam: tool({
@@ -252,7 +319,7 @@ export const generateAgentResponse = async (
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
       execute: async (input) => {
-        return await updateTicketsStatus(mailbox, "spam", input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, showStatus);
+        return await updateTickets({ status: "spam" }, input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, "mark as spam");
       },
     }),
   };
@@ -373,69 +440,4 @@ const formatConversation = (
     isVip: platformCustomer?.isVip || false,
     url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,
   };
-};
-
-const updateTicketsStatus = async (
-  mailbox: Mailbox,
-  status: "open" | "closed" | "spam",
-  input: {
-    ids?: (string | number)[];
-    filters?: SearchFiltersInput;
-  },
-  message: string,
-  showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
-) => {
-  showStatus(`Finding tickets to mark ${status}...`, { toolName: `${status}Tickets#search`, parameters: input });
-  try {
-    const { where } = input.filters
-      ? await searchConversations(mailbox, { ...input.filters, limit: 1 })
-      : { where: {} as Record<string, SQL> };
-    if (input.ids) {
-      where.updateIds = assertDefined(
-        or(
-          inArray(conversations.id, input.ids.filter((id) => /^\d+$/.test(id.toString())).map(Number)),
-          inArray(
-            conversations.slug,
-            input.ids.filter((id) => !/^\d+$/.test(id.toString())).map((id) => id.toString()),
-          ),
-        ),
-      );
-    }
-    if (Object.keys(where).length === 0) {
-      return { message: "No search criteria provided" };
-    }
-    where.statusCheck = ne(conversations.status, status);
-    const count = await countSearchResults(where);
-
-    if (count === 0) {
-      return { message: `No tickets found matching the criteria to mark ${status}` };
-    } else if (count > 1000) {
-      return { error: `Too many tickets (${count}) found to mark ${status}. Maximum allowed is 1000.` };
-    }
-
-    const idsToUpdate = await getSearchResultIds(where);
-
-    showStatus(`Marking tickets as ${status}...`, {
-      toolName: `${status}Tickets#update`,
-      parameters: { idsToUpdate },
-    });
-
-    for (let i = 0; i < idsToUpdate.length; i++) {
-      if (i % 10 === 9) {
-        showStatus(`Marking ticket ${i + 1} out of ${idsToUpdate.length} as ${status}...`);
-      }
-      await updateConversation(assertDefined(idsToUpdate[i]), {
-        set: { status },
-        message,
-      });
-    }
-
-    return {
-      message: `Successfully marked ${idsToUpdate.length} tickets as ${status}`,
-      count: idsToUpdate.length,
-    };
-  } catch (error) {
-    captureExceptionAndLog(error);
-    return { error: `Failed to mark tickets as ${status}` };
-  }
 };
