@@ -121,8 +121,7 @@ export default function HelpingHand({
 
       Now, the current URL is: ${pageDetails.currentPageDetails.url}
       Current Page Title: ${pageDetails.currentPageDetails.title}
-      Elements: ${pageDetails.clickableElements}
-      `;
+      Elements: ${pageDetails.clickableElements}`;
 
       trackToolResult(toolCallId, resultMessage);
     } else {
@@ -212,7 +211,7 @@ export default function HelpingHand({
       {steps.length > 0 ? (
         <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 text-white">
           <LoadingSpinner />
           <p>Thinking...</p>
         </div>

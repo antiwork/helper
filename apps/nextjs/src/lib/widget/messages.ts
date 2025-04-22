@@ -77,8 +77,8 @@ export function sendRequestToParent<T>(action: string, content?: any): Promise<T
     // Set timeout to avoid hanging promises
     setTimeout(() => {
       window.removeEventListener("message", handler);
-      reject(new Error("Request timed out"));
-    }, 5000);
+      reject(new Error(`Request timed out - ${action}`));
+    }, 6000);
 
     window.parent.postMessage(
       {
