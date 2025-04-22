@@ -253,7 +253,19 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
             </>
           )}
           <SidebarMenuItem>
-            <AccountDropdown setShowNativeAppModal={setShowNativeAppModal} />
+            <AccountDropdown
+              setShowNativeAppModal={setShowNativeAppModal}
+              trigger={(children) => (
+                <SidebarMenuButton
+                  className={cn(
+                    "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5! text-sidebar-foreground",
+                    "h-10 px-2 mb-2 md:h-8 md:mb-0",
+                  )}
+                >
+                  {children}
+                </SidebarMenuButton>
+              )}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

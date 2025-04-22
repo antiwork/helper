@@ -235,7 +235,14 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
             items={items}
             footer={
               <div className="border-t border-border">
-                <AccountDropdown setShowNativeAppModal={setShowNativeAppModal} />
+                <AccountDropdown
+                  setShowNativeAppModal={setShowNativeAppModal}
+                  trigger={(children) => (
+                    <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                      {children}
+                    </button>
+                  )}
+                />
               </div>
             }
           />

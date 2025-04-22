@@ -11,7 +11,7 @@ import {
 } from "@clerk/nextjs";
 import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Avatar } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -21,11 +21,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
-import { cn } from "@/lib/utils";
 
-export function AccountDropdown({ setShowNativeAppModal }: { setShowNativeAppModal: (show: boolean) => void }) {
+export function AccountDropdown({
+  setShowNativeAppModal,
+  trigger,
+}: {
+  setShowNativeAppModal: (show: boolean) => void;
+  trigger: (children: ReactNode) => ReactNode;
+}) {
   const { user } = useUser();
   const { isDesktopWeb, isMobileWeb } = useNativePlatform();
   const { signOut } = useClerk();
@@ -46,19 +50,13 @@ export function AccountDropdown({ setShowNativeAppModal }: { setShowNativeAppMod
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <SidebarMenuButton
-          className={cn(
-            "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5!",
-            "md:h-8",
-            "h-10 px-2 mb-2 md:mb-0",
-          )}
-        >
-          <Avatar fallback={user?.emailAddresses?.[0]?.emailAddress ?? ""} size="sm" />
-          <span className="grow truncate font-sundry-narrow-medium text-base text-sidebar-foreground">
-            {user?.fullName}
-          </span>
-          <ChevronUp className="ml-auto text-sidebar-foreground" />
-        </SidebarMenuButton>
+        {trigger(
+          <>
+            <Avatar fallback={user?.emailAddresses?.[0]?.emailAddress ?? ""} size="sm" />
+            <span className="grow truncate font-sundry-narrow-medium text-base">{user?.fullName}</span>
+            <ChevronUp className="ml-auto" />
+          </>,
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
         <Dialog>
