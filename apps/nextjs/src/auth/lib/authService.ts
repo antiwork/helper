@@ -2,6 +2,7 @@ import { Organization, User } from "@clerk/nextjs/server";
 import { db } from "@/db/client";
 import { inngest } from "@/inngest/client";
 import { createGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
+import { updateUserMailboxData } from "@/lib/data/user";
 import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
 import { captureExceptionAndLog, captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { createInitialMailbox } from "./account";
@@ -35,6 +36,11 @@ export const setupOrganizationForNewUser = async (organization: Organization, us
       captureExceptionAndLogIfDevelopment(e);
     }
   }
+
+  await updateUserMailboxData(user.id, mailbox.id, {
+    role: "core",
+    keywords: [],
+  });
 
   return mailbox;
 };
