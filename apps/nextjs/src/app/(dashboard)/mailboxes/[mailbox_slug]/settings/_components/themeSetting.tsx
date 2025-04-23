@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/clientLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import SectionWrapper from "./sectionWrapper";
 
 export type ThemeUpdates = {
@@ -21,6 +23,8 @@ const ThemeSetting = ({
   themeData: ThemeUpdates;
   onChange: (updates: ThemeUpdates) => void;
 }) => {
+  const { setTheme: setWindowTheme } = useInboxTheme();
+
   const [isEnabled, setIsEnabled] = useState(!!themeData.theme);
   const [theme, setTheme] = useState(
     themeData.theme ?? {
@@ -43,9 +47,12 @@ const ThemeSetting = ({
     }
   }, []);
 
+  const debouncedSetWindowTheme = useDebouncedCallback(setWindowTheme, 200);
+
   const handleColorChange =
     (color: keyof NonNullable<ThemeUpdates["theme"]>) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setTheme({ ...theme, [color]: e.target.value });
+      debouncedSetWindowTheme({ ...theme, [color]: e.target.value });
       onChange({ theme: { ...theme, [color]: e.target.value } });
     };
 

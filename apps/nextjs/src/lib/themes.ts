@@ -7,10 +7,21 @@ export const buildThemeCss = (theme: MailboxTheme) => {
 
   const { background, foreground, primary, accent } = theme;
 
+  const normalizeHex = (color: string) => {
+    if (color.startsWith("#")) color = color.slice(1);
+    if (color.length === 3)
+      color = color
+        .split("")
+        .map((c) => c + c)
+        .join("");
+    return color;
+  };
+
   const getLuminance = (hexColor: string) => {
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
+    const normalizedHex = normalizeHex(hexColor);
+    const r = parseInt(normalizedHex.slice(0, 2), 16);
+    const g = parseInt(normalizedHex.slice(2, 4), 16);
+    const b = parseInt(normalizedHex.slice(4, 6), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance;
   };
