@@ -33,7 +33,7 @@ const Header = React.memo(function Header({
 
   return (
     <div className="flex items-start justify-between border-b border-black p-4">
-      <div className="flex items-center">
+      <div className="flex items-center h-full">
         {logoSrc && <Image src={logoSrc} alt={config.mailbox_slug} width="40" height="40" className="h-10 w-10" />}
 
         <div className="ml-2 flex flex-col gap-0.5">
