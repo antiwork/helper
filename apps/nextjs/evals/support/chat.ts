@@ -131,6 +131,7 @@ export const parseMessagesWithMocks = (input: string) => {
     preferences: {
       confetti: false,
     },
+    isWhitelabel: false,
   };
 
   return { messages, mailbox };
