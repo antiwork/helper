@@ -113,7 +113,7 @@ export default function SupportButtons({
           </button>
           <button
             onClick={handleTalkToTeamClick}
-            className="flex items-center gap-2 rounded-full border border-gray-400 px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200 text-black"
+            className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted transition-colors duration-200 text-foreground"
           >
             <motion.div
               className="w-4 h-4 origin-center"

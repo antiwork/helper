@@ -99,8 +99,8 @@ export default function Message({
     >
       <div
         className={cx("rounded-lg max-w-full", {
-          "bg-black text-white": message.role === USER_ROLE,
-          "border border-black bg-white text-black": message.role !== USER_ROLE,
+          "bg-primary text-primary-foreground": message.role === USER_ROLE,
+          "border border-black bg-background text-foreground": message.role !== USER_ROLE,
         })}
       >
         {userAnnotation ? (

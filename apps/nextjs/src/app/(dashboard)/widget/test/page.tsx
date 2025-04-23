@@ -31,6 +31,12 @@ export default async function WidgetTest({
         "Billing Portal": "https://example.com",
       },
     },
+    theme: {
+      background: "#b92d5d",
+      foreground: "#ffffff",
+      primary: "#ffffff",
+      accent: "#feb61b",
+    },
   };
 
   return (

@@ -13,6 +13,12 @@ export type HelperWidgetConfig = {
   experimental_read_page?: boolean;
   show_toggle_button?: boolean;
   enable_guide?: boolean;
+  theme?: {
+    background: string;
+    foreground: string;
+    primary: string;
+    accent: string;
+  };
 };
 
 export type ReadPageToolConfig = {

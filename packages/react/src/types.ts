@@ -28,4 +28,10 @@ export type HelperConfig = {
   icon_color?: string | null;
   experimental_read_page?: boolean;
   enable_guide?: boolean;
-}; 
+  theme?: {
+    background: string;
+    foreground: string;
+    primary: string;
+    accent: string;
+  };
+};

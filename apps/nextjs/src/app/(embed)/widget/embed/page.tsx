@@ -13,6 +13,7 @@ import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
+import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
 import {
   MESSAGE_TYPE,
   minimizeWidget,
@@ -25,6 +26,7 @@ import { GuideInstructions } from "@/types/guide";
 
 type DecodedPayload = {
   isWhitelabel?: boolean;
+  theme?: MailboxTheme;
   exp?: number;
   iat?: number;
 };
@@ -36,6 +38,7 @@ export default function Page() {
   const [token, setToken] = useState<string | null>(null);
   const [config, setConfig] = useState<HelperWidgetConfig | null>(null);
   const [isWhitelabel, setIsWhitelabel] = useState<boolean>(false);
+  const [theme, setTheme] = useState<MailboxTheme | null>(null);
   const [currentURL, setCurrentURL] = useState<string | null>(null);
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
@@ -124,6 +127,7 @@ export default function Page() {
         try {
           const payload = jwtDecode<DecodedPayload>(content.sessionToken);
           setIsWhitelabel(payload?.isWhitelabel ?? false);
+          setTheme(payload?.theme);
         } catch (error) {
           setIsWhitelabel(false);
         }
@@ -151,10 +155,21 @@ export default function Page() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <style>
+        {buildThemeCss(
+          theme ?? {
+            background: "#ffffff",
+            foreground: "#000000",
+            primary: "#000000",
+            accent: "#000000",
+            sidebarBackground: "#ffffff",
+          },
+        )}
+      </style>
       <div
-        className={cx("flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
+        className={cx("light flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
           "bg-gumroad-bg": isGumroadTheme,
-          "bg-white": !isGumroadTheme,
+          "bg-background": !isGumroadTheme,
           hidden: isGuidingUser,
         })}
       >

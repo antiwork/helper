@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { env } from "@/env";
+import { MailboxTheme } from "@/lib/themes";
 
 export type WidgetSessionPayload = {
   email?: string;
@@ -11,6 +12,7 @@ export type WidgetSessionPayload = {
   showWidget: boolean;
   isAnonymous: boolean;
   isWhitelabel: boolean;
+  theme?: MailboxTheme;
 };
 
 const jwtSecret = () => {

@@ -74,7 +74,7 @@ export default function PreviousConversations({ token, onSelectConversation }: P
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <h2 className="mb-4 text-lg font-medium text-black">History</h2>
+      <h2 className="mb-4 text-lg font-medium text-foreground">History</h2>
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
@@ -92,8 +92,8 @@ export default function PreviousConversations({ token, onSelectConversation }: P
               className="group w-full overflow-hidden rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-black hover:shadow-xs"
             >
               <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-gray-900 group-hover:text-black">{conversation.subject}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm font-medium text-foreground">{conversation.subject}</div>
+                <div className="text-xs text-muted-foreground">
                   <HumanizedTime time={conversation.createdAt} />
                 </div>
               </div>
