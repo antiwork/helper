@@ -34,6 +34,7 @@ export const mailboxes = pgTable(
     vipThreshold: bigint({ mode: "number" }),
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
+    isWhitelabel: boolean().notNull().default(false),
     onboardingMetadata: jsonb().$type<OnboardingMetadata>().default({
       completed: false,
     }),

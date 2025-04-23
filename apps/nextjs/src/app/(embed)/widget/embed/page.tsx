@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cx from "classnames";
 import { domAnimation, LazyMotion, m } from "framer-motion";
+import { jwtDecode } from "jwt-decode";
 import { useCallback, useEffect, useState } from "react";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -22,12 +23,19 @@ import {
 import { HelperWidgetConfig } from "@/sdk/types";
 import { GuideInstructions } from "@/types/guide";
 
+type DecodedPayload = {
+  isWhitelabel?: boolean;
+  exp?: number;
+  iat?: number;
+};
+
 const queryClient = new QueryClient();
 const GUMROAD_MAILBOX_SLUG = "gumroad";
 
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
   const [config, setConfig] = useState<HelperWidgetConfig | null>(null);
+  const [isWhitelabel, setIsWhitelabel] = useState<boolean>(false);
   const [currentURL, setCurrentURL] = useState<string | null>(null);
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
@@ -110,8 +118,15 @@ export default function Page() {
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
-        setConfig(content.config);
         setToken(content.sessionToken);
+        setConfig(content.config);
+
+        try {
+          const payload = jwtDecode<DecodedPayload>(content.sessionToken);
+          setIsWhitelabel(payload?.isWhitelabel ?? false);
+        } catch (error) {
+          setIsWhitelabel(false);
+        }
       } else if (action === "OPEN_CONVERSATION") {
         const { conversationSlug } = content;
         onSelectConversation(conversationSlug);
@@ -149,6 +164,7 @@ export default function Page() {
           onShowPreviousConversations={onShowPreviousConversations}
           onNewConversation={memoizedHandleNewConversation}
           isAnonymous={isAnonymous}
+          isWhitelabel={isWhitelabel}
         />
         <div className="relative flex-1 overflow-hidden">
           <LazyMotion features={domAnimation}>
