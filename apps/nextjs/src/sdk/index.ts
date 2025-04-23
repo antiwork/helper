@@ -3,13 +3,12 @@ import type { NotificationStatus } from "@/db/schema/messageNotifications";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
+  GUIDE_DONE,
   GUIDE_START,
   MINIMIZE_ACTION,
   READY_ACTION,
   SCREENSHOT_ACTION,
 } from "@/lib/widget/messages";
-import { domElements } from "./domElements";
-import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import type { HelperWidgetConfig } from "./types";
@@ -58,7 +57,7 @@ class HelperWidget {
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
-    this.guideManager = new GuideManager();
+    this.guideManager = new GuideManager(this);
   }
 
   private async setup(): Promise<void> {
@@ -71,6 +70,7 @@ class HelperWidget {
     await this.createSessionWithRetry();
     this.createToggleButton();
     this.loadPreviousStatusFromLocalStorage();
+    await this.guideManager.checkForResumableGuideSession();
   }
 
   private async createSessionWithRetry() {
@@ -80,21 +80,6 @@ class HelperWidget {
     }
     // eslint-disable-next-line no-console
     console.error("Failed to create Helper session after 3 attempts");
-  }
-
-  private takeDOMSnapshot(
-    debugMode = false,
-    doHighlightElements = false,
-    focusHighlightIndex = -1,
-    viewportExpansion = 0,
-  ) {
-    return domElements({
-      debugMode,
-      doHighlightElements,
-      focusHighlightIndex,
-      viewportExpansion,
-      onlyVisibleElements: true,
-    });
   }
 
   private async createSession() {
@@ -298,7 +283,7 @@ class HelperWidget {
             let response = null;
 
             if (action === "FETCH_PAGE_DETAILS") {
-              response = HelperWidget.fetchCurrentPageDetails();
+              response = this.guideManager.fetchCurrentPageDetails();
             }
 
             if (action === "CLICK_ELEMENT") {
@@ -314,7 +299,7 @@ class HelperWidget {
               response = await this.guideManager.executeDOMAction(actionType, params, currentState);
             }
 
-            if (action === "GUIDE_DONE") {
+            if (action === GUIDE_DONE) {
               this.guideManager.done();
             }
 
@@ -593,6 +578,7 @@ class HelperWidget {
       this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
+      this.guideManager.clearSession();
 
       // Show the toggle button when the widget is hidden (only if it has been opened before)
       if (
@@ -738,56 +724,6 @@ class HelperWidget {
   public static startGuide(prompt: string): void {
     if (HelperWidget.instance) {
       HelperWidget.instance.startGuideInternal(prompt);
-    }
-  }
-
-  public static fetchCurrentPageDetails(): {
-    currentPageDetails: { url: string; title: string };
-    domTracking: any;
-    clickableElements?: string;
-    interactiveElements?: ReturnType<typeof findInteractiveElements>;
-  } | null {
-    if (!HelperWidget.instance) {
-      return null;
-    }
-
-    const domTracking = HelperWidget.instance.takeDOMSnapshot();
-    HelperWidget.instance.guideManager.setDomTracking(domTracking);
-
-    const currentPageDetails = {
-      url: window.location.href,
-      title: document.title,
-    };
-
-    try {
-      const domTree = constructDomTree(domTracking as DomTrackingData);
-
-      const includeAttributes = [
-        "title",
-        "type",
-        "name",
-        "role",
-        "tabindex",
-        "aria-label",
-        "placeholder",
-        "value",
-        "alt",
-        "aria-expanded",
-      ];
-
-      const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
-      const interactiveElements = findInteractiveElements(domTree.root);
-
-      return {
-        currentPageDetails,
-        domTracking,
-        clickableElements,
-        interactiveElements,
-      };
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to construct DOM tree:", error);
-      return { currentPageDetails, domTracking };
     }
   }
 

@@ -13,6 +13,7 @@ export const MINIMIZE_ACTION = "MINIMIZE";
 export const MESSAGE_TYPE = "HELPER_WIDGET_MESSAGE";
 export const GUIDE_START = "GUIDE_START";
 export const GUIDE_DONE = "GUIDE_DONE";
+export const RESUME_GUIDE = "RESUME_GUIDE";
 export const EXECUTE_GUIDE_ACTION = "EXECUTE_GUIDE_ACTION";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
@@ -76,8 +77,8 @@ export function sendRequestToParent<T>(action: string, content?: any): Promise<T
     // Set timeout to avoid hanging promises
     setTimeout(() => {
       window.removeEventListener("message", handler);
-      reject(new Error("Request timed out"));
-    }, 5000);
+      reject(new Error(`Request timed out - ${action}`));
+    }, 6000);
 
     window.parent.postMessage(
       {
@@ -95,7 +96,6 @@ export function sendRequestToParent<T>(action: string, content?: any): Promise<T
 
 export const fetchCurrentPageDetails = async (): Promise<{
   currentPageDetails: { url: string; title: string };
-  domTracking: any;
   clickableElements?: string;
   interactiveElements?: ReturnType<typeof findInteractiveElements>;
 }> => {

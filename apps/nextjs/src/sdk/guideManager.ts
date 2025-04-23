@@ -3,10 +3,15 @@ import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
 import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
+import { domElements } from "./domElements";
+import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 
 declare const __EMBED_URL__: string;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Define RESUME_GUIDE locally as it's not imported
+const RESUME_GUIDE = "RESUME_GUIDE";
 
 const fetchElementByXpath = (xpath: string) => {
   return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
@@ -102,12 +107,15 @@ export class GuideManager {
   private sessionId: string | null = null;
   private sessionToken: string | null = null;
   private isRecording = false;
+  private widget: any; // Reference to HelperWidget instance
 
-  // Constants for recording
-  private readonly SEND_FREQUENCY = 5000; // 5 seconds
+  private readonly SEND_FREQUENCY = 5000;
   private readonly MAX_EVENTS_BEFORE_FLUSH = 50;
+  private readonly SESSION_ID_STORAGE_KEY = "helper_guide_session_id";
+  private readonly SESSION_TOKEN_STORAGE_KEY = "helper_guide_session_token";
 
-  constructor() {
+  constructor(widgetInstance: any) {
+    this.widget = widgetInstance;
     this.helperHandElement = null;
     this.lastDomTracking = null;
   }
@@ -208,11 +216,15 @@ export class GuideManager {
     if (!domTrackingElement) return null;
 
     const xpath = domTrackingElement.xpath;
+    if (!xpath || xpath.trim().length === 0) return null;
+
     const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     return element as HTMLElement;
   }
 
   public async executeDOMAction(actionType: string, params: any, currentState: any): Promise<boolean | string> {
+    const pageDetails = this.fetchCurrentPageDetails();
+
     const supported = [
       "click_element",
       "select_option",
@@ -229,34 +241,117 @@ export class GuideManager {
       return false;
     }
 
-    await this.sendGuideEvent("action_performed", {
-      actionType,
-      params,
-      currentState,
-    });
+    let result: boolean | string = false;
 
     switch (actionType) {
       case "click_element":
-        return await this.clickElement(params.index);
+        result = await this.clickElement(params.index);
+        break;
       case "select_option":
-        return await this.selectDropdownOption(params.index, params.text);
+        result = await this.selectDropdownOption(params.index, params.text);
+        break;
       case "input_text":
-        return await this.inputText(params.index, params.text);
+        result = await this.inputText(params.index, params.text);
+        break;
       case "get_dropdown_options":
-        return this.getDropdownOptions(params.index);
+        result = this.getDropdownOptions(params.index);
+        break;
       case "send_keys":
-        return await this.sendKeys(params.index, params.text);
+        result = await this.sendKeys(params.index, params.text);
+        break;
       case "scroll_to_element":
-        return await this.scrollToElement(params.index);
+        result = await this.scrollToElement(params.index);
+        break;
       case "go_back":
         window.history.back();
-        return true;
+        result = true;
+        break;
       case "wait":
         await wait(params.seconds * 1000);
-        return true;
+        result = true;
+        break;
     }
 
-    return false;
+    if (result == true) {
+      const newPageDetails = this.fetchCurrentPageDetails();
+
+      await this.sendGuideEvent("action_performed", {
+        actionType,
+        params,
+        result: result ? "Performed" : "Failed",
+        currentState,
+        previousPageDetails: {
+          url: pageDetails?.currentPageDetails.url,
+          title: pageDetails?.currentPageDetails.title,
+          elements: pageDetails?.clickableElements,
+        },
+        newPageDetails: {
+          url: newPageDetails?.currentPageDetails.url,
+          title: newPageDetails?.currentPageDetails.title,
+          elements: newPageDetails?.clickableElements,
+        },
+      });
+    }
+
+    return result;
+  }
+
+  private takeDOMSnapshot(
+    debugMode = false,
+    doHighlightElements = false,
+    focusHighlightIndex = -1,
+    viewportExpansion = 0,
+  ) {
+    return domElements({
+      debugMode,
+      doHighlightElements,
+      focusHighlightIndex,
+      viewportExpansion,
+      onlyVisibleElements: true,
+    });
+  }
+
+  public fetchCurrentPageDetails(): {
+    currentPageDetails: { url: string; title: string };
+    clickableElements?: string;
+    interactiveElements?: ReturnType<typeof findInteractiveElements>;
+  } {
+    const domTracking = this.takeDOMSnapshot();
+    this.setDomTracking(domTracking);
+
+    const currentPageDetails = {
+      url: window.location.href,
+      title: document.title,
+    };
+
+    try {
+      const domTree = constructDomTree(domTracking as DomTrackingData);
+
+      const includeAttributes = [
+        "title",
+        "type",
+        "name",
+        "role",
+        "tabindex",
+        "aria-label",
+        "placeholder",
+        "value",
+        "alt",
+        "aria-expanded",
+      ];
+
+      const clickableElements = clickableElementsToString(domTree.root, includeAttributes);
+      const interactiveElements = findInteractiveElements(domTree.root);
+
+      return {
+        currentPageDetails,
+        clickableElements,
+        interactiveElements,
+      };
+    } catch (error) {
+      console.error("Failed to construct DOM tree:", error);
+      return { currentPageDetails };
+    }
   }
 
   public getDropdownOptions(index: number): string | boolean {
@@ -414,6 +509,7 @@ export class GuideManager {
     });
     this.stopRecording();
     this.hideHelperHand();
+    this.clearSession();
   }
 
   public startRecording(): Promise<void> {
@@ -528,6 +624,8 @@ export class GuideManager {
   public start(sessionToken: string, sessionId: string): void {
     this.sessionToken = sessionToken;
     this.sessionId = sessionId;
+    localStorage.setItem(this.SESSION_ID_STORAGE_KEY, sessionId);
+    localStorage.setItem(this.SESSION_TOKEN_STORAGE_KEY, sessionToken);
     this.startRecording().catch(console.error);
   }
 
@@ -546,6 +644,30 @@ export class GuideManager {
 
     if (this.isRecording) {
       this.stopRecording().catch(console.error);
+    }
+
+    this.clearSession();
+  }
+
+  public clearSession(): void {
+    localStorage.removeItem(this.SESSION_ID_STORAGE_KEY);
+    localStorage.removeItem(this.SESSION_TOKEN_STORAGE_KEY);
+  }
+
+  public getPreviousSessionId(): string | null {
+    return localStorage.getItem(this.SESSION_ID_STORAGE_KEY);
+  }
+
+  public getPreviousSessionToken(): string | null {
+    return localStorage.getItem(this.SESSION_TOKEN_STORAGE_KEY);
+  }
+
+  public async checkForResumableGuideSession(): Promise<void> {
+    const storedSessionId = this.getPreviousSessionId();
+    const storedToken = this.getPreviousSessionToken();
+
+    if (storedSessionId && storedToken) {
+      await this.resumeGuideSession(storedSessionId, storedToken);
     }
   }
 
@@ -583,6 +705,48 @@ export class GuideManager {
       }
     } catch (error) {
       console.error("Failed to send guide event:", error);
+    }
+  }
+
+  public async resumeGuideSession(sessionId: string, token: string): Promise<void> {
+    try {
+      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/guide/resume`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 401 || response.status === 403) {
+          // Session not found or invalid, clear local storage
+          this.clearSession();
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return;
+      }
+
+      const sessionData = await response.json();
+
+      this.start(token, sessionId);
+
+      this.widget.sendMessageToEmbed({
+        action: RESUME_GUIDE,
+        content: {
+          ...sessionData,
+          token,
+        },
+      });
+
+      this.widget.showInternal();
+      this.widget.minimizeInternal();
+
+      console.log("Guide session resumed successfully:", sessionId);
+    } catch (error) {
+      this.clearSession();
     }
   }
 }
