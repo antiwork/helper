@@ -744,7 +744,6 @@ export class GuideManager {
       this.widget.showInternal();
       this.widget.minimizeInternal();
 
-      // eslint-disable-next-line no-console
       console.log("Guide session resumed successfully:", sessionId);
     } catch (error) {
       this.clearSession();
