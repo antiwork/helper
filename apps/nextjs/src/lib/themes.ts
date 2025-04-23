@@ -14,6 +14,7 @@ export const buildThemeCss = (theme: MailboxTheme) => {
         .split("")
         .map((c) => c + c)
         .join("");
+    if (!/^[0-9a-f]{6}$/i.test(color)) return "ffffff"; // If something invalid is entered in the input, default to white
     return color;
   };
 
