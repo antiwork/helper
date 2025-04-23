@@ -197,7 +197,7 @@
     --primary: hsl(0 0% 100%); /* Primary colors for <Button> */
     --primary-foreground: hsl(0 58% 10%); /* Primary text color for <Button> */
     --secondary: hsl(0 0% 100% / 10%); /* Secondary colors for <Button> */
-    --secondary-foreground: hsl(0 58% 10%); /* Secondary text color for <Button> */
+    --secondary-foreground: hsl(0 0% 100%); /* Secondary text color for <Button> */
     --muted: hsl(0 0% 100% / 10%); /* Muted backgrounds for <TabsList>, <Skeleton>, <Switch> */
     --muted-foreground: hsl(0 0% 100% / 70%); /* Muted text color */
     --accent: hsl(0 0% 100% / 10%); /* Used for accents like hover effects */

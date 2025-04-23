@@ -4,32 +4,25 @@ import { useUser } from "@clerk/nextjs";
 import {
   ArrowPathIcon,
   ArrowRightIcon,
-  ArrowRightOnRectangleIcon,
   BookOpenIcon,
-  ChevronRightIcon,
   HandThumbDownIcon,
   InboxIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
   PlayIcon,
   PlusCircleIcon,
-  StarIcon,
   TrashIcon,
-  UserIcon,
 } from "@heroicons/react/24/outline";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useMediaQuery } from "react-responsive";
+import React, { useCallback, useEffect, useState } from "react";
 import { useHelper } from "@helperai/react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useNativePlatform } from "@/components/useNativePlatform";
-import { api } from "@/trpc/react";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
