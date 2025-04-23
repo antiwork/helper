@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/react";
-import { ALargeSmall, Minus, MinusIcon } from "lucide-react";
+import { ALargeSmall, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
@@ -132,6 +132,14 @@ const Toolbar = ({
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
           >
             <ToolbarLink />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().unsetAllMarks().run()}
+            className={baseToolbarStyles}
+            aria-label="Clear formatting"
+          >
+            <RemoveFormatting className="w-4 h-4" />
           </button>
           {isLinkModalOpen && (
             <div className="absolute bottom-full left-0 right-0 mb-2">
