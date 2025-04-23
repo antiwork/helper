@@ -1,8 +1,12 @@
-import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+
+export function OPTIONS() {
+  return corsOptions();
+}
 
 export async function POST(request: Request) {
   const { sessionId } = await request.json();
