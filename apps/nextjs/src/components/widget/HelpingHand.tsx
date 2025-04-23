@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { executeGuideAction, fetchCurrentPageDetails, guideDone, sendStartGuide } from "@/lib/widget/messages";
 import { Step } from "@/types/guide";
@@ -26,6 +26,7 @@ export default function HelpingHand({
   const [steps, setSteps] = useState<Step[]>(initialSteps);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
+  const lastSerializedStepsRef = useRef<string>(JSON.stringify(initialSteps));
 
   const updateStepsBackend = async (updatedSteps: Step[]) => {
     if (!guideSessionId || !token) return;
@@ -70,7 +71,6 @@ export default function HelpingHand({
         }
 
         setSteps(newSteps);
-        updateStepsBackend(newSteps);
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
@@ -193,6 +193,22 @@ export default function HelpingHand({
       sendInitialPrompt(resumed);
     }
   }, [guideSessionId, isInitializing]);
+
+  useEffect(() => {
+    if (!guideSessionId || !token) return;
+
+    const serializedSteps = JSON.stringify(steps);
+    if (serializedSteps === lastSerializedStepsRef.current) return;
+
+    const handler = setTimeout(() => {
+      updateStepsBackend(steps);
+      lastSerializedStepsRef.current = serializedSteps;
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [steps, guideSessionId, token]);
 
   if (isInitializing) {
     return null;

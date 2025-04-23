@@ -310,7 +310,7 @@ export class GuideManager {
     currentPageDetails: { url: string; title: string };
     clickableElements?: string;
     interactiveElements?: ReturnType<typeof findInteractiveElements>;
-  } | null {
+  } {
     const domTracking = this.takeDOMSnapshot();
     this.setDomTracking(domTracking);
 

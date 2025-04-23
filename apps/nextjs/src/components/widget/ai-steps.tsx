@@ -45,7 +45,7 @@ export function AISteps({ steps, onToggleStep }: AIStepsProps) {
               <p className="text-sm font-normal">{step.description}</p>
             </div>
             <div className="flex items-center space-x-2">
-              <StatusIcon status={step.completed ? "completed" : true ? "loading" : "pending"} />
+              <StatusIcon status={step.completed ? "completed" : "loading"} />
               <button onClick={() => toggleStep(step.id)} className="text-zinc-400 hover:text-white transition-colors">
                 {expandedSteps[step.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
