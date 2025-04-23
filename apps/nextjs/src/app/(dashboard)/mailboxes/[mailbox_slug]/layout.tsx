@@ -1,18 +1,16 @@
-"use client";
+import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/clientLayout";
+import { api } from "@/trpc/server";
 
-import { DeepLinkRedirect } from "@/components/deepLinkRedirect";
-import { TauriDragArea } from "@/components/tauriDragArea";
-import { useNativePlatform } from "@/components/useNativePlatform";
-import { LayoutInfoProvider } from "./_components/useLayoutInfo";
+export default async function InboxLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ mailbox_slug: string }>;
+}) {
+  const { preferences } = await api.mailbox.preferences.get({
+    mailboxSlug: (await params).mailbox_slug,
+  });
 
-export default function InboxLayout({ children }: { children: React.ReactNode }) {
-  const { nativePlatform, isLegacyTauri } = useNativePlatform();
-
-  return (
-    <LayoutInfoProvider>
-      {nativePlatform === "macos" && isLegacyTauri && <TauriDragArea className="top-0 inset-x-0 h-3" />}
-      <DeepLinkRedirect />
-      {children}
-    </LayoutInfoProvider>
-  );
+  return <InboxClientLayout theme={preferences?.theme}>{children}</InboxClientLayout>;
 }

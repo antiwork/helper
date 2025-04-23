@@ -46,6 +46,12 @@ export const mailboxes = pgTable(
     preferences: jsonb()
       .$type<{
         confetti: boolean;
+        theme?: {
+          background: string;
+          foreground: string;
+          primary: string;
+          accent: string;
+        };
       }>()
       .default({
         confetti: false,
