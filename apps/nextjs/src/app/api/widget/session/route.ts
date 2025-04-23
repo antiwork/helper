@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       id: true,
       widgetDisplayMode: true,
       widgetDisplayMinValue: true,
+      isWhitelabel: true,
     },
   });
 
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
     email,
     mailboxSlug,
     showWidget,
+    isWhitelabel: mailboxRecord.isWhitelabel ?? false,
   });
 
   let notifications;

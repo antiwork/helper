@@ -11,6 +11,7 @@ type Props = {
   isAnonymous: boolean;
   onShowPreviousConversations: () => void;
   onNewConversation: () => void;
+  isWhitelabel: boolean;
 };
 
 const NewChatIcon = React.memo(() => (
@@ -26,6 +27,7 @@ const Header = React.memo(function Header({
   isAnonymous,
   onShowPreviousConversations,
   onNewConversation,
+  isWhitelabel,
 }: Props) {
   const logoSrc = isGumroadTheme || config.mailbox_slug === "flexile" ? `/${config.mailbox_slug}-logo.svg` : null;
 
@@ -36,12 +38,14 @@ const Header = React.memo(function Header({
 
         <div className="ml-2 flex flex-col gap-0.5">
           <h2 className="text-lg font-medium leading-5 text-black">{config.title || "Helper"}</h2>
-          <p className="flex items-center text-sm text-zinc-500">
-            Powered by&nbsp;
-            <a href="https://helper.ai" target="_blank" className="flex items-center">
-              <Image src="/logo.svg" alt="Helper" width="110" height="32" className="w-12" />
-            </a>
-          </p>
+          {!isWhitelabel && (
+            <p className="flex items-center text-sm text-zinc-500">
+              Powered by&nbsp;
+              <a href="https://helper.ai" target="_blank" className="flex items-center">
+                <Image src="/logo.svg" alt="Helper" width="110" height="32" className="w-12" />
+              </a>
+            </p>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2">
