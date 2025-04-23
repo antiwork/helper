@@ -274,6 +274,7 @@ export default function Conversation({
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
+        isGumroadTheme={isGumroadTheme}
       />
     </>
   );

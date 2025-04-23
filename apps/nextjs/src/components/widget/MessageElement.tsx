@@ -23,8 +23,8 @@ export default function MessageElement({
   reasoning: Reasoning | null;
   token: string | null;
   conversationSlug: string | null;
-  // bg-foreground or bg-gumroad-pink - Keep this for Tailwind to identify the color
-  color: "black" | "gumroad-pink";
+  // bg-primary or bg-gumroad-pink - Keep this for Tailwind to identify the color
+  color: "primary" | "gumroad-pink";
 }) {
   const [showReasoning, setShowReasoning] = useState(false);
   const [reasoningTimeCounter, setReasoningTimeCounter] = useState(0);
@@ -96,7 +96,7 @@ export default function MessageElement({
       )}
       {hasContent ? (
         <ReactMarkdown
-          className={`prose prose-sm max-w-none text-base ${message.role === "user" ? "text-white **:text-white" : "text-black **:text-black"}`}
+          className={`prose prose-sm max-w-none text-base ${message.role === "user" ? "text-primary-foreground **:text-primary-foreground" : "text-foreground **:text-foreground"}`}
           components={{
             a: ({ children, ...props }: any) => (
               <a target="_blank" rel="noopener noreferrer" {...props}>

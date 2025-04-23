@@ -17,7 +17,7 @@ type Props = {
 const NewChatIcon = React.memo(() => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor" />
-    <path d="M8 12H16M12 8V16" stroke="white" strokeWidth="2" strokeLinecap="round" />
+    <path d="M8 12H16M12 8V16" strokeWidth="2" strokeLinecap="round" style={{ stroke: "var(--background)" }} />
   </svg>
 ));
 
@@ -37,9 +37,9 @@ const Header = React.memo(function Header({
         {logoSrc && <Image src={logoSrc} alt={config.mailbox_slug} width="40" height="40" className="h-10 w-10" />}
 
         <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-lg font-medium leading-5 text-black">{config.title || "Helper"}</h2>
+          <h2 className="text-lg font-medium leading-5 text-foreground">{config.title || "Helper"}</h2>
           {!isWhitelabel && (
-            <p className="flex items-center text-sm text-zinc-500">
+            <p className="flex items-center text-sm text-muted-foreground">
               Powered by&nbsp;
               <a href="https://helper.ai" target="_blank" className="flex items-center">
                 <Image src="/logo.svg" alt="Helper" width="110" height="32" className="w-12" />
@@ -53,7 +53,7 @@ const Header = React.memo(function Header({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="text-black hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+                className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted"
                 onClick={onNewConversation}
                 aria-label="Start new conversation"
               >
@@ -66,7 +66,7 @@ const Header = React.memo(function Header({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="text-black hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+                  className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted"
                   onClick={onShowPreviousConversations}
                   aria-label="Show previous conversations"
                 >
@@ -79,7 +79,7 @@ const Header = React.memo(function Header({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="text-black hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+                className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted"
                 onClick={() => closeWidget()}
                 aria-label="Close chat"
               >

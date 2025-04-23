@@ -13,6 +13,7 @@ type Props = {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (screenshotData?: string) => void;
   isLoading: boolean;
+  isGumroadTheme: boolean;
 };
 
 const SCREENSHOT_KEYWORDS = [
@@ -53,7 +54,14 @@ const SCREENSHOT_KEYWORDS = [
   "screenshot",
 ];
 
-export default function ChatInput({ input, inputRef, handleInputChange, handleSubmit, isLoading }: Props) {
+export default function ChatInput({
+  input,
+  inputRef,
+  handleInputChange,
+  handleSubmit,
+  isLoading,
+  isGumroadTheme,
+}: Props) {
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
   const { screenshot, setScreenshot } = useScreenshotStore();
@@ -104,10 +112,10 @@ export default function ChatInput({ input, inputRef, handleInputChange, handleSu
               }
             }}
             placeholder="Ask a question"
-            className="self-stretch max-w-md placeholder:text-gray-700 text-black flex-1 resize-none border-none bg-transparent p-0 outline-hidden focus:border-none focus:outline-hidden focus:ring-0"
+            className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-transparent p-0 outline-hidden focus:border-none focus:outline-hidden focus:ring-0"
             disabled={isLoading}
           />
-          <ShadowHoverButton isLoading={isLoading} />
+          <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
         </div>
         {showScreenshot && (
           <motion.div
