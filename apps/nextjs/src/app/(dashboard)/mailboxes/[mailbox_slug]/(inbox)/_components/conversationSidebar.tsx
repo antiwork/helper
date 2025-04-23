@@ -154,7 +154,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2">
               <EnvelopeIcon className="h-4 w-4" />
               <a
-                className="overflow-hidden overflow-ellipsis whitespace-nowrap hover:underline"
+                className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline"
                 title={conversation.emailFrom ?? ""}
               >
                 {conversation.emailFrom}

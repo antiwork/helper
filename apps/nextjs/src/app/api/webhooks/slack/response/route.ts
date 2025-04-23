@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, faqs } from "@/db/schema";
+import { agentMessages, conversationMessages, faqs } from "@/db/schema";
 import { handleKnowledgeBankSlackAction } from "@/lib/data/knowledge";
+import { handleAgentMessageSlackAction } from "@/lib/slack/agent/handleAgentMessageSlackAction";
 import { verifySlackRequest } from "@/lib/slack/client";
 import { handleMessageSlackAction } from "@/lib/slack/shared";
 
@@ -18,6 +19,17 @@ export const POST = async (request: Request) => {
 
   if (!messageTs) {
     return Response.json({ error: "Invalid payload" }, { status: 400 });
+  }
+
+  if (payload.container?.channel_id) {
+    const agentMessage = await db.query.agentMessages.findFirst({
+      where: and(eq(agentMessages.slackChannel, payload.container.channel_id), eq(agentMessages.messageTs, messageTs)),
+      orderBy: desc(agentMessages.createdAt),
+    });
+    if (agentMessage) {
+      await handleAgentMessageSlackAction(agentMessage, payload);
+      return new Response(null, { status: 200 });
+    }
   }
 
   const message = await db.query.conversationMessages.findFirst({

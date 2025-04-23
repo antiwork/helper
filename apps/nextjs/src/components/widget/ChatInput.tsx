@@ -104,7 +104,7 @@ export default function ChatInput({ input, inputRef, handleInputChange, handleSu
               }
             }}
             placeholder="Ask a question"
-            className="self-stretch max-w-md placeholder:text-gray-700 text-black flex-1 resize-none border-none bg-transparent p-0 outline-none focus:border-none focus:outline-none focus:ring-0"
+            className="self-stretch max-w-md placeholder:text-gray-700 text-black flex-1 resize-none border-none bg-transparent p-0 outline-hidden focus:border-none focus:outline-hidden focus:ring-0"
             disabled={isLoading}
           />
           <ShadowHoverButton isLoading={isLoading} />

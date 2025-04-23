@@ -29,7 +29,7 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
 
   return (
     <SectionWrapper
-      title="Connect Your Support Email"
+      title="Support Email"
       description="Connect your support email to receive and send emails from your support email address."
     >
       {error && (

@@ -482,7 +482,7 @@ function SearchResultItem({
               />
             )}
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             {conversation.assignedToClerkId && (
               <AssignedToLabel
                 className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"

@@ -36,7 +36,7 @@ export const crawlWebsite = async (websiteId: number, crawlId: number): Promise<
       })
       .where(eq(websiteCrawls.id, crawlId));
 
-    firecrawl.crawlUrl(website.url, {
+    await firecrawl.asyncCrawlUrl(website.url, {
       limit: PAGE_LIMIT,
       scrapeOptions: {
         formats: ["markdown", "html"],

@@ -1,5 +1,4 @@
 import { Button as BaseButton } from "@react-email/components";
-import { cn } from "@/lib/utils";
 
 export const Button = ({
   children,
@@ -12,10 +11,21 @@ export const Button = ({
 }) => {
   return (
     <BaseButton
-      className={cn(
-        "bg-primary inline-block rounded-lg px-5 py-3 text-center text-sm font-light text-primary-foreground no-underline",
-        className,
-      )}
+      style={{
+        backgroundColor: "hsl(0 67% 17%)",
+        display: "inline-block",
+        borderRadius: "0.5rem",
+        paddingLeft: "1.25rem",
+        paddingRight: "1.25rem",
+        paddingTop: "0.75rem",
+        paddingBottom: "0.75rem",
+        textAlign: "center",
+        fontSize: "0.875rem",
+        fontWeight: "300",
+        color: "hsl(0 0% 100%)",
+        textDecoration: "none",
+      }}
+      className={className}
       href={href}
     >
       {children}

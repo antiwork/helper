@@ -30,10 +30,10 @@ export function DeepLinkRedirect() {
             }
           };
 
-          window.addEventListener("blur", handleBlur, { once: true });
+          window.addEventListener("blur-sm", handleBlur, { once: true });
 
           const timeoutId = setTimeout(() => {
-            window.removeEventListener("blur", handleBlur);
+            window.removeEventListener("blur-sm", handleBlur);
             resolve(false);
             if (iframe.parentNode === document.body) {
               document.body.removeChild(iframe);

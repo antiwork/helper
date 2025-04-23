@@ -174,12 +174,12 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             </CardHeader>
 
             <CardContent className="flex flex-col flex-1 overflow-hidden">
-              <div className="mb-6 flex-shrink-0">
+              <div className="mb-6 shrink-0">
                 <h3 className="text-lg font-medium mb-2">Instructions</h3>
                 <div className=" p-4 text-sm rounded-md border border-white/10">{session.instructions}</div>
               </div>
 
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <h2 className="text-lg font-medium mb-4">Steps</h2>
                 <div className="flex flex-col gap-2 ">
                   {session.steps?.map((step, index) => (
@@ -190,7 +190,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
                 </div>
               </div>
 
-              <h3 className="text-lg font-medium mt-8 mb-4 flex-shrink-0">Timeline</h3>
+              <h3 className="text-lg font-medium mt-8 mb-4 shrink-0">Timeline</h3>
               <div className="flex-1 overflow-auto">
                 {session.events.length === 0 ? (
                   <p className="text-center py-8 text-muted-foreground">No events recorded for this session</p>

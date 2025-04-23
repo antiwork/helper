@@ -53,10 +53,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                   )}
                 >
                   <Icon
-                    className={cx(
-                      "mr-2 h-5 w-5 flex-shrink-0",
-                      isSelected ? "text-primary-500" : "text-muted-foreground",
-                    )}
+                    className={cx("mr-2 h-5 w-5 shrink-0", isSelected ? "text-primary-500" : "text-muted-foreground")}
                   />
                   <span className={cx("truncate", isSelected ? "text-foreground" : "")}>{item.label}</span>
                 </button>
@@ -64,7 +61,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
             })}
           </div>
         </div>
-        <div className="flex-grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
+        <div className="grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
       </div>
     );
   }
@@ -87,15 +84,12 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                   "flex h-12 items-center px-4 text-sm transition-colors duration-150 ease-in-out",
                   "overflow-hidden cursor-pointer",
                   isSelected
-                    ? "font-sundry-medium border-l-2 border-bright bg-secondary"
+                    ? "font-sundry-medium bg-secondary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <Icon
-                  className={cx(
-                    "mr-3 h-5 w-5 flex-shrink-0",
-                    isSelected ? "text-primary-500" : "text-muted-foreground",
-                  )}
+                  className={cx("mr-3 h-5 w-5 shrink-0", isSelected ? "text-primary-500" : "text-muted-foreground")}
                 />
                 <span className={cx("truncate", isSelected ? "text-foreground" : "")}>{item.label}</span>
               </span>

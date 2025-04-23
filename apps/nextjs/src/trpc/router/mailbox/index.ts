@@ -94,6 +94,7 @@ export const mailboxRouter = {
         vipExpectedResponseHours: z.number().optional(),
         autoCloseEnabled: z.boolean().optional(),
         autoCloseDaysOfInactivity: z.number().optional(),
+        name: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

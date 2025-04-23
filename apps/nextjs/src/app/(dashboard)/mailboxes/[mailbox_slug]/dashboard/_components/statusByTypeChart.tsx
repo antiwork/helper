@@ -13,9 +13,9 @@ import { api } from "@/trpc/react";
 import { type TimeRange } from "./dashboardContent";
 
 const COLORS = {
-  OPEN: "hsl(var(--chart-open))",
-  CLOSED_MANUAL: "hsl(var(--chart-closed-manual))",
-  CLOSED_AI: "hsl(var(--chart-closed-ai))",
+  OPEN: "var(--chart-open)",
+  CLOSED_MANUAL: "var(--chart-closed-manual)",
+  CLOSED_AI: "var(--chart-closed-ai)",
 };
 
 const chartConfig = {

@@ -158,7 +158,7 @@ export default function Page() {
               variants={{ previous: { x: 0 }, chat: { x: "-100%" } }}
               transition={{ type: "tween", duration: 0.3 }}
             >
-              <div className="flex-shrink-0 w-full h-full">
+              <div className="shrink-0 w-full h-full">
                 <div className="h-full overflow-y-auto p-4">
                   {hasLoadedHistory && !isAnonymous && (
                     <PreviousConversations token={token} onSelectConversation={onSelectConversation} />
@@ -166,7 +166,7 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex-shrink-0 w-full h-full flex flex-col">
+              <div className="shrink-0 w-full h-full flex flex-col">
                 <Conversation
                   token={token}
                   readPageTool={readPageToolCall}

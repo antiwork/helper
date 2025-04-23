@@ -42,5 +42,8 @@ export const useNativePlatform = () => {
     isTauri: platform === "macos" || platform === "windows" || platform === "linux",
     isExpo: platform === "ios" || platform === "android",
     isLegacyTauri,
+    isWeb: !platform,
+    isDesktopWeb: !platform && typeof navigator !== "undefined" && !/Android|iPhone|iPad/i.test(navigator.userAgent),
+    isMobileWeb: !platform && typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent),
   };
 };

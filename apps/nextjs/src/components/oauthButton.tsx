@@ -13,7 +13,7 @@ const OAuthButton = ({ provider, onClick }: OAuthButtonProps) => {
   return (
     <Button variant="outlined_subtle" onClick={onClick}>
       <img alt={providerName} height="24" width="24" src={providerImgSrc} />
-      <span className="flex-grow">Log in with {providerName}</span>
+      <span className="grow">Log in with {providerName}</span>
     </Button>
   );
 };
