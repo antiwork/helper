@@ -8,29 +8,33 @@ export const dynamic = "force-dynamic";
 export default async function WidgetTest({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; isVip?: string }>;
+  searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
   const session = await auth();
-  const { email, isVip } = await searchParams;
+  const { email, isVip, anonymous } = await searchParams;
 
   if (!session) {
     return <div>Not logged in</div>;
   }
 
-  const helperAuth = generateHelperAuth({ email: email ?? "test@example.com" });
+  const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
 
   const config: HelperConfig = {
+    // eslint-disable-next-line turbo/no-undeclared-env-vars, no-restricted-properties
+    mailbox_slug: process.env.HELPER_MAILBOX_SLUG!,
     ...helperAuth,
     title: "Support & Help",
     experimental_read_page: false,
     enable_guide: true,
-    customer_metadata: {
-      name: "John Doe",
-      value: isVip ? 1000_00 : 100,
-      links: {
-        "Billing Portal": "https://example.com",
-      },
-    },
+    customer_metadata: anonymous
+      ? null
+      : {
+          name: "John Doe",
+          value: isVip ? 1000_00 : 100,
+          links: {
+            "Billing Portal": "https://example.com",
+          },
+        },
     theme: {
       background: "#b92d5d",
       foreground: "#ffffff",

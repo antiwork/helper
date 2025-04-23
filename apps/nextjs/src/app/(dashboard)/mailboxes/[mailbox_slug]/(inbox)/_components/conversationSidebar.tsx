@@ -14,6 +14,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/components/utils/currency";
+import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationListContext } from "./conversationListContext";
 
@@ -121,13 +122,18 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
       <div className="flex flex-col gap-3 p-4 border-b border-border text-sm">
         <h3>Customer</h3>
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-          <Avatar fallback={conversation.emailFrom ?? ""} size="md" />
+          <Avatar fallback={conversation.emailFrom ?? "?"} size="md" />
           <div className="flex items-center gap-2 min-w-0">
             <span
-              className="text-base font-medium truncate"
+              className={cn(
+                "truncate",
+                conversation.customerMetadata?.name || conversation.emailFrom
+                  ? "text-base font-medium"
+                  : "text-muted-foreground",
+              )}
               title={conversation.customerMetadata?.name || conversation.emailFrom || ""}
             >
-              {conversation.customerMetadata?.name || conversation.emailFrom}
+              {conversation.customerMetadata?.name || conversation.emailFrom || "Anonymous"}
             </span>
             {conversation.customerMetadata?.isVip && <Badge variant="bright">VIP</Badge>}
             {conversation.customerMetadata?.value && conversation.customerMetadata.value > 0 && (
@@ -137,30 +143,32 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
               </div>
             )}
           </div>
-          <CopyToClipboard
-            text={conversation.emailFrom ?? ""}
-            onCopy={(_, success) =>
-              success
-                ? toast({
-                    variant: "success",
-                    title: "Copied!",
-                  })
-                : toast({
-                    variant: "destructive",
-                    title: "Failed to copy to clipboard",
-                  })
-            }
-          >
-            <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2">
-              <EnvelopeIcon className="h-4 w-4" />
-              <a
-                className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline"
-                title={conversation.emailFrom ?? ""}
-              >
-                {conversation.emailFrom}
-              </a>
-            </div>
-          </CopyToClipboard>
+          {conversation.emailFrom && (
+            <CopyToClipboard
+              text={conversation.emailFrom ?? ""}
+              onCopy={(_, success) =>
+                success
+                  ? toast({
+                      variant: "success",
+                      title: "Copied!",
+                    })
+                  : toast({
+                      variant: "destructive",
+                      title: "Failed to copy to clipboard",
+                    })
+              }
+            >
+              <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2">
+                <EnvelopeIcon className="h-4 w-4" />
+                <a
+                  className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline"
+                  title={conversation.emailFrom ?? ""}
+                >
+                  {conversation.emailFrom}
+                </a>
+              </div>
+            </CopyToClipboard>
+          )}
 
           {Object.entries(conversation.customerMetadata?.links ?? {}).map(([label, url], idx) => (
             <a
