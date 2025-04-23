@@ -1,5 +1,6 @@
 import { intervalToDuration } from "date-fns";
 import { useEffect, useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type HumanizedTimeProps = {
   time: string | Date;
@@ -38,9 +39,9 @@ const calculateCurrentTime = (time: Date, formatter: Formatter) => {
   return "now";
 };
 
-const HumanizedTime = ({ time, titlePrefix, className, format }: HumanizedTimeProps) => {
+const HumanizedTime = ({ time, titlePrefix, className, format = "long" }: HumanizedTimeProps) => {
   const date = new Date(time);
-  const formatter = formatters[format ?? "short"];
+  const formatter = formatters[format];
   const [currentTime, setCurrentTime] = useState<string>(calculateCurrentTime(date, formatter));
 
   const [titleTime, setTitleTime] = useState(date);
@@ -58,15 +59,20 @@ const HumanizedTime = ({ time, titlePrefix, className, format }: HumanizedTimePr
     year: "numeric",
     month: "long",
     day: "numeric",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
-    second: "2-digit",
+    hour12: true,
   });
 
   return (
-    <span className={className} title={titlePrefix ? `${titlePrefix} ${longDate}` : longDate}>
-      {currentTime}
-    </span>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={className}>{currentTime}</span>
+        </TooltipTrigger>
+        <TooltipContent>{titlePrefix ? `${titlePrefix} ${longDate}` : longDate}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
