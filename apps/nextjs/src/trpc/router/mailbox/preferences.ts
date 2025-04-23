@@ -25,10 +25,11 @@ export const preferencesRouter = {
           confetti: z.boolean(),
           theme: z
             .object({
-              background: z.string(),
-              foreground: z.string(),
-              primary: z.string(),
-              accent: z.string(),
+              background: z.string().regex(/^#([0-9a-f]{6})$/i),
+              foreground: z.string().regex(/^#([0-9a-f]{6})$/i),
+              primary: z.string().regex(/^#([0-9a-f]{6})$/i),
+              accent: z.string().regex(/^#([0-9a-f]{6})$/i),
+              sidebarBackground: z.string().regex(/^#([0-9a-f]{6})$/i),
             })
             .optional(),
         }),

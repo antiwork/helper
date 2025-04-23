@@ -51,6 +51,7 @@ export const mailboxes = pgTable(
           foreground: string;
           primary: string;
           accent: string;
+          sidebarBackground: string;
         };
       }>()
       .default({
