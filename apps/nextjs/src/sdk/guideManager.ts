@@ -10,6 +10,9 @@ declare const __EMBED_URL__: string;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Define RESUME_GUIDE locally as it's not imported
+const RESUME_GUIDE = "RESUME_GUIDE";
+
 const fetchElementByXpath = (xpath: string) => {
   return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
     .singleNodeValue as HTMLElement;
@@ -104,13 +107,15 @@ export class GuideManager {
   private sessionId: string | null = null;
   private sessionToken: string | null = null;
   private isRecording = false;
+  private widget: any; // Reference to HelperWidget instance
 
   private readonly SEND_FREQUENCY = 5000;
   private readonly MAX_EVENTS_BEFORE_FLUSH = 50;
   private readonly SESSION_ID_STORAGE_KEY = "helper_guide_session_id";
   private readonly SESSION_TOKEN_STORAGE_KEY = "helper_guide_session_token";
 
-  constructor() {
+  constructor(widgetInstance: any) {
+    this.widget = widgetInstance;
     this.helperHandElement = null;
     this.lastDomTracking = null;
   }
@@ -657,6 +662,15 @@ export class GuideManager {
     return localStorage.getItem(this.SESSION_TOKEN_STORAGE_KEY);
   }
 
+  public async checkForResumableGuideSession(): Promise<void> {
+    const storedSessionId = this.getPreviousSessionId();
+    const storedToken = this.getPreviousSessionToken();
+
+    if (storedSessionId && storedToken) {
+      await this.resumeGuideSession(storedSessionId, storedToken);
+    }
+  }
+
   public async sendGuideEvent(
     type: (typeof guideSessionEventTypeEnum.enumValues)[number],
     data: Record<string, unknown>,
@@ -691,6 +705,49 @@ export class GuideManager {
       }
     } catch (error) {
       console.error("Failed to send guide event:", error);
+    }
+  }
+
+  public async resumeGuideSession(sessionId: string, token: string): Promise<void> {
+    try {
+      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/guide/resume`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 401 || response.status === 403) {
+          // Session not found or invalid, clear local storage
+          this.clearSession();
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return;
+      }
+
+      const sessionData = await response.json();
+
+      this.start(token, sessionId);
+
+      this.widget.sendMessageToEmbed({
+        action: RESUME_GUIDE,
+        content: {
+          ...sessionData,
+          token,
+        },
+      });
+
+      this.widget.showInternal();
+      this.widget.minimizeInternal();
+
+      // eslint-disable-next-line no-console
+      console.log("Guide session resumed successfully:", sessionId);
+    } catch (error) {
+      this.clearSession();
     }
   }
 }

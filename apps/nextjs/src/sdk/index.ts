@@ -7,7 +7,6 @@ import {
   GUIDE_START,
   MINIMIZE_ACTION,
   READY_ACTION,
-  RESUME_GUIDE,
   SCREENSHOT_ACTION,
 } from "@/lib/widget/messages";
 import embedStyles from "./embed.css";
@@ -58,7 +57,7 @@ class HelperWidget {
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
-    this.guideManager = new GuideManager();
+    this.guideManager = new GuideManager(this);
   }
 
   private async setup(): Promise<void> {
@@ -71,7 +70,7 @@ class HelperWidget {
     await this.createSessionWithRetry();
     this.createToggleButton();
     this.loadPreviousStatusFromLocalStorage();
-    await this.checkForResumableGuideSession();
+    await this.guideManager.checkForResumableGuideSession();
   }
 
   private async createSessionWithRetry() {
@@ -856,59 +855,6 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
-  }
-
-  private async checkForResumableGuideSession(): Promise<void> {
-    const storedSessionId = this.guideManager.getPreviousSessionId();
-    const storedToken = this.guideManager.getPreviousSessionToken();
-
-    if (storedSessionId && storedToken) {
-      // Use the stored token for resuming, might differ from the main session token if it refreshed
-      await this.resumeGuideSession(storedSessionId, storedToken);
-    }
-  }
-
-  private async resumeGuideSession(sessionId: string, token: string): Promise<void> {
-    try {
-      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/guide/resume`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sessionId }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 404 || response.status === 401 || response.status === 403) {
-          // Session not found or invalid, clear local storage
-          this.guideManager.clearSession();
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return;
-      }
-
-      const sessionData = await response.json();
-
-      this.guideManager.start(token, sessionId);
-
-      this.sendMessageToEmbed({
-        action: RESUME_GUIDE,
-        content: {
-          ...sessionData,
-          token,
-        },
-      });
-
-      this.showInternal();
-      this.minimizeInternal();
-
-      // eslint-disable-next-line no-console
-      console.log("Guide session resumed successfully:", sessionId);
-    } catch (error) {
-      this.guideManager.clearSession();
-    }
   }
 }
 
