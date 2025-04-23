@@ -92,6 +92,7 @@ const Page = async (props: { params: Promise<PageProps> }) => {
           mailboxSlug: params.mailbox_slug,
           preferences: {
             confetti: pendingUpdates?.preferences?.confettiSetting?.confetti ?? false,
+            theme: pendingUpdates?.preferences?.themeSetting?.theme ?? undefined,
           },
         });
       } catch (e) {

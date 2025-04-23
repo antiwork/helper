@@ -1,6 +1,5 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
   Cog6ToothIcon,
@@ -60,7 +59,6 @@ type SettingsProps = {
 };
 
 const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) => {
-  const { signOut } = useClerk();
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdates>({});
@@ -96,17 +94,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     Boolean(pendingUpdates.customer) ||
     Boolean(pendingUpdates.autoClose) ||
     Boolean(pendingUpdates.preferences);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to sign out",
-      });
-    }
-  };
 
   const items = [
     {
