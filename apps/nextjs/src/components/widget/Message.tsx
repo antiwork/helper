@@ -20,7 +20,7 @@ type Props = {
   token: string | null;
   data: JSONValue[] | null;
   attachments: Attachment[];
-  color: "black" | "gumroad-pink";
+  color: "primary" | "gumroad-pink";
   startGuide: () => void;
   cancelGuide: (toolCallId: string) => void;
 };

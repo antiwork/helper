@@ -37,7 +37,7 @@ export default function MessagesList({
             conversationSlug={conversationSlug}
             token={token}
             data={index === messages.length - 1 ? data : null}
-            color={isGumroadTheme ? "gumroad-pink" : "black"}
+            color={isGumroadTheme ? "gumroad-pink" : "primary"}
             startGuide={startGuide}
             cancelGuide={cancelGuide}
           />
