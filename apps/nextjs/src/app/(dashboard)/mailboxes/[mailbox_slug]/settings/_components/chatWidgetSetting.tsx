@@ -1,6 +1,9 @@
 "use client";
 
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,27 +26,7 @@ const hmac = crypto.createHmac('sha256', hmacSecret)
   .update(\`\${email}:\${timestamp}\`)
   .digest('hex'); // Format of content is "email:timestamp"`;
 
-const WIDGET_SAMPLE_CODE = `<script>
-  (function(d,t) {
-    var g=d.createElement("script");
-    g.src="https://helper.ai/widget/sdk.js";
-    g.onload=function(){
-      window.HelperWidget.init({
-        email: "CUSTOMER_EMAIL", // This is the email address of your authenticated customer
-        email_hash: "GENERATED_HMAC_FROM_SERVER", // This is the HMAC you generated from the server
-        mailbox_slug: "YOUR_MAILBOX_SLUG", // This is your mailbox slug
-        timestamp: TIMESTAMP, // Same timestamp as the one used to generate the HMAC in the server
-        title: "Support", // You can customize the title of the chat widget (optional)
-        metadata: { // Add additional customer information to Helper
-          value: "CUSTOMER_VALUE", // Revenue value of the customer (optional)
-          name: "CUSTOMER_NAME", // Name of the customer (optional)
-          links: {"Impersonate": "https://example.com/impersonate", "Dashboard": "https://example.com/dashboard"}, // Links of the customer (optional)
-        },
-      })
-    }
-    d.body.appendChild(g);
-  })(document);
-</script>`;
+const WIDGET_SAMPLE_CODE = `<script src="https://helper.ai/widget/sdk.js{{QUERY_STRING}}"></script>`;
 
 const ChatWidgetSetting = ({
   mailbox,
@@ -90,10 +73,34 @@ const ChatWidgetSetting = ({
     }
   };
 
-  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("YOUR_MAILBOX_SLUG", mailbox.slug || "");
+  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{QUERY_STRING}}", `?mailbox=${mailbox.slug}`);
 
   return (
     <div>
+      <SectionWrapper className="max-w-3xl space-y-4" title="Widget Installation">
+        <h3 className="text-lg font-semibold">Get started</h3>
+        <p className="text-sm">Copy and paste this code into your website</p>
+        <CodeBlock code={widgetSampleCode} language="html" />
+        <h3 className="mt-12 text-lg font-semibold">Next steps</h3>
+        <Button variant="ghost" className="border h-14 w-full justify-between" asChild>
+          <Link href="https://docs.helper.ai/docs/chat-widget-installation" target="_blank">
+            Customize the widget
+            <ArrowRightIcon className="size-4" />
+          </Link>
+        </Button>
+        <Button variant="ghost" className="border h-14 w-full justify-between" asChild>
+          <Link href="https://docs.helper.ai/docs/chat-widget-installation" target="_blank">
+            Authenticate your users
+            <ArrowRightIcon className="size-4" />
+          </Link>
+        </Button>
+        <Button variant="ghost" className="border h-14 w-full justify-between" asChild>
+          <Link href="https://docs.helper.ai/docs/chat-widget-installation" target="_blank">
+            Use with React/Next.js
+            <ArrowRightIcon className="size-4" />
+          </Link>
+        </Button>
+      </SectionWrapper>
       <SectionWrapper
         title="Chat Icon Visibility"
         description="Choose when your customers can see the chat widget on your website or app"

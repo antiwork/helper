@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 
 type SectionWrapperProps = {
   title: string;
-  description: string | React.ReactNode;
+  description?: string | React.ReactNode;
   fullWidth?: boolean;
   initialSwitchChecked?: boolean;
   onSwitchChange?: (checked: boolean) => void;
+  className?: string;
   children: React.ReactNode;
 };
 
@@ -20,6 +21,7 @@ const SectionWrapper = ({
   fullWidth,
   initialSwitchChecked,
   onSwitchChange,
+  className,
   children,
 }: SectionWrapperProps) => {
   const [isSwitchChecked, setIsSwitchChecked] = useState(initialSwitchChecked);
@@ -47,7 +49,7 @@ const SectionWrapper = ({
           <Switch aria-label={`${title} Switch`} checked={isSwitchChecked} onCheckedChange={handleSwitchChange} />
         )}
       </div>
-      <div className={cn("grow", !fullWidth && "max-w-xl")}>{children}</div>
+      <div className={cn("grow", !fullWidth && "max-w-xl", className)}>{children}</div>
     </section>
   );
 };
