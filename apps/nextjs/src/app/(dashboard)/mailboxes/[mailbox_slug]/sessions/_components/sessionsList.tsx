@@ -94,7 +94,6 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
                     <TableHead>Title</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Customer</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -121,7 +120,6 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
                           <span>{formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{session.platformCustomerId}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button size="sm" variant="outlined" onClick={() => handleViewSession(session)}>

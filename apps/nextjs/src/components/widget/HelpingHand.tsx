@@ -216,7 +216,7 @@ export default function HelpingHand({
 
   if (done) {
     return (
-      <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto text-white">
+      <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto">
         <p>{done.message}</p>
       </div>
     );
@@ -227,7 +227,7 @@ export default function HelpingHand({
       {steps.length > 0 ? (
         <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
       ) : (
-        <div className="flex flex-col gap-2 text-white">
+        <div className="flex flex-col gap-2">
           <LoadingSpinner />
           <p>Thinking...</p>
         </div>

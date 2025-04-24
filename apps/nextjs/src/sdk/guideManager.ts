@@ -744,7 +744,13 @@ export class GuideManager {
       this.widget.showInternal();
       this.widget.minimizeInternal();
 
-      console.log("Guide session resumed successfully:", sessionId);
+      const newPageDetails = this.fetchCurrentPageDetails();
+      await this.sendGuideEvent("resumed", {
+        pageDetails: {
+          url: newPageDetails.currentPageDetails.url,
+          title: newPageDetails.currentPageDetails.title,
+        },
+      });
     } catch (error) {
       this.clearSession();
     }

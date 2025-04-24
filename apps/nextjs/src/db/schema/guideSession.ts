@@ -22,6 +22,7 @@ export const guideSessionEventTypeEnum = pgEnum("guide_session_event_type", [
   "completed",
   "abandoned",
   "paused",
+  "resumed",
 ]);
 
 export type GuideSessionStep = {
