@@ -135,7 +135,7 @@ const EmailEditorComponent = React.forwardRef<
           actionButtons={actionButtons}
           signature={
             user?.firstName ? (
-              <div className="mt-6 text-muted-foreground">
+              <div className="mt-1 text-muted-foreground">
                 Best,
                 <br />
                 {user.firstName}

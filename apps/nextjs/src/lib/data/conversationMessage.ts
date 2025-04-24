@@ -3,6 +3,7 @@ import { addSeconds } from "date-fns";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
+import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
@@ -419,7 +420,7 @@ export const createAiDraft = async (
   return await createConversationMessage(
     {
       conversationId,
-      body: body.replace("\n", "<br>"),
+      body: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"))),
       role: "ai_assistant",
       status: "draft",
       responseToId,
