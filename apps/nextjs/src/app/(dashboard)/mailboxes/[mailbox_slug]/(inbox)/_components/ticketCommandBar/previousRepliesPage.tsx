@@ -26,7 +26,7 @@ export const usePreviousRepliesPage = ({
         label: reply.cleanedUpText.slice(0, 60) + (reply.cleanedUpText.length > 60 ? "..." : ""),
         icon: EmptyIcon,
         onSelect: () => {
-          onInsertReply(reply.content ?? "");
+          onInsertReply((reply.content ?? "").trim());
           setPage("main");
           onOpenChange(false);
         },
