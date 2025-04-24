@@ -63,7 +63,7 @@ export function AISteps({ steps, onToggleStep }: AIStepsProps) {
                 )}
               </div>
               {step.details.result && (
-                <pre className="font-mono text-xs text-zinc-400 overflow-x-auto mt-0.5">
+                <pre className="font-mono text-xs overflow-x-auto mt-0.5">
                   {typeof step.details.result === "object" ? JSON.stringify(step.details.result) : step.details.result}
                 </pre>
               )}
