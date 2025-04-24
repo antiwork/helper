@@ -406,7 +406,10 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     .find((call) => call.toolName === "confirmReplyText");
 
   return {
-    text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
+    text: result.text
+      .replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>")
+      .replace(/\*\*/g, "*")
+      .trim(),
     confirmReplyText,
   };
 };
