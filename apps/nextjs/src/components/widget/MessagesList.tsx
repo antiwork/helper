@@ -66,6 +66,7 @@ export default function MessagesList({
                     token={token}
                     data={index === messages.length - 1 ? data : null}
                     color={isGumroadTheme ? "gumroad-pink" : "primary"}
+                    hideReasoning={true}
                   />
                 )}
               </>

@@ -20,9 +20,18 @@ type Props = {
   data: JSONValue[] | null;
   attachments: Attachment[];
   color: "primary" | "gumroad-pink";
+  hideReasoning?: boolean;
 };
 
-export default function Message({ message, conversationSlug, token, data, color, attachments }: Props) {
+export default function Message({
+  message,
+  conversationSlug,
+  token,
+  data,
+  color,
+  attachments,
+  hideReasoning = false,
+}: Props) {
   const idFromAnnotation =
     message.annotations?.find(
       (annotation): annotation is { id: string | number } =>
@@ -86,6 +95,7 @@ export default function Message({ message, conversationSlug, token, data, color,
           conversationSlug={conversationSlug}
           message={message}
           reasoning={reasoning}
+          hideReasoning={hideReasoning}
           token={token}
           color={color}
         />

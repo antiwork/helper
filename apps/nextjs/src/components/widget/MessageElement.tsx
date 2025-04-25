@@ -14,6 +14,7 @@ export default function MessageElement({
   messageId,
   message,
   reasoning,
+  hideReasoning,
   token,
   conversationSlug,
   color,
@@ -21,6 +22,7 @@ export default function MessageElement({
   messageId: string | undefined;
   message: MessageWithReaction;
   reasoning: Reasoning | null;
+  hideReasoning: boolean;
   token: string | null;
   conversationSlug: string | null;
   // bg-primary or bg-gumroad-pink - Keep this for Tailwind to identify the color
@@ -74,7 +76,7 @@ export default function MessageElement({
 
   return (
     <div className="relative p-4">
-      {(reasoning || !hasContent) && (
+      {!hideReasoning && (reasoning || !hasContent) && (
         <button
           onClick={handleReasoningClick}
           className="flex items-center gap-1 text-xs text-gray-800 hover:text-gray-700 transition-colors mb-2"
