@@ -637,6 +637,22 @@ class HelperWidget {
     }
   }
 
+  public isWidgetVisible(): boolean {
+    return this.isVisible;
+  }
+
+  public hideWidgetTemporarily(): void {
+    if (this.iframeWrapper && this.isVisible) {
+      this.iframeWrapper.classList.add("temporarily-hidden");
+    }
+  }
+
+  public showWidgetAfterAnimation(): void {
+    if (this.iframeWrapper) {
+      this.iframeWrapper.classList.remove("temporarily-hidden");
+    }
+  }
+
   private async takeScreenshot(): Promise<void> {
     const { domToPng, createContext } = await import("modern-screenshot");
     this.screenshotContext ??= await createContext(document.body, {

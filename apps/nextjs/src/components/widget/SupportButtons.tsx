@@ -34,6 +34,10 @@ export default function SupportButtons({
     )?.id ?? null;
   const persistedId = idFromAnnotation ?? (!lastMessage?.id.startsWith("client_") ? lastMessage?.id : null);
 
+  const lastMessageIsGuide = lastMessage?.parts?.find(
+    (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
+  );
+
   const handleHelpfulClick = async () => {
     if (!conversationSlug || !token) return;
 
@@ -71,7 +75,7 @@ export default function SupportButtons({
     setTimeout(() => setIsTalkToTeamAnimating(false), 1000);
   };
 
-  const shouldHideButtons = isEscalated || hasClickedTalkToHuman;
+  const shouldHideButtons = isEscalated || hasClickedTalkToHuman || lastMessageIsGuide;
 
   return (
     <AnimatePresence>

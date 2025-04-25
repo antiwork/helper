@@ -187,6 +187,15 @@ export class GuideManager {
       const targetX = rect.left + rect.width / 2;
       const targetY = rect.top + rect.height / 2;
 
+      // Check if the target element is behind the widget wrapper
+      const isElementBehindWidget = this.isElementBehindWidget(element);
+
+      if (isElementBehindWidget) {
+        this.temporarilyHideWidget();
+      } else {
+        this.showWidgetAgain();
+      }
+
       hand.classList.add("animating", "visible");
       hand.style.left = `${targetX}px`;
       hand.style.top = `${targetY}px`;
@@ -201,6 +210,33 @@ export class GuideManager {
         }, 200);
       }, 600);
     });
+  }
+
+  private isElementBehindWidget(element: HTMLElement): boolean {
+    const widgetWrapper = document.querySelector(".helper-widget-wrapper")!;
+    if (!widgetWrapper?.classList.contains("visible")) return false;
+
+    const elementRect = element.getBoundingClientRect();
+    const wrapperRect = widgetWrapper.getBoundingClientRect();
+
+    return !(
+      elementRect.right < wrapperRect.left ||
+      elementRect.left > wrapperRect.right ||
+      elementRect.bottom < wrapperRect.top ||
+      elementRect.top > wrapperRect.bottom
+    );
+  }
+
+  private temporarilyHideWidget(): boolean {
+    if (this.widget?.isWidgetVisible()) {
+      this.widget.hideWidgetTemporarily();
+      return true;
+    }
+    return false;
+  }
+
+  private showWidgetAgain(): void {
+    this.widget?.showWidgetAfterAnimation();
   }
 
   public hideHelperHand(): void {
@@ -509,6 +545,7 @@ export class GuideManager {
     });
     this.stopRecording();
     this.hideHelperHand();
+    this.showWidgetAgain();
     this.clearSession();
   }
 

@@ -29,23 +29,11 @@ const Header = React.memo(function Header({
   onNewConversation,
   isWhitelabel,
 }: Props) {
-  const logoSrc = isGumroadTheme || config.mailbox_slug === "flexile" ? `/${config.mailbox_slug}-logo.svg` : null;
-
   return (
-    <div className="flex items-start justify-between border-b border-black p-4">
+    <div className="flex items-start justify-between border-b border-black p-2">
       <div className="flex items-center h-full">
-        {logoSrc && <Image src={logoSrc} alt={config.mailbox_slug} width="40" height="40" className="h-10 w-10" />}
-
         <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-lg font-medium leading-5 text-foreground">{config.title || "Helper"}</h2>
-          {!isWhitelabel && (
-            <p className="flex items-center text-sm text-muted-foreground">
-              Powered by&nbsp;
-              <a href="https://helper.ai" target="_blank" className="flex items-center">
-                <Image src="/logo.svg" alt="Helper" width="110" height="32" className="w-12" />
-              </a>
-            </p>
-          )}
+          <h2 className="text-md font-medium leading-4 text-foreground">{config.title || "Helper"}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">
