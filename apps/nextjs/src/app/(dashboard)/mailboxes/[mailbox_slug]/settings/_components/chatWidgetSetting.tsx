@@ -25,7 +25,7 @@ const hmac = crypto.createHmac('sha256', hmacSecret)
   .update(\`\${email}:\${timestamp}\`)
   .digest('hex'); // Format of content is "email:timestamp"`;
 
-const WIDGET_SAMPLE_CODE = `<script src="https://helper.ai/widget/sdk.js" {{DATA_ATTRIBUTES}}></script>`;
+const WIDGET_SAMPLE_CODE = `<script src="https://helper.ai/widget/sdk.js" {{DATA_ATTRIBUTES}} async></script>`;
 
 const ChatWidgetSetting = ({
   mailbox,
@@ -72,7 +72,7 @@ const ChatWidgetSetting = ({
     }
   };
 
-  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", `data-mailbox-slug="${mailbox.slug}"`);
+  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", `data-mailbox="${mailbox.slug}"`);
 
   return (
     <div>
@@ -99,9 +99,7 @@ const ChatWidgetSetting = ({
 
           <TabsContent value="vanilla" className="space-y-4">
             <h3 className="text-lg font-semibold">Get started</h3>
-            <p className="text-sm">
-              Copy and paste this code into your website before the closing <code>&lt;/body&gt;</code> tag
-            </p>
+            <p className="text-sm">Copy and paste this code into your website:</p>
             <CodeBlock code={widgetSampleCode} language="html" />
             <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
             <Accordion type="multiple" className="w-full">
