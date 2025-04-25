@@ -27,7 +27,7 @@ export const mailboxes = pgTable(
     githubRepoName: text(),
     promptUpdatedAt: timestamp({ withTimezone: true, mode: "date" }).notNull(),
     widgetHMACSecret: varchar({ length: 255 }).notNull(),
-    widgetDisplayMode: text().$type<"always" | "revenue_based" | "off">().notNull().default("off"),
+    widgetDisplayMode: text().$type<"always" | "revenue_based" | "off">().notNull().default("always"),
     widgetDisplayMinValue: bigint({ mode: "number" }),
     autoRespondEmailToChat: boolean().notNull().default(false),
     widgetHost: text(),

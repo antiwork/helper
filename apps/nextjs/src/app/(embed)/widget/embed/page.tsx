@@ -27,6 +27,7 @@ import { GuideInstructions } from "@/types/guide";
 type DecodedPayload = {
   isWhitelabel?: boolean;
   theme?: MailboxTheme;
+  title?: string;
   exp?: number;
   iat?: number;
 };
@@ -39,6 +40,7 @@ export default function Page() {
   const [config, setConfig] = useState<HelperWidgetConfig | null>(null);
   const [isWhitelabel, setIsWhitelabel] = useState<boolean>(false);
   const [theme, setTheme] = useState<MailboxTheme | null>(null);
+  const [defaultTitle, setDefaultTitle] = useState<string | null>(null);
   const [currentURL, setCurrentURL] = useState<string | null>(null);
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
@@ -128,6 +130,7 @@ export default function Page() {
           const payload = jwtDecode<DecodedPayload>(content.sessionToken);
           setIsWhitelabel(payload?.isWhitelabel ?? false);
           setTheme(payload?.theme);
+          setDefaultTitle(payload?.title ?? null);
         } catch (error) {
           setIsWhitelabel(false);
         }
@@ -180,6 +183,7 @@ export default function Page() {
           onNewConversation={memoizedHandleNewConversation}
           isAnonymous={isAnonymous}
           isWhitelabel={isWhitelabel}
+          defaultTitle={defaultTitle}
         />
         <div className="relative flex-1 overflow-hidden">
           <LazyMotion features={domAnimation}>

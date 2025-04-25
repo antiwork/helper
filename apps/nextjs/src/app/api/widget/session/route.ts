@@ -48,6 +48,7 @@ export async function POST(request: Request) {
       widgetDisplayMinValue: true,
       isWhitelabel: true,
       preferences: true,
+      name: true,
     },
   });
 
@@ -99,6 +100,7 @@ export async function POST(request: Request) {
     showWidget,
     isWhitelabel: mailboxRecord.isWhitelabel ?? false,
     theme: mailboxRecord.preferences?.theme,
+    title: mailboxRecord.name,
   });
 
   let notifications;

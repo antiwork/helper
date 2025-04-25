@@ -12,6 +12,7 @@ type Props = {
   onShowPreviousConversations: () => void;
   onNewConversation: () => void;
   isWhitelabel: boolean;
+  defaultTitle: string | null;
 };
 
 const NewChatIcon = React.memo(() => (
@@ -28,6 +29,7 @@ const Header = React.memo(function Header({
   onShowPreviousConversations,
   onNewConversation,
   isWhitelabel,
+  defaultTitle,
 }: Props) {
   const logoSrc = isGumroadTheme || config.mailbox_slug === "flexile" ? `/${config.mailbox_slug}-logo.svg` : null;
 
@@ -37,7 +39,7 @@ const Header = React.memo(function Header({
         {logoSrc && <Image src={logoSrc} alt={config.mailbox_slug} width="40" height="40" className="h-10 w-10" />}
 
         <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-lg font-medium leading-5 text-foreground">{config.title || "Helper"}</h2>
+          <h2 className="text-lg font-medium leading-5 text-foreground">{config.title || defaultTitle || "Helper"}</h2>
           {!isWhitelabel && (
             <p className="flex items-center text-sm text-muted-foreground">
               Powered by&nbsp;
