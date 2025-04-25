@@ -9,7 +9,9 @@
   border-radius: 12px;
   box-shadow: -2px 2px 0 0 #000000;
   border: 1px solid #000000;
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
   transform: translateX(100%);
   opacity: 0;
   z-index: 2147483000;
