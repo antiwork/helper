@@ -51,7 +51,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         sundryNarrowBold.variable,
       )}
     >
-      <body className="h-full overflow-y-hidden antialiased text-foreground bg-background font-regular">
+      <body
+        className="h-full overflow-y-hidden antialiased text-foreground bg-background font-regular"
+        suppressHydrationWarning
+      >
         <ClerkProvider appearance={{ variables: { colorPrimary: "hsl(0 67% 17%)" } }}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <NuqsAdapter>

@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         sundryNarrowBold.variable,
       )}
     >
-      <body className="h-full antialiased text-foreground bg-background font-regular">
+      <body className="h-full antialiased text-foreground bg-background font-regular" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
