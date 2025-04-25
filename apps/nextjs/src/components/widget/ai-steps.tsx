@@ -18,30 +18,14 @@ export interface Step {
 
 interface AIStepsProps {
   steps: Step[];
-  onToggleStep?: (stepId: string) => void;
 }
 
-export function AISteps({ steps, onToggleStep }: AIStepsProps) {
-  const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
-
-  const toggleStep = (stepId: string) => {
-    setExpandedSteps((prev) => ({
-      ...prev,
-      [stepId]: !prev[stepId],
-    }));
-
-    if (onToggleStep) {
-      onToggleStep(stepId);
-    }
-  };
-
-  // Find the index of the first non-completed step
+export function AISteps({ steps }: AIStepsProps) {
   const currentStepIndex = steps.findIndex((step) => !step.completed);
 
   return (
     <div className="flex flex-col space-y-4 w-full max-w-2xl">
       {steps.map((step, index) => {
-        // Determine step status
         let status: StepStatus = "pending";
         if (step.completed) {
           status = "completed";

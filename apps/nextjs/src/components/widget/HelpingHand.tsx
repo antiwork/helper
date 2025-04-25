@@ -270,7 +270,7 @@ export default function HelpingHand({
           {status === "running" || status === "done" ? (
             <>
               <div className="flex items-center mb-4">
-                <p className="text-md font-medium">{title}</p>
+                <p className="text-base font-medium">{title}</p>
               </div>
               <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
             </>
