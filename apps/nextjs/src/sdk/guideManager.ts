@@ -183,11 +183,8 @@ export class GuideManager {
       const hand = this.createHelperHand();
       const rect = element.getBoundingClientRect();
 
-      // Target position (center of the element)
       const targetX = rect.left + rect.width / 2;
       const targetY = rect.top + rect.height / 2;
-
-      // Check if the target element is behind the widget wrapper
       const isElementBehindWidget = this.isElementBehindWidget(element);
 
       if (isElementBehindWidget) {
@@ -200,7 +197,6 @@ export class GuideManager {
       hand.style.left = `${targetX}px`;
       hand.style.top = `${targetY}px`;
 
-      // Simulate clicking after the hand reaches the element
       setTimeout(() => {
         hand.classList.add("clicking");
 

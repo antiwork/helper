@@ -257,7 +257,6 @@ class HelperWidget {
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
-    this.setupStartGuideEventListeners();
     this.setupMutationObserver();
 
     window.addEventListener("message", async (event: MessageEvent) => {
@@ -358,20 +357,6 @@ class HelperWidget {
     });
   }
 
-  private setupStartGuideEventListeners(): void {
-    this.guideManager.connectExistingStartGuideElements(this.handleStartGuideClick.bind(this));
-  }
-
-  private handleStartGuideClick(event: MouseEvent): void {
-    const startGuideElement = event.currentTarget as HTMLElement;
-    const prompt = startGuideElement.getAttribute("data-helper-start-guide");
-
-    if (prompt) {
-      this.startGuideInternal(prompt);
-      startGuideElement.setAttribute("data-helper-start-guide-sent", "true");
-    }
-  }
-
   private onIframeReady(): void {
     if (this.isIframeReady) return;
 
@@ -452,14 +437,8 @@ class HelperWidget {
               if (node.hasAttribute("data-helper-toggle")) {
                 this.connectToggleElement(node);
               }
-              if (node.hasAttribute("data-helper-start-guide")) {
-                this.guideManager.connectStartGuideElement(node, this.handleStartGuideClick.bind(this));
-              }
               node.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
               node.querySelectorAll("[data-helper-toggle]").forEach(this.connectToggleElement.bind(this));
-              node.querySelectorAll("[data-helper-start-guide]").forEach((el) => {
-                this.guideManager.connectStartGuideElement(el, this.handleStartGuideClick.bind(this));
-              });
             }
           });
         }
