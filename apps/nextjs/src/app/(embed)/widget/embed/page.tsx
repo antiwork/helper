@@ -87,34 +87,18 @@ export default function Page() {
 
       const { action, content } = event.data.payload;
 
-      if (action === "PROMPT") {
+      if (action === "PROMPT" || action === "START_GUIDE") {
         if (eventBus.all.has("PROMPT")) {
           eventBus.emit("PROMPT", content as string);
         } else {
           messageQueue.push(content as string);
         }
-      } else if (action === "START_GUIDE") {
-        minimizeWidget();
-        // setGuideInstructions({
-        //   instructions: content as string,
-        //   title: null,
-        //   callId: null,
-        //   steps: [],
-        //   resumed: false,
-        // });
-        // setIsGuidingUser(true);
       } else if (action === RESUME_GUIDE) {
-        // setResumedGuideSessionId(content.sessionId);
-        // setIsGuidingUser(true);
-        // setGuideInstructions({
-        //   instructions: content.instructions,
-        //   title: content.title,
-        //   callId: null,
-        //   steps: content.steps,
-        //   resumed: true,
-        // });
+        const sessionId = content.sessionId;
+        const steps = content.steps;
+        const instructions = content.instructions;
+        const title = content.title;
         setSelectedConversationSlug(content.conversationSlug);
-        minimizeWidget();
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
