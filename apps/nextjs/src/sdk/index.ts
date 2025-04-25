@@ -32,7 +32,6 @@ class HelperWidget {
   private iframe: HTMLIFrameElement | null = null;
   private iframeWrapper: HTMLDivElement | null = null;
   private helperIcon: HTMLButtonElement | null = null;
-  private overlay: HTMLDivElement | null = null;
   private loadingOverlay: HTMLDivElement | null = null;
   private notificationContainer: HTMLDivElement | null = null;
   private notificationBubbles: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
@@ -62,7 +61,6 @@ class HelperWidget {
 
   private async setup(): Promise<void> {
     this.injectStyles();
-    this.createOverlay();
     this.createLoadingOverlay();
     this.createWrapper();
     this.createNotificationContainer();
@@ -256,19 +254,11 @@ class HelperWidget {
     }
   }
 
-  private createOverlay(): void {
-    this.overlay = document.createElement("div");
-    this.overlay.className = "helper-widget-overlay";
-    document.body.appendChild(this.overlay);
-  }
-
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
     this.setupStartGuideEventListeners();
     this.setupMutationObserver();
-
-    this.overlay?.addEventListener("click", () => HelperWidget.hide());
 
     window.addEventListener("message", async (event: MessageEvent) => {
       const embedOrigin = new URL(__EMBED_URL__).origin;
@@ -526,7 +516,6 @@ class HelperWidget {
   }
 
   private startGuideInternal(prompt: string): void {
-    this.minimizeInternal();
     this.sendMessageToEmbed({ action: "START_GUIDE", content: prompt });
     setTimeout(() => {
       this.showInternal();
@@ -537,11 +526,8 @@ class HelperWidget {
     if (!this.iframe) {
       this.createIframe();
     }
-    if (this.iframeWrapper && this.overlay && !this.isVisible) {
+    if (this.iframeWrapper && !this.isVisible) {
       this.iframeWrapper.classList.add("visible");
-      if (!this.isMinimized) {
-        this.overlay.classList.add("visible");
-      }
       if (!this.isIframeReady) {
         this.showLoadingOverlay();
       }
@@ -569,10 +555,9 @@ class HelperWidget {
   }
 
   private hideInternal(): void {
-    if (this.iframeWrapper && this.overlay && this.isVisible) {
+    if (this.iframeWrapper && this.isVisible) {
       this.iframeWrapper.classList.remove("visible");
       this.iframeWrapper.classList.remove("minimized");
-      this.overlay.classList.remove("visible");
       this.hideLoadingOverlay();
       this.isVisible = false;
       this.isMinimized = false;
@@ -604,9 +589,6 @@ class HelperWidget {
   private minimizeInternal(): void {
     if (this.iframeWrapper) {
       this.iframeWrapper.classList.add("minimized");
-      if (this.overlay) {
-        this.overlay.classList.remove("visible");
-      }
       this.isMinimized = true;
       if (this.toggleButton) {
         this.toggleButton.classList.add("with-minimized-widget");
@@ -617,9 +599,6 @@ class HelperWidget {
   private maximizeInternal(): void {
     if (this.iframeWrapper) {
       this.iframeWrapper.classList.remove("minimized");
-      if (this.overlay) {
-        this.overlay.classList.add("visible");
-      }
       this.isMinimized = false;
       if (this.toggleButton) {
         this.toggleButton.classList.remove("with-minimized-widget");
@@ -644,9 +623,6 @@ class HelperWidget {
   private destroyInternal(): void {
     if (this.iframeWrapper) {
       document.body.removeChild(this.iframeWrapper);
-    }
-    if (this.overlay) {
-      document.body.removeChild(this.overlay);
     }
     if (this.toggleButton) {
       document.body.removeChild(this.toggleButton);

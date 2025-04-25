@@ -624,9 +624,9 @@ export class GuideManager {
   public start(sessionToken: string, sessionId: string): void {
     this.sessionToken = sessionToken;
     this.sessionId = sessionId;
-    localStorage.setItem(this.SESSION_ID_STORAGE_KEY, sessionId);
-    localStorage.setItem(this.SESSION_TOKEN_STORAGE_KEY, sessionToken);
-    this.startRecording().catch(console.error);
+    // localStorage.setItem(this.SESSION_ID_STORAGE_KEY, sessionId);
+    // localStorage.setItem(this.SESSION_TOKEN_STORAGE_KEY, sessionToken);
+    // this.startRecording().catch(console.error);
   }
 
   public isCurrentlyRecording(): boolean {
@@ -742,7 +742,6 @@ export class GuideManager {
       });
 
       this.widget.showInternal();
-      this.widget.minimizeInternal();
 
       const newPageDetails = this.fetchCurrentPageDetails();
       await this.sendGuideEvent("resumed", {

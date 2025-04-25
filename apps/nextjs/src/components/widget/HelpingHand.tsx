@@ -1,5 +1,7 @@
 import { useChat } from "@ai-sdk/react";
-import { useEffect, useRef, useState } from "react";
+import { UIMessage } from "ai";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { executeGuideAction, fetchCurrentPageDetails, guideDone, sendStartGuide } from "@/lib/widget/messages";
 import { Step } from "@/types/guide";
@@ -7,26 +9,40 @@ import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
 
 export default function HelpingHand({
+  title,
   instructions,
   conversationSlug,
   token,
-  initialSteps,
-  resumed,
-  existingSessionId,
+  toolCallId,
+  stopChat,
+  addChatToolResult,
 }: {
+  title: string;
   instructions: string;
   conversationSlug: string | null;
   token: string;
-  initialSteps: Step[];
-  resumed: boolean;
-  existingSessionId: string | null;
+  toolCallId: string;
+  stopChat: () => void;
+  addChatToolResult: ({ toolCallId, result }: { toolCallId: string; result: any }) => void;
 }) {
-  const [guideSessionId, setGuideSessionId] = useState<string | null>(existingSessionId);
-  const [isInitializing, setIsInitializing] = useState(!resumed);
-  const [steps, setSteps] = useState<Step[]>(initialSteps);
+  const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
+  const [status, setStatus] = useState<"prompt" | "initializing" | "running" | "error" | "done" | "cancelled">(
+    "prompt",
+  );
+  const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
-  const lastSerializedStepsRef = useRef<string>(JSON.stringify(initialSteps));
+  const lastSerializedStepsRef = useRef<string>(JSON.stringify([]));
+  const sessionIdRef = useRef<string | null>(null);
+  const stepsRef = useRef<Step[]>([]);
+
+  useEffect(() => {
+    sessionIdRef.current = guideSessionId;
+  }, [guideSessionId]);
+
+  useEffect(() => {
+    stepsRef.current = steps;
+  }, [steps]);
 
   const updateStepsBackend = async (updatedSteps: Step[]) => {
     if (!guideSessionId || !token) return;
@@ -46,6 +62,16 @@ export default function HelpingHand({
     }
   };
 
+  const prepareRequestBody = useCallback((options: { id: string; messages: UIMessage[]; requestBody?: object }) => {
+    return {
+      id: options.id,
+      message: options.messages[options.messages.length - 1],
+      sessionId: sessionIdRef.current,
+      steps: stepsRef.current,
+      ...options.requestBody,
+    };
+  }, []);
+
   const { append, addToolResult } = useChat({
     api: "/api/guide/action",
     maxSteps: 10,
@@ -59,29 +85,15 @@ export default function HelpingHand({
 
       if (params.current_state) {
         const completedSteps = params.current_state.completed_steps || [];
-        const newSteps = steps.map((step, index) => ({
+        const newSteps = stepsRef.current.map((step, index) => ({
           ...step,
           completed: completedSteps.includes(index + 1),
-          active: false,
         }));
-
-        const firstIncompleteIndex = newSteps.findIndex((step) => !step.completed);
-        if (firstIncompleteIndex !== -1 && newSteps[firstIncompleteIndex]) {
-          newSteps[firstIncompleteIndex].active = true;
-        }
 
         setSteps(newSteps);
       }
     },
-    experimental_prepareRequestBody({ messages, id, requestBody }) {
-      return {
-        id,
-        message: messages[messages.length - 1],
-        sessionId: guideSessionId,
-        steps,
-        ...requestBody,
-      };
-    },
+    experimental_prepareRequestBody: prepareRequestBody,
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -110,6 +122,7 @@ export default function HelpingHand({
     if (type === "done") {
       await guideDone(action.success);
       setDone({ success: action.success, message: action.text });
+      setStatus("done");
       return;
     }
 
@@ -132,7 +145,7 @@ export default function HelpingHand({
 
   const initializeGuideSession = async () => {
     try {
-      setIsInitializing(true);
+      setStatus("initializing");
       const response = await fetch("/api/guide/start", {
         method: "POST",
         headers: {
@@ -151,21 +164,22 @@ export default function HelpingHand({
 
       const data = await response.json();
       setGuideSessionId(data.sessionId);
-      setIsInitializing(false);
-      setSteps(
-        data.steps.map((step: string, index: number) => ({
-          description: step,
-          active: index === 0,
-          completed: false,
-        })),
-      );
+      sessionIdRef.current = data.sessionId; // Immediately update ref
+      const steps = data.steps.map((step: string, index: number) => ({
+        description: step,
+        completed: false,
+      }));
+      setSteps(steps);
+      stepsRef.current = steps;
+      setStatus("running");
+      sendInitialPrompt({ resumed: false });
       sendStartGuide(data.sessionId);
     } catch (error) {
-      setIsInitializing(false);
+      setStatus("error");
     }
   };
 
-  const sendInitialPrompt = async (resumed: boolean) => {
+  const sendInitialPrompt = async ({ resumed }: { resumed: boolean }) => {
     const pageDetails = await fetchCurrentPageDetails();
     let content = GUIDE_INITIAL_PROMPT.replace("INSTRUCTIONS", instructions)
       .replace("{{CURRENT_URL}}", pageDetails.currentPageDetails.url)
@@ -176,23 +190,21 @@ export default function HelpingHand({
       content += `\n\nWe are resuming the guide. Check if the steps are still valid based on the current page details. Elements changed and use the last page details to continue the guide.`;
     }
 
-    append({
-      role: "user",
-      content,
-    });
+    append({ role: "user", content });
   };
 
-  useEffect(() => {
-    if (instructions && instructions.length > 0 && !resumed) {
-      initializeGuideSession();
-    }
-  }, [instructions, resumed]);
+  const startGuide = () => {
+    stopChat();
+    initializeGuideSession();
+  };
 
-  useEffect(() => {
-    if (guideSessionId && !isInitializing) {
-      sendInitialPrompt(resumed);
-    }
-  }, [guideSessionId, isInitializing]);
+  const cancelGuide = () => {
+    setStatus("cancelled");
+    addChatToolResult({
+      toolCallId,
+      result: "Receive text instructions",
+    });
+  };
 
   useEffect(() => {
     if (!guideSessionId || !token) return;
@@ -201,7 +213,7 @@ export default function HelpingHand({
     if (serializedSteps === lastSerializedStepsRef.current) return;
 
     const handler = setTimeout(() => {
-      updateStepsBackend(steps);
+      updateStepsBackend(stepsRef.current);
       lastSerializedStepsRef.current = serializedSteps;
     }, 500);
 
@@ -210,22 +222,34 @@ export default function HelpingHand({
     };
   }, [steps, guideSessionId, token]);
 
-  if (isInitializing) {
-    return null;
-  }
-
-  if (done) {
+  if (status === "prompt") {
     return (
-      <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto">
-        <p>{done.message}</p>
+      <div className="p-4 space-y-2">
+        <p className="text-sm font-semibold">Guide - {title}</p>
+        <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
+        <div className="flex items-center gap-2">
+          <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
+            Do it for me!
+          </button>
+          <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuide}>
+            Receive text instructions
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto text-white">
-      {steps.length > 0 ? (
-        <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
+    <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-auto">
+      {status === "running" || status === "done" ? (
+        <>
+          <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
+          {done && (
+            <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-aut">
+              <p>{done.message}</p>
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex flex-col gap-2">
           <LoadingSpinner />

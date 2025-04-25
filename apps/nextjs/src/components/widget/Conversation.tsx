@@ -15,7 +15,6 @@ import { GUIDE_USER_TOOL_NAME } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
-import { GuideInstructions } from "@/types/guide";
 
 type Props = {
   token: string | null;
@@ -25,8 +24,6 @@ type Props = {
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
   isAnonymous: boolean;
-  setIsGuidingUser: (isGuidingUser: boolean) => void;
-  setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
   guideEnabled: boolean;
 };
 
@@ -44,8 +41,6 @@ export default function Conversation({
   readPageTool,
   onLoadFailed,
   isAnonymous,
-  setIsGuidingUser,
-  setGuideInstructions,
   guideEnabled,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
@@ -78,16 +73,16 @@ export default function Conversation({
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
       }
-      if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
-        const args = toolCall.args as { instructions: string; title: string };
-        setGuideInstructions({
-          instructions: args.instructions,
-          title: args.title,
-          callId: toolCall.toolCallId,
-          resumed: false,
-          steps: [],
-        });
-      }
+      // if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
+      //   const args = toolCall.args as { instructions: string; title: string };
+      //   setGuideInstructions({
+      //     instructions: args.instructions,
+      //     title: args.title,
+      //     callId: toolCall.toolCallId,
+      //     resumed: false,
+      //     steps: [],
+      //   });
+      // }
       if (toolCall.toolName === "request_human_support") {
         setIsEscalated(true);
       }
@@ -106,22 +101,6 @@ export default function Conversation({
       Authorization: `Bearer ${token}`,
     },
   });
-
-  const cancelGuide = (toolCallId: string) => {
-    setGuideInstructions(null);
-    if (toolCallId) {
-      addToolResult({
-        toolCallId,
-        result: "cancelled, return text instructions",
-      });
-    }
-  };
-
-  const startGuide = () => {
-    minimizeWidget();
-    setIsGuidingUser(true);
-    stop();
-  };
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {
@@ -257,8 +236,8 @@ export default function Conversation({
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
-        startGuide={startGuide}
-        cancelGuide={cancelGuide}
+        stopChat={stop}
+        addToolResult={addToolResult}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

@@ -44,9 +44,6 @@ export default function Page() {
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
   const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
-  const [isGuidingUser, setIsGuidingUser] = useState(false);
-  const [guideInstructions, setGuideInstructions] = useState<GuideInstructions | null>(null);
-  const [resumedGuideSessionId, setResumedGuideSessionId] = useState<string | null>(null);
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
 
   const {
@@ -98,24 +95,24 @@ export default function Page() {
         }
       } else if (action === "START_GUIDE") {
         minimizeWidget();
-        setGuideInstructions({
-          instructions: content as string,
-          title: null,
-          callId: null,
-          steps: [],
-          resumed: false,
-        });
-        setIsGuidingUser(true);
+        // setGuideInstructions({
+        //   instructions: content as string,
+        //   title: null,
+        //   callId: null,
+        //   steps: [],
+        //   resumed: false,
+        // });
+        // setIsGuidingUser(true);
       } else if (action === RESUME_GUIDE) {
-        setResumedGuideSessionId(content.sessionId);
-        setIsGuidingUser(true);
-        setGuideInstructions({
-          instructions: content.instructions,
-          title: content.title,
-          callId: null,
-          steps: content.steps,
-          resumed: true,
-        });
+        // setResumedGuideSessionId(content.sessionId);
+        // setIsGuidingUser(true);
+        // setGuideInstructions({
+        //   instructions: content.instructions,
+        //   title: content.title,
+        //   callId: null,
+        //   steps: content.steps,
+        //   resumed: true,
+        // });
         setSelectedConversationSlug(content.conversationSlug);
         minimizeWidget();
       } else if (action === "CONFIG") {
@@ -170,7 +167,6 @@ export default function Page() {
         className={cx("light flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
           "bg-gumroad-bg": isGumroadTheme,
           "bg-background": !isGumroadTheme,
-          hidden: isGuidingUser,
         })}
       >
         <Header
@@ -206,8 +202,6 @@ export default function Page() {
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
-                  setIsGuidingUser={setIsGuidingUser}
-                  setGuideInstructions={setGuideInstructions}
                   guideEnabled={config.enable_guide ?? false}
                 />
               </div>
@@ -215,7 +209,7 @@ export default function Page() {
           </LazyMotion>
         </div>
       </div>
-      {isGuidingUser && guideInstructions && (
+      {/* {isGuidingUser && guideInstructions && (
         <HelpingHand
           instructions={guideInstructions.instructions}
           token={token}
@@ -224,7 +218,7 @@ export default function Page() {
           resumed={guideInstructions.resumed}
           existingSessionId={resumedGuideSessionId}
         />
-      )}
+      )} */}
     </QueryClientProvider>
   );
 }
