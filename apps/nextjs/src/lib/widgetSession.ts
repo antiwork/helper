@@ -13,6 +13,7 @@ export type WidgetSessionPayload = {
   isAnonymous: boolean;
   isWhitelabel: boolean;
   theme?: MailboxTheme;
+  title?: string;
 };
 
 const jwtSecret = () => {
