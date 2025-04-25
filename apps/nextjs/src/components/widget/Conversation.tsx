@@ -11,9 +11,8 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
-import { GUIDE_USER_TOOL_NAME } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
+import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
 
 type Props = {
@@ -73,16 +72,7 @@ export default function Conversation({
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
       }
-      // if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
-      //   const args = toolCall.args as { instructions: string; title: string };
-      //   setGuideInstructions({
-      //     instructions: args.instructions,
-      //     title: args.title,
-      //     callId: toolCall.toolCallId,
-      //     resumed: false,
-      //     steps: [],
-      //   });
-      // }
+
       if (toolCall.toolName === "request_human_support") {
         setIsEscalated(true);
       }
@@ -223,6 +213,10 @@ export default function Conversation({
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
   };
 
+  const appendMessage = (role: Message["role"], content: Message["content"]) => {
+    append({ role, content });
+  };
+
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
     return <MessagesSkeleton />;
   }
@@ -238,6 +232,7 @@ export default function Conversation({
         token={token}
         stopChat={stop}
         addToolResult={addToolResult}
+        appendMessage={appendMessage}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

@@ -1,5 +1,6 @@
 import { useChat } from "@ai-sdk/react";
-import { UIMessage } from "ai";
+import { UIMessage, type Message as AIMessage } from "ai";
+import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
@@ -7,6 +8,7 @@ import { executeGuideAction, fetchCurrentPageDetails, guideDone, sendStartGuide 
 import { Step } from "@/types/guide";
 import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
+import { MessageWithReaction } from "./Message";
 
 export default function HelpingHand({
   title,
@@ -16,6 +18,8 @@ export default function HelpingHand({
   toolCallId,
   stopChat,
   addChatToolResult,
+  appendMessage,
+  message,
 }: {
   title: string;
   instructions: string;
@@ -24,6 +28,8 @@ export default function HelpingHand({
   toolCallId: string;
   stopChat: () => void;
   addChatToolResult: ({ toolCallId, result }: { toolCallId: string; result: any }) => void;
+  appendMessage: (role: AIMessage["role"], content: AIMessage["content"]) => void;
+  message: MessageWithReaction;
 }) {
   const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<"prompt" | "initializing" | "running" | "error" | "done" | "cancelled">(
@@ -99,21 +105,27 @@ export default function HelpingHand({
     },
   });
 
-  const trackToolResult = (toolCallId: string, result: string) => {
+  const trackToolResult = (actionToolCallId: string, result: string) => {
     if (toolResultCount >= 10) {
       guideDone(false);
       setDone({ success: false, message: "Failed to complete the task, too many attempts" });
+      setStatus("error");
+      addChatToolResult({
+        toolCallId: actionToolCallId,
+        result:
+          "Failed to complete the task, too many attempts. Return the text instructions instead and inform about the issue",
+      });
       return false;
     }
     setToolResultCount((prevCount) => prevCount + 1);
     addToolResult({
-      toolCallId,
+      toolCallId: actionToolCallId,
       result,
     });
     return true;
   };
 
-  const handleAction = async (action: any, toolCallId: string, context: any) => {
+  const handleAction = async (action: any, actionToolCallId: string, context: any) => {
     const type = action.type;
     if (!type) return;
 
@@ -123,12 +135,16 @@ export default function HelpingHand({
       await guideDone(action.success);
       setDone({ success: action.success, message: action.text });
       setStatus("done");
+      addChatToolResult({
+        toolCallId,
+        result: action.text,
+      });
       return;
     }
 
     const result = await executeGuideAction(type, params, context);
 
-    if (result && toolCallId) {
+    if (result && actionToolCallId) {
       const pageDetails = await fetchCurrentPageDetails();
       const resultMessage = `Executed the last action: ${type}.
 
@@ -136,10 +152,10 @@ export default function HelpingHand({
       Current Page Title: ${pageDetails.currentPageDetails.title}
       Elements: ${pageDetails.clickableElements}`;
 
-      trackToolResult(toolCallId, resultMessage);
+      trackToolResult(actionToolCallId, resultMessage);
     } else {
       const pageDetails = await fetchCurrentPageDetails();
-      trackToolResult(toolCallId, `Failed to execute action. Current elements: ${pageDetails.clickableElements}`);
+      trackToolResult(actionToolCallId, `Failed to execute action. Current elements: ${pageDetails.clickableElements}`);
     }
   };
 
@@ -202,7 +218,7 @@ export default function HelpingHand({
     setStatus("cancelled");
     addChatToolResult({
       toolCallId,
-      result: "Receive text instructions",
+      result: "User cancelled the guide. Send text instructions instead.",
     });
   };
 
@@ -222,40 +238,50 @@ export default function HelpingHand({
     };
   }, [steps, guideSessionId, token]);
 
-  if (status === "prompt") {
+  if (status === "prompt" || status === "cancelled") {
     return (
       <div className="p-4 space-y-2">
         <p className="text-sm font-semibold">Guide - {title}</p>
         <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
-        <div className="flex items-center gap-2">
-          <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
-            Do it for me!
-          </button>
-          <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuide}>
-            Receive text instructions
-          </button>
-        </div>
+
+        {status === "prompt" && (
+          <div className="flex items-center gap-2">
+            <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
+              Do it for me!
+            </button>
+            <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuide}>
+              Receive text instructions
+            </button>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full items-center p-4 text-sm overflow-y-auto mt-2">
-      {status === "running" || status === "done" ? (
-        <>
-          <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
-          {done && (
-            <div className="flex flex-col h-72 w-full items-center p-4 text-sm overflow-y-aut">
-              <p>{done.message}</p>
+    <div className="flex flex-col gap-2 mr-9 items-start w-full">
+      <div
+        className={cx("rounded-lg max-w-full border border-black bg-background text-foreground", {
+          "border-green-900": status === "done",
+          "border-red-900": status === "error",
+        })}
+      >
+        <div className="relative p-4">
+          {status === "running" || status === "done" ? (
+            <>
+              <div className="flex items-center mb-4">
+                <p className="text-md font-medium">{title}</p>
+              </div>
+              <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <LoadingSpinner />
+              <p>Thinking...</p>
             </div>
           )}
-        </>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <LoadingSpinner />
-          <p>Thinking...</p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
