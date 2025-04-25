@@ -3,6 +3,7 @@ import { useStickToBottom } from "use-stick-to-bottom";
 import { Attachment } from "@/components/widget/Conversation";
 import HelpingHand from "@/components/widget/HelpingHand";
 import Message, { MessageWithReaction } from "@/components/widget/Message";
+import { Fragment } from "react";
 
 type Props = {
   data: JSONValue[] | null;
@@ -44,10 +45,10 @@ export default function MessagesList({
             const toolCallId = guide.toolInvocation.toolCallId;
             const hasResult = guide.toolInvocation.state === "result";
             return (
-              <>
+              <Fragment key={`${message.id || index}-guide-tool`}>
                 <HelpingHand
                   message={message}
-                  key={`${index}-guide`}
+                  key={`${message.id || index}-guide`}
                   conversationSlug={conversationSlug}
                   token={token}
                   toolCallId={toolCallId}
@@ -59,7 +60,7 @@ export default function MessagesList({
                 />
                 {hasResult && (
                   <Message
-                    key={`${index}-message`}
+                    key={`${message.id || index}-guide-result`}
                     message={message}
                     attachments={allAttachments.filter((a) => a.messageId === message.id)}
                     conversationSlug={conversationSlug}
@@ -69,13 +70,13 @@ export default function MessagesList({
                     hideReasoning={true}
                   />
                 )}
-              </>
+              </Fragment>
             );
           }
 
           return (
             <Message
-              key={`${index}-message`}
+              key={`${message.id || index}-message`}
               message={message}
               attachments={allAttachments.filter((a) => a.messageId === message.id)}
               conversationSlug={conversationSlug}

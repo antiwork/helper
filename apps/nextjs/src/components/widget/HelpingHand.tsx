@@ -10,6 +10,8 @@ import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
 import { MessageWithReaction } from "./Message";
 
+type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled";
+
 export default function HelpingHand({
   title,
   instructions,
@@ -32,9 +34,7 @@ export default function HelpingHand({
   message: MessageWithReaction;
 }) {
   const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
-  const [status, setStatus] = useState<"prompt" | "initializing" | "running" | "error" | "done" | "cancelled">(
-    "prompt",
-  );
+  const [status, setStatus] = useState<Status>("prompt");
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
@@ -240,24 +240,46 @@ export default function HelpingHand({
 
   if (status === "prompt" || status === "cancelled") {
     return (
-      <div className="p-4 space-y-2">
-        <p className="text-sm font-semibold">Guide - {title}</p>
-        <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
+      <MessageWrapper status={status}>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-semibold">Guide - {title}</p>
+          <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
 
-        {status === "prompt" && (
-          <div className="flex items-center gap-2">
-            <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
-              Do it for me!
-            </button>
-            <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuide}>
-              Receive text instructions
-            </button>
-          </div>
-        )}
-      </div>
+          {status === "prompt" && (
+            <div className="flex items-center gap-2">
+              <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
+                Do it for me!
+              </button>
+              <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuide}>
+                Receive text instructions
+              </button>
+            </div>
+          )}
+        </div>
+      </MessageWrapper>
     );
   }
 
+  return (
+    <MessageWrapper status={status}>
+      {status === "running" || status === "done" ? (
+        <>
+          <div className="flex items-center mb-4">
+            <p className="text-base font-medium">{title}</p>
+          </div>
+          <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
+        </>
+      ) : (
+        <div className="flex gap-2">
+          <LoadingSpinner />
+          <p>Thinking...</p>
+        </div>
+      )}
+    </MessageWrapper>
+  );
+}
+
+const MessageWrapper = ({ children, status }: { children: React.ReactNode; status: Status }) => {
   return (
     <div className="flex flex-col gap-2 mr-9 items-start w-full">
       <div
@@ -266,22 +288,8 @@ export default function HelpingHand({
           "border-red-900": status === "error",
         })}
       >
-        <div className="relative p-4">
-          {status === "running" || status === "done" ? (
-            <>
-              <div className="flex items-center mb-4">
-                <p className="text-base font-medium">{title}</p>
-              </div>
-              <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
-            </>
-          ) : (
-            <div className="flex gap-2">
-              <LoadingSpinner />
-              <p>Thinking...</p>
-            </div>
-          )}
-        </div>
+        <div className="relative p-4">{children}</div>
       </div>
     </div>
   );
-}
+};

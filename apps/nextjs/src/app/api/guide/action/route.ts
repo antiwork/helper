@@ -201,7 +201,7 @@ export async function POST(request: Request) {
       const result = streamText({
         system: systemPrompt,
         model,
-        temperature: 0.1,
+        temperature: 0,
         messages,
         tools,
         toolChoice: "required",
