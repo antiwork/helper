@@ -2,6 +2,10 @@
 
 Helper is an open-source AI-powered customer support automation platform. It helps you manage customer support across email and chat with powerful AI assistance.
 
+## Contributing
+
+If you're working on a task that requires significant effort, feel free to ask for a bounty increase by commenting "could you increase the bounty on this because it would be a big lift" on the issue or pull request.
+
 ## Features
 
 - 📧 Email Integration: Connect your Gmail account to manage customer support emails
