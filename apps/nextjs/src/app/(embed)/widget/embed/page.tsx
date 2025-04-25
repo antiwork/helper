@@ -8,21 +8,13 @@ import { useCallback, useEffect, useState } from "react";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
-import HelpingHand from "@/components/widget/HelpingHand";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
-import {
-  MESSAGE_TYPE,
-  minimizeWidget,
-  RESUME_GUIDE,
-  sendConversationUpdate,
-  sendReadyMessage,
-} from "@/lib/widget/messages";
+import { MESSAGE_TYPE, RESUME_GUIDE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
-import { GuideInstructions } from "@/types/guide";
 
 type DecodedPayload = {
   isWhitelabel?: boolean;
@@ -193,16 +185,6 @@ export default function Page() {
           </LazyMotion>
         </div>
       </div>
-      {/* {isGuidingUser && guideInstructions && (
-        <HelpingHand
-          instructions={guideInstructions.instructions}
-          token={token}
-          conversationSlug={selectedConversationSlug}
-          initialSteps={guideInstructions.steps}
-          resumed={guideInstructions.resumed}
-          existingSessionId={resumedGuideSessionId}
-        />
-      )} */}
     </QueryClientProvider>
   );
 }
