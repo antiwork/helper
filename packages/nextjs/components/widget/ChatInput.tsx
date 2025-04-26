@@ -1,11 +1,15 @@
-import { Camera } from "lucide-react";
+import { Camera, Mic } from "lucide-react";
 import * as motion from "motion/react-client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/hooks/use-toast";
 import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
 import { useScreenshotStore } from "@/components/widget/widgetState";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { sendScreenshot } from "@/lib/widget/messages";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
   input: string;
@@ -65,6 +69,8 @@ export default function ChatInput({
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
   const { screenshot, setScreenshot } = useScreenshotStore();
+  const { isSupported, isRecording, transcript, error, startRecording, stopRecording } = useSpeechRecognition();
+  const prevTranscript = useRef(transcript);
 
   useEffect(() => {
     if (!input) {
@@ -82,11 +88,44 @@ export default function ChatInput({
     }
   }, [screenshot]);
 
+  useEffect(() => {
+    // handleInputChange updates each render, so we need to check if the transcript has changed
+    if (transcript && transcript !== prevTranscript.current) {
+      const event = {
+        target: { value: transcript },
+      } as React.ChangeEvent<HTMLTextAreaElement>;
+      handleInputChange(event);
+
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }
+
+    prevTranscript.current = transcript;
+  }, [transcript, handleInputChange, inputRef]);
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+      });
+    }
+  }, [error]);
+
   const submit = () => {
     if (includeScreenshot) {
       sendScreenshot();
     } else {
       handleSubmit();
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 
@@ -115,7 +154,37 @@ export default function ChatInput({
             className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-transparent p-0 outline-hidden focus:border-none focus:outline-hidden focus:ring-0"
             disabled={isLoading}
           />
-          <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
+          <div className="flex items-center gap-2">
+            {isSupported && (
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={toggleRecording}
+                      className={cn(
+                        "text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted focus:outline-none",
+                        {
+                          "bg-muted": isRecording,
+                        }
+                      )}
+                      disabled={isLoading}
+                      aria-label={isRecording ? "Stop recording" : "Start recording"}
+                    >
+                      <Mic
+                        className={cn("w-4 h-4", {
+                          "text-red-500": isRecording,
+                          "text-primary": !isRecording,
+                        })}
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isRecording ? "Stop recording" : "Start recording"}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
+          </div>
         </div>
         {showScreenshot && (
           <motion.div
