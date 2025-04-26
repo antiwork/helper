@@ -15,6 +15,7 @@ export const GUIDE_START = "GUIDE_START";
 export const GUIDE_DONE = "GUIDE_DONE";
 export const RESUME_GUIDE = "RESUME_GUIDE";
 export const EXECUTE_GUIDE_ACTION = "EXECUTE_GUIDE_ACTION";
+export const CANCEL_GUIDE = "CANCEL_GUIDE";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
   window.parent.postMessage(
@@ -118,4 +119,8 @@ export const guideDone = async (success = true) => {
 
 export const sendStartGuide = (sessionId: string) => {
   sendMessageToParent({ action: GUIDE_START, content: { sessionId } });
+};
+
+export const cancelGuide = () => {
+  sendRequestToParent(CANCEL_GUIDE);
 };

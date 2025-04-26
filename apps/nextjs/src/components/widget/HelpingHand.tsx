@@ -1,14 +1,19 @@
 import { useChat } from "@ai-sdk/react";
-import { UIMessage, type Message as AIMessage } from "ai";
+import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
-import { executeGuideAction, fetchCurrentPageDetails, guideDone, sendStartGuide } from "@/lib/widget/messages";
+import {
+  cancelGuide,
+  executeGuideAction,
+  fetchCurrentPageDetails,
+  guideDone,
+  sendStartGuide,
+} from "@/lib/widget/messages";
 import { GuideInstructions, Step } from "@/types/guide";
 import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
-import { MessageWithReaction } from "./Message";
 
 type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
 
@@ -216,7 +221,8 @@ export default function HelpingHand({
     initializeGuideSession();
   };
 
-  const cancelGuide = () => {
+  const cancelGuideAction = () => {
+    cancelGuide();
     setStatus("cancelled");
     addChatToolResult({
       toolCallId,
@@ -248,11 +254,11 @@ export default function HelpingHand({
     }
   }, [resumeGuide]);
 
-  if (status === "pending-resume") {
+  if (status === "pending-resume" || status === "cancelled") {
     return null;
   }
 
-  if (status === "prompt" || status === "cancelled") {
+  if (status === "prompt") {
     return (
       <MessageWrapper status={status}>
         <div className="flex flex-col gap-2">
@@ -264,7 +270,7 @@ export default function HelpingHand({
               <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
                 Do it for me!
               </button>
-              <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuide}>
+              <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuideAction}>
                 Receive text instructions
               </button>
             </div>
@@ -275,21 +281,48 @@ export default function HelpingHand({
   }
 
   return (
-    <MessageWrapper status={status}>
-      {status === "running" || status === "done" ? (
-        <>
-          <div className="flex items-center mb-4">
-            <p className="text-base font-medium">{title}</p>
+    <>
+      <MessageWrapper status={status}>
+        {status === "running" || status === "done" ? (
+          <>
+            <div className="flex items-center mb-4">
+              <p className="text-base font-medium">{title}</p>
+            </div>
+            <AISteps
+              steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))}
+              isDone={status === "done"}
+            />
+          </>
+        ) : (
+          <div className="flex gap-2">
+            <LoadingSpinner />
+            <p>Thinking...</p>
           </div>
-          <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} isDone={status === "done"} />
-        </>
-      ) : (
-        <div className="flex gap-2">
-          <LoadingSpinner />
-          <p>Thinking...</p>
+        )}
+      </MessageWrapper>
+      {status === "running" && (
+        <div className="flex justify-start">
+          <button onClick={cancelGuideAction} className="flex items-center">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="mr-1"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M5.9999 11.6004C9.0927 11.6004 11.5999 9.09318 11.5999 6.00039C11.5999 2.9076 9.0927 0.400391 5.9999 0.400391C2.90711 0.400391 0.399902 2.9076 0.399902 6.00039C0.399902 9.09318 2.90711 11.6004 5.9999 11.6004ZM4.5999 3.90039C4.2133 3.90039 3.8999 4.21379 3.8999 4.60039V7.40039C3.8999 7.78699 4.2133 8.10039 4.5999 8.10039H7.3999C7.7865 8.10039 8.0999 7.78699 8.0999 7.40039V4.60039C8.0999 4.21379 7.7865 3.90039 7.3999 3.90039H4.5999Z"
+                fill="black"
+              />
+            </svg>
+            <span className="underline text-xs">Just tell me how</span>
+          </button>
         </div>
       )}
-    </MessageWrapper>
+    </>
   );
 }
 

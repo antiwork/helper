@@ -88,7 +88,6 @@ export default function Page() {
           messageQueue.push(content as string);
         }
       } else if (action === RESUME_GUIDE) {
-        console.log("RESUME_GUIDE", content);
         const sessionId = content.sessionId;
         const steps = content.steps;
         const instructions = content.instructions;

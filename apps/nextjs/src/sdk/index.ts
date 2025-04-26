@@ -292,6 +292,10 @@ class HelperWidget {
               this.guideManager.done();
             }
 
+            if (action === "CANCEL_GUIDE") {
+              this.guideManager.cancel();
+            }
+
             // Send the response back to the iframe
             if (event.source && "postMessage" in event.source) {
               (event.source as Window).postMessage(

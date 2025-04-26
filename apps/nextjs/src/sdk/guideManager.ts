@@ -106,6 +106,7 @@ export class GuideManager {
   private sessionToken: string | null = null;
   private isRecording = false;
   private widget: any; // Reference to HelperWidget instance
+  private isRunning = false;
 
   private readonly SEND_FREQUENCY = 5000;
   private readonly MAX_EVENTS_BEFORE_FLUSH = 50;
@@ -253,6 +254,10 @@ export class GuideManager {
   }
 
   public async executeDOMAction(actionType: string, params: any, currentState: any): Promise<boolean | string> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const pageDetails = this.fetchCurrentPageDetails();
 
     const supported = [
@@ -396,6 +401,10 @@ export class GuideManager {
   }
 
   public async scrollToElement(index: number): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const element = this.fetchElementByIndex(index);
     if (!element) return false;
 
@@ -406,6 +415,10 @@ export class GuideManager {
   }
 
   public async sendKeys(index: number, text: string): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const element = this.fetchElementByIndex(index);
     if (!element || !(element instanceof HTMLElement)) return false;
 
@@ -436,6 +449,10 @@ export class GuideManager {
   }
 
   public async inputText(index: number, text: string): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const element = this.fetchElementByIndex(index);
     if (!element || !(element instanceof HTMLElement)) return false;
 
@@ -482,6 +499,10 @@ export class GuideManager {
   }
 
   public async clickElement(index: number): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     this.createHelperHand();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -497,6 +518,10 @@ export class GuideManager {
   }
 
   public async selectDropdownOption(index: number, text: string): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     this.createHelperHand();
     const element = this.fetchElementByIndex(index);
     if (!element) return false;
@@ -530,6 +555,18 @@ export class GuideManager {
 
   public connectStartGuideElement(element: Element, callback: (event: MouseEvent) => void): void {
     element.addEventListener("click", (event: Event) => callback(event as MouseEvent));
+  }
+
+  public cancel(): void {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.isRunning = false;
+    this.stopRecording();
+    this.hideHelperHand();
+    this.showWidgetAgain();
+    this.clearSession();
   }
 
   public done(): void {
@@ -653,6 +690,7 @@ export class GuideManager {
   }
 
   public start(sessionToken: string, sessionId: string): void {
+    this.isRunning = true;
     this.sessionToken = sessionToken;
     this.sessionId = sessionId;
     localStorage.setItem(this.SESSION_ID_STORAGE_KEY, sessionId);
@@ -781,6 +819,8 @@ export class GuideManager {
           title: newPageDetails.currentPageDetails.title,
         },
       });
+
+      this.clearSession();
     } catch (error) {
       this.clearSession();
     }
