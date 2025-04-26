@@ -12,7 +12,6 @@ import {
   sendStartGuide,
 } from "@/lib/widget/messages";
 import { GuideInstructions, Step } from "@/types/guide";
-import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
 
 type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
@@ -28,6 +27,7 @@ export default function HelpingHand({
   resumeGuide,
   pendingResume = false,
   existingSessionId,
+  color,
 }: {
   title: string;
   instructions: string;
@@ -39,6 +39,7 @@ export default function HelpingHand({
   resumeGuide: GuideInstructions | null;
   pendingResume?: boolean;
   existingSessionId?: string;
+  color: string;
 }) {
   const [guideSessionId, setGuideSessionId] = useState<string | null>(existingSessionId ?? null);
   const [status, setStatus] = useState<Status>(pendingResume ? "pending-resume" : "prompt");
@@ -262,16 +263,16 @@ export default function HelpingHand({
     return (
       <MessageWrapper status={status}>
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold">Guide - {title}</p>
+          <p className="text-sm font-medium">Guide - {title}</p>
           <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
 
           {status === "prompt" && (
             <div className="flex items-center gap-2">
-              <button className="text-xs bg-green-200 px-2 py-1 rounded-md" onClick={startGuide}>
+              <button className="text-xs bg-black text-white px-2 py-1 rounded-md" onClick={startGuide}>
                 Do it for me!
               </button>
-              <button className="text-xs bg-gray-200 px-2 py-1 rounded-md" onClick={cancelGuideAction}>
-                Receive text instructions
+              <button className="text-xs px-2 py-1 rounded-md underline" onClick={cancelGuideAction}>
+                Just tell me how
               </button>
             </div>
           )}
@@ -279,6 +280,8 @@ export default function HelpingHand({
       </MessageWrapper>
     );
   }
+
+  const loadingClasses = `absolute top-1/2 h-2 w-2 -translate-y-1/2 transform rounded-full bg-${color}`;
 
   return (
     <>
@@ -294,12 +297,18 @@ export default function HelpingHand({
             />
           </>
         ) : (
-          <div className="flex gap-2">
-            <LoadingSpinner />
-            <p>Thinking...</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs">Planning steps...</p>
+            <div className="relative h-4 w-20 overflow-hidden rounded-lg">
+              <div className={`${loadingClasses} ball-1`}></div>
+              <div className={`${loadingClasses} ball-2`}></div>
+              <div className={`${loadingClasses} ball-3`}></div>
+              <div className={`${loadingClasses} ball-4`}></div>
+            </div>
           </div>
         )}
       </MessageWrapper>
+
       {status === "running" && (
         <div className="flex justify-start">
           <button onClick={cancelGuideAction} className="flex items-center">

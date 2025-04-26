@@ -81,12 +81,18 @@ export default function Conversation({
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
+      const lastMessage = messages[messages.length - 1];
+      const isToolResult = lastMessage?.parts?.some(
+        (part) => part.type === "tool-invocation" && part.toolInvocation.state === "result",
+      );
+
       return {
         id,
         readPageTool,
         guideEnabled,
-        message: messages[messages.length - 1],
+        message: lastMessage,
         conversationSlug,
+        isToolResult,
         ...requestBody,
       };
     },

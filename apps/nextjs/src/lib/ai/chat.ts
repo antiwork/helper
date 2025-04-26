@@ -513,6 +513,7 @@ export const respondWithAI = async ({
   readPageTool,
   guideEnabled,
   onResponse,
+  reasoningEnabled = true,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -529,6 +530,7 @@ export const respondWithAI = async ({
     isFirstMessage: boolean;
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
+  reasoningEnabled?: boolean;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
@@ -614,7 +616,7 @@ export const respondWithAI = async ({
         email: userEmail,
         readPageTool,
         guideEnabled,
-        addReasoning: true,
+        addReasoning: reasoningEnabled,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

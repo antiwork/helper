@@ -62,6 +62,7 @@ export default function MessagesList({
                   pendingResume={pendingResume}
                   resumeGuide={resumeGuide}
                   existingSessionId={sessionId}
+                  color={isGumroadTheme ? "gumroad-pink" : "primary"}
                 />
                 {hasResult && (
                   <Message
