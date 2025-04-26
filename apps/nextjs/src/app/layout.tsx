@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/themeProvider";
 export const metadata: Metadata = {
   title: "Helper",
   description: "AI powered assistant",
+  manifest: "/app.webmanifest",
   icons: [
     {
       rel: "icon",

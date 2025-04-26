@@ -17,7 +17,6 @@ import { HydrateClient } from "@/trpc/server";
 export const metadata: Metadata = {
   title: "Helper",
   description: "AI powered assistant",
-  manifest: "/manifest.json",
   icons: [
     {
       rel: "icon",
