@@ -258,14 +258,20 @@ export const generateAgentResponse = async (
             cleanedUpText: true,
             createdAt: true,
             clerkUserId: true,
+            emailFrom: true,
             role: true,
           },
         });
+        const members = await getClerkUserList(mailbox.clerkOrganizationId);
         return messages.map((message) => ({
           id: message.id,
           content: message.cleanedUpText,
           createdAt: message.createdAt,
           role: message.role,
+          sentBy:
+            message.role === "user"
+              ? message.emailFrom
+              : members.data.find((member) => member.id === message.clerkUserId)?.fullName,
           clerkUserId: message.clerkUserId,
         }));
       },
