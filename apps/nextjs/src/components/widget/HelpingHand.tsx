@@ -10,11 +10,19 @@ import {
   fetchCurrentPageDetails,
   guideDone,
   sendStartGuide,
+  showWidget,
 } from "@/lib/widget/messages";
 import { GuideInstructions, Step } from "@/types/guide";
 import { AISteps } from "./ai-steps";
 
 type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
+
+type PendingConfirmation = {
+  actionToolCallId: string;
+  action: any;
+  context: any;
+  description: string;
+};
 
 export default function HelpingHand({
   title,
@@ -46,6 +54,7 @@ export default function HelpingHand({
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const lastSerializedStepsRef = useRef<string>(JSON.stringify([]));
   const sessionIdRef = useRef<string | null>(null);
   const stepsRef = useRef<Step[]>([]);
@@ -150,6 +159,21 @@ export default function HelpingHand({
       return;
     }
 
+    if (type === "click_element" && params.hasSideEffects === true) {
+      setPendingConfirmation({
+        actionToolCallId,
+        action,
+        context,
+        description: (params.sideEffectDescription as string) || "This action may have side effects",
+      });
+      showWidget();
+      return;
+    }
+
+    await executeActionAndTrackResult(type, params, context, actionToolCallId);
+  };
+
+  const executeActionAndTrackResult = async (type: string, params: any, context: any, actionToolCallId: string) => {
     const result = await executeGuideAction(type, params, context);
 
     if (result && actionToolCallId) {
@@ -165,6 +189,28 @@ export default function HelpingHand({
       const pageDetails = await fetchCurrentPageDetails();
       trackToolResult(actionToolCallId, `Failed to execute action. Current elements: ${pageDetails.clickableElements}`);
     }
+  };
+
+  const handleConfirmAction = async () => {
+    if (!pendingConfirmation) return;
+
+    const { action, context, actionToolCallId } = pendingConfirmation;
+    setPendingConfirmation(null);
+
+    const type = action.type;
+    const params = Object.fromEntries(Object.entries(action).filter(([key]) => key !== "type"));
+
+    await executeActionAndTrackResult(type, params, context, actionToolCallId);
+  };
+
+  const handleCancelAction = async () => {
+    if (!pendingConfirmation) return;
+
+    const { actionToolCallId } = pendingConfirmation;
+    setPendingConfirmation(null);
+
+    const pageDetails = await fetchCurrentPageDetails();
+    trackToolResult(actionToolCallId, `Action cancelled by user. Current elements: ${pageDetails.clickableElements}`);
   };
 
   const initializeGuideSession = async () => {
@@ -295,6 +341,27 @@ export default function HelpingHand({
               steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))}
               isDone={status === "done"}
             />
+
+            {pendingConfirmation && (
+              <div className="mt-4 p-3 border border-yellow-500 bg-yellow-50 rounded-md">
+                <p className="text-sm font-medium text-yellow-700 mb-2">Confirmation Required</p>
+                <p className="text-xs mb-3">{pendingConfirmation.description}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleConfirmAction}
+                    className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-md"
+                  >
+                    Proceed
+                  </button>
+                  <button
+                    onClick={handleCancelAction}
+                    className="text-xs border border-yellow-600 text-yellow-700 px-2 py-1 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex flex-col gap-2">
@@ -309,7 +376,7 @@ export default function HelpingHand({
         )}
       </MessageWrapper>
 
-      {status === "running" && (
+      {status === "running" && !pendingConfirmation && (
         <div className="flex justify-start">
           <button onClick={cancelGuideAction} className="flex items-center">
             <svg

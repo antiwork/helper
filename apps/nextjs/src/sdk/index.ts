@@ -8,6 +8,7 @@ import {
   MINIMIZE_ACTION,
   READY_ACTION,
   SCREENSHOT_ACTION,
+  SHOW_WIDGET,
 } from "@/lib/widget/messages";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
@@ -345,6 +346,9 @@ class HelperWidget {
             case READY_ACTION:
               this.onIframeReady();
               break;
+            case SHOW_WIDGET:
+              this.showInternal();
+              break;
             case CONVERSATION_UPDATE_ACTION:
               if (content.conversationSlug && content.conversationSlug.length > 0) {
                 this.currentConversationSlug = content.conversationSlug;
@@ -541,6 +545,7 @@ class HelperWidget {
         }
       }
     }
+    this.showWidgetAfterAnimation();
   }
 
   private hideInternal(): void {
