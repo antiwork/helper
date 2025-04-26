@@ -15,6 +15,12 @@ import type { HelperWidgetConfig } from "./types";
 
 declare const __EMBED_URL__: string;
 
+declare global {
+  interface Window {
+    helperWidgetConfig?: HelperWidgetConfig;
+  }
+}
+
 const GUMROAD_MAILBOX_SLUG = "gumroad";
 
 const screenshotWorkerUrl = new URL("modern-screenshot/dist/worker.js", import.meta.url).href;
@@ -834,3 +840,10 @@ class HelperWidget {
 }
 
 export default HelperWidget;
+
+if (typeof window !== "undefined" && window.document.currentScript?.dataset.mailbox) {
+  HelperWidget.init({
+    mailbox_slug: window.document.currentScript.dataset.mailbox,
+    ...(window.helperWidgetConfig || {}),
+  });
+}

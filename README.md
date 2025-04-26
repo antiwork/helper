@@ -1,25 +1,6 @@
 # Helper
 
-Helper is an open-source AI-powered customer support automation platform. It helps you manage customer support across email and chat with powerful AI assistance.
-
-## Features
-
-- 📧 Email Integration: Connect your Gmail account to manage customer support emails
-- 💬 Chat Integration: Seamless Slack integration for team collaboration
-- 🤖 AI Assistance: Intelligent response suggestions and automation
-- 📱 Cross-Platform: Web, desktop (macOS, Windows, Linux), and mobile apps (iOS, Android)
-- 🔄 Real-time Sync: Instant synchronization across all platforms
-- 🎨 Modern UI: Beautiful and intuitive user interface
-
-## Documentation
-
-- [Local Development Guide](docs/development.md)
-- [Mobile App Development](docs/mobile.md)
-- [Desktop App Development](docs/desktop.md)
-- [Integrations Guide](docs/integrations.md)
-- [Deployment Guide](docs/deployment.md)
-- [AI Evaluation Guide](docs/evaluation.md)
-- [Helping Hand Guide](docs/helping-hand.md)
+Customer support agents via live chat and email.
 
 ## Project Structure
 

@@ -12,6 +12,7 @@ type Props = {
   onShowPreviousConversations: () => void;
   onNewConversation: () => void;
   isWhitelabel: boolean;
+  defaultTitle: string | null;
 };
 
 const NewChatIcon = React.memo(() => (
@@ -28,12 +29,13 @@ const Header = React.memo(function Header({
   onShowPreviousConversations,
   onNewConversation,
   isWhitelabel,
+  defaultTitle,
 }: Props) {
   return (
     <div className="flex items-start justify-between border-b border-black p-2">
       <div className="flex items-center h-full">
         <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-md font-medium leading-4 text-foreground">{config.title || "Helper"}</h2>
+          <h2 className="text-lg font-medium leading-5 text-foreground">{config.title || defaultTitle || "Helper"}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">
