@@ -4,9 +4,8 @@ export type Step = {
 };
 
 export type GuideInstructions = {
+  sessionId: string;
   instructions: string;
   title: string | null;
-  callId: string | null;
-  resumed: boolean;
   steps: Step[];
 };

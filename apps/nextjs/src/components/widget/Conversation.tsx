@@ -14,6 +14,7 @@ import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
+import { GuideInstructions } from "@/types/guide";
 
 type Props = {
   token: string | null;
@@ -24,6 +25,7 @@ type Props = {
   onLoadFailed: () => void;
   isAnonymous: boolean;
   guideEnabled: boolean;
+  resumeGuide: GuideInstructions | null;
 };
 
 export type Attachment = {
@@ -41,6 +43,7 @@ export default function Conversation({
   onLoadFailed,
   isAnonymous,
   guideEnabled,
+  resumeGuide,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -107,6 +110,7 @@ export default function Conversation({
     isEscalated: boolean;
   } | null>({
     queryKey: ["conversation", conversationSlug],
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
         headers: {
@@ -124,6 +128,17 @@ export default function Conversation({
         if (data.isEscalated) {
           setIsEscalated(true);
         }
+
+        const guideMessage = data.messages.find((message: any) =>
+          message.parts?.some(
+            (part: any) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
+          ),
+        );
+
+        if (guideMessage) {
+          setMessages([...messages, { ...guideMessage, createdAt: new Date(guideMessage.createdAt) }]);
+        }
+
         return {
           messages: data.messages.map((message: any) => ({
             id: message.id,
@@ -133,6 +148,7 @@ export default function Conversation({
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
             annotations: message.annotations,
+            parts: message.parts,
             experimental_attachments: message.experimental_attachments,
           })),
           allAttachments: data.allAttachments,
@@ -213,10 +229,6 @@ export default function Conversation({
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
   };
 
-  const appendMessage = (role: Message["role"], content: Message["content"]) => {
-    append({ role, content });
-  };
-
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
     return <MessagesSkeleton />;
   }
@@ -232,7 +244,7 @@ export default function Conversation({
         token={token}
         stopChat={stop}
         addToolResult={addToolResult}
-        appendMessage={appendMessage}
+        resumeGuide={resumeGuide}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

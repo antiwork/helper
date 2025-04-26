@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, Loader2 } from "lucide-react";
-import { useState } from "react";
 
 export type StepStatus = "completed" | "loading" | "pending";
 
@@ -18,16 +17,17 @@ export interface Step {
 
 interface AIStepsProps {
   steps: Step[];
+  isDone: boolean;
 }
 
-export function AISteps({ steps }: AIStepsProps) {
+export function AISteps({ steps, isDone }: AIStepsProps) {
   const currentStepIndex = steps.findIndex((step) => !step.completed);
 
   return (
     <div className="flex flex-col space-y-4 w-full max-w-2xl">
       {steps.map((step, index) => {
         let status: StepStatus = "pending";
-        if (step.completed) {
+        if (step.completed || isDone) {
           status = "completed";
         } else if (index === currentStepIndex) {
           status = "loading";

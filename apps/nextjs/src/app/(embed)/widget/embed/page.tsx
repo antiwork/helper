@@ -15,6 +15,7 @@ import { useScreenshotStore } from "@/components/widget/widgetState";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
 import { MESSAGE_TYPE, RESUME_GUIDE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
+import { GuideInstructions } from "@/types/guide";
 
 type DecodedPayload = {
   isWhitelabel?: boolean;
@@ -37,6 +38,7 @@ export default function Page() {
   const [pageHTML, setPageHTML] = useState<string | null>(null);
   const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
+  const [resumeGuide, setResumeGuide] = useState<GuideInstructions | null>(null);
 
   const {
     currentView,
@@ -86,11 +88,18 @@ export default function Page() {
           messageQueue.push(content as string);
         }
       } else if (action === RESUME_GUIDE) {
+        console.log("RESUME_GUIDE", content);
         const sessionId = content.sessionId;
         const steps = content.steps;
         const instructions = content.instructions;
         const title = content.title;
         setSelectedConversationSlug(content.conversationSlug);
+        setResumeGuide({
+          sessionId,
+          instructions,
+          title,
+          steps,
+        });
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -179,6 +188,7 @@ export default function Page() {
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
                   guideEnabled={config.enable_guide ?? false}
+                  resumeGuide={resumeGuide}
                 />
               </div>
             </m.div>

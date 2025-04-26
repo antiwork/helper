@@ -1,9 +1,10 @@
 import { JSONValue, type Message as AIMessage } from "ai";
+import { Fragment } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { Attachment } from "@/components/widget/Conversation";
 import HelpingHand from "@/components/widget/HelpingHand";
 import Message, { MessageWithReaction } from "@/components/widget/Message";
-import { Fragment } from "react";
+import { GuideInstructions } from "@/types/guide";
 
 type Props = {
   data: JSONValue[] | null;
@@ -14,7 +15,7 @@ type Props = {
   token: string | null;
   stopChat: () => void;
   addToolResult: ({ toolCallId, result }: { toolCallId: string; result: any }) => void;
-  appendMessage: (role: AIMessage["role"], content: AIMessage["content"]) => void;
+  resumeGuide: GuideInstructions | null;
 };
 
 export default function MessagesList({
@@ -26,7 +27,7 @@ export default function MessagesList({
   token,
   stopChat,
   addToolResult,
-  appendMessage,
+  resumeGuide,
 }: Props) {
   const { scrollRef, contentRef } = useStickToBottom();
 
@@ -44,10 +45,12 @@ export default function MessagesList({
             const instructions = args.instructions ?? "No instructions";
             const toolCallId = guide.toolInvocation.toolCallId;
             const hasResult = guide.toolInvocation.state === "result";
+            const pendingResume = args.pendingResume;
+            const sessionId = args.sessionId;
+
             return (
               <Fragment key={`${message.id || index}-guide-tool`}>
                 <HelpingHand
-                  message={message}
                   key={`${message.id || index}-guide`}
                   conversationSlug={conversationSlug}
                   token={token}
@@ -56,7 +59,9 @@ export default function MessagesList({
                   title={title}
                   stopChat={stopChat}
                   addChatToolResult={addToolResult}
-                  appendMessage={appendMessage}
+                  pendingResume={pendingResume}
+                  resumeGuide={resumeGuide}
+                  existingSessionId={sessionId}
                 />
                 {hasResult && (
                   <Message

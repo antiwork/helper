@@ -5,12 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { executeGuideAction, fetchCurrentPageDetails, guideDone, sendStartGuide } from "@/lib/widget/messages";
-import { Step } from "@/types/guide";
+import { GuideInstructions, Step } from "@/types/guide";
 import LoadingSpinner from "../loadingSpinner";
 import { AISteps } from "./ai-steps";
 import { MessageWithReaction } from "./Message";
 
-type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled";
+type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
 
 export default function HelpingHand({
   title,
@@ -20,8 +20,9 @@ export default function HelpingHand({
   toolCallId,
   stopChat,
   addChatToolResult,
-  appendMessage,
-  message,
+  resumeGuide,
+  pendingResume = false,
+  existingSessionId,
 }: {
   title: string;
   instructions: string;
@@ -30,11 +31,12 @@ export default function HelpingHand({
   toolCallId: string;
   stopChat: () => void;
   addChatToolResult: ({ toolCallId, result }: { toolCallId: string; result: any }) => void;
-  appendMessage: (role: AIMessage["role"], content: AIMessage["content"]) => void;
-  message: MessageWithReaction;
+  resumeGuide: GuideInstructions | null;
+  pendingResume?: boolean;
+  existingSessionId?: string;
 }) {
-  const [guideSessionId, setGuideSessionId] = useState<string | null>(null);
-  const [status, setStatus] = useState<Status>("prompt");
+  const [guideSessionId, setGuideSessionId] = useState<string | null>(existingSessionId ?? null);
+  const [status, setStatus] = useState<Status>(pendingResume ? "pending-resume" : "prompt");
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
@@ -238,6 +240,18 @@ export default function HelpingHand({
     };
   }, [steps, guideSessionId, token]);
 
+  useEffect(() => {
+    if (resumeGuide && resumeGuide.sessionId === guideSessionId) {
+      setStatus("running");
+      sendInitialPrompt({ resumed: true });
+      setSteps(resumeGuide.steps);
+    }
+  }, [resumeGuide]);
+
+  if (status === "pending-resume") {
+    return null;
+  }
+
   if (status === "prompt" || status === "cancelled") {
     return (
       <MessageWrapper status={status}>
@@ -267,7 +281,7 @@ export default function HelpingHand({
           <div className="flex items-center mb-4">
             <p className="text-base font-medium">{title}</p>
           </div>
-          <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} />
+          <AISteps steps={steps.map((step, index) => ({ ...step, id: `step-${index}` }))} isDone={status === "done"} />
         </>
       ) : (
         <div className="flex gap-2">

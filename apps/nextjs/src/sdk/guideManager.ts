@@ -3,15 +3,13 @@ import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
 import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
+import { RESUME_GUIDE } from "@/lib/widget/messages";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 
 declare const __EMBED_URL__: string;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Define RESUME_GUIDE locally as it's not imported
-const RESUME_GUIDE = "RESUME_GUIDE";
 
 const fetchElementByXpath = (xpath: string) => {
   return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
