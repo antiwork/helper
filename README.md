@@ -84,4 +84,4 @@ npm run db:migrate
 
 ## License
 
-You may self-host Helper for free, if (1) your business has less than 1 million USD total revenue in the prior tax year, and less than 10 million USD GMV (Gross Merchandise Value), or (2) you are a non-profit organization or government entity. For more details, see the [Helper Community License 1.0](LICENSE.md)
+Helper is licensed under the [MIT License](LICENSE.md).
