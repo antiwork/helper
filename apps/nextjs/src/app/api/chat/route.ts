@@ -22,6 +22,7 @@ interface ChatRequestBody {
   conversationSlug: string;
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
+  isToolResult?: boolean;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload, mailbox: Mailbox) => {
@@ -49,7 +50,7 @@ export function OPTIONS() {
 }
 
 export async function POST(request: Request) {
-  const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, isToolResult }: ChatRequestBody = await request.json();
 
   const authResult = await authenticateWidget(request);
   if (!authResult.success) {
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
     readPageTool,
     guideEnabled,
     sendEmail: false,
+    reasoningEnabled: !isToolResult,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||

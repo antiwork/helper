@@ -8,19 +8,12 @@ import { useCallback, useEffect, useState } from "react";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
-import HelpingHand from "@/components/widget/HelpingHand";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
-import {
-  MESSAGE_TYPE,
-  minimizeWidget,
-  RESUME_GUIDE,
-  sendConversationUpdate,
-  sendReadyMessage,
-} from "@/lib/widget/messages";
+import { MESSAGE_TYPE, RESUME_GUIDE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
 import { GuideInstructions } from "@/types/guide";
 
@@ -46,10 +39,8 @@ export default function Page() {
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
   const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
-  const [isGuidingUser, setIsGuidingUser] = useState(false);
-  const [guideInstructions, setGuideInstructions] = useState<GuideInstructions | null>(null);
-  const [resumedGuideSessionId, setResumedGuideSessionId] = useState<string | null>(null);
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
+  const [resumeGuide, setResumeGuide] = useState<GuideInstructions | null>(null);
 
   const {
     currentView,
@@ -92,34 +83,24 @@ export default function Page() {
 
       const { action, content } = event.data.payload;
 
-      if (action === "PROMPT") {
+      if (action === "PROMPT" || action === "START_GUIDE") {
         if (eventBus.all.has("PROMPT")) {
           eventBus.emit("PROMPT", content as string);
         } else {
           messageQueue.push(content as string);
         }
-      } else if (action === "START_GUIDE") {
-        minimizeWidget();
-        setGuideInstructions({
-          instructions: content as string,
-          title: null,
-          callId: null,
-          steps: [],
-          resumed: false,
-        });
-        setIsGuidingUser(true);
       } else if (action === RESUME_GUIDE) {
-        setResumedGuideSessionId(content.sessionId);
-        setIsGuidingUser(true);
-        setGuideInstructions({
-          instructions: content.instructions,
-          title: content.title,
-          callId: null,
-          steps: content.steps,
-          resumed: true,
-        });
+        const sessionId = content.sessionId;
+        const steps = content.steps;
+        const instructions = content.instructions;
+        const title = content.title;
         setSelectedConversationSlug(content.conversationSlug);
-        minimizeWidget();
+        setResumeGuide({
+          sessionId,
+          instructions,
+          title,
+          steps,
+        });
       } else if (action === "CONFIG") {
         setPageHTML(content.pageHTML);
         setCurrentURL(content.currentURL);
@@ -173,7 +154,6 @@ export default function Page() {
         className={cx("light flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
           "bg-gumroad-bg": isGumroadTheme,
           "bg-background": !isGumroadTheme,
-          hidden: isGuidingUser,
         })}
       >
         <Header
@@ -210,25 +190,14 @@ export default function Page() {
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
-                  setIsGuidingUser={setIsGuidingUser}
-                  setGuideInstructions={setGuideInstructions}
                   guideEnabled={config.enable_guide ?? false}
+                  resumeGuide={resumeGuide}
                 />
               </div>
             </m.div>
           </LazyMotion>
         </div>
       </div>
-      {isGuidingUser && guideInstructions && (
-        <HelpingHand
-          instructions={guideInstructions.instructions}
-          token={token}
-          conversationSlug={selectedConversationSlug}
-          initialSteps={guideInstructions.steps}
-          resumed={guideInstructions.resumed}
-          existingSessionId={resumedGuideSessionId}
-        />
-      )}
     </QueryClientProvider>
   );
 }

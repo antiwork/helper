@@ -160,6 +160,17 @@ export async function POST(request: Request) {
                 type: z.literal("click_element"),
                 index: z.number().int(),
                 xpath: z.string().nullable().optional(),
+                hasSideEffects: z
+                  .boolean()
+                  .default(false)
+                  .describe(
+                    "Whether the action has side effects, e.g. clicking on a button that deletes data, modifying data or creating data",
+                  ),
+                sideEffectDescription: z
+                  .string()
+                  .describe(
+                    "Description of the side effect/action, e.g. 'Deletes all data from the account', 'Modifies the data of the account', 'Creates a new account'",
+                  ),
               }),
               z.object({
                 type: z.literal("input_text"),
@@ -201,7 +212,7 @@ export async function POST(request: Request) {
       const result = streamText({
         system: systemPrompt,
         model,
-        temperature: 0.1,
+        temperature: 0,
         messages,
         tools,
         toolChoice: "required",

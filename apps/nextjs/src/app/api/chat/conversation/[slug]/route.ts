@@ -3,7 +3,8 @@ import { htmlToText } from "html-to-text";
 import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
+import { conversationMessages, conversations, files, guideSessions, MessageMetadata } from "@/db/schema";
+import type { Tool } from "@/db/schema/tools";
 import { getClerkUser } from "@/lib/data/user";
 import { createPresignedDownloadUrl } from "@/s3/utils";
 
@@ -49,6 +50,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     ),
   });
 
+  const incompleteGuideSessions = await db.query.guideSessions.findMany({
+    where: (gs) => and(eq(gs.conversationId, conversation.id)),
+    with: { events: true },
+  });
+
+  const activeGuideSessions = incompleteGuideSessions.filter(
+    (session) => !session.events.some((event) => event.type === "completed"),
+  );
+
   const formattedMessages = await Promise.all(
     conversation.messages.map(async (message) => ({
       id: message.id.toString(),
@@ -64,8 +74,35 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     })),
   );
 
+  const guideSessionMessages = activeGuideSessions.map((session) => ({
+    id: `guide_session_${session.id}`,
+    role: "assistant",
+    content: "",
+    parts: [
+      {
+        type: "tool-invocation",
+        toolInvocation: {
+          toolName: "guide_user",
+          toolCallId: `guide_session_${session.id}`,
+          state: "call",
+          args: {
+            pendingResume: true,
+            sessionId: session.uuid,
+            title: session.title,
+            instructions: session.instructions,
+          },
+        },
+      },
+    ],
+    createdAt: session.createdAt.toISOString(),
+  }));
+
+  const allMessages = [...formattedMessages, ...guideSessionMessages].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+
   return Response.json({
-    messages: formattedMessages,
+    messages: allMessages,
     // We don't want to include staff-uploaded attachments in the AI messages, but we need to show them in the UI
     allAttachments: await Promise.all(
       attachments.map(async (a) => ({

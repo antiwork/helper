@@ -8,6 +8,7 @@ import {
   MINIMIZE_ACTION,
   READY_ACTION,
   SCREENSHOT_ACTION,
+  SHOW_WIDGET,
 } from "@/lib/widget/messages";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
@@ -38,7 +39,6 @@ class HelperWidget {
   private iframe: HTMLIFrameElement | null = null;
   private iframeWrapper: HTMLDivElement | null = null;
   private helperIcon: HTMLButtonElement | null = null;
-  private overlay: HTMLDivElement | null = null;
   private loadingOverlay: HTMLDivElement | null = null;
   private notificationContainer: HTMLDivElement | null = null;
   private notificationBubbles: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
@@ -68,7 +68,6 @@ class HelperWidget {
 
   private async setup(): Promise<void> {
     this.injectStyles();
-    this.createOverlay();
     this.createLoadingOverlay();
     this.createWrapper();
     this.createNotificationContainer();
@@ -262,19 +261,10 @@ class HelperWidget {
     }
   }
 
-  private createOverlay(): void {
-    this.overlay = document.createElement("div");
-    this.overlay.className = "helper-widget-overlay";
-    document.body.appendChild(this.overlay);
-  }
-
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
-    this.setupStartGuideEventListeners();
     this.setupMutationObserver();
-
-    this.overlay?.addEventListener("click", () => HelperWidget.hide());
 
     window.addEventListener("message", async (event: MessageEvent) => {
       const embedOrigin = new URL(__EMBED_URL__).origin;
@@ -307,6 +297,10 @@ class HelperWidget {
 
             if (action === GUIDE_DONE) {
               this.guideManager.done();
+            }
+
+            if (action === "CANCEL_GUIDE") {
+              this.guideManager.cancel();
             }
 
             // Send the response back to the iframe
@@ -352,6 +346,9 @@ class HelperWidget {
             case READY_ACTION:
               this.onIframeReady();
               break;
+            case SHOW_WIDGET:
+              this.showInternal();
+              break;
             case CONVERSATION_UPDATE_ACTION:
               if (content.conversationSlug && content.conversationSlug.length > 0) {
                 this.currentConversationSlug = content.conversationSlug;
@@ -372,20 +369,6 @@ class HelperWidget {
         }
       }
     });
-  }
-
-  private setupStartGuideEventListeners(): void {
-    this.guideManager.connectExistingStartGuideElements(this.handleStartGuideClick.bind(this));
-  }
-
-  private handleStartGuideClick(event: MouseEvent): void {
-    const startGuideElement = event.currentTarget as HTMLElement;
-    const prompt = startGuideElement.getAttribute("data-helper-start-guide");
-
-    if (prompt) {
-      this.startGuideInternal(prompt);
-      startGuideElement.setAttribute("data-helper-start-guide-sent", "true");
-    }
   }
 
   private onIframeReady(): void {
@@ -468,14 +451,8 @@ class HelperWidget {
               if (node.hasAttribute("data-helper-toggle")) {
                 this.connectToggleElement(node);
               }
-              if (node.hasAttribute("data-helper-start-guide")) {
-                this.guideManager.connectStartGuideElement(node, this.handleStartGuideClick.bind(this));
-              }
               node.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
               node.querySelectorAll("[data-helper-toggle]").forEach(this.connectToggleElement.bind(this));
-              node.querySelectorAll("[data-helper-start-guide]").forEach((el) => {
-                this.guideManager.connectStartGuideElement(el, this.handleStartGuideClick.bind(this));
-              });
             }
           });
         }
@@ -532,7 +509,6 @@ class HelperWidget {
   }
 
   private startGuideInternal(prompt: string): void {
-    this.minimizeInternal();
     this.sendMessageToEmbed({ action: "START_GUIDE", content: prompt });
     setTimeout(() => {
       this.showInternal();
@@ -543,11 +519,8 @@ class HelperWidget {
     if (!this.iframe) {
       this.createIframe();
     }
-    if (this.iframeWrapper && this.overlay && !this.isVisible) {
+    if (this.iframeWrapper && !this.isVisible) {
       this.iframeWrapper.classList.add("visible");
-      if (!this.isMinimized) {
-        this.overlay.classList.add("visible");
-      }
       if (!this.isIframeReady) {
         this.showLoadingOverlay();
       }
@@ -572,13 +545,13 @@ class HelperWidget {
         }
       }
     }
+    this.showWidgetAfterAnimation();
   }
 
   private hideInternal(): void {
-    if (this.iframeWrapper && this.overlay && this.isVisible) {
+    if (this.iframeWrapper && this.isVisible) {
       this.iframeWrapper.classList.remove("visible");
       this.iframeWrapper.classList.remove("minimized");
-      this.overlay.classList.remove("visible");
       this.hideLoadingOverlay();
       this.isVisible = false;
       this.isMinimized = false;
@@ -610,9 +583,6 @@ class HelperWidget {
   private minimizeInternal(): void {
     if (this.iframeWrapper) {
       this.iframeWrapper.classList.add("minimized");
-      if (this.overlay) {
-        this.overlay.classList.remove("visible");
-      }
       this.isMinimized = true;
       if (this.toggleButton) {
         this.toggleButton.classList.add("with-minimized-widget");
@@ -623,9 +593,6 @@ class HelperWidget {
   private maximizeInternal(): void {
     if (this.iframeWrapper) {
       this.iframeWrapper.classList.remove("minimized");
-      if (this.overlay) {
-        this.overlay.classList.add("visible");
-      }
       this.isMinimized = false;
       if (this.toggleButton) {
         this.toggleButton.classList.remove("with-minimized-widget");
@@ -651,9 +618,6 @@ class HelperWidget {
     if (this.iframeWrapper) {
       document.body.removeChild(this.iframeWrapper);
     }
-    if (this.overlay) {
-      document.body.removeChild(this.overlay);
-    }
     if (this.toggleButton) {
       document.body.removeChild(this.toggleButton);
     }
@@ -664,6 +628,22 @@ class HelperWidget {
     this.guideManager.destroy();
     if (this.observer) {
       this.observer.disconnect();
+    }
+  }
+
+  public isWidgetVisible(): boolean {
+    return this.isVisible;
+  }
+
+  public hideWidgetTemporarily(): void {
+    if (this.iframeWrapper && this.isVisible) {
+      this.iframeWrapper.classList.add("temporarily-hidden");
+    }
+  }
+
+  public showWidgetAfterAnimation(): void {
+    if (this.iframeWrapper) {
+      this.iframeWrapper.classList.remove("temporarily-hidden");
     }
   }
 

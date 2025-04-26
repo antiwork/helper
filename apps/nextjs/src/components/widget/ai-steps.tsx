@@ -1,8 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Check, Loader2 } from "lucide-react";
 
 export type StepStatus = "completed" | "loading" | "pending";
 
@@ -19,78 +17,53 @@ export interface Step {
 
 interface AIStepsProps {
   steps: Step[];
-  onToggleStep?: (stepId: string) => void;
+  isDone: boolean;
 }
 
-export function AISteps({ steps, onToggleStep }: AIStepsProps) {
-  const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
-
-  const toggleStep = (stepId: string) => {
-    setExpandedSteps((prev) => ({
-      ...prev,
-      [stepId]: !prev[stepId],
-    }));
-
-    if (onToggleStep) {
-      onToggleStep(stepId);
-    }
-  };
+export function AISteps({ steps, isDone }: AIStepsProps) {
+  const currentStepIndex = steps.findIndex((step) => !step.completed);
 
   return (
-    <div className="flex flex-col space-y-2 w-full max-w-2xl">
-      {steps.map((step) => (
-        <Card key={step.id} className="bg-black border-zinc-800 text-white p-3 rounded-xl">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-normal">{step.description}</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <StatusIcon status={step.completed ? "completed" : "loading"} />
-              <button onClick={() => toggleStep(step.id)} className="text-zinc-400 hover:text-white transition-colors">
-                {expandedSteps[step.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
+    <div className="flex flex-col space-y-4 w-full max-w-2xl">
+      {steps.map((step, index) => {
+        let status: StepStatus = "pending";
+        if (step.completed || isDone) {
+          status = "completed";
+        } else if (index === currentStepIndex) {
+          status = "loading";
+        }
 
-          {expandedSteps[step.id] && step.details && (
-            <div className="mt-2">
-              <div className="flex items-start text-zinc-400 mb-0.5">
-                <span className="mr-2 font-mono text-xs">→</span>
-                {step.details.function && (
-                  <code className="font-mono text-xs">
-                    {step.details.function}({step.details.params && JSON.stringify(step.details.params)})
-                  </code>
-                )}
-              </div>
-              {step.details.result && (
-                <pre className="font-mono text-xs overflow-x-auto mt-0.5">
-                  {typeof step.details.result === "object" ? JSON.stringify(step.details.result) : step.details.result}
-                </pre>
-              )}
-            </div>
-          )}
-        </Card>
-      ))}
+        return (
+          <div key={step.id} className="flex items-center space-x-3">
+            <StatusIcon status={status} index={index + 1} />
+            <p className="text-sm">{step.description}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function StatusIcon({ status }: { status: StepStatus }) {
+function StatusIcon({ status, index }: { status: StepStatus; index: number }) {
   if (status === "completed") {
     return (
-      <div className="rounded-full">
-        <Check className="h-4 w-4 text-green-500" />
+      <div className="rounded-full bg-black text-white flex items-center justify-center w-6 h-6">
+        <Check className="h-4 w-4" />
       </div>
     );
   }
 
   if (status === "loading") {
     return (
-      <div>
-        <Loader2 className="h-4 w-4 text-white animate-spin" />
+      <div className="rounded-full bg-pink-100 text-pink-500 flex items-center justify-center w-6 h-6">
+        <Loader2 className="h-4 w-4 animate-spin" />
       </div>
     );
   }
 
-  return null;
+  return (
+    <div className="rounded-full border border-gray-300 text-gray-500 flex items-center justify-center w-6 h-6 text-xs">
+      {index}
+    </div>
+  );
 }

@@ -3,15 +3,13 @@ import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
 import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
+import { RESUME_GUIDE } from "@/lib/widget/messages";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 
 declare const __EMBED_URL__: string;
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Define RESUME_GUIDE locally as it's not imported
-const RESUME_GUIDE = "RESUME_GUIDE";
 
 const fetchElementByXpath = (xpath: string) => {
   return document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
@@ -108,6 +106,7 @@ export class GuideManager {
   private sessionToken: string | null = null;
   private isRecording = false;
   private widget: any; // Reference to HelperWidget instance
+  private isRunning = false;
 
   private readonly SEND_FREQUENCY = 5000;
   private readonly MAX_EVENTS_BEFORE_FLUSH = 50;
@@ -183,15 +182,20 @@ export class GuideManager {
       const hand = this.createHelperHand();
       const rect = element.getBoundingClientRect();
 
-      // Target position (center of the element)
       const targetX = rect.left + rect.width / 2;
       const targetY = rect.top + rect.height / 2;
+      const isElementBehindWidget = this.isElementBehindWidget(element);
+
+      if (isElementBehindWidget) {
+        this.temporarilyHideWidget();
+      } else {
+        this.showWidgetAgain();
+      }
 
       hand.classList.add("animating", "visible");
       hand.style.left = `${targetX}px`;
       hand.style.top = `${targetY}px`;
 
-      // Simulate clicking after the hand reaches the element
       setTimeout(() => {
         hand.classList.add("clicking");
 
@@ -201,6 +205,33 @@ export class GuideManager {
         }, 200);
       }, 600);
     });
+  }
+
+  private isElementBehindWidget(element: HTMLElement): boolean {
+    const widgetWrapper = document.querySelector(".helper-widget-wrapper")!;
+    if (!widgetWrapper?.classList.contains("visible")) return false;
+
+    const elementRect = element.getBoundingClientRect();
+    const wrapperRect = widgetWrapper.getBoundingClientRect();
+
+    return !(
+      elementRect.right < wrapperRect.left ||
+      elementRect.left > wrapperRect.right ||
+      elementRect.bottom < wrapperRect.top ||
+      elementRect.top > wrapperRect.bottom
+    );
+  }
+
+  private temporarilyHideWidget(): boolean {
+    if (this.widget?.isWidgetVisible()) {
+      this.widget.hideWidgetTemporarily();
+      return true;
+    }
+    return false;
+  }
+
+  private showWidgetAgain(): void {
+    this.widget?.showWidgetAfterAnimation();
   }
 
   public hideHelperHand(): void {
@@ -223,6 +254,10 @@ export class GuideManager {
   }
 
   public async executeDOMAction(actionType: string, params: any, currentState: any): Promise<boolean | string> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const pageDetails = this.fetchCurrentPageDetails();
 
     const supported = [
@@ -366,6 +401,10 @@ export class GuideManager {
   }
 
   public async scrollToElement(index: number): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const element = this.fetchElementByIndex(index);
     if (!element) return false;
 
@@ -376,6 +415,10 @@ export class GuideManager {
   }
 
   public async sendKeys(index: number, text: string): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const element = this.fetchElementByIndex(index);
     if (!element || !(element instanceof HTMLElement)) return false;
 
@@ -406,6 +449,10 @@ export class GuideManager {
   }
 
   public async inputText(index: number, text: string): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     const element = this.fetchElementByIndex(index);
     if (!element || !(element instanceof HTMLElement)) return false;
 
@@ -452,6 +499,10 @@ export class GuideManager {
   }
 
   public async clickElement(index: number): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     this.createHelperHand();
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -467,6 +518,10 @@ export class GuideManager {
   }
 
   public async selectDropdownOption(index: number, text: string): Promise<boolean> {
+    if (!this.isRunning) {
+      return false;
+    }
+
     this.createHelperHand();
     const element = this.fetchElementByIndex(index);
     if (!element) return false;
@@ -502,6 +557,18 @@ export class GuideManager {
     element.addEventListener("click", (event: Event) => callback(event as MouseEvent));
   }
 
+  public cancel(): void {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.isRunning = false;
+    this.stopRecording();
+    this.hideHelperHand();
+    this.showWidgetAgain();
+    this.clearSession();
+  }
+
   public done(): void {
     this.sendGuideEvent("completed", {
       title: document.title,
@@ -509,6 +576,7 @@ export class GuideManager {
     });
     this.stopRecording();
     this.hideHelperHand();
+    this.showWidgetAgain();
     this.clearSession();
   }
 
@@ -622,6 +690,7 @@ export class GuideManager {
   }
 
   public start(sessionToken: string, sessionId: string): void {
+    this.isRunning = true;
     this.sessionToken = sessionToken;
     this.sessionId = sessionId;
     localStorage.setItem(this.SESSION_ID_STORAGE_KEY, sessionId);
@@ -742,7 +811,6 @@ export class GuideManager {
       });
 
       this.widget.showInternal();
-      this.widget.minimizeInternal();
 
       const newPageDetails = this.fetchCurrentPageDetails();
       await this.sendGuideEvent("resumed", {
@@ -751,6 +819,8 @@ export class GuideManager {
           title: newPageDetails.currentPageDetails.title,
         },
       });
+
+      this.clearSession();
     } catch (error) {
       this.clearSession();
     }

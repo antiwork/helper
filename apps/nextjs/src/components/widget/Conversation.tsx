@@ -11,9 +11,8 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
-import { GUIDE_USER_TOOL_NAME } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { minimizeWidget, sendConversationUpdate } from "@/lib/widget/messages";
+import { sendConversationUpdate } from "@/lib/widget/messages";
 import { ReadPageToolConfig } from "@/sdk/types";
 import { GuideInstructions } from "@/types/guide";
 
@@ -25,9 +24,8 @@ type Props = {
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
   isAnonymous: boolean;
-  setIsGuidingUser: (isGuidingUser: boolean) => void;
-  setGuideInstructions: (guideInstructions: GuideInstructions | null) => void;
   guideEnabled: boolean;
+  resumeGuide: GuideInstructions | null;
 };
 
 export type Attachment = {
@@ -44,9 +42,8 @@ export default function Conversation({
   readPageTool,
   onLoadFailed,
   isAnonymous,
-  setIsGuidingUser,
-  setGuideInstructions,
   guideEnabled,
+  resumeGuide,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -78,27 +75,24 @@ export default function Conversation({
       if (readPageTool && toolCall.toolName === readPageTool.toolName) {
         return readPageTool.pageContent || readPageTool.pageHTML;
       }
-      if (toolCall.toolName === GUIDE_USER_TOOL_NAME) {
-        const args = toolCall.args as { instructions: string; title: string };
-        setGuideInstructions({
-          instructions: args.instructions,
-          title: args.title,
-          callId: toolCall.toolCallId,
-          resumed: false,
-          steps: [],
-        });
-      }
+
       if (toolCall.toolName === "request_human_support") {
         setIsEscalated(true);
       }
     },
     experimental_prepareRequestBody({ messages, id, requestBody }) {
+      const lastMessage = messages[messages.length - 1];
+      const isToolResult = lastMessage?.parts?.some(
+        (part) => part.type === "tool-invocation" && part.toolInvocation.state === "result",
+      );
+
       return {
         id,
         readPageTool,
         guideEnabled,
-        message: messages[messages.length - 1],
+        message: lastMessage,
         conversationSlug,
+        isToolResult,
         ...requestBody,
       };
     },
@@ -106,22 +100,6 @@ export default function Conversation({
       Authorization: `Bearer ${token}`,
     },
   });
-
-  const cancelGuide = (toolCallId: string) => {
-    setGuideInstructions(null);
-    if (toolCallId) {
-      addToolResult({
-        toolCallId,
-        result: "cancelled, return text instructions",
-      });
-    }
-  };
-
-  const startGuide = () => {
-    minimizeWidget();
-    setIsGuidingUser(true);
-    stop();
-  };
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {
@@ -138,6 +116,7 @@ export default function Conversation({
     isEscalated: boolean;
   } | null>({
     queryKey: ["conversation", conversationSlug],
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
         headers: {
@@ -155,6 +134,17 @@ export default function Conversation({
         if (data.isEscalated) {
           setIsEscalated(true);
         }
+
+        const guideMessage = data.messages.find((message: any) =>
+          message.parts?.some(
+            (part: any) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
+          ),
+        );
+
+        if (guideMessage) {
+          setMessages([...messages, { ...guideMessage, createdAt: new Date(guideMessage.createdAt) }]);
+        }
+
         return {
           messages: data.messages.map((message: any) => ({
             id: message.id,
@@ -164,6 +154,7 @@ export default function Conversation({
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
             annotations: message.annotations,
+            parts: message.parts,
             experimental_attachments: message.experimental_attachments,
           })),
           allAttachments: data.allAttachments,
@@ -257,8 +248,9 @@ export default function Conversation({
         conversationSlug={conversationSlug}
         isGumroadTheme={isGumroadTheme}
         token={token}
-        startGuide={startGuide}
-        cancelGuide={cancelGuide}
+        stopChat={stop}
+        addToolResult={addToolResult}
+        resumeGuide={resumeGuide}
       />
       <SupportButtons
         conversationSlug={conversationSlug}
