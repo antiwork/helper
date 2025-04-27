@@ -1,0 +1,494 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Helper API",
+    "description": "API for integrating with Helper chat capabilities.\nThese endpoints allow you to create custom chat interfaces or automate interactions with Helper.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Helper Support",
+      "url": "https://helper.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://helper.ai",
+      "description": "Production server"
+    },
+    {
+      "url": "https://helperai.dev",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/widget/session": {
+      "post": {
+        "summary": "Create Session",
+        "description": "Creates a new authentication session for Helper",
+        "operationId": "createSession",
+        "tags": ["Session"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              },
+              "examples": {
+                "authenticatedRequest": {
+                  "summary": "Authenticated Session Request",
+                  "value": {
+                    "email": "customer@example.com",
+                    "emailHash": "a1b2c3d4e5f6...",
+                    "mailboxSlug": "your-mailbox",
+                    "timestamp": 1693324800000,
+                    "customerMetadata": {
+                      "value": 500,
+                      "name": "John Doe",
+                      "links": {
+                        "Profile": "https://example.com/users/john",
+                        "Orders": "https://example.com/users/john/orders"
+                      }
+                    },
+                    "currentURL": "https://example.com/products"
+                  }
+                },
+                "anonymousRequest": {
+                  "summary": "Anonymous Session Request",
+                  "value": {
+                    "mailboxSlug": "your-mailbox",
+                    "currentURL": "https://example.com/products"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                },
+                "example": {
+                  "valid": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "showWidget": true,
+                  "notifications": []
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalidParameters": {
+                    "summary": "Invalid request parameters",
+                    "value": {
+                      "error": "Invalid request parameters"
+                    }
+                  },
+                  "invalidMailbox": {
+                    "summary": "Invalid mailbox",
+                    "value": {
+                      "error": "Invalid mailbox"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missingFields": {
+                    "summary": "Missing email authentication fields",
+                    "value": {
+                      "error": "Email authentication fields missing"
+                    }
+                  },
+                  "invalidTimestamp": {
+                    "summary": "Timestamp too old",
+                    "value": {
+                      "error": "Timestamp is too far in the past"
+                    }
+                  },
+                  "invalidHmac": {
+                    "summary": "Invalid HMAC signature",
+                    "value": {
+                      "error": "Invalid HMAC signature"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/conversation": {
+      "post": {
+        "summary": "Create Conversation",
+        "description": "Creates a new conversation in Helper",
+        "operationId": "createConversation",
+        "tags": ["Conversation"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationRequest"
+              },
+              "example": {
+                "isPrompt": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                },
+                "example": {
+                  "conversationSlug": "abc123def456"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Authentication error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Mailbox not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Mailbox not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Send Message",
+        "description": "Sends a message to Helper and receives a streaming response",
+        "operationId": "sendMessage",
+        "tags": ["Chat"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              },
+              "examples": {
+                "simpleMessage": {
+                  "summary": "Simple Message",
+                  "value": {
+                    "message": {
+                      "role": "user",
+                      "content": "How can I update my shipping address?",
+                      "id": "msg_1234"
+                    },
+                    "conversationSlug": "abc123def456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Streaming response with AI-generated reply",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "examples": {
+                  "streamedResponse": {
+                    "summary": "Streamed Response",
+                    "value": "data: {\"type\":\"text\",\"value\":\"Hello! I'd be happy to help you update your shipping address. \"}\ndata: {\"type\":\"text\",\"value\":\"You can change your shipping address by following these steps:\"}\ndata: {\"type\":\"text\",\"value\":\"\\n\\n1. Log into your account\\n2. Go to 'Account Settings'\\n3. Select 'Addresses'\\n4. Click 'Edit' next to your existing address or 'Add New Address'\\n5. Update the information and save your changes\"}\ndata: {\"type\":\"text\",\"value\":\"\\n\\nIs there anything else you need help with today?\"}\ndata: {\"type\":\"messageAnnotation\",\"value\":{\"id\":\"12345\",\"traceId\":\"trace_abc123\"}}"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "error": "Invalid token"
+                    }
+                  },
+                  "unauthorized": {
+                    "summary": "Unauthorized access",
+                    "value": {
+                      "error": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "mailboxNotFound": {
+                    "summary": "Mailbox not found",
+                    "value": {
+                      "error": "Mailbox not found"
+                    }
+                  },
+                  "conversationNotFound": {
+                    "summary": "Conversation not found",
+                    "value": {
+                      "error": "Conversation not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from the Session API"
+      }
+    },
+    "schemas": {
+      "SessionRequest": {
+        "type": "object",
+        "required": ["mailboxSlug", "currentURL"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the user",
+            "example": "customer@example.com"
+          },
+          "emailHash": {
+            "type": "string",
+            "description": "HMAC hash of the email and timestamp",
+            "example": "a1b2c3d4e5f6..."
+          },
+          "mailboxSlug": {
+            "type": "string",
+            "description": "Slug of the mailbox to connect to",
+            "example": "your-mailbox"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Current timestamp in milliseconds",
+            "example": 1693324800000
+          },
+          "customerMetadata": {
+            "type": "object",
+            "description": "Additional metadata about the customer",
+            "properties": {
+              "value": {
+                "type": "number",
+                "nullable": true,
+                "description": "Numeric value representing the customer's worth/revenue",
+                "example": 500
+              },
+              "name": {
+                "type": "string",
+                "nullable": true,
+                "description": "Name of the customer",
+                "example": "John Doe"
+              },
+              "links": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "nullable": true,
+                "description": "Key-value pairs of links related to the customer",
+                "example": {
+                  "Profile": "https://example.com/users/john",
+                  "Orders": "https://example.com/users/john/orders"
+                }
+              }
+            }
+          },
+          "experimentalReadPage": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether to enable experimental page reading"
+          },
+          "currentURL": {
+            "type": "string",
+            "description": "The current URL where the chat is being initiated",
+            "example": "https://example.com/products"
+          }
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "required": ["valid", "token", "showWidget"],
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "description": "Whether the authentication was successful",
+            "example": true
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT token to use for subsequent API calls",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "showWidget": {
+            "type": "boolean",
+            "description": "Whether the chat widget should be shown to this customer",
+            "example": true
+          },
+          "notifications": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Optional array of unread notifications for the customer",
+            "example": []
+          },
+          "experimentalReadPage": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether experimental page reading is enabled"
+          }
+        }
+      },
+      "ConversationRequest": {
+        "type": "object",
+        "properties": {
+          "isPrompt": {
+            "type": "boolean",
+            "description": "Whether the conversation is starting from a fixed prompt",
+            "example": true
+          }
+        }
+      },
+      "ConversationResponse": {
+        "type": "object",
+        "required": ["conversationSlug"],
+        "properties": {
+          "conversationSlug": {
+            "type": "string",
+            "description": "Unique identifier for the created conversation",
+            "example": "abc123def456"
+          }
+        }
+      },
+      "ChatRequest": {
+        "type": "object",
+        "required": ["message", "conversationSlug"],
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/Message",
+            "description": "The message to send to Helper"
+          },
+          "conversationSlug": {
+            "type": "string",
+            "description": "Slug of the conversation to send the message to",
+            "example": "abc123def456"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Role of the message sender",
+            "enum": ["user", "assistant"],
+            "example": "user"
+          },
+          "content": {
+            "type": "string",
+            "description": "Text content of the message",
+            "example": "How can I update my shipping address?"
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the message",
+            "example": "msg_1234"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request parameters"
+          }
+        }
+      }
+    }
+  }
+}

@@ -7,9 +7,6 @@
 
 @config '../tailwind.config.ts';
 
-@source '../node_modules/fumadocs-ui/dist/**/*.js';
-@source '../node_modules/fumadocs-openapi/dist/**/*.js';
-
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Helper theme */
