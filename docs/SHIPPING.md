@@ -14,7 +14,7 @@ A new table is needed to store auto-assign rules. This table will integrate with
 - Note: Consider adding an index on `mailboxId` and `subtopicId` to improve query performance
 
 Implementation steps:
-1. Create a new file `src/db/schema/autoAssignRules.ts` with the table definition using integer references (not foreign keys) and `withTimestamps` helper
+1. Create a new file `db/schema/autoAssignRules.ts` with the table definition using integer references (not foreign keys) and `withTimestamps` helper
 2. Run `npm run db:generate` to automatically generate the migration files
 3. The migration will be created in the `drizzle` directory and can be reviewed before applying
 
@@ -29,8 +29,8 @@ Create new tRPC endpoints for managing auto-assign rules within the `mailbox` ro
 
 These endpoints will interact with the new database table and should be protected procedures. The files that would change include:
 
-- `src/trpc/router/mailbox/index.ts`: Add the `autoAssignRules` router.
-- `src/trpc/router/mailbox/autoAssignRules.ts`: Implement the new endpoints.
+- `trpc/router/mailbox/index.ts`: Add the `autoAssignRules` router.
+- `trpc/router/mailbox/autoAssignRules.ts`: Implement the new endpoints.
 
 **3. Server-Side Logic (Trigger Points):**
 
@@ -71,10 +71,10 @@ async function applyAutoAssignRules(conversation: Conversation) {
 ```
 
 Relevant files:
-- `src/inngest/functions/handleGmailWebhookEvent.ts`
-- `src/inngest/functions/handleChatHumanSupportRequested.ts`
-- `src/inngest/functions/handleConversationReopened.ts`
-- `src/inngest/functions/handleConversationSubtopicUpdated.ts`
+- `inngest/functions/handleGmailWebhookEvent.ts`
+- `inngest/functions/handleChatHumanSupportRequested.ts`
+- `inngest/functions/handleConversationReopened.ts`
+- `inngest/functions/handleConversationSubtopicUpdated.ts`
 
 **4. Subtopic Integration:**
 
@@ -89,7 +89,7 @@ Since conversations already have topics assigned:
 A new section on the mailbox settings page is required to manage auto-assign rules. This will be implemented as a new tab in the mailbox settings area, similar to other mailbox configuration sections:
 
 Settings UI Components:
-- Create a new `AutoAssignSettings` component in `src/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/autoAssignSettings.tsx`
+- Create a new `AutoAssignSettings` component in `app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/autoAssignSettings.tsx`
 - Add the component to the settings tabs in `settings.tsx`
 
 The Auto-Assign Settings should include:
@@ -115,14 +115,14 @@ The Auto-Assign Settings should include:
    - Example use cases
 
 This involves changes to:
-- `src/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/settings.tsx`: Add new auto-assign tab
-- `src/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/autoAssignSettings.tsx`: New component for auto-assign configuration
-- Create reusable components for rule form and table in `src/components/settings/autoAssign/`
+- `app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/settings.tsx`: Add new auto-assign tab
+- `app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/autoAssignSettings.tsx`: New component for auto-assign configuration
+- Create reusable components for rule form and table in `components/settings/autoAssign/`
 
 **Example Implementation (Partial):**
 
 ```typescript
-// src/inngest/functions/handleGmailWebhookEvent.ts (simplified)
+// inngest/functions/handleGmailWebhookEvent.ts (simplified)
 // ... existing code ...
 const rules = await db.query.autoAssignRules.findMany({
     where: eq(autoAssignRules.mailboxId, mailbox.id),

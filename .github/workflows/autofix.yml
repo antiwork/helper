@@ -29,11 +29,11 @@ jobs:
       - run: npm ci
 
       - name: Lint
-        run: npm run lint --fix
+        run: npm run lint -- --fix
         shell: bash
 
       - name: Format
-        run: npm run format --write
+        run: npm run format -- --write
         shell: bash
 
       - name: Typecheck
