@@ -3,6 +3,6 @@
 set -eo pipefail
 export NODE_OPTIONS="--max_old_space_size=4096"
 
-cp apps/nextjs/.env.local.sample apps/nextjs/.env.local
+cp packages/nextjs/.env.local.sample packages/nextjs/.env.local
 
 npm run typecheck

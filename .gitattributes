@@ -1,8 +1,2 @@
-# Treat CSV files in the root directory as LFS objects
-/*.csv filter=lfs diff=lfs merge=lfs -text
-
-# Exclude CSV files in subdirectories from LFS
-/**/*.csv -filter -diff -merge -text
-
 # Treat Drizzle snapshot files as generated
-apps/nextjs/src/db/drizzle/meta/*snapshot.json linguist-generated=true
+packages/nextjs/db/drizzle/meta/*snapshot.json linguist-generated=true

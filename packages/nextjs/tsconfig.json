@@ -1,0 +1,16 @@
+{
+  "extends": "@helperai/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@tests/*": ["./tests/*"],
+    },
+    "plugins": [{ "name": "next" }],
+    "module": "esnext"
+  },
+  "include": [".", "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "public"]
+}
