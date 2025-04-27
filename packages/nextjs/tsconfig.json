@@ -1,6 +1,30 @@
 {
-  "extends": "@helperai/tsconfig/base.json",
   "compilerOptions": {
+    /** Base Options */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+
+    /** Keep TSC performant in monorepos */
+    "incremental": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "tsBuildInfoFile": "${configDir}/.cache/tsbuildinfo.json",
+
+    /** Strictness */
+    "strict": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "checkJs": true,
+
+    /** Transpile using Bundler (not tsc) */
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+
+    /** Next.js project options */
     "lib": ["dom", "dom.iterable", "esnext"],
     "jsx": "preserve",
     "baseUrl": ".",

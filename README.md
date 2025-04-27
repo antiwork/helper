@@ -24,13 +24,6 @@ packages
       └─ Shared React components and hooks
 supabase
   └─ Database configurations
-tooling
-  ├─ eslint
-  │   └─ Shared ESLint config
-  ├─ tailwind
-  │   └─ Shared Tailwind config
-  └─ typescript
-      └─ Shared TypeScript config
 ```
 
 ## Quick Start
