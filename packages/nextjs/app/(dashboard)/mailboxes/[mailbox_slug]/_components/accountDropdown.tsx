@@ -12,6 +12,7 @@ import {
 import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
+import { getBaseUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Avatar } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -99,7 +100,7 @@ export function AccountDropdown({
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();
-            window.open("http://docs.helper.ai", "_blank", "noopener,noreferrer");
+            window.open(`${getBaseUrl()}/docs`, "_blank", "noopener,noreferrer");
           }}
         >
           <span>Documentation</span>

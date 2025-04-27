@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import { useHelper } from "@helperai/react";
+import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -45,7 +46,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
 
   return (
     <div className="flex space-x-2">
-      <Link href="https://docs.helper.ai" target="_blank">
+      <Link href={`${getBaseUrl()}/docs`} target="_blank">
         <Button variant="subtle">
           <span className="flex items-center">
             <BookOpenIcon className="h-5 w-5 mr-2" />
