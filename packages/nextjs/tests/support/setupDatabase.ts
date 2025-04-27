@@ -35,7 +35,7 @@ export async function setupDockerTestDb() {
   const db = drizzle(client, { schema });
 
   console.log("Applying migrations...");
-  const migrationPath = path.join(__dirname, "..", "..", "src", "db", "drizzle");
+  const migrationPath = path.join(__dirname, "..", "..", "db", "drizzle");
   console.log("Migration path:", migrationPath);
   await migrate(db, {
     migrationsFolder: migrationPath,

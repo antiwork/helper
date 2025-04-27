@@ -6,7 +6,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@tests/*": ["./tests/*"],
+      "@tests/*": ["./tests/*"]
     },
     "plugins": [{ "name": "next" }],
     "module": "esnext"
