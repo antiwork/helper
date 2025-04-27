@@ -172,6 +172,7 @@
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.4",
     "@babel/preset-typescript": "^7.24.7",
+    "@eslint/compat": "^1.2.8",
     "@faker-js/faker": "^9.0.1",
     "@figma/code-connect": "^1.0.5",
     "@next/eslint-plugin-next": "^15.3.1",
