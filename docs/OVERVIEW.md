@@ -37,11 +37,6 @@ The codebase is a monorepo managed using Turborepo, containing multiple packages
 - **`apps/nextjs/tests`:**  Unit and integration tests for the Next.js application and its components.
 - **`apps/nextjs/src/db/schema`:** Contains all database table definitions and relationships using Drizzle ORM. Each domain entity (mailboxes, conversations, workflows, etc.) has its own schema file, providing type-safe database interactions.
 
-### Other Apps
-
-- **`apps/expo`:** A mobile application built using Expo, providing access to core Helper functionality on mobile devices. Shares logic with the Next.js application and consumes the same tRPC API.
-- **`apps/tauri`:** Desktop application built using Tauri, allowing for a native desktop experience.
-
 ### Packages
 
 - **`packages/react`:** A React package providing a wrapper and hooks for integrating the Helper chat widget into other applications.

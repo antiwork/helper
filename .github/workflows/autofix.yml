@@ -28,15 +28,12 @@ jobs:
 
       - run: npm ci
 
-      - name: Generate tRPC types
-        run: npm run expo:trpc:generate
-
       - name: Lint
-        run: bin/lint --fix
+        run: npm run lint --fix
         shell: bash
 
       - name: Format
-        run: bin/format --write
+        run: npm run format --write
         shell: bash
 
       - name: Typecheck

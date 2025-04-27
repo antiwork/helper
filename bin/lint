@@ -1,4 +1,0 @@
-#!/bin/bash
-
-npm run lint -- $@ && \
-(cd apps/expo && npm run lint -- $@)
