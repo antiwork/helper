@@ -34,6 +34,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+.source
+
 public/sdk.js
 public/sdk-*.js
 

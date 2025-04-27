@@ -97,6 +97,7 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       await createEligibleOrganizationForConversationDeletion();
 
     vi.mocked(getClerkOrganization).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-misused-spread
       ...organization,
       privateMetadata: {
         freeTrialEndsAt: subDays(new Date(), 29).toISOString(),

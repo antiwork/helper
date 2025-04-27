@@ -48,6 +48,7 @@ export const buildPromptWithMessages = async (conversationId: number) => {
 
   const messages = buildMessagesFromHistory(filteredMessages);
   const formattedMessages = messages
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     .map((m) => `<message><role>${m.role}</role><content>${m.content}</content></message>`)
     .join("\n");
   return `This is the conversation history: <messages>${cleanUpTextForAI(formattedMessages)}</messages>`;
@@ -76,7 +77,7 @@ export const generateDraftResponse = async (
   const userPrompt = await getTextWithConversationSubject(lastUserEmail.conversation, lastUserEmail);
   const {
     knowledgeBank,
-    websitePages,
+    websitePagesPrompt,
     metadata: metadataPrompt,
   } = await fetchPromptRetrievalData(mailbox, userPrompt, metadata);
   const relevantPastConversations = await getPastConversationsPrompt(userPrompt, mailbox);
@@ -84,7 +85,7 @@ export const generateDraftResponse = async (
   const systemPrompt = [
     SYSTEM_PROMPT_PREFIX,
     knowledgeBank ? [knowledgeBank] : [],
-    websitePages ? [websitePages] : [],
+    websitePagesPrompt ? [websitePagesPrompt] : [],
     relevantPastConversations ? [relevantPastConversations] : [],
     metadataPrompt ? [metadataPrompt] : [],
     GLOBAL_RULES_SUFFIX,

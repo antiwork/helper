@@ -8,7 +8,7 @@ import reactPlugin from "eslint-plugin-react";
 import hooksPlugin from "eslint-plugin-react-hooks";
 import turboPlugin from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";
-import turboNoUndeclaredEnvVarsT3Env from "./lib/tooling/turboNoUndeclaredEnvVarsT3Env";
+import turboNoUndeclaredEnvVarsT3Env from "./lib/tooling/turboNoUndeclaredEnvVarsT3Env.mjs";
 
 const restrictEnvAccess = tseslint.config(
   { ignores: ["**/env.ts"] },
