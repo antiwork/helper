@@ -2,6 +2,7 @@
 
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { getBaseUrl } from "@/components/constants";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,7 +82,7 @@ const ChatWidgetSetting = ({
         title="Widget Installation"
         description={
           <a
-            href="https://docs.helper.ai/widget/01-overview"
+            href={`${getBaseUrl()}/docs/widget/01-overview`}
             target="_blank"
             rel="noopener noreferrer"
             className="hover:underline flex items-center gap-1"

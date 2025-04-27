@@ -2,10 +2,11 @@
 
 import { useUser } from "@clerk/nextjs";
 import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
-import { ArrowLeft, MapPin, Shuffle } from "lucide-react";
+import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
@@ -21,7 +22,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
 
   return (
     <div className="flex space-x-2">
-      <Link href="https://docs.helper.ai" target="_blank">
+      <Link href={`${getBaseUrl()}/docs`} target="_blank">
         <Button variant="subtle">
           <span className="flex items-center">
             <BookOpenIcon className="h-5 w-5 mr-2" />
