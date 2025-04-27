@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { docs } from "@/.source";
 
 export const source = loader({
-  baseUrl: "/",
+  baseUrl: "/docs",
   source: docs.toFumadocsSource(),
   pageTree: {
     attachFile,
