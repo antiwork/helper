@@ -126,7 +126,7 @@
     "inngest": "^3.24.0",
     "isomorphic-dompurify": "^2.16.0",
     "js-tiktoken": "^1.0.15",
-    "jsdom": "^25.0.1",
+    "jsdom": "^26.0.1",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
