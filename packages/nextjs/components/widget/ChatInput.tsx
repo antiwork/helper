@@ -134,6 +134,7 @@ export default function ChatInput({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          stopRecording();
           submit();
         }}
         className="flex flex-col gap-2"
