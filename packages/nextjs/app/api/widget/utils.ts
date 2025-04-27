@@ -18,7 +18,11 @@ export function corsOptions(method: "POST" | "PATCH" = "POST") {
   });
 }
 
-export function corsResponse(data: unknown, init?: ResponseInit, method: "POST" | "PATCH" = "POST") {
+export function corsResponse(
+  data: unknown,
+  init?: Omit<ResponseInit, "headers"> & { headers?: Record<string, string> },
+  method: "POST" | "PATCH" = "POST",
+) {
   return Response.json(data, {
     ...init,
     headers: {

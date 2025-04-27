@@ -40,7 +40,7 @@ export const filesRouter = {
         },
       }) => {
         const isPublic = isInline;
-        const contentType = mime.lookup(fileName, "application/octet-stream");
+        const contentType = mime.getType(fileName) ?? "application/octet-stream";
         const acl = isPublic ? PUBLIC_ACL : PRIVATE_ACL;
 
         const s3Key = generateS3Key(["attachments", unauthorizedConversationSlug], fileName);

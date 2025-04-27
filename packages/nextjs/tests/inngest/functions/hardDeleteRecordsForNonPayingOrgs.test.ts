@@ -1,3 +1,4 @@
+import { Organization } from "@clerk/nextjs/server";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
@@ -96,11 +97,12 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       await createEligibleOrganizationForConversationDeletion();
 
     vi.mocked(getClerkOrganization).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-misused-spread
       ...organization,
       privateMetadata: {
         freeTrialEndsAt: subDays(new Date(), 29).toISOString(),
       },
-    });
+    } as Organization);
 
     await hardDeleteRecordsForNonPayingOrgs();
 

@@ -3,7 +3,7 @@ title: Session API
 description: Create and manage authentication sessions for Helper
 ---
 
-import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
 # Session API
 
@@ -19,17 +19,17 @@ Creates a new session and returns a token that can be used for authentication in
 
 ### Request Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `email` | string | Optional | Email address of the user. If not provided, an anonymous session will be created. |
-| `emailHash` | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided. |
-| `mailboxSlug` | string | Yes | Slug of the mailbox to connect to. |
-| `timestamp` | number | Conditional | Current timestamp in milliseconds. Required if email is provided. |
-| `customerMetadata` | object | No | Additional metadata about the customer. |
-| `customerMetadata.value` | number | No | Numeric value representing the customer's worth/revenue. |
-| `customerMetadata.name` | string | No | Name of the customer. |
-| `customerMetadata.links` | object | No | Key-value pairs of links related to the customer. |
-| `currentURL` | string | Yes | The current URL where the chat is being initiated. |
+| Parameter                | Type   | Required    | Description                                                                       |
+| ------------------------ | ------ | ----------- | --------------------------------------------------------------------------------- |
+| `email`                  | string | Optional    | Email address of the user. If not provided, an anonymous session will be created. |
+| `emailHash`              | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided.              |
+| `mailboxSlug`            | string | Yes         | Slug of the mailbox to connect to.                                                |
+| `timestamp`              | number | Conditional | Current timestamp in milliseconds. Required if email is provided.                 |
+| `customerMetadata`       | object | No          | Additional metadata about the customer.                                           |
+| `customerMetadata.value` | number | No          | Numeric value representing the customer's worth/revenue.                          |
+| `customerMetadata.name`  | string | No          | Name of the customer.                                                             |
+| `customerMetadata.links` | object | No          | Key-value pairs of links related to the customer.                                 |
+| `currentURL`             | string | Yes         | The current URL where the chat is being initiated.                                |
 
 ### Example Request Body
 
@@ -53,12 +53,12 @@ Creates a new session and returns a token that can be used for authentication in
 
 ### Response
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `valid` | boolean | Whether the authentication was successful. |
-| `token` | string | JWT token to use for subsequent API calls. |
-| `showWidget` | boolean | Whether the chat widget should be shown to this customer based on your settings. |
-| `notifications` | array | Optional array of unread notifications for the customer. |
+| Field           | Type    | Description                                                                      |
+| --------------- | ------- | -------------------------------------------------------------------------------- |
+| `valid`         | boolean | Whether the authentication was successful.                                       |
+| `token`         | string  | JWT token to use for subsequent API calls.                                       |
+| `showWidget`    | boolean | Whether the chat widget should be shown to this customer based on your settings. |
+| `notifications` | array   | Optional array of unread notifications for the customer.                         |
 
 ### Example Response
 
@@ -73,19 +73,20 @@ Creates a new session and returns a token that can be used for authentication in
 
 ### Error Responses
 
-| Status Code | Error | Description |
-|-------------|-------|-------------|
-| 400 | `Invalid request parameters` | The request is missing required parameters or they are invalid. |
-| 400 | `Invalid mailbox` | The specified mailbox does not exist. |
-| 401 | `Email authentication fields missing` | Email provided but timestamp or emailHash is missing. |
-| 401 | `Timestamp is too far in the past` | The timestamp is outside the acceptable range (1 hour). |
-| 401 | `Invalid HMAC signature` | The provided emailHash does not match the computed hash. |
+| Status Code | Error                                 | Description                                                     |
+| ----------- | ------------------------------------- | --------------------------------------------------------------- |
+| 400         | `Invalid request parameters`          | The request is missing required parameters or they are invalid. |
+| 400         | `Invalid mailbox`                     | The specified mailbox does not exist.                           |
+| 401         | `Email authentication fields missing` | Email provided but timestamp or emailHash is missing.           |
+| 401         | `Timestamp is too far in the past`    | The timestamp is outside the acceptable range (1 hour).         |
+| 401         | `Invalid HMAC signature`              | The provided emailHash does not match the computed hash.        |
 
 ## Authentication
 
 ### Generating the HMAC Hash
 
 To authenticate a user with their email, you need to generate an HMAC hash using:
+
 - The user's email
 - A timestamp
 - Your mailbox's HMAC secret
@@ -95,9 +96,11 @@ To authenticate a user with their email, you need to generate an HMAC hash using
 ### Prepare Your Data
 
 Gather the required information:
+
 - User's email address
 - Current timestamp in milliseconds
 - Your mailbox's HMAC secret from the Helper dashboard
+
 </Step>
 
 <Step>
@@ -106,6 +109,7 @@ Gather the required information:
 The format for the HMAC input is: `email:timestamp`
 
 For example: `customer@example.com:1693324800000`
+
 </Step>
 
 <Step>
@@ -118,15 +122,13 @@ Here's how to generate the hash in different languages:
 **Node.js**
 
 ```javascript
-const crypto = require('crypto');
+const crypto = require("crypto");
 
-const email = 'customer@example.com';
+const email = "customer@example.com";
 const timestamp = Date.now(); // current time in milliseconds
-const hmacSecret = 'your_mailbox_hmac_secret';
+const hmacSecret = "your_mailbox_hmac_secret";
 
-const hmac = crypto.createHmac('sha256', hmacSecret)
-  .update(`${email}:${timestamp}`)
-  .digest('hex');
+const hmac = crypto.createHmac("sha256", hmacSecret).update(`${email}:${timestamp}`).digest("hex");
 ```
 
 **Python**
@@ -147,12 +149,14 @@ signature = hmac.new(
     hashlib.sha256
 ).hexdigest()
 ```
+
 </Step>
 
 <Step>
 ### Use the Hash in Your API Request
 
 Include the hash as the `emailHash` parameter in your session creation request, along with the email and timestamp.
+
 </Step>
 </Steps>
 

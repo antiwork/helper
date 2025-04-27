@@ -16,7 +16,7 @@ const cachedChannelInfo = async (token: string, teamId: string, channelId: strin
 
   const client = new WebClient(token);
   const response = await client.conversations.info({ channel: channelId });
-  const info = `${response.channel?.name}\n${response.channel?.purpose}\n${response.channel?.topic}`;
+  const info = `${response.channel?.name}\n${response.channel?.purpose?.value}\n${response.channel?.topic?.value}`;
   await redis.set(`slack:channel:${teamId}:${channelId}`, info, { ex: 60 * 60 * 24 });
   return info;
 };
@@ -33,7 +33,7 @@ export const findMailboxForEvent = async (event: SlackEvent): Promise<SlackMailb
   if ("team_id" in event) {
     conditions = eq(mailboxes.slackTeamId, String(event.team_id));
   } else if ("team" in event) {
-    conditions = eq(mailboxes.slackTeamId, String(event.team));
+    conditions = eq(mailboxes.slackTeamId, typeof event.team === "string" ? event.team : (event.team?.id ?? ""));
   } else if ("assistant_thread" in event) {
     conditions = eq(mailboxes.slackTeamId, String(event.assistant_thread.context.team_id));
   }
@@ -75,13 +75,16 @@ export const findMailboxForEvent = async (event: SlackEvent): Promise<SlackMailb
       assertDefined(matchingMailboxes[0].slackBotUserId),
     );
     const askedIndex = threadMessages.findLastIndex(
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       (message) => message.role === "assistant" && message.content.toString().startsWith(WHICH_MAILBOX_MESSAGE),
     );
     if (askedIndex !== -1) {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       messageTextToCheck = threadMessages[askedIndex + 1]?.content.toString() ?? "";
     } else {
       messageTextToCheck = threadMessages
         .filter((message) => message.role === "user")
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         .map((message) => message.content.toString())
         .join("\n");
     }

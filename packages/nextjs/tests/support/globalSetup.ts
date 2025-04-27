@@ -15,7 +15,7 @@ export async function setup({ provide }: GlobalSetupContext) {
 export async function teardown() {
   console.log("Starting global teardown...");
   try {
-    if (testDatabase.client) {
+    if (testDatabase.client && "end" in testDatabase.client) {
       console.log("Closing database connection...");
       await testDatabase.client.end();
       console.log("Database connection closed.");

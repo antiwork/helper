@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai/react";
 import { AppLayout } from "./_components/AppLayout";
 import { WidgetButtons } from "./WidgetButtons";
@@ -56,9 +57,9 @@ export default async function WidgetTest({
             </div>
           </div>
         </div>
-        <a href="/widget/test/vanilla" className="mt-4 text-sm text-muted-foreground hover:underline">
+        <Link href="/widget/test/vanilla" className="mt-4 text-sm text-muted-foreground hover:underline">
           Vanilla JavaScript Test Page →
-        </a>
+        </Link>
       </div>
     </HelperProvider>
   );
