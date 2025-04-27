@@ -4,7 +4,7 @@
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 
-@config '../../tailwind.config.ts';
+@config '../tailwind.config.ts';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -63,9 +63,8 @@
   --font-narrow: var(--font-sundry-narrow-medium);
   --font-narrow-medium: var(--font-sundry-narrow-medium);
   --font-narrow-bold: var(--font-sundry-narrow-bold);
-  --font-system-ui:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-    "Helvetica Neue", sans-serif;
+  --font-system-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 
   @keyframes default-pulse {
     0%,
