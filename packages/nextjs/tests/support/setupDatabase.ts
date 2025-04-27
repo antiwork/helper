@@ -4,9 +4,8 @@
 import path from "path";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import * as schema from "@/db/schema";
 
 export async function setupDockerTestDb() {
@@ -31,8 +30,7 @@ export async function setupDockerTestDb() {
 
   const connectionString = container.getConnectionUri();
   console.log("Connecting to database...");
-  const client = postgres(connectionString);
-  const db = drizzle(client, { schema });
+  const db = drizzle(connectionString, { schema });
 
   console.log("Applying migrations...");
   const migrationPath = path.join(__dirname, "..", "..", "db", "drizzle");
@@ -48,7 +46,7 @@ export async function setupDockerTestDb() {
 
   console.log("Docker test database setup completed.");
 
-  return { container, db, confirmDatabaseReady, client, connectionString };
+  return { container, db, confirmDatabaseReady, client: db.$client, connectionString };
 }
 
 export const truncateDb = async () => {

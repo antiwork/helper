@@ -32,6 +32,7 @@ const mockCompletionResponse = {
   reasoningDetails: [],
   sources: [],
   providerMetadata: {},
+  files: [],
 } satisfies GenerateTextResult<Record<string, CoreTool>, undefined>;
 
 describe("runAIQuery", () => {
@@ -127,6 +128,7 @@ describe("runAIQuery", () => {
       },
       logprobs: [],
       request: {},
+      files: [],
     });
 
     await runAIQuery({

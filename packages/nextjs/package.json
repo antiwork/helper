@@ -132,6 +132,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.501.0",
     "mailparser": "^3.7.1",
+    "mime": "^4.0.7",
     "mitt": "^3.0.1",
     "modern-screenshot": "^4.5.5",
     "motion": "^12.0.0-alpha.2",

@@ -1,3 +1,4 @@
+import { Organization } from "@clerk/nextjs/server";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
@@ -100,7 +101,7 @@ describe("hardDeleteRecordsForNonPayingOrgs", () => {
       privateMetadata: {
         freeTrialEndsAt: subDays(new Date(), 29).toISOString(),
       },
-    });
+    } as Organization);
 
     await hardDeleteRecordsForNonPayingOrgs();
 

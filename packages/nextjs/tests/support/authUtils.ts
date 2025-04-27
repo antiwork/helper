@@ -23,7 +23,11 @@ export const createTestAuthSession = (user: User, organization: Organization): A
     has: () => false,
     debug: () => ({}),
     factorVerificationAge: null,
+    sessionStatus: "active",
     redirectToSignIn: () => {
+      throw new Error("Not implemented");
+    },
+    redirectToSignUp: () => {
       throw new Error("Not implemented");
     },
   };
