@@ -33,13 +33,11 @@ let nextConfig: NextConfig = {
     "/mailboxes/[mailbox_slug]/conversations": ["../../node_modules/canvas"],
     "/api/inngest": ["../../node_modules/canvas"],
   },
-  experimental: {
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },
