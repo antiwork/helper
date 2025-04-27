@@ -11,12 +11,8 @@ The project uses [Turborepo](https://turbo.build/) and contains:
   └─ workflows
       └─ CI with tests, linting, and type checking
 apps
-  ├─ expo
-  │   └─ Mobile app using Expo + NativeWind
   ├─ nextjs
   │   └─ Next.js web application
-  └─ tauri
-      └─ Desktop app using Tauri (Rust-based)
 bin
   └─ Development and deployment scripts
 docker

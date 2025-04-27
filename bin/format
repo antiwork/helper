@@ -1,4 +1,0 @@
-#!/bin/bash
-
-npm run format -- $@ && \
-(cd apps/expo && npm run format -- $@)

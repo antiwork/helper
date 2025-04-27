@@ -5,7 +5,6 @@
   "packageManager": "npm@10.8.2",
   "private": true,
   "scripts": {
-    "postinstall": "(cd apps/expo && npm install && cd ../tauri && npm install)",
     "build": "turbo run build",
     "build:preview": "(cd apps/nextjs && npm run build:preview)",
     "clean": "git clean -xdf node_modules",
@@ -19,17 +18,8 @@
     "dev:email": "npm -C apps/nextjs run dev:email",
     "dev:next": "lsof -ti:3010 | xargs kill -9 || true && npm run daemon:clean && turbo run dev --continue -F @helperai/nextjs...",
     "dev:sdk": "npm -C apps/nextjs run dev:sdk",
-    "dev:expo": "(cd apps/expo && ./verify-env.sh && npm run start)",
-    "dev:tauri": "(cd apps/tauri && npm run dev)",
     "eval:dev": "(cd apps/nextjs && npm run eval:dev)",
     "evals": "(cd apps/nextjs && npm run evals)",
-    "expo:trpc:generate": "(cd apps/nextjs && npx tsc --project tsconfig.api.json --emitDeclarationOnly)",
-    "expo:trpc:watch": "npx nodemon --watch apps/nextjs/src/trpc --ext ts,tsx --exec \"npm run expo:trpc:generate\"",
-    "expo:build:ios": "(cd apps/expo && npm run build:ios)",
-    "expo:build:android": "(cd apps/expo && npm run build:android)",
-    "expo:update:production": "(cd apps/expo && npm run update:production)",
-    "tauri:build": "(cd apps/tauri && npm run build)",
-    "tauri:upload-bundles": "(cd apps/tauri && npm run upload-bundles)",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
     "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
     "repl": "(cd apps/nextjs && npm run repl)",
@@ -53,7 +43,6 @@
     "packages/*"
   ],
   "dependencies": {
-    "@algora/xtrpc": "^0.1.1",
     "date-fns-tz": "^3.2.0"
   }
 }

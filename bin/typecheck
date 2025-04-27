@@ -5,7 +5,4 @@ export NODE_OPTIONS="--max_old_space_size=4096"
 
 cp apps/nextjs/.env.local.sample apps/nextjs/.env.local
 
-# Run typecheck
 npm run typecheck
-
-(cd apps/expo && npm run typecheck)
