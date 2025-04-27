@@ -10,6 +10,7 @@ Helper uses OpenAPI specifications to understand your API's capabilities and con
 ## Supported OpenAPI Versions
 
 Helper supports:
+
 - OpenAPI 3.0.x
 - OpenAPI 3.1.x
 
@@ -36,6 +37,7 @@ Helper uses these operation IDs to name and identify tools.
 ### 2. Detailed Descriptions
 
 Include descriptions for:
+
 - Each endpoint
 - Parameters
 - Request bodies
@@ -61,6 +63,7 @@ These descriptions help Helper understand when and how to use each tool.
 ### 3. Well-Defined Parameters
 
 Clearly define all parameters, including:
+
 - Type information
 - Format constraints
 - Whether they're required
@@ -170,7 +173,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
+                $ref: "#/components/schemas/Order"
 components:
   schemas:
     Order:
@@ -179,11 +182,11 @@ components:
         id:
           type: string
         customer:
-          $ref: '#/components/schemas/Customer'
+          $ref: "#/components/schemas/Customer"
         items:
           type: array
           items:
-            $ref: '#/components/schemas/OrderItem'
+            $ref: "#/components/schemas/OrderItem"
         total:
           type: number
           format: float
@@ -197,4 +200,4 @@ If Helper has trouble parsing your OpenAPI specification:
 - Validate your specification using tools like the [Swagger Validator](https://validator.swagger.io/)
 - Check for missing required fields (operationIds, descriptions, etc.)
 - Ensure your specification is accessible from the provided URL
-- Verify that the specification follows the OpenAPI standard 
+- Verify that the specification follows the OpenAPI standard
