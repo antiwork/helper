@@ -1,4 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 import { env } from "@/env";
 
@@ -9,7 +10,7 @@ if (!env.GOOGLE_CLIENT_ID) {
   throw new Error("GOOGLE_CLIENT_ID is not set");
 }
 
-const nextConfig: NextConfig = {
+let nextConfig: NextConfig = {
   reactStrictMode: !env.DISABLE_STRICT_MODE,
   /** We already do linting as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
@@ -147,6 +148,9 @@ const nextConfig: NextConfig = {
     ];
   },
 };
+
+const withMDX = createMDX();
+nextConfig = withMDX(nextConfig);
 
 export default process.env.VERCEL_ENV === "production"
   ? withSentryConfig(nextConfig, {
