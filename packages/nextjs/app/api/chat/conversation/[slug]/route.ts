@@ -23,6 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     where: and(eq(conversations.slug, slug), eq(conversations.emailFrom, authResult.session.email)),
     with: {
       messages: {
+        where: inArray(conversationMessages.role, ["user", "ai_assistant", "staff"]),
         orderBy: [asc(conversationMessages.createdAt)],
       },
     },
