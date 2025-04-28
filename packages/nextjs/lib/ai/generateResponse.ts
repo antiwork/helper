@@ -7,7 +7,7 @@ import { getTextWithConversationSubject } from "@/lib/data/conversationMessage";
 import { getMailboxById } from "@/lib/data/mailbox";
 import { fetchPromptRetrievalData, getPastConversationsPrompt } from "@/lib/data/retrieval";
 import type { PromptInfo } from "@/types/conversationMessages";
-import { cleanUpTextForAI, generateCompletion, GPT_4O_MODEL } from "./core";
+import { cleanUpTextForAI, generateCompletion, GPT_4_1_MODEL } from "./core";
 import { buildMessagesFromHistory } from "./messageBuilder";
 import { buildTools } from "./tools";
 
@@ -94,7 +94,7 @@ export const generateDraftResponse = async (
     .join("\n");
 
   const result = await generateCompletion({
-    model: GPT_4O_MODEL,
+    model: GPT_4_1_MODEL,
     system: systemPrompt,
     prompt: await buildPromptWithMessages(conversationId),
     maxSteps: 5,
