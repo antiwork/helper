@@ -821,7 +821,6 @@ export class GuideManager {
           title: newPageDetails.currentPageDetails.title,
         },
       });
-
     } catch (error) {
       this.clearSession();
     }
