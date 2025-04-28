@@ -1,9 +1,9 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export type ChipVariant = "sidebar" | "mobile";
 
@@ -70,42 +70,38 @@ export const ChipContainer = ({
   children,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { storageKey?: string }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const [showLeft, setShowLeft] = React.useState(false)
-  const [showRight, setShowRight] = React.useState(false)
-  const [isHovered, setIsHovered] = React.useState(false)
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = React.useState(false);
+  const [showRight, setShowRight] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
 
   const checkScroll = () => {
-    const el = containerRef.current
-    if (!el) return
-    setShowLeft(el.scrollLeft > 0)
-    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
-  }
+    const el = containerRef.current;
+    if (!el) return;
+    setShowLeft(el.scrollLeft > 0);
+    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
 
   React.useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
+    const el = containerRef.current;
+    if (!el) return;
     const handleScroll = () => {
-      sessionStorage.setItem(storageKey, el.scrollLeft.toString())
-      checkScroll()
-    }
-    const savedScroll = sessionStorage.getItem(storageKey)
-    if (savedScroll) el.scrollLeft = parseInt(savedScroll)
-    el.addEventListener("scroll", handleScroll)
-    checkScroll()
-    return () => el.removeEventListener("scroll", handleScroll)
-  }, [storageKey])
+      sessionStorage.setItem(storageKey, el.scrollLeft.toString());
+      checkScroll();
+    };
+    const savedScroll = sessionStorage.getItem(storageKey);
+    if (savedScroll) el.scrollLeft = parseInt(savedScroll);
+    el.addEventListener("scroll", handleScroll);
+    checkScroll();
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [storageKey]);
 
   const scrollBy = (amount: number) => {
-    containerRef.current?.scrollBy({ left: amount, behavior: "smooth" })
-  }
+    containerRef.current?.scrollBy({ left: amount, behavior: "smooth" });
+  };
 
   return (
-    <div 
-      className="relative group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="relative group" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       {showLeft && (
         <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
       )}
@@ -113,7 +109,7 @@ export const ChipContainer = ({
         <button
           className={cn(
             "absolute left-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-opacity duration-200 shadow leading-normal ml-2",
-            isHovered ? "opacity-100" : "opacity-0"
+            isHovered ? "opacity-100" : "opacity-0",
           )}
           onClick={() => scrollBy(-120)}
           tabIndex={-1}
@@ -131,7 +127,7 @@ export const ChipContainer = ({
           "[&::-webkit-scrollbar-thumb]{background:rgba(0,0,0,0.4)}",
           "dark:[&::-webkit-scrollbar-thumb]{background:rgba(255,255,255,0.4)}",
           "dark:[--scrollbar-color:rgba(255,255,255,0.4)]",
-          className
+          className,
         )}
         {...props}
       >
@@ -144,7 +140,7 @@ export const ChipContainer = ({
         <button
           className={cn(
             "absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-opacity duration-200 shadow leading-normal mr-2",
-            isHovered ? "opacity-100" : "opacity-0"
+            isHovered ? "opacity-100" : "opacity-0",
           )}
           onClick={() => scrollBy(120)}
           tabIndex={-1}
@@ -154,6 +150,6 @@ export const ChipContainer = ({
         </button>
       )}
     </div>
-  )
-}
-ChipContainer.displayName = "ChipContainer"
+  );
+};
+ChipContainer.displayName = "ChipContainer";
