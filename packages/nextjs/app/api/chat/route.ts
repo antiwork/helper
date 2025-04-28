@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     readPageTool,
     guideEnabled,
     sendEmail: false,
-    reasoningEnabled: !isToolResult,
+    reasoningEnabled: false,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||

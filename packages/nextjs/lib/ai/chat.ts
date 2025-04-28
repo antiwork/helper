@@ -21,7 +21,7 @@ import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
-import { COMPLETION_MODEL, GPT_4O_MINI_MODEL, GPT_4O_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
+import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
@@ -63,7 +63,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   }
 
   const { text: summary } = await generateText({
-    model: openai(GPT_4O_MINI_MODEL),
+    model: openai(GPT_4_1_MINI_MODEL),
     system: SUMMARY_PROMPT,
     prompt: text,
     maxTokens: SUMMARY_MAX_TOKENS,
@@ -415,7 +415,7 @@ export const generateAIResponse = async ({
       if (!evaluation) {
         await trackAIUsageEvent({
           mailbox,
-          model: GPT_4O_MODEL,
+          model: GPT_4_1_MODEL,
           queryType: "chat_completion",
           usage: openAIUsage,
         });

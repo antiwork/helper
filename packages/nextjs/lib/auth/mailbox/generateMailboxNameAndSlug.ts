@@ -3,7 +3,7 @@ import { generateText } from "ai";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { GPT_4O_MODEL } from "@/lib/ai/core";
+import { GPT_4_1_MODEL } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { slugify } from "@/lib/auth/slugify";
 
@@ -51,7 +51,7 @@ const openAICompletion = async (emailAddress: string): Promise<string> => {
   if (!emailAddress) return "";
 
   const { text } = await generateText({
-    model: openai(GPT_4O_MODEL),
+    model: openai(GPT_4_1_MODEL),
     system: "You are a professional name generator for companies. Generate concise and appropriate names.",
     prompt: userPrompt(emailAddress),
     temperature: 0,

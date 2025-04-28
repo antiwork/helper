@@ -4,7 +4,7 @@ import { traceAISDKModel } from "evalite/ai-sdk";
 import { vi } from "vitest";
 import { z } from "zod";
 import { generateAIResponse, REASONING_MODEL } from "@/lib/ai/chat";
-import { GPT_4O_MODEL } from "@/lib/ai/core";
+import { GPT_4_1_MODEL } from "@/lib/ai/core";
 import { buildTools } from "@/lib/ai/tools";
 import { Mailbox } from "@/lib/data/mailbox";
 import { fetchPromptRetrievalData, PromptRetrievalData as FetchPromptRetrievalData } from "@/lib/data/retrieval";
@@ -141,7 +141,7 @@ export const runAIQuery = async (input: string, reasoning = false) => {
   const { messages, mailbox } = parseMessagesWithMocks(input);
 
   const result = await generateAIResponse({
-    model: traceAISDKModel(openai(GPT_4O_MODEL)),
+    model: traceAISDKModel(openai(GPT_4_1_MODEL)),
     reasoningModel: traceAISDKModel(REASONING_MODEL),
     messages,
     mailbox,
