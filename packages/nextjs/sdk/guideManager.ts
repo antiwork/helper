@@ -582,8 +582,6 @@ export class GuideManager {
 
   public endGuideSession(): void {
     this.isRunning = false;
-    this.sessionId = null;
-    this.sessionToken = null;
     this.clearSession();
   }
 
