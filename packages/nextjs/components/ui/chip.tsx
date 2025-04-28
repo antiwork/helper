@@ -73,6 +73,7 @@ export const ChipContainer = ({
   const containerRef = React.useRef<HTMLDivElement>(null)
   const [showLeft, setShowLeft] = React.useState(false)
   const [showRight, setShowRight] = React.useState(false)
+  const [isHovered, setIsHovered] = React.useState(false)
 
   const checkScroll = () => {
     const el = containerRef.current
@@ -100,19 +101,26 @@ export const ChipContainer = ({
   }
 
   return (
-    <div className="relative">
+    <div 
+      className="relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {showLeft && (
-        <>
-          <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
-          <button
-            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-colors shadow leading-normal ml-2"
-            onClick={() => scrollBy(-120)}
-            tabIndex={-1}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        </>
+        <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+      )}
+      {showLeft && (
+        <button
+          className={cn(
+            "absolute left-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-opacity duration-200 shadow leading-normal ml-2",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+          onClick={() => scrollBy(-120)}
+          tabIndex={-1}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
       )}
       <div
         ref={containerRef}
@@ -130,17 +138,20 @@ export const ChipContainer = ({
         {children}
       </div>
       {showRight && (
-        <>
-          <div className="absolute right-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10" />
-          <button
-            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-colors shadow leading-normal mr-2"
-            onClick={() => scrollBy(120)}
-            tabIndex={-1}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </>
+        <div className="absolute right-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+      )}
+      {showRight && (
+        <button
+          className={cn(
+            "absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-opacity duration-200 shadow leading-normal mr-2",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+          onClick={() => scrollBy(120)}
+          tabIndex={-1}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       )}
     </div>
   )
