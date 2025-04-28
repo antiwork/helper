@@ -103,9 +103,9 @@ export const ChipContainer = ({
     <div className="relative">
       {showLeft && (
         <>
-          <div className="absolute left-0 top-0 h-full w-10 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+          <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
           <button
-            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-colors shadow leading-normal"
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-colors shadow leading-normal ml-2"
             onClick={() => scrollBy(-120)}
             tabIndex={-1}
             aria-label="Scroll left"
@@ -131,9 +131,9 @@ export const ChipContainer = ({
       </div>
       {showRight && (
         <>
-          <div className="absolute right-0 top-0 h-full w-10 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+          <div className="absolute right-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10" />
           <button
-            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-colors shadow leading-normal"
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-colors shadow leading-normal mr-2"
             onClick={() => scrollBy(120)}
             tabIndex={-1}
             aria-label="Scroll right"
