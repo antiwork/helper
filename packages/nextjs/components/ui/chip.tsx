@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -66,41 +67,89 @@ Chip.displayName = "Chip";
 export const ChipContainer = ({
   className,
   storageKey = "chipContainerScroll",
+  children,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { storageKey?: string }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = React.useState(false);
+  const [showRight, setShowRight] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const checkScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    setShowLeft(el.scrollLeft > 0);
+    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
 
   React.useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
+    const el = containerRef.current;
+    if (!el) return;
     const handleScroll = () => {
-      sessionStorage.setItem(storageKey, container.scrollLeft.toString());
+      sessionStorage.setItem(storageKey, el.scrollLeft.toString());
+      checkScroll();
     };
-
     const savedScroll = sessionStorage.getItem(storageKey);
-    if (savedScroll) {
-      container.scrollLeft = parseInt(savedScroll);
-    }
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
+    if (savedScroll) el.scrollLeft = parseInt(savedScroll);
+    el.addEventListener("scroll", handleScroll);
+    checkScroll();
+    return () => el.removeEventListener("scroll", handleScroll);
   }, [storageKey]);
 
+  const scrollBy = (amount: number) => {
+    containerRef.current?.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "flex gap-1.5 overflow-x-auto px-4 py-2 md:pb-4",
-        "[scrollbar-color:var(--scrollbar-color,rgba(0,0,0,0.4))_transparent]",
-        "[&::-webkit-scrollbar]{height:4px}",
-        "[&::-webkit-scrollbar-thumb]{background:rgba(0,0,0,0.4)}",
-        "dark:[&::-webkit-scrollbar-thumb]{background:rgba(255,255,255,0.4)}",
-        "dark:[--scrollbar-color:rgba(255,255,255,0.4)]",
-        className,
+    <div className="relative group" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+      {showLeft && (
+        <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
       )}
-      {...props}
-    />
+      {showLeft && (
+        <button
+          className={cn(
+            "absolute left-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-opacity duration-200 shadow leading-normal ml-2",
+            isHovered ? "opacity-100" : "opacity-0",
+          )}
+          onClick={() => scrollBy(-120)}
+          tabIndex={-1}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+      )}
+      <div
+        ref={containerRef}
+        className={cn(
+          "flex gap-1.5 overflow-x-auto px-4 py-4",
+          "[scrollbar-color:var(--scrollbar-color,rgba(0,0,0,0.4))_transparent]",
+          "[&::-webkit-scrollbar]{height:4px}",
+          "[&::-webkit-scrollbar-thumb]{background:rgba(0,0,0,0.4)}",
+          "dark:[&::-webkit-scrollbar-thumb]{background:rgba(255,255,255,0.4)}",
+          "dark:[--scrollbar-color:rgba(255,255,255,0.4)]",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+      {showRight && (
+        <div className="absolute right-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+      )}
+      {showRight && (
+        <button
+          className={cn(
+            "absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full h-8 w-8 bg-bright text-primary dark:text-sidebar transition-opacity duration-200 shadow leading-normal mr-2",
+            isHovered ? "opacity-100" : "opacity-0",
+          )}
+          onClick={() => scrollBy(120)}
+          tabIndex={-1}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   );
 };
 ChipContainer.displayName = "ChipContainer";
