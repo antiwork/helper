@@ -566,7 +566,7 @@ export class GuideManager {
     this.stopRecording();
     this.hideHelperHand();
     this.showWidgetAgain();
-    this.clearSession();
+    this.endGuideSession();
   }
 
   public done(): void {
@@ -577,6 +577,13 @@ export class GuideManager {
     this.stopRecording();
     this.hideHelperHand();
     this.showWidgetAgain();
+    this.endGuideSession();
+  }
+
+  public endGuideSession(): void {
+    this.isRunning = false;
+    this.sessionId = null;
+    this.sessionToken = null;
     this.clearSession();
   }
 
@@ -714,8 +721,6 @@ export class GuideManager {
     if (this.isRecording) {
       this.stopRecording().catch(console.error);
     }
-
-    this.clearSession();
   }
 
   public clearSession(): void {
