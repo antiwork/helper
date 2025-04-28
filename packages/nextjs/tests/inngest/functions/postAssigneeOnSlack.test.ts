@@ -29,9 +29,11 @@ describe("notifySlackAssignment", () => {
       },
     });
     const user2 = userFactory.buildMockUser();
+    const twentyFiveHoursAgo = new Date(Date.now() - 25 * 60 * 60 * 1000);
     const { conversation } = await conversationFactory.create(mailbox.id, {
       assignedToClerkId: user.id,
       emailFrom: "sender@example.com",
+      lastUserEmailCreatedAt: twentyFiveHoursAgo,
     });
 
     vi.mocked(getClerkUser)
@@ -87,9 +89,11 @@ describe("notifySlackAssignment", () => {
       },
     });
     const user2 = userFactory.buildMockUser();
+    const twentyFiveHoursAgo = new Date(Date.now() - 25 * 60 * 60 * 1000);
     const { conversation } = await conversationFactory.create(mailbox.id, {
       assignedToClerkId: user.id,
       emailFrom: "sender@example.com",
+      lastUserEmailCreatedAt: twentyFiveHoursAgo,
     });
 
     vi.mocked(getClerkUser)
