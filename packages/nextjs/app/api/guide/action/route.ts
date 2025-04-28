@@ -93,8 +93,7 @@ export async function POST(request: Request) {
     if (actionData.result === "Performed") {
       textResult = `Successfully performed action ${actionData.actionType}
       Now, the current URL is: ${actionData.newPageDetails.url}
-      Current Page Title: ${actionData.newPageDetails.title}
-      Elements: ${actionData.newPageDetails.elements}`;
+      Current Page Title: ${actionData.newPageDetails.title}`;
     } else {
       textResult = `Failed to perform action ${actionData.actionType}`;
     }
@@ -107,10 +106,9 @@ export async function POST(request: Request) {
         {
           id: action.id.toString(),
           toolName: "AgentOutput",
-          step: 0,
           state: "result",
           result: textResult,
-          toolCallId: `tool_${action.id}`,
+          toolCallId: `call_${action.id}`,
           args: {
             current_state: actionData.currentState,
             action: {
@@ -212,7 +210,7 @@ export async function POST(request: Request) {
       const result = streamText({
         system: systemPrompt,
         model,
-        temperature: 0,
+        temperature: 0.1,
         messages,
         tools,
         toolChoice: "required",

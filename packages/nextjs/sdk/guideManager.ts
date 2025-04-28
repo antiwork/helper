@@ -795,7 +795,6 @@ export class GuideManager {
 
       if (!response.ok) {
         if (response.status === 404 || response.status === 401 || response.status === 403) {
-          // Session not found or invalid, clear local storage
           this.clearSession();
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -825,7 +824,6 @@ export class GuideManager {
         },
       });
 
-      this.clearSession();
     } catch (error) {
       this.clearSession();
     }

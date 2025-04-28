@@ -20,4 +20,4 @@ If you achieved your ultimate task, stop everything and use the done action in t
     
 Current URL: {{CURRENT_URL}}
 Current Page Title: {{CURRENT_PAGE_TITLE}}
-{{PAGE_DETAILS}}`;
+Current Elements: {{PAGE_DETAILS}}`;
