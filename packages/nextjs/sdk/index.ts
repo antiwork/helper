@@ -557,7 +557,6 @@ class HelperWidget {
       this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
-      this.guideManager.clearSession();
 
       // Show the toggle button when the widget is hidden (only if it has been opened before)
       if (

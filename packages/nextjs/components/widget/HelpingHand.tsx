@@ -257,7 +257,7 @@ export default function HelpingHand({
       .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements));
 
     if (resumed) {
-      content += `\n\nWe are resuming the guide. Check if the steps are still valid based on the current page details. Elements changed and use the last page details to continue the guide.`;
+      content += `\n\nWe are resuming the guide. Check if the steps are still valid based on the current page elements.`;
     }
 
     append({ role: "user", content });
