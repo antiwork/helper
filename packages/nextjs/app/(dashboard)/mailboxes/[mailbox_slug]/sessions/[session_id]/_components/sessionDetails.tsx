@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ interface SessionDetailsProps {
   mailbox: MailboxData;
   session: GuideSession & {
     events: GuideSessionEvent[];
+    conversation?: { slug: string } | null;
   };
   replayEvents: ReplayEvent[];
 }
@@ -152,9 +153,10 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
         <div className="flex items-center">
           <Button variant="ghost" onClick={() => router.push(`/mailboxes/${mailbox.slug}/sessions`)} className="mr-2">
             <ChevronLeft className="h-4 w-4" />
-            Back to Sessions
+            Back to sessions
           </Button>
-          <h1 className="text-xl font-semibold">Session Details</h1>
+
+          <h1 className="text-xl font-semibold">Session details</h1>
         </div>
       </div>
 
@@ -174,6 +176,20 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             </CardHeader>
 
             <CardContent className="flex flex-col flex-1 overflow-hidden">
+              {session.conversation && (
+                <div className="mb-4 shrink-0">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      router.push(`/mailboxes/${mailbox.slug}/conversations?id=${session.conversation.slug}`)
+                    }
+                    className="w-full"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    View conversation
+                  </Button>
+                </div>
+              )}
               <div className="mb-6 shrink-0">
                 <h3 className="text-lg font-medium mb-2">Instructions</h3>
                 <div className=" p-4 text-sm rounded-md border border-white/10">{session.instructions}</div>
