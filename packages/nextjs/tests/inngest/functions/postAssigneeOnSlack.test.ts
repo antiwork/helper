@@ -180,4 +180,128 @@ describe("notifySlackAssignment", () => {
     expect(postSlackDM).not.toHaveBeenCalled();
     expect(postSlackMessage).not.toHaveBeenCalled();
   });
+
+  it("posts assignment to Slack DM when assignee has a Slack user ID and conversation has been waiting over 24 hours", async () => {
+    const { user, mailbox } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "valid-token",
+        slackAlertChannel: "channel-id",
+      },
+    });
+    const user2 = userFactory.buildMockUser();
+    const twentyFiveHoursAgo = new Date(Date.now() - 25 * 60 * 60 * 1000);
+    const { conversation } = await conversationFactory.create(mailbox.id, {
+      assignedToClerkId: user.id,
+      emailFrom: "sender@example.com",
+      lastUserEmailCreatedAt: twentyFiveHoursAgo,
+    });
+
+    vi.mocked(getClerkUser)
+      .mockResolvedValueOnce({
+        id: user2.id,
+        firstName: "John",
+        lastName: "Doe",
+        fullName: user2.fullName,
+        externalAccounts: [] as ExternalAccount[],
+      } as User)
+      .mockResolvedValueOnce({
+        id: user.id,
+        firstName: "John",
+        lastName: "Doe",
+        fullName: user.fullName,
+        externalAccounts: [{ provider: "oauth_slack", externalId: "slack-user-id" }],
+      } as User);
+
+    const result = await notifySlackAssignment(conversation.id, {
+      assignedToId: user.id,
+      message: null,
+      assignedById: user2.id,
+    });
+
+    expect(result).toBe("Posted");
+    expect(postSlackDM).toHaveBeenCalled();
+  });
+
+  it("does not post assignment to Slack when conversation has not been waiting over 24 hours", async () => {
+    const { user, mailbox } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "valid-token",
+        slackAlertChannel: "channel-id",
+      },
+    });
+    const user2 = userFactory.buildMockUser();
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const { conversation } = await conversationFactory.create(mailbox.id, {
+      assignedToClerkId: user.id,
+      emailFrom: "sender@example.com",
+      lastUserEmailCreatedAt: twelveHoursAgo,
+    });
+
+    vi.mocked(getClerkUser)
+      .mockResolvedValueOnce({
+        id: user2.id,
+        firstName: "John",
+        lastName: "Doe",
+        fullName: user2.fullName,
+        externalAccounts: [] as ExternalAccount[],
+      } as User)
+      .mockResolvedValueOnce({
+        id: user.id,
+        firstName: "John",
+        lastName: "Doe",
+        fullName: user.fullName,
+        externalAccounts: [{ provider: "oauth_slack", externalId: "slack-user-id" }],
+      } as User);
+
+    const result = await notifySlackAssignment(conversation.id, {
+      assignedToId: user.id,
+      message: null,
+      assignedById: user2.id,
+    });
+
+    expect(result).toBe("Not posted, conversation has not been waiting over 24 hours without a response");
+    expect(postSlackDM).not.toHaveBeenCalled();
+    expect(postSlackMessage).not.toHaveBeenCalled();
+  });
+
+  it("does not post when conversation has no lastUserEmailCreatedAt", async () => {
+    const { user, mailbox } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "valid-token",
+        slackAlertChannel: "channel-id",
+      },
+    });
+    const user2 = userFactory.buildMockUser();
+    const { conversation } = await conversationFactory.create(mailbox.id, {
+      assignedToClerkId: user.id,
+      emailFrom: "sender@example.com",
+      lastUserEmailCreatedAt: null,
+    });
+
+    vi.mocked(getClerkUser)
+      .mockResolvedValueOnce({
+        id: user2.id,
+        firstName: "John",
+        lastName: "Doe",
+        fullName: user2.fullName,
+        externalAccounts: [] as ExternalAccount[],
+      } as User)
+      .mockResolvedValueOnce({
+        id: user.id,
+        firstName: "John",
+        lastName: "Doe",
+        fullName: user.fullName,
+        externalAccounts: [{ provider: "oauth_slack", externalId: "slack-user-id" }],
+      } as User);
+
+    const result = await notifySlackAssignment(conversation.id, {
+      assignedToId: user.id,
+      message: null,
+      assignedById: user2.id,
+    });
+
+    expect(result).toBe("Not posted, no last user email timestamp");
+    expect(postSlackDM).not.toHaveBeenCalled();
+    expect(postSlackMessage).not.toHaveBeenCalled();
+  });
 });

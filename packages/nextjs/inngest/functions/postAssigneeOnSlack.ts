@@ -29,6 +29,15 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
     return "Not posted, no assignee";
   }
 
+  if (!conversation.lastUserEmailCreatedAt) {
+    return "Not posted, no last user email timestamp";
+  }
+
+  const hoursSinceLastUserEmail = (Date.now() - conversation.lastUserEmailCreatedAt.getTime()) / (1000 * 60 * 60);
+  if (hoursSinceLastUserEmail <= 24) {
+    return "Not posted, conversation has not been waiting over 24 hours without a response";
+  }
+
   const slackUserId = assignee.externalAccounts.find((account) => account.provider === "oauth_slack")?.externalId;
   const heading = `_Message from ${conversation.emailFrom} assigned to *${slackUserId ? "you" : assignee.fullName}*${assignedBy ? ` by ${assignedBy.fullName}` : ""}_`;
   const attachments = [
