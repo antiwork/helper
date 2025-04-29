@@ -569,10 +569,12 @@ export class GuideManager {
     this.endGuideSession();
   }
 
-  public done(): void {
+  public done(success: boolean, message?: string): void {
     this.sendGuideEvent("completed", {
       title: document.title,
       url: window.location.href,
+      success,
+      message,
     });
     this.stopRecording();
     this.hideHelperHand();

@@ -66,6 +66,7 @@ Planned steps:
 Instructions:
 {{INSTRUCTIONS}}
 
+Current date: {{CURRENT_DATE}}
 Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
@@ -133,7 +134,8 @@ export async function POST(request: Request) {
   const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
     .replace("{{MAILBOX_NAME}}", mailbox.name)
     .replace("{{PLANNED_STEPS}}", formattedSteps)
-    .replace("{{INSTRUCTIONS}}", guideSession.instructions || "");
+    .replace("{{INSTRUCTIONS}}", guideSession.instructions || "")
+    .replace("{{CURRENT_DATE}}", new Date().toISOString());
 
   const tools = {
     AgentOutput: tool({

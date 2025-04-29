@@ -1,4 +1,4 @@
-import { ArrowRightFromLine, History } from "lucide-react";
+import { History, X } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -73,7 +73,7 @@ const Header = React.memo(function Header({
                 onClick={() => closeWidget()}
                 aria-label="Close chat"
               >
-                <ArrowRightFromLine className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </button>
             </TooltipTrigger>
             <TooltipContent>Close chat</TooltipContent>
