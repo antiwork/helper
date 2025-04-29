@@ -137,6 +137,8 @@ export default function Page() {
     return <div />;
   }
 
+  const headerTitle = currentView === "previous" ? "History" : (config.title ?? defaultTitle ?? "Support");
+
   return (
     <QueryClientProvider client={queryClient}>
       <style>
@@ -158,12 +160,10 @@ export default function Page() {
       >
         <Header
           config={config}
-          isGumroadTheme={isGumroadTheme}
           onShowPreviousConversations={onShowPreviousConversations}
           onNewConversation={memoizedHandleNewConversation}
           isAnonymous={isAnonymous}
-          isWhitelabel={isWhitelabel}
-          defaultTitle={defaultTitle}
+          title={headerTitle}
         />
         <div className="relative flex-1 overflow-hidden">
           <LazyMotion features={domAnimation}>

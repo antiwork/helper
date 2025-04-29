@@ -1,5 +1,4 @@
 import { History, X } from "lucide-react";
-import Image from "next/image";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { closeWidget } from "@/lib/widget/messages";
@@ -7,12 +6,10 @@ import { HelperWidgetConfig } from "@/sdk/types";
 
 type Props = {
   config: HelperWidgetConfig;
-  isGumroadTheme: boolean;
   isAnonymous: boolean;
   onShowPreviousConversations: () => void;
   onNewConversation: () => void;
-  isWhitelabel: boolean;
-  defaultTitle: string | null;
+  title: string;
 };
 
 const NewChatIcon = React.memo(() => (
@@ -24,18 +21,16 @@ const NewChatIcon = React.memo(() => (
 
 const Header = React.memo(function Header({
   config,
-  isGumroadTheme,
   isAnonymous,
   onShowPreviousConversations,
   onNewConversation,
-  isWhitelabel,
-  defaultTitle,
+  title,
 }: Props) {
   return (
     <div className="flex items-start justify-between border-b border-black p-2">
       <div className="flex items-center h-full">
         <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-lg font-medium leading-5 text-foreground">{config.title || defaultTitle || "Helper"}</h2>
+          <h2 className="text-lg font-medium leading-5 text-foreground">{title}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">
