@@ -251,6 +251,7 @@ export default function Conversation({
         stopChat={stop}
         addToolResult={addToolResult}
         resumeGuide={resumeGuide}
+        status={status}
       />
       <SupportButtons
         conversationSlug={conversationSlug}

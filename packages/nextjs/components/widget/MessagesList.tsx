@@ -16,6 +16,7 @@ type Props = {
   stopChat: () => void;
   addToolResult: ({ toolCallId, result }: { toolCallId: string; result: any }) => void;
   resumeGuide: GuideInstructions | null;
+  status: string;
 };
 
 export default function MessagesList({
@@ -28,6 +29,7 @@ export default function MessagesList({
   stopChat,
   addToolResult,
   resumeGuide,
+  status,
 }: Props) {
   const { scrollRef, contentRef } = useStickToBottom();
 
@@ -92,6 +94,29 @@ export default function MessagesList({
             />
           );
         })}
+
+        {status === "submitted" && (
+          <div className="flex flex-col gap-3">
+            <Message
+              key="loading-message"
+              message={{
+                id: "loading",
+                role: "assistant",
+                content: "",
+                createdAt: new Date(),
+                reactionType: null,
+                reactionFeedback: null,
+                reactionCreatedAt: null,
+              }}
+              attachments={[]}
+              conversationSlug={conversationSlug}
+              token={token}
+              data={null}
+              color={isGumroadTheme ? "gumroad-pink" : "primary"}
+              hideReasoning={true}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
