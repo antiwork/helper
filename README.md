@@ -4,15 +4,17 @@ Customer support agents via live chat and email.
 
 ## Project Structure
 
-The project uses [Turborepo](https://turbo.build/) and contains:
+The project contains:
 
 ```text
 .github
   └─ workflows
       └─ CI with tests, linting, and type checking
-apps
+packages
   ├─ nextjs
   │   └─ Next.js web application
+  ├─ react
+  │   └─ React SDK for integrating the chat widget
 bin
   └─ Development and deployment scripts
 docker

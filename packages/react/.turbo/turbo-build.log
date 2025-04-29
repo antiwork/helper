@@ -1,0 +1,104 @@
+
+
+> @helperai/react@0.5.1 build
+> tsup && node postbuild.js
+
+[1G[0K[34mCLI[39m Building entry: src/global.d.ts, src/index.ts, src/types.ts, src/components/ClientHelperProvider.tsx, src/components/HelperProvider.tsx, src/hooks/useHelper.ts, src/server/helper-auth.ts, src/test/setup.d.ts, src/test/setup.ts, src/test/utils.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.3.6
+[34mCLI[39m Using tsup config: /Users/jono/Projects/Work/helper2/packages/react/tsup.config.ts
+[34mCLI[39m Building entry: src/global.d.ts, src/index.ts, src/types.ts, src/components/ClientHelperProvider.tsx, src/components/HelperProvider.tsx, src/hooks/useHelper.ts, src/server/helper-auth.ts, src/test/setup.d.ts, src/test/setup.ts, src/test/utils.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.3.6
+[34mCLI[39m Using tsup config: /Users/jono/Projects/Work/helper2/packages/react/tsup.config.ts
+[34mCLI[39m Target: es2020
+[34mCLI[39m Target: es2020
+[34mCLI[39m Cleaning output folder
+[34mESM[39m Build start
+[34mCLI[39m Cleaning output folder
+[34mCJS[39m Build start
+[33mGenerated an empty chunk: "global.d".[39m
+[33mGenerated an empty chunk: "types".[39m
+[33mGenerated an empty chunk: "setup.d".[39m
+[33mdist/esm/server/helper-auth.mjs (1:0): Module level directives cause errors when bundled, "use server" in "dist/esm/server/helper-auth.mjs" was ignored.[39m
+[33mdist/esm/components/ClientHelperProvider.mjs (1:0): Module level directives cause errors when bundled, "use client" in "dist/esm/components/ClientHelperProvider.mjs" was ignored.[39m
+[33mGenerated an empty chunk: "global.d".[39m
+[33mGenerated an empty chunk: "types".[39m
+[33mdist/cjs/components/ClientHelperProvider.js (1:0): Module level directives cause errors when bundled, "use client" in "dist/cjs/components/ClientHelperProvider.js" was ignored.[39m
+[33mGenerated an empty chunk: "setup.d".[39m
+[33mdist/cjs/server/helper-auth.js (1:0): Module level directives cause errors when bundled, "use server" in "dist/cjs/server/helper-auth.js" was ignored.[39m
+[32mCJS[39m [1mdist/cjs/global.d.js                            [22m[32m88.00 B[39m
+[32mCJS[39m [1mdist/cjs/types.js                               [22m[32m82.00 B[39m
+[32mCJS[39m [1mdist/cjs/index.js                               [22m[32m639.00 B[39m
+[32mCJS[39m [1mdist/cjs/hooks/useHelper.js                     [22m[32m929.00 B[39m
+[32mCJS[39m [1mdist/cjs/test/setup.d.js                        [22m[32m86.00 B[39m
+[32mCJS[39m [1mdist/cjs/components/HelperProvider.js           [22m[32m668.00 B[39m
+[32mCJS[39m [1mdist/cjs/components/ClientHelperProvider.js     [22m[32m994.00 B[39m
+[32mCJS[39m [1mdist/cjs/test/utils.js                          [22m[32m1.12 KB[39m
+[32mCJS[39m [1mdist/cjs/server/helper-auth.js                  [22m[32m1.51 KB[39m
+[32mCJS[39m [1mdist/cjs/test/setup.js                          [22m[32m858.00 B[39m
+[32mCJS[39m [1mdist/cjs/global.d.js.map                        [22m[32m72.00 B[39m
+[32mCJS[39m [1mdist/cjs/index.js.map                           [22m[32m89.00 B[39m
+[32mCJS[39m [1mdist/cjs/types.js.map                           [22m[32m69.00 B[39m
+[32mCJS[39m [1mdist/cjs/hooks/useHelper.js.map                 [22m[32m1.80 KB[39m
+[32mCJS[39m [1mdist/cjs/components/ClientHelperProvider.js.map [22m[32m2.08 KB[39m
+[32mCJS[39m [1mdist/cjs/components/HelperProvider.js.map       [22m[32m1.53 KB[39m
+[32mCJS[39m [1mdist/cjs/test/setup.d.js.map                    [22m[32m71.00 B[39m
+[32mCJS[39m [1mdist/cjs/test/utils.js.map                      [22m[32m1.95 KB[39m
+[32mCJS[39m [1mdist/cjs/test/setup.js.map                      [22m[32m597.00 B[39m
+[32mCJS[39m [1mdist/cjs/server/helper-auth.js.map              [22m[32m3.02 KB[39m
+[32mCJS[39m ⚡️ Build success in 71ms
+[32mESM[39m [1mdist/esm/test/setup.d.mjs                        [22m[32m74.00 B[39m
+[32mESM[39m [1mdist/esm/types.mjs                               [22m[32m70.00 B[39m
+[32mESM[39m [1mdist/esm/server/helper-auth.mjs                  [22m[32m1.29 KB[39m
+[32mESM[39m [1mdist/esm/components/ClientHelperProvider.mjs     [22m[32m960.00 B[39m
+[32mESM[39m [1mdist/esm/test/utils.mjs                          [22m[32m995.00 B[39m
+[32mESM[39m [1mdist/esm/test/setup.mjs                          [22m[32m324.00 B[39m
+[32mESM[39m [1mdist/esm/index.mjs                               [22m[32m237.00 B[39m
+[32mESM[39m [1mdist/esm/hooks/useHelper.mjs                     [22m[32m890.00 B[39m
+[32mESM[39m [1mdist/esm/components/HelperProvider.mjs           [22m[32m427.00 B[39m
+[32mESM[39m [1mdist/esm/global.d.mjs                            [22m[32m76.00 B[39m
+[32mESM[39m [1mdist/esm/test/setup.d.mjs.map                    [22m[32m72.00 B[39m
+[32mESM[39m [1mdist/esm/server/helper-auth.mjs.map              [22m[32m3.01 KB[39m
+[32mESM[39m [1mdist/esm/test/utils.mjs.map                      [22m[32m1.94 KB[39m
+[32mESM[39m [1mdist/esm/index.mjs.map                           [22m[32m90.00 B[39m
+[32mESM[39m [1mdist/esm/types.mjs.map                           [22m[32m70.00 B[39m
+[32mESM[39m [1mdist/esm/components/ClientHelperProvider.mjs.map [22m[32m2.07 KB[39m
+[32mESM[39m [1mdist/esm/test/setup.mjs.map                      [22m[32m529.00 B[39m
+[32mESM[39m [1mdist/esm/hooks/useHelper.mjs.map                 [22m[32m1.78 KB[39m
+[32mESM[39m [1mdist/esm/components/HelperProvider.mjs.map       [22m[32m1.50 KB[39m
+[32mESM[39m [1mdist/esm/global.d.mjs.map                        [22m[32m73.00 B[39m
+[32mESM[39m ⚡️ Build success in 82ms
+DTS Build start
+DTS Build start
+DTS ⚡️ Build success in 1821ms
+DTS dist/esm/index.d.mts                           275.00 B
+DTS dist/esm/global.d.d.mts                        278.00 B
+DTS dist/esm/components/ClientHelperProvider.d.mts 291.00 B
+DTS dist/esm/components/HelperProvider.d.mts       1.04 KB
+DTS dist/esm/hooks/useHelper.d.mts                 168.00 B
+DTS dist/esm/server/helper-auth.d.mts              724.00 B
+DTS dist/esm/test/setup.d.d.mts                    255.00 B
+DTS dist/esm/test/setup.d.mts                      170.00 B
+DTS dist/esm/test/utils.d.mts                      524.00 B
+DTS dist/esm/types.d.mts                           1.63 KB
+DTS ⚡️ Build success in 1931ms
+DTS dist/cjs/index.d.ts                           271.00 B
+DTS dist/cjs/global.d.d.ts                        277.00 B
+DTS dist/cjs/components/ClientHelperProvider.d.ts 290.00 B
+DTS dist/cjs/components/HelperProvider.d.ts       1.04 KB
+DTS dist/cjs/hooks/useHelper.d.ts                 168.00 B
+DTS dist/cjs/server/helper-auth.d.ts              724.00 B
+DTS dist/cjs/test/setup.d.d.ts                    255.00 B
+DTS dist/cjs/test/setup.d.ts                      170.00 B
+DTS dist/cjs/test/utils.d.ts                      523.00 B
+DTS dist/cjs/types.d.ts                           1.63 KB
+Added "use client" to dist/cjs/components/ClientHelperProvider.js
+Added "use client" to dist/cjs/components/ClientHelperProvider.d.ts
+Added "use server" to dist/cjs/server/helper-auth.js
+Added "use server" to dist/cjs/server/helper-auth.d.ts
+[33mCould not process dist/esm/components/ClientHelperProvider.js: File does not exist[39m
+Added "use client" to dist/esm/components/ClientHelperProvider.d.mts
+[33mCould not process dist/esm/server/helper-auth.js: File does not exist[39m
+Added "use server" to dist/esm/server/helper-auth.d.mts
+[1G[0K⠙[1G[0K

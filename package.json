@@ -5,28 +5,25 @@
   "packageManager": "npm@10.8.2",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "npm run build --workspace=packages/react --workspace=packages/nextjs",
     "build:preview": "(cd packages/nextjs && npm run build:preview)",
     "clean": "git clean -xdf node_modules",
-    "clean:workspaces": "turbo run clean",
-    "daemon:clean": "turbo daemon clean || true",
     "db:check": "(cd packages/nextjs && npm run db:check)",
     "db:generate": "(cd packages/nextjs && npm run db:generate)",
     "db:migrate": "(cd packages/nextjs && npm run db:migrate)",
     "db:reset": "(cd packages/nextjs && npm run db:reset)",
-    "dev": "lsof -ti:3010 | xargs kill -9 || true && npm run daemon:clean && turbo run dev --continue",
     "dev:email": "npm -C packages/nextjs run dev:email",
-    "dev:next": "lsof -ti:3010 | xargs kill -9 || true && npm run daemon:clean && turbo run dev --continue -F @helperai/nextjs...",
+    "dev:next": "lsof -ti:3010 | xargs kill -9 || true && npm run dev --workspace=packages/nextjs",
     "dev:sdk": "npm -C packages/nextjs run dev:sdk",
     "eval:dev": "(cd packages/nextjs && npm run eval:dev)",
     "evals": "(cd packages/nextjs && npm run evals)",
-    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
-    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
+    "format": "npm run format --workspaces",
+    "lint": "npm run lint --workspaces",
     "repl": "(cd packages/nextjs && npm run repl)",
     "repl:preview": "(cd packages/nextjs && npm run repl:preview)",
     "repl:prod": "(cd packages/nextjs && npm run repl:prod)",
-    "test": "turbo run test --concurrency=1",
-    "typecheck": "turbo run typecheck"
+    "test": "npm run test --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
   },
   "devDependencies": {
     "@figma/code-connect": "^1.0.5",
@@ -34,7 +31,6 @@
     "inngest-cli": "^1.1.0",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
-    "turbo": "^2.1.1",
     "typescript": "^5.5.4"
   },
   "workspaces": [
