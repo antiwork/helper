@@ -1,6 +1,5 @@
 export function isSpeechRecognitionSupported(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
 
-  return 'SpeechRecognition' in window ||
-         'webkitSpeechRecognition' in window;
+  return "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
 }

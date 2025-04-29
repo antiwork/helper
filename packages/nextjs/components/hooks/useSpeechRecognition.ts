@@ -1,13 +1,13 @@
-import { isSpeechRecognitionSupported } from '@/lib/shared/browser';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { isSpeechRecognitionSupported } from "@/lib/shared/browser";
 
 export function useSpeechRecognition() {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [error, setError] = useState(null);
+  const [transcript, setTranscript] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [recognition, setRecognition] = useState<any>(null);
 
-  const isSupported = isSpeechRecognitionSupported()
+  const isSupported = isSpeechRecognitionSupported();
 
   const getRecognition = () => {
     if (!isSupported) return null;
@@ -17,15 +17,15 @@ export function useSpeechRecognition() {
       const recognition = new SpeechRecognition();
 
       recognition.continuous = true;
-      recognition.lang = 'en-US';
+      recognition.lang = "en-US";
 
       recognition.onresult = (event) => {
-        let finalTranscript = '';
+        let finalTranscript = "";
 
         // Combine all results
-        for (let i = 0; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+        for (const result of Array.from(event.results)) {
+          if (result.isFinal) {
+            finalTranscript += result[0]?.transcript || "";
           }
         }
 
@@ -34,8 +34,8 @@ export function useSpeechRecognition() {
         }
       };
 
-      recognition.onerror = (event) => {
-        setError(event.error || 'Speech recognition error');
+      recognition.onerror = (event: any) => {
+        setError(event.error || "Speech recognition error");
         setIsRecording(false);
       };
 
@@ -53,7 +53,7 @@ export function useSpeechRecognition() {
 
   const startRecording = () => {
     if (!isSupported) {
-      setError('Speech recognition is not supported in this browser');
+      setError("Speech recognition is not supported in this browser");
       return;
     }
 
@@ -89,4 +89,3 @@ export function useSpeechRecognition() {
     stopRecording,
   };
 }
-

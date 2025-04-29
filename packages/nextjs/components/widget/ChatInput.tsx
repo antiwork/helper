@@ -1,15 +1,15 @@
 import { Camera, Mic } from "lucide-react";
 import * as motion from "motion/react-client";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "@/components/hooks/use-toast";
+import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
 import { useScreenshotStore } from "@/components/widget/widgetState";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { sendScreenshot } from "@/lib/widget/messages";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { sendScreenshot } from "@/lib/widget/messages";
 
 type Props = {
   input: string;
@@ -167,7 +167,7 @@ export default function ChatInput({
                         "text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted focus:outline-none",
                         {
                           "bg-muted": isRecording,
-                        }
+                        },
                       )}
                       disabled={isLoading}
                       aria-label={isRecording ? "Stop recording" : "Start recording"}
