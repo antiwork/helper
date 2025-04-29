@@ -179,9 +179,9 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
               {session.conversation && (
                 <div className="mb-4 shrink-0">
                   <Button
-                    variant="outline"
+                    variant="outlined"
                     onClick={() =>
-                      router.push(`/mailboxes/${mailbox.slug}/conversations?id=${session.conversation.slug}`)
+                      router.push(`/mailboxes/${mailbox.slug}/conversations?id=${session.conversation?.slug}`)
                     }
                     className="w-full"
                   >
