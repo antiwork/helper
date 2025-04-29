@@ -163,12 +163,9 @@ export default function ChatInput({
                     <button
                       type="button"
                       onClick={toggleRecording}
-                      className={cn(
-                        "text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted focus:outline-none",
-                        {
-                          "bg-muted": isRecording,
-                        },
-                      )}
+                      className={cn("text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted", {
+                        "bg-muted": isRecording,
+                      })}
                       disabled={isLoading}
                       aria-label={isRecording ? "Stop recording" : "Start recording"}
                     >
