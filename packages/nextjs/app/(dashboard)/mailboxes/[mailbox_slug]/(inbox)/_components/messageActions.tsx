@@ -9,6 +9,7 @@ import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
+import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
@@ -53,10 +54,26 @@ const EmailEditorComponent = React.forwardRef<
     onOptionSend: () => void;
     updateEmail: (changes: Partial<DraftedEmail>) => void;
     handleInsertReply: (content: string) => void;
+    isRecordingSupported: boolean;
+    isRecording: boolean;
+    startRecording: () => void;
+    stopRecording: () => void;
   }
 >(
   (
-    { draftedEmail, initialMessage, actionButtons, onSend, onOptionSend, updateEmail, handleInsertReply },
+    {
+      draftedEmail,
+      initialMessage,
+      actionButtons,
+      onSend,
+      onOptionSend,
+      updateEmail,
+      handleInsertReply,
+      isRecordingSupported,
+      isRecording,
+      startRecording,
+      stopRecording,
+    },
     forwardedRef,
   ) => {
     const { isAboveMd } = useBreakpoint("md");
@@ -80,7 +97,7 @@ const EmailEditorComponent = React.forwardRef<
       } else if (forwardedRef) {
         forwardedRef.current = editorRef.current;
       }
-    }, [forwardedRef]);
+    }, [forwardedRef, editorRef.current]);
 
     const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
 
@@ -146,6 +163,10 @@ const EmailEditorComponent = React.forwardRef<
               </div>
             ) : null
           }
+          isRecordingSupported={isRecordingSupported}
+          isRecording={isRecording}
+          startRecording={startRecording}
+          stopRecording={stopRecording}
         />
       </div>
     );
@@ -239,12 +260,25 @@ export const MessageActions = () => {
     }
   }, [storedMessage]);
 
+  const {
+    isSupported: isRecordingSupported,
+    isRecording,
+    error,
+    startRecording,
+    stopRecording,
+    latestSegment,
+  } = useSpeechRecognition();
+  const prevLatestSegment = useRef(latestSegment);
+
   const { readyFiles, resetFiles } = useFileUpload();
   const { sendDisabled, sending, setSending } = useSendDisabled(draftedEmail.message);
+
   const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
 
+    stopRecording();
     setSending(true);
+
     try {
       const cc_emails = draftedEmail.cc.replace(/\s/g, "").split(",");
       const bcc_emails = draftedEmail.bcc.replace(/\s/g, "").split(",");
@@ -388,6 +422,23 @@ export const MessageActions = () => {
 
   const editorRef = useRef<TipTapEditorRef | null>(null);
 
+  useEffect(() => {
+    if (latestSegment && latestSegment.id !== prevLatestSegment.current?.id && editorRef.current?.editor) {
+      editorRef.current.editor.commands.insertContent(latestSegment.segment);
+    }
+    prevLatestSegment.current = latestSegment;
+  }, [latestSegment, editorRef.current?.editor]);
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Speech Recognition Error",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  }, [error]);
+
   return (
     <EmailEditorComponent
       ref={editorRef}
@@ -398,6 +449,10 @@ export const MessageActions = () => {
       onOptionSend={() => handleSend({ assign: false, close: false })}
       updateEmail={updateDraftedEmail}
       handleInsertReply={handleInsertReply}
+      isRecordingSupported={isRecordingSupported}
+      isRecording={isRecording}
+      startRecording={startRecording}
+      stopRecording={stopRecording}
     />
   );
 };

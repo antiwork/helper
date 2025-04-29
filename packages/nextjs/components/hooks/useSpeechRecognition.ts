@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isSpeechRecognitionSupported } from "@/lib/shared/browser";
 
 export function useSpeechRecognition() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [latestSegment, setLatestSegment] = useState<{
+    id: string;
+    segment: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recognition, setRecognition] = useState<any>(null);
 
@@ -21,16 +25,27 @@ export function useSpeechRecognition() {
 
       recognition.onresult = (event) => {
         let finalTranscript = "";
+        let newFinalSegment = "";
 
-        // Combine all results
-        for (const result of Array.from(event.results)) {
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const result = event.results[i];
+          if (!result) continue;
           if (result.isFinal) {
-            finalTranscript += result[0]?.transcript || "";
+            const segment = result[0]?.transcript || "";
+            finalTranscript += segment;
+            newFinalSegment = segment;
           }
         }
 
         if (finalTranscript) {
-          setTranscript(finalTranscript);
+          setTranscript((prev) => prev + finalTranscript);
+        }
+
+        if (newFinalSegment) {
+          setLatestSegment({
+            id: new Date().getTime().toString(),
+            segment: newFinalSegment,
+          });
         }
       };
 
@@ -85,6 +100,7 @@ export function useSpeechRecognition() {
     isRecording,
     transcript,
     error,
+    latestSegment,
     startRecording,
     stopRecording,
   };

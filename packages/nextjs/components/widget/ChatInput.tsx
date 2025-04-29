@@ -69,8 +69,8 @@ export default function ChatInput({
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
   const { screenshot, setScreenshot } = useScreenshotStore();
-  const { isSupported, isRecording, transcript, error, startRecording, stopRecording } = useSpeechRecognition();
-  const prevTranscript = useRef(transcript);
+  const { isSupported, isRecording, latestSegment, error, startRecording, stopRecording } = useSpeechRecognition();
+  const prevLatestSegment = useRef(latestSegment);
 
   useEffect(() => {
     if (!input) {
@@ -89,10 +89,9 @@ export default function ChatInput({
   }, [screenshot]);
 
   useEffect(() => {
-    // handleInputChange updates each render, so we need to check if the transcript has changed
-    if (transcript && transcript !== prevTranscript.current) {
+    if (latestSegment && latestSegment.id !== prevLatestSegment.current?.id) {
       const event = {
-        target: { value: transcript },
+        target: { value: input + latestSegment.segment },
       } as React.ChangeEvent<HTMLTextAreaElement>;
       handleInputChange(event);
 
@@ -100,15 +99,15 @@ export default function ChatInput({
         inputRef.current.focus();
       }
     }
-
-    prevTranscript.current = transcript;
-  }, [transcript, handleInputChange, inputRef]);
+    prevLatestSegment.current = latestSegment;
+  }, [latestSegment, handleInputChange]);
 
   useEffect(() => {
     if (error) {
       toast({
         title: "Error",
         description: error,
+        variant: "destructive",
       });
     }
   }, [error]);
