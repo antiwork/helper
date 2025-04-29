@@ -36,7 +36,8 @@ brew install mkcert
 brew install nss
 ```
 
-#### For Windows:
+```sh
+# Install mkcert on Windows
 
 Open **PowerShell as Administrator** and run:
 
@@ -47,13 +48,13 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocola
 ```
 
 Then:
-
 ```powershell
 choco install mkcert
 mkcert -install
 ```
 
 > If Chocolatey installation fails due to an existing incomplete setup, delete `C:\ProgramData\chocolatey` manually and rerun the script above.
+```sh
 
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
 
