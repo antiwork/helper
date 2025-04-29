@@ -93,7 +93,3 @@ npm run db:migrate
 
 Helper is licensed under the [MIT License](LICENSE.md).
 ```
-
----
-
-Agora é só copiar e colar no seu `README.md`. Isso deve funcionar de forma bem clara para todos os sistemas. Qualquer coisa, só me chamar!
