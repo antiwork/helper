@@ -210,22 +210,6 @@ class HelperWidget {
     this.loadingOverlay.innerHTML = '<div class="helper-widget-spinner"></div>';
   }
 
-  private addHelperIcon(): void {
-    if (this.helperIcon) return;
-
-    this.helperIcon = document.createElement("button");
-    this.helperIcon.className = "helper-widget-icon";
-
-    const iconColor = this.config.icon_color || "#222";
-    const svgColor = this.isLightColor(iconColor) ? "#000000" : "#FFFFFF";
-
-    this.helperIcon.innerHTML = `<svg class="hand-icon" width="26" height="29" viewBox="0 0 26 29" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.9885 19.1603C14.4462 16.4526 25.36 8.80865 25.36 8.80865L22.5717 4.78239C22.5717 4.78239 18.2979 8.46521 15.1353 12.7541C14.4648 13.7215 13.1488 12.9234 13.9447 11.5515C15.9064 8.16995 21.5892 2.70127 21.5892 2.70127L17.2712 0.54569C17.2712 0.54569 14.458 3.38303 10.9133 10.5004C10.2651 11.8018 8.94659 11.1429 9.39493 9.80167C10.5422 6.36947 14.2637 0.913031 14.2637 0.913031L9.74091 0.17627C9.74091 0.17627 7.30141 4.59585 5.78539 10.0891C5.46118 11.2634 4.04931 10.9838 4.2171 9.81717C4.50759 7.79708 6.51921 1.95354 6.51921 1.95354L2.60762 1.97033C2.60762 1.97033 -0.737277 9.78607 1.7329 18.4073C3.13956 23.3167 7.54191 28.1763 13.287 28.1763C18.9209 28.1763 23.8513 23.8362 25.5294 17.1416L21.6221 14.1778C21.6221 14.1778 19.4441 21.7758 16.9885 19.1603Z" fill="${svgColor}"/></svg>`;
-    this.helperIcon.style.backgroundColor = iconColor;
-
-    document.body.appendChild(this.helperIcon);
-    this.connectToggleElement(this.helperIcon);
-  }
-
   private isLightColor(color: string): boolean {
     const hex = color.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
@@ -233,6 +217,27 @@ class HelperWidget {
     const b = parseInt(hex.substr(4, 2), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5;
+  }
+
+  public getIconColors(): { backgroundColor: string; foregroundColor: string } {
+    const backgroundColor = this.config.icon_color || "#222";
+    const foregroundColor = this.isLightColor(backgroundColor) ? "#000000" : "#FFFFFF";
+    return { backgroundColor, foregroundColor };
+  }
+
+  private addHelperIcon(): void {
+    if (this.helperIcon) return;
+
+    this.helperIcon = document.createElement("button");
+    this.helperIcon.className = "helper-widget-icon";
+
+    const { backgroundColor, foregroundColor } = this.getIconColors();
+
+    this.helperIcon.innerHTML = `<svg class="hand-icon" width="26" height="29" viewBox="0 0 26 29" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.9885 19.1603C14.4462 16.4526 25.36 8.80865 25.36 8.80865L22.5717 4.78239C22.5717 4.78239 18.2979 8.46521 15.1353 12.7541C14.4648 13.7215 13.1488 12.9234 13.9447 11.5515C15.9064 8.16995 21.5892 2.70127 21.5892 2.70127L17.2712 0.54569C17.2712 0.54569 14.458 3.38303 10.9133 10.5004C10.2651 11.8018 8.94659 11.1429 9.39493 9.80167C10.5422 6.36947 14.2637 0.913031 14.2637 0.913031L9.74091 0.17627C9.74091 0.17627 7.30141 4.59585 5.78539 10.0891C5.46118 11.2634 4.04931 10.9838 4.2171 9.81717C4.50759 7.79708 6.51921 1.95354 6.51921 1.95354L2.60762 1.97033C2.60762 1.97033 -0.737277 9.78607 1.7329 18.4073C3.13956 23.3167 7.54191 28.1763 13.287 28.1763C18.9209 28.1763 23.8513 23.8362 25.5294 17.1416L21.6221 14.1778C21.6221 14.1778 19.4441 21.7758 16.9885 19.1603Z" fill="${foregroundColor}"/></svg>`;
+    this.helperIcon.style.backgroundColor = backgroundColor;
+
+    document.body.appendChild(this.helperIcon);
+    this.connectToggleElement(this.helperIcon);
   }
 
   private createIframe(): void {
@@ -296,7 +301,8 @@ class HelperWidget {
             }
 
             if (action === GUIDE_DONE) {
-              this.guideManager.done();
+              const { success, message } = content;
+              this.guideManager.done(success, message);
             }
 
             if (action === "CANCEL_GUIDE") {
@@ -474,12 +480,14 @@ class HelperWidget {
       this.toggleButton.classList.add("gumroad-theme");
     }
 
+    const { backgroundColor, foregroundColor } = this.getIconColors();
+
     this.toggleButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="${foregroundColor}" class="size-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
 </svg>
-
     `;
+    this.toggleButton.style.backgroundColor = backgroundColor;
     this.toggleButton.addEventListener("click", () => HelperWidget.show());
   }
 
@@ -557,7 +565,6 @@ class HelperWidget {
       this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
-      this.guideManager.clearSession();
 
       // Show the toggle button when the widget is hidden (only if it has been opened before)
       if (

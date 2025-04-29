@@ -63,6 +63,10 @@ IMPORTANT: Only call one action at a time.
 Planned steps:
 {{PLANNED_STEPS}}
 
+Instructions:
+{{INSTRUCTIONS}}
+
+Current date: {{CURRENT_DATE}}
 Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
@@ -93,8 +97,7 @@ export async function POST(request: Request) {
     if (actionData.result === "Performed") {
       textResult = `Successfully performed action ${actionData.actionType}
       Now, the current URL is: ${actionData.newPageDetails.url}
-      Current Page Title: ${actionData.newPageDetails.title}
-      Elements: ${actionData.newPageDetails.elements}`;
+      Current Page Title: ${actionData.newPageDetails.title}`;
     } else {
       textResult = `Failed to perform action ${actionData.actionType}`;
     }
@@ -107,10 +110,9 @@ export async function POST(request: Request) {
         {
           id: action.id.toString(),
           toolName: "AgentOutput",
-          step: 0,
           state: "result",
           result: textResult,
-          toolCallId: `tool_${action.id}`,
+          toolCallId: `call_${action.id}`,
           args: {
             current_state: actionData.currentState,
             action: {
@@ -131,7 +133,9 @@ export async function POST(request: Request) {
   const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
   const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
     .replace("{{MAILBOX_NAME}}", mailbox.name)
-    .replace("{{PLANNED_STEPS}}", formattedSteps);
+    .replace("{{PLANNED_STEPS}}", formattedSteps)
+    .replace("{{INSTRUCTIONS}}", guideSession.instructions || "")
+    .replace("{{CURRENT_DATE}}", new Date().toISOString());
 
   const tools = {
     AgentOutput: tool({
@@ -140,7 +144,7 @@ export async function POST(request: Request) {
         .object({
           current_state: z.object({
             evaluation_previous_goal: z.string(),
-            next_goal: z.string(),
+            next_goal: z.string().describe("Next goal to complete, do not include sample values, only actual values"),
             completed_steps: z
               .array(z.number().int())
               .describe("List of steps that have been completed, empty array if none, index starts at 1"),
@@ -212,7 +216,7 @@ export async function POST(request: Request) {
       const result = streamText({
         system: systemPrompt,
         model,
-        temperature: 0,
+        temperature: 0.1,
         messages,
         tools,
         toolChoice: "required",

@@ -15,7 +15,7 @@ import {
 import { GuideInstructions, Step } from "@/types/guide";
 import { AISteps } from "./ai-steps";
 
-type Status = "prompt" | "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
+type Status = "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
 
 type PendingConfirmation = {
   actionToolCallId: string;
@@ -50,7 +50,7 @@ export default function HelpingHand({
   color: string;
 }) {
   const [guideSessionId, setGuideSessionId] = useState<string | null>(existingSessionId ?? null);
-  const [status, setStatus] = useState<Status>(pendingResume ? "pending-resume" : "prompt");
+  const [status, setStatus] = useState<Status>(pendingResume ? "pending-resume" : "initializing");
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
@@ -66,6 +66,13 @@ export default function HelpingHand({
   useEffect(() => {
     stepsRef.current = steps;
   }, [steps]);
+
+  useEffect(() => {
+    if (!pendingResume && status === "initializing" && !existingSessionId) {
+      stopChat();
+      initializeGuideSession();
+    }
+  }, [pendingResume, status, existingSessionId]);
 
   const updateStepsBackend = async (updatedSteps: Step[]) => {
     if (!guideSessionId || !token) return;
@@ -124,8 +131,9 @@ export default function HelpingHand({
 
   const trackToolResult = (actionToolCallId: string, result: string) => {
     if (toolResultCount >= 10) {
-      guideDone(false);
-      setDone({ success: false, message: "Failed to complete the task, too many attempts" });
+      const message = "Failed to complete the task, too many attempts";
+      guideDone(false, message);
+      setDone({ success: false, message });
       setStatus("error");
       addChatToolResult({
         toolCallId: actionToolCallId,
@@ -149,12 +157,13 @@ export default function HelpingHand({
     const params = Object.fromEntries(Object.entries(action).filter(([key]) => key !== "type"));
 
     if (type === "done") {
-      await guideDone(action.success);
-      setDone({ success: action.success, message: action.text });
+      const message = action.text || "Task completed successfully";
+      await guideDone(action.success, message);
+      setDone({ success: action.success, message });
       setStatus("done");
       addChatToolResult({
         toolCallId,
-        result: action.text,
+        result: message,
       });
       return;
     }
@@ -257,15 +266,10 @@ export default function HelpingHand({
       .replace("{{PAGE_DETAILS}}", JSON.stringify(pageDetails.clickableElements));
 
     if (resumed) {
-      content += `\n\nWe are resuming the guide. Check if the steps are still valid based on the current page details. Elements changed and use the last page details to continue the guide.`;
+      content += `\n\nWe are resuming the guide. Check if the steps are still valid based on the current page elements.`;
     }
 
     append({ role: "user", content });
-  };
-
-  const startGuide = () => {
-    stopChat();
-    initializeGuideSession();
   };
 
   const cancelGuideAction = () => {
@@ -303,28 +307,6 @@ export default function HelpingHand({
 
   if (status === "pending-resume" || status === "cancelled") {
     return null;
-  }
-
-  if (status === "prompt") {
-    return (
-      <MessageWrapper status={status}>
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Guide - {title}</p>
-          <ReactMarkdown className="text-xs">{instructions}</ReactMarkdown>
-
-          {status === "prompt" && (
-            <div className="flex items-center gap-2">
-              <button className="text-xs bg-black text-white px-2 py-1 rounded-md" onClick={startGuide}>
-                Do it for me!
-              </button>
-              <button className="text-xs px-2 py-1 rounded-md underline" onClick={cancelGuideAction}>
-                Just tell me how
-              </button>
-            </div>
-          )}
-        </div>
-      </MessageWrapper>
-    );
   }
 
   const loadingClasses = `absolute top-1/2 h-2 w-2 -translate-y-1/2 transform rounded-full bg-${color}`;

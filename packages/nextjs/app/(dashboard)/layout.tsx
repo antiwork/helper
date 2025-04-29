@@ -38,40 +38,19 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cx(
-        "h-full",
-        sundryRegular.variable,
-        sundryMedium.variable,
-        sundryBold.variable,
-        sundryNarrowMedium.variable,
-        sundryNarrowBold.variable,
-      )}
-    >
-      <body
-        className="h-full overflow-y-hidden antialiased text-foreground bg-background font-regular"
-        suppressHydrationWarning
-      >
-        <ClerkProvider appearance={{ variables: { colorPrimary: "hsl(0 67% 17%)" } }}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <NuqsAdapter>
-              <Toaster />
-              <SentryContext />
-              <TRPCReactProvider>
-                <HydrateClient>
-                  <TauriUpdateChecker />
-                  <NativeAppIntegration />
-                  <DeepLinkHandler />
-                  {children}
-                </HydrateClient>
-              </TRPCReactProvider>
-            </NuqsAdapter>
-          </ThemeProvider>
-        </ClerkProvider>
-        <Analytics />
-      </body>
-    </html>
+    <ClerkProvider appearance={{ variables: { colorPrimary: "hsl(0 67% 17%)" } }}>
+      <NuqsAdapter>
+        <Toaster />
+        <SentryContext />
+        <TRPCReactProvider>
+          <HydrateClient>
+            <TauriUpdateChecker />
+            <NativeAppIntegration />
+            <DeepLinkHandler />
+            {children}
+          </HydrateClient>
+        </TRPCReactProvider>
+      </NuqsAdapter>
+    </ClerkProvider>
   );
 }

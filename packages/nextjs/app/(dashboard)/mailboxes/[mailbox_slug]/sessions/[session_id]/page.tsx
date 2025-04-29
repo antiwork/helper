@@ -29,6 +29,7 @@ export default async function SessionPage(props: { params: Promise<PageProps> })
       replays: {
         orderBy: (r, { asc }) => [asc(r.timestamp)],
       },
+      conversation: true, // Add this line to include the conversation data
     },
   });
 

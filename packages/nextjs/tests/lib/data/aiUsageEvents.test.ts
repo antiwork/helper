@@ -27,7 +27,7 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: 100,
       outputTokensCount: 50,
       cachedTokensCount: 0,
-      cost: "0.0003000",
+      cost: "0.0007500",
     });
   });
 
@@ -57,7 +57,7 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: usage.promptTokens,
       outputTokensCount: usage.completionTokens,
       cachedTokensCount: usage.cachedTokens,
-      cost: "0.0002250",
+      cost: "0.0006750",
     });
   });
 
@@ -106,7 +106,7 @@ describe("trackAIUsageEvent", () => {
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
-        expectedCost: "0.0030000",
+        expectedCost: "0.0075000",
       },
     ];
 

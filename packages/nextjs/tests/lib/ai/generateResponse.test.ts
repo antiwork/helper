@@ -10,7 +10,7 @@ vi.mock("@/lib/ai/core", () => ({
   generateEmbedding: vi.fn().mockResolvedValue([0.1, 0.2, 0.3]),
   generateCompletion: vi.fn(),
   cleanUpTextForAI: vi.fn(),
-  GPT_4O_MODEL: "gpt-4o",
+  GPT_4_1_MODEL: "gpt-4.1",
 }));
 
 vi.mock("@/lib/ai/tools", () => ({
