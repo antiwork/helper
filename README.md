@@ -92,4 +92,3 @@ npm run db:migrate
 ## License
 
 Helper is licensed under the [MIT License](LICENSE.md).
-```
