@@ -68,7 +68,7 @@ export default function Message({
       typeof annotation === "object" && annotation !== null && "user" in annotation,
   );
 
-  if (!conversationSlug || (!message.content && !reasoningStarted)) {
+  if (!conversationSlug) {
     return null;
   }
 
