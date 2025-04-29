@@ -316,13 +316,13 @@
       height 0.3s ease-in-out,
       border-radius 0.3s ease-in-out;
   }
-  
+
   .helper-widget-wrapper.visible {
     right: 0;
     transform: translateY(0);
     animation: slide-up-in 0.3s ease-out forwards;
   }
-  
+
   .helper-widget-wrapper.minimized {
     height: 320px !important;
     width: 100% !important;
@@ -333,10 +333,10 @@
     box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.1) !important;
     transform: translateY(0) !important;
   }
-  
+
   /* Add a drag indicator for the minimized state */
   .helper-widget-wrapper.minimized::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 12px;
     left: 50%;
@@ -347,28 +347,28 @@
     border-radius: 2px;
     z-index: 2147483001;
   }
-  
+
   .helper-widget-toggle-button.with-minimized-widget {
     bottom: 330px !important;
     right: 20px !important;
   }
-  
+
   .notification-container {
     right: 16px;
     bottom: 16px;
     width: calc(100% - 32px);
     z-index: 2147483001;
   }
-  
+
   .notification-container.with-widget {
     bottom: 96px;
   }
-  
+
   .helper-widget-wrapper.visible ~ .notification-container {
     bottom: 16px;
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
-  
+
   .helper-widget-wrapper.temporarily-hidden {
     opacity: 0;
   }
@@ -554,13 +554,13 @@
       height 0.3s ease-in-out,
       border-radius 0.3s ease-in-out;
   }
-  
+
   .helper-widget-wrapper.visible {
     right: 0;
     transform: translateY(0);
     animation: slide-up-in 0.3s ease-out forwards;
   }
-  
+
   .helper-widget-toggle-button.with-minimized-widget {
     bottom: 330px !important;
     right: 20px !important;
