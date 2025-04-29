@@ -20,14 +20,22 @@ Inside your messages, there will be AI messages from different agents with diffe
 
 Keep your responses concise and focused on actionable insights.`;
 
-export type PlanResult = {
-  state_analysis: string;
-  progress_evaluation: string;
-  challenges: string;
-  next_steps: string[];
-  reasoning: string;
-  title: string;
-};
+const PlanResultSchema = z.object({
+  state_analysis: z.string().describe("Brief analysis of the current state and what has been done so far"),
+  progress_evaluation: z
+    .string()
+    .describe("Evaluation of progress towards the ultimate goal (as percentage and description)"),
+  challenges: z.string().describe("List any potential challenges or roadblocks"),
+  next_steps: z
+    .array(z.string())
+    .describe(
+      "List 3-4 concrete next steps to take, filling several fields in the same form can be considered as one step",
+    ),
+  reasoning: z.string().describe("Explain your reasoning for the suggested next steps"),
+  title: z.string().describe("Title of the guide session"),
+});
+
+export type PlanResult = z.infer<typeof PlanResultSchema>;
 
 export async function generateGuidePlan(title: string, instructions: string, mailbox: Mailbox): Promise<PlanResult> {
   const prompt = `# USER REQUEST:
@@ -48,21 +56,7 @@ export async function generateGuidePlan(title: string, instructions: string, mai
       model: openai("gpt-4.1"),
       system: PLAN_PROMPT,
       prompt,
-      schema: z.object({
-        state_analysis: z.string().describe("Brief analysis of the current state and what has been done so far"),
-        progress_evaluation: z
-          .string()
-          .describe("Evaluation of progress towards the ultimate goal (as percentage and description)"),
-        challenges: z.string().describe("List any potential challenges or roadblocks"),
-        next_steps: z
-          .array(z.string())
-          .max(4)
-          .describe(
-            "List 3-4 concrete next steps to take, filling several fields in the same form can be considered as one step",
-          ),
-        reasoning: z.string().describe("Explain your reasoning for the suggested next steps"),
-        title: z.string().describe("Title of the guide session"),
-      }),
+      schema: PlanResultSchema,
     });
 
     return result.object;
