@@ -41,20 +41,18 @@ brew install nss
 
 Open **PowerShell as Administrator** and run:
 
-```powershell
+powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; `
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
 iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-```
 
 Then:
-```powershell
+powershell
 choco install mkcert
 mkcert -install
-```
 
-> If Chocolatey installation fails due to an existing incomplete setup, delete `C:\ProgramData\chocolatey` manually and rerun the script above.
-```sh
+If Chocolatey installation fails due to an existing incomplete setup, delete `C:\ProgramData\chocolatey` manually and rerun the script above.
+```
 
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
 
