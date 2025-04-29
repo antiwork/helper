@@ -63,6 +63,9 @@ IMPORTANT: Only call one action at a time.
 Planned steps:
 {{PLANNED_STEPS}}
 
+Instructions:
+{{INSTRUCTIONS}}
+
 Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
@@ -129,7 +132,8 @@ export async function POST(request: Request) {
   const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
   const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
     .replace("{{MAILBOX_NAME}}", mailbox.name)
-    .replace("{{PLANNED_STEPS}}", formattedSteps);
+    .replace("{{PLANNED_STEPS}}", formattedSteps)
+    .replace("{{INSTRUCTIONS}}", guideSession.instructions || "");
 
   const tools = {
     AgentOutput: tool({
@@ -138,7 +142,7 @@ export async function POST(request: Request) {
         .object({
           current_state: z.object({
             evaluation_previous_goal: z.string(),
-            next_goal: z.string(),
+            next_goal: z.string().describe("Next goal to complete, do not include sample values, only actual values"),
             completed_steps: z
               .array(z.number().int())
               .describe("List of steps that have been completed, empty array if none, index starts at 1"),
