@@ -124,8 +124,9 @@ export default function HelpingHand({
 
   const trackToolResult = (actionToolCallId: string, result: string) => {
     if (toolResultCount >= 10) {
-      guideDone(false);
-      setDone({ success: false, message: "Failed to complete the task, too many attempts" });
+      const message = "Failed to complete the task, too many attempts";
+      guideDone(false, message);
+      setDone({ success: false, message });
       setStatus("error");
       addChatToolResult({
         toolCallId: actionToolCallId,
@@ -149,12 +150,13 @@ export default function HelpingHand({
     const params = Object.fromEntries(Object.entries(action).filter(([key]) => key !== "type"));
 
     if (type === "done") {
-      await guideDone(action.success);
-      setDone({ success: action.success, message: action.text });
+      const message = action.text || "Task completed successfully";
+      await guideDone(action.success, message);
+      setDone({ success: action.success, message });
       setStatus("done");
       addChatToolResult({
         toolCallId,
-        result: action.text,
+        result: message,
       });
       return;
     }

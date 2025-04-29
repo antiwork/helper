@@ -296,7 +296,8 @@ class HelperWidget {
             }
 
             if (action === GUIDE_DONE) {
-              this.guideManager.done();
+              const { success, message } = content;
+              this.guideManager.done(success, message);
             }
 
             if (action === "CANCEL_GUIDE") {
