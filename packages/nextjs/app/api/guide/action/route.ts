@@ -8,8 +8,6 @@ import { assertDefined } from "../../../../components/utils/assert";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
 
-Current date: {{CURRENT_DATE}}
-
 # Input Format
 Task
 Previous steps
@@ -65,6 +63,7 @@ IMPORTANT: Only call one action at a time.
 Planned steps:
 {{PLANNED_STEPS}}
 
+Current date: {{CURRENT_DATE}}
 Current user email: {{USER_EMAIL}}`;
 
 export async function POST(request: Request) {
