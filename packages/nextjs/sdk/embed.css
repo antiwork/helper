@@ -368,6 +368,10 @@
     bottom: 16px;
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
+  
+  .helper-widget-wrapper.temporarily-hidden {
+    opacity: 0;
+  }
 }
 
 @keyframes slide-in {
