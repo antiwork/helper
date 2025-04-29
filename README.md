@@ -74,3 +74,7 @@ npm run db:migrate
 ## License
 
 Helper is licensed under the [MIT License](LICENSE.md).
+
+## Contributor Note
+
+This small change was made as part of my application for the Gumroad Customer Support role. I'm new to GitHub and open-source collaboration, but I'm excited to learn more!
