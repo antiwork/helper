@@ -22,7 +22,7 @@ The codebase is a monorepo managed using Turborepo, containing multiple packages
     - Embed routes live under `(embed)`.
     - Marketing routes live under `(marketing)`.
     - API routes live under `api`.
-- **`packages/nextjs/auth`:** Contains authentication-related logic, including mailbox creation and user management.
+- **`packages/nextjs/lib/auth`:** Contains authentication-related logic, including mailbox creation and user management.
 - **`packages/nextjs/components`:**  Reusable UI components, hooks, and utility functions.
 - **`packages/nextjs/inngest/functions`:** Background functions powered by Inngest, responsible for tasks like email processing, AI response generation, and data updates.
 - **`packages/nextjs/lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, Stripe, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
