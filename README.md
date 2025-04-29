@@ -36,6 +36,25 @@ brew install mkcert
 brew install nss
 ```
 
+#### For Windows:
+
+Open **PowerShell as Administrator** and run:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; `
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+```
+
+Then:
+
+```powershell
+choco install mkcert
+mkcert -install
+```
+
+> If Chocolatey installation fails due to an existing incomplete setup, delete `C:\ProgramData\chocolatey` manually and rerun the script above.
+
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
 
 2. Generate SSL certificates:
@@ -74,3 +93,8 @@ npm run db:migrate
 ## License
 
 Helper is licensed under the [MIT License](LICENSE.md).
+```
+
+---
+
+Agora é só copiar e colar no seu `README.md`. Isso deve funcionar de forma bem clara para todos os sistemas. Qualquer coisa, só me chamar!
