@@ -6,7 +6,6 @@ docker/tmp/
 tmp/
 dist/
 .cache
-.turbo
 coverage/
 .vercel
 .tool-versions

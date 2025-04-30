@@ -19,6 +19,7 @@ export type HelperWidgetConfig = {
     primary: string;
     accent: string;
   };
+  viewportWidth?: number;
 };
 
 export type ReadPageToolConfig = {
