@@ -476,7 +476,7 @@ const ConversationContent = () => {
 
   if (isAboveSm) {
     return (
-      <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
+      <ResizablePanelGroup direction="horizontal" className="relative flex w-full mt-10">
         <ResizablePanel defaultSize={75} minSize={50} maxSize={85}>
           <ResizablePanelGroup direction="vertical" className="flex w-full flex-col bg-background">
             <ResizablePanel
