@@ -13,7 +13,7 @@ Helper.ai is an AI-powered customer support tool that helps businesses automate 
 
 ## Codebase Structure
 
-The codebase is a monorepo managed using Turborepo, containing multiple packages and apps. The main components reside within the `packages/nextjs` directory, which is a Next.js application.
+The codebase is a monorepo, containing multiple packages and apps. The main components reside within the `packages/nextjs` directory, which is a Next.js application.
 
 ### Key Directories and Their Purpose
 
@@ -53,7 +53,6 @@ The codebase is a monorepo managed using Turborepo, containing multiple packages
 
 - **Next.js:**  The primary framework for the web application, providing server-side rendering, API routes, and a robust component model.
 - **tRPC:**  Used for building the API, offering type safety and efficient communication between the frontend and backend.
-- **Turborepo:**  Manages the monorepo structure, optimizing build processes and dependency management.
 - **Tailwind CSS and Nativewind:** Used for styling and UI components, ensuring consistency across web and mobile applications.
 - **Drizzle ORM:**  Database access library, enabling type-safe queries and database interactions.
 - **Clerk:**  For user authentication and user account management.

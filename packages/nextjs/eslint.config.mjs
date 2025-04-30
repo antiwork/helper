@@ -6,9 +6,7 @@ import importPlugin from "eslint-plugin-import";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
 import reactPlugin from "eslint-plugin-react";
 import hooksPlugin from "eslint-plugin-react-hooks";
-import turboPlugin from "eslint-plugin-turbo";
 import tseslint from "typescript-eslint";
-import turboNoUndeclaredEnvVarsT3Env from "./lib/tooling/turboNoUndeclaredEnvVarsT3Env.mjs";
 
 const restrictEnvAccess = tseslint.config(
   { ignores: ["**/env.ts"] },
@@ -43,12 +41,6 @@ const baseConfig = tseslint.config(
     files: ["**/*.js", "**/*.ts", "**/*.tsx"],
     plugins: {
       import: importPlugin,
-      turbo: turboPlugin,
-      custom: {
-        rules: {
-          "turbo-no-undeclared-env-vars-t3-env": turboNoUndeclaredEnvVarsT3Env,
-        },
-      },
     },
     extends: [
       // eslint.configs.recommended,
@@ -56,7 +48,6 @@ const baseConfig = tseslint.config(
       ...tseslint.configs.stylisticTypeChecked,
     ],
     rules: {
-      ...turboPlugin.configs.recommended.rules,
       "arrow-body-style": "error",
       "logical-assignment-operators": "error",
       "no-else-return": "error",
@@ -93,7 +84,6 @@ const baseConfig = tseslint.config(
       "no-console": "error",
       "prefer-promise-reject-errors": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
-      "custom/turbo-no-undeclared-env-vars-t3-env": "error",
       "@typescript-eslint/consistent-type-imports": [
         "off",
         { prefer: "type-imports", fixStyle: "separate-type-imports" },
