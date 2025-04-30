@@ -32,7 +32,6 @@
 }
 
 .helper-widget-wrapper.temporarily-hidden {
-  opacity: 0.2;
   pointer-events: none;
   transition: opacity 0.3s ease-in-out;
 }
@@ -499,6 +498,12 @@
 
 .helper-widget-icon + .notification-container {
   bottom: 100px;
+}
+
+/* Add the scale effect for hand icon when widget is coming over */
+.helper-widget-wrapper.temporarily-hidden ~ .helper-widget-icon .hand-icon {
+  transform: translate(-50%, -50%) scale(0.6);
+  transition: transform 0.3s ease-in-out;
 }
 
 @media (max-width: 639px) {
