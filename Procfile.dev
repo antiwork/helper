@@ -1,4 +1,4 @@
-web: PORT=$WEB_PORT npm run dev:next
-email: npm run dev:email
-sdk: npm run dev:sdk
-inngest: npx inngest-cli dev --no-discovery -u http://localhost:$WEB_PORT/api/inngest
+web: PORT=$WEB_PORT pnpm dev:next
+email: pnpm dev:email
+sdk: pnpm dev:sdk
+inngest: pnpm inngest-cli dev --no-discovery -u http://localhost:$WEB_PORT/api/inngest
