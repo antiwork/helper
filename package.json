@@ -12,7 +12,7 @@
     "db:generate": "(cd packages/nextjs && pnpm run db:generate)",
     "db:migrate": "(cd packages/nextjs && pnpm run db:migrate)",
     "db:reset": "(cd packages/nextjs && pnpm run db:reset)",
-    "dev:email": "pnpm -C packages/nextjs run dev:email",
+    "dev:email": "(cd packages/nextjs && pnpm run dev:email)",
     "dev:next": "lsof -ti:3010 | xargs kill -9 || true && (cd packages/nextjs && pnpm run dev)",
     "dev:sdk": "(cd packages/nextjs && pnpm run dev:sdk)",
     "eval:dev": "(cd packages/nextjs && pnpm run eval:dev)",
@@ -29,7 +29,8 @@
   "devDependencies": {
     "@figma/code-connect": "^1.0.5",
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
-    "inngest-cli": "^1.1.0",
+    "heroku": "^10.6.1",
+    "inngest-cli": "^1.5.10",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "typescript": "^5.5.4",
@@ -37,5 +38,16 @@
   },
   "dependencies": {
     "date-fns-tz": "^3.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "cpu-features",
+      "esbuild",
+      "inngest-cli",
+      "protobufjs",
+      "sharp",
+      "ssh2",
+      "unrs-resolver"
+    ]
   }
 }

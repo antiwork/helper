@@ -8,3 +8,4 @@ onlyBuiltDependencies:
   - sharp
   - ssh2
   - unrs-resolver
+  - inngest-cli

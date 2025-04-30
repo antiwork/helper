@@ -34,7 +34,7 @@ jobs:
         shell: bash
 
       - name: Build React Package
-        run: pnpm run build --filter=@helperai/react
+        run: pnpm run --filter=@helperai/react build
         shell: bash
 
       - name: Typecheck
