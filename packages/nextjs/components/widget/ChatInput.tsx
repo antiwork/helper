@@ -69,7 +69,7 @@ export default function ChatInput({
   const adjustTextareaHeight = () => {
     const textarea = inputRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
   };

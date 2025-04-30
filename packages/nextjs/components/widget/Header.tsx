@@ -1,4 +1,4 @@
-import { History, X, Maximize2, Minimize2 } from "lucide-react";
+import { History, Maximize2, Minimize2, X } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -43,7 +43,7 @@ const Header = React.memo(function Header({
     <div className="flex items-start justify-between border-b border-black p-1.5">
       <div className="flex items-center h-full">
         <div className="ml-2 flex flex-col gap-0.5">
-        <h2 className="text-base leading-5 text-foreground">{title}</h2>
+          <h2 className="text-base leading-5 text-foreground">{title}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">
