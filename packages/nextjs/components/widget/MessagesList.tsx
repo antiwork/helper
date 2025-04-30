@@ -6,6 +6,7 @@ import HelpingHand from "@/components/widget/HelpingHand";
 import Message, { MessageWithReaction } from "@/components/widget/Message";
 import { cn } from "@/lib/utils";
 import { GuideInstructions } from "@/types/guide";
+import LoadingMessage from "./LoadingMessage";
 
 type Props = {
   data: JSONValue[] | null;
@@ -102,6 +103,7 @@ export default function MessagesList({
               conversationSlug={conversationSlug}
               token={token}
               data={index === messages.length - 1 ? data : null}
+              hideReasoning={true}
               color={isGumroadTheme ? "gumroad-pink" : "primary"}
             />
           );
@@ -109,24 +111,7 @@ export default function MessagesList({
 
         {status === "submitted" && (
           <div className="flex flex-col gap-3">
-            <Message
-              key="loading-message"
-              message={{
-                id: "loading",
-                role: "assistant",
-                content: "",
-                createdAt: new Date(),
-                reactionType: null,
-                reactionFeedback: null,
-                reactionCreatedAt: null,
-              }}
-              attachments={[]}
-              conversationSlug={conversationSlug}
-              token={token}
-              data={null}
-              color={isGumroadTheme ? "gumroad-pink" : "primary"}
-              hideReasoning={true}
-            />
+            <LoadingMessage color={isGumroadTheme ? "gumroad-pink" : "primary"} />
           </div>
         )}
       </div>

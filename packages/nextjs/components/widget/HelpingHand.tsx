@@ -68,11 +68,11 @@ export default function HelpingHand({
   }, [steps]);
 
   useEffect(() => {
-    if (!pendingResume && status === "initializing" && !existingSessionId) {
+    if (!resumeGuide && status === "initializing" && !existingSessionId) {
       stopChat();
       initializeGuideSession();
     }
-  }, [pendingResume, status, existingSessionId]);
+  }, [resumeGuide, status, existingSessionId]);
 
   const updateStepsBackend = async (updatedSteps: Step[]) => {
     if (!guideSessionId || !token) return;
