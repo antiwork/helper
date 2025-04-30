@@ -13,8 +13,8 @@
     "db:migrate": "(cd packages/nextjs && pnpm run db:migrate)",
     "db:reset": "(cd packages/nextjs && pnpm run db:reset)",
     "dev:email": "pnpm -C packages/nextjs run dev:email",
-    "dev:next": "lsof -ti:3010 | xargs kill -9 || true && pnpm run dev --workspace=packages/nextjs",
-    "dev:sdk": "pnpm -C packages/nextjs run dev:sdk",
+    "dev:next": "lsof -ti:3010 | xargs kill -9 || true && (cd packages/nextjs && pnpm run dev)",
+    "dev:sdk": "(cd packages/nextjs && pnpm run dev:sdk)",
     "eval:dev": "(cd packages/nextjs && pnpm run eval:dev)",
     "evals": "(cd packages/nextjs && pnpm run evals)",
     "format": "pnpm run-on-packages format",
@@ -24,7 +24,7 @@
     "repl:prod": "(cd packages/nextjs && pnpm run repl:prod)",
     "test": "pnpm run-on-packages test",
     "typecheck": "pnpm run-on-packages typecheck",
-    "run-on-packages": "pnpm run --filter=!helperai --if-present"
+    "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1"
   },
   "devDependencies": {
     "@figma/code-connect": "^1.0.5",
