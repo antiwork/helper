@@ -125,6 +125,7 @@
     "fumadocs-mdx": "^11.6.1",
     "fumadocs-openapi": "^8.1.2",
     "fumadocs-ui": "^15.2.11",
+    "gaxios": "^6.7.1",
     "google-auth-library": "^9.15.1",
     "googleapis": "^140.0.0",
     "gpt-tokenizer": "^2.5.0",

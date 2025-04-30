@@ -303,6 +303,9 @@ importers:
       fumadocs-ui:
         specifier: ^15.2.11
         version: 15.2.12(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(next@15.3.1(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(tailwindcss@4.1.5)
+      gaxios:
+        specifier: ^6.7.1
+        version: 6.7.1
       google-auth-library:
         specifier: ^9.15.1
         version: 9.15.1
