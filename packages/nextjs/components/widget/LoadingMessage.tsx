@@ -21,4 +21,4 @@ export default function LoadingMessage({ color }: Props) {
       </div>
     </div>
   );
-};
+}
