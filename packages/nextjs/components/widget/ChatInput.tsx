@@ -1,13 +1,13 @@
 import { Camera, Mic } from "lucide-react";
 import * as motion from "motion/react-client";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { useCallback, useEffect, useState } from "react";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
 import { useScreenshotStore } from "@/components/widget/widgetState";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { sendScreenshot } from "@/lib/widget/messages";
 
@@ -69,8 +69,34 @@ export default function ChatInput({
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
   const { screenshot, setScreenshot } = useScreenshotStore();
-  const { isSupported, isRecording, latestSegment, error, startRecording, stopRecording } = useSpeechRecognition();
-  const prevLatestSegment = useRef(latestSegment);
+
+  const handleSegment = useCallback(
+    (segment: string) => {
+      const currentInput = inputRef.current?.value || "";
+
+      const event = {
+        target: { value: currentInput + segment },
+      } as React.ChangeEvent<HTMLTextAreaElement>;
+
+      handleInputChange(event);
+
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      });
+    },
+    [handleInputChange, inputRef],
+  );
+
+  const handleError = useCallback((error: string) => {
+    captureExceptionAndLog(new Error(`Speech recognition error: ${error}`));
+  }, []);
+
+  const { isSupported, isRecording, startRecording, stopRecording } = useSpeechRecognition({
+    onSegment: handleSegment,
+    onError: handleError,
+  });
 
   useEffect(() => {
     if (!input) {
@@ -87,30 +113,6 @@ export default function ChatInput({
       setScreenshot(null);
     }
   }, [screenshot]);
-
-  useEffect(() => {
-    if (latestSegment && latestSegment.id !== prevLatestSegment.current?.id) {
-      const event = {
-        target: { value: input + latestSegment.segment },
-      } as React.ChangeEvent<HTMLTextAreaElement>;
-      handleInputChange(event);
-
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }
-    prevLatestSegment.current = latestSegment;
-  }, [latestSegment, handleInputChange]);
-
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
-    }
-  }, [error]);
 
   const submit = () => {
     if (includeScreenshot) {

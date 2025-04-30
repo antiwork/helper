@@ -260,15 +260,34 @@ export const MessageActions = () => {
     }
   }, [storedMessage]);
 
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+
+  const handleSegment = useCallback(
+    (segment: string) => {
+      if (editorRef.current?.editor) {
+        editorRef.current.editor.commands.insertContent(segment);
+      }
+    },
+    [editorRef],
+  );
+
+  const handleError = useCallback((error: string) => {
+    toast({
+      title: "Speech Recognition Error",
+      description: error,
+      variant: "destructive",
+    });
+  }, []);
+
   const {
     isSupported: isRecordingSupported,
     isRecording,
-    error,
     startRecording,
     stopRecording,
-    latestSegment,
-  } = useSpeechRecognition();
-  const prevLatestSegment = useRef(latestSegment);
+  } = useSpeechRecognition({
+    onSegment: handleSegment,
+    onError: handleError,
+  });
 
   const { readyFiles, resetFiles } = useFileUpload();
   const { sendDisabled, sending, setSending } = useSendDisabled(draftedEmail.message);
@@ -419,25 +438,6 @@ export const MessageActions = () => {
     setInitialMessageObject({ content });
     setStoredMessage(content);
   };
-
-  const editorRef = useRef<TipTapEditorRef | null>(null);
-
-  useEffect(() => {
-    if (latestSegment && latestSegment.id !== prevLatestSegment.current?.id && editorRef.current?.editor) {
-      editorRef.current.editor.commands.insertContent(latestSegment.segment);
-    }
-    prevLatestSegment.current = latestSegment;
-  }, [latestSegment, editorRef.current?.editor]);
-
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Speech Recognition Error",
-        description: error,
-        variant: "destructive",
-      });
-    }
-  }, [error]);
 
   return (
     <EmailEditorComponent
