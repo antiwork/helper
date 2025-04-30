@@ -39,6 +39,7 @@
   "dependencies": {
     "@ai-sdk/fireworks": "^0.1.10",
     "@ai-sdk/openai": "^1.1.12",
+    "@ai-sdk/react": "^1.2.10",
     "@aws-sdk/client-s3": "^3.658.1",
     "@aws-sdk/s3-presigned-post": "^3.665.0",
     "@aws-sdk/s3-request-presigner": "^3.665.0",
