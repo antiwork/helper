@@ -159,6 +159,9 @@ importers:
       '@slack/oauth':
         specifier: ^3.0.1
         version: 3.0.3
+      '@slack/types':
+        specifier: ^2.14.0
+        version: 2.14.0
       '@slack/web-api':
         specifier: ^7.5.0
         version: 7.9.1
