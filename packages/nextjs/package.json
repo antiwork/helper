@@ -194,6 +194,7 @@
     "@faker-js/faker": "^9.0.1",
     "@figma/code-connect": "^1.0.5",
     "@next/eslint-plugin-next": "^15.3.1",
+    "@rrweb/types": "2.0.0-alpha.18",
     "@svgr/webpack": "^8.1.0",
     "@tanstack/react-query-devtools": "^5.59.16",
     "@testcontainers/postgresql": "^10.13.1",
