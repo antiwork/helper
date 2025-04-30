@@ -4,6 +4,7 @@ import { useStickToBottom } from "use-stick-to-bottom";
 import { Attachment } from "@/components/widget/Conversation";
 import HelpingHand from "@/components/widget/HelpingHand";
 import Message, { MessageWithReaction } from "@/components/widget/Message";
+import { cn } from "@/lib/utils";
 import { GuideInstructions } from "@/types/guide";
 
 type Props = {
@@ -34,7 +35,18 @@ export default function MessagesList({
   const { scrollRef, contentRef } = useStickToBottom();
 
   return (
-    <div className="flex-1 overflow-y-auto p-4" id="message-container" ref={scrollRef}>
+    <div
+      className={cn(
+        "flex-1 overflow-y-auto p-4",
+        "[scrollbar-color:var(--scrollbar-color,rgba(0,0,0,0.4))_transparent]",
+        "[&::-webkit-scrollbar]{height:4px}",
+        "[&::-webkit-scrollbar-thumb]{background:rgba(0,0,0,0.4)}",
+        "dark:[&::-webkit-scrollbar-thumb]{background:rgba(0,0,0,0.4)}",
+        "dark:[--scrollbar-color:rgba(0,0,0,0.4)]",
+      )}
+      id="message-container"
+      ref={scrollRef}
+    >
       <div className="flex flex-col gap-3" ref={contentRef}>
         {messages.map((message, index) => {
           const guide = message.parts?.find(
