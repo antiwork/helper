@@ -24,7 +24,7 @@ export default async function WidgetTest({
     // eslint-disable-next-line turbo/no-undeclared-env-vars, no-restricted-properties
     mailbox_slug: process.env.HELPER_MAILBOX_SLUG!,
     ...helperAuth,
-    title: "Support",
+    title: "Support & Help",
     experimental_read_page: false,
     enable_guide: true,
     customer_metadata: anonymous
