@@ -325,7 +325,7 @@ importers:
         specifier: ^3.24.0
         version: 3.35.1(@vercel/node@5.1.15(rollup@3.29.5))(fastify@5.3.2)(next@15.3.1(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
       isomorphic-dompurify:
-        specifier: ^2.16.0
+        specifier: ^2.24.0
         version: 2.24.0
       js-tiktoken:
         specifier: ^1.0.15
@@ -520,9 +520,6 @@ importers:
       '@types/canvas-confetti':
         specifier: ^1.9.0
         version: 1.9.0
-      '@types/dompurify':
-        specifier: ^3.0.5
-        version: 3.2.0
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
@@ -5480,10 +5477,6 @@ packages:
 
   '@types/dockerode@3.3.38':
     resolution: {integrity: sha512-nnrcfUe2iR+RyOuz0B4bZgQwD9djQa9ADEjp7OAgBs10pYT0KSCtplJjcmBDJz0qaReX5T7GbE5i4VplvzUHvA==}
-
-  '@types/dompurify@3.2.0':
-    resolution: {integrity: sha512-Fgg31wv9QbLDA0SpTOXO3MaxySc4DKGLi8sna4/Utjo4r3ZRPdCt4UQee8BWr+Q5z21yifghREPJGYaEOEIACg==}
-    deprecated: This is a stub types definition. dompurify provides its own type definitions, so you do not need this installed.
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -18553,10 +18546,6 @@ snapshots:
       '@types/docker-modem': 3.0.6
       '@types/node': 20.17.32
       '@types/ssh2': 1.15.5
-
-  '@types/dompurify@3.2.0':
-    dependencies:
-      dompurify: 3.2.5
 
   '@types/eslint-scope@3.7.7':
     dependencies:
