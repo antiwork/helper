@@ -230,6 +230,7 @@ export const postSlackDM = async (
 
   return await postSlackMessage(token, {
     ...options,
+    text: "Hey everyone! Say hi to @jullie, our new hire!",
     channel: conversationResponse.channel.id,
   } as ChatPostMessageArguments);
 };
