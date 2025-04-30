@@ -1,7 +1,8 @@
-import { History, X } from "lucide-react";
+import { History, X, Maximize2, Minimize2 } from "lucide-react";
+import Image from "next/image";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { closeWidget } from "@/lib/widget/messages";
+import { closeWidget, toggleWidgetHeight } from "@/lib/widget/messages";
 import { HelperWidgetConfig } from "@/sdk/types";
 
 type Props = {
@@ -26,11 +27,21 @@ const Header = React.memo(function Header({
   onNewConversation,
   title,
 }: Props) {
+  const [isMaximized, setIsMaximized] = React.useState(() => {
+    return localStorage.getItem("helper_widget_minimized") !== "true";
+  });
+
+  const handleToggleHeight = () => {
+    const newState = !isMaximized;
+    setIsMaximized(newState);
+    toggleWidgetHeight();
+  };
+
   return (
-    <div className="flex items-start justify-between border-b border-black p-2">
+    <div className="flex items-start justify-between border-b border-black p-1.5">
       <div className="flex items-center h-full">
         <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-lg font-medium leading-5 text-foreground">{title}</h2>
+          <h2 className="text-lg text-base leading-5 text-foreground">{config.title || defaultTitle || "Helper"}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -38,7 +49,19 @@ const Header = React.memo(function Header({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted"
+                className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
+                onClick={handleToggleHeight}
+                aria-label={isMaximized ? "Minimize widget" : "Maximize widget"}
+              >
+                {isMaximized ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{isMaximized ? "Minimize" : "Maximize"}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
                 onClick={onNewConversation}
                 aria-label="Start new conversation"
               >
@@ -51,7 +74,7 @@ const Header = React.memo(function Header({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted"
+                  className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
                   onClick={onShowPreviousConversations}
                   aria-label="Show previous conversations"
                 >
@@ -64,7 +87,7 @@ const Header = React.memo(function Header({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted"
+                className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
                 onClick={() => closeWidget()}
                 aria-label="Close chat"
               >

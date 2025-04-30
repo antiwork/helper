@@ -49,7 +49,7 @@ class HelperWidget {
   private sessionToken: string | null = null;
   private showWidget = false;
   private showToggleButton: boolean | null = null;
-  private isMinimized = false;
+  private isMinimized = true;
   private guideManager: GuideManager;
 
   private messageQueue: any[] = [];
@@ -57,12 +57,14 @@ class HelperWidget {
   private readonly messageType: string = "HELPER_WIDGET_MESSAGE";
   private readonly VISIBILITY_STORAGE_KEY = "helper_widget_visible";
   private readonly CONVERSATION_STORAGE_KEY = "helper_widget_conversation";
+  private readonly MINIMIZED_STORAGE_KEY = "helper_widget_minimized";
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
     this.showToggleButton = config.show_toggle_button ?? null;
+    this.isMinimized = localStorage.getItem(this.MINIMIZED_STORAGE_KEY) === "true";
     this.guideManager = new GuideManager(this);
   }
 
@@ -371,6 +373,13 @@ class HelperWidget {
             case SCREENSHOT_ACTION:
               this.takeScreenshot();
               break;
+            case "TOGGLE_WIDGET_HEIGHT":
+              if (this.isMinimized) {
+                this.maximizeInternal();
+              } else {
+                this.minimizeInternal();
+              }
+              break;
           }
         }
       }
@@ -529,6 +538,9 @@ class HelperWidget {
     }
     if (this.iframeWrapper && !this.isVisible) {
       this.iframeWrapper.classList.add("visible");
+      if (this.isMinimized) {
+        this.iframeWrapper.classList.add("minimized");
+      }
       if (!this.isIframeReady) {
         this.showLoadingOverlay();
       }
@@ -562,7 +574,6 @@ class HelperWidget {
       this.iframeWrapper.classList.remove("minimized");
       this.hideLoadingOverlay();
       this.isVisible = false;
-      this.isMinimized = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");
       this.updateAllToggleElements();
 
@@ -591,6 +602,7 @@ class HelperWidget {
     if (this.iframeWrapper) {
       this.iframeWrapper.classList.add("minimized");
       this.isMinimized = true;
+      localStorage.setItem(this.MINIMIZED_STORAGE_KEY, "true");
       if (this.toggleButton) {
         this.toggleButton.classList.add("with-minimized-widget");
       }
@@ -601,6 +613,7 @@ class HelperWidget {
     if (this.iframeWrapper) {
       this.iframeWrapper.classList.remove("minimized");
       this.isMinimized = false;
+      localStorage.setItem(this.MINIMIZED_STORAGE_KEY, "false");
       if (this.toggleButton) {
         this.toggleButton.classList.remove("with-minimized-widget");
       }
