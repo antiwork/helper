@@ -596,6 +596,9 @@ class HelperWidget {
       }
     }
     this.showWidgetAfterAnimation();
+    if (this.helperIcon) {
+      this.helperIcon.classList.add("scaled-down");
+    }
   }
 
   private hideInternal(): void {
@@ -617,6 +620,9 @@ class HelperWidget {
         this.toggleButton.classList.add("visible");
         this.toggleButton.classList.remove("with-minimized-widget");
       }
+    }
+    if (this.helperIcon) {
+      this.helperIcon.classList.remove("scaled-down");
     }
   }
 
