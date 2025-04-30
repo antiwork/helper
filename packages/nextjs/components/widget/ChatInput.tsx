@@ -66,6 +66,18 @@ export default function ChatInput({
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
   const { screenshot, setScreenshot } = useScreenshotStore();
 
+  const adjustTextareaHeight = () => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
+
   useEffect(() => {
     if (!input) {
       setShowScreenshot(false);
@@ -91,7 +103,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="h-16 border-t border-black p-4">
+    <div className="border-t border-black p-4 bg-white">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -104,15 +116,18 @@ export default function ChatInput({
             aria-label="Ask a question"
             ref={inputRef}
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => {
+              handleInputChange(e);
+              adjustTextareaHeight();
+            }}
             onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 submit();
               }
             }}
-            placeholder="Ask a question"
-            className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-transparent p-0 outline-hidden focus:border-none focus:outline-hidden focus:ring-0"
+            placeholder="Ask a question..."
+            className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-white p-0 pr-3 outline-hidden focus:border-none focus:outline-hidden focus:ring-0 min-h-[24px] max-h-[200px]"
             disabled={isLoading}
           />
           <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
