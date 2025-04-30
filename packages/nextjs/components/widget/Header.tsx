@@ -37,6 +37,8 @@ const Header = React.memo(function Header({
     toggleWidgetHeight();
   };
 
+  const shouldShowMinimizeButton = config.viewportWidth ? config.viewportWidth >= 640 : true;
+
   return (
     <div className="flex items-start justify-between border-b border-black p-1.5">
       <div className="flex items-center h-full">
@@ -46,18 +48,6 @@ const Header = React.memo(function Header({
       </div>
       <div className="flex items-center gap-2">
         <TooltipProvider delayDuration={100}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
-                onClick={handleToggleHeight}
-                aria-label={isMaximized ? "Minimize widget" : "Maximize widget"}
-              >
-                {isMaximized ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>{isMaximized ? "Minimize" : "Maximize"}</TooltipContent>
-          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -82,6 +72,20 @@ const Header = React.memo(function Header({
                 </button>
               </TooltipTrigger>
               <TooltipContent>History</TooltipContent>
+            </Tooltip>
+          )}
+          {shouldShowMinimizeButton && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
+                  onClick={handleToggleHeight}
+                  aria-label={isMaximized ? "Minimize widget" : "Maximize widget"}
+                >
+                  {isMaximized ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{isMaximized ? "Minimize" : "Maximize"}</TooltipContent>
             </Tooltip>
           )}
           <Tooltip>
