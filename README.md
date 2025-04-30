@@ -36,6 +36,15 @@ brew install mkcert
 brew install nss
 ```
 
+```sh
+# Install mkcert on Windows
+# First ensure you have Chocolately installed: https://chocolatey.org/install
+# Then:
+powershell
+choco install mkcert
+mkcert -install
+```
+
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
 
 2. Generate SSL certificates:
