@@ -2,8 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cx from "classnames";
-import { domAnimation, LazyMotion, m } from "framer-motion";
 import { jwtDecode } from "jwt-decode";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
