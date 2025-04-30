@@ -7,7 +7,7 @@
   height: calc(100% - 40px);
   background-color: white;
   border-radius: 12px;
-  box-shadow: -2px 2px 0 0 #000000;
+  box-shadow: 4px 2px 0 0 #000000;
   border: 1px solid #000000;
   transition:
     transform 0.3s ease-in-out,
@@ -41,7 +41,7 @@
   width: 360px !important;
   border-radius: 12px;
   border: 1px solid #000000 !important;
-  box-shadow: -2px 2px 0 0 #000000 !important;
+  box-shadow: 4px 2px 0 0 #000000 !important;
   bottom: 20px !important;
   top: auto !important;
   left: auto !important;
@@ -198,7 +198,7 @@
 .helper-widget-toggle-button.gumroad-theme {
   background-color: #f4f4ef;
   color: #000000;
-  box-shadow: -2px 2px 0 0 #000000;
+  box-shadow: 4px 2px 0 0 #000000;
   right: -3px;
   transition:
     transform 0.3s ease,
@@ -215,7 +215,7 @@
 .helper-widget-toggle-button.gumroad-theme:hover {
   background-color: #ff7ad9;
   color: #000;
-  box-shadow: -3px 3px 0 0 #000000;
+  box-shadow: 3px 3px 0 0 #000000;
 }
 
 .helper-widget-icon {
@@ -455,7 +455,7 @@
 
 .notification-bubble.gumroad-theme {
   background-color: #f4f4ef;
-  box-shadow: -2px 2px 0 0 #000000;
+  box-shadow: 4px 2px 0 0 #000000;
 }
 
 .notification-bubble.gumroad-theme .close-button {

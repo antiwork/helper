@@ -74,7 +74,6 @@ export default function PreviousConversations({ token, onSelectConversation }: P
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <h2 className="mb-4 text-lg font-medium text-foreground">History</h2>
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (

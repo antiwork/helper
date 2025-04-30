@@ -35,7 +35,7 @@ export default function MessagesList({
 
   return (
     <div className="flex-1 overflow-y-auto p-4" id="message-container" ref={scrollRef}>
-      <div className="flex flex-col gap-3 pb-16" ref={contentRef}>
+      <div className="flex flex-col gap-3" ref={contentRef}>
         {messages.map((message, index) => {
           const guide = message.parts?.find(
             (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
