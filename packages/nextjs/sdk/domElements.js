@@ -941,11 +941,12 @@ export function domElements(
       children: [],
     };
 
-    // Get attributes for interactive elements or potential text containers
+    // Get attributes for interactive elements, forms, and potential text containers
     if (
       isInteractiveCandidate(node) ||
       node.tagName.toLowerCase() === "iframe" ||
-      node.tagName.toLowerCase() === "body"
+      node.tagName.toLowerCase() === "body" ||
+      node.tagName.toLowerCase() === "form"
     ) {
       const attributeNames = node.getAttributeNames?.() || [];
       for (const name of attributeNames) {

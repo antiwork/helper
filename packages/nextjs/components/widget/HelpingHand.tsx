@@ -185,13 +185,21 @@ export default function HelpingHand({
   const executeActionAndTrackResult = async (type: string, params: any, context: any, actionToolCallId: string) => {
     const result = await executeGuideAction(type, params, context);
 
+    let additionalInstructions = "";
+    if (type === "input_text") {
+      additionalInstructions = `
+      Use the required attribute to check if there are other required inputs in the form and plan to fill them even if they are not planned in the steps and before you submit the form.
+      <input> and <button> elements can have a form attribute. Use it to identify which form the input belongs to and check for required inputs in the form.`;
+    }
+
     if (result && actionToolCallId) {
       const pageDetails = await fetchCurrentPageDetails();
       const resultMessage = `Executed the last action: ${type}.
-
+        
       Now, the current URL is: ${pageDetails.currentPageDetails.url}
       Current Page Title: ${pageDetails.currentPageDetails.title}
-      Elements: ${pageDetails.clickableElements}`;
+      Elements: ${pageDetails.clickableElements} 
+      ${additionalInstructions}`;
 
       trackToolResult(actionToolCallId, resultMessage);
     } else {

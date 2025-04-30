@@ -600,6 +600,7 @@ class HelperWidget {
 
   private hideInternal(): void {
     if (this.iframeWrapper && this.isVisible) {
+      this.guideManager.clearSession();
       this.iframeWrapper.classList.remove("visible");
       this.iframeWrapper.classList.remove("minimized");
       this.hideLoadingOverlay();

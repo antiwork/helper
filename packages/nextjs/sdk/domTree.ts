@@ -169,72 +169,6 @@ export function findNodeByXpath(root: DOMElementNode, xpath: string): DOMElement
 }
 
 /**
- * Converts a DOM tree to a formatted string representation for display/debugging
- * @param root The root node of the DOM tree
- * @param includeAttributes Optional list of attribute names to include in the output
- * @returns Formatted string representation of the clickable elements in the DOM tree
- */
-export function stringifyDomTree(root: DOMElementNode, includeAttributes?: string[]): string {
-  const formattedText: string[] = [];
-
-  function processNode(node: DOMNode, depth: number): void {
-    if ("tagName" in node) {
-      // Add element with highlight_index
-      if (node.highlightIndex !== undefined) {
-        let attributesStr = "";
-        const text = getTextTillNextClickableElement(node);
-
-        if (includeAttributes && includeAttributes.length > 0) {
-          const attributes = Array.from(
-            new Set(
-              Object.entries(node.attributes)
-                .filter(([key, value]) => includeAttributes.includes(key) && value !== node.tagName)
-                .map(([_, value]) => String(value)),
-            ),
-          );
-
-          if (text && attributes.includes(text)) {
-            attributes.splice(attributes.indexOf(text), 1);
-          }
-
-          attributesStr = attributes.join(";");
-        }
-
-        let line = `[${node.highlightIndex}]<${node.tagName} `;
-
-        if (attributesStr) {
-          line += attributesStr;
-        }
-
-        if (text) {
-          if (attributesStr) {
-            line += `>${text}`;
-          } else {
-            line += text;
-          }
-        }
-
-        line += "/>";
-        formattedText.push(line);
-      }
-
-      // Process children regardless
-      for (const child of node.children) {
-        processNode(child, depth + 1);
-      }
-    } else if (node.type === "TEXT_NODE") {
-      // Add text only if it doesn't have a highlighted parent and is visible
-      if (!hasParentWithHighlightIndex(node) && node.isVisible) {
-        formattedText.push(node.text);
-      }
-    }
-  }
-
-  processNode(root, 0);
-  return formattedText.join("\n");
-}
-
-/**
  * Checks if a text node has a parent with a highlight index
  */
 function hasParentWithHighlightIndex(node: DOMTextNode): boolean {
@@ -275,6 +209,99 @@ function getTextTillNextClickableElement(node: DOMElementNode, maxDepth = -1): s
 
   collectText(node, 0);
   return textParts.join("\n").trim();
+}
+
+/**
+ * Finds the text content of the label associated with an input element.
+ * Checks parent first, then siblings with matching 'for' attribute.
+ */
+function getLabelTextForInput(inputNode: DOMElementNode): string | null {
+  if (!inputNode || inputNode.tagName !== "input") {
+    return null;
+  }
+
+  const parent = inputNode.parent;
+  if (!parent) return null;
+
+  if (parent.tagName === "label") {
+    return getTextTillNextClickableElement(parent).trim();
+  }
+
+  // 2. Check for label with a matching 'for' attribute
+  const inputId = inputNode.attributes.id;
+  if (inputId) {
+    // First check among siblings of the input
+    for (const sibling of parent.children) {
+      if (
+        sibling !== inputNode &&
+        "tagName" in sibling &&
+        sibling.tagName === "label" &&
+        sibling.attributes.for === inputId
+      ) {
+        return getTextTillNextClickableElement(sibling).trim();
+      }
+    }
+
+    // If no label found among siblings, search through the entire parent's DOM subtree
+    const allNodes = flattenDomTree(parent);
+    for (const node of allNodes) {
+      if ("tagName" in node && node !== inputNode && node.tagName === "label" && node.attributes.for === inputId) {
+        return getTextTillNextClickableElement(node).trim();
+      }
+    }
+  }
+
+  // 3. Check for label that directly contains the input (without 'for' attribute)
+  // This would handle cases like <label>Label text <input></label>
+  if (parent.tagName === "label" || (parent.parent && parent.parent.tagName === "label")) {
+    const labelNode = parent.tagName === "label" ? parent : parent.parent;
+    if (labelNode) {
+      // Extract text content excluding the input's text
+      const labelText = getTextTillNextClickableElement(labelNode).trim();
+      return labelText;
+    }
+  }
+
+  // 4. If no explicit label, check if there's text preceding the input in the same container
+  for (let i = 0; i < parent.children.length; i++) {
+    const child = parent.children[i];
+    if (child === inputNode) {
+      // Found our input, check if the previous sibling is a text node or has text
+      if (i > 0) {
+        const prevSibling = parent.children[i - 1];
+        if (prevSibling && "type" in prevSibling && prevSibling.type === "TEXT_NODE") {
+          return prevSibling.text.trim();
+        } else if (
+          prevSibling &&
+          "tagName" in prevSibling &&
+          !["input", "button", "select", "textarea"].includes(prevSibling.tagName)
+        ) {
+          return getTextTillNextClickableElement(prevSibling).trim();
+        }
+      }
+      break;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Recursively searches up the DOM tree to find a parent form element
+ * and returns its name attribute. Works for any element type.
+ */
+function getFormName(element: DOMElementNode): string | null {
+  if (!element) {
+    return null;
+  }
+  let current = element.parent;
+  while (current) {
+    if (current.tagName === "form") {
+      return current.attributes.name || null;
+    }
+    current = current.parent;
+  }
+  return null;
 }
 
 /**
@@ -346,42 +373,65 @@ export function clickableElementsToString(root: DOMElementNode, includeAttribute
 
   function processNode(node: DOMNode, depth: number): void {
     if ("tagName" in node) {
-      // Add element with highlight_index
       if (node.highlightIndex !== undefined) {
-        let attributesStr = "";
-        const text = getTextTillNextClickableElement(node);
+        const isInput = node.tagName === "input";
+        const isButton = node.tagName === "button";
+        const text = isInput ? "" : getTextTillNextClickableElement(node);
+        const labelText = isInput ? getLabelTextForInput(node) : null;
 
+        // Extract specific attributes for special handling
+        const placeholder = node.attributes.placeholder;
+        const type = node.attributes.type;
+        const valueAttr = node.attributes.value;
+        const isRequired = node.attributes.required !== undefined;
+        const formName = isInput || isButton ? getFormName(node) : null;
+
+        // Filter other attributes based on includeAttributes, excluding the specific ones
+        let otherAttributesStr = "";
         if (includeAttributes && includeAttributes.length > 0) {
-          const attributes = Array.from(
+          const attributesToExclude = ["placeholder", "type", "value", "required"];
+          if (isInput) attributesToExclude.push("label");
+          if (isInput || isButton) attributesToExclude.push("form");
+          const otherAttributes = Array.from(
             new Set(
               Object.entries(node.attributes)
-                .filter(([key, value]) => includeAttributes.includes(key) && value !== node.tagName)
-                .map(([_, value]) => String(value)),
+                .filter(
+                  ([key, attrValue]) =>
+                    includeAttributes.includes(key) && !attributesToExclude.includes(key) && attrValue !== node.tagName,
+                )
+                .map(([_, attrValue]) => String(attrValue)),
             ),
           );
 
-          if (text && attributes.includes(text)) {
-            attributes.splice(attributes.indexOf(text), 1);
+          // Remove text content from attributes if present (for non-inputs)
+          if (!isInput && text && otherAttributes.includes(text)) {
+            otherAttributes.splice(otherAttributes.indexOf(text), 1);
           }
-
-          attributesStr = attributes.join(";");
+          otherAttributesStr = otherAttributes.join(";");
         }
 
-        let line = `[${node.highlightIndex}]<${node.tagName} `;
+        let line = `[${node.highlightIndex}]<${node.tagName}`;
 
-        if (attributesStr) {
-          line += attributesStr;
+        // Append specific attributes
+        if (isInput && labelText) line += ` label="${labelText}"`;
+        if (isInput && placeholder) line += ` placeholder="${placeholder}"`;
+        if ((isInput || isButton) && type) line += ` type="${type}"`;
+        if (isInput && valueAttr) line += ` value="${valueAttr}"`;
+        if ((isInput || isButton) && formName) line += ` form="${formName}"`;
+
+        // Append other attributes string
+        if (otherAttributesStr) line += ` ${otherAttributesStr}`;
+
+        // Append required keyword
+        if (isRequired) line += ` required`;
+
+        // Close the tag
+        if (!isInput && text) {
+          line += `>${text}</${node.tagName}>`;
+        } else {
+          line += "/>";
         }
 
-        if (text) {
-          if (attributesStr) {
-            line += `>${text}`;
-          } else {
-            line += text;
-          }
-        }
-
-        line += "/>";
         formattedText.push(line);
       }
 
@@ -392,7 +442,10 @@ export function clickableElementsToString(root: DOMElementNode, includeAttribute
     } else if (node.type === "TEXT_NODE") {
       // Add text only if it doesn't have a highlighted parent and is visible
       if (!hasParentWithHighlightIndex(node) && node.isVisible) {
-        formattedText.push(node.text);
+        const trimmedText = node.text.trim();
+        if (trimmedText) {
+          formattedText.push(trimmedText);
+        }
       }
     }
   }

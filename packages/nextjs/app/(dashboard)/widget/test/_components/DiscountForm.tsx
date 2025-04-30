@@ -24,7 +24,9 @@ export function DiscountForm() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
     const newErrors: { name?: string } = {};
 
     if (!formValues.name.trim()) {
@@ -99,7 +101,7 @@ export function DiscountForm() {
   }
 
   return (
-    <div className="max-w-4xl bg-white p-6 rounded-lg shadow">
+    <form name="discount-form" onSubmit={handleSubmit} className="max-w-4xl bg-white p-6 rounded-lg shadow">
       <h1 className="mb-6 text-3xl font-bold text-gray-800">Create discount</h1>
 
       <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
@@ -111,14 +113,19 @@ export function DiscountForm() {
             Once the code is created, you can share it or copy a unique link per product that automatically applies the
             discount.
           </p>
-          <button className="text-blue-600 underline">Learn more</button>
+          <button type="button" className="text-blue-600 underline">
+            Learn more
+          </button>
         </div>
 
         <div className="flex gap-3">
-          <button className="bg-transparent border border-gray-300 text-gray-700 px-4 py-2 rounded flex items-center gap-2">
+          <button
+            type="button"
+            className="bg-transparent border border-gray-300 text-gray-700 px-4 py-2 rounded flex items-center gap-2"
+          >
             <span>Cancel</span>
           </button>
-          <button onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Add discount
           </button>
         </div>
@@ -134,6 +141,7 @@ export function DiscountForm() {
             id="name"
             placeholder="Black Friday"
             value={formValues.name}
+            required
             onChange={(e) => handleInputChange("name", e.target.value)}
             className={`w-full border ${errors.name ? "border-red-500" : "border-gray-300"} rounded p-2 text-gray-800`}
           />
@@ -153,7 +161,7 @@ export function DiscountForm() {
               onChange={(e) => handleInputChange("code", e.target.value)}
               className="w-full border border-gray-300 rounded-l p-2 text-gray-800"
             />
-            <button className="bg-gray-200 border border-gray-300 rounded-r p-2 text-gray-600">
+            <button type="button" className="bg-gray-200 border border-gray-300 rounded-r p-2 text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
@@ -301,6 +309,6 @@ export function DiscountForm() {
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
