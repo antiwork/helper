@@ -17,13 +17,13 @@
     "dev:sdk": "npm -C packages/nextjs run dev:sdk",
     "eval:dev": "(cd packages/nextjs && npm run eval:dev)",
     "evals": "(cd packages/nextjs && npm run evals)",
-    "format": "npm run format --workspaces",
-    "lint": "npm run lint --workspaces",
+    "format": "npm run format --if-present --workspaces",
+    "lint": "npm run lint --if-present --workspaces",
     "repl": "(cd packages/nextjs && npm run repl)",
     "repl:preview": "(cd packages/nextjs && npm run repl:preview)",
     "repl:prod": "(cd packages/nextjs && npm run repl:prod)",
-    "test": "npm run test --workspaces",
-    "typecheck": "npm run typecheck --workspaces"
+    "test": "npm run test --if-present --workspaces",
+    "typecheck": "npm run typecheck --if-present --workspaces"
   },
   "devDependencies": {
     "@figma/code-connect": "^1.0.5",
