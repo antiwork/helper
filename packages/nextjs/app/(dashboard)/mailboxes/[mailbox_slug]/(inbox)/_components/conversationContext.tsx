@@ -53,11 +53,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
     refetch,
   } = assertDefined(useConversationQuery(mailboxSlug, currentConversationSlug));
 
-  const { mutate: updateConversation } = api.mailbox.conversations.update.useMutation({
-    onSuccess: () => {
-      window.ReactNativeWebView?.postMessage(JSON.stringify({ type: "conversationUpdated" }));
-    },
-  });
+  const { mutate: updateConversation } = api.mailbox.conversations.update.useMutation();
   const update = (inputs: Partial<RouterInputs["mailbox"]["conversations"]["update"]>) =>
     updateConversation({ mailboxSlug, conversationSlug, ...inputs });
 

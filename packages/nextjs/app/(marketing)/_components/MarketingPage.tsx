@@ -16,14 +16,12 @@ import {
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import { useHelper } from "@helperai/react";
 import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useNativePlatform } from "@/components/useNativePlatform";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -291,14 +289,6 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
 
     return () => window.removeEventListener("resize", setVH);
   }, []);
-
-  const { nativePlatform } = useNativePlatform();
-  const router = useRouter();
-
-  if (nativePlatform) {
-    router.push("/login");
-    return null;
-  }
 
   return (
     <div style={{ backgroundColor: "#3D0C11" }}>

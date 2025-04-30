@@ -3,7 +3,8 @@
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Reorder } from "motion/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SetStateAction, useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useMediaQuery } from "react-responsive";
 import { create } from "zustand";
 
 type Tab = {
@@ -24,50 +25,46 @@ export const useTabsState = create<{
   tabs: Tab[];
   activeTab: string | null;
   setTabs: (setter: (tabs: Tab[], activeTab: string | null) => { tabs: Tab[]; activeTab: string | null }) => void;
-}>((set, get) => ({
-  ...initialState,
-  setTabs: (setter) => {
+  addTab: (url?: string) => void;
+  updateCurrentTab: (tab: Partial<Tab>) => void;
+}>((set, get) => {
+  const setTabs = (setter: (tabs: Tab[], activeTab: string | null) => { tabs: Tab[]; activeTab: string | null }) => {
     const newState = setter(get().tabs, get().activeTab);
     localStorage.setItem("tabs", JSON.stringify(newState));
     set(newState);
-  },
-}));
+  };
+  return {
+    ...initialState,
+    setTabs,
+    addTab: (url?: string) => {
+      const tab = newTab(url);
+      setTabs((tabs) => ({ tabs: [...tabs, tab], activeTab: tab.id }));
+    },
+    updateCurrentTab: (tab) => {
+      setTabs((tabs) => ({
+        tabs: tabs.map((t) => (t.id === get().activeTab ? { ...t, ...tab } : t)),
+        activeTab: get().activeTab,
+      }));
+    },
+  };
+});
 
 export const TabBar = () => {
+  const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { tabs, activeTab, setTabs } = useTabsState();
-
-  const savedState = localStorage.getItem("tabs");
-  const { tabs: initialTabs, activeTab: initialActiveTab }: { tabs: Tab[]; activeTab: string } = savedState
-    ? JSON.parse(savedState)
-    : buildFirstTab();
-
-  const [tabs, setTabsState] = useState(initialTabs);
-  const setTabs = (newTabs: SetStateAction<Tab[]>, newActiveTab: SetStateAction<string | null> = (id) => id) => {
-    setTabsState((tabs) => {
-      const tabsState = typeof newTabs === "function" ? newTabs(tabs) : newTabs;
-      setActiveTab((activeTab) => {
-        const activeTabState = typeof newActiveTab === "function" ? newActiveTab(activeTab) : newActiveTab;
-        localStorage.setItem("tabs", JSON.stringify({ tabs: tabsState, activeTab: activeTabState }));
-        return activeTabState;
-      });
-      return tabsState;
-    });
-  };
-  const [activeTab, setActiveTab] = useState<string | null>(initialActiveTab);
+  const { tabs, activeTab, setTabs, updateCurrentTab, addTab } = useTabsState();
 
   useEffect(() => {
-    setTabs((tabs) => tabs.map((tab) => (tab.id === activeTab ? { ...tab, url: location.href } : tab)));
+    updateCurrentTab({ url: location.href });
   }, [pathname, searchParams, activeTab]);
 
   useEffect(() => {
     const updateCurrentTabTitle = () => {
       const titles = Array.from(document.querySelectorAll("title"));
       // We should fix how we deal with titles to make sure we only create one - React 19 and Next are clashing
-      const title = titles.find((title) => title.textContent !== "Helper")?.textContent ?? "Helper";
-      setTabs((tabs) => tabs.map((tab) => (tab.id === activeTab ? { ...tab, title } : tab)));
+      updateCurrentTab({ title: titles.find((title) => title.textContent !== "Helper")?.textContent ?? "Helper" });
     };
 
     const titleObserver = new MutationObserver((mutations) => {
@@ -112,6 +109,8 @@ export const TabBar = () => {
     return () => titleObserver.disconnect();
   }, []);
 
+  if (!isStandalone) return null;
+
   return (
     <div className="absolute top-0 left-0 right-0 h-10 bg-background flex">
       <div className="absolute inset-x-0 bottom-0 border-b" />
@@ -121,7 +120,7 @@ export const TabBar = () => {
         layoutScroll
         style={{ overflowX: "scroll", display: "flex" }}
         onReorder={(newTabs) => {
-          setTabs(newTabs);
+          setTabs((_, activeTab) => ({ tabs: newTabs, activeTab }));
         }}
       >
         {tabs.map((tab) => (
@@ -131,7 +130,7 @@ export const TabBar = () => {
               key={tab.id}
               className="relative h-full w-56 flex items-center pl-4 pr-2 border-r border-b bg-background cursor-pointer"
               onClick={() => {
-                setTabs(tabs, tab.id);
+                setTabs((tabs) => ({ tabs, activeTab: tab.id }));
                 router.push(tab.url);
               }}
             >
@@ -143,10 +142,12 @@ export const TabBar = () => {
                   e.stopPropagation();
                   const newTabs = tabs.filter((t) => t.id !== tab.id);
                   if (newTabs[0]) {
-                    setTabs(newTabs, activeTab === tab.id ? newTabs[0].id : activeTab);
+                    setTabs((_, activeTab) => ({
+                      tabs: newTabs,
+                      activeTab: activeTab === tab.id ? newTabs[0]!.id : activeTab,
+                    }));
                   } else {
-                    const { tabs: firstTab, activeTab: newActiveTab } = buildFirstTab();
-                    setTabs(firstTab, newActiveTab);
+                    setTabs(() => buildFirstTab());
                   }
                 }}
               >
@@ -156,19 +157,13 @@ export const TabBar = () => {
           </Reorder.Item>
         ))}
       </Reorder.Group>
-      <button
-        className="self-center ml-1 p-2 rounded transition-colors hover:bg-muted"
-        onClick={() => {
-          const tab = newTab();
-          setTabs([...tabs, tab], tab.id);
-        }}
-      >
+      <button className="self-center ml-1 p-2 rounded transition-colors hover:bg-muted" onClick={() => addTab()}>
         <PlusIcon className="w-4 h-4" />
       </button>
     </div>
   );
 };
 
-const newTab = () => {
-  return { id: crypto.randomUUID(), title: document.title, url: location.href };
+const newTab = (url?: string) => {
+  return { id: crypto.randomUUID(), title: document.title, url: url ?? location.href };
 };

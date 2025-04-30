@@ -12,6 +12,7 @@ import FileSaver from "file-saver";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { useMediaQuery } from "react-responsive";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -41,7 +42,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import { useNativePlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
 import { conversationChannelId } from "@/lib/ably/channels";
 import { useAblyEvent } from "@/lib/ably/hooks";
@@ -74,10 +74,10 @@ export const useUndoneEmailStore = create<{
 );
 
 const CopyLinkButton = () => {
-  const { nativePlatform } = useNativePlatform();
+  const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const [copied, setCopied] = useState(false);
 
-  if (!nativePlatform) return null;
+  if (!isStandalone) return null;
 
   return (
     <Tooltip delayDuration={0}>
@@ -393,7 +393,6 @@ const ConversationContent = () => {
   });
 
   const { input } = useConversationsListInput();
-  const { nativePlatform } = useNativePlatform();
 
   const utils = api.useUtils();
   const conversationListInfo = utils.mailbox.conversations.list
@@ -460,20 +459,6 @@ const ConversationContent = () => {
 
   const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
 
-  useEffect(() => {
-    if ((nativePlatform === "ios" || nativePlatform === "android") && conversationInfo?.subject) {
-      window.ReactNativeWebView?.postMessage(
-        JSON.stringify({
-          type: "conversationLoaded",
-          subject: conversationInfo?.subject,
-        }),
-      );
-      window.__EXPO__?.onToggleSidebar(() => {
-        setSidebarVisible((prev) => !prev);
-      });
-    }
-  }, [nativePlatform, conversationInfo?.subject]);
-
   if (isAboveSm) {
     return (
       <ResizablePanelGroup direction="horizontal" className="relative flex w-full mt-10">
@@ -495,14 +480,12 @@ const ConversationContent = () => {
                   previewFiles={previewFiles}
                   setPreviewFiles={setPreviewFiles}
                 />
-                {nativePlatform !== "ios" && nativePlatform !== "android" && (
-                  <ConversationHeader
-                    conversationMetadata={conversationMetadata}
-                    isAboveSm={isAboveSm}
-                    sidebarVisible={sidebarVisible}
-                    setSidebarVisible={setSidebarVisible}
-                  />
-                )}
+                <ConversationHeader
+                  conversationMetadata={conversationMetadata}
+                  isAboveSm={isAboveSm}
+                  sidebarVisible={sidebarVisible}
+                  setSidebarVisible={setSidebarVisible}
+                />
                 <ErrorContent />
                 <LoadingContent />
                 {!error && !isPending && (
@@ -549,14 +532,12 @@ const ConversationContent = () => {
           previewFiles={previewFiles}
           setPreviewFiles={setPreviewFiles}
         />
-        {nativePlatform !== "ios" && nativePlatform !== "android" && (
-          <ConversationHeader
-            conversationMetadata={conversationMetadata}
-            isAboveSm={isAboveSm}
-            sidebarVisible={sidebarVisible}
-            setSidebarVisible={setSidebarVisible}
-          />
-        )}
+        <ConversationHeader
+          conversationMetadata={conversationMetadata}
+          isAboveSm={isAboveSm}
+          sidebarVisible={sidebarVisible}
+          setSidebarVisible={setSidebarVisible}
+        />
         <ErrorContent />
         <LoadingContent />
         {!error && !isPending && (
@@ -578,12 +559,7 @@ const ConversationContent = () => {
       </div>
 
       {conversationInfo && sidebarVisible ? (
-        <div
-          className={cn(
-            "fixed z-20 inset-0",
-            nativePlatform === "ios" || nativePlatform === "android" ? "top-0" : "top-10",
-          )}
-        >
+        <div className="fixed z-20 inset-0 top-10">
           <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
         </div>
       ) : null}

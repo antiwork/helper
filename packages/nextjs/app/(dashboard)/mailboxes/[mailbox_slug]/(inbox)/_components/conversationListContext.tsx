@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useMemo } from "react";
 import { ConversationListItem } from "@/app/types/global";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { getExpoPlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
 import { conversationsListChannelId } from "@/lib/ably/channels";
 import { useAblyEventOnce } from "@/lib/ably/hooks";
@@ -56,7 +55,6 @@ export const ConversationListContextProvider = ({
 
   const moveToNextConversation = () => {
     if (!conversations.length) return setId(null);
-    if (getExpoPlatform()) return; // In Expo the conversation is effectively a modal so it's confusing to navigate within it
 
     let nextConversation;
     const currentIndex = conversations.findIndex((c) => c.slug === currentConversationSlug);
