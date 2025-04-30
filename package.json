@@ -41,7 +41,6 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "cpu-features",
       "esbuild",
       "inngest-cli",
       "protobufjs",
