@@ -244,7 +244,7 @@
   width: 60px;
   height: 60px;
   cursor: pointer;
-  transition: filter 0.3s;
+  transition: filter 0.3s, transform 0.3s ease;
   align-items: center;
   justify-content: center;
   z-index: 2147482998;
@@ -291,6 +291,10 @@
   100% {
     transform: translate(-50%, -50%) rotate(0deg);
   }
+}
+
+.helper-widget-icon.scaled-down {
+  transform: scale(0.6);
 }
 
 .notification-container {
