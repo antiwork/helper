@@ -113,7 +113,7 @@ export default function SupportButtons({
             >
               <HandThumbUpIcon className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
             </motion.div>
-            That solved it!
+            Looks good—thanks!
           </button>
           <button
             onClick={handleTalkToTeamClick}
@@ -139,7 +139,7 @@ export default function SupportButtons({
             >
               <ChatBubbleLeftRightIcon className="h-4 w-4" />
             </motion.div>
-            Talk to a human
+            Chat with a real person
           </button>
         </motion.div>
       )}
