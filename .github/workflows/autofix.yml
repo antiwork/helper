@@ -16,23 +16,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "npm"
+          node-version-file: ".node-version"
+          cache: "pnpm"
 
-      - run: npm ci
+      - run: pnpm install
 
       - name: Lint
-        run: npm run lint -- --fix
+        run: pnpm run lint --fix
         shell: bash
 
       - name: Format
-        run: npm run format -- --write
+        run: pnpm run format --write
         shell: bash
 
       - name: Build React Package
-        run: npm run build --workspace=packages/react
+        run: pnpm run --filter=@helperai/react build
         shell: bash
 
       - name: Typecheck

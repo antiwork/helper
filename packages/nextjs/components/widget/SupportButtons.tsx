@@ -1,6 +1,6 @@
 import { ChatBubbleLeftRightIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
 import { UIMessage } from "ai";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 

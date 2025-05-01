@@ -1,9 +1,9 @@
 const fs = require('fs/promises');
 const path = require('path');
-const glob = require('glob-promise');
+const { glob } = require('glob-promise');
 
 (async () => {
-  const srcFiles = await glob('src/**/*.{ts,tsx}');
+  const srcFiles = await glob.glob('src/**/*.{ts,tsx}');
   const directiveFiles = new Map(); // Map to store files and their directives
 
   // Find source files with "use client" or "use server"

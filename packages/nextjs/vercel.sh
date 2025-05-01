@@ -1,9 +1,9 @@
 #!/bin/bash
 
-(cd ../react && npm run build)
+(cd ../react && pnpm run build)
 
 if [[ $VERCEL_ENV == "production"  ]] ; then 
-  npm run deploy
+  pnpm run deploy
 else 
-  npm run build:preview
+  pnpm run build:preview
 fi

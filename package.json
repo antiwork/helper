@@ -2,41 +2,52 @@
   "name": "helperai",
   "version": "1.0.0",
   "description": "Help customer supporters with drafted answers and actions.",
-  "packageManager": "npm@10.8.2",
+  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971",
   "private": true,
   "scripts": {
-    "build": "npm run build --workspace=packages/react --workspace=packages/nextjs",
-    "build:preview": "(cd packages/nextjs && npm run build:preview)",
+    "build": "pnpm run-on-packages --filter=!@helperai/nextjs build && pnpm run --filter=@helperai/nextjs build",
+    "build:preview": "(cd packages/nextjs && pnpm run build:preview)",
     "clean": "git clean -xdf node_modules",
-    "db:check": "(cd packages/nextjs && npm run db:check)",
-    "db:generate": "(cd packages/nextjs && npm run db:generate)",
-    "db:migrate": "(cd packages/nextjs && npm run db:migrate)",
-    "db:reset": "(cd packages/nextjs && npm run db:reset)",
-    "dev:email": "npm -C packages/nextjs run dev:email",
-    "dev:next": "lsof -ti:3010 | xargs kill -9 || true && npm run dev --workspace=packages/nextjs",
-    "dev:sdk": "npm -C packages/nextjs run dev:sdk",
-    "eval:dev": "(cd packages/nextjs && npm run eval:dev)",
-    "evals": "(cd packages/nextjs && npm run evals)",
-    "format": "npm run format --if-present --workspaces",
-    "lint": "npm run lint --if-present --workspaces",
-    "repl": "(cd packages/nextjs && npm run repl)",
-    "repl:preview": "(cd packages/nextjs && npm run repl:preview)",
-    "repl:prod": "(cd packages/nextjs && npm run repl:prod)",
-    "test": "npm run test --if-present --workspaces",
-    "typecheck": "npm run typecheck --if-present --workspaces"
+    "db:check": "(cd packages/nextjs && pnpm run db:check)",
+    "db:generate": "(cd packages/nextjs && pnpm run db:generate)",
+    "db:migrate": "(cd packages/nextjs && pnpm run db:migrate)",
+    "db:reset": "(cd packages/nextjs && pnpm run db:reset)",
+    "dev:email": "(cd packages/nextjs && pnpm run dev:email)",
+    "dev:next": "lsof -ti:3010 | xargs kill -9 || true && (cd packages/nextjs && pnpm run dev)",
+    "dev:sdk": "(cd packages/nextjs && pnpm run dev:sdk)",
+    "eval:dev": "(cd packages/nextjs && pnpm run eval:dev)",
+    "evals": "(cd packages/nextjs && pnpm run evals)",
+    "format": "pnpm run-on-packages format",
+    "lint": "pnpm run-on-packages lint",
+    "repl": "(cd packages/nextjs && pnpm run repl)",
+    "repl:preview": "(cd packages/nextjs && pnpm run repl:preview)",
+    "repl:prod": "(cd packages/nextjs && pnpm run repl:prod)",
+    "test": "pnpm run-on-packages test",
+    "typecheck": "pnpm run-on-packages typecheck",
+    "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1"
   },
   "devDependencies": {
     "@figma/code-connect": "^1.0.5",
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
-    "inngest-cli": "^1.1.0",
+    "dotenv-cli": "^7.4.2",
+    "heroku": "^10.6.1",
+    "inngest-cli": "^1.5.10",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vercel": "^41.7.0"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "dependencies": {
     "date-fns-tz": "^3.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "inngest-cli",
+      "protobufjs",
+      "sharp",
+      "ssh2",
+      "unrs-resolver"
+    ]
   }
 }

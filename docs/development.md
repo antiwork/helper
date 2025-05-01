@@ -161,7 +161,7 @@ npm run db:migrate
 npm test
 
 # Run a specific test file
-(cd packages/nextjs && npx vitest run tests/inngest/functions/postEmailToGmail.test.ts)
+(cd packages/nextjs && pnpm test tests/inngest/functions/postEmailToGmail.test.ts)
 ```
 
 ## Background Tasks
