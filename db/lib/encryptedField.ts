@@ -1,7 +1,7 @@
 import { customType } from "drizzle-orm/pg-core";
-import { env } from "../../env";
-import { symmetricDecrypt, symmetricEncrypt } from "./crypto";
-import { DjangoCryptoCompat } from "./djangoCrypto";
+import { env } from "@/lib/env";
+import { symmetricDecrypt, symmetricEncrypt } from "@/db/lib/crypto";
+import { DjangoCryptoCompat } from "@/db/lib/djangoCrypto";
 
 const secretKey = env.CRYPTO_SECRET;
 const nativeEncryptColumnSecret = env.ENCRYPT_COLUMN_SECRET;
