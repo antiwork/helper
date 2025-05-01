@@ -16,6 +16,15 @@ type Props = {
   isGumroadTheme: boolean;
 };
 
+// — PROACTIVE SUGGESTIONS —
+// Surface these common pain points so Helper waves first.
+const PROACTIVE_SUGGESTIONS = [
+  { label: "Why is my payout delayed?", prompt: "Explain payout review process" },
+  { label: "Publishing error—help!",  prompt: "Troubleshoot my publishing request" },
+  { label: "Email tools locked—what now?", prompt: "Unlock email workflow guide" },
+  { label: "Verify my account",      prompt: "How do I complete KYC?" },
+];
+
 const SCREENSHOT_KEYWORDS = [
   "error",
   "I can't",
@@ -82,7 +91,11 @@ export default function ChatInput({
     if (!input) {
       setShowScreenshot(false);
       setIncludeScreenshot(false);
-    } else if (SCREENSHOT_KEYWORDS.some((keyword) => input.toLowerCase().includes(keyword))) {
+    } else if (
+      SCREENSHOT_KEYWORDS.some((keyword) =>
+        input.toLowerCase().includes(keyword)
+      )
+    ) {
       setShowScreenshot(true);
     }
   }, [input]);
@@ -111,6 +124,23 @@ export default function ChatInput({
         }}
         className="flex flex-col gap-2"
       >
+        {/* Proactive quick-help buttons */}
+        <div className="flex flex-wrap gap-2 mb-2">
+          {PROACTIVE_SUGGESTIONS.map((s) => (
+            <button
+              key={s.prompt}
+              type="button"
+              onClick={() => {
+                // Prefill the chat input with the suggestion
+                handleInputChange({ target: { value: s.prompt } } as any);
+              }}
+              className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm"
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex-1 flex items-start">
           <Textarea
             aria-label="Ask a question"
@@ -126,12 +156,16 @@ export default function ChatInput({
                 submit();
               }
             }}
-            placeholder="Ask a question..."
+            placeholder="Having trouble with payouts, publishing, or email? Ask me here…"
             className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-white p-0 pr-3 outline-hidden focus:border-none focus:outline-hidden focus:ring-0 min-h-[24px] max-h-[200px]"
             disabled={isLoading}
           />
-          <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
+          <ShadowHoverButton
+            isLoading={isLoading}
+            isGumroadTheme={isGumroadTheme}
+          />
         </div>
+
         {showScreenshot && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
