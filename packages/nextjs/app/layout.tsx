@@ -1,4 +1,5 @@
 import "@/app/globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import cx from "classnames";
 import type { Metadata } from "next";
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="h-full antialiased text-foreground bg-background font-regular" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <ClerkProvider>{children}</ClerkProvider>
         </ThemeProvider>
         <Analytics />
       </body>
