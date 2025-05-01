@@ -17,6 +17,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 corepack enable
+pnpm install
 
 # Check if .env.local exists
 if [ ! -f ".env.local" ]; then
@@ -37,7 +38,6 @@ fi
 
 if [ -z "$SKIP_SETUP" ]; then
     LOCAL_DETACHED=true make local
-    pnpm install
     pnpm db:migrate
 fi
 
