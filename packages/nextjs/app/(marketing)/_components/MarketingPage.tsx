@@ -308,13 +308,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
           <div className="relative w-[110px] h-[32px] mx-auto md:mx-0">
             <div className="flex items-center absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100">
               <WavingHand />
-              <Image
-                src="/logo-text-white.svg"
-                priority
-                alt="Helper"
-                width={82}
-                height={32}
-              />
+              <Image src="/logo-text-white.svg" priority alt="Helper" width={82} height={32} />
             </div>
           </div>
           <div className="flex space-x-2 mx-auto md:mx-0">

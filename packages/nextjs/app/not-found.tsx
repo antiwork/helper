@@ -6,6 +6,7 @@ import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import WavingHand from "@/components/wavingHand";
+
 export default function NotFound() {
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
@@ -106,7 +107,8 @@ export default function NotFound() {
                 />
               </a>
             </div>
-          </div>ß
+          </div>
+          ß
           <div className="flex items-center">
             <Button
               onClick={generateRandomColors}

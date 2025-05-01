@@ -12,13 +12,13 @@ import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
 import { Button } from "@/components/ui/button";
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
+import WavingHand from "@/components/wavingHand";
 import { env } from "@/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import AppleLogo from "./icons/apple-logo.svg";
 import GitHubLogo from "./icons/github-logo.svg";
 import GoogleLogo from "./icons/google-logo.svg";
-import WavingHand from "@/components/wavingHand";
 
 export function LoginForm() {
   const { isSignedIn, isLoaded } = useUser();
