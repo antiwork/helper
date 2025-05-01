@@ -13,10 +13,27 @@ import SectionWrapper from "./sectionWrapper";
 
 const isValidUrl = (url: string) => {
   try {
-    new URL(url);
+    const urlWithProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    new URL(urlWithProtocol);
     return true;
   } catch {
     return false;
+  }
+};
+
+const fetchPageTitle = async (url: string): Promise<string> => {
+  try {
+    const urlWithProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    
+    const response = await fetch(urlWithProtocol, {
+      headers: { 'User-Agent': 'Helper Website Crawler' }
+    });
+    const html = await response.text();
+    
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return titleMatch ? titleMatch[1].trim() : new URL(urlWithProtocol).hostname;
+  } catch (error) {
+    return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname;
   }
 };
 
@@ -85,12 +102,17 @@ const WebsiteCrawlSetting = () => {
     },
   });
 
-  const handleAddWebsite = () =>
-    addWebsiteMutation.mutateAsync({
+  const handleAddWebsite = async (url: string) => {
+    const urlWithProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    
+    const title = await fetchPageTitle(urlWithProtocol);
+    
+    return addWebsiteMutation.mutateAsync({
       mailboxSlug: params.mailbox_slug,
-      name: newWebsite.name,
-      url: newWebsite.url,
+      name: title,
+      url: urlWithProtocol,
     });
+  };
 
   const handleDeleteWebsite = async (websiteId: number) => {
     if (confirm("Are you sure you want to delete this website? All scanned pages will be deleted.")) {
@@ -234,35 +256,33 @@ const WebsiteCrawlSetting = () => {
               onSubmit={async (e) => {
                 e.preventDefault();
                 if (!isValidUrl(newWebsite.url)) {
-                  setUrlError("Please enter a valid URL (e.g., https://example.com)");
+                  setUrlError("Please enter a valid URL");
                   return;
                 }
                 setUrlError("");
-                await handleAddWebsite();
-                setNewWebsite({ name: "", url: "" });
-                setShowAddWebsite(false);
+                
+                try {
+                  await handleAddWebsite(newWebsite.url);
+                  setNewWebsite({ name: "", url: "" });
+                  setShowAddWebsite(false);
+                } catch (error) {
+                  console.error("Error adding website:", error);
+                  setUrlError("Failed to add website. Please try again.");
+                }
               }}
             >
               <div className="border rounded-lg p-4 grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Main Website"
-                    value={newWebsite.name}
-                    onChange={(e) => setNewWebsite({ ...newWebsite, name: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
                   <Label htmlFor="url">URL</Label>
                   <Input
                     id="url"
-                    placeholder="https://example.com"
+                    placeholder="example.com"
                     value={newWebsite.url}
                     onChange={(e) => {
-                      setNewWebsite({ ...newWebsite, url: e.target.value });
+                      setNewWebsite({ ...newWebsite, name: "", url: e.target.value });
                       setUrlError("");
                     }}
+                    autoFocus
                   />
                   {urlError && <div className="text-sm text-destructive">{urlError}</div>}
                 </div>
@@ -271,7 +291,7 @@ const WebsiteCrawlSetting = () => {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={addWebsiteMutation.isPending}>
-                    {addWebsiteMutation.isPending ? "Adding..." : "Add Website"}
+                    {addWebsiteMutation.isPending ? "Adding..." : "Add website"}
                   </Button>
                 </div>
               </div>
@@ -279,7 +299,7 @@ const WebsiteCrawlSetting = () => {
           ) : (
             <Button variant="subtle" onClick={() => setShowAddWebsite(true)}>
               <PlusCircleIcon className="mr-2 h-4 w-4" />
-              Add Website
+              Add website
             </Button>
           )}
         </div>
