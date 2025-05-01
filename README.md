@@ -84,4 +84,6 @@ npm run db:migrate
 
 ## License
 
+## Some extra credit goes to AI i guess
+
 Helper is licensed under the [MIT License](LICENSE.md).
