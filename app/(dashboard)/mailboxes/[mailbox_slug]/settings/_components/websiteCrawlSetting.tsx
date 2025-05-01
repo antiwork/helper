@@ -266,7 +266,6 @@ const WebsiteCrawlSetting = () => {
                   setNewWebsite({ name: "", url: "" });
                   setShowAddWebsite(false);
                 } catch (error) {
-                  console.error("Error adding website:", error);
                   setUrlError("Failed to add website. Please try again.");
                 }
               }}
