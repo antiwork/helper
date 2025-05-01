@@ -34,7 +34,7 @@ Keep in mind that, while no one else will be receiving these Gmail webhook event
 If this makes local development difficult (by cluttering the Inngest event log), you can:
 
 1. Create a new development-only Google pub/sub topic
-2. Update `GOOGLE_PUBSUB_TOPIC_NAME` in `packages/nextjs/.env.local` to point to that new topic
+2. Update `GOOGLE_PUBSUB_TOPIC_NAME` in `.env.local` to point to that new topic
 3. Within that new topic, create a new subscription using the same configuration as the existing `mail-forwarding-sub` subscription. Set the endpoint URL to your Ngrok URL.
 
 ## Slack Integration
@@ -43,9 +43,9 @@ If this makes local development difficult (by cluttering the Inngest event log),
 
 ![Slack app redirect URLs](images/slack_app_redirect_urls.png)
 
-2. Update `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, and `SLACK_SIGNING_SECRET` in `packages/nextjs/.env.local` to the credentials for your Slack app.
+2. Update `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, and `SLACK_SIGNING_SECRET` in `.env.local` to the credentials for your Slack app.
 
-3. Set `AUTH_URL` in `packages/nextjs/.env.local` to the Ngrok URL configured above e.g. `AUTH_URL=https://1jdkfiro39f8.ngrok.app`. This is so that Slack login works properly.
+3. Set `AUTH_URL` in `.env.local` to the Ngrok URL configured above e.g. `AUTH_URL=https://1jdkfiro39f8.ngrok.app`. This is so that Slack login works properly.
 
 4. Run `bin/dev`, and access the application using that same Ngrok URL (in other words, things will not work if you access the application with `helperai.dev`. You must use the Ngrok URL configured above).
 

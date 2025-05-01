@@ -2,7 +2,7 @@
 
 ## Running Evaluations
 
-The project uses [Evalite](https://evalite.dev/) for testing AI behavior. Eval files are located in `packages/nextjs/evals` and follow this pattern:
+The project uses [Evalite](https://evalite.dev/) for testing AI behavior. Eval files are located in `tests/evals` and follow this pattern:
 
 ```typescript
 evalite("Test description", {

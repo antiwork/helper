@@ -1,3 +1,3 @@
 {
-    "buildCommand": "sh vercel.sh"
+    "buildCommand": "sh bin/vercel.sh"
 }
