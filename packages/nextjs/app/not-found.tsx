@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-
+import WavingHand from "@/components/wavingHand";
 export default function NotFound() {
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
@@ -95,17 +95,18 @@ export default function NotFound() {
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center">
             <div className="flex flex-col items-start">
-              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
+              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                <WavingHand />
                 <Image
-                  src="/logo.svg"
+                  src="/logo-text.svg"
                   alt="Helper"
-                  width={100}
+                  width={82}
                   height={32}
                   className="transition-opacity duration-300 ease-in-out opacity-100"
                 />
               </a>
             </div>
-          </div>
+          </div>ß
           <div className="flex items-center">
             <Button
               onClick={generateRandomColors}

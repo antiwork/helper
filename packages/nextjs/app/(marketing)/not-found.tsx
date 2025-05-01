@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
+import WavingHand from "@/components/wavingHand";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -124,7 +125,7 @@ export default function NotFound() {
               src="/logo-white.svg"
               priority
               alt="Helper"
-              width={100}
+              width={82}
               height={32}
               className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100"
             />
@@ -162,11 +163,12 @@ export default function NotFound() {
         <div className=" flex justify-between items-center w-full">
           <div className="flex items-center">
             <div className="flex flex-col items-start">
-              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
+              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                <WavingHand />
                 <Image
-                  src="/logo.svg"
+                  src="/logo-text.svg"
                   alt="Helper"
-                  width={100}
+                  width={82}
                   height={32}
                   className="transition-opacity duration-300 ease-in-out opacity-100"
                 />

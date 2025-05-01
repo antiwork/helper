@@ -18,6 +18,7 @@ import { api } from "@/trpc/react";
 import AppleLogo from "./icons/apple-logo.svg";
 import GitHubLogo from "./icons/github-logo.svg";
 import GoogleLogo from "./icons/google-logo.svg";
+import WavingHand from "@/components/wavingHand";
 
 export function LoginForm() {
   const { isSignedIn, isLoaded } = useUser();
@@ -154,13 +155,16 @@ export function LoginForm() {
   return (
     <>
       <div className="mb-8 flex flex-col items-center gap-4">
-        <Image
-          src={theme === "dark" || systemTheme === "dark" ? "/logo-white.svg" : "/logo.svg"}
-          alt="Helper"
-          width="110"
-          height="32"
-          className="w-28"
-        />
+        <div className="flex items-center">
+          <WavingHand />
+          <Image
+            src={theme === "dark" || systemTheme === "dark" ? "/logo-text-white.svg" : "/logo-text.svg"}
+            alt="Helper"
+            width="82"
+            height="32"
+            className="w-20"
+          />
+        </div>
         <p className="text-sm text-muted-foreground">Please sign in or sign up to continue</p>
       </div>
 
