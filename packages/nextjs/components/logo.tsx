@@ -1,8 +1,8 @@
 "use client";
 
+import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
 
 interface LogoProps {
   themePreference?: "auto" | "light" | "dark";
@@ -11,7 +11,12 @@ interface LogoProps {
   waveDuration?: number;
 }
 
-export default function Logo({ themePreference = "auto", className = "", isWaving = false, waveDuration = 1 }: LogoProps) {
+export default function Logo({
+  themePreference = "auto",
+  className = "",
+  isWaving = false,
+  waveDuration = 1,
+}: LogoProps) {
   const [waving, setWaving] = useState(false);
   const { theme, systemTheme } = useTheme();
 
@@ -54,11 +59,7 @@ export default function Logo({ themePreference = "auto", className = "", isWavin
 
   return (
     <div className={`${className} flex items-center`}>
-      <div
-        className="relative"
-        onMouseEnter={() => setWaving(true)}
-        onMouseLeave={() => !isWaving && setWaving(false)}
-      >
+      <div className="relative" onMouseEnter={() => setWaving(true)} onMouseLeave={() => !isWaving && setWaving(false)}>
         <Image
           src="/logo-hand.svg"
           priority
@@ -73,10 +74,10 @@ export default function Logo({ themePreference = "auto", className = "", isWavin
           themePreference === "dark"
             ? "/logo-text-white.svg"
             : themePreference === "light"
-            ? "/logo-text.svg" 
-            : theme === "dark" || systemTheme === "dark"
-            ? "/logo-text-white.svg"
-            : "/logo-text.svg"
+              ? "/logo-text.svg"
+              : theme === "dark" || systemTheme === "dark"
+                ? "/logo-text-white.svg"
+                : "/logo-text.svg"
         }
         alt="Helper"
         width="82"

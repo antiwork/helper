@@ -7,8 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getBaseUrl } from "@/components/constants";
-import { Button } from "@/components/ui/button";
 import Logo from "@/components/logo";
+import { Button } from "@/components/ui/button";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (

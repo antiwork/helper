@@ -20,11 +20,11 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import { useHelper } from "@helperai/react";
 import { getBaseUrl } from "@/components/constants";
+import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useNativePlatform } from "@/components/useNativePlatform";
-import Logo from "@/components/logo";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
