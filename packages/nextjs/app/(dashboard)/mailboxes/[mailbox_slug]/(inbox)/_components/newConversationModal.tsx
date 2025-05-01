@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FAILED_ATTACHMENTS_TOOLTIP_MESSAGE,
   useSendDisabled,
@@ -7,8 +7,9 @@ import {
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
+import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import LabeledInput from "@/components/labeledInput";
-import TipTapEditor from "@/components/tiptap/editor";
+import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,34 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
   });
 
   const { sendDisabled, sending, setSending } = useSendDisabled(newConversationInfo.message);
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+
+  const handleSegment = useCallback(
+    (segment: string) => {
+      if (editorRef.current?.editor) {
+        editorRef.current.editor.commands.insertContent(segment);
+      }
+    },
+    [editorRef],
+  );
+
+  const handleError = useCallback((error: string) => {
+    toast({
+      title: "Speech Recognition Error",
+      description: error,
+      variant: "destructive",
+    });
+  }, []);
+
+  const {
+    isSupported: isRecordingSupported,
+    isRecording,
+    startRecording,
+    stopRecording,
+  } = useSpeechRecognition({
+    onSegment: handleSegment,
+    onError: handleError,
+  });
 
   const router = useRouter();
   const { mutateAsync: createNewConversation } = api.mailbox.conversations.create.useMutation({
@@ -68,6 +97,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
 
   const sendMessage = async () => {
     if (sendDisabled) return;
+    stopRecording();
     const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
       conversation_slug: conversationSlug,
       to_email_address: newConversationInfo.to_email_address.trim(),
@@ -138,6 +168,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
         />
         <div className="min-h-[10rem]">
           <TipTapEditor
+            ref={editorRef}
             ariaLabel="Message"
             defaultContent={messageMemoized}
             onModEnter={sendMessage}
@@ -149,6 +180,10 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
             }
             enableImageUpload
             enableFileUpload
+            isRecordingSupported={isRecordingSupported}
+            isRecording={isRecording}
+            startRecording={startRecording}
+            stopRecording={stopRecording}
           />
         </div>
       </div>
