@@ -220,9 +220,6 @@ export default function AnimatedCursor({
             />
           </svg>
         </motion.div>
-        <div className="absolute" style={getLabelPositionStyle()}>
-          <div className="bg-yellow-400 text-black rounded-full px-2 py-0.5 text-xs whitespace-nowrap">Helper</div>
-        </div>
       </div>
     </motion.div>
   );
