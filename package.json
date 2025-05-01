@@ -29,6 +29,7 @@
   "devDependencies": {
     "@figma/code-connect": "^1.0.5",
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
+    "dotenv-cli": "^7.4.2",
     "heroku": "^10.6.1",
     "inngest-cli": "^1.5.10",
     "prettier": "^3.3.3",
