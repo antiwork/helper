@@ -255,6 +255,7 @@ class HelperWidget {
 
     this.iframe = document.createElement("iframe");
     this.iframe.className = "helper-widget-iframe";
+    this.iframe.allow = "microphone *";
     this.iframe.src = __EMBED_URL__;
 
     if (this.iframeWrapper) {
