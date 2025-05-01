@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 
 const isEvals = process.env.EVALITE === "true";
 const include = isEvals ? [] : ["tests/**/*.{test,spec}.?(c|m)[jt]s?(x)"];
-const setupFiles = isEvals ? ["./evals/support/setup.ts"] : ["./tests/support/setup.ts"];
+const setupFiles = isEvals ? ["./tests/evals/support/setup.ts"] : ["./tests/support/setup.ts"];
 const globalSetup = isEvals ? [] : ["./tests/support/globalSetup.ts"];
 
 export default defineConfig({

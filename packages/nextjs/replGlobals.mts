@@ -1,28 +1,28 @@
 import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  exists,
-  gt,
-  gte,
-  ilike,
-  inArray,
-  isNotNull,
-  isNull,
-  like,
-  lt,
-  lte,
-  not,
-  notExists,
-  or,
-  sql,
+    and,
+    asc,
+    count,
+    desc,
+    eq,
+    exists,
+    gt,
+    gte,
+    ilike,
+    inArray,
+    isNotNull,
+    isNull,
+    like,
+    lt,
+    lte,
+    not,
+    notExists,
+    or,
+    sql,
 } from "drizzle-orm";
 import { createDbClient } from "@/db/client";
 import { explainAnalyze } from "@/db/lib/debug";
 import * as dbSchemas from "@/db/schema";
-import { env } from "@/env";
+import { env } from "@/lib/env";
 import { inngest } from "@/inngest/client";
 
 // @ts-expect-error Node's CommonJS module loading changes the schemas to be under a single 'default' export

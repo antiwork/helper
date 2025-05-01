@@ -1,4 +1,4 @@
-import { env } from "@/env";
+import { env } from "@/lib/env";
 
 export const commonConfig = {
   dsn: env.NEXT_PUBLIC_SENTRY_DSN,
