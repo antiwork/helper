@@ -327,6 +327,9 @@ export default function Home() {
                         </motion.div>
                       )}
                     </div>
+                    <div className="flex justify-start mt-2">
+                      <div className="text-2xl">👋</div>
+                    </div>
                   </div>
                 </motion.div>
               )}
