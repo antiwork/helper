@@ -222,7 +222,7 @@ const Toolbar = ({
           className={cn("h-8 w-8 p-0 border border-border hover:border-primary", {
             "bg-muted": isRecording,
           })}
-          aria-label={isRecording ? "Stop recording" : "Start recording"}
+          aria-label={isRecording ? "Stop" : "Dictate"}
         >
           <Mic
             className={cn("w-4 h-4", {
@@ -274,7 +274,7 @@ const Toolbar = ({
             className={cn(baseToolbarStyles, {
               "bg-muted": isRecording,
             })}
-            aria-label={isRecording ? "Stop recording" : "Start recording"}
+            aria-label={isRecording ? "Stop" : "Dictate"}
           >
             <Mic
               className={cn("w-4 h-4", {

@@ -183,7 +183,7 @@ export default function ChatInput({
                         "bg-muted": isRecording,
                       })}
                       disabled={isLoading}
-                      aria-label={isRecording ? "Stop recording" : "Start recording"}
+                      aria-label={isRecording ? "Stop" : "Dictate"}
                     >
                       <Mic
                         className={cn("w-4 h-4", {
@@ -193,7 +193,7 @@ export default function ChatInput({
                       />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>{isRecording ? "Stop recording" : "Start recording"}</TooltipContent>
+                  <TooltipContent>{isRecording ? "Stop" : "Dictate"}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
