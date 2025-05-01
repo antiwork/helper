@@ -1,4 +1,4 @@
-# Hi! This is my PR. Thanks for the extra credit.
+# Hi! I'm Shalewa Oseni and this is my PR. Thanks for the extra credit.
 
 # Helper
 
