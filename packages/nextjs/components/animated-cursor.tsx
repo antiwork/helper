@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 interface AnimatedCursorProps {
-  position: { x: number; y: number }
-  animate?: boolean
-  stopAnimation?: boolean
-  showSpotlight?: boolean
-  labelPosition?: "left" | "right" | "top" | "bottom"
+  position: { x: number; y: number };
+  animate?: boolean;
+  stopAnimation?: boolean;
+  showSpotlight?: boolean;
+  labelPosition?: "left" | "right" | "top" | "bottom";
 }
 
 export default function AnimatedCursor({
@@ -18,13 +18,13 @@ export default function AnimatedCursor({
   showSpotlight = true,
   labelPosition = "left",
 }: AnimatedCursorProps) {
-  const [isWaving, setIsWaving] = useState(false)
-  const [cursorVariant, setCursorVariant] = useState("initial")
-  const [spotlightIntensity, setSpotlightIntensity] = useState(0)
-  const [isFlickering, setIsFlickering] = useState(false)
-  const [hasStartedMoving, setHasStartedMoving] = useState(false)
-  const animationRef = useRef<NodeJS.Timeout | null>(null)
-  const sequenceRunning = useRef(false)
+  const [isWaving, setIsWaving] = useState(false);
+  const [cursorVariant, setCursorVariant] = useState("initial");
+  const [spotlightIntensity, setSpotlightIntensity] = useState(0);
+  const [isFlickering, setIsFlickering] = useState(false);
+  const [hasStartedMoving, setHasStartedMoving] = useState(false);
+  const animationRef = useRef<NodeJS.Timeout | null>(null);
+  const sequenceRunning = useRef(false);
 
   // Define the cursor animation variants
   const cursorVariants = {
@@ -50,117 +50,117 @@ export default function AnimatedCursor({
       transition: { duration: 1, ease: "easeInOut" },
     },
     rest: position,
-  }
+  };
 
   // Get label position styles
   const getLabelPositionStyle = () => {
     switch (labelPosition) {
       case "left":
-        return { left: "-40px", top: "30px" }
+        return { left: "-40px", top: "30px" };
       case "right":
-        return { right: "-40px", top: "-30px" }
+        return { right: "-40px", top: "-30px" };
       case "top":
-        return { top: "-30px", left: "0px", transform: "translateX(-50%)" }
+        return { top: "-30px", left: "0px", transform: "translateX(-50%)" };
       case "bottom":
-        return { bottom: "-30px", left: "0px", transform: "translateX(-50%)" }
+        return { bottom: "-30px", left: "0px", transform: "translateX(-50%)" };
       default:
-        return { left: "-80px", top: "0px" }
+        return { left: "-80px", top: "0px" };
     }
-  }
+  };
 
   // Stop animation when requested
   useEffect(() => {
     if (stopAnimation) {
-      sequenceRunning.current = false
+      sequenceRunning.current = false;
       if (animationRef.current) {
-        clearTimeout(animationRef.current)
+        clearTimeout(animationRef.current);
       }
-      setCursorVariant("rest")
+      setCursorVariant("rest");
     }
-  }, [stopAnimation])
+  }, [stopAnimation]);
 
   // Initial animation sequence - flickering spotlight, then wave, then movement
   useEffect(() => {
-    if (!animate) return
-    sequenceRunning.current = true
+    if (!animate) return;
+    sequenceRunning.current = true;
 
     // Step 1: Wait, then flicker on the spotlight
     const startFlickering = async () => {
       // Wait before starting the flicker
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      if (!sequenceRunning.current) return
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (!sequenceRunning.current) return;
 
       // Flickering sequence
-      setIsFlickering(true)
-      setTimeout(() => setSpotlightIntensity(0.4), 0)
-      setTimeout(() => setSpotlightIntensity(0.1), 100)
-      setTimeout(() => setSpotlightIntensity(0.7), 200)
-      setTimeout(() => setSpotlightIntensity(0.2), 300)
+      setIsFlickering(true);
+      setTimeout(() => setSpotlightIntensity(0.4), 0);
+      setTimeout(() => setSpotlightIntensity(0.1), 100);
+      setTimeout(() => setSpotlightIntensity(0.7), 200);
+      setTimeout(() => setSpotlightIntensity(0.2), 300);
       setTimeout(() => {
-        setSpotlightIntensity(1)
+        setSpotlightIntensity(1);
 
         // Step 2: After spotlight is on, start waving
         setTimeout(() => {
-          if (!sequenceRunning.current) return
-          setIsWaving(true)
+          if (!sequenceRunning.current) return;
+          setIsWaving(true);
 
           // Step 3: After waving, start movement loop
           setTimeout(() => {
-            if (!sequenceRunning.current) return
-            setIsWaving(false)
-            setHasStartedMoving(true)
-            startMovementLoop()
-          }, 2000) // Wave for 2 seconds
-        }, 500) // Wait 0.5s after spotlight is on before waving
-      }, 500) // Final flicker to full intensity
-    }
+            if (!sequenceRunning.current) return;
+            setIsWaving(false);
+            setHasStartedMoving(true);
+            startMovementLoop();
+          }, 2000); // Wave for 2 seconds
+        }, 500); // Wait 0.5s after spotlight is on before waving
+      }, 500); // Final flicker to full intensity
+    };
 
-    startFlickering()
+    startFlickering();
 
     return () => {
-      sequenceRunning.current = false
+      sequenceRunning.current = false;
       if (animationRef.current) {
-        clearTimeout(animationRef.current)
+        clearTimeout(animationRef.current);
       }
-    }
-  }, [animate])
+    };
+  }, [animate]);
 
   // Movement loop - only starts after spotlight and waving
   const startMovementLoop = async () => {
-    if (!sequenceRunning.current) return
+    if (!sequenceRunning.current) return;
 
     // Movement sequence
     const runMovementLoop = async () => {
-      if (!sequenceRunning.current) return
+      if (!sequenceRunning.current) return;
 
       // Move to position 1
-      setCursorVariant("animate1")
-      await new Promise((resolve) => setTimeout(resolve, 1200))
-      if (!sequenceRunning.current) return
+      setCursorVariant("animate1");
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (!sequenceRunning.current) return;
 
       // Move to position 2
-      setCursorVariant("animate2")
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      if (!sequenceRunning.current) return
+      setCursorVariant("animate2");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (!sequenceRunning.current) return;
 
       // Move to position 3
-      setCursorVariant("animate3")
-      await new Promise((resolve) => setTimeout(resolve, 1300))
-      if (!sequenceRunning.current) return
+      setCursorVariant("animate3");
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      if (!sequenceRunning.current) return;
 
       // Return to original position
-      setCursorVariant("animate4")
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      if (!sequenceRunning.current) return
+      setCursorVariant("animate4");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!sequenceRunning.current) return;
 
       // Loop the sequence
       if (sequenceRunning.current) {
-        animationRef.current = setTimeout(runMovementLoop, 500)
+        animationRef.current = setTimeout(runMovementLoop, 500);
       }
-    }
+    };
 
-    runMovementLoop()
-  }
+    runMovementLoop();
+  };
 
   return (
     <motion.div
@@ -178,8 +178,9 @@ export default function AnimatedCursor({
             height: "180px",
             top: "-90px",
             left: "-90px",
-            background: "radial-gradient(circle, rgba(255, 221, 51, 0.25) 0%, rgba(255, 221, 51, 0.15) 40%, rgba(255, 221, 51, 0) 60%)",
-opacity: spotlightIntensity,
+            background:
+              "radial-gradient(circle, rgba(255, 221, 51, 0.25) 0%, rgba(255, 221, 51, 0.15) 40%, rgba(255, 221, 51, 0) 60%)",
+            opacity: spotlightIntensity,
             transition: isFlickering ? "opacity 0.1s linear" : "opacity 0.5s ease-in-out",
           }}
           animate={{
@@ -224,5 +225,5 @@ opacity: spotlightIntensity,
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

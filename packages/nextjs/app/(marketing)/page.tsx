@@ -71,13 +71,12 @@ export default function Home() {
   const [showCursor, setShowCursor] = useState(true);
   const [showFeatures, setShowFeatures] = useState(false);
   const [activeBubble, setActiveBubble] = useState<string | null>(null);
-  const [cursorPosition, setCursorPosition] = useState({ x: 80, y: 450 });
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [customerTypingComplete, setCustomerTypingComplete] = useState(false);
   const [helperTypingComplete, setHelperTypingComplete] = useState(false);
   const [showHelperButton, setShowHelperButton] = useState(false);
   const [cursorAnimating, setCursorAnimating] = useState(true);
-  const [stopCursorAnimation, setStopCursorAnimation] = useState(false);
-  const [showSpotlight, setShowSpotlight] = useState(true);
+  const [showSpotlight, setShowSpotlight] = useState(false);
   const showMeButtonRef = useRef<HTMLButtonElement>(null);
   const lastActiveFeature = useRef<string | null>(null);
   const initialScrollComplete = useRef(false);
@@ -92,6 +91,22 @@ export default function Home() {
     bubbleVariant: "topRight",
     labelPosition: "left",
   });
+
+  useEffect(() => {
+    const updateInitialCursorPosition = () => {
+      if (cursorAnimating) {
+        setCursorPosition({
+          x: window.innerWidth - 50,
+          y: window.innerHeight - 50,
+        });
+      }
+    };
+
+    updateInitialCursorPosition();
+    window.addEventListener("resize", updateInitialCursorPosition);
+
+    return () => window.removeEventListener("resize", updateInitialCursorPosition);
+  }, [cursorAnimating]);
 
   useEffect(() => {
     const questionInterval = setInterval(() => {
@@ -113,10 +128,6 @@ export default function Home() {
     if (customerTypingComplete) {
       const helperTimer = setTimeout(() => {
         setShowHelperMessage(true);
-        if (helperMessageRef.current) {
-          const rect = helperMessageRef.current.getBoundingClientRect();
-          setCursorPosition({ x: rect.left - 40, y: window.scrollY + rect.top + rect.height / 2 });
-        }
       }, 500);
       return () => clearTimeout(helperTimer);
     }
@@ -126,13 +137,16 @@ export default function Home() {
     if (helperTypingComplete) {
       const buttonTimer = setTimeout(() => {
         setShowHelperButton(true);
-        if (showMeButtonRef.current) {
-          const buttonRect = showMeButtonRef.current.getBoundingClientRect();
-          setCursorPosition({
-            x: buttonRect.left + buttonRect.width / 2,
-            y: window.scrollY + buttonRect.top + buttonRect.height / 2,
-          });
-        }
+        setTimeout(() => {
+          if (showMeButtonRef.current) {
+            const buttonRect = showMeButtonRef.current.getBoundingClientRect();
+            const finalX = buttonRect.left + buttonRect.width / 2;
+            const finalY = window.scrollY + buttonRect.top + buttonRect.height / 2;
+            setCursorPosition({ x: finalX, y: finalY });
+            setCursorAnimating(false);
+            setShowSpotlight(true);
+          }
+        }, 100);
       }, 500);
       return () => clearTimeout(buttonTimer);
     }
@@ -175,13 +189,6 @@ export default function Home() {
     setFooterBgColor(bgColor);
     setFooterTextColor(textColor);
   }, []);
-
-  useEffect(() => {
-    if (helperMessageRef.current) {
-      const rect = helperMessageRef.current.getBoundingClientRect();
-      setCursorPosition({ x: rect.left - 40, y: rect.top + rect.height / 2 });
-    }
-  }, [helperTypingComplete]);
 
   useEffect(() => {
     if (showFeatures && !initialScrollComplete.current) {
@@ -227,8 +234,6 @@ export default function Home() {
   const handleShowMe = () => {
     setShowFeatures(true);
     initialScrollComplete.current = false;
-    setStopCursorAnimation(true);
-    setShowSpotlight(false);
   };
 
   const handleCustomerTypingComplete = () => {
@@ -250,8 +255,7 @@ export default function Home() {
           <AnimatedCursor
             position={cursorPosition}
             animate={cursorAnimating}
-            stopAnimation={stopCursorAnimation}
-            showSpotlight={showSpotlight}
+            showSpotlight={false}
             labelPosition={currentPositionConfig.labelPosition}
           />
         )}
@@ -316,9 +320,9 @@ export default function Home() {
                           <button
                             ref={showMeButtonRef}
                             onClick={handleShowMe}
-                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-md mt-4 transition-colors"
+                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-3 rounded-lg mt-4 transition-colors"
                           >
-                            TAKE THE TOUR
+                            Take the tour
                           </button>
                         </motion.div>
                       )}
@@ -418,7 +422,10 @@ export default function Home() {
               </div>
             </section>
 
-            <footer className="fixed bottom-0 left-0 right-0 w-full h-24" style={{ backgroundColor: footerBgColor }}>
+            <footer
+              className="fixed bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5"
+              style={{ backgroundColor: footerBgColor }}
+            >
               <div className="flex items-center">
                 <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
                   <svg width="200" height="40" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
