@@ -596,10 +596,14 @@ class HelperWidget {
       }
     }
     this.showWidgetAfterAnimation();
+    if (this.helperIcon) {
+      this.helperIcon.classList.add("scaled-down");
+    }
   }
 
   private hideInternal(): void {
     if (this.iframeWrapper && this.isVisible) {
+      this.guideManager.clearSession();
       this.iframeWrapper.classList.remove("visible");
       this.iframeWrapper.classList.remove("minimized");
       this.hideLoadingOverlay();
@@ -616,6 +620,9 @@ class HelperWidget {
         this.toggleButton.classList.add("visible");
         this.toggleButton.classList.remove("with-minimized-widget");
       }
+    }
+    if (this.helperIcon) {
+      this.helperIcon.classList.remove("scaled-down");
     }
   }
 

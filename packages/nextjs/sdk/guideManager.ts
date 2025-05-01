@@ -375,6 +375,7 @@ export class GuideManager {
         "aria-label",
         "placeholder",
         "value",
+        "required",
         "alt",
         "aria-expanded",
       ];
