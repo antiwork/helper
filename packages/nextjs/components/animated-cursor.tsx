@@ -52,22 +52,6 @@ export default function AnimatedCursor({
     rest: position,
   };
 
-  // Get label position styles
-  const getLabelPositionStyle = () => {
-    switch (labelPosition) {
-      case "left":
-        return { left: "-40px", top: "30px" };
-      case "right":
-        return { right: "-40px", top: "-30px" };
-      case "top":
-        return { top: "-30px", left: "0px", transform: "translateX(-50%)" };
-      case "bottom":
-        return { bottom: "-30px", left: "0px", transform: "translateX(-50%)" };
-      default:
-        return { left: "-80px", top: "0px" };
-    }
-  };
-
   // Stop animation when requested
   useEffect(() => {
     if (stopAnimation) {
