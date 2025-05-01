@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "postinstall": "fumadocs-mdx",
-    "build": "pnpm run-on-packages build && build:sdk:prod && next build",
+    "build": "pnpm run-on-packages build && pnpm build:sdk:prod && next build",
     "build:preview": "pnpm run build && pnpm run db:migrate && pnpx tsx --conditions=react-server ./db/seeds/index.ts",
     "build:sdk": "webpack --config webpack.sdk.cjs --env development",
     "build:sdk:prod": "webpack --config webpack.sdk.cjs --env production",
