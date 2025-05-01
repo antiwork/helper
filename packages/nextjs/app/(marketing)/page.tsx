@@ -3,11 +3,13 @@
 import { useUser } from "@clerk/nextjs";
 import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import { motion } from "framer-motion";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AnimatedCursor from "@/components/animated-cursor";
+import AnimatedTyping from "@/components/animated-typing";
 import ComparisonHistogram from "@/components/comparison-histogram";
 import { getBaseUrl } from "@/components/constants";
 import MessageBubble from "@/components/message-bubble";
@@ -63,11 +65,9 @@ export default function Home() {
     "Will Helper reduce our support team's workload?",
   ]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [displayedQuestionText, setDisplayedQuestionText] = useState("");
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [showCustomerMessage, setShowCustomerMessage] = useState(true);
-  const [showHelperMessage, setShowHelperMessage] = useState(true);
+  const [showCustomerMessage, setShowCustomerMessage] = useState(false);
+  const [showHelperMessage, setShowHelperMessage] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
   const [showFeatures, setShowFeatures] = useState(false);
   const [activeBubble, setActiveBubble] = useState<string | null>(null);
@@ -102,35 +102,41 @@ export default function Home() {
   }, [customerQuestions.length]);
 
   useEffect(() => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+    const customerTimer = setTimeout(() => {
+      setShowCustomerMessage(true);
+    }, 1000);
+
+    return () => clearTimeout(customerTimer);
+  }, []);
+
+  useEffect(() => {
+    if (customerTypingComplete) {
+      const helperTimer = setTimeout(() => {
+        setShowHelperMessage(true);
+        if (helperMessageRef.current) {
+          const rect = helperMessageRef.current.getBoundingClientRect();
+          setCursorPosition({ x: rect.left - 40, y: window.scrollY + rect.top + rect.height / 2 });
+        }
+      }, 500);
+      return () => clearTimeout(helperTimer);
     }
-    setDisplayedQuestionText("");
+  }, [customerTypingComplete]);
 
-    const targetText = customerQuestions[currentQuestionIndex];
-    if (!targetText) return;
-
-    let index = 0;
-    const typeSpeed = 30;
-
-    const typeChar = () => {
-      if (index < targetText.length) {
-        setDisplayedQuestionText((prev) => prev + targetText.charAt(index));
-        index++;
-        typingTimeoutRef.current = setTimeout(typeChar, typeSpeed);
-      } else {
-        typingTimeoutRef.current = null;
-      }
-    };
-
-    typingTimeoutRef.current = setTimeout(typeChar, 100);
-
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, [currentQuestionIndex, customerQuestions]);
+  useEffect(() => {
+    if (helperTypingComplete) {
+      const buttonTimer = setTimeout(() => {
+        setShowHelperButton(true);
+        if (showMeButtonRef.current) {
+          const buttonRect = showMeButtonRef.current.getBoundingClientRect();
+          setCursorPosition({
+            x: buttonRect.left + buttonRect.width / 2,
+            y: window.scrollY + buttonRect.top + buttonRect.height / 2,
+          });
+        }
+      }, 500);
+      return () => clearTimeout(buttonTimer);
+    }
+  }, [helperTypingComplete]);
 
   useEffect(() => {
     fetch("https://api.github.com/repos/antiwork/helper")
@@ -178,175 +184,6 @@ export default function Home() {
   }, [helperTypingComplete]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setHelperTypingComplete(true);
-    }, 1000);
-  }, []);
-
-  useEffect(() => {
-    if (helperTypingComplete) {
-      setTimeout(() => {
-        setShowHelperButton(true);
-      }, 500);
-    }
-  }, [helperTypingComplete]);
-
-  useEffect(() => {
-    if (!showFeatures) return;
-
-    setStopCursorAnimation(true);
-
-    setShowSpotlight(false);
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      const viewportMiddle = scrollY + viewportHeight / 2;
-
-      const featureElements = {
-        smarterSupport: document.getElementById("smarter-support"),
-        knowledgeBank: document.getElementById("knowledgeBank"),
-        messageReactions: document.getElementById("messageReactions"),
-        shorthandReplies: document.getElementById("shorthandReplies"),
-        slackInterface: document.getElementById("slackInterface"),
-        slackNotification: document.getElementById("slackNotification"),
-        responseTimeChart: document.getElementById("responseTimeChart"),
-      };
-
-      let closestElement: HTMLElement | null = null;
-      let closestDistance = Number.POSITIVE_INFINITY;
-      let closestFeature = "";
-
-      for (const [feature, element] of Object.entries(featureElements)) {
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const elementTop = scrollY + rect.top;
-          const elementMiddle = elementTop + rect.height / 2;
-          const distance = Math.abs(viewportMiddle - elementMiddle);
-
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestElement = element;
-            closestFeature = feature;
-          }
-        }
-      }
-
-      if (closestElement && closestFeature !== lastActiveFeature.current) {
-        const rect = closestElement.getBoundingClientRect();
-
-        let cursorX = rect.left;
-        let cursorY = scrollY + rect.top + rect.height / 2;
-
-        switch (closestFeature) {
-          case "smarterSupport":
-            const dashboardImage = document.querySelector("#smarter-support img");
-            if (dashboardImage) {
-              const imageRect = dashboardImage.getBoundingClientRect();
-              cursorX = imageRect.left - 10;
-              cursorY = scrollY + imageRect.top + imageRect.height / 2 + 160;
-            }
-            break;
-          case "knowledgeBank":
-            const knowledgeBankImg = document.querySelector("#knowledgeBank img");
-            if (knowledgeBankImg) {
-              const imgRect = knowledgeBankImg.getBoundingClientRect();
-              cursorX = imgRect.right - 5;
-              cursorY = scrollY + imgRect.top + imgRect.height / 2 + 130;
-            }
-            break;
-          case "messageReactions":
-            const reactionsImg = document.querySelector("#messageReactions img");
-            if (reactionsImg) {
-              const imgRect = reactionsImg.getBoundingClientRect();
-              cursorX = imgRect.right - 5;
-              cursorY = scrollY + imgRect.top + imgRect.height / 2 + 130;
-            }
-            break;
-          case "shorthandReplies":
-            const shorthandImg = document.querySelector("#shorthandReplies img");
-            if (shorthandImg) {
-              const imgRect = shorthandImg.getBoundingClientRect();
-              cursorX = imgRect.right - 5;
-              cursorY = scrollY + imgRect.top + imgRect.height / 2 + 130;
-            }
-            break;
-          case "slackInterface":
-            const slackInterface = document.querySelector("#slackInterface");
-            if (slackInterface) {
-              const interfaceRect = slackInterface.getBoundingClientRect();
-              cursorX = interfaceRect.left - 10;
-              cursorY = scrollY + interfaceRect.top + interfaceRect.height / 2;
-            }
-            break;
-          case "slackNotification":
-            const notification = document.querySelector("#slackNotification");
-            if (notification) {
-              const notificationRect = notification.getBoundingClientRect();
-              cursorX = notificationRect.left - 10;
-              cursorY = scrollY + notificationRect.top + notificationRect.height / 2;
-            }
-            break;
-          case "responseTimeChart":
-            const chart = document.querySelector("#responseTimeChart");
-            if (chart) {
-              const chartRect = chart.getBoundingClientRect();
-              cursorX = chartRect.left + 20;
-              cursorY = scrollY + chartRect.top + chartRect.height / 2 + 40;
-            }
-            break;
-        }
-
-        if (!cursorX || !cursorY) {
-          cursorX = rect.left + 60;
-          cursorY = scrollY + rect.top + rect.height / 2;
-        }
-
-        cursorX = Math.max(cursorX, 60);
-
-        cursorX = Math.min(cursorX, viewportWidth - 60);
-
-        setCursorPosition({ x: cursorX, y: cursorY });
-        setActiveBubble(closestFeature);
-        setCurrentBubbleText(featureBubbleTexts[closestFeature] || "");
-
-        setCurrentPositionConfig(featurePositions[closestFeature] ?? defaultPositionConfig);
-
-        lastActiveFeature.current = closestFeature;
-      }
-
-      const finalToggle = document.querySelector("#finalToggle");
-      if (finalToggle) {
-        const rect = finalToggle.getBoundingClientRect();
-        const switchElement = finalToggle.querySelector('[role="switch"]');
-
-        if (switchElement) {
-          const switchRect = switchElement.getBoundingClientRect();
-          if (rect.top < window.innerHeight / 2 && rect.bottom > window.innerHeight / 2) {
-            setCursorPosition({
-              x: switchRect.left + switchRect.width / 2 - 20,
-              y: window.scrollY + switchRect.top + switchRect.height / 2 + 25,
-            });
-            setActiveBubble("finalToggle");
-            setCurrentPositionConfig(featurePositions.finalToggle ?? defaultPositionConfig);
-            setCurrentBubbleText(featureBubbleTexts.finalToggle || "");
-          }
-        }
-      } else if (lastActiveFeature.current !== null) {
-        setActiveBubble(null);
-        setCurrentBubbleText("");
-        lastActiveFeature.current = null;
-      }
-    };
-
-    setTimeout(handleScroll, 100);
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [showFeatures]);
-
-  useEffect(() => {
     if (showFeatures && !initialScrollComplete.current) {
       const timer = setTimeout(() => {
         const smarterSupportSection = document.getElementById("smarter-support");
@@ -390,6 +227,8 @@ export default function Home() {
   const handleShowMe = () => {
     setShowFeatures(true);
     initialScrollComplete.current = false;
+    setStopCursorAnimation(true);
+    setShowSpotlight(false);
   };
 
   const handleCustomerTypingComplete = () => {
@@ -430,32 +269,62 @@ export default function Home() {
             <h1 className="text-6xl font-bold mb-24 text-center">Helper helps customers help themselves.</h1>
 
             <div className="max-w-lg mx-auto">
-              <div className="flex justify-end mb-8">
-                <div className="max-w-md w-full">
-                  <div className="bg-[#412020] rounded-t-2xl rounded-bl-2xl p-6 shadow-lg/40 h-[80px] flex items-center">
-                    <span>{displayedQuestionText}</span>
-                  </div>
-                  <div className="flex justify-end mt-2">
-                    <div className="text-2xl">👩‍💻</div>
-                  </div>
-                </div>
-              </div>
-
-              {showHelperMessage && (
-                <div className="flex mb-8">
-                  <div className="w-96">
-                    <div ref={helperMessageRef} className="bg-[#412020] rounded-t-2xl rounded-br-2xl p-6 shadow-lg/40">
-                      Let me show you how I can help...
-                      <button
-                        ref={showMeButtonRef}
-                        onClick={handleShowMe}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-md mt-4"
-                      >
-                        TAKE THE TOUR
-                      </button>
+              {showCustomerMessage && (
+                <motion.div
+                  className="flex justify-end mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="max-w-md w-full">
+                    <div className="bg-[#412020] rounded-t-2xl rounded-bl-2xl p-6 shadow-lg/40 min-h-[80px] flex items-center">
+                      {customerQuestions[currentQuestionIndex] && (
+                        <AnimatedTyping
+                          text={customerQuestions[currentQuestionIndex]}
+                          speed={30}
+                          onComplete={handleCustomerTypingComplete}
+                        />
+                      )}
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <div className="text-2xl">👩‍💻</div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
+              )}
+
+              {showHelperMessage && (
+                <motion.div
+                  className="flex mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="w-96">
+                    <div ref={helperMessageRef} className="bg-[#412020] rounded-t-2xl rounded-br-2xl p-6 shadow-lg/40">
+                      <AnimatedTyping
+                        text="Let me show you how I can help..."
+                        speed={50}
+                        onComplete={handleHelperTypingComplete}
+                      />
+                      {showHelperButton && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.2 }}
+                        >
+                          <button
+                            ref={showMeButtonRef}
+                            onClick={handleShowMe}
+                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-md mt-4 transition-colors"
+                          >
+                            TAKE THE TOUR
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
               )}
             </div>
           </div>
