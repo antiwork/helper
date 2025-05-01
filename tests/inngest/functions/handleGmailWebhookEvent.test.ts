@@ -23,7 +23,10 @@ import { s3UrlToS3Key, uploadFile } from "@/lib/s3/utils";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("google-auth-library");
-vi.mock("@sentry/nextjs");
+vi.mock("@sentry/nextjs", () => ({
+  setContext: vi.fn(),
+  captureException: vi.fn(),
+}));
 vi.mock("@/inngest/functions/generateFilePreview");
 vi.mock("@/lib/s3/utils", async (importOriginal) => {
   const mod = await importOriginal<typeof import("@/lib/s3/utils")>();

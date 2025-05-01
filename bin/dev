@@ -16,6 +16,8 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+corepack enable
+
 # Check if .env.local exists
 if [ ! -f "packages/nextjs/.env.local" ]; then
     echo "packages/nextjs/.env.local file not found."
@@ -23,26 +25,26 @@ if [ ! -f "packages/nextjs/.env.local" ]; then
 
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         echo "Pulling environment variables from Vercel..."
-        cd packages/nextjs && npx vercel link && npx vercel env pull --environment=development && cd ../..
+        cd packages/nextjs && pnpm vercel link && pnpm vercel env pull --environment=development && cd ../..
     else
         echo "Please set up your .env.local file by copying packages/nextjs/.env.local.sample to packages/nextjs/.env.local and filling in the required values"
         exit 1
     fi
 elif [ -f "packages/nextjs/.vercel/project.json" ]; then
     echo "Found existing Vercel project configuration. Pulling latest environment variables..."
-    cd packages/nextjs && npx vercel env pull --environment=development && cd ../..
+    cd packages/nextjs && pnpm vercel env pull --environment=development && cd ../..
 fi
 
 if [ -z "$SKIP_SETUP" ]; then
     LOCAL_DETACHED=true make local
-    npm install
-    npm run db:migrate
+    pnpm install
+    pnpm db:migrate
 fi
 
 # Add the local CA to the Node.js environment
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 
 # Build the React package
-cd packages/react && npm run build && cd ../..
+cd packages/react && pnpm build && cd ../..
 
-npx dotenv -e packages/nextjs/.env.development.local -e packages/nextjs/.env.local -- npx heroku local -f Procfile.dev
+pnpm dotenv -e packages/nextjs/.env.development.local -e packages/nextjs/.env.local -- pnpm heroku local -f Procfile.dev

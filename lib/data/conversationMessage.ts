@@ -420,7 +420,7 @@ export const createAiDraft = async (
   return await createConversationMessage(
     {
       conversationId,
-      body: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"))),
+      body: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false })),
       role: "ai_assistant",
       status: "draft",
       responseToId,

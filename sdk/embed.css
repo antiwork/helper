@@ -244,7 +244,9 @@
   width: 60px;
   height: 60px;
   cursor: pointer;
-  transition: filter 0.3s, transform 0.3s ease;
+  transition:
+    filter 0.3s,
+    transform 0.3s ease;
   align-items: center;
   justify-content: center;
   z-index: 2147482998;

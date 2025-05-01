@@ -1,0 +1,13 @@
+packages:
+  - packages/*
+
+onlyBuiltDependencies:
+  - esbuild
+  - protobufjs
+  - sharp
+  - ssh2
+  - unrs-resolver
+  - inngest-cli
+
+ignoredBuiltDependencies:
+  - cpu-features
