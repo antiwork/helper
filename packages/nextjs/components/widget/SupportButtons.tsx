@@ -113,7 +113,7 @@ export default function SupportButtons({
             >
               <HandThumbUpIcon className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
             </motion.div>
-            // Microcopy reinforce that we’re an approachable team, not a faceless bot. Previously 'That solved it!'
+            {/* Microcopy reinforce that we’re an approachable team, not a faceless bot. Previously 'That solved it!' */}
             Looks good—thanks!
           </button>
           <button
@@ -140,7 +140,7 @@ export default function SupportButtons({
             >
               <ChatBubbleLeftRightIcon className="h-4 w-4" />
             </motion.div>
-            // Microcopy reinforce that we’re an approachable team, not a faceless bot
+            {/* Microcopy reinforce that we’re an approachable team, not a faceless bot */}
             Chat with a real person
           </button>
         </motion.div>
