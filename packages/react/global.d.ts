@@ -1,4 +1,4 @@
-import type { HelperConfig } from './src/types';
+import type { HelperConfig } from "./src/types";
 
 declare global {
   interface Window {
