@@ -324,6 +324,6 @@
   }
   pre.code .token-line::before {
     counter-increment: step;
-    @apply text-muted-foreground/40 mr-4 inline-block w-4 text-right content-[counter(step)];
+    @apply mr-4 inline-block w-4 text-right text-muted-foreground/40 content-[counter(step)];
   }
 }
