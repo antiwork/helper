@@ -417,7 +417,7 @@ const ConversationContent = () => {
           <TooltipTrigger asChild>
             <div
               onClick={copyEmailToClipboard}
-              className="lg:text-base text-sm text-foreground font-sundry-medium responsive-break-words truncate cursor-pointer hover:text-primary"
+              className="lg:text-base text-sm text-foreground responsive-break-words truncate cursor-pointer hover:text-primary"
             >
               {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
             </div>

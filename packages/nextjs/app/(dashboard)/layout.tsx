@@ -5,7 +5,6 @@ import cx from "classnames";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { DeepLinkHandler } from "@/components/deepLinkHandler";
-import { sundryBold, sundryMedium, sundryNarrowBold, sundryNarrowMedium, sundryRegular } from "@/components/fonts";
 import { NativeAppIntegration } from "@/components/nativeAppIntegration";
 import { SentryContext } from "@/components/sentryContext";
 import { TauriUpdateChecker } from "@/components/tauriUpdateChecker";

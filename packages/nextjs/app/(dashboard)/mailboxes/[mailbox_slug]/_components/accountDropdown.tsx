@@ -53,8 +53,13 @@ export function AccountDropdown({
       <DropdownMenuTrigger asChild>
         {trigger(
           <>
-            <Avatar fallback={user?.emailAddresses?.[0]?.emailAddress ?? ""} size="sm" />
-            <span className="grow truncate font-sundry-narrow-medium text-base">{user?.fullName}</span>
+            <Avatar src={user?.imageUrl ?? undefined} fallback={user?.initials ?? "?"} size="xs" />
+            <div className="grow flex flex-col truncate items-start">
+              <span className="grow truncate text-base">{user?.fullName}</span>
+              <span className="text-xs text-muted-foreground truncate block">
+                {/* @todo uncomment once teams API is ready */}
+              </span>
+            </div>
             <ChevronUp className="ml-auto" />
           </>,
         )}
