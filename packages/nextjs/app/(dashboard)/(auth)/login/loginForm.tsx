@@ -5,11 +5,10 @@ import { OAuthStrategy } from "@clerk/types";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
+import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 import { env } from "@/env";
@@ -25,7 +24,6 @@ export function LoginForm() {
   const { signUp } = useSignUp();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { theme, systemTheme } = useTheme();
   const { isTauri, nativePlatform } = useNativePlatform();
   const router = useRouter();
   const appleSignInMutation = api.user.nativeAppleSignIn.useMutation();
@@ -154,13 +152,7 @@ export function LoginForm() {
   return (
     <>
       <div className="mb-8 flex flex-col items-center gap-4">
-        <Image
-          src={theme === "dark" || systemTheme === "dark" ? "/logo-white.svg" : "/logo.svg"}
-          alt="Helper"
-          width="110"
-          height="32"
-          className="w-28"
-        />
+        <Logo />
         <p className="text-sm text-muted-foreground">Please sign in or sign up to continue</p>
       </div>
 
