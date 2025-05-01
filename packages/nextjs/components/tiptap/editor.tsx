@@ -34,6 +34,10 @@ type TipTapEditorProps = {
   ariaLabel?: string;
   className?: string;
   actionButtons?: React.ReactNode;
+  isRecordingSupported: boolean;
+  isRecording: boolean;
+  startRecording: () => void;
+  stopRecording: () => void;
 };
 
 declare module "@tiptap/core" {
@@ -83,6 +87,10 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       ariaLabel,
       className,
       actionButtons,
+      isRecordingSupported,
+      isRecording,
+      startRecording,
+      stopRecording,
     },
     ref,
   ) => {
@@ -317,6 +325,10 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               customToolbar,
               enableImageUpload,
               enableFileUpload,
+              isRecording,
+              isRecordingSupported,
+              startRecording,
+              stopRecording,
             }}
           />
           {toolbarOpen && !isAboveMd ? null : actionButtons}
