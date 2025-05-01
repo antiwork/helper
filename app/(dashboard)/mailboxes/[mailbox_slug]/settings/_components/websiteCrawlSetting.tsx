@@ -24,14 +24,14 @@ const isValidUrl = (url: string) => {
 const fetchPageTitle = async (url: string): Promise<string> => {
   try {
     const urlWithProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    
+
     const response = await fetch(urlWithProtocol, {
-      headers: { 'User-Agent': 'Helper Website Crawler' }
+      headers: { "User-Agent": "Helper Website Crawler" },
     });
     const html = await response.text();
-    
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    return titleMatch && titleMatch[1] ? titleMatch[1].trim() : new URL(urlWithProtocol).hostname;
+
+    const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
+    return titleMatch?.[1] ? titleMatch[1].trim() : new URL(urlWithProtocol).hostname;
   } catch (error) {
     return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname;
   }
@@ -104,9 +104,9 @@ const WebsiteCrawlSetting = () => {
 
   const handleAddWebsite = async (url: string) => {
     const urlWithProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    
+
     const title = await fetchPageTitle(urlWithProtocol);
-    
+
     return addWebsiteMutation.mutateAsync({
       mailboxSlug: params.mailbox_slug,
       name: title,
@@ -260,7 +260,7 @@ const WebsiteCrawlSetting = () => {
                   return;
                 }
                 setUrlError("");
-                
+
                 try {
                   await handleAddWebsite(newWebsite.url);
                   setNewWebsite({ name: "", url: "" });
