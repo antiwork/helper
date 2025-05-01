@@ -19,20 +19,20 @@ trap cleanup SIGINT SIGTERM
 corepack enable
 
 # Check if .env.local exists
-if [ ! -f "packages/nextjs/.env.local" ]; then
-    echo "packages/nextjs/.env.local file not found."
+if [ ! -f ".env.local" ]; then
+    echo ".env.local file not found."
     read -p "Would you like to pull environment variables from Vercel? (y/n) " answer
 
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         echo "Pulling environment variables from Vercel..."
-        cd packages/nextjs && pnpm vercel link && pnpm vercel env pull --environment=development && cd ../..
+        pnpm vercel link && pnpm vercel env pull --environment=development
     else
-        echo "Please set up your .env.local file by copying packages/nextjs/.env.local.sample to packages/nextjs/.env.local and filling in the required values"
+        echo "Please set up your .env.local file by copying .env.local.sample to .env.local and filling in the required values"
         exit 1
     fi
-elif [ -f "packages/nextjs/.vercel/project.json" ]; then
+elif [ -f ".vercel/project.json" ]; then
     echo "Found existing Vercel project configuration. Pulling latest environment variables..."
-    cd packages/nextjs && pnpm vercel env pull --environment=development && cd ../..
+    pnpm vercel env pull --environment=development
 fi
 
 if [ -z "$SKIP_SETUP" ]; then
@@ -47,4 +47,4 @@ export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 # Build the React package
 cd packages/react && pnpm build && cd ../..
 
-pnpm dotenv -e packages/nextjs/.env.development.local -e packages/nextjs/.env.local -- pnpm heroku local -f Procfile.dev
+pnpm dotenv -e .env.development.local -e .env.local -- pnpm heroku local -f Procfile.dev
