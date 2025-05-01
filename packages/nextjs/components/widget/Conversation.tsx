@@ -232,7 +232,8 @@ export default function Conversation({
 
   const handleTalkToTeamClick = () => {
     setIsEscalated(true);
-    append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
+    // Proactive microcopy that comes across as friendly request, not a cold demand
+    append({ role: "user", content: "Please connect me with a human—I’d appreciate a hand!" }, { body: { conversationSlug } });
   };
 
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
