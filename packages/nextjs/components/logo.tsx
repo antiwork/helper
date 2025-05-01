@@ -53,9 +53,9 @@ export default function Logo({ themePreference = "auto", className = "", isWavin
   }, [waveDuration]);
 
   return (
-    <div className="flex items-center">
+    <div className={`${className} flex items-center`}>
       <div
-        className={`${className} relative`}
+        className="relative"
         onMouseEnter={() => setWaving(true)}
         onMouseLeave={() => !isWaving && setWaving(false)}
       >
