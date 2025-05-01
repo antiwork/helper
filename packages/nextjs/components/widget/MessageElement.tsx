@@ -110,6 +110,7 @@ export default function MessageElement({
           {message.parts?.find(
             (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
           )
+            // Proactive microcopy to set expectations, stay human
             ? "_Hang tight—I’ve escalated this to a real person. They’ll reach out via email shortly._"
             : message.content}
         </ReactMarkdown>
