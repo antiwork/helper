@@ -47,4 +47,4 @@ export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 # Build the React package
 cd packages/react && pnpm build && cd ../..
 
-pnpm dotenv -e .env.development.local -e .env.local -- pnpm heroku local -f Procfile.dev
+pnpm dotenv -e .env.development.local -e .env.local -- pnpm heroku local -f scripts/Procfile.dev

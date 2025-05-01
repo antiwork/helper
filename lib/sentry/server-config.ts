@@ -3,6 +3,6 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
-import { commonConfig } from "./sentry.common.config";
+import { commonConfig } from "./common-config";
 
 Sentry.init({ ...commonConfig });
