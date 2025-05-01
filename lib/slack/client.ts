@@ -1,12 +1,12 @@
 import crypto from "crypto";
 import {
-    ChatPostEphemeralArguments,
-    ChatPostMessageArguments,
-    ConversationsListResponse,
-    KnownBlock,
-    MessageAttachment,
-    ModalView,
-    WebClient,
+  ChatPostEphemeralArguments,
+  ChatPostMessageArguments,
+  ConversationsListResponse,
+  KnownBlock,
+  MessageAttachment,
+  ModalView,
+  WebClient,
 } from "@slack/web-api";
 import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/lib/env";

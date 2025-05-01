@@ -1,8 +1,8 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import appleSignin from "apple-signin-auth";
 import { z } from "zod";
-import { env } from "@/lib/env";
 import { clerkClient } from "@/lib/data/user";
+import { env } from "@/lib/env";
 import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = {

@@ -4,9 +4,9 @@ import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
-import { env } from "@/lib/env";
 import { createReply } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
+import { env } from "@/lib/env";
 
 const verifyGitHubWebhook = (payload: string, signature: string | null) => {
   if (!signature || !env.GITHUB_CLIENT_SECRET) return false;

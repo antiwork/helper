@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { env } from "@/lib/env";
 import { inngest } from "@/inngest/client";
 import { ALLOWED_STRIPE_EVENTS } from "@/inngest/functions/handleStripeWebhookEvent";
+import { env } from "@/lib/env";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { stripe } from "@/lib/stripe/client";
 

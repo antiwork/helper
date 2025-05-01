@@ -25,14 +25,14 @@ if [ ! -f ".env.local" ]; then
 
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         echo "Pulling environment variables from Vercel..."
-        pnpm vercel link && pnpm vercel env pull --environment=development && cd ../..
+        pnpm vercel link && pnpm vercel env pull --environment=development
     else
         echo "Please set up your .env.local file by copying .env.local.sample to .env.local and filling in the required values"
         exit 1
     fi
 elif [ -f ".vercel/project.json" ]; then
     echo "Found existing Vercel project configuration. Pulling latest environment variables..."
-    pnpm vercel env pull --environment=development && cd ../..
+    pnpm vercel env pull --environment=development
 fi
 
 if [ -z "$SKIP_SETUP" ]; then

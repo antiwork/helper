@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { env } from "@/lib/env";
 import { inngest } from "@/inngest/client";
+import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 // https://app.inngest.com/env/production/manage/webhooks/20cb171c-b095-4df3-8e50-30e4989e9f48

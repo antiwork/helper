@@ -16,9 +16,9 @@ import { htmlToText } from "html-to-text";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { env } from "@/lib/env";
 import { indexMessage } from "@/inngest/functions/indexConversation";
 import { getClerkUser } from "@/lib/data/user";
+import { env } from "@/lib/env";
 import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
 
 const getTables = async () => {

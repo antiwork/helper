@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import { getBaseUrl } from "@/components/constants";
-import { env } from "@/lib/env";
 import { GMAIL_AUTHORIZATION_PARAMS } from "@/lib/auth/constants";
+import { env } from "@/lib/env";
 
 export const auth = new google.auth.OAuth2({
   clientId: env.GOOGLE_CLIENT_ID,

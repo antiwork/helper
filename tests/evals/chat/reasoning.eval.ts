@@ -1,7 +1,7 @@
 import { Factuality } from "autoevals";
 import { evalite } from "evalite";
-import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/tests/evals/support/chat";
 import { knowledgeBankPrompt } from "@/lib/ai/prompts";
+import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/tests/evals/support/chat";
 
 const REASONING_ENABLED = true;
 

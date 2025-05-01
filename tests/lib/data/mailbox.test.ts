@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { env } from "@/lib/env";
 import { disconnectSlack, getMailboxInfo } from "@/lib/data/mailbox";
 import { getClerkOrganization } from "@/lib/data/organization";
+import { env } from "@/lib/env";
 import { uninstallSlackApp } from "@/lib/slack/client";
 
 vi.mock("@/lib/slack/client", () => ({

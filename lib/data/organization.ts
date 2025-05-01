@@ -4,8 +4,8 @@ import { desc, eq } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
 import { subscriptions } from "@/db/schema";
-import { env } from "@/lib/env";
 import { FREE_TRIAL_PERIOD_DAYS } from "@/lib/auth/account";
+import { env } from "@/lib/env";
 import { redis } from "@/lib/redis/client";
 import { clerkClient, getClerkUserList } from "./user";
 

@@ -1,9 +1,9 @@
 import { Factuality } from "autoevals";
 import { evalite } from "evalite";
 import { expect, vi } from "vitest";
-import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/tests/evals/support/chat";
 import { REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { knowledgeBankPrompt } from "@/lib/ai/prompts";
+import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/tests/evals/support/chat";
 
 const REASONING_ENABLED = true;
 

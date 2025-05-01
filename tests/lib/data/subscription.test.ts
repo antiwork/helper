@@ -3,8 +3,8 @@ import { describe, expect, inject, it, vi } from "vitest";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { gmailSupportEmails } from "@/db/schema";
-import { env } from "@/lib/env";
 import { createStripeCheckoutSessionUrl } from "@/lib/data/subscription";
+import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe/client";
 
 vi.mock("@/lib/stripe/client", () => ({

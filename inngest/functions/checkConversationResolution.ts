@@ -3,7 +3,6 @@ import { SUBSCRIPTION_FREE_TRIAL_USAGE_LIMIT } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, subscriptions } from "@/db/schema";
-import { env } from "@/lib/env";
 import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { runAIQuery } from "@/lib/ai";
@@ -11,12 +10,13 @@ import { loadPreviousMessages } from "@/lib/ai/chat";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { Mailbox } from "@/lib/data/mailbox";
 import {
-    getClerkOrganization,
-    getOrganizationAdminUsers,
-    isFreeTrial,
-    setPrivateMetadata,
+  getClerkOrganization,
+  getOrganizationAdminUsers,
+  isFreeTrial,
+  setPrivateMetadata,
 } from "@/lib/data/organization";
 import AutomatedRepliesLimitExceededEmail from "@/lib/emails/automatedRepliesLimitExceeded";
+import { env } from "@/lib/env";
 import { sendEmail } from "@/lib/resend/client";
 import { stripe } from "@/lib/stripe/client";
 

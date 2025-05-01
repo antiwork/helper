@@ -2,8 +2,8 @@ import FirecrawlApp from "@mendable/firecrawl-js";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { websiteCrawls, websites } from "@/db/schema";
-import { env } from "@/lib/env";
 import { inngest } from "@/inngest/client";
+import { env } from "@/lib/env";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
 const CONCURRENCY_LIMIT = 3;

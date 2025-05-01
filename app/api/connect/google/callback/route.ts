@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth, connectSupportEmailUrl } from "@/app/api/connect/google/utils";
 import { getBaseUrl } from "@/components/constants";
-import { env } from "@/lib/env";
 import { gmailScopesGranted } from "@/lib/auth/authService";
 import { connectSupportEmail } from "@/lib/authService";
+import { env } from "@/lib/env";
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;

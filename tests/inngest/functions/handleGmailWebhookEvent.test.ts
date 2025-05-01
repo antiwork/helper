@@ -14,10 +14,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import { env } from "@/lib/env";
 import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
 import { handleGmailWebhookEvent } from "@/inngest/functions/handleGmailWebhookEvent";
 import { findUserByEmail } from "@/lib/data/user";
+import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { s3UrlToS3Key, uploadFile } from "@/lib/s3/utils";
 

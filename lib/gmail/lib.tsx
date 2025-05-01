@@ -5,8 +5,8 @@ import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files } from "@/db/schema";
-import AIReplyEmail from "@/lib/emails/aiReply";
 import { getClerkUser } from "@/lib/data/user";
+import AIReplyEmail from "@/lib/emails/aiReply";
 import { getFileStream } from "@/lib/s3/utils";
 
 export const convertConversationMessageToRaw = async (

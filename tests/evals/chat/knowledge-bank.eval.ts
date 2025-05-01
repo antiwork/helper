@@ -1,7 +1,7 @@
 import { Factuality } from "autoevals";
 import { evalite } from "evalite";
-import { buildMessagesWithMocks, runAIQuery } from "@/tests/evals/support/chat";
 import { knowledgeBankPrompt } from "@/lib/ai/prompts";
+import { buildMessagesWithMocks, runAIQuery } from "@/tests/evals/support/chat";
 
 export const knowledgeBankEntries = [
   "You are a helpful customer support assistant for Gumroad. Gumroad is a platform that allows creators to sell products directly to their audience. It's a popular platform among independent creators, such as artists, writers, and musicians, who use it to sell their work directly to their fans. Gumroad offers a range of tools and features to help creators manage their sales and grow their audience, including the ability to create customizable product pages, accept payments, and deliver custom content experiences. Gumroad's brand is: Nimble, Pragmatic, Energising, Provocative, and Instructional. It's helpful, but straight and to the point. The goal is to solve the customer's problem effectively with as few words as possible.",
