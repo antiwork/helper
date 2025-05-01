@@ -2,15 +2,18 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 
-interface WavingHandProps {
+interface LogoProps {
+  themePreference?: "auto" | "light" | "dark";
   className?: string;
   isWaving?: boolean;
   waveDuration?: number;
 }
 
-export default function WavingHand({ className = "", isWaving = false, waveDuration = 1 }: WavingHandProps) {
+export default function Logo({ themePreference = "auto", className = "", isWaving = false, waveDuration = 1 }: LogoProps) {
   const [waving, setWaving] = useState(false);
+  const { theme, systemTheme } = useTheme();
 
   // Wave on page load and set up random waving
   useEffect(() => {
@@ -50,18 +53,34 @@ export default function WavingHand({ className = "", isWaving = false, waveDurat
   }, [waveDuration]);
 
   return (
-    <div
-      className={`${className} relative`}
-      onMouseEnter={() => setWaving(true)}
-      onMouseLeave={() => !isWaving && setWaving(false)}
-    >
+    <div className="flex items-center">
+      <div
+        className={`${className} relative`}
+        onMouseEnter={() => setWaving(true)}
+        onMouseLeave={() => !isWaving && setWaving(false)}
+      >
+        <Image
+          src="/logo-hand.svg"
+          priority
+          alt="Helper Icon"
+          width={28}
+          height={32}
+          className={`transition-transform ${waving || isWaving ? "animate-wave" : ""}`}
+        />
+      </div>
       <Image
-        src="/logo-hand.svg"
-        priority
-        alt="Helper Icon"
-        width={28}
-        height={32}
-        className={`transition-transform ${waving || isWaving ? "animate-wave" : ""}`}
+        src={
+          themePreference === "dark"
+            ? "/logo-text-white.svg"
+            : themePreference === "light"
+            ? "/logo-text.svg" 
+            : theme === "dark" || systemTheme === "dark"
+            ? "/logo-text-white.svg"
+            : "/logo-text.svg"
+        }
+        alt="Helper"
+        width="82"
+        height="32"
       />
     </div>
   );

@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useNativePlatform } from "@/components/useNativePlatform";
-import WavingHand from "@/components/wavingHand";
+import Logo from "@/components/logo";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -306,9 +306,8 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
       <header className="sticky top-0 z-50">
         <nav className="flex flex-col md:flex-row items-center md:justify-between p-4 mx-4 space-y-4 md:space-y-0">
           <div className="relative w-[110px] h-[32px] mx-auto md:mx-0">
-            <div className="flex items-center absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100">
-              <WavingHand />
-              <Image src="/logo-text-white.svg" priority alt="Helper" width={82} height={32} />
+            <div className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100">
+              <Logo themePreference="dark" />
             </div>
           </div>
           <div className="flex space-x-2 mx-auto md:mx-0">

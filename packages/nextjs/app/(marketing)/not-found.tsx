@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
-import WavingHand from "@/components/wavingHand";
+import Logo from "@/components/logo";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -120,15 +120,10 @@ export default function NotFound() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#3D0C11" }}>
       <header className="sticky top-0 z-50">
         <nav className="flex flex-col md:flex-row items-center md:justify-between p-4 mx-4 space-y-4 md:space-y-0">
-          <div className="relative w-[100px] h-[32px] mx-auto md:mx-0">
-            <Image
-              src="/logo-white.svg"
-              priority
-              alt="Helper"
-              width={82}
-              height={32}
-              className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100"
-            />
+          <div className="relative w-[110px] h-[32px] mx-auto md:mx-0">
+            <div className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100">
+              <Logo themePreference="dark" />
+            </div>
           </div>
           <div className="flex space-x-2 mx-auto md:mx-0">
             <LoginButtons githubStars={githubStars} />
@@ -163,15 +158,8 @@ export default function NotFound() {
         <div className=" flex justify-between items-center w-full">
           <div className="flex items-center">
             <div className="flex flex-col items-start">
-              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer" className="flex items-center">
-                <WavingHand />
-                <Image
-                  src="/logo-text.svg"
-                  alt="Helper"
-                  width={82}
-                  height={32}
-                  className="transition-opacity duration-300 ease-in-out opacity-100"
-                />
+              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
+                <Logo themePreference="dark" />
               </a>
             </div>
           </div>

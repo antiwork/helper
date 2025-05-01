@@ -5,14 +5,12 @@ import { OAuthStrategy } from "@clerk/types";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
 import { Button } from "@/components/ui/button";
 import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
-import WavingHand from "@/components/wavingHand";
+import Logo from "@/components/logo";
 import { env } from "@/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
@@ -26,7 +24,6 @@ export function LoginForm() {
   const { signUp } = useSignUp();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { theme, systemTheme } = useTheme();
   const { isTauri, nativePlatform } = useNativePlatform();
   const router = useRouter();
   const appleSignInMutation = api.user.nativeAppleSignIn.useMutation();
@@ -155,16 +152,7 @@ export function LoginForm() {
   return (
     <>
       <div className="mb-8 flex flex-col items-center gap-4">
-        <div className="flex items-center">
-          <WavingHand />
-          <Image
-            src={theme === "dark" || systemTheme === "dark" ? "/logo-text-white.svg" : "/logo-text.svg"}
-            alt="Helper"
-            width="82"
-            height="32"
-            className="w-20"
-          />
-        </div>
+        <Logo />
         <p className="text-sm text-muted-foreground">Please sign in or sign up to continue</p>
       </div>
 
