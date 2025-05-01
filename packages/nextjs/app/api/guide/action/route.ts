@@ -36,6 +36,7 @@ Common action sequences:
 - Actions are executed in the given order
 - If the page changes after an action, the sequence is interrupted and you get the new state.
 - Only provide the action sequence until an action which changes the page state significantly.
+- Make sure we fill all inputs that are required when filling out the form and submit the form.
 
 3. ELEMENT INTERACTION:
 - Only use indexes of the interactive elements
@@ -55,6 +56,8 @@ Common action sequences:
 
 6. Form filling:
 - If you fill an input field and your action sequence is interrupted, most often something changed e.g. suggestions popped up under the field.
+- Use the required attribute to check if the input is required and plan to fill it even if it is not planned in the steps.
+- <input> and <button> elements can have a form attribute. Use it to identify which form the input belongs to and check for required inputs in the form.
 
 Your responses must be always JSON with the specified format.
   
