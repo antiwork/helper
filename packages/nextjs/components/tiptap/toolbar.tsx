@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/react";
-import { ALargeSmall, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
+import { ALargeSmall, Mic, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
@@ -23,6 +23,10 @@ type ToolbarProps = {
   uploadFileAttachments: (nonImages: File[]) => void;
   enableImageUpload?: boolean;
   enableFileUpload?: boolean;
+  isRecording: boolean;
+  isRecordingSupported: boolean;
+  startRecording: () => void;
+  stopRecording: () => void;
 };
 
 const Toolbar = ({
@@ -33,6 +37,10 @@ const Toolbar = ({
   uploadFileAttachments,
   enableImageUpload,
   enableFileUpload,
+  isRecording,
+  isRecordingSupported,
+  startRecording,
+  stopRecording,
 }: ToolbarProps) => {
   const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
@@ -77,6 +85,14 @@ const Toolbar = ({
       editor.view.focus();
     }
     setLinkModalOpen(false);
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
   const imageFieldId = React.useId();
@@ -196,6 +212,26 @@ const Toolbar = ({
 
   return (
     <div className="flex items-center gap-2">
+      {isRecordingSupported && !isAboveMd && (
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          type="button"
+          onClick={toggleRecording}
+          className={cn("h-8 w-8 p-0 border border-border hover:border-primary", {
+            "bg-muted": isRecording,
+          })}
+          aria-label={isRecording ? "Stop" : "Dictate"}
+        >
+          <Mic
+            className={cn("w-4 h-4", {
+              "text-red-500": isRecording,
+              "text-primary": !isRecording,
+            })}
+          />
+        </Button>
+      )}
       {!isAboveMd && (
         <Button
           variant="ghost"
@@ -229,6 +265,23 @@ const Toolbar = ({
         {isAboveMd && (
           <button type="button" onClick={() => setOpen(!open)} className={cn(baseToolbarStyles, "ml-auto")}>
             {open ? <Minus className="w-4 h-4" /> : <ALargeSmall className="w-4 h-4" />}
+          </button>
+        )}
+        {isRecordingSupported && isAboveMd && (
+          <button
+            type="button"
+            onClick={toggleRecording}
+            className={cn(baseToolbarStyles, {
+              "bg-muted": isRecording,
+            })}
+            aria-label={isRecording ? "Stop" : "Dictate"}
+          >
+            <Mic
+              className={cn("w-4 h-4", {
+                "text-red-500": isRecording,
+                "text-primary": !isRecording,
+              })}
+            />
           </button>
         )}
       </div>

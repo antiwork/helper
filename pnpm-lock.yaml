@@ -520,6 +520,9 @@ importers:
       '@types/canvas-confetti':
         specifier: ^1.9.0
         version: 1.9.0
+      '@types/dom-speech-recognition':
+        specifier: ^0.0.6
+        version: 0.0.6
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
@@ -5477,6 +5480,9 @@ packages:
 
   '@types/dockerode@3.3.38':
     resolution: {integrity: sha512-nnrcfUe2iR+RyOuz0B4bZgQwD9djQa9ADEjp7OAgBs10pYT0KSCtplJjcmBDJz0qaReX5T7GbE5i4VplvzUHvA==}
+
+  '@types/dom-speech-recognition@0.0.6':
+    resolution: {integrity: sha512-o7pAVq9UQPJL5RDjO1f/fcpfFHdgiMnR4PoIU2N/ZQrYOS3C5rzdOJMsrpqeBCbii2EE9mERXgqspQqPDdPahw==}
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -18546,6 +18552,8 @@ snapshots:
       '@types/docker-modem': 3.0.6
       '@types/node': 20.17.32
       '@types/ssh2': 1.15.5
+
+  '@types/dom-speech-recognition@0.0.6': {}
 
   '@types/eslint-scope@3.7.7':
     dependencies:
