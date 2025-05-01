@@ -31,7 +31,7 @@ const fetchPageTitle = async (url: string): Promise<string> => {
     const html = await response.text();
     
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    return titleMatch ? titleMatch[1].trim() : new URL(urlWithProtocol).hostname;
+    return titleMatch && titleMatch[1] ? titleMatch[1].trim() : new URL(urlWithProtocol).hostname;
   } catch (error) {
     return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname;
   }
