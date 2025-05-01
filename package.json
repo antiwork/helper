@@ -250,6 +250,9 @@
       "sharp",
       "ssh2",
       "unrs-resolver"
-    ]
+    ],
+    "patchedDependencies": {
+      "next@15.3.1": "patches/next@15.3.1.patch"
+    }
   }
 }
