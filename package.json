@@ -8,7 +8,7 @@
   "scripts": {
     "postinstall": "fumadocs-mdx content/source.config.ts",
     "build": "pnpm run-on-packages build && pnpm build:sdk:prod && next build",
-    "build:preview": "pnpm run build && pnpm run db:migrate && pnpm tsx --conditions=react-server ./db/seeds/index.ts",
+    "build:preview": "pnpm run build && pnpm run db:prod:migrate && pnpm tsx --conditions=react-server ./db/seeds/index.ts",
     "build:sdk": "webpack --config packages/sdk/webpack.sdk.cjs --env development",
     "build:sdk:prod": "webpack --config packages/sdk/webpack.sdk.cjs --env production",
     "clean": "git clean -xdf .cache .next node_modules",
