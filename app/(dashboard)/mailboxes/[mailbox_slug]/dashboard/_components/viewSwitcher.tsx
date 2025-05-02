@@ -18,10 +18,10 @@ export function ViewSwitcher({ mailboxSlug }: ViewSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [view, setView] = useQueryState("view");
-  
+
   const isDashboardPage = pathname.includes("/dashboard");
   const isInboxPage = pathname.includes("/conversations");
-  
+
   const switchView = (newView: string) => {
     if (isDashboardPage) {
       router.push(`/mailboxes/${mailboxSlug}/conversations?view=${newView}`);

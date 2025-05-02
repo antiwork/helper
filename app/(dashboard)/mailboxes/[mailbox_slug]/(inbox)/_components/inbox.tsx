@@ -12,9 +12,9 @@ import {
   ConversationListContextProvider,
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
-import { DashboardContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/dashboardContent";
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/mobileList";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useSaveLatestMailboxSlug";
+import { DashboardContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/dashboardContent";
 import { getGlobalAblyClient } from "@/components/ablyClient";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
@@ -43,7 +43,7 @@ const Inbox = () => {
   const pageTitle = currentConversation
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];
-  
+
   const { data: mailboxData } = api.mailbox.get.useQuery({ mailboxSlug });
   const currentMailbox = mailboxData ? { name: mailboxData.name, slug: mailboxData.slug } : undefined;
 
