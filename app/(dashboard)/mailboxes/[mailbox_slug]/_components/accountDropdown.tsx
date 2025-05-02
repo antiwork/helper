@@ -53,7 +53,7 @@ export function AccountDropdown({
       <DropdownMenuTrigger asChild>
         {trigger(
           <>
-            <Avatar src={user?.imageUrl ?? undefined} fallback={user?.initials ?? "?"} size="xs" />
+            <Avatar src={user?.imageUrl ?? undefined} fallback={user?.fullName?.[0] ?? "?"} size="sm" />
             <div className="grow flex flex-col truncate items-start">
               <span className="grow truncate text-base">{user?.fullName}</span>
               <span className="text-xs text-muted-foreground truncate block">
