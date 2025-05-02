@@ -14,14 +14,16 @@ export function SlackNotification() {
 
       <div className="space-y-4">
         <div className="flex items-start">
-          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">H</div>
+          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">
+            H
+          </div>
           <div>
             <div className="font-bold">Helper</div>
             <div className="bg-gray-700 rounded p-3 mt-1">
               <p className="text-sm">
-                <span className="text-red-400">@channel</span> I need human assistance with a complex refund request from
-                a customer who purchased multiple add-ons but is experiencing technical issues with their integration.
-                This is outside my capabilities.
+                <span className="text-red-400">@channel</span> I need human assistance with a complex refund request
+                from a customer who purchased multiple add-ons but is experiencing technical issues with their
+                integration. This is outside my capabilities.
               </p>
             </div>
             <div className="flex mt-2">
@@ -43,7 +45,9 @@ export function SlackNotification() {
         </div>
 
         <div className="flex items-start">
-          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">H</div>
+          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">
+            H
+          </div>
           <div>
             <div className="font-bold">Helper</div>
             <div className="bg-gray-700 rounded p-3 mt-1">

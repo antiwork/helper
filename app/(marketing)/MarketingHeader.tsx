@@ -33,9 +33,7 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
 
   return (
     <header
-      className={`w-full transition-all duration-300 ${
-        isScrolled ? "py-2 shadow-md" : "py-4"
-      }`}
+      className={`w-full transition-all duration-300 ${isScrolled ? "py-2 shadow-md" : "py-4"}`}
       style={{ backgroundColor: isScrolled ? "#2B0808" : bgColor }}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">

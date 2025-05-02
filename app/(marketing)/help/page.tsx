@@ -15,7 +15,7 @@ export default function HelpPage() {
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl font-bold mb-8">Help Center</h1>
-          
+
           <div className="bg-[#412020] rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-semibold mb-4 flex items-center">
               <BookOpenIcon className="w-6 h-6 mr-2" />
@@ -46,9 +46,7 @@ export default function HelpPage() {
               Our support team is available to assist you with any questions or issues you may have.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-black">
-                Contact Support
-              </Button>
+              <Button className="bg-amber-500 hover:bg-amber-600 text-black">Contact Support</Button>
               <Link href="/" passHref>
                 <Button variant="outlined" className="border-amber-500 text-amber-500 hover:bg-amber-500/10">
                   Return to Home

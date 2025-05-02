@@ -29,7 +29,7 @@ export function AnimatedCursor({ position, animate, showSpotlight, labelPosition
       const elapsedTime = currentTime - startTime;
       const progress = Math.min(elapsedTime / animationDuration, 1);
 
-      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+      const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
       const easedProgress = easeOutCubic(progress);
 
       const newX = startPosition.x + (endPosition.x - startPosition.x) * easedProgress;

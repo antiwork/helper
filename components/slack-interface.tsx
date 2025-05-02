@@ -14,13 +14,15 @@ export function SlackInterface() {
 
       <div className="space-y-4">
         <div className="flex items-start">
-          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">H</div>
+          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">
+            H
+          </div>
           <div>
             <div className="font-bold">Helper</div>
             <div className="bg-gray-700 rounded p-3 mt-1">
               <p className="text-sm">
-                @sarah There's a new support request from customer@example.com about their subscription renewal. Would you
-                like me to draft a response?
+                @sarah There's a new support request from customer@example.com about their subscription renewal. Would
+                you like me to draft a response?
               </p>
             </div>
           </div>
@@ -39,7 +41,9 @@ export function SlackInterface() {
         </div>
 
         <div className="flex items-start">
-          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">H</div>
+          <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold mr-3">
+            H
+          </div>
           <div>
             <div className="font-bold">Helper</div>
             <div className="bg-gray-700 rounded p-3 mt-1">
