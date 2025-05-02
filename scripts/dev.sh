@@ -8,7 +8,7 @@ cleanup() {
 
     # Stop Docker containers
     if [ -z "$SKIP_SETUP" ]; then
-        make stop_local
+        pnpm services:stop
     fi
 
     exit 0
@@ -37,7 +37,6 @@ elif [ -f ".vercel/project.json" ]; then
 fi
 
 if [ -z "$SKIP_SETUP" ]; then
-    pnpm services:start
     pnpm db:migrate
 fi
 

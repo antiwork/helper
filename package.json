@@ -34,7 +34,7 @@
     "test": "pnpm run-on-packages test && pnpm run with-dev-env vitest",
     "test:watch": "pnpm run with-dev-env vitest --watch",
     "typecheck": "pnpm run-on-packages typecheck && pnpm run with-dev-env pnpm run build; BUILD_EXIT=$?; tsc --noEmit && ([ $BUILD_EXIT -eq 0 ] && npm run db:check || exit $BUILD_EXIT)",
-    "services:start": "COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml up -d",
+    "services:start": "(docker ps --filter 'name=helperai' --filter 'status=running' | grep -q helperai) || COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml up -d",
     "services:stop": "COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml down",
     "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1",
     "with-dev-env": "dotenv -e ./.env.development.local -e ./.env.local --"

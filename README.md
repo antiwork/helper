@@ -40,11 +40,8 @@ brew install nss
 
 ```sh
 # Install mkcert on Windows
-# First ensure you have Chocolately installed: https://chocolatey.org/install
-# Then:
-powershell
+# First ensure you have Chocolately installed (https://chocolatey.org/install), then:
 choco install mkcert
-mkcert -install
 ```
 
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
@@ -52,35 +49,22 @@ _For other operating systems, see the [mkcert installation guide](https://github
 2. Generate SSL certificates:
 
 ```sh
-# Generate SSL certificates
-bin/generate_ssl_certificates
+pnpm generate-ssl-certificates
 ```
 
-3. Start the application:
+3. Seed the database:
 
 ```sh
-bin/dev
+pnpm db:reset
+```
+
+4. Start the application:
+
+```sh
+pnpm dev
 ```
 
 Access the application at [helperai.dev](https://helperai.dev)
-
-4. Seed the database:
-
-```sh
-npm run db:reset
-```
-
-Sample credentials:
-
-- `support@gumroad.com` / `password`
-- `user1,...,user4@gumroad.com` / `password`
-
-5. Generate and run database migrations:
-
-```sh
-npm run db:generate
-npm run db:migrate
-```
 
 ## License
 
