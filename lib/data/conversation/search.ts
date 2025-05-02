@@ -96,64 +96,13 @@ export const searchConversations = async (
           ),
         }
       : {}),
-    ...(filters.events?.length
-      ? {
-          events: hasEvent(inArray(conversationEvents.type, filters.events)),
-        }
+    ...(filters.events?.length ? { events: hasEvent(inArray(conversationEvents.type, filters.events)) } : {}),
+    ...(filters.closed ? { closed: hasStatusChangeEvent("closed", filters.closed, CLOSED_BY_AGENT_MESSAGE) } : {}),
+    ...(filters.reopened
+      ? { reopened: hasStatusChangeEvent("open", filters.reopened, REOPENED_BY_AGENT_MESSAGE) }
       : {}),
-    ...(filters.closedByAgentBefore
-      ? {
-          closedByAgentBefore: hasStatusChangeEvent(
-            "closed",
-            CLOSED_BY_AGENT_MESSAGE,
-            lt(conversationEvents.createdAt, new Date(filters.closedByAgentBefore)),
-          ),
-        }
-      : {}),
-    ...(filters.closedByAgentAfter
-      ? {
-          closedByAgentAfter: hasStatusChangeEvent(
-            "closed",
-            CLOSED_BY_AGENT_MESSAGE,
-            gt(conversationEvents.createdAt, new Date(filters.closedByAgentAfter)),
-          ),
-        }
-      : {}),
-    ...(filters.reopenedByAgentBefore
-      ? {
-          reopenedByAgentBefore: hasStatusChangeEvent(
-            "open",
-            REOPENED_BY_AGENT_MESSAGE,
-            lt(conversationEvents.createdAt, new Date(filters.reopenedByAgentBefore)),
-          ),
-        }
-      : {}),
-    ...(filters.reopenedByAgentAfter
-      ? {
-          reopenedByAgentAfter: hasStatusChangeEvent(
-            "open",
-            REOPENED_BY_AGENT_MESSAGE,
-            gt(conversationEvents.createdAt, new Date(filters.reopenedByAgentAfter)),
-          ),
-        }
-      : {}),
-    ...(filters.markedAsSpamByAgentBefore
-      ? {
-          markedAsSpamByAgentBefore: hasStatusChangeEvent(
-            "spam",
-            MARKED_AS_SPAM_BY_AGENT_MESSAGE,
-            lt(conversationEvents.createdAt, new Date(filters.markedAsSpamByAgentBefore)),
-          ),
-        }
-      : {}),
-    ...(filters.markedAsSpamByAgentAfter
-      ? {
-          markedAsSpamByAgentAfter: hasStatusChangeEvent(
-            "spam",
-            MARKED_AS_SPAM_BY_AGENT_MESSAGE,
-            gt(conversationEvents.createdAt, new Date(filters.markedAsSpamByAgentAfter)),
-          ),
-        }
+    ...(filters.markedAsSpam
+      ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam, MARKED_AS_SPAM_BY_AGENT_MESSAGE) }
       : {}),
   };
 
@@ -269,12 +218,20 @@ const hasEvent = (where?: SQL) =>
       .where(and(eq(conversationEvents.conversationId, conversations.id), where)),
   );
 
-const hasStatusChangeEvent = (status: (typeof conversations.$inferSelect)["status"], reason: string, where?: SQL) =>
+const hasStatusChangeEvent = (
+  status: (typeof conversations.$inferSelect)["status"],
+  filters: { by?: "slack_bot" | "human"; byClerkId?: string[]; before?: string; after?: string },
+  slackBotReason: string,
+) =>
   hasEvent(
     and(
       eq(conversationEvents.conversationId, conversations.id),
-      eq(conversationEvents.reason, reason),
+      filters.by === "slack_bot"
+        ? eq(conversationEvents.reason, slackBotReason)
+        : isNotNull(conversationEvents.byClerkUserId),
+      filters.byClerkId?.length ? inArray(conversationEvents.byClerkUserId, filters.byClerkId) : undefined,
       eq(sql`${conversationEvents.changes}->>'status'`, status),
-      where,
+      filters.before ? lt(conversationEvents.createdAt, new Date(filters.before)) : undefined,
+      filters.after ? gt(conversationEvents.createdAt, new Date(filters.after)) : undefined,
     ),
   );
