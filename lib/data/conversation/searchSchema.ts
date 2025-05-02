@@ -34,35 +34,51 @@ export const searchSchema = z.object({
     .optional()
     .describe("Filter tickets that were escalated to humans or resolved by AI"),
 
-  // So that the agent can undo its own actions
-  closedByAgentBefore: z
-    .string()
-    .datetime()
+  closed: z
+    .object({
+      by: z
+        .enum(["human", "slack_bot"])
+        .optional()
+        .describe("Filter tickets closed by a human or the Helper Slack agent"),
+      byClerkId: z
+        .array(z.string().regex(/^user_/))
+        .optional()
+        .describe("Filter tickets closed by specific team members"),
+      before: z.string().datetime().optional().describe("Tickets closed before this date"),
+      after: z.string().datetime().optional().describe("Tickets closed after this date"),
+    })
     .optional()
-    .describe("Filter tickets closed by the Helper agent before this date"),
-  closedByAgentAfter: z
-    .string()
-    .datetime()
+    .describe("Filter tickets by when they were closed or who closed them"),
+
+  reopened: z
+    .object({
+      by: z
+        .enum(["human", "slack_bot"])
+        .optional()
+        .describe("Filter tickets reopened by a human or the Helper Slack agent"),
+      byClerkId: z
+        .array(z.string().regex(/^user_/))
+        .optional()
+        .describe("Filter tickets reopened by specific team members"),
+      before: z.string().datetime().optional().describe("Tickets reopened before this date"),
+      after: z.string().datetime().optional().describe("Tickets reopened after this date"),
+    })
     .optional()
-    .describe("Filter tickets closed by the Helper agent after this date"),
-  reopenedByAgentBefore: z
-    .string()
-    .datetime()
+    .describe("Filter tickets reopened by the Helper Slack agent or by human agents"),
+
+  markedAsSpam: z
+    .object({
+      by: z
+        .enum(["human", "slack_bot"])
+        .optional()
+        .describe("Filter tickets marked as spam by a human or the Helper Slack agent"),
+      byClerkId: z
+        .array(z.string().regex(/^user_/))
+        .optional()
+        .describe("Filter tickets marked as spam by specific team members"),
+      before: z.string().datetime().optional().describe("Tickets marked as spam before this date"),
+      after: z.string().datetime().optional().describe("Tickets marked as spam after this date"),
+    })
     .optional()
-    .describe("Filter tickets reopened by the Helper agent before this date"),
-  reopenedByAgentAfter: z
-    .string()
-    .datetime()
-    .optional()
-    .describe("Filter tickets reopened by the Helper agent after this date"),
-  markedAsSpamByAgentBefore: z
-    .string()
-    .datetime()
-    .optional()
-    .describe("Filter tickets marked as spam by the Helper agent before this date"),
-  markedAsSpamByAgentAfter: z
-    .string()
-    .datetime()
-    .optional()
-    .describe("Filter tickets marked as spam by the Helper agent after this date"),
+    .describe("Filter tickets marked as spam by the Helper Slack agent or by human agents"),
 });
