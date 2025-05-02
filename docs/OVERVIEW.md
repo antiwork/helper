@@ -56,7 +56,6 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **Tailwind CSS and Nativewind:** Used for styling and UI components, ensuring consistency across web and mobile applications.
 - **Drizzle ORM:** Database access library, enabling type-safe queries and database interactions.
 - **Clerk:** For user authentication and user account management.
-- **NextAuth.js:** For authentication.
 - **Inngest:** Serverless functions platform that powers background jobs and data processing.
 - **Ably:** Real-time messaging platform for live updates and notifications.
 - **Vercel AI SDK:** Used for building AI-powered features with streaming support, function calling, and type-safe AI responses.

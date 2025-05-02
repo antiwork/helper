@@ -16,7 +16,7 @@ services:
     ports:
       - 6382:6379
     volumes:
-      - ./tmp/redis:/data
+      - helperai_redisdata:/data
 
   serverless-redis-http:
     ports:
@@ -77,4 +77,5 @@ services:
 
 volumes:
   helperai_pgdata:
+  helperai_redisdata:
   helperai_miniodata:

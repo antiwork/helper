@@ -37,7 +37,7 @@ elif [ -f ".vercel/project.json" ]; then
 fi
 
 if [ -z "$SKIP_SETUP" ]; then
-    cd scripts && LOCAL_DETACHED=true make local && cd ..
+    pnpm services:start
     pnpm db:migrate
 fi
 
@@ -47,4 +47,4 @@ export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 # Build the React package
 cd packages/react && pnpm build && cd ../..
 
-pnpm dotenv -e .env.development.local -e .env.local -- pnpm heroku local -f scripts/Procfile.dev
+pnpm with-dev-env pnpm heroku local -f scripts/Procfile.dev
