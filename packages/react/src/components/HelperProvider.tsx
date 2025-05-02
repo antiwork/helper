@@ -1,6 +1,6 @@
-import React from 'react';
-import { ClientHelperProvider } from './ClientHelperProvider';
-import type { HelperConfig } from '../types';
+import React from "react";
+import type { HelperConfig } from "../types";
+import { ClientHelperProvider } from "./ClientHelperProvider";
 
 /**
  * Props for the HelperProvider component
@@ -17,21 +17,17 @@ export type HelperProviderProps = HelperConfig & {
 /**
  * Provider component that enables Helper functionality for its children
  * Wraps the application with necessary context and configuration for Helper features
- * 
+ *
  * @param {HelperProviderProps} props - Component props
  * @param {React.ReactNode} props.children - Child components to be wrapped
  * @param {string} [props.host] - Optional host URL for the Helper service
  * @returns {JSX.Element} Provider component with configured Helper functionality
  */
-export function HelperProvider({
-  children,
-  host,
-  ...props
-}: HelperProviderProps) {
+export function HelperProvider({ children, host, ...props }: HelperProviderProps) {
   return (
     <>
       <ClientHelperProvider host={host} {...props} />
       {children}
     </>
   );
-} 
+}

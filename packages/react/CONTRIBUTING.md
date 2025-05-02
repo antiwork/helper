@@ -6,10 +6,13 @@ Thank you for your interest in contributing to the Helper React package! This do
 
 1. Fork the repository and clone it locally
 2. Install dependencies:
+
 ```bash
 npm install
 ```
+
 3. Start the development environment:
+
 ```bash
 npm run dev
 ```
@@ -49,11 +52,13 @@ We use [Changesets](https://github.com/changesets/changesets) to manage versions
 When making changes, you need to include a changeset file describing your changes:
 
 1. Run the following command:
+
    ```bash
    npx changeset
    ```
 
 2. Select the type of change:
+
    - `major`: Breaking changes
    - `minor`: New features
    - `patch`: Bug fixes
@@ -65,20 +70,25 @@ When making changes, you need to include a changeset file describing your change
 ### Releasing a New Version
 
 1. Build the package:
+
    ```bash
    npm run build
    ```
 
 2. Run tests:
+
    ```bash
    npm run test
    ```
 
 3. Create a version PR:
+
    ```bash
    npx changeset version
    ```
+
    This will:
+
    - Update package versions based on changesets
    - Generate/update changelog
    - Remove changeset files
@@ -86,10 +96,13 @@ When making changes, you need to include a changeset file describing your change
 4. Review and merge the version PR
 
 5. Create a release:
+
    ```bash
    npx changeset publish
    ```
+
    This will:
+
    - Publish packages to npm
    - Create git tags
    - Push changes
@@ -101,4 +114,4 @@ When making changes, you need to include a changeset file describing your change
 
 ## Questions?
 
-If you have any questions, please open an issue in the repository. 
+If you have any questions, please open an issue in the repository.

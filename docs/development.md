@@ -21,7 +21,7 @@ bin/generate_ssl_certificates
 
 ## Environment & Services
 
-Copy `packages/nextjs/.env.local.sample` to `packages/nextjs/.env.local`.
+Copy `.env.local.sample` to `.env.local`.
 
 <details>
 <summary>Clerk</summary>
@@ -161,7 +161,7 @@ npm run db:migrate
 npm test
 
 # Run a specific test file
-(cd packages/nextjs && pnpm test tests/inngest/functions/postEmailToGmail.test.ts)
+pnpm test tests/inngest/functions/postEmailToGmail.test.ts
 ```
 
 ## Background Tasks
@@ -170,7 +170,7 @@ This project uses [Inngest](https://www.inngest.com/) for background tasks. You 
 
 ## Email Development
 
-While email sending/receiving in a customer's inbox happens through Gmail, all other emails get sent using Resend and are defined at `packages/nextjs/emails`. To preview an email, you can visit http://localhost:3060. You can also send yourself a preview email (note that some assets like images may not properly display when sending a preview email during local development):
+While email sending/receiving in a customer's inbox happens through Gmail, all other emails get sent using Resend and are defined at `lib/emails`. To preview an email, you can visit http://localhost:3060. You can also send yourself a preview email (note that some assets like images may not properly display when sending a preview email during local development):
 
 ![How to send a preview email](images/resend_preview_email.png)
 
@@ -190,7 +190,7 @@ Enables various features including messaging channels when tickets are received,
    - `SLACK_CLIENT_ID`: Client ID from Basic Information
    - `SLACK_CLIENT_SECRET`: Client Secret from Basic Information
    - `SLACK_SIGNING_SECRET`: Signing Secret from Basic Information
-1. Under "OAuth & Permissions", add all scopes listed in `packages/nextjs/lib/slack/constants.ts`
+1. Under "OAuth & Permissions", add all scopes listed in `lib/slack/constants.ts`
 1. Under "Event Subscriptions", add `https://<your-forwarding-url>/api/webhooks/slack/event` as the event request URL
 1. Also under "Event Subscriptions", subscribe to the following bot events:
    - `app_mention`

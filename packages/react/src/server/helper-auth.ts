@@ -1,6 +1,6 @@
-"use server"
+"use server";
 
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
 export type HelperAuthParams = {
   email: string;
@@ -11,7 +11,7 @@ export type HelperAuthParams = {
 export class HelperAuthError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'HelperAuthError';
+    this.name = "HelperAuthError";
   }
 }
 
@@ -33,28 +33,27 @@ function isValidEmail(email: string): boolean {
  */
 export function generateHelperAuth({ email, hmacSecret, mailboxSlug }: HelperAuthParams) {
   if (!email) {
-    throw new HelperAuthError('Email is required');
+    throw new HelperAuthError("Email is required");
   }
 
   if (!isValidEmail(email)) {
-    throw new HelperAuthError('Invalid email format');
+    throw new HelperAuthError("Invalid email format");
   }
 
   const finalHmacSecret = hmacSecret || process.env.HELPER_HMAC_SECRET;
   if (!finalHmacSecret) {
-    throw new HelperAuthError('HMAC secret must be provided via parameter or HELPER_HMAC_SECRET environment variable');
+    throw new HelperAuthError("HMAC secret must be provided via parameter or HELPER_HMAC_SECRET environment variable");
   }
-  
+
   const timestamp = Date.now();
 
-  const hmac = crypto
-    .createHmac('sha256', finalHmacSecret)
-    .update(`${email}:${timestamp}`)
-    .digest('hex');
+  const hmac = crypto.createHmac("sha256", finalHmacSecret).update(`${email}:${timestamp}`).digest("hex");
 
   const finalMailboxSlug = mailboxSlug || process.env.HELPER_MAILBOX_SLUG;
   if (!finalMailboxSlug) {
-    throw new HelperAuthError('Mailbox slug must be provided via parameter or HELPER_MAILBOX_SLUG environment variable');
+    throw new HelperAuthError(
+      "Mailbox slug must be provided via parameter or HELPER_MAILBOX_SLUG environment variable",
+    );
   }
 
   return {

@@ -13,34 +13,34 @@ Helper.ai is an AI-powered customer support tool that helps businesses automate 
 
 ## Codebase Structure
 
-The codebase is a monorepo, containing multiple packages and apps. The main components reside within the `packages/nextjs` directory, which is a Next.js application.
+The codebase is Next.js app which also contains individual SDK packages.
 
 ### Key Directories and Their Purpose
 
-- **`packages/nextjs/app`:** Contains the Next.js application's routes and components. This is where most of the user interface logic resides, including the mailbox view, conversation view, settings, and other dashboard components. It's organized by feature, using Next.js's file-based routing. The structure within roughly follows this pattern:
+- **`app`:** Contains the Next.js application's routes and components. This is where most of the user interface logic resides, including the mailbox view, conversation view, settings, and other dashboard components. It's organized by feature, using Next.js's file-based routing. The structure within roughly follows this pattern:
   - Dashboard routes live under `(dashboard)`.
   - Embed routes live under `(embed)`.
   - Marketing routes live under `(marketing)`.
   - API routes live under `api`.
-- **`packages/nextjs/lib/auth`:** Contains authentication-related logic, including mailbox creation and user management.
-- **`packages/nextjs/components`:** Reusable UI components, hooks, and utility functions.
-- **`packages/nextjs/inngest/functions`:** Background functions powered by Inngest, responsible for tasks like email processing, AI response generation, and data updates.
-- **`packages/nextjs/lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, Stripe, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
-- **`packages/nextjs/lib/ai`:** AI-related functionality including chat completion, response generation, embeddings, and tools. Contains core AI logic for:
+- **`lib/auth`:** Contains authentication-related logic, including mailbox creation and user management.
+- **`components`:** Reusable UI components, hooks, and utility functions.
+- **`inngest/functions`:** Background functions powered by Inngest, responsible for tasks like email processing, AI response generation, and data updates.
+- **`lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, Stripe, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
+- **`lib/ai`:** AI-related functionality including chat completion, response generation, embeddings, and tools. Contains core AI logic for:
   - Chat message generation and streaming
   - Response generation with custom prompts
   - Conversation embeddings and summaries
   - Custom AI tools and function calling
   - Integration with Vercel AI SDK
-- **`packages/nextjs/trpc`:** Contains the tRPC API router and context definitions.
-- **`packages/nextjs/types`:** Type definitions used throughout the Next.js app, particularly for the tRPC API.
-- **`packages/nextjs/tests`:** Unit and integration tests for the Next.js application and its components.
-- **`packages/nextjs/db/schema`:** Contains all database table definitions and relationships using Drizzle ORM. Each domain entity (mailboxes, conversations, workflows, etc.) has its own schema file, providing type-safe database interactions.
+- **`trpc`:** Contains the tRPC API router and context definitions.
+- **`types`:** Type definitions used throughout the Next.js app, particularly for the tRPC API.
+- **`tests`:** Unit and integration tests for the Next.js application and its components.
+- **`db/schema`:** Contains all database table definitions and relationships using Drizzle ORM. Each domain entity (mailboxes, conversations, workflows, etc.) has its own schema file, providing type-safe database interactions.
 
 ### Packages
 
 - **`packages/react`:** A React package providing a wrapper and hooks for integrating the Helper chat widget into other applications.
-- **`packages/nextjs/sdk`:** The core SDK for the embeddable chat widget, featuring:
+- **`sdk`:** The core SDK for the embeddable chat widget, featuring:
   - Singleton pattern for widget instance management
   - Seamless iframe-based widget integration
   - Real-time messaging and notifications
@@ -69,7 +69,7 @@ The database layer is built using Drizzle ORM, providing type-safe database inte
 
 ### Schema Organization
 
-- **Location:** All database schemas reside in `packages/nextjs/db/schema/`
+- **Location:** All database schemas reside in `db/schema/`
 - **Structure:** Each domain entity has its own schema file (e.g., `mailboxes.ts`, `conversations.ts`, `platformCustomers.ts`)
 - **Centralization:** All schemas are exported from a central `index.ts` file for easy access
 
@@ -90,7 +90,7 @@ Helper uses Inngest for managing background jobs and event-driven processes. The
 
 ### Event Schema and Organization
 
-- **Location:** Background functions are defined in `packages/nextjs/inngest/functions/`
+- **Location:** Background functions are defined in `inngest/functions/`
 - **Event Schema:** Events are strongly typed using Zod schemas in `client.ts`
 - **Function Types:** Two main types of functions:
   - Event-driven (e.g., `conversations/message.created`, `files/preview.generate`)
@@ -117,7 +117,7 @@ Helper uses Inngest for managing background jobs and event-driven processes. The
 
 ## Development Workflow
 
-- **New Features:** Create a new branch for your feature. Implement the necessary changes in the appropriate directories (e.g., `packages/nextjs/app` for UI components, `packages/nextjs/lib` for backend logic). Add corresponding tests in the `packages/nextjs/tests` directory. Create a changeset to document your changes.
+- **New Features:** Create a new branch for your feature. Implement the necessary changes in the appropriate directories (e.g., `app` for UI components, `lib` for backend logic). Add corresponding tests in the `tests` directory. Create a changeset to document your changes.
 - **Bug Fixes:** Follow the same process as new features, but focus on resolving the specific issue and adding tests to prevent regressions.
 - **Testing:** Run tests before submitting a pull request. Use `pnpm test` to run all tests or target specific files using Vitest CLI arguments.
 - **Code Style:** Follow the existing code style and conventions. Use ESLint to ensure consistent code quality.
