@@ -2,8 +2,8 @@
 import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
-import type { guideSessionEventTypeEnum } from "@/db/schema/guideSession";
-import { RESUME_GUIDE } from "@/lib/widget/messages";
+import type { guideSessionEventTypeEnum } from "../../../db/schema/guideSession";
+import { RESUME_GUIDE } from "../../../lib/widget/messages";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 

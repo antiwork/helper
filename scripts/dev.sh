@@ -37,7 +37,7 @@ elif [ -f ".vercel/project.json" ]; then
 fi
 
 if [ -z "$SKIP_SETUP" ]; then
-    LOCAL_DETACHED=true make local
+    cd scripts && LOCAL_DETACHED=true make local && cd ..
     pnpm db:migrate
 fi
 

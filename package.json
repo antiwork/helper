@@ -21,7 +21,7 @@
     "dev": "sh scripts/dev.sh",
     "dev:email": "pnpm run with-dev-env email dev --dir lib/emails --port 3060",
     "dev:next": "lsof -ti:3010 | xargs kill -9 || true && pnpm next dev --turbopack -H 0.0.0.0",
-    "dev:sdk": "webpack --config webpack.sdk.cjs --watch",
+    "dev:sdk": "webpack --config packages/sdk/webpack.sdk.cjs --watch",
     "eval:dev": "EVALITE=true NODE_ENV=test pnpm run with-dev-env evalite watch",
     "evals": "EVALITE=true NODE_ENV=test pnpm run with-dev-env evalite",
     "format": "pnpm run-on-packages format && prettier --check . --ignore-path ./.gitignore --ignore-path ./.prettierignore",
