@@ -145,6 +145,7 @@ let nextConfig: NextConfig = {
       },
     ];
   },
+  devIndicators: env.DEV_INDICATOR ? undefined : false,
 };
 
 const withMDX = createMDX();

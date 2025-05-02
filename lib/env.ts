@@ -105,6 +105,7 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
     DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
+    DEV_INDICATOR: z.string().optional(), // Show the Next.js dev indicator in the UI
   },
 
   /**
