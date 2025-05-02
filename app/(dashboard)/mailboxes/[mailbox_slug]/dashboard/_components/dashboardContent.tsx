@@ -2,6 +2,7 @@
 
 import { UserButton } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/peopleTable";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/reactionsChart";
@@ -23,21 +24,26 @@ const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false })
 export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<Date>();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isDashboardPage = pathname.includes("/dashboard");
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-sidebar text-white px-4 flex items-center border-b border-white/20">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center">
-            <div className="py-1">
-              <ViewSwitcher mailboxSlug={mailboxSlug} />
+      {isDashboardPage && (
+        <div className="bg-sidebar text-white px-4 flex items-center border-b border-white/20">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center">
+              <div className="py-1">
+                <ViewSwitcher mailboxSlug={mailboxSlug} />
+              </div>
             </div>
           </div>
+          <div className="ml-auto py-1">
+            <UserButton />
+          </div>
         </div>
-        <div className="ml-auto py-1">
-          <UserButton />
-        </div>
-      </div>
+      )}
 
       <div className="flex-1 overflow-y-auto min-h-0">
         <DashboardAlerts mailboxSlug={mailboxSlug} />

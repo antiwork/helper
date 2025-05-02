@@ -12,6 +12,7 @@ import {
   ConversationListContextProvider,
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationListContext";
+import { DashboardContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/_components/dashboardContent";
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/mobileList";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/useSaveLatestMailboxSlug";
 import { getGlobalAblyClient } from "@/components/ablyClient";
@@ -35,12 +36,16 @@ const Inbox = () => {
   const params = useParams<{ mailbox_slug: string; category: keyof typeof CATEGORY_LABELS }>();
   const mailboxSlug = params.mailbox_slug;
   const { currentConversationSlug, conversationListData, isPending } = useConversationListContext();
+  const [view] = useQueryState("view");
   const utils = api.useUtils();
   const isMobile = useIsMobile();
   const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
   const pageTitle = currentConversation
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];
+  
+  const { data: mailboxData } = api.mailbox.get.useQuery({ mailboxSlug });
+  const currentMailbox = mailboxData ? { name: mailboxData.name, slug: mailboxData.slug } : undefined;
 
   const currentConversationIndex =
     conversationListData?.conversations.findIndex((c) => c.slug === currentConversationSlug) ?? -1;
@@ -62,15 +67,23 @@ const Inbox = () => {
 
   useSaveLatestMailboxSlug(mailboxSlug);
 
+  const shouldShowDashboard = view === "dashboard" && currentMailbox;
+
   if (isMobile) {
     return (
       <div className="flex grow overflow-hidden">
         {pageTitle ? <title>{pageTitle}</title> : null}
-        <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
+        <div className={cn("w-full", currentConversationSlug || shouldShowDashboard ? "hidden" : "block")}>
           <MobileList />
         </div>
 
-        {currentConversationSlug && (
+        {shouldShowDashboard && currentMailbox && (
+          <div className="absolute inset-0 z-10 bg-background">
+            <DashboardContent mailboxSlug={mailboxSlug} currentMailbox={currentMailbox} />
+          </div>
+        )}
+
+        {currentConversationSlug && !shouldShowDashboard && (
           <div className="absolute inset-0 z-10 bg-background">
             <Conversation key={currentConversationSlug} />
           </div>
@@ -82,7 +95,9 @@ const Inbox = () => {
   return (
     <div className="flex grow overflow-hidden">
       {pageTitle ? <title>{pageTitle}</title> : null}
-      {currentConversationSlug ? (
+      {shouldShowDashboard && currentMailbox ? (
+        <DashboardContent mailboxSlug={mailboxSlug} currentMailbox={currentMailbox} />
+      ) : currentConversationSlug ? (
         <Conversation key={currentConversationSlug} />
       ) : (
         <div className="mx-auto hidden items-center lg:flex">
