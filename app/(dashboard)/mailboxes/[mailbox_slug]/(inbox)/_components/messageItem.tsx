@@ -259,7 +259,9 @@ const MessageItem = ({
               </span>
             )}
             <div className="flex flex-1 items-center gap-2">
-              <div className="flex flex-1 items-center justify-end gap-2">
+              <div className={cx("flex flex-1 items-center gap-2", {
+                "justify-end": rightAlignedMessage
+              })}>
                 <HumanizedTime time={message.createdAt} />
                 {message.type === "message" && message.slackUrl && (
                   <span>
