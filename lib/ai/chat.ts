@@ -34,7 +34,7 @@ import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustom
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
-import { ReadPageToolConfig } from "@/sdk/types";
+import { ReadPageToolConfig } from "../../packages/sdk/src/types";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 

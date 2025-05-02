@@ -14,8 +14,8 @@ import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
 import { MESSAGE_TYPE, RESUME_GUIDE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
-import { HelperWidgetConfig } from "@/sdk/types";
 import { GuideInstructions } from "@/types/guide";
+import { HelperWidgetConfig } from "../../../../packages/sdk/src/types";
 
 type DecodedPayload = {
   isWhitelabel?: boolean;
