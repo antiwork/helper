@@ -50,7 +50,7 @@ export default function HelpPage() {
                 Contact Support
               </Button>
               <Link href="/" passHref>
-                <Button variant="outline" className="border-amber-500 text-amber-500 hover:bg-amber-500/10">
+                <Button variant="outlined" className="border-amber-500 text-amber-500 hover:bg-amber-500/10">
                   Return to Home
                 </Button>
               </Link>
