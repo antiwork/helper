@@ -13,8 +13,8 @@ fi
 mkcert -install
 
 # Create certs directory if it doesn't exist
-mkdir -p docker/local-nginx/certs
-cd docker/local-nginx/certs
+mkdir -p scripts/docker/local-nginx/certs
+cd scripts/docker/local-nginx/certs
 
 # Generate certificates
 echo "Generating certificates for helperai.dev..."
@@ -22,4 +22,4 @@ mkcert helperai.dev "*.helperai.dev"
 mv helperai.dev+1.pem helperai_dev.crt
 mv helperai.dev+1-key.pem helperai_dev.key
 
-echo "SSL certificates generated successfully in docker/local-nginx/certs/"
+echo "SSL certificates generated successfully in scripts/docker/local-nginx/certs/"

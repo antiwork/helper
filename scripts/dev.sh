@@ -16,6 +16,12 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+if [ -z "$SKIP_SETUP" ]; then
+    if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
+        pnpm generate-ssl-certificates
+    fi
+fi
+
 corepack enable
 pnpm install
 

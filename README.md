@@ -46,19 +46,13 @@ choco install mkcert
 
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
 
-2. Generate SSL certificates:
-
-```sh
-pnpm generate-ssl-certificates
-```
-
-3. Seed the database:
+2. Seed the database:
 
 ```sh
 pnpm db:reset
 ```
 
-4. Start the application:
+3. Start the application:
 
 ```sh
 pnpm dev
