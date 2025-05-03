@@ -38,6 +38,9 @@ _For other operating systems, see the [mkcert installation guide](https://github
 
 ### Set up environment variables
 
+> [!TIP]
+> If you already have a Vercel project with development environment variables set up, you can skip this step. When you run `pnpm dev` you will be prompted to pull the environment variables from Vercel.
+
 Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
 <details>
@@ -89,7 +92,7 @@ pnpm db:reset
 pnpm dev
 ```
 
-Access the application at [helperai.dev](https://helperai.dev)
+Access the application at [helperai.dev](https://helperai.dev) 🚀
 
 ## Docs
 
