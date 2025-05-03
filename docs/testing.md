@@ -1,6 +1,16 @@
-# AI Evaluation Guide
+# Testing
 
-## Running Evaluations
+## Vitest
+
+The project uses [Vitest](https://vitest.dev/) for unit testing.
+
+To run the tests:
+
+```sh
+pnpm test
+```
+
+## AI Evals
 
 The project uses [Evalite](https://evalite.dev/) for testing AI behavior. Eval files are located in `tests/evals` and follow this pattern:
 
@@ -28,5 +38,5 @@ evalite("Test description", {
 To run eval tests:
 
 ```sh
-npm run eval:dev
+pnpm eval:dev
 ```
