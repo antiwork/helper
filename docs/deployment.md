@@ -8,10 +8,10 @@ The application is intended to be deployed to [Vercel](https://vercel.com).
 1. Fork the repository.
 1. Create a Vercel project and import your fork.
 1. Connect essential services:
-    - PostgreSQL (we recommend [Supabase](https://supabase.com))
-    - Redis (we recommend [Upstash](https://upstash.com))
-    - Inngest (we recommend [Inngest Cloud](https://www.inngest.com/cloud))
-    - S3-compatible storage
+   - PostgreSQL (we recommend [Supabase](https://supabase.com))
+   - Redis (we recommend [Upstash](https://upstash.com))
+   - Inngest (we recommend [Inngest Cloud](https://www.inngest.com/cloud))
+   - S3-compatible storage
 1. Set up environment variables for required integrations (see the [README](README.md#set-up-environment-variables) and [development.md](development.md#optional-integrations) for instructions).
 
 Vercel will automatically build and deploy your fork upon pushing to the main branch.

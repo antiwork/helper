@@ -13,10 +13,10 @@ Customer support via live chat and email.
 
 Features:
 
-* **AI agent:** Reads your docs to give world-class support for everyday queries.
-* **Dashboard:** A fully featured escalation flow for human agents to handle complex cases.
-* **Tools:** Enable customers and agents to interact with your systems using natural language.
-* **SDK:** Integrate live chat and AI-powered inline assistance into your website in seconds.
+- **AI agent:** Reads your docs to give world-class support for everyday queries.
+- **Dashboard:** A fully featured escalation flow for human agents to handle complex cases.
+- **Tools:** Enable customers and agents to interact with your systems using natural language.
+- **SDK:** Integrate live chat and AI-powered inline assistance into your website in seconds.
 
 ## Quick Start
 
@@ -24,8 +24,8 @@ Features:
 
 You'll need:
 
-* [Docker](https://docs.docker.com/get-docker/)
-* [Node.js](https://nodejs.org/en/download/) (see [`.node-version`](.node-version))
+- [Docker](https://docs.docker.com/get-docker/)
+- [Node.js](https://nodejs.org/en/download/) (see [`.node-version`](.node-version))
 
 ### Install local Certificate Authority
 
