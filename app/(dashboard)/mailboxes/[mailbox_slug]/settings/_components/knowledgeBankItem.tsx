@@ -1,5 +1,5 @@
 import { CheckIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { truncate } from "lodash";
+import { truncate } from "lodash-es";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { FAQ } from "@/app/types/global";

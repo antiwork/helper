@@ -14,7 +14,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
 import { SparklesIcon, XCircleIcon } from "@heroicons/react/24/solid";
-import { truncate } from "lodash";
+import { truncate } from "lodash-es";
 import { Bot, Frown, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { renderMessageBody } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/renderMessageBody";

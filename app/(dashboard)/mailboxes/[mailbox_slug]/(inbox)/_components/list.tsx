@@ -1,7 +1,7 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
-import { capitalize } from "lodash";
+import { capitalize } from "lodash-es";
 import { Bot } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";

@@ -1,5 +1,5 @@
 import { and, desc, eq, SQL, sql } from "drizzle-orm";
-import { uniqBy } from "lodash";
+import { uniqBy } from "lodash-es";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { extractHashedWordsFromEmail } from "./extractHashedWordsFromEmail";
