@@ -1,3 +1,4 @@
+import QuickSuggestions from "./QuickSuggestions";
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
@@ -154,7 +155,7 @@ export default function Conversation({
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
             annotations: message.annotations,
-            parts: message.parts,
+	            parts: message.parts,
             experimental_attachments: message.experimental_attachments,
           })),
           allAttachments: data.allAttachments,
@@ -183,6 +184,11 @@ export default function Conversation({
       setIsEscalated(false);
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
+
+  const handleSuggestionClick = (prompt: string) => {  
+  setInput(prompt);  
+  handleSubmit(prompt);  
+  };
 
   const handleSubmit = async (screenshotData?: string) => {
     if (!input.trim()) return;
@@ -261,7 +267,13 @@ export default function Conversation({
         onTalkToTeamClick={handleTalkToTeamClick}
         isEscalated={isEscalated}
       />
-      <ChatInput
+
+     <QuickSuggestions   
+       onSuggestionClick={handleSuggestionClick}   
+       isVisible={isNewConversation && messages.length === 0}   
+      />
+  
+       <ChatInput
         input={input}
         inputRef={inputRef}
         handleInputChange={handleInputChange}
