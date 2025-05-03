@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ReactSortable as Sortable, type ReactSortableProps } from "react-sortablejs";
-import DragSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/icons/outline-drag.svg";
+import DragSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/icons/outline-drag.svg";
 import { cn } from "@/lib/utils";
 
 type Props<T extends string | number> = {

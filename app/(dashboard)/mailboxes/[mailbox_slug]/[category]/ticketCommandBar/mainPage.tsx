@@ -15,7 +15,7 @@ import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tick
 import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { api } from "@/trpc/react";
-import GitHubSvg from "../../_components/icons/github.svg";
+import GitHubSvg from "../icons/github.svg";
 import { CommandGroup } from "./types";
 
 type MainPageProps = {
