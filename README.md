@@ -20,6 +20,13 @@ Features:
 
 ## Quick Start
 
+### Install dependencies
+
+You'll need:
+
+* [Docker](https://docs.docker.com/get-docker/)
+* [Node.js](https://nodejs.org/en/download/) (see [`.node-version`](.node-version))
+
 ### Install local Certificate Authority
 
 ```sh
