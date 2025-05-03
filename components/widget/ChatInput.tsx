@@ -128,9 +128,13 @@ export default function ChatInput({
 
   const submit = () => {
     const normalizedInput = input.trim().toLowerCase();
-    if (["exit", "cancel", "close", "stop", "quit", "end", "bye"].some(cmd => normalizedInput === cmd) || 
-        normalizedInput.includes("exit chat") || normalizedInput.includes("exit this chat") ||  normalizedInput.includes("close this chat") || 
-        normalizedInput.includes("close chat")) {
+    if (
+      ["exit", "cancel", "close", "stop", "quit", "end", "bye"].some((cmd) => normalizedInput === cmd) ||
+      normalizedInput.includes("exit chat") ||
+      normalizedInput.includes("exit this chat") ||
+      normalizedInput.includes("close this chat") ||
+      normalizedInput.includes("close chat")
+    ) {
       closeWidget();
       return;
     }
