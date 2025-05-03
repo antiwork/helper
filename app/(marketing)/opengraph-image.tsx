@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Helper.ai - World-class support can be effortless";
+export const alt = "Helper - World-class support can be effortless";
 export const size = {
   width: 1200,
   height: 630,
@@ -24,7 +24,7 @@ export default function Image() {
           padding: "40px",
         }}
       >
-        <img src={logoUrl} alt="Helper.ai" width={550} height={160} style={{ marginBottom: "40px" }} />
+        <img src={logoUrl} alt="Helper" width={550} height={160} style={{ marginBottom: "40px" }} />
       </div>
     ),
     {

@@ -1,64 +1,74 @@
 # Local Development Guide
 
-## Dependencies
+> [!TIP]
+> Make sure you follow the Quick Start in the [README](/README.md) first!
 
-First, install local Certificate Authority:
+## Docker Services
+
+The app uses Docker to run the following services locally:
+
+- PostgreSQL
+- Redis
+- Inngest
+- Minio
+- Nginx (allowing you to use the `https://helperai.dev` domain)
+
+`pnpm dev` will automatically start and stop these services, or you can use `pnpm services:start` and `pnpm services:stop` to start and stop them manually.
+
+> [!TIP]
+> Nginx will attempt to listen on port 80 and 443, so if you have other containers or services running on those ports you will need to stop them first.
+
+## Database Management
+
+Seed the database with sample data:
 
 ```sh
-# Install mkcert on macOS
-brew install mkcert
-brew install nss
+pnpm db:reset
 ```
 
-_For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
-
-Then, create a local Certificate Authority and generate SSL certificates for the Helper development project:
+Generate/run database migrations:
 
 ```sh
-# Generate SSL certificates
-bin/generate_ssl_certificates
+# Generate a migration to bring the database schema in sync with the definitions in db/schema
+pnpm db:generate
+
+# Apply any new migrations to the database
+pnpm db:migrate
 ```
 
-## Environment & Services
+Note that `pnpm dev` will automatically run migrations, but won't generate them.
 
-Copy `.env.local.sample` to `.env.local`.
+## Testing
 
-<details>
-<summary>Clerk</summary>
+```sh
+# Run all tests
+npm test
 
-1. Go to [clerk.com](https://clerk.com) and create a new app.
-1. Name the app and set login methods to: **Email, Google, Apple, GitHub**.
-1. Under "Configure > Email, phone, username", turn on "Personal information > Name"
-1. Under "Configure > Organization Management", turn on "Enable organizations"
-1. Under "Configure > API Keys", add `CLERK_SECRET_KEY` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` to your `.env.local` file.
-1. Under "Users", create a user with email `support@gumroad.com` and password `password`. Optionally create other users, e.g. with your email.
-1. Add the user ID(s) to your `.env.local` file as `CLERK_INITIAL_USER_IDS`.
-1. Under "Organizations", create a new organization and add your user(s) to the "Members" list.
-1. Add the organization ID to your `.env.local` file as `CLERK_INITIAL_ORGANIZATION_ID`.
+# Run a specific test file
+pnpm test tests/inngest/functions/postEmailToGmail.test.ts
+```
 
-</details>
+## Background Tasks
 
-<details>
-<summary>OpenAI</summary>
+This project uses [Inngest](https://www.inngest.com/) for background tasks. You can view the dashboard / development server at [http://localhost:8288/](http://localhost:8288/).
 
-1. Create an account at [openai.com](https://openai.com).
-1. Create a new API key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
-1. Add the API key to your `.env.local` file as `OPENAI_API_KEY`.
+## Email Development
 
-</details>
+While email sending/receiving in a customer's inbox happens through Gmail, all other emails get sent using Resend and are defined at `lib/emails`. To preview an email, you can visit http://localhost:3060. You can also send yourself a preview email using the "Send" button (note that some assets like images may not properly display when sending a preview email during local development).
 
-<details>
-<summary>Ably</summary>
+## SSL certificates
 
-1. Go to [ably.com](https://ably.com) and sign up or log in.
-2. Create a new app.
-3. Go to the "API Keys" tab for your new app.
-4. Copy the API key that has all capabilities enabled (usually the first one).
-5. Add the API key to your `.env.local` file as `ABLY_API_KEY`.
+The app uses a local Certificate Authority (CA) to generate SSL certificates for the `https://helperai.dev` domain.
 
-</details>
+The certificates will be automatically generated when you run `pnpm dev` for the first time, but if you need to regenerate them you can use:
 
-_The app will start with placeholder values for Google services and Resend, but set these up if you want to test sending and receiving emails._
+```sh
+pnpm generate-ssl-certificates
+```
+
+## Optional Integrations
+
+These integrations are optional for local development but required to make Helper work correctly in production:
 
 <details>
 <summary>Resend (transactional emails)</summary>
@@ -130,52 +140,7 @@ Now linking your Gmail account from Settings → Integrations should grant Gmail
 
 </details>
 
-## Running locally
-
-Run the application and access it at [helperai.dev](https://helperai.dev):
-
-```sh
-bin/dev
-```
-
-## Database Management
-
-Seed the database with sample data: (email/password: `support@gumroad.com` / `password` and `user1,...,user4@gumroad.com` / `password`)
-
-```sh
-npm run db:reset
-```
-
-Generate/run database migrations:
-
-```sh
-npm run db:generate
-npm run db:migrate
-```
-
-## Testing
-
-```sh
-# Run all tests
-npm test
-
-# Run a specific test file
-pnpm test tests/inngest/functions/postEmailToGmail.test.ts
-```
-
-## Background Tasks
-
-This project uses [Inngest](https://www.inngest.com/) for background tasks. You can view the dashboard / development server at [http://localhost:8288/](http://localhost:8288/).
-
-## Email Development
-
-While email sending/receiving in a customer's inbox happens through Gmail, all other emails get sent using Resend and are defined at `lib/emails`. To preview an email, you can visit http://localhost:3060. You can also send yourself a preview email (note that some assets like images may not properly display when sending a preview email during local development):
-
-![How to send a preview email](images/resend_preview_email.png)
-
-## Optional Integrations
-
-These integrations are optional but add more functionality to Helper.
+These integrations are entirely optional but add more functionality to Helper.
 
 <details>
 <summary>Slack</summary>
