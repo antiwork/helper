@@ -77,9 +77,9 @@ Access the application at [helperai.dev](https://helperai.dev)
 
 ## Docs
 
-* [Project structure](docs/OVERVIEW.md)
-* [Local development](docs/development.md)
-* [Deployment](docs/deployment.md)
+- [Project structure](docs/OVERVIEW.md)
+- [Local development](docs/development.md)
+- [Deployment](docs/deployment.md)
 
 ## License
 
