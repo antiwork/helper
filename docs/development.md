@@ -56,6 +56,16 @@ This project uses [Inngest](https://www.inngest.com/) for background tasks. You 
 
 While email sending/receiving in a customer's inbox happens through Gmail, all other emails get sent using Resend and are defined at `lib/emails`. To preview an email, you can visit http://localhost:3060. You can also send yourself a preview email using the "Send" button (note that some assets like images may not properly display when sending a preview email during local development).
 
+## SSL certificates
+
+The app uses a local Certificate Authority (CA) to generate SSL certificates for the `https://helperai.dev` domain.
+
+The certificates will be automatically generated when you run `pnpm dev` for the first time, but if you need to regenerate them you can use:
+
+```sh
+pnpm generate-ssl-certificates
+```
+
 ## Optional Integrations
 
 These integrations are optional for local development but required to make Helper work correctly in production:

@@ -1,10 +1,26 @@
+<p align="center">
+  <img src="./public/logo.svg#gh-light-mode-only" alt="Helper logo" width="256" />
+  <img src="./public/logo-white.svg#gh-dark-mode-only" alt="Helper logo" width="256" />
+</p>
+<p align="center">
+    <a href="https://helper.ai">helper.ai</a> |
+    <a href="https://helper.ai/docs">Docs</a>
+</p>
+
 # Helper
 
-Customer support agents via live chat and email.
+Customer support via live chat and email.
+
+Features:
+
+* **AI agent:** Reads your docs to give world-class support for everyday queries.
+* **Dashboard:** A fully featured escalation flow for human agents to handle complex cases.
+* **Tools:** Enable customers and agents to interact with your systems using natural language.
+* **SDK:** Integrate live chat and AI-powered inline assistance into your website in seconds.
 
 ## Quick Start
 
-1. Install local Certificate Authority:
+### Install local Certificate Authority
 
 ```sh
 # Install mkcert on macOS
@@ -20,7 +36,7 @@ choco install mkcert
 
 _For other operating systems, see the [mkcert installation guide](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation)._
 
-2. Set up environment variables:
+### Set up environment variables
 
 Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
@@ -61,13 +77,13 @@ Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
 _The app will start with placeholder values for other services - you can follow the instructions in [development.md](docs/services.md#optional-integrations) to enable them later._
 
-2. Seed the database:
+### Seed the database with sample data
 
 ```sh
 pnpm db:reset
 ```
 
-3. Start the application:
+### Start the application
 
 ```sh
 pnpm dev
