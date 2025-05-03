@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="./public/logo.svg#gh-light-mode-only" alt="Helper logo" width="256" />
-  <img src="./public/logo-white.svg#gh-dark-mode-only" alt="Helper logo" width="256" />
+  <img src="./public/logo.svg#gh-light-mode-only" alt="Helper logo" width="192" />
+  <img src="./public/logo-white.svg#gh-dark-mode-only" alt="Helper logo" width="192" />
 </p>
 <p align="center">
     <a href="https://helper.ai">helper.ai</a> |
