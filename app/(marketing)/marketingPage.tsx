@@ -62,12 +62,21 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
           </span>
         </Button>
       </Link>
-      {isSignedIn && (
+      {isSignedIn ? (
         <Link href="/mailboxes">
           <Button variant="subtle">
             <span className="flex items-center">
               <InboxIcon className="h-5 w-5 mr-2" />
               Go to mailbox
+            </span>
+          </Button>
+        </Link>
+      ) : (
+        <Link href="/login">
+          <Button variant="subtle">
+            <span className="flex items-center">
+              <InboxIcon className="h-5 w-5 mr-2" />
+              Login
             </span>
           </Button>
         </Link>
