@@ -16,7 +16,7 @@ import {
   SQL,
   sql,
 } from "drizzle-orm";
-import { memoize } from "lodash";
+import { memoize } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";

@@ -9,9 +9,9 @@ module.exports = (env) => {
 
   return {
     mode: isProduction ? "production" : "development",
-    entry: "./sdk/index.ts",
+    entry: path.resolve(__dirname, "src/index.ts"),
     output: {
-      path: path.resolve(__dirname, "public"),
+      path: path.resolve(__dirname, "../../public"),
       filename: "sdk.js",
       chunkFilename: "sdk-[name]-[chunkhash].js",
       library: {

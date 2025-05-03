@@ -1,15 +1,8 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import {
-  CheckIcon,
-  CurrencyDollarIcon,
-  FunnelIcon,
-  InboxIcon,
-  ShieldExclamationIcon,
-  StarIcon,
-} from "@heroicons/react/24/outline";
-import { omit, upperFirst } from "lodash";
+import { CheckIcon, CurrencyDollarIcon, FunnelIcon, StarIcon } from "@heroicons/react/24/outline";
+import { omit } from "lodash-es";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

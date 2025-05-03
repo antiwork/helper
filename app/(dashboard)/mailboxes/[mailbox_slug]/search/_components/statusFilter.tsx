@@ -1,5 +1,5 @@
 import { InboxIcon } from "@heroicons/react/24/outline";
-import { upperFirst } from "lodash";
+import { upperFirst } from "lodash-es";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

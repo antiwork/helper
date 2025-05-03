@@ -12,7 +12,7 @@ import {
 } from "@/lib/data/conversation";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
-import { ReadPageToolConfig } from "@/sdk/types";
+import { ReadPageToolConfig } from "../../../packages/sdk/src/types";
 
 export const maxDuration = 60;
 

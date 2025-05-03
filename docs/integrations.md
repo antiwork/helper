@@ -47,7 +47,7 @@ If this makes local development difficult (by cluttering the Inngest event log),
 
 3. Set `AUTH_URL` in `.env.local` to the Ngrok URL configured above e.g. `AUTH_URL=https://1jdkfiro39f8.ngrok.app`. This is so that Slack login works properly.
 
-4. Run `bin/dev`, and access the application using that same Ngrok URL (in other words, things will not work if you access the application with `helperai.dev`. You must use the Ngrok URL configured above).
+4. Run `pnpm dev`, and access the application using that same Ngrok URL (in other words, things will not work if you access the application with `helperai.dev`. You must use the Ngrok URL configured above).
 
 Note that if you want to login with Google while using that Ngrok URL, you will also need to update the redirect URLs in your Google Cloud Platform credentials.
 

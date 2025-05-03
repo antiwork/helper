@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { memoize } from "lodash";
+import { memoize } from "lodash-es";
 import { App } from "octokit";
 import { env } from "@/lib/env";
 

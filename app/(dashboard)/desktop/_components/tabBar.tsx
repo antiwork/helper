@@ -4,7 +4,7 @@ import { EllipsisHorizontalIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { uniqBy } from "lodash";
+import { uniqBy } from "lodash-es";
 import { Reorder } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";

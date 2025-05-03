@@ -1,5 +1,5 @@
 import { Context } from "modern-screenshot";
-import type { NotificationStatus } from "@/db/schema/messageNotifications";
+import type { NotificationStatus } from "../../../db/schema/messageNotifications";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -9,7 +9,7 @@ import {
   READY_ACTION,
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
-} from "@/lib/widget/messages";
+} from "../../../lib/widget/messages";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import type { HelperWidgetConfig } from "./types";
@@ -314,7 +314,7 @@ class HelperWidget {
         // Handle request-response pattern messages (has requestId)
         if (requestId) {
           try {
-            let response = null;
+            let response: any = null;
 
             if (action === "FETCH_PAGE_DETAILS") {
               response = this.guideManager.fetchCurrentPageDetails();

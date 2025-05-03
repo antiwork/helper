@@ -1,5 +1,5 @@
 import { BoltIcon, ChevronDownIcon, ChevronRightIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { kebabCase, upperFirst } from "lodash";
+import { kebabCase, upperFirst } from "lodash-es";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";

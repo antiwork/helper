@@ -147,7 +147,7 @@ let nextConfig: NextConfig = {
   },
 };
 
-const withMDX = createMDX();
+const withMDX = createMDX({ configPath: "./content/source.config.ts" });
 nextConfig = withMDX(nextConfig);
 
 export default process.env.VERCEL_ENV === "production"

@@ -8,13 +8,19 @@ cleanup() {
 
     # Stop Docker containers
     if [ -z "$SKIP_SETUP" ]; then
-        make stop_local
+        pnpm services:stop
     fi
 
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM
+
+if [ -z "$SKIP_SETUP" ]; then
+    if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
+        pnpm generate-ssl-certificates
+    fi
+fi
 
 corepack enable
 pnpm install
@@ -37,7 +43,6 @@ elif [ -f ".vercel/project.json" ]; then
 fi
 
 if [ -z "$SKIP_SETUP" ]; then
-    LOCAL_DETACHED=true make local
     pnpm db:migrate
 fi
 
@@ -47,4 +52,4 @@ export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 # Build the React package
 cd packages/react && pnpm build && cd ../..
 
-pnpm dotenv -e .env.development.local -e .env.local -- pnpm heroku local -f Procfile.dev
+pnpm with-dev-env pnpm heroku local -f scripts/Procfile.dev

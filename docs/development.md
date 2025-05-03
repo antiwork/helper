@@ -136,7 +136,6 @@ Run the application and access it at [helperai.dev](https://helperai.dev):
 
 ```sh
 bin/dev
-# Run `LOCAL_DETACHED=false make local` first if you prefer to run Docker services in the foreground
 ```
 
 ## Database Management

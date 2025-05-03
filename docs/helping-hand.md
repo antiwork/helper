@@ -22,7 +22,7 @@ To disable it, ensure the following environment variable is set:
 DISABLE_STRICT_MODE=true
 ```
 
-This is typically configured in your environment file (e.g., `.env.local`) or when starting the development server with `DISABLE_STRICT_MODE=true bin/dev`.
+This is typically configured in your environment file (e.g., `.env.local`) or when starting the development server with `DISABLE_STRICT_MODE=true pnpm dev`.
 
 ## Key Components
 
