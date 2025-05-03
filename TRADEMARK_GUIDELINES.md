@@ -23,7 +23,7 @@ You can, though, say you like the Gumroad, Inc. Helper software, that you partic
 
 You may not use or register our marks, or variations of them as part of your own trademark, service mark, domain name, company name, trade name, product name or service name.
 
-Trademark law does not allow your use of names or trademarks that are too similar to ours. You therefore may not use an obvious variation of any of our marks or any phonetic equivalent, foreign language equivalent, takeoff, or abbreviation for a similar or compatible product or service. We would consider the following too similar to one of our Marks:
+Trademark law does not allow your use of names or trademarks that are too similar to ours. You therefore may not use an obvious variation of any of our marks or any phonetic equivalent, foreign language equivalent, takeoff, or abbreviation for a similar or compatible product or service. We would consider the following too similar to one of our marks:
 
 - MyHelper
 - Helper
@@ -55,11 +55,11 @@ You must not offer a hosted or managed service using our marks. The operation of
 
 ### User Groups
 
-You can use the Word Marks as part of your user group name provided that:
+You can use the Word Marks as part of your user group name, provided that:
 
 - The main focus of the group is our software
 - The group does not make a profit
-- Any charge to attend meetings are to cover the cost of the venue, food and drink only
+- Any charges to attend meetings are to cover the cost of the venue, food and drink only
 
 You are not authorized to conduct a conference using our marks.
 
@@ -100,4 +100,4 @@ However, when the context requires the use of black-and-white graphics and the l
 
 ---
 
-These guidelines are based on the Model Trademark Guidelines, available at http://www.modeltrademarkguidelines.org., used under a Creative Commons Attribution 3.0 Unported license: https://creativecommons.org/licenses/by/3.0/deed.en_US.
+These guidelines are based on the Model Trademark Guidelines, available at http://www.modeltrademarkguidelines.org, used under a Creative Commons Attribution 3.0 Unported license: https://creativecommons.org/licenses/by/3.0/deed.en_US.
