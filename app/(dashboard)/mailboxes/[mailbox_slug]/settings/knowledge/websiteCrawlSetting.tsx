@@ -234,6 +234,11 @@ const WebsiteCrawlSetting = () => {
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
+                
+                const urlWithProtocol = /^https?:\/\//i.test(newWebsite.url)
+                  ? newWebsite.url
+                  : `https://${newWebsite.url}`;
+                
                 if (!isValidUrl(newWebsite.url)) {
                   setUrlError("Please enter a valid URL");
                   return;
@@ -241,10 +246,6 @@ const WebsiteCrawlSetting = () => {
                 setUrlError("");
 
                 try {
-                  const urlWithProtocol = /^https?:\/\//i.test(newWebsite.url)
-                    ? newWebsite.url
-                    : `https://${newWebsite.url}`;
-
                   await handleAddWebsite(urlWithProtocol);
                   setNewWebsite({ name: "", url: "" });
                   setShowAddWebsite(false);
