@@ -241,10 +241,10 @@ const WebsiteCrawlSetting = () => {
                 setUrlError("");
 
                 try {
-                  const urlWithProtocol = /^https?:\/\//i.test(newWebsite.url) 
-                    ? newWebsite.url 
+                  const urlWithProtocol = /^https?:\/\//i.test(newWebsite.url)
+                    ? newWebsite.url
                     : `https://${newWebsite.url}`;
-                    
+
                   await handleAddWebsite(urlWithProtocol);
                   setNewWebsite({ name: "", url: "" });
                   setShowAddWebsite(false);

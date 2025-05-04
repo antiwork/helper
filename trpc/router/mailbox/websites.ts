@@ -65,9 +65,9 @@ export const websitesRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const urlWithProtocol = /^https?:\/\//i.test(input.url) ? input.url : `https://${input.url}`;
-      
-      const name = input.name || await fetchPageTitle(urlWithProtocol);
-      
+
+      const name = input.name || (await fetchPageTitle(urlWithProtocol));
+
       const website = await db
         .insert(websites)
         .values({
