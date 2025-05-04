@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { guideSessions } from "@/db/schema";
 import { api } from "@/trpc/server";
-import SessionDetails from "./_components/sessionDetails";
+import SessionDetails from "./sessionDetails";
 
 type PageProps = {
   mailbox_slug: string;

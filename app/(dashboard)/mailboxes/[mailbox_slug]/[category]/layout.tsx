@@ -1,11 +1,10 @@
 import React from "react";
 import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
+import { getSidebarInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/getSidebarInfo";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { withMailboxAuth } from "@/components/withMailboxAuth";
-import { getSidebarInfo } from "../getSidebarInfo";
-import { ClientLayout } from "./clientLayout";
 
-async function SettingsLayout({
+async function ConversationsLayout({
   params,
   children,
 }: {
@@ -13,18 +12,17 @@ async function SettingsLayout({
   children: React.ReactNode;
 }) {
   const { mailbox_slug } = await params;
+
   const sidebarInfo = await getSidebarInfo(mailbox_slug);
 
   return (
     <SidebarProvider>
-      <div className="flex h-dvh w-full">
-        <div className="md:hidden">
-          <AppSidebar mailboxSlug={mailbox_slug} sidebarInfo={sidebarInfo} />
-        </div>
-        <ClientLayout>{children}</ClientLayout>
+      <div className="flex-1 flex h-full flex-col lg:flex-row min-w-0">
+        <AppSidebar mailboxSlug={mailbox_slug} sidebarInfo={sidebarInfo} />
+        <main className="flex flex-col h-dvh text-foreground w-full min-w-0">{children}</main>
       </div>
     </SidebarProvider>
   );
 }
 
-export default withMailboxAuth(SettingsLayout);
+export default withMailboxAuth(ConversationsLayout);
