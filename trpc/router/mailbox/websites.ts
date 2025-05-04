@@ -8,6 +8,20 @@ import { inngest } from "@/inngest/client";
 import { assertDefined } from "../../../components/utils/assert";
 import { mailboxProcedure } from "./procedure";
 
+const fetchPageTitle = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": "Helper Website Crawler" },
+    });
+    const html = await response.text();
+
+    const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
+    return titleMatch?.[1] ? titleMatch[1].trim() : new URL(url).hostname;
+  } catch (error) {
+    return new URL(url).hostname;
+  }
+};
+
 export const websitesRouter = {
   list: mailboxProcedure.query(async ({ ctx }) => {
     const websitesList = await db.query.websites.findMany({
@@ -45,17 +59,21 @@ export const websitesRouter = {
   create: mailboxProcedure
     .input(
       z.object({
-        name: z.string(),
         url: z.string().url(),
+        name: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const urlWithProtocol = /^https?:\/\//i.test(input.url) ? input.url : `https://${input.url}`;
+      
+      const name = input.name || await fetchPageTitle(urlWithProtocol);
+      
       const website = await db
         .insert(websites)
         .values({
           mailboxId: ctx.mailbox.id,
-          name: input.name,
-          url: input.url,
+          name,
+          url: urlWithProtocol,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
