@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { TabBar } from "@/app/(dashboard)/desktop/_components/tabBar";
+import { TabBar } from "@/app/(dashboard)/desktop/tabBar";
 
 export default async function ManagerPage({ searchParams }: { searchParams: Promise<{ initialTabUrl?: string }> }) {
   const { userId } = await auth();
