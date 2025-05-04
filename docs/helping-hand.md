@@ -22,12 +22,12 @@ To disable it, ensure the following environment variable is set:
 DISABLE_STRICT_MODE=true
 ```
 
-This is typically configured in your environment file (e.g., `.env.local`) or when starting the development server with `DISABLE_STRICT_MODE=true bin/dev`.
+This is typically configured in your environment file (e.g., `.env.local`) or when starting the development server with `DISABLE_STRICT_MODE=true pnpm dev`.
 
 ## Key Components
 
--   **Guide Planning (`lib/ai/guide.ts`)**: Generates the sequence of steps required for a task.
--   **DOM Interaction & Highlighting (`lib/widget/domElements.js`, `lib/widget/guideManager.ts`)**: Manages finding, highlighting, and interacting with UI elements. Includes caching and performance optimizations.
--   **UI Components (`components/widget/ai-steps.tsx`, `components/widget/HelpingHand.tsx`)**: Renders the guide steps and visual elements within the widget.
--   **API Routes (`app/api/v1/guide_sessions/[guideSessionId]/events/route.ts`, `app/api/v1/guide_sessions/route.ts`)**: Handles backend logic for creating guide sessions and tracking events.
--   **Widget Integration (`lib/widget/index.ts`)**: Integrates the guide functionality into the main chat widget. 
+- **Guide Planning (`lib/ai/guide.ts`)**: Generates the sequence of steps required for a task.
+- **DOM Interaction & Highlighting (`lib/widget/domElements.js`, `lib/widget/guideManager.ts`)**: Manages finding, highlighting, and interacting with UI elements. Includes caching and performance optimizations.
+- **UI Components (`components/widget/ai-steps.tsx`, `components/widget/HelpingHand.tsx`)**: Renders the guide steps and visual elements within the widget.
+- **API Routes (`app/api/v1/guide_sessions/[guideSessionId]/events/route.ts`, `app/api/v1/guide_sessions/route.ts`)**: Handles backend logic for creating guide sessions and tracking events.
+- **Widget Integration (`lib/widget/index.ts`)**: Integrates the guide functionality into the main chat widget.

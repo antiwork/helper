@@ -14,4 +14,4 @@
     "types": ["node", "vitest"]
   },
   "include": ["src", "tsup.config.ts"]
-} 
+}

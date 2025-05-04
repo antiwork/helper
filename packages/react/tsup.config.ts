@@ -1,22 +1,18 @@
-import type { Options } from 'tsup';
-import { defineConfig } from 'tsup';
-import { name, version } from './package.json';
-import { mkdir } from 'fs/promises';
+import { mkdir } from "fs/promises";
+import { defineConfig, type Options } from "tsup";
+import { name, version } from "./package.json";
 
 export default defineConfig((overrideOptions) => {
-  const isProd = overrideOptions.env?.NODE_ENV === 'production';
+  const isProd = overrideOptions.env?.NODE_ENV === "production";
 
   const common: Options = {
-    entry: [
-      './src/**/*.{ts,tsx}',
-      '!./src/**/*.test.{ts,tsx}'
-    ],
+    entry: ["./src/**/*.{ts,tsx}", "!./src/**/*.test.{ts,tsx}"],
     bundle: false,
     treeshake: true,
     splitting: false,
     clean: true,
     minify: false,
-    external: ['react'],
+    external: ["react"],
     sourcemap: true,
     dts: true,
     define: {
@@ -28,20 +24,20 @@ export default defineConfig((overrideOptions) => {
 
   const esm: Options = {
     ...common,
-    format: 'esm',
-    outDir: './dist/esm',
+    format: "esm",
+    outDir: "./dist/esm",
   };
 
   const cjs: Options = {
     ...common,
-    format: 'cjs',
-    outDir: './dist/cjs',
+    format: "cjs",
+    outDir: "./dist/cjs",
   };
 
-  const copyPackageJson = async (format: 'esm' | 'cjs') => {
+  const copyPackageJson = async (format: "esm" | "cjs") => {
     const outDir = `./dist/${format}`;
     await mkdir(outDir, { recursive: true });
-    const { execSync } = await import('child_process');
+    const { execSync } = await import("child_process");
     execSync(`cp ./package.${format}.json ${outDir}/package.json`);
   };
 
@@ -49,14 +45,14 @@ export default defineConfig((overrideOptions) => {
     {
       ...esm,
       onSuccess: async () => {
-        await copyPackageJson('esm');
+        await copyPackageJson("esm");
       },
     },
     {
       ...cjs,
       onSuccess: async () => {
-        await copyPackageJson('cjs');
+        await copyPackageJson("cjs");
       },
     },
   ];
-}); 
+});

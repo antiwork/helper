@@ -1,0 +1,4 @@
+public/
+db/drizzle/meta/*.json
+content/
+pnpm-lock.yaml

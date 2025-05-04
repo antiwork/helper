@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
 function withHelperWidget(callback: (helperWidget: typeof window.HelperWidget) => void) {
   if (!window.HelperWidget) {
-    console.warn('[useHelper] HelperWidget is undefined. Did you set up the provider?');
+    console.warn("[useHelper] HelperWidget is undefined. Did you set up the provider?");
     return;
   }
   callback(window.HelperWidget);
@@ -30,5 +30,5 @@ export function useHelper() {
     hide,
     toggle,
     sendPrompt,
-  }
-} 
+  };
+}
