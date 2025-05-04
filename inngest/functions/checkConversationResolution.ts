@@ -33,7 +33,7 @@ Just check if the assistant has provided information generally relevant to the c
 const checkAIBasedResolution = async (conversationId: number, mailbox: Mailbox) => {
   const messages = await loadPreviousMessages(conversationId);
 
-  const aiResponse = await runAIQuery({
+  const aiResponse = (await runAIQuery({
     messages: messages.map((msg) => ({
       role: msg.role === "user" ? "user" : "assistant",
       content: msg.content,
@@ -44,7 +44,7 @@ const checkAIBasedResolution = async (conversationId: number, mailbox: Mailbox) 
     system: RESOLUTION_CHECK_PROMPT,
     temperature: 0.1,
     maxTokens: 100,
-  });
+  })).text;
 
   const [isResolved, reason] = aiResponse.trim().toLowerCase().split(": ");
   return { isResolved: isResolved !== "bad", reason };

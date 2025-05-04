@@ -39,7 +39,7 @@ const isThankYouOrAutoResponse = async (
   emailContent: string,
 ): Promise<boolean> => {
   try {
-    const content = await runAIQuery({
+    const content = (await runAIQuery({
       system: [
         "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
         "Respond with 'yes' if the email EITHER:",
@@ -54,7 +54,7 @@ const isThankYouOrAutoResponse = async (
       model: GPT_4O_MINI_MODEL,
       functionId: "email-auto-ignore-detector",
       maxTokens: 10,
-    });
+    })).text;
 
     return content.toLowerCase().trim() === "yes";
   } catch (error) {
