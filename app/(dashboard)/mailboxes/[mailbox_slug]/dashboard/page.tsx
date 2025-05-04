@@ -1,6 +1,6 @@
 import { withMailboxAuth } from "@/components/withMailboxAuth";
 import { api } from "@/trpc/server";
-import { DashboardContent } from "./_components/dashboardContent";
+import { DashboardContent } from "./dashboardContent";
 
 type PageProps = {
   mailbox_slug: string;

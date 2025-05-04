@@ -47,5 +47,5 @@ public/sdk-*.js
 
 db/seeds/localSeeds.ts
 
-docker/tmp/
-docker/local-nginx/certs/*
+scripts/docker/tmp/
+scripts/docker/local-nginx/certs/*

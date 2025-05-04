@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
 import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react";
 import UAParser from "ua-parser-js";
-import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/messageActions";
+import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import FileAttachment from "@/components/tiptap/fileAttachment";

@@ -1,10 +1,10 @@
-# Helper.ai Codebase Architecture Overview
+# Helper Codebase Architecture Overview
 
-This document provides a high-level overview of the Helper.ai codebase architecture, designed to help new developers understand the structure and contribute effectively. It covers key components, their interactions, and important concepts to grasp.
+This document provides a high-level overview of the Helper codebase architecture, designed to help new developers understand the structure and contribute effectively. It covers key components, their interactions, and important concepts to grasp.
 
 ## Core Functionality
 
-Helper.ai is an AI-powered customer support tool that helps businesses automate and improve their support workflows. Its core functionalities include:
+Helper is an AI-powered customer support tool that helps businesses automate and improve their support workflows. Its core functionalities include:
 
 - **Email Integration:** Connects to Gmail accounts to fetch and process customer support emails.
 - **AI-Driven Responses:** Generates draft responses to customer emails using AI, leveraging past conversations, FAQs, and other context.
@@ -24,6 +24,8 @@ The codebase is Next.js app which also contains individual SDK packages.
   - API routes live under `api`.
 - **`lib/auth`:** Contains authentication-related logic, including mailbox creation and user management.
 - **`components`:** Reusable UI components, hooks, and utility functions.
+- **`content`:** Markdown content for the help center.
+- **`db`:** Database migrations and schema definitions.
 - **`inngest/functions`:** Background functions powered by Inngest, responsible for tasks like email processing, AI response generation, and data updates.
 - **`lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, Stripe, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
 - **`lib/ai`:** AI-related functionality including chat completion, response generation, embeddings, and tools. Contains core AI logic for:
@@ -40,7 +42,7 @@ The codebase is Next.js app which also contains individual SDK packages.
 ### Packages
 
 - **`packages/react`:** A React package providing a wrapper and hooks for integrating the Helper chat widget into other applications.
-- **`sdk`:** The core SDK for the embeddable chat widget, featuring:
+- **`packages/sdk`:** The core SDK for the embeddable chat widget, featuring:
   - Singleton pattern for widget instance management
   - Seamless iframe-based widget integration
   - Real-time messaging and notifications
@@ -56,7 +58,6 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **Tailwind CSS and Nativewind:** Used for styling and UI components, ensuring consistency across web and mobile applications.
 - **Drizzle ORM:** Database access library, enabling type-safe queries and database interactions.
 - **Clerk:** For user authentication and user account management.
-- **NextAuth.js:** For authentication.
 - **Inngest:** Serverless functions platform that powers background jobs and data processing.
 - **Ably:** Real-time messaging platform for live updates and notifications.
 - **Vercel AI SDK:** Used for building AI-powered features with streaming support, function calling, and type-safe AI responses.
@@ -122,4 +123,4 @@ Helper uses Inngest for managing background jobs and event-driven processes. The
 - **Testing:** Run tests before submitting a pull request. Use `pnpm test` to run all tests or target specific files using Vitest CLI arguments.
 - **Code Style:** Follow the existing code style and conventions. Use ESLint to ensure consistent code quality.
 
-This overview provides a starting point for understanding the Helper.ai codebase. Deeper dives into specific directories and files will be necessary for more detailed knowledge. Familiarize yourself with the key technologies used and don't hesitate to ask questions!
+This overview provides a starting point for understanding the Helper codebase. Deeper dives into specific directories and files will be necessary for more detailed knowledge. Familiarize yourself with the key technologies used and don't hesitate to ask questions!

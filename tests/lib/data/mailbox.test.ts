@@ -37,7 +37,7 @@ test("getMailboxInfo", async () => {
     clerkOrganizationId: mailbox.clerkOrganizationId,
     subscription: null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
-    widgetDisplayMode: "off",
+    widgetDisplayMode: "always",
     widgetDisplayMinValue: null,
     widgetHost: null,
     autoRespondEmailToChat: false,

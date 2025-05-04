@@ -1,9 +1,8 @@
 import { History, Maximize2, Minimize2, X } from "lucide-react";
-import Image from "next/image";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { closeWidget, toggleWidgetHeight } from "@/lib/widget/messages";
-import { HelperWidgetConfig } from "@/sdk/types";
+import { HelperWidgetConfig } from "../../packages/sdk/src/types";
 
 type Props = {
   config: HelperWidgetConfig;
