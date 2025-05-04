@@ -6,7 +6,7 @@ import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
-import { runAIRawQuery } from "@/lib/ai";
+import { runAIQuery } from "@/lib/ai";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, getSearchResultIds, searchConversations } from "@/lib/data/conversation/search";
@@ -379,7 +379,7 @@ export const generateAgentResponse = async (
     });
   }
 
-  const result = await runAIRawQuery({
+  const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
     model: "gpt-4o",
@@ -408,8 +408,8 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
   });
 
   const confirmReplyText = result.steps
-    ?.flatMap((step) => step.toolCalls ?? [])
-    .find((call) => call.toolName === "confirmReplyText");
+    ?.flatMap((step: any) => step.toolCalls ?? [])
+    .find((call: any) => call.toolName === "confirmReplyText");
 
   return {
     text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),

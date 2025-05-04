@@ -60,6 +60,10 @@ describe("runAIQuery", () => {
       model: core.GPT_4_1_MODEL,
       temperature: 0,
       maxTokens: 500,
+      maxSteps: undefined,
+      system: undefined,
+      tools: undefined,
+      shortenPromptBy: undefined,
       metadata: {
         mailboxSlug: mailbox.slug,
       },
@@ -87,6 +91,9 @@ describe("runAIQuery", () => {
       model: "gpt-4o",
       temperature: 0.5,
       maxTokens: 1000,
+      maxSteps: undefined,
+      tools: undefined,
+      shortenPromptBy: undefined,
       metadata: {
         mailboxSlug: mailbox.slug,
       },
@@ -165,7 +172,7 @@ describe("runAIQuery", () => {
       queryType: "response_generator",
     });
 
-    expect(result).toBe("Retry successful");
+    expect(result.text).toBe("Retry successful");
     expect(core.generateCompletion).toHaveBeenCalledTimes(2);
   });
 });

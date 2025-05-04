@@ -35,7 +35,7 @@ export const emailKeywordsExtractor = async (params: {
   subject: string;
   body: string;
 }): Promise<string[]> => {
-  const content = await runAIQuery({
+  const content = (await runAIQuery({
     system: [
       "Generate a space-delimited list of 1-3 keywords taken directly from the user email. Do not respond with anything else.",
       "Examples:",
@@ -47,7 +47,7 @@ export const emailKeywordsExtractor = async (params: {
     queryType: "email_keywords_extractor",
     model: GPT_4O_MINI_MODEL,
     functionId: "email-keywords-extractor",
-  });
+  })).text;
 
   return content
     .trim()

@@ -384,7 +384,7 @@ export const generateConversationSubject = async (
   const subject =
     messages.length === 1 && messages[0] && messages[0].content.length <= 50
       ? messages[0].content
-      : await runAIQuery({
+      : (await runAIQuery({
           messages: messages.filter((m) => m.role === "user").map((m) => ({ role: "user", content: m.content })),
           mailbox,
           queryType: "response_generator",
@@ -393,7 +393,7 @@ export const generateConversationSubject = async (
           maxTokens: 50,
           temperature: 0,
           functionId: "generate-conversation-subject",
-        });
+        })).text;
 
   await db.update(conversations).set({ subject }).where(eq(conversations.id, conversationId));
 };
