@@ -13,8 +13,7 @@ import SectionWrapper from "../sectionWrapper";
 
 const isValidUrl = (url: string) => {
   try {
-    const urlWithProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    new URL(urlWithProtocol);
+    new URL(url);
     return true;
   } catch {
     return false;
@@ -239,7 +238,7 @@ const WebsiteCrawlSetting = () => {
                   ? newWebsite.url
                   : `https://${newWebsite.url}`;
 
-                if (!isValidUrl(newWebsite.url)) {
+                if (!isValidUrl(urlWithProtocol)) {
                   setUrlError("Please enter a valid URL");
                   return;
                 }
@@ -259,7 +258,7 @@ const WebsiteCrawlSetting = () => {
                   <Label htmlFor="url">URL</Label>
                   <Input
                     id="url"
-                    placeholder="example.com"
+                    placeholder="https://example.com"
                     value={newWebsite.url}
                     onChange={(e) => {
                       setNewWebsite({ ...newWebsite, name: "", url: e.target.value });
