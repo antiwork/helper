@@ -86,7 +86,7 @@ const WebsiteCrawlSetting = () => {
     },
   });
 
-  const handleAddWebsite = async (url: string) => {
+  const handleAddWebsite = (url: string) => {
     return addWebsiteMutation.mutateAsync({
       mailboxSlug: params.mailbox_slug,
       url,
