@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { MarketingPage } from "./_components/MarketingPage";
+import { MarketingPage } from "./marketingPage";
 
 async function getGitHubStars() {
   const response = await fetch("https://api.github.com/repos/antiwork/helper", {

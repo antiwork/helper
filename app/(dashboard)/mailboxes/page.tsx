@@ -1,7 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { auth, currentUser, User } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { SetActiveOrganization } from "@/app/(dashboard)/mailboxes/_components/setActiveOrganization";
+import { SetActiveOrganization } from "@/app/(dashboard)/mailboxes/setActiveOrganization";
 import { assertDefined } from "@/components/utils/assert";
 import { createOrganization, getOrganizationMemberships } from "@/lib/data/organization";
 import { api } from "@/trpc/server";

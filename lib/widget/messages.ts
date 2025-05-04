@@ -1,4 +1,4 @@
-import { findInteractiveElements } from "@/sdk/domTree";
+import { findInteractiveElements } from "../../packages/sdk/src/domTree";
 
 export type WidgetMessage = {
   action: string;

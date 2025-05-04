@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { PorterStemmer } from "natural";
+import natural from "natural";
 import { env } from "@/lib/env";
 
 /**
@@ -17,7 +17,7 @@ export function extractHashedWordsFromEmail(params: {
   if (params.body) extractedWords.push(...extractWords(params.body));
 
   // Stem the words and combine with extracted words
-  const stemmedWords = extractedWords.map((word) => PorterStemmer.stem(word));
+  const stemmedWords = extractedWords.map((word) => natural.PorterStemmer.stem(word));
   extractedWords.push(...extractedWords, ...stemmedWords);
 
   // Hash all words

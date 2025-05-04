@@ -1,9 +1,9 @@
 import React from "react";
-import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/appSidebar";
+import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { withMailboxAuth } from "@/components/withMailboxAuth";
-import { getSidebarInfo } from "../_components/getSidebarInfo";
-import { ClientLayout } from "./_components/clientLayout";
+import { getSidebarInfo } from "../getSidebarInfo";
+import { ClientLayout } from "./clientLayout";
 
 async function SettingsLayout({
   params,

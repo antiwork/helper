@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HelperWidgetConfig, ReadPageToolConfig } from "@/sdk/types";
+import { HelperWidgetConfig, ReadPageToolConfig } from "../../../packages/sdk/src/types";
 
 export function useReadPageTool(
   token: string | null,
