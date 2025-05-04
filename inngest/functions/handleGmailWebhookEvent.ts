@@ -39,22 +39,24 @@ const isThankYouOrAutoResponse = async (
   emailContent: string,
 ): Promise<boolean> => {
   try {
-    const content = (await runAIQuery({
-      system: [
-        "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
-        "Respond with 'yes' if the email EITHER:",
-        "1. Is just a thank you message with no follow-up questions",
-        "2. Contains wording like 'We'll respond to you as soon as we can.'. Always respond with 'yes' if similar wording to this is present even if there are other instructions present.",
-        "Respond with 'no' followed by a reason if the email contains questions or requires a response.",
-      ].join("\n"),
-      mailbox,
-      temperature: 0,
-      messages: [{ role: "user", content: emailContent }],
-      queryType: "email_auto_ignore",
-      model: GPT_4O_MINI_MODEL,
-      functionId: "email-auto-ignore-detector",
-      maxTokens: 10,
-    })).text;
+    const content = (
+      await runAIQuery({
+        system: [
+          "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
+          "Respond with 'yes' if the email EITHER:",
+          "1. Is just a thank you message with no follow-up questions",
+          "2. Contains wording like 'We'll respond to you as soon as we can.'. Always respond with 'yes' if similar wording to this is present even if there are other instructions present.",
+          "Respond with 'no' followed by a reason if the email contains questions or requires a response.",
+        ].join("\n"),
+        mailbox,
+        temperature: 0,
+        messages: [{ role: "user", content: emailContent }],
+        queryType: "email_auto_ignore",
+        model: GPT_4O_MINI_MODEL,
+        functionId: "email-auto-ignore-detector",
+        maxTokens: 10,
+      })
+    ).text;
 
     return content.toLowerCase().trim() === "yes";
   } catch (error) {
