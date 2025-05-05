@@ -2,7 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 import SuperJSON from "superjson";
 import { env } from "../env";
 
-export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+const isTestEnv = process.env.NODE_ENV === 'test';
+export const supabase = createClient(
+  isTestEnv ? 'https://example.supabase.co' : env.SUPABASE_URL,
+  isTestEnv ? 'mock-anon-key' : env.SUPABASE_ANON_KEY
+);
 
 const SUPABASE_MAX_PAYLOAD_SIZE = 65536 - 3000;
 
