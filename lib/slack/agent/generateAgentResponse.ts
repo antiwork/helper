@@ -405,12 +405,11 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     messages,
     maxSteps: 10,
     tools,
-    maxTokens: 1000,
   });
 
   const confirmReplyText = result.steps
-    ?.flatMap((step: any) => step.toolCalls ?? [])
-    .find((call: any) => call.toolName === "confirmReplyText");
+    ?.flatMap((step) => step.toolCalls ?? [])
+    .find((call) => call.toolName === "confirmReplyText");
 
   return {
     text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
