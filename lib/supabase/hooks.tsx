@@ -49,10 +49,10 @@ export const ChannelProvider = ({
   return <ChannelContext.Provider value={{ channel }}>{children}</ChannelContext.Provider>;
 };
 
-export const useSupabaseEvent = <T = unknown>(
+export const useSupabaseEvent = (
   channelName: string,
   eventName: string,
-  callback: (message: { id: string; data: T; event: string; timestamp: number }) => void
+  callback: (message: { id: string; data: unknown; event: string; timestamp: number }) => void
 ): void => {
   const handledMessageIds = useRef<Set<string>>(new Set());
   const [channel] = useState(() => 
@@ -77,7 +77,7 @@ export const useSupabaseEvent = <T = unknown>(
         
         callback({
           id: messageId,
-          data: data as T,
+          data: data as unknown,
           event: message.event,
           timestamp: message.timestamp || Date.now(),
         });
@@ -91,12 +91,12 @@ export const useSupabaseEvent = <T = unknown>(
 };
 
 const handledOneTimeMessageIds = new Set();
-export const useSupabaseEventOnce = <T = unknown>(
+export const useSupabaseEventOnce = (
   channelName: string,
   eventName: string,
-  callback: (message: { id: string; data: T; event: string; timestamp: number }) => void
+  callback: (message: { id: string; data: unknown; event: string; timestamp: number }) => void
 ): void => {
-  useSupabaseEvent<T>(channelName, eventName, (message) => {
+  useSupabaseEvent(channelName, eventName, (message) => {
     if (handledOneTimeMessageIds.has(message.id)) {
       return;
     }
