@@ -136,7 +136,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
                 <SelectContent>
                   <SelectItem value="(none)">(none)</SelectItem>
                   {editingTool.parameters
-                    .filter((param) => param.type === "string" && param.required)
+                    .filter((param) => param.type === "string")
                     .map((param) => (
                       <SelectItem key={param.name} value={param.name}>
                         {param.name}
