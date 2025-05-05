@@ -91,7 +91,7 @@ export const useSupabaseEvent = <Data = unknown>(
 };
 
 const handledOneTimeMessageIds = new Set();
-export const useSupabaseEventOnce = <Data,>(
+export const useSupabaseEventOnce = <Data = unknown>(
   channelName: string,
   eventName: string,
   callback: (message: { id: string; data: Data; event: string; timestamp: number }) => void,
