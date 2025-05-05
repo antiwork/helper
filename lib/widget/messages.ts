@@ -1,5 +1,22 @@
 import { findInteractiveElements } from "../../packages/sdk/src/domTree";
 import {
+  CANCEL_GUIDE,
+  CLOSE_ACTION,
+  CONVERSATION_UPDATE_ACTION,
+  EXECUTE_GUIDE_ACTION,
+  GUIDE_DONE,
+  GUIDE_START,
+  MESSAGE_TYPE,
+  MINIMIZE_ACTION,
+  READY_ACTION,
+  RESUME_GUIDE,
+  SCREENSHOT_ACTION,
+  SHOW_WIDGET,
+  TOGGLE_HEIGHT_ACTION,
+  WidgetMessage,
+} from "../../packages/sdk/src/types/messages";
+
+export {
   READY_ACTION,
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -13,13 +30,6 @@ import {
   CANCEL_GUIDE,
   SHOW_WIDGET,
   TOGGLE_HEIGHT_ACTION,
-  WidgetMessage
-} from "../../packages/sdk/src/types/messages";
-
-export { 
-  READY_ACTION, CLOSE_ACTION, CONVERSATION_UPDATE_ACTION, SCREENSHOT_ACTION,
-  MINIMIZE_ACTION, MESSAGE_TYPE, GUIDE_START, GUIDE_DONE, RESUME_GUIDE,
-  EXECUTE_GUIDE_ACTION, CANCEL_GUIDE, SHOW_WIDGET, TOGGLE_HEIGHT_ACTION
 };
 export type { WidgetMessage };
 
