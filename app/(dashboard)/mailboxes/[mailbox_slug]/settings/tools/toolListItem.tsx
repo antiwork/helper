@@ -6,6 +6,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/trpc/react";
 import type { ToolFormatted } from "@/types/tools";
@@ -15,11 +16,11 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
   const utils = api.useUtils();
 
   const updateToolMutation = api.mailbox.tools.update.useMutation({
-    onMutate: ({ toolId, settings: { enabled, availableInChat } }) => {
+    onMutate: ({ toolId, settings }) => {
       utils.mailbox.tools.list.setData({ mailboxSlug }, (currentApis = []) =>
         currentApis.map((api) => ({
           ...api,
-          tools: api.tools.map((t) => (t.id === toolId ? { ...t, enabled, availableInChat } : t)),
+          tools: api.tools.map((t) => (t.id === toolId ? { ...t, ...settings } : t)),
         })),
       );
     },
@@ -35,6 +36,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
       settings: {
         enabled,
         availableInChat: tool.availableInChat,
+        customerEmailParameter: tool.customerEmailParameter,
       },
     });
   };
@@ -49,6 +51,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
           settings: {
             enabled: editingTool.enabled,
             availableInChat: editingTool.availableInChat,
+            customerEmailParameter: editingTool.customerEmailParameter,
           },
         });
 
@@ -89,8 +92,8 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
         <div className="mt-1.5 space-y-4">
           <div className="flex items-start justify-between gap-8">
             <div>
-              <div>Enable Tool</div>
-              <div className="text-sm text-muted-foreground">Allow this tool to be used in the mailbox</div>
+              <div className="text-sm">Enable Tool</div>
+              <div className="text-xs text-muted-foreground">Allow this tool to be used in the mailbox</div>
             </div>
             <Switch
               id="enable-tool"
@@ -102,8 +105,8 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
           </div>
           <div className="flex items-start justify-between gap-8">
             <div>
-              <div>Available in Chat</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm">Available in Chat</div>
+              <div className="text-xs text-muted-foreground">
                 Allow this tool to be used by customers in chat conversations
               </div>
             </div>
@@ -117,6 +120,36 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
               disabled={updateToolMutation.isPending || !editingTool.enabled}
             />
           </div>
+          {editingTool.availableInChat && editingTool.parameters && editingTool.parameters.length > 0 && (
+            <div>
+              <Label htmlFor="customer-email-parameter">Customer Email Parameter</Label>
+              <Select
+                value={editingTool.customerEmailParameter || ""}
+                onValueChange={(value) =>
+                  setEditingTool((tool) => (tool ? { ...tool, customerEmailParameter: value } : tool))
+                }
+                disabled={!editingTool.availableInChat}
+              >
+                <SelectTrigger id="customer-email-parameter">
+                  <SelectValue placeholder="Select parameter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="(none)">(none)</SelectItem>
+                  {editingTool.parameters
+                    .filter((param) => param.type === "string" && param.required)
+                    .map((param) => (
+                      <SelectItem key={param.name} value={param.name}>
+                        {param.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <div className="text-xs text-muted-foreground mt-1">
+                In chat this parameter will always be set to the customer's email. For security, make sure to set this
+                for any tools related to a customer's account.
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setEditingTool(null)}>

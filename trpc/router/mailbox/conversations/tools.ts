@@ -48,6 +48,7 @@ export const toolsRouter = {
         slug: tool.slug,
         description: tool.description,
         parameterTypes: tool.parameters ?? [],
+        customerEmailParameter: tool.customerEmailParameter,
       })),
     };
   }),
