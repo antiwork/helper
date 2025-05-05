@@ -6,8 +6,8 @@ import { useBreakpoint } from "@/components/useBreakpoint";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { getExpoPlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
-import { conversationsListChannelId } from "@/lib/ably/channels";
-import { useAblyEventOnce } from "@/lib/ably/hooks";
+import { conversationsListChannelId } from "@/lib/supabase/channels";
+import { useSupabaseEventOnce } from "@/lib/supabase/hooks";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -115,7 +115,7 @@ export const ConversationListContextProvider = ({
     moveToNextConversation();
   };
 
-  useAblyEventOnce<{
+  useSupabaseEventOnce<{
     id: number;
     status: string;
     assignedToClerkId: string | null;

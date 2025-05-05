@@ -1,6 +1,5 @@
 "use client";
 
-import { AblyProvider, ChannelProvider } from "ably/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -14,12 +13,13 @@ import {
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/mobileList";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
 import { CATEGORY_LABELS } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/categoryNav";
-import { getGlobalAblyClient } from "@/components/ablyClient";
+import { getGlobalSupabaseClient } from "@/components/supabaseClient";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
-import { conversationsListChannelId } from "@/lib/ably/channels";
+import { conversationsListChannelId } from "@/lib/supabase/channels";
+import { SupabaseProvider, ChannelProvider } from "@/lib/supabase/hooks";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -110,7 +110,7 @@ export const InboxProvider = ({ children }: { children: ReactNode }) => {
   const [conversationSlug] = useQueryState("id");
 
   return (
-    <AblyProvider client={getGlobalAblyClient(mailboxSlug)}>
+    <SupabaseProvider>
       <ChannelProvider channelName={conversationsListChannelId(mailboxSlug)}>
         <ConversationListContextProvider currentConversationSlug={conversationSlug}>
           <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug ?? undefined}>
@@ -118,7 +118,7 @@ export const InboxProvider = ({ children }: { children: ReactNode }) => {
           </FileUploadProvider>
         </ConversationListContextProvider>
       </ChannelProvider>
-    </AblyProvider>
+    </SupabaseProvider>
   );
 };
 

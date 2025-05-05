@@ -9,19 +9,18 @@ import {
   HandThumbUpIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
-import { AblyProvider, ChannelProvider } from "ably/react";
 import { BotIcon } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
-import { getGlobalAblyClient } from "@/components/ablyClient";
+import { getGlobalSupabaseClient } from "@/components/supabaseClient";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { dashboardChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { dashboardChannelId } from "@/lib/supabase/channels";
+import { SupabaseProvider, ChannelProvider, useSupabaseEvent } from "@/lib/supabase/hooks";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -60,7 +59,7 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
     });
   }, 5000);
 
-  useAblyEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
+  useSupabaseEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
     newEventsRef.current = [...newEventsRef.current, message.data];
     addNewEvents();
   });
@@ -166,11 +165,11 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
 
 const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
   return (
-    <AblyProvider client={getGlobalAblyClient(mailboxSlug)}>
+    <SupabaseProvider>
       <ChannelProvider channelName={dashboardChannelId(mailboxSlug)}>
         <RealtimeEventsContent mailboxSlug={mailboxSlug} />
       </ChannelProvider>
-    </AblyProvider>
+    </SupabaseProvider>
   );
 };
 

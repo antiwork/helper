@@ -8,8 +8,8 @@ import { db, Transaction } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { inngest } from "@/inngest/client";
-import { conversationChannelId, conversationsListChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
+import { conversationChannelId, conversationsListChannelId } from "@/lib/supabase/channels";
+import { publishToSupabase } from "@/lib/supabase/client";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
 import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";
@@ -149,7 +149,7 @@ export const updateConversation = async (
       try {
         const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
         const events = [
-          publishToAbly({
+          publishToSupabase({
             channel: conversationChannelId(mailbox.slug, updatedConversation.slug),
             event: "conversation.updated",
             data: serializeConversation(mailbox, updatedConversation),
@@ -161,7 +161,7 @@ export const updateConversation = async (
           current.assignedToClerkId !== updatedConversation.assignedToClerkId
         ) {
           events.push(
-            publishToAbly({
+            publishToSupabase({
               channel: conversationsListChannelId(mailbox.slug),
               event: "conversation.statusChanged",
               data: {

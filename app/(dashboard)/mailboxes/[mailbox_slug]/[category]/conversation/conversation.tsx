@@ -7,7 +7,6 @@ import {
   LinkIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
@@ -43,8 +42,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useNativePlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
-import { conversationChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { conversationChannelId } from "@/lib/supabase/channels";
+import { ChannelProvider, useSupabaseEvent } from "@/lib/supabase/hooks";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -374,12 +373,12 @@ const MergedContent = () => {
 
 const ConversationContent = () => {
   const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
-  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
+  useSupabaseEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
     utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
       data ? { ...data, ...event.data } : null,
     );
   });
-  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
+  useSupabaseEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
     const message = { ...event.data, createdAt: new Date(event.data.createdAt) } as Awaited<
       ReturnType<typeof serializeMessage>
     >;
@@ -594,11 +593,13 @@ const ConversationContent = () => {
 const Conversation = () => {
   const { mailboxSlug, currentConversationSlug } = useConversationListContext();
   return (
-    <ChannelProvider channelName={conversationChannelId(mailboxSlug, assertDefined(currentConversationSlug))}>
-      <ConversationContextProvider>
-        <ConversationContent />
-      </ConversationContextProvider>
-    </ChannelProvider>
+    <SupabaseProvider>
+      <ChannelProvider channelName={conversationChannelId(mailboxSlug, assertDefined(currentConversationSlug))}>
+        <ConversationContextProvider>
+          <ConversationContent />
+        </ConversationContextProvider>
+      </ChannelProvider>
+    </SupabaseProvider>
   );
 };
 
