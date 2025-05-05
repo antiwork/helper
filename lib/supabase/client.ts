@@ -2,12 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import SuperJSON from "superjson";
 import { env } from "../env";
 
-const isTestEnv = process.env.NODE_ENV === 'test';
+const isTestEnv = env.NODE_ENV === 'test';
 let supabaseClient;
 
 if (isTestEnv) {
   const mockChannel = {
-    send: async () => Promise.resolve(),
+    send: () => Promise.resolve(),
     on: () => mockChannel,
     subscribe: () => mockChannel,
     unsubscribe: () => {},

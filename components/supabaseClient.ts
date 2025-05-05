@@ -1,11 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { env } from "../lib/env";
 
-const isTestEnv = process.env.NODE_ENV === 'test';
+const isTestEnv = env.NODE_ENV === 'test';
 
 const createMockClient = () => {
   const mockChannel = {
-    send: async () => Promise.resolve(),
+    send: () => Promise.resolve(),
     on: () => mockChannel,
     subscribe: () => mockChannel,
     unsubscribe: () => {},
@@ -16,7 +16,7 @@ const createMockClient = () => {
   };
 };
 
-let supabaseClient: { client: ReturnType<typeof createClient> | any; mailboxSlug: string } | null = null;
+let supabaseClient: { client: ReturnType<typeof createClient> | Record<string, unknown>; mailboxSlug: string } | null = null;
 
 export const getGlobalSupabaseClient = (mailboxSlug: string) => {
   if (supabaseClient?.mailboxSlug !== mailboxSlug) {
