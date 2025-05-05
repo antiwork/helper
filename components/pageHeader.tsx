@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { AppSidebarOpen } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/appSidebarOpen";
+import { AppSidebarOpen } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebarOpen";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "./ui/button";

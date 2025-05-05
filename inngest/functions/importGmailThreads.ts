@@ -1,6 +1,6 @@
 import { addDays, differenceInWeeks } from "date-fns";
 import { eq } from "drizzle-orm";
-import { chunk } from "lodash";
+import { chunk } from "lodash-es";
 import { db } from "@/db/client";
 import { gmailSupportEmails } from "@/db/schema";
 import { inngest } from "@/inngest/client";

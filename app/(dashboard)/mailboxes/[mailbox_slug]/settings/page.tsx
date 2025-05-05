@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { api } from "@/trpc/server";
-import { getSidebarInfo } from "../_components/getSidebarInfo";
-import Settings, { type PendingUpdates } from "./_components/settings";
+import { getSidebarInfo } from "../getSidebarInfo";
+import Settings, { type PendingUpdates } from "./settings";
 
 type PageProps = {
   mailbox_slug: string;

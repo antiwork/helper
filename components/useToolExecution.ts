@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/conversationContext";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { toast } from "@/components/hooks/use-toast";
 import { api } from "@/trpc/react";
 

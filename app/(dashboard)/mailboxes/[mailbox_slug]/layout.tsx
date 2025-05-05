@@ -1,4 +1,4 @@
-import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/_components/clientLayout";
+import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { api } from "@/trpc/server";
 
 export default async function InboxLayout({

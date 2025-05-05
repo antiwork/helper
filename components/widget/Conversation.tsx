@@ -13,8 +13,8 @@ import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
-import { ReadPageToolConfig } from "@/sdk/types";
 import { GuideInstructions } from "@/types/guide";
+import { ReadPageToolConfig } from "../../packages/sdk/src/types";
 
 type Props = {
   token: string | null;

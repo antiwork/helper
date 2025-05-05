@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# Deploy backend
-if ! git remote get-url "heroku-backend" > /dev/null 2>&1; then
-    git remote add heroku-backend https://git.heroku.com/helperai.git
-fi
-git push heroku-backend +main:main --no-verify

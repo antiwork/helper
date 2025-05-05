@@ -1,5 +1,5 @@
 import { api } from "@/trpc/server";
-import SessionsList from "./_components/sessionsList";
+import SessionsList from "./sessionsList";
 
 type PageProps = {
   mailbox_slug: string;
