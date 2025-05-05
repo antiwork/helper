@@ -48,6 +48,7 @@ export const emailKeywordsExtractor = async (params: {
       queryType: "email_keywords_extractor",
       model: GPT_4O_MINI_MODEL,
       functionId: "email-keywords-extractor",
+      maxTokens: 500,
     })
   ).text;
 

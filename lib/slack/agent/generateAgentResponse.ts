@@ -405,6 +405,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     messages,
     maxSteps: 10,
     tools,
+    maxTokens: 1000,
   });
 
   const confirmReplyText = result.steps

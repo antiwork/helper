@@ -34,7 +34,7 @@ export const runAIQuery = async ({
   model = COMPLETION_MODEL,
   system,
   temperature = 0.0,
-  maxTokens = 500,
+  maxTokens,
   maxSteps,
   tools,
   functionId,

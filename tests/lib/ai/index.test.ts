@@ -52,6 +52,7 @@ describe("runAIQuery", () => {
       messages,
       mailbox,
       queryType: "response_generator",
+      maxTokens: 500,
     });
 
     expect(core.generateCompletion).toHaveBeenCalledWith({
@@ -170,6 +171,7 @@ describe("runAIQuery", () => {
       messages,
       mailbox,
       queryType: "response_generator",
+      maxTokens: 500,
     });
 
     expect(result.text).toBe("Retry successful");
