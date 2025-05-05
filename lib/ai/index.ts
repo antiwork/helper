@@ -27,12 +27,7 @@ type CommonAIQueryOptions = {
   shortenPromptBy?: ShortenPromptOptions;
 };
 
-export const runAIQuery = async (options: Parameters<typeof runAIRawQuery>[0]): Promise<string> => {
-  const response = await runAIRawQuery({ maxTokens: 500, ...options });
-  return response.text;
-};
-
-export const runAIRawQuery = async ({
+export const runAIQuery = async ({
   messages,
   mailbox,
   queryType,
