@@ -1,5 +1,5 @@
 import { Context } from "modern-screenshot";
-import type { NotificationStatus } from "../../../db/schema/messageNotifications";
+import type { NotificationStatus } from "./types/notifications";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -9,7 +9,7 @@ import {
   READY_ACTION,
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
-} from "../../../lib/widget/messages";
+} from "./types/messages";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import type { HelperWidgetConfig } from "./types";

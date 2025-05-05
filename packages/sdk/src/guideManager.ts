@@ -2,8 +2,8 @@
 import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
-import type { guideSessionEventTypeEnum } from "../../../db/schema/guideSession";
-import { RESUME_GUIDE } from "../../../lib/widget/messages";
+import type { GuideSessionEventType } from "./types/guideSession";
+import { RESUME_GUIDE } from "./types/messages";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
 
@@ -751,7 +751,7 @@ export class GuideManager {
   }
 
   public async sendGuideEvent(
-    type: (typeof guideSessionEventTypeEnum.enumValues)[number],
+    type: GuideSessionEventType,
     data: Record<string, unknown>,
   ): Promise<void> {
     if (!this.sessionId || !this.sessionToken) {
