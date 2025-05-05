@@ -3,10 +3,24 @@ import SuperJSON from "superjson";
 import { env } from "../env";
 
 const isTestEnv = process.env.NODE_ENV === 'test';
-export const supabase = createClient(
-  isTestEnv ? 'https://example.supabase.co' : env.SUPABASE_URL,
-  isTestEnv ? 'mock-anon-key' : env.SUPABASE_ANON_KEY
-);
+let supabaseClient;
+
+if (isTestEnv) {
+  const mockChannel = {
+    send: async () => Promise.resolve(),
+    on: () => mockChannel,
+    subscribe: () => mockChannel,
+    unsubscribe: () => {},
+  };
+  
+  supabaseClient = {
+    channel: () => mockChannel,
+  };
+} else {
+  supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+}
+
+export const supabase = supabaseClient;
 
 const SUPABASE_MAX_PAYLOAD_SIZE = 65536 - 3000;
 
