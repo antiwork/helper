@@ -40,6 +40,7 @@ describe("emailKeywordsExtractor", () => {
       system: expect.stringContaining("Generate a space-delimited list of 1-3 keywords"),
       temperature: 0,
       model: "gpt-4o-mini",
+      maxTokens: 500,
     });
   });
 });
