@@ -21,7 +21,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
     const emailFrom = conversationInfo?.emailFrom;
     if (typeof emailFrom === "string") {
       tool.parameterTypes.forEach((param) => {
-        if (param.name === "email") {
+        if (param.name === tool.customerEmailParameter || (!tool.customerEmailParameter && param.name === "email")) {
           initialParams[param.name] = emailFrom;
         }
       });

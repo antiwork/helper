@@ -94,6 +94,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
       {
         name: "Create product",
@@ -107,6 +108,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
       {
         name: "Update a product",
@@ -127,6 +129,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
       {
         name: "Delete product",
@@ -147,6 +150,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
     ]);
   });
@@ -193,6 +197,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
     ]);
   });
@@ -256,6 +261,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
     ]);
   });
@@ -391,6 +397,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         authenticationToken: "123",
         enabled: true,
         availableInChat: false,
+        customerEmailParameter: null,
       },
     ]);
   });

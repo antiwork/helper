@@ -32,6 +32,7 @@ export const toolsRouter = {
               enabled: true,
               slug: true,
               availableInChat: true,
+              customerEmailParameter: true,
               parameters: true,
               toolApiId: true,
             },
@@ -130,6 +131,7 @@ export const toolsRouter = {
         settings: z.object({
           availableInChat: z.boolean(),
           enabled: z.boolean(),
+          customerEmailParameter: z.string().nullable(),
         }),
       }),
     )
@@ -137,13 +139,21 @@ export const toolsRouter = {
       const { mailbox } = ctx;
       const { toolId, settings } = input;
 
+      const tool = await db.query.tools.findFirst({
+        where: and(eq(toolsTable.id, toolId), eq(toolsTable.mailboxId, mailbox.id)),
+      });
+
+      if (!tool) throw new TRPCError({ code: "NOT_FOUND", message: "Tool not found" });
+
       await db
         .update(toolsTable)
         .set({
           availableInChat: settings.enabled ? settings.availableInChat : false,
           enabled: settings.enabled,
+          customerEmailParameter:
+            tool.parameters?.find((param) => param.name === settings.customerEmailParameter)?.name ?? null,
         })
-        .where(and(eq(toolsTable.id, toolId), eq(toolsTable.mailboxId, mailbox.id)));
+        .where(and(eq(toolsTable.id, toolId)));
 
       return { success: true };
     }),
