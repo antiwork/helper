@@ -44,7 +44,7 @@ export const ChannelProvider = ({
   return <ChannelContext.Provider value={{ channel }}>{children}</ChannelContext.Provider>;
 };
 
-export const useSupabaseEvent = <Data = any>(
+export const useSupabaseEvent = <Data,>(
   channelName: string,
   eventName: string,
   callback: (message: { id: string; data: Data; event: string; timestamp: number }) => void,
@@ -64,17 +64,11 @@ export const useSupabaseEvent = <Data = any>(
         const messageId = message.eventId || `${Date.now()}-${Math.random()}`;
         
         if (handledMessageIds.current.has(messageId)) {
-          if (env.NODE_ENV === "development") {
-            console.debug("Already handled Supabase event:", channelName, eventName, message);
-          }
           return;
         }
         handledMessageIds.current.add(messageId);
 
         const data = SuperJSON.parse(message.payload);
-        if (env.NODE_ENV === "development") {
-          console.debug("Received Supabase event:", channelName, eventName, { ...message, data });
-        }
         
         callback({
           id: messageId,
@@ -92,8 +86,12 @@ export const useSupabaseEvent = <Data = any>(
 };
 
 const handledOneTimeMessageIds = new Set();
-export const useSupabaseEventOnce: typeof useSupabaseEvent = (channelName, eventName, callback) => {
-  useSupabaseEvent(channelName, eventName, (message) => {
+export const useSupabaseEventOnce = <Data,>(
+  channelName: string,
+  eventName: string,
+  callback: (message: { id: string; data: Data; event: string; timestamp: number }) => void,
+) => {
+  useSupabaseEvent<Data>(channelName, eventName, (message) => {
     if (handledOneTimeMessageIds.has(message.id)) {
       return;
     }
