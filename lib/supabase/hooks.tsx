@@ -15,7 +15,12 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
 };
 
 type ChannelContextType = {
-  channel: RealtimeChannel;
+  channel: RealtimeChannel | {
+    send: () => Promise<void>;
+    on: () => any;
+    subscribe: () => any;
+    unsubscribe: () => void;
+  };
 };
 
 const ChannelContext = createContext<ChannelContextType | null>(null);
