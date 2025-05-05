@@ -44,7 +44,7 @@ export const ChannelProvider = ({
   return <ChannelContext.Provider value={{ channel }}>{children}</ChannelContext.Provider>;
 };
 
-export const useSupabaseEvent = <Data,>(
+export const useSupabaseEvent = <Data = unknown>(
   channelName: string,
   eventName: string,
   callback: (message: { id: string; data: Data; event: string; timestamp: number }) => void,
