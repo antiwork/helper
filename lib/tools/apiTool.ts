@@ -59,9 +59,6 @@ export const callToolApi = async (
   params: Record<string, any>,
   clerkUserId?: string,
 ) => {
-  if (tool.customerEmailParameter) {
-    params = { ...params, [tool.customerEmailParameter]: conversation.emailFrom };
-  }
   validateParameters(tool, params);
 
   const headers = createHeaders(tool);

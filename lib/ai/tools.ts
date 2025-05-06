@@ -193,6 +193,9 @@ export const buildTools = async (
         parameters: aiTool.parameters,
         execute: async (params, { messages }) => {
           const conversation = assertDefined(await getConversationById(conversationId));
+          if (mailboxTool.customerEmailParameter) {
+            params = { ...params, [mailboxTool.customerEmailParameter]: conversation.emailFrom };
+          }
           const result = await callToolApi(conversation, mailboxTool, params);
           return reasoningMiddleware(JSON.stringify(result), messages);
         },
