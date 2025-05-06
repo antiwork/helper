@@ -1,4 +1,5 @@
 import { findInteractiveElements } from "../../packages/sdk/src/domTree";
+import type { WidgetMessage } from "../../packages/sdk/src/types";
 import {
   CANCEL_GUIDE,
   CLOSE_ACTION,
@@ -13,25 +14,7 @@ import {
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
   TOGGLE_HEIGHT_ACTION,
-  WidgetMessage,
-} from "../../packages/sdk/src/types/messages";
-
-export {
-  READY_ACTION,
-  CLOSE_ACTION,
-  CONVERSATION_UPDATE_ACTION,
-  SCREENSHOT_ACTION,
-  MINIMIZE_ACTION,
-  MESSAGE_TYPE,
-  GUIDE_START,
-  GUIDE_DONE,
-  RESUME_GUIDE,
-  EXECUTE_GUIDE_ACTION,
-  CANCEL_GUIDE,
-  SHOW_WIDGET,
-  TOGGLE_HEIGHT_ACTION,
-};
-export type { WidgetMessage };
+} from "../../packages/sdk/src/types";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
   window.parent.postMessage(
