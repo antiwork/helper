@@ -13,12 +13,19 @@ type Tab = {
   url: string;
 };
 
+const newTab = (url?: string) => {
+  return { id: crypto.randomUUID(), title: document.title, url: url ?? location.href };
+};
+
 const buildFirstTab = () => {
+  if (typeof window === "undefined") {
+    return { tabs: [], activeTab: null };
+  }
   const tab = newTab();
   return { tabs: [tab], activeTab: tab.id };
 };
 
-const savedState = localStorage.getItem("tabs");
+const savedState = typeof window !== "undefined" ? localStorage.getItem("tabs") : null;
 const initialState: { tabs: Tab[]; activeTab: string } = savedState ? JSON.parse(savedState) : buildFirstTab();
 
 export const useTabsState = create<{
@@ -162,8 +169,4 @@ export const TabBar = () => {
       </button>
     </div>
   );
-};
-
-const newTab = (url?: string) => {
-  return { id: crypto.randomUUID(), title: document.title, url: url ?? location.href };
 };
