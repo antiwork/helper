@@ -49,7 +49,4 @@ fi
 # Add the local CA to the Node.js environment
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 
-# Build the React package
-cd packages/react && pnpm build && cd ../..
-
 pnpm with-dev-env pnpm heroku local -f scripts/Procfile.dev
