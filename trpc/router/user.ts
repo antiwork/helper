@@ -6,6 +6,18 @@ import { env } from "@/lib/env";
 import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = {
+  getSupabaseJWT: protectedProcedure.query(async ({ ctx }) => {
+    return jwt.sign(
+      {
+        aud: "authenticated",
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+        sub: ctx.session.userId,
+        role: "authenticated",
+      },
+      env.SUPABASE_JWT_SECRET,
+    );
+  }),
+
   getSignInToken: protectedProcedure.query(async ({ ctx }) => {
     const signInToken = await clerkClient.signInTokens.createSignInToken({
       userId: ctx.session.userId,

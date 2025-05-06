@@ -46,9 +46,6 @@ export const env = createEnv({
 
     // Required integrations
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-    SUPABASE_URL: z.string().url(), // Project URL from Supabase
-    SUPABASE_ANON_KEY: z.string().min(1), // Public anon key from Supabase for client-side access
-    // ABLY_API_KEY: z.string().min(1), // API key from https://ably.com for real-time events
     GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
@@ -114,6 +111,9 @@ export const env = createEnv({
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
    */
   client: {
+    NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url(), "http://127.0.0.1:54321"),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(z.string().min(1), process.env.RUNNING_SUPABASE_ANON_KEY ?? ""),
+
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1).default("/login"),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1).default("/login"),
@@ -130,8 +130,8 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,

@@ -178,6 +178,7 @@
     "server-only": "^0.0.1",
     "sharp": "^0.33.5",
     "stripe": "^16.5.0",
+    "supabase": "^2.22.12",
     "superjson": "2.2.1",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^4.1.4",
@@ -256,7 +257,8 @@
       "protobufjs",
       "sharp",
       "ssh2",
-      "unrs-resolver"
+      "unrs-resolver",
+      "supabase"
     ],
     "ignoredBuiltDependencies": [
       "cpu-features"
