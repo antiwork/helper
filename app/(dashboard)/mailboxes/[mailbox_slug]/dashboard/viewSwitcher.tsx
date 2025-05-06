@@ -20,12 +20,12 @@ export function ViewSwitcher({ mailboxSlug }: ViewSwitcherProps) {
         <div className="flex items-center">
           <Image src="/helper_logo_02.svg" alt="Helper" width={20} height={20} priority />
           <span className="font-sundry-narrow-bold text-xl mx-4">Helper</span>
-          <div className="flex items-center gap-1 ml-40">
+          <div className="flex items-center gap-1">
             <ChevronsUpDown className="h-4 w-4" />
           </div>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[160px]">
+      <DropdownMenuContent align="end" className="w-[160px] view-switcher-dropdown">
         <DropdownMenuItem asChild>
           <Link href={`/mailboxes/${mailboxSlug}/dashboard`} className="flex items-center gap-2">
             <ChartBarIcon className="h-4 w-4" />

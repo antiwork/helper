@@ -327,3 +327,9 @@
     @apply mr-4 inline-block w-4 text-right text-muted-foreground/40 content-[counter(step)];
   }
 }
+
+[data-radix-popper-content-wrapper] > .view-switcher-dropdown {
+  left: 14px !important;
+  top: -4px !important;
+}
+
