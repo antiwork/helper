@@ -3,8 +3,8 @@ import { db } from "@/db/client";
 import { conversationEvents, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
-import { dashboardChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
+import { dashboardChannelId } from "@/lib/supabase/channels";
+import { publishToSupabase } from "@/lib/supabase/serverClient";
 import { createHumanSupportRequestEventPayload } from "@/lib/data/dashboardEvent";
 
 export default inngest.createFunction(
@@ -35,7 +35,7 @@ export default inngest.createFunction(
         }),
       );
 
-      await publishToAbly({
+      await publishToSupabase({
         channel: dashboardChannelId(mailboxSlug),
         event: "event",
         data: createHumanSupportRequestEventPayload(event, mailbox),

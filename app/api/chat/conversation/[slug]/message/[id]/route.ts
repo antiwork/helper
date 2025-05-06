@@ -6,8 +6,8 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { dashboardChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
+import { dashboardChannelId } from "@/lib/supabase/channels";
+import { publishToSupabase } from "@/lib/supabase/serverClient";
 import { createReactionEventPayload } from "@/lib/data/dashboardEvent";
 
 const MessageReactionSchema = z.discriminatedUnion("type", [
@@ -132,7 +132,7 @@ const publishEvent = async (messageId: number) => {
     }),
   );
 
-  await publishToAbly({
+  await publishToSupabase({
     channel: dashboardChannelId(message.conversation.mailbox.slug),
     event: "event",
     data: createReactionEventPayload(message, message.conversation.mailbox),

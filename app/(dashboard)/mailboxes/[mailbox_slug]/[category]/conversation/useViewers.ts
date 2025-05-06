@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/nextjs";
 import { usePresence, usePresenceListener } from "ably/react";
 import { useMemo } from "react";
-import { conversationChannelId } from "@/lib/ably/channels";
+import { conversationChannelId } from "@/lib/supabase/channels";
 
 const useViewers = (mailboxSlug: string, conversationSlug: string) => {
   const { user } = useUser();

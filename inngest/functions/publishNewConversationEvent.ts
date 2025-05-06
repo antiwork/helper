@@ -3,8 +3,8 @@ import { NonRetriableError } from "inngest";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
+import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/supabase/channels";
+import { publishToSupabase } from "@/lib/supabase/serverClient";
 import { serializeMessage } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
 import { getClerkUser } from "@/lib/data/user";
@@ -55,7 +55,7 @@ const publish = async (messageId: number) => {
   });
   const published = [];
   if (message && message?.role !== "ai_assistant") {
-    await publishToAbly({
+    await publishToSupabase({
       channel: conversationChannelId(message.conversation.mailbox.slug, message.conversation.slug),
       event: "conversation.message",
       data: await serializeMessage(
@@ -64,7 +64,7 @@ const publish = async (messageId: number) => {
         message.conversation.mailbox,
         await getClerkUser(message.clerkUserId),
       ),
-      trim: (data, amount) => ({
+      trim: (data: any, amount: number) => ({
         ...data,
         body: data.body && amount < data.body.length ? data.body.slice(0, data.body.length - amount) : null,
       }),
@@ -72,7 +72,7 @@ const publish = async (messageId: number) => {
     published.push("conversation.message");
   }
   if (message?.role === "user" && message.conversation.status === "open") {
-    await publishToAbly({
+    await publishToSupabase({
       channel: conversationsListChannelId(message.conversation.mailbox.slug),
       event: "conversation.new",
       data: message.conversation,
@@ -80,12 +80,12 @@ const publish = async (messageId: number) => {
     published.push("conversation.new");
   }
   if (message) {
-    await publishToAbly({
+    await publishToSupabase({
       channel: dashboardChannelId(message.conversation.mailbox.slug),
       event: "event",
       data: createMessageEventPayload(message, message.conversation.mailbox),
     });
     published.push("realtime.event");
   }
-  return `Message ${message?.id} published to Ably: ${published.join(", ") || "none"}`;
+  return `Message ${message?.id} published to Supabase: ${published.join(", ") || "none"}`;
 };

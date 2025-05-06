@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/components/utils/currency";
-import { conversationsListChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { conversationsListChannelId } from "@/lib/supabase/channels";
+import { useSupabaseEvent } from "@/lib/supabase/hooks";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -215,7 +215,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   );
 
   const utils = api.useUtils();
-  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
+  useSupabaseEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationListItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
     const sort = searchParams.sort ?? defaultSort;
