@@ -9,7 +9,7 @@ import { conversationMessages, conversations, mailboxes, platformCustomers } fro
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { inngest } from "@/inngest/client";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/supabase/channels";
-import { publishToSupabase } from "@/lib/supabase/client";
+import { publishToSupabase } from "@/lib/supabase/serverClient";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
 import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";

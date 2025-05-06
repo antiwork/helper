@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, ReactNod
 import { RealtimeChannel } from "@supabase/supabase-js";
 import SuperJSON from "superjson";
 import { env } from "../env";
-import { supabase } from "./client";
+import { supabase } from "./serverClient";
 
 type SupabaseContextType = {
   supabase: typeof supabase;
