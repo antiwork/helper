@@ -4,12 +4,14 @@
   "description": "Helper SDK for embedding the widget in client websites",
   "private": true,
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/sdk.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "webpack --config webpack.sdk.cjs --env development",
-    "build:prod": "webpack --config webpack.sdk.cjs --env production",
-    "dev": "webpack --config webpack.sdk.cjs --watch"
+    "build": "pnpm build:types && webpack --config webpack.sdk.cjs --env development",
+    "build:prod": "pnpm build:types && webpack --config webpack.sdk.cjs --env production",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist",
+    "dev": "webpack --config webpack.sdk.cjs --watch",
+    "dev:types": "tsc --watch --preserveWatchOutput --emitDeclarationOnly --declaration --declarationDir dist"
   },
   "dependencies": {
     "modern-screenshot": "^4.5.5",

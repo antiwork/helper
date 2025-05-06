@@ -1,3 +1,5 @@
+export type { InteractiveElement } from "./domTree";
+
 export type HelperWidgetConfig = {
   title?: string;
   email?: string;

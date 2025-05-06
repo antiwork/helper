@@ -13,6 +13,8 @@ import {
   SHOW_WIDGET,
 } from "./types";
 
+export * from "./types";
+
 declare const __EMBED_URL__: string;
 
 declare global {

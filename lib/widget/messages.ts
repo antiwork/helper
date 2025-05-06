@@ -1,5 +1,3 @@
-import { findInteractiveElements } from "@helperai/sdk";
-import type { WidgetMessage } from "@helperai/sdk";
 import {
   CANCEL_GUIDE,
   CLOSE_ACTION,
@@ -7,13 +5,14 @@ import {
   EXECUTE_GUIDE_ACTION,
   GUIDE_DONE,
   GUIDE_START,
+  InteractiveElement,
   MESSAGE_TYPE,
   MINIMIZE_ACTION,
   READY_ACTION,
-  RESUME_GUIDE,
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
   TOGGLE_HEIGHT_ACTION,
+  WidgetMessage,
 } from "@helperai/sdk";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
@@ -103,7 +102,7 @@ export function sendRequestToParent<T>(action: string, content?: any): Promise<T
 export const fetchCurrentPageDetails = async (): Promise<{
   currentPageDetails: { url: string; title: string };
   clickableElements?: string;
-  interactiveElements?: ReturnType<typeof findInteractiveElements>;
+  interactiveElements?: InteractiveElement[];
 }> => {
   return await sendRequestToParent("FETCH_PAGE_DETAILS");
 };

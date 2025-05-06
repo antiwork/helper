@@ -7,20 +7,9 @@ module.exports = (env) => {
   const isProduction = env.production;
   const EMBED_URL = isProduction ? "https://helper.ai/widget/embed" : `https://helperai.dev/widget/embed`;
 
-  return {
+  const baseConfig = {
     mode: isProduction ? "production" : "development",
     entry: path.resolve(__dirname, "src/index.ts"),
-    output: {
-      path: path.resolve(__dirname, "../../public"),
-      filename: "sdk.js",
-      chunkFilename: "sdk-[name]-[chunkhash].js",
-      library: {
-        name: "HelperWidget",
-        type: "umd",
-        export: "default",
-      },
-      globalObject: "this",
-    },
     resolve: {
       extensions: [".ts", ".js"],
       alias: {
@@ -61,4 +50,32 @@ module.exports = (env) => {
       minimize: isProduction,
     },
   };
+
+  const outputOptions = {
+    filename: "sdk.js",
+    chunkFilename: "sdk-[name]-[chunkhash].js",
+    library: {
+      name: "HelperWidget",
+      type: "umd",
+      export: "default",
+    },
+    globalObject: "this",
+  };
+
+  return [
+    {
+      ...baseConfig,
+      output: {
+        ...outputOptions,
+        path: path.resolve(__dirname, "dist"),
+      },
+    },
+    {
+      ...baseConfig,
+      output: {
+        ...outputOptions,
+        path: path.resolve(__dirname, "../../public"),
+      },
+    },
+  ];
 };
