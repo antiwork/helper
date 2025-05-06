@@ -1,5 +1,5 @@
-import { findInteractiveElements } from "../../packages/sdk/src/domTree";
-import type { WidgetMessage } from "../../packages/sdk/src/types";
+import { findInteractiveElements } from "@helperai/sdk";
+import type { WidgetMessage } from "@helperai/sdk";
 import {
   CANCEL_GUIDE,
   CLOSE_ACTION,
@@ -14,7 +14,7 @@ import {
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
   TOGGLE_HEIGHT_ACTION,
-} from "../../packages/sdk/src/types";
+} from "@helperai/sdk";
 
 export const sendMessageToParent = (message: WidgetMessage) => {
   window.parent.postMessage(
