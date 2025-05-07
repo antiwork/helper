@@ -1,5 +1,8 @@
+// This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
+
 import { Context } from "modern-screenshot";
-import type { NotificationStatus } from "../../../db/schema/messageNotifications";
+import embedStyles from "./embed.css";
+import GuideManager from "./guideManager";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -9,10 +12,9 @@ import {
   READY_ACTION,
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
-} from "../../../lib/widget/messages";
-import embedStyles from "./embed.css";
-import GuideManager from "./guideManager";
-import type { HelperWidgetConfig } from "./types";
+  type HelperWidgetConfig,
+  type NotificationStatus,
+} from "./utils";
 
 declare const __EMBED_URL__: string;
 

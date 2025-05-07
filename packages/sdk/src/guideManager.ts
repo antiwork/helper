@@ -1,11 +1,10 @@
 /* eslint-disable no-console */
-import { record } from "@rrweb/record";
+import type { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
-import type { guideSessionEventTypeEnum } from "../../../db/schema/guideSession";
-import { RESUME_GUIDE } from "../../../lib/widget/messages";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
+import { RESUME_GUIDE, type GuideSessionEventType } from "./utils";
 
 declare const __EMBED_URL__: string;
 
@@ -592,14 +591,13 @@ export class GuideManager {
     this.clearSession();
   }
 
-  public startRecording(): Promise<void> {
-    if (this.stopFn) {
-      return Promise.resolve();
-    }
+  public async startRecording(): Promise<void> {
+    if (this.stopFn) return;
 
     this.isRecording = true;
 
     try {
+      const { record } = await import("@rrweb/record");
       this.stopFn = record({
         emit: (event: eventWithTime) => {
           this.events.push(event);
@@ -618,13 +616,11 @@ export class GuideManager {
       });
 
       this.startAutoFlush();
-
-      return Promise.resolve();
     } catch (error) {
       console.error("Failed to start recording:", error);
       this.isRecording = false;
       this.stopFn = null;
-      return Promise.reject(error);
+      throw error;
     }
   }
 
@@ -750,10 +746,7 @@ export class GuideManager {
     }
   }
 
-  public async sendGuideEvent(
-    type: (typeof guideSessionEventTypeEnum.enumValues)[number],
-    data: Record<string, unknown>,
-  ): Promise<void> {
+  public async sendGuideEvent(type: GuideSessionEventType, data: Record<string, unknown>): Promise<void> {
     if (!this.sessionId || !this.sessionToken) {
       console.error("Cannot send guide event: session not started.");
       return;
