@@ -13,11 +13,11 @@ vi.mock("@/lib/ai", async () => {
 
 describe("emailKeywordsExtractor", () => {
   it("returns email keywords", async () => {
-    vi.mocked(aiModule.runAIQuery).mockResolvedValue("global affiliate gumroad");
+    vi.mocked(aiModule.runAIQuery).mockResolvedValue({ text: "global affiliate gumroad" } as any);
 
     const { mailbox } = await userFactory.createRootUser();
 
-    vi.mocked(aiModule.runAIQuery).mockResolvedValue("global affiliate gumroad");
+    vi.mocked(aiModule.runAIQuery).mockResolvedValue({ text: "global affiliate gumroad" } as any);
 
     const keywords = await emailKeywordsExtractor({
       mailbox,
@@ -40,6 +40,7 @@ describe("emailKeywordsExtractor", () => {
       system: expect.stringContaining("Generate a space-delimited list of 1-3 keywords"),
       temperature: 0,
       model: "gpt-4o-mini",
+      maxTokens: 500,
     });
   });
 });

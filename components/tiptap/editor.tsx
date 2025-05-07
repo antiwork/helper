@@ -100,7 +100,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       if (typeof window !== "undefined") {
         return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
       }
-      return true;
+      return isAboveMd;
     });
 
     useEffect(() => {

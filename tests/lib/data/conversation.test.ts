@@ -41,9 +41,10 @@ vi.mock("@/inngest/client", () => ({
   },
 }));
 
-vi.mock("@/lib/ai", async (importOriginal) => {
+vi.mock("@/lib/ai", async () => {
+  const actual = await vi.importActual("@/lib/ai");
   return {
-    ...(await importOriginal<typeof import("@/lib/ai")>()),
+    ...actual,
     runAIQuery: vi.fn(),
   };
 });
@@ -313,7 +314,7 @@ describe("getNonSupportParticipants", () => {
 
 describe("getRelatedConversations", () => {
   it("returns related conversations based on email keywords", async () => {
-    vi.mocked(runAIQuery).mockResolvedValue("keyword1 keyword2");
+    vi.mocked(runAIQuery).mockResolvedValue({ text: "keyword1 keyword2" } as any);
     const { mailbox } = await userFactory.createRootUser();
     const { conversation: conversation1 } = await conversationFactory.create(mailbox.id, {
       emailFrom: "related1@example.com",

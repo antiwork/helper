@@ -2,7 +2,6 @@ import { useUser } from "@clerk/nextjs";
 import { ArrowUturnUpIcon } from "@heroicons/react/20/solid";
 import { isMacOS } from "@tiptap/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import * as React from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { DraftedEmail } from "@/app/types/global";
 import { triggerConfetti } from "@/components/confetti";
@@ -43,137 +42,6 @@ export const useSendDisabled = (message: string | undefined) => {
     sending || (isEmptyContent(message) && !hasReadyFileAttachments) || uploading || failedAttachmentsExist;
   return { sendDisabled, sending, setSending };
 };
-
-const EmailEditorComponent = React.forwardRef<
-  TipTapEditorRef,
-  {
-    draftedEmail: DraftedEmail;
-    initialMessage: { content: string };
-    actionButtons: React.ReactNode;
-    onSend: () => void;
-    onOptionSend: () => void;
-    updateEmail: (changes: Partial<DraftedEmail>) => void;
-    handleInsertReply: (content: string) => void;
-    isRecordingSupported: boolean;
-    isRecording: boolean;
-    startRecording: () => void;
-    stopRecording: () => void;
-  }
->(
-  (
-    {
-      draftedEmail,
-      initialMessage,
-      actionButtons,
-      onSend,
-      onOptionSend,
-      updateEmail,
-      handleInsertReply,
-      isRecordingSupported,
-      isRecording,
-      startRecording,
-      stopRecording,
-    },
-    forwardedRef,
-  ) => {
-    const { isAboveMd } = useBreakpoint("md");
-    const [showCommandBar, setShowCommandBar] = useState(false);
-    const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
-    const [toolbarOpen, setToolbarOpen] = useState(() => {
-      if (typeof window !== "undefined") {
-        return (localStorage.getItem("editorToolbarOpen") ?? isAboveMd.toString()) === "true";
-      }
-      return isAboveMd;
-    });
-    const ccRef = useRef<HTMLInputElement>(null);
-    const bccRef = useRef<HTMLInputElement>(null);
-    const commandInputRef = useRef<HTMLInputElement>(null);
-    const { user } = useUser();
-    const editorRef = useRef<TipTapEditorRef | null>(null);
-
-    useEffect(() => {
-      if (typeof forwardedRef === "function") {
-        forwardedRef(editorRef.current);
-      } else if (forwardedRef) {
-        forwardedRef.current = editorRef.current;
-      }
-    }, [forwardedRef, editorRef.current]);
-
-    const onToggleCc = useCallback(() => setShowCc(!showCc), [showCc]);
-
-    useEffect(() => {
-      if (showCc) {
-        ccRef.current?.focus();
-      }
-    }, [showCc]);
-
-    useEffect(() => {
-      localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
-    }, [toolbarOpen]);
-
-    return (
-      <div className="flex flex-col h-full pt-4">
-        <TicketCommandBar
-          open={showCommandBar}
-          onOpenChange={setShowCommandBar}
-          onInsertReply={handleInsertReply}
-          onToggleCc={onToggleCc}
-          inputRef={commandInputRef}
-        />
-        <div className={cn("shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
-          <LabeledInput
-            ref={ccRef}
-            name="CC"
-            value={draftedEmail.cc}
-            onChange={(cc) => updateEmail({ cc })}
-            onModEnter={() => {}}
-          />
-          <LabeledInput
-            ref={bccRef}
-            name="BCC"
-            value={draftedEmail.bcc}
-            onChange={(bcc) => updateEmail({ bcc })}
-            onModEnter={() => {}}
-          />
-        </div>
-        <TipTapEditor
-          ref={editorRef}
-          className={cn("flex-1 min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
-          ariaLabel="Conversation editor"
-          placeholder="Type your reply here..."
-          defaultContent={initialMessage}
-          editable={true}
-          onUpdate={(message, isEmpty) => updateEmail({ message: isEmpty ? "" : message })}
-          onModEnter={onSend}
-          onOptionEnter={onOptionSend}
-          onSlashKey={() => commandInputRef.current?.focus()}
-          enableImageUpload
-          enableFileUpload
-          actionButtons={actionButtons}
-          signature={
-            user?.firstName ? (
-              <div className="mt-1 text-muted-foreground">
-                Best,
-                <br />
-                {user.firstName}
-                <div className="text-xs mt-2">
-                  Note: This signature will be automatically included in email responses, but not in live chat
-                  conversations.
-                </div>
-              </div>
-            ) : null
-          }
-          isRecordingSupported={isRecordingSupported}
-          isRecording={isRecording}
-          startRecording={startRecording}
-          stopRecording={stopRecording}
-        />
-      </div>
-    );
-  },
-);
-
-EmailEditorComponent.displayName = "EmailEditor";
 
 export const MessageActions = () => {
   const { navigateToConversation } = useConversationListContext();
@@ -260,16 +128,27 @@ export const MessageActions = () => {
     }
   }, [storedMessage]);
 
+  const { user } = useUser();
+  const [showCommandBar, setShowCommandBar] = useState(false);
+  const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
+  const ccRef = useRef<HTMLInputElement>(null);
+  const bccRef = useRef<HTMLInputElement>(null);
+  const commandInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<TipTapEditorRef | null>(null);
 
-  const handleSegment = useCallback(
-    (segment: string) => {
-      if (editorRef.current?.editor) {
-        editorRef.current.editor.commands.insertContent(segment);
-      }
-    },
-    [editorRef],
-  );
+  useEffect(() => {
+    if (showCc) {
+      ccRef.current?.focus();
+    }
+  }, [showCc]);
+
+  const onToggleCc = useCallback(() => setShowCc((prev) => !prev), []);
+
+  const handleSegment = useCallback((segment: string) => {
+    if (editorRef.current?.editor) {
+      editorRef.current.editor.commands.insertContent(segment);
+    }
+  }, []);
 
   const handleError = useCallback((error: string) => {
     toast({
@@ -440,19 +319,62 @@ export const MessageActions = () => {
   };
 
   return (
-    <EmailEditorComponent
-      ref={editorRef}
-      draftedEmail={draftedEmail}
-      initialMessage={initialMessageObject}
-      actionButtons={actionButtons}
-      onSend={() => handleSend({ assign: false })}
-      onOptionSend={() => handleSend({ assign: false, close: false })}
-      updateEmail={updateDraftedEmail}
-      handleInsertReply={handleInsertReply}
-      isRecordingSupported={isRecordingSupported}
-      isRecording={isRecording}
-      startRecording={startRecording}
-      stopRecording={stopRecording}
-    />
+    <div className="flex flex-col h-full pt-4">
+      <TicketCommandBar
+        open={showCommandBar}
+        onOpenChange={setShowCommandBar}
+        onInsertReply={handleInsertReply}
+        onToggleCc={onToggleCc}
+        inputRef={commandInputRef}
+      />
+      <div className={cn("shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
+        <LabeledInput
+          ref={ccRef}
+          name="CC"
+          value={draftedEmail.cc}
+          onChange={(cc) => updateDraftedEmail({ cc })}
+          onModEnter={() => {}}
+        />
+        <LabeledInput
+          ref={bccRef}
+          name="BCC"
+          value={draftedEmail.bcc}
+          onChange={(bcc) => updateDraftedEmail({ bcc })}
+          onModEnter={() => {}}
+        />
+      </div>
+      <TipTapEditor
+        ref={editorRef}
+        className={cn("flex-1 min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
+        ariaLabel="Conversation editor"
+        placeholder="Type your reply here..."
+        defaultContent={initialMessageObject}
+        editable={true}
+        onUpdate={(message, isEmpty) => updateDraftedEmail({ message: isEmpty ? "" : message })}
+        onModEnter={() => handleSend({ assign: false })}
+        onOptionEnter={() => handleSend({ assign: false, close: false })}
+        onSlashKey={() => commandInputRef.current?.focus()}
+        enableImageUpload
+        enableFileUpload
+        actionButtons={actionButtons}
+        signature={
+          user?.firstName ? (
+            <div className="mt-1 text-muted-foreground">
+              Best,
+              <br />
+              {user.firstName}
+              <div className="text-xs mt-2">
+                Note: This signature will be automatically included in email responses, but not in live chat
+                conversations.
+              </div>
+            </div>
+          ) : null
+        }
+        isRecordingSupported={isRecordingSupported}
+        isRecording={isRecording}
+        startRecording={startRecording}
+        stopRecording={stopRecording}
+      />
+    </div>
   );
 };
