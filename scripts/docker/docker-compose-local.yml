@@ -1,4 +1,13 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: scripts/docker/Dockerfile
+    ports:
+      - 3010:3010
+    volumes:
+      - .:/app
+
   db:
     image: pgvector/pgvector:0.7.4-pg15
     volumes:

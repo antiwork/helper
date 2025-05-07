@@ -17,14 +17,11 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-if [ -z "$SKIP_SETUP" ]; then
-    if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
-        pnpm generate-ssl-certificates
-    fi
+if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
+    pnpm generate-ssl-certificates
 fi
 
-corepack enable
-pnpm install
+docker-compose -f scripts/docker/docker-compose-local.yml builds
 
 # Check if .env.local exists
 if [ ! -f ".env.local" ]; then
@@ -33,21 +30,20 @@ if [ ! -f ".env.local" ]; then
 
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
         echo "Pulling environment variables from Vercel..."
-        pnpm vercel link && pnpm vercel env pull --environment=development
+        pnpm in-dev-container sh -c "pnpm vercel link && pnpm vercel env pull --environment=development"
     else
         echo "Please set up your .env.local file by copying .env.local.sample to .env.local and filling in the required values"
         exit 1
     fi
 elif [ -f ".vercel/project.json" ]; then
     echo "Found existing Vercel project configuration. Pulling latest environment variables..."
-    pnpm vercel env pull --environment=development
+    pnpm in-dev-container sh -c "pnpm vercel env pull --environment=development"
 fi
 
-if [ -z "$SKIP_SETUP" ]; then
-    pnpm db:migrate
-fi
+pnpm in-dev-container sh -c "pnpm db:migrate"
 
 # Add the local CA to the Node.js environment
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 
-pnpm with-dev-env pnpm heroku local -f scripts/Procfile.dev
+docker-compose -f scripts/docker/docker-compose-local.yml up -d
+docker-compose -f scripts/docker/docker-compose-local.yml logs -f app
