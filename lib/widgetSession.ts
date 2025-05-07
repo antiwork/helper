@@ -14,6 +14,7 @@ export type WidgetSessionPayload = {
   isWhitelabel: boolean;
   theme?: MailboxTheme;
   title?: string;
+  anonymousSessionId?: string;
 };
 
 const jwtSecret = () => {
@@ -25,7 +26,7 @@ const jwtSecret = () => {
 };
 
 export function createWidgetSession(
-  payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & { email?: string; isWhitelabel: boolean },
+  payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & { email?: string; isWhitelabel: boolean; anonymousSessionId?: string },
 ): string {
   const isAnonymous = !payload.email;
   return jwt.sign({ ...payload, isAnonymous }, jwtSecret(), { expiresIn: "12h" });

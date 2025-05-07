@@ -18,6 +18,8 @@ type ConversationsResponse = {
 type Props = {
   token: string | null;
   onSelectConversation: (slug: string) => void;
+  isAnonymous: boolean;
+  onClearHistory?: () => void;
 };
 
 function ConversationSkeleton() {
@@ -53,7 +55,7 @@ async function fetchConversations({
   return response.json();
 }
 
-export default function PreviousConversations({ token, onSelectConversation }: Props) {
+export default function PreviousConversations({ token, onSelectConversation, isAnonymous, onClearHistory }: Props) {
   const { ref, inView } = useInView();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
@@ -72,6 +74,14 @@ export default function PreviousConversations({ token, onSelectConversation }: P
 
   const conversations = data?.pages.flatMap((page) => page.conversations) ?? [];
 
+  const handleClearHistory = () => {
+    if (onClearHistory) {
+      if (window.confirm("Are you sure you want to clear your conversation history? This cannot be undone.")) {
+        onClearHistory();
+      }
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto">
       {isLoading ? (
@@ -84,6 +94,14 @@ export default function PreviousConversations({ token, onSelectConversation }: P
         <div className="flex h-40 items-center justify-center text-gray-500">No previous conversations found</div>
       ) : (
         <div className="space-y-3">
+          {isAnonymous && onClearHistory && (
+            <button
+              onClick={handleClearHistory}
+              className="w-full mb-4 p-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Clear conversation history
+            </button>
+          )}
           {conversations.map((conversation) => (
             <button
               key={conversation.slug}

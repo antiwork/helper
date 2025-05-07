@@ -21,6 +21,7 @@ const requestSchema = z.object({
     .nullish(),
   experimentalReadPage: z.boolean().nullish(),
   currentURL: z.string(),
+  anonymousSessionId: z.string().optional(),
 });
 
 // 1 hour
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
 
-  const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentURL } = result.data;
+  const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentURL, anonymousSessionId } = result.data;
 
   const mailboxRecord = await db.query.mailboxes.findFirst({
     where: eq(mailboxes.slug, mailboxSlug),
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
     isWhitelabel: mailboxRecord.isWhitelabel ?? false,
     theme: mailboxRecord.preferences?.theme,
     title: mailboxRecord.name,
+    anonymousSessionId,
   });
 
   let notifications;

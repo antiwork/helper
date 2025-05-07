@@ -60,6 +60,7 @@ class HelperWidget {
   private readonly VISIBILITY_STORAGE_KEY = "helper_widget_visible";
   private readonly CONVERSATION_STORAGE_KEY = "helper_widget_conversation";
   private readonly MINIMIZED_STORAGE_KEY = "helper_widget_minimized";
+  private readonly ANONYMOUS_SESSION_ID_KEY = "helper_widget_anonymous_session_id";
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
 
@@ -115,6 +116,8 @@ class HelperWidget {
         requestBody.emailHash = this.config.email_hash;
         requestBody.timestamp = this.config.timestamp;
         requestBody.customerMetadata = this.config.customer_metadata;
+      } else {
+        requestBody.anonymousSessionId = this.getAnonymousSessionId();
       }
 
       const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/widget/session`, {
@@ -905,6 +908,20 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
+  }
+
+  private getAnonymousSessionId(): string | null {
+    if (!this.isAnonymous()) {
+      return null;
+    }
+    
+    let sessionId = localStorage.getItem(this.ANONYMOUS_SESSION_ID_KEY);
+    if (!sessionId) {
+      sessionId = crypto.randomUUID ? crypto.randomUUID() : `anonymous-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      localStorage.setItem(this.ANONYMOUS_SESSION_ID_KEY, sessionId);
+    }
+    
+    return sessionId;
   }
 }
 
