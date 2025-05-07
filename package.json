@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "fumadocs-mdx content/source.config.ts",
-    "build": "pnpm --filter=@helperai/react build && pnpm --filter=@helperai/sdk build && next build",
+    "build": "pnpm --filter=@helperai/react build && pnpm --filter=@helperai/sdk build:prod && next build",
     "build:preview": "pnpm run build && pnpm run db:prod:migrate && pnpm tsx --conditions=react-server ./db/seeds/index.ts",
     "clean": "git clean -xdf .cache .next node_modules",
     "deploy": "pnpm run build && pnpm run db:prod:migrate",
