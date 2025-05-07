@@ -20,8 +20,7 @@ const requestSchema = z.object({
     })
     .nullish(),
   experimentalReadPage: z.boolean().nullish(),
-  currentURL: z.string(),
-  anonymousSessionId: z.string().optional(),
+  currentToken: z.string().nullish(),
 });
 
 // 1 hour
@@ -39,16 +38,8 @@ export async function POST(request: Request) {
     return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
 
-  const {
-    email,
-    emailHash,
-    mailboxSlug,
-    timestamp,
-    customerMetadata,
-    experimentalReadPage,
-    currentURL,
-    anonymousSessionId,
-  } = result.data;
+  const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentToken } =
+    result.data;
 
   const mailboxRecord = await db.query.mailboxes.findFirst({
     where: eq(mailboxes.slug, mailboxSlug),
@@ -104,15 +95,17 @@ export async function POST(request: Request) {
       false;
   }
 
-  const token = createWidgetSession({
-    email,
-    mailboxSlug,
-    showWidget,
-    isWhitelabel: mailboxRecord.isWhitelabel ?? false,
-    theme: mailboxRecord.preferences?.theme,
-    title: mailboxRecord.name,
-    anonymousSessionId,
-  });
+  const token = createWidgetSession(
+    {
+      email,
+      mailboxSlug,
+      showWidget,
+      isWhitelabel: mailboxRecord.isWhitelabel ?? false,
+      theme: mailboxRecord.preferences?.theme,
+      title: mailboxRecord.name,
+    },
+    currentToken,
+  );
 
   let notifications;
   if (platformCustomer) {

@@ -133,11 +133,6 @@ export default function Page() {
 
   const isAnonymous = !config?.email;
 
-  const clearHistory = useCallback(() => {
-    localStorage.removeItem("helper_widget_anonymous_session_id");
-    window.location.reload();
-  }, []);
-
   if (!config || !token) {
     return <div />;
   }
@@ -185,7 +180,6 @@ export default function Page() {
                       token={token}
                       onSelectConversation={onSelectConversation}
                       isAnonymous={isAnonymous}
-                      onClearHistory={isAnonymous ? clearHistory : undefined}
                     />
                   )}
                 </div>

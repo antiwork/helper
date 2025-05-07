@@ -1,7 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";
+import { sendMessageToParent } from "@/lib/widget/messages";
 
 type Conversation = {
   slug: string;
@@ -19,7 +20,6 @@ type Props = {
   token: string | null;
   onSelectConversation: (slug: string) => void;
   isAnonymous: boolean;
-  onClearHistory?: () => void;
 };
 
 function ConversationSkeleton() {
@@ -55,9 +55,10 @@ async function fetchConversations({
   return response.json();
 }
 
-export default function PreviousConversations({ token, onSelectConversation, isAnonymous, onClearHistory }: Props) {
+export default function PreviousConversations({ token, onSelectConversation, isAnonymous }: Props) {
   const { ref, inView } = useInView();
 
+  const [isCleared, setIsCleared] = useState(false);
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["conversations"],
     queryFn: ({ pageParam }) => fetchConversations({ token: token!, cursor: pageParam! }),
@@ -67,19 +68,20 @@ export default function PreviousConversations({ token, onSelectConversation, isA
   });
 
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+    setIsCleared(false);
+  }, [token]);
+
+  useEffect(() => {
+    if (!isCleared && inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, isCleared]);
 
   const conversations = data?.pages.flatMap((page) => page.conversations) ?? [];
 
   const handleClearHistory = () => {
-    if (onClearHistory) {
-      if (window.confirm("Are you sure you want to clear your conversation history? This cannot be undone.")) {
-        onClearHistory();
-      }
-    }
+    sendMessageToParent({ action: "CLEAR_ANONYMOUS_SESSION" });
+    setIsCleared(true);
   };
 
   return (
@@ -90,11 +92,11 @@ export default function PreviousConversations({ token, onSelectConversation, isA
             <ConversationSkeleton key={i} />
           ))}
         </div>
-      ) : conversations.length === 0 ? (
+      ) : isCleared || conversations.length === 0 ? (
         <div className="flex h-40 items-center justify-center text-gray-500">No previous conversations found</div>
       ) : (
         <div className="space-y-3">
-          {isAnonymous && onClearHistory && (
+          {isAnonymous && (
             <button
               onClick={handleClearHistory}
               className="w-full mb-4 p-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"

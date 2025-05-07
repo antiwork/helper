@@ -29,11 +29,26 @@ export function createWidgetSession(
   payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & {
     email?: string;
     isWhitelabel: boolean;
-    anonymousSessionId?: string;
   },
+  currentToken?: string | null,
 ): string {
+  let anonymousSessionId: string | undefined;
+  if (currentToken) {
+    const decoded = jwt.verify(currentToken, jwtSecret()) as WidgetSessionPayload;
+    if (decoded.mailboxSlug === payload.mailboxSlug) {
+      anonymousSessionId = decoded.anonymousSessionId;
+    }
+  }
   const isAnonymous = !payload.email;
-  return jwt.sign({ ...payload, isAnonymous }, jwtSecret(), { expiresIn: "12h" });
+  return jwt.sign(
+    {
+      ...payload,
+      isAnonymous,
+      anonymousSessionId: isAnonymous ? (anonymousSessionId ?? crypto.randomUUID()) : undefined,
+    },
+    jwtSecret(),
+    { expiresIn: isAnonymous ? "7d" : "12h" },
+  );
 }
 
 export function verifyWidgetSession(token: string): WidgetSessionPayload {
