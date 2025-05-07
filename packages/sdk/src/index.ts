@@ -1,3 +1,5 @@
+// This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
+
 import { Context } from "modern-screenshot";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";

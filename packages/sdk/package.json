@@ -7,11 +7,10 @@
   "module": "dist/esm/utils.js",
   "types": "dist/types/utils.d.ts",
   "scripts": {
-    "build": "pnpm build:types && webpack --config webpack.sdk.cjs --env development",
-    "build:prod": "pnpm build:types && webpack --config webpack.sdk.cjs --env production",
+    "build": "pnpm build:types && webpack --config webpack.sdk.cjs --env production",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist/types",
-    "dev": "webpack --config webpack.sdk.cjs --watch",
-    "dev:types": "tsc --watch --preserveWatchOutput --emitDeclarationOnly --declaration --declarationDir dist"
+    "dev": "webpack --config webpack.sdk.cjs --watch --preserveWatchOutput",
+    "dev:types": "pnpm build:types --watch"
   },
   "dependencies": {
     "modern-screenshot": "^4.5.5",
