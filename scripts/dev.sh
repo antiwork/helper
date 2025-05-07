@@ -4,12 +4,13 @@ set -e
 
 cleanup() {
     echo "Shutting down..."
-    pkill -P $$
 
     # Stop Docker containers
     if [ -z "$SKIP_SETUP" ]; then
         pnpm services:stop
     fi
+
+    pkill -P $$
 
     exit 0
 }

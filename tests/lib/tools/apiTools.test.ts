@@ -43,8 +43,8 @@ describe("apiTools", () => {
       const aiTools = buildAITools([tool]);
 
       expect(aiTools[tool.slug]).toBeDefined();
-      expect(aiTools[tool.slug].description).toBe(`${tool.name} - ${tool.description}`);
-      expect(aiTools[tool.slug].parameters).toBeDefined();
+      expect(aiTools[tool.slug]?.description).toBe(`${tool.name} - ${tool.description}`);
+      expect(aiTools[tool.slug]?.parameters).toBeDefined();
     });
   });
 
