@@ -132,7 +132,7 @@ export default function Page() {
   }, []);
 
   const isAnonymous = !config?.email;
-  
+
   const clearHistory = useCallback(() => {
     localStorage.removeItem("helper_widget_anonymous_session_id");
     window.location.reload();
@@ -181,9 +181,9 @@ export default function Page() {
               <div className="shrink-0 w-full h-full">
                 <div className="h-full overflow-y-auto p-4">
                   {currentView === "previous" && hasLoadedHistory && (
-                    <PreviousConversations 
-                      token={token} 
-                      onSelectConversation={onSelectConversation} 
+                    <PreviousConversations
+                      token={token}
+                      onSelectConversation={onSelectConversation}
                       isAnonymous={isAnonymous}
                       onClearHistory={isAnonymous ? clearHistory : undefined}
                     />

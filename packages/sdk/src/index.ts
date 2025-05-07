@@ -914,13 +914,15 @@ class HelperWidget {
     if (!this.isAnonymous()) {
       return null;
     }
-    
+
     let sessionId = localStorage.getItem(this.ANONYMOUS_SESSION_ID_KEY);
     if (!sessionId) {
-      sessionId = crypto.randomUUID ? crypto.randomUUID() : `anonymous-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      sessionId = crypto.randomUUID
+        ? crypto.randomUUID()
+        : `anonymous-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
       localStorage.setItem(this.ANONYMOUS_SESSION_ID_KEY, sessionId);
     }
-    
+
     return sessionId;
   }
 }

@@ -26,7 +26,11 @@ const jwtSecret = () => {
 };
 
 export function createWidgetSession(
-  payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & { email?: string; isWhitelabel: boolean; anonymousSessionId?: string },
+  payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & {
+    email?: string;
+    isWhitelabel: boolean;
+    anonymousSessionId?: string;
+  },
 ): string {
   const isAnonymous = !payload.email;
   return jwt.sign({ ...payload, isAnonymous }, jwtSecret(), { expiresIn: "12h" });

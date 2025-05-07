@@ -39,7 +39,16 @@ export async function POST(request: Request) {
     return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
 
-  const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentURL, anonymousSessionId } = result.data;
+  const {
+    email,
+    emailHash,
+    mailboxSlug,
+    timestamp,
+    customerMetadata,
+    experimentalReadPage,
+    currentURL,
+    anonymousSessionId,
+  } = result.data;
 
   const mailboxRecord = await db.query.mailboxes.findFirst({
     where: eq(mailboxes.slug, mailboxSlug),

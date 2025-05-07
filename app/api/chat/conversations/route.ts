@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   } else {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
-  
+
   const whereClause = cursor ? and(baseCondition, lt(conversationsTable.createdAt, new Date(cursor))) : baseCondition;
   const userConversations = await db.query.conversations.findMany({
     where: whereClause,
