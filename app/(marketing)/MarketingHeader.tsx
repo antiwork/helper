@@ -38,7 +38,7 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link href="/" className="flex items-center">
-          <Image src="/logo.svg" alt="Helper" width={120} height={32} />
+          <Image src="/logo-white.svg" alt="Helper" width={120} height={32} />
         </Link>
 
         {/* Desktop Navigation */}
