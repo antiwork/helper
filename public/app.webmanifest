@@ -5,7 +5,7 @@
   "start_url": "/mailboxes",
   "display": "standalone",
   "background_color": "#280B0B",
-  "theme_color": "#480F0E",
+  "theme_color": "#280B0B",
   "orientation": "portrait",
   "icons": [
     {

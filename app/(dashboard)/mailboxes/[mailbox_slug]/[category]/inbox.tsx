@@ -12,6 +12,7 @@ import {
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/mobileList";
+import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
 import { CATEGORY_LABELS } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/categoryNav";
 import { getGlobalAblyClient } from "@/components/ablyClient";
@@ -80,8 +81,9 @@ const Inbox = () => {
   }
 
   return (
-    <div className="flex grow overflow-hidden">
+    <div className="relative flex grow overflow-hidden">
       {pageTitle ? <title>{pageTitle}</title> : null}
+      <TabBar />
       {currentConversationSlug ? (
         <Conversation key={currentConversationSlug} />
       ) : (

@@ -3,11 +3,11 @@
 import { ArrowLeftIcon, ArrowPathIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useMediaQuery } from "react-responsive";
 import { Button } from "@/components/ui/button";
-import { useNativePlatform } from "@/components/useNativePlatform";
 
 export const NavigationButtons = () => {
-  const { isTauri } = useNativePlatform();
+  const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -50,7 +50,7 @@ export const NavigationButtons = () => {
     window.history.forward();
   };
 
-  if (!isTauri) return null;
+  if (!isStandalone) return null;
 
   return (
     <div className="flex">

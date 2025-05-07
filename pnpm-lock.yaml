@@ -154,24 +154,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.66.0
         version: 5.74.11(react@19.1.0)
-      '@tauri-apps/api':
-        specifier: ^2.4.0
-        version: 2.5.0
-      '@tauri-apps/plugin-deep-link':
-        specifier: ^2.2.0
-        version: 2.2.1
-      '@tauri-apps/plugin-opener':
-        specifier: ^2.2.5
-        version: 2.2.6
-      '@tauri-apps/plugin-os':
-        specifier: ^2.2.0
-        version: 2.2.1
-      '@tauri-apps/plugin-process':
-        specifier: ^2.2.0
-        version: 2.2.1
-      '@tauri-apps/plugin-updater':
-        specifier: ^2.5.0
-        version: 2.7.1
       '@tiptap/core':
         specifier: ^2.4.0
         version: 2.11.9(@tiptap/pm@2.11.9)
@@ -235,9 +217,6 @@ importers:
       ai:
         specifier: ^4.1.41
         version: 4.3.12(react@19.1.0)(zod@3.24.3)
-      apple-signin-auth:
-        specifier: ^1.7.8
-        version: 1.7.9
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.3
@@ -5223,24 +5202,6 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@tauri-apps/api@2.5.0':
-    resolution: {integrity: sha512-Ldux4ip+HGAcPUmuLT8EIkk6yafl5vK0P0c0byzAKzxJh7vxelVtdPONjfgTm96PbN24yjZNESY8CKo8qniluA==}
-
-  '@tauri-apps/plugin-deep-link@2.2.1':
-    resolution: {integrity: sha512-8skZ6qIH/kWaV8d6jj3aPvvkIOuqkVk0APRDey9n9N3Ueu3n4MIbuxpAKR2EdoAyQxnXxPTNVyjw2D35/vfGyg==}
-
-  '@tauri-apps/plugin-opener@2.2.6':
-    resolution: {integrity: sha512-bSdkuP71ZQRepPOn8BOEdBKYJQvl6+jb160QtJX/i2H9BF6ZySY/kYljh76N2Ne5fJMQRge7rlKoStYQY5Jq1w==}
-
-  '@tauri-apps/plugin-os@2.2.1':
-    resolution: {integrity: sha512-cNYpNri2CCc6BaNeB6G/mOtLvg8dFyFQyCUdf2y0K8PIAKGEWdEcu8DECkydU2B+oj4OJihDPD2de5K6cbVl9A==}
-
-  '@tauri-apps/plugin-process@2.2.1':
-    resolution: {integrity: sha512-cF/k8J+YjjuowhNG1AboHNTlrGiOwgX5j6NzsX6WFf9FMzyZUchkCgZMxCdSE5NIgFX0vvOgLQhODFJgbMenLg==}
-
-  '@tauri-apps/plugin-updater@2.7.1':
-    resolution: {integrity: sha512-1OPqEY/z7NDVSeTEMIhD2ss/vXWdpfZ5Th2Mk0KtPR/RA6FKuOTDGZQhxoyYBk0pcZJ+nNZUbl/IujDCLBApjA==}
-
   '@testcontainers/postgresql@10.24.2':
     resolution: {integrity: sha512-s4k/QVSmpXFzxNBeft84x172Hx5tNiGeDRWwU8iOAHjtcnyXd4aBORF0GruNojTo7TOIuAM0ArBZUMqRBLJKwQ==}
 
@@ -6315,9 +6276,6 @@ packages:
   apparatus@0.0.10:
     resolution: {integrity: sha512-KLy/ugo33KZA7nugtQ7O0E1c8kQ52N3IvD/XgIh4w/Nr28ypfkwDfA67F1ev4N1m5D+BOk1+b2dEJDfpj/VvZg==}
     engines: {node: '>=0.2.6'}
-
-  apple-signin-auth@1.7.9:
-    resolution: {integrity: sha512-p/ggSSeM4CGr+9FI+D6OxMVkbKpt4p4wJQgBgABlgs/zJ/EXgqn1EQTMp9GCWVJHBB04PShp5c7Gh7ceZwEIDg==}
 
   archiver-utils@5.0.2:
     resolution: {integrity: sha512-wuLJMmIBQYCsGZgYLTy5FIB2pF6Lfb6cXMSF8Qywwk3t20zWnAi7zLcQFdKQmIB8wyZpY5ER38x08GbwtR2cLA==}
@@ -10190,9 +10148,6 @@ packages:
 
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
-
-  node-rsa@1.1.1:
-    resolution: {integrity: sha512-Jd4cvbJMryN21r5HgxQOpMEqv+ooke/korixNNK3mGqfGJmy0M77WDDzo/05969+OkMy3XW1UuZsSmW9KQm7Fw==}
 
   nodemailer@6.10.1:
     resolution: {integrity: sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==}
@@ -18162,28 +18117,6 @@ snapshots:
       '@tanstack/query-core': 5.74.9
       react: 19.1.0
 
-  '@tauri-apps/api@2.5.0': {}
-
-  '@tauri-apps/plugin-deep-link@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-opener@2.2.6':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-os@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-process@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-updater@2.7.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
   '@testcontainers/postgresql@10.24.2':
     dependencies:
       testcontainers: 10.24.2
@@ -19415,14 +19348,6 @@ snapshots:
   apparatus@0.0.10:
     dependencies:
       sylvester: 0.0.12
-
-  apple-signin-auth@1.7.9:
-    dependencies:
-      jsonwebtoken: 9.0.2
-      node-fetch: 2.7.0
-      node-rsa: 1.1.1
-    transitivePeerDependencies:
-      - encoding
 
   archiver-utils@5.0.2:
     dependencies:
@@ -24011,10 +23936,6 @@ snapshots:
       which: 2.0.2
 
   node-releases@2.0.19: {}
-
-  node-rsa@1.1.1:
-    dependencies:
-      asn1: 0.2.6
 
   nodemailer@6.10.1: {}
 

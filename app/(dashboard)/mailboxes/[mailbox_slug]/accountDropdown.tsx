@@ -22,24 +22,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 
-export function AccountDropdown({
-  setShowNativeAppModal,
-  trigger,
-}: {
-  setShowNativeAppModal: (show: boolean) => void;
-  trigger: (children: ReactNode) => ReactNode;
-}) {
+export function AccountDropdown({ trigger }: { trigger: (children: ReactNode) => ReactNode }) {
   const { user } = useUser();
-  const { isDesktopWeb, isMobileWeb } = useNativePlatform();
   const { signOut } = useClerk();
 
   const handleSignOut = async () => {
     try {
       // TODO (jono): Fix properly so the default implementation from @clerk/nextjs doesn't cause errors
       window.__unstable__onBeforeSetActive = () => {};
-      await signOut({ redirectUrl: getTauriPlatform() ? "/login" : "/" });
+      await signOut({ redirectUrl: "/" });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -105,16 +97,6 @@ export function AccountDropdown({
         >
           <span>Documentation</span>
         </DropdownMenuItem>
-        {isMobileWeb || (isDesktopWeb && user?.unsafeMetadata?.desktopAppPromptDismissed) ? (
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              setShowNativeAppModal(true);
-            }}
-          >
-            <span>Download the app</span>
-          </DropdownMenuItem>
-        ) : null}
         <DropdownMenuItem onClick={handleSignOut}>
           <span>Sign out</span>
         </DropdownMenuItem>

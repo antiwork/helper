@@ -11,13 +11,11 @@ import {
 } from "@heroicons/react/24/outline";
 import React, { useState, useTransition } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
-import NativeAppModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/nativeAppModal";
 import type { SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
 import { Button } from "@/components/ui/button";
-import { getTauriPlatform } from "@/components/useNativePlatform";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { SidebarInfo } from "../getSidebarInfo";
@@ -62,8 +60,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdates>({});
-  const [showBilling] = useState(() => !getTauriPlatform());
-  const [showNativeAppModal, setShowNativeAppModal] = useState(false);
 
   const handleUpdateSettings = async () => {
     if (!hasPendingUpdates) return;
@@ -199,7 +195,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     },
   ];
 
-  if (mailbox.billingEnabled && showBilling) {
+  if (mailbox.billingEnabled) {
     items.push({
       label: "Billing",
       id: "billing",
@@ -223,7 +219,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
             footer={
               <div className="border-t border-border">
                 <AccountDropdown
-                  setShowNativeAppModal={setShowNativeAppModal}
                   trigger={(children) => (
                     <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                       {children}
@@ -235,7 +230,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
           />
         </div>
       </FileUploadProvider>
-      <NativeAppModal open={showNativeAppModal} onOpenChange={setShowNativeAppModal} />
     </div>
   );
 };
