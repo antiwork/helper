@@ -1,7 +1,6 @@
 import { Context } from "modern-screenshot";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
-import type { HelperWidgetConfig, NotificationStatus } from "./types";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -11,9 +10,9 @@ import {
   READY_ACTION,
   SCREENSHOT_ACTION,
   SHOW_WIDGET,
-} from "./types";
-
-export * from "./types";
+  type HelperWidgetConfig,
+  type NotificationStatus,
+} from "./utils";
 
 declare const __EMBED_URL__: string;
 

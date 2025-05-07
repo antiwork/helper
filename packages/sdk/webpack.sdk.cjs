@@ -9,7 +9,6 @@ module.exports = (env) => {
 
   const baseConfig = {
     mode: isProduction ? "production" : "development",
-    entry: path.resolve(__dirname, "src/index.ts"),
     resolve: {
       extensions: [".ts", ".js"],
       alias: {
@@ -51,29 +50,35 @@ module.exports = (env) => {
     },
   };
 
-  const outputOptions = {
-    filename: "sdk.js",
-    chunkFilename: "sdk-[name]-[chunkhash].js",
-    library: {
-      name: "HelperWidget",
-      type: "umd",
-      export: "default",
-    },
-    globalObject: "this",
-  };
+  const outputOptions = {};
 
   return [
     {
       ...baseConfig,
+      entry: path.resolve(__dirname, "src/utils.ts"),
       output: {
-        ...outputOptions,
-        path: path.resolve(__dirname, "dist"),
+        filename: "utils.js",
+        library: {
+          type: "module",
+        },
+        path: path.resolve(__dirname, "dist/esm"),
+      },
+      experiments: {
+        outputModule: true,
       },
     },
     {
       ...baseConfig,
+      entry: path.resolve(__dirname, "src/index.ts"),
       output: {
-        ...outputOptions,
+        filename: "sdk.js",
+        chunkFilename: "sdk-[name]-[chunkhash].js",
+        globalObject: "this",
+        library: {
+          name: "HelperWidget",
+          type: "umd",
+          export: "default",
+        },
         path: path.resolve(__dirname, "../../public"),
       },
     },

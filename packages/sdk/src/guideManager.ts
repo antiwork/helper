@@ -4,8 +4,7 @@ import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
-import type { GuideSessionEventType } from "./types";
-import { RESUME_GUIDE } from "./types";
+import { RESUME_GUIDE, type GuideSessionEventType } from "./utils";
 
 declare const __EMBED_URL__: string;
 
