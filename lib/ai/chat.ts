@@ -17,6 +17,7 @@ import {
 } from "ai";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
@@ -34,7 +35,6 @@ import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustom
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
-import { ReadPageToolConfig } from "../../packages/sdk/src/types";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 

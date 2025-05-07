@@ -304,17 +304,19 @@ function getFormName(element: DOMElementNode): string | null {
   return null;
 }
 
+export type InteractiveElement = {
+  index: number;
+  element: DOMElementNode;
+  description: string;
+};
+
 /**
  * Finds all interactive elements in the DOM tree
  * @param root The root node
  * @returns Array of interactive elements with their highlight indices and descriptions
  */
-export function findInteractiveElements(root: DOMElementNode): {
-  index: number;
-  element: DOMElementNode;
-  description: string;
-}[] {
-  const interactiveElements: { index: number; element: DOMElementNode; description: string }[] = [];
+export function findInteractiveElements(root: DOMElementNode): InteractiveElement[] {
+  const interactiveElements: InteractiveElement[] = [];
 
   function traverse(node: DOMNode): void {
     if ("tagName" in node) {
