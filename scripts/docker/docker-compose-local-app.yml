@@ -1,0 +1,18 @@
+services:
+  app:
+    depends_on:
+      - db
+      - serverless-redis-http
+      - nginx
+      - minio
+    image: node:22
+    ports:
+      - 3010:3010
+    volumes:
+      - .:/app
+      - pnpm_cache:/root/.pnpm-store
+      - npx_cache:/root/.npm/_npx
+    working_dir: /app
+    entrypoint: ["sh", "scripts/dev.sh"]
+    environment:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: 0

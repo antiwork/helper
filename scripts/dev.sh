@@ -2,26 +2,12 @@
 
 set -e
 
-cleanup() {
-    echo "Shutting down..."
-
-    # Stop Docker containers
-    if [ -z "$SKIP_SETUP" ]; then
-        pnpm services:stop
-    fi
-
-    pkill -P $$
-
-    exit 0
-}
-
-trap cleanup SIGINT SIGTERM
-
-if [ -z "$SKIP_SETUP" ]; then
-    if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
-        pnpm generate-ssl-certificates
-    fi
-fi
+# TODO:
+# if [ -z "$SKIP_SETUP" ]; then
+#     if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
+#         pnpm generate-ssl-certificates
+#     fi
+# fi
 
 corepack enable
 pnpm install
