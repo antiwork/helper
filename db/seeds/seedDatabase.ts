@@ -152,7 +152,7 @@ export const seedDatabase = async () => {
     }
 
     // Optionally create this file to do any additional seeding, e.g. setting up integrations with local credentials
-    if (existsSync(path.join(import.meta.dirname, "localSeeds.ts"))) {
+    if (existsSync(path.join(dirname(fileURLToPath(import.meta.url)), "localSeeds.ts"))) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - localSeeds.ts is optional
       await import("./localSeeds").then((module: any) => module.default());
