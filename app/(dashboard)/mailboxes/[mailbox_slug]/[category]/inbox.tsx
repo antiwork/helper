@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
+import { useMediaQuery } from "react-responsive";
 import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import {
   ConversationListContextProvider,
@@ -34,6 +35,7 @@ const Conversation = dynamic(() => import("./conversation/conversation"), {
 
 const Inbox = () => {
   const params = useParams<{ mailbox_slug: string; category: keyof typeof CATEGORY_LABELS }>();
+  const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const mailboxSlug = params.mailbox_slug;
   const { currentConversationSlug, conversationListData, isPending } = useConversationListContext();
   const utils = api.useUtils();
@@ -81,7 +83,7 @@ const Inbox = () => {
   }
 
   return (
-    <div className="relative flex grow overflow-hidden">
+    <div className={cn("relative flex grow overflow-hidden", isStandalone ? "pt-10" : "")}>
       {pageTitle ? <title>{pageTitle}</title> : null}
       <TabBar />
       {currentConversationSlug ? (

@@ -111,13 +111,13 @@ export const searchConversations = async (
   // Additional filters we can't pass to searchEmailsByKeywords
   where = {
     ...where,
-    ...(filters.isVip && mailbox.vipThreshold
+    ...(filters.isVip && mailbox.vipThreshold != null
       ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
       : {}),
-    ...(filters.minValueDollars
+    ...(filters.minValueDollars != null
       ? { minValue: gt(platformCustomers.value, (filters.minValueDollars * 100).toString()) }
       : {}),
-    ...(filters.maxValueDollars
+    ...(filters.maxValueDollars != null
       ? { maxValue: lt(platformCustomers.value, (filters.maxValueDollars * 100).toString()) }
       : {}),
     ...(filters.search

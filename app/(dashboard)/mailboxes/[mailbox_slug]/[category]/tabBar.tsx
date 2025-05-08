@@ -5,13 +5,21 @@ import { Reorder } from "motion/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
+import { z } from "zod";
 import { create } from "zustand";
 
-type Tab = {
-  id: string;
-  title: string;
-  url: string;
-};
+const tabsSchema = z.object({
+  tabs: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      url: z.string(),
+    }),
+  ),
+  activeTab: z.string().nullable(),
+});
+
+type Tab = z.infer<typeof tabsSchema>["tabs"][number];
 
 const newTab = (url?: string) => {
   return { id: crypto.randomUUID(), title: document.title, url: url ?? location.href };
@@ -25,8 +33,10 @@ const buildFirstTab = () => {
   return { tabs: [tab], activeTab: tab.id };
 };
 
-const savedState = typeof window !== "undefined" ? localStorage.getItem("tabs") : null;
-const initialState: { tabs: Tab[]; activeTab: string } = savedState ? JSON.parse(savedState) : buildFirstTab();
+const savedState = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("tabs") ?? "null") : null;
+const initialState: { tabs: Tab[]; activeTab: string } = tabsSchema.safeParse(savedState).success
+  ? savedState
+  : buildFirstTab();
 
 export const useTabsState = create<{
   tabs: Tab[];
