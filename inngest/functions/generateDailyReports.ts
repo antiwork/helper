@@ -59,7 +59,7 @@ export async function generateMailboxReport(mailboxId: number) {
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
 
   const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
-  
+
   const openTicketsOverZeroCount = await db
     .select({ count: sql`count(*)` })
     .from(conversations)
@@ -67,18 +67,18 @@ export async function generateMailboxReport(mailboxId: number) {
       platformCustomers,
       and(
         eq(conversations.mailboxId, platformCustomers.mailboxId),
-        eq(conversations.emailFrom, platformCustomers.email)
-      )
+        eq(conversations.emailFrom, platformCustomers.email),
+      ),
     )
     .where(
       and(
         eq(conversations.mailboxId, mailbox.id),
         eq(conversations.status, "open"),
         isNull(conversations.mergedIntoId),
-        gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0)
-      )
+        gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0),
+      ),
     )
-    .then(result => Number(result[0]?.count || 0));
+    .then((result) => Number(result[0]?.count || 0));
 
   const openTicketsOverZeroMessage = `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}`;
 
@@ -143,7 +143,9 @@ export async function generateMailboxReport(mailboxId: number) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: [openCountMessage, openTicketsOverZeroMessage, avgReplyTimeMessage, vipAvgReplyTimeMessage].filter(Boolean).join("\n"),
+      text: [openCountMessage, openTicketsOverZeroMessage, avgReplyTimeMessage, vipAvgReplyTimeMessage]
+        .filter(Boolean)
+        .join("\n"),
     },
   });
 
