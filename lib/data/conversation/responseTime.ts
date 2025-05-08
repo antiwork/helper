@@ -36,6 +36,7 @@ export const getAverageResponseTime = async (
     .where(
       and(
         ...Object.values(where ?? {}),
+        eq(conversations.mailboxId, mailbox.id),
         eq(conversationMessages.role, "staff"),
         gte(conversationMessages.createdAt, new Date(startDate)),
         lte(conversationMessages.createdAt, new Date(endDate)),
