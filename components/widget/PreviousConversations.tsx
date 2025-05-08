@@ -1,7 +1,9 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { sendMessageToParent } from "@/lib/widget/messages";
 
 type Conversation = {
@@ -59,8 +61,9 @@ export default function PreviousConversations({ token, onSelectConversation, isA
   const { ref, inView } = useInView();
 
   const [isCleared, setIsCleared] = useState(false);
+  const queryClient = useQueryClient();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", token],
     queryFn: ({ pageParam }) => fetchConversations({ token: token!, cursor: pageParam! }),
     getNextPageParam: (lastPage: ConversationsResponse) => lastPage.nextCursor,
     enabled: !!token,
@@ -82,6 +85,10 @@ export default function PreviousConversations({ token, onSelectConversation, isA
   const handleClearHistory = () => {
     sendMessageToParent({ action: "CLEAR_ANONYMOUS_SESSION" });
     setIsCleared(true);
+    queryClient.setQueryData(["conversations", token], {
+      pages: [],
+      pageParams: [],
+    });
   };
 
   return (
@@ -97,12 +104,19 @@ export default function PreviousConversations({ token, onSelectConversation, isA
       ) : (
         <div className="space-y-3">
           {isAnonymous && (
-            <button
-              onClick={handleClearHistory}
-              className="w-full mb-4 p-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              Clear conversation history
-            </button>
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleClearHistory}
+                    className="absolute flex items-center justify-center bottom-4 right-4 w-10 h-10 bg-white border border-gray-200 rounded-full hover:border-black transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Clear history</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           {conversations.map((conversation) => (
             <button

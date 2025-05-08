@@ -148,8 +148,10 @@ class HelperWidget {
             });
           }, 2000);
         }
-        if (!this.isAnonymous()) {
+        if (this.isAnonymous()) {
           localStorage.setItem(this.ANONYMOUS_SESSION_TOKEN_KEY, data.token);
+        } else {
+          localStorage.removeItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
         }
       }
       return true;
