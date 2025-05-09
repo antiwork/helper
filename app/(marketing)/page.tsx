@@ -1,13 +1,14 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { BookOpenIcon, InboxIcon, BanknotesIcon, ArchiveBoxIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArchiveBoxIcon, BanknotesIcon, BookOpenIcon, InboxIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon, CursorArrowRaysIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
 import AnimatedCursor from "@/components/animated-cursor";
 import AnimatedTyping from "@/components/animated-typing";
 import ComparisonHistogram from "@/components/comparison-histogram";
@@ -18,7 +19,6 @@ import SlackInterface from "@/components/slack-interface";
 import SlackNotification from "@/components/slack-notification";
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "./MarketingHeader";
-import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
 
 type PositionConfig = {
   bubbleVariant: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
@@ -109,20 +109,20 @@ export default function Home() {
       src: "/images/websiteknowledge-ui-1.png",
       alt: "Website Knowledge UI",
       width: 400,
-      height: 237
+      height: 237,
     },
     {
       src: "/images/knowledgebank-ui-1.png",
       alt: "Knowledge Bank UI",
       width: 250,
-      height: 237
+      height: 237,
     },
     {
       src: "/images/message-reactions-ui-1.png",
       alt: "Message Reactions UI",
       width: 400,
-      height: 237
-    }
+      height: 237,
+    },
   ];
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
@@ -298,7 +298,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined' || window.innerWidth >= 768) return;
+    if (typeof window === "undefined" || window.innerWidth >= 768) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev === 2 ? 0 : prev + 1));
     }, 4000);
@@ -331,7 +331,9 @@ export default function Home() {
 
         <section className="min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-4">
-            <h1 className="text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">Helper helps customers help themselves.</h1>
+            <h1 className="text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">
+              Helper helps customers help themselves.
+            </h1>
 
             <div className="max-w-lg mx-auto">
               {showCustomerMessage && (
@@ -364,7 +366,10 @@ export default function Home() {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="w-96">
-                    <div ref={helperMessageRef} className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-br-2xl p-6 shadow-md">
+                    <div
+                      ref={helperMessageRef}
+                      className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-br-2xl p-6 shadow-md"
+                    >
                       <AnimatedTyping
                         text="Let me show you how I can help..."
                         speed={50}
@@ -411,21 +416,34 @@ export default function Home() {
                       <CursorArrowRaysIcon className="w-6 h-6 text-amber-400 mt-1" />
                       <span>
                         <span className="font-bold text-bright">Helping hand</span>
-                        <span className="text-secondary dark:text-foreground"> shows your customers how, instead of telling them.</span>
+                        <span className="text-secondary dark:text-foreground">
+                          {" "}
+                          shows your customers how, instead of telling them.
+                        </span>
                       </span>
                     </div>
                     <div className="flex items-start gap-4">
-                      <BookOpenIcon className="w-6 h-6 mt-1" style={{ color: '#459EFD' }} />
+                      <BookOpenIcon className="w-6 h-6 mt-1" style={{ color: "#459EFD" }} />
                       <span>
-                        <span className="font-bold" style={{ color: '#459EFD' }}>Citations</span>
-                        <span className="text-secondary dark:text-foreground"> back Helper's answers with real help doc snippets.</span>
+                        <span className="font-bold" style={{ color: "#459EFD" }}>
+                          Citations
+                        </span>
+                        <span className="text-secondary dark:text-foreground">
+                          {" "}
+                          back Helper's answers with real help doc snippets.
+                        </span>
                       </span>
                     </div>
                     <div className="flex items-start gap-4">
-                      <PlayCircleIcon className="w-6 h-6 mt-1" style={{ color: '#FF90E8' }} />
+                      <PlayCircleIcon className="w-6 h-6 mt-1" style={{ color: "#FF90E8" }} />
                       <span>
-                        <span className="font-bold" style={{ color: '#FF90E8' }}>Tools</span>
-                        <span className="text-secondary dark:text-foreground"> handle common requests automatically—no agent needed.</span>
+                        <span className="font-bold" style={{ color: "#FF90E8" }}>
+                          Tools
+                        </span>
+                        <span className="text-secondary dark:text-foreground">
+                          {" "}
+                          handle common requests automatically—no agent needed.
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -448,13 +466,31 @@ export default function Home() {
                           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                         >
                           <div className="w-full flex-shrink-0 flex items-center justify-center h-full">
-                            <Image src="/images/helpinghand-ui-mobile.png" alt="Helping Hand UI" width={600} height={800} className="w-full h-auto max-h-full object-contain" />
+                            <Image
+                              src="/images/helpinghand-ui-mobile.png"
+                              alt="Helping Hand UI"
+                              width={600}
+                              height={800}
+                              className="w-full h-auto max-h-full object-contain"
+                            />
                           </div>
                           <div className="w-full flex-shrink-0 flex items-center justify-center h-full">
-                            <Image src="/images/citations-ui.png" alt="Citations UI" width={600} height={800} className="w-full h-auto max-h-full object-contain" />
+                            <Image
+                              src="/images/citations-ui.png"
+                              alt="Citations UI"
+                              width={600}
+                              height={800}
+                              className="w-full h-auto max-h-full object-contain"
+                            />
                           </div>
                           <div className="w-full flex-shrink-0 flex items-center justify-center h-full">
-                            <Image src="/images/tool-usage-ui.png" alt="Tool Usage UI" width={600} height={800} className="w-full h-auto max-h-full object-contain" />
+                            <Image
+                              src="/images/tool-usage-ui.png"
+                              alt="Tool Usage UI"
+                              width={600}
+                              height={800}
+                              className="w-full h-auto max-h-full object-contain"
+                            />
                           </div>
                         </div>
                       </div>
@@ -463,7 +499,7 @@ export default function Home() {
                           <button
                             key={index}
                             onClick={() => setCurrentSlide(index)}
-                            className={`w-2 h-2 rounded-full transition-colors ${currentSlide === index ? 'bg-amber-500' : 'bg-gray-400'}`}
+                            className={`w-2 h-2 rounded-full transition-colors ${currentSlide === index ? "bg-amber-500" : "bg-gray-400"}`}
                           />
                         ))}
                       </div>
@@ -484,14 +520,25 @@ export default function Home() {
           <section className="py-12 md:py-20">
             <div className="container mx-auto px-4">
               <div className="mb-24 text-center md:text-center max-w-4xl mx-auto">
-                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left md:text-center ">Helper delivers fast, accurate support by deeply understanding your content.</h2>
-                <p className="text-lg md:text-xl text-secondary dark:text-foreground  mx-auto text-left md:text-center">Website Knowledge keeps Helper in sync with your site automatically. Knowledge Bank lets agents add custom answers on the fly, right from their inbox.</p>
+                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left md:text-center ">
+                  Helper delivers fast, accurate support by deeply understanding your content.
+                </h2>
+                <p className="text-lg md:text-xl text-secondary dark:text-foreground  mx-auto text-left md:text-center">
+                  Website Knowledge keeps Helper in sync with your site automatically. Knowledge Bank lets agents add
+                  custom answers on the fly, right from their inbox.
+                </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center md:items-stretch">
                 <div className="relative flex flex-col items-center md:items-end h-full px-4 md:px-0">
                   <div className="bg-[#3B1B1B] dark:bg-[#2B0808] rounded-3xl p-8 max-w-xl w-full mx-auto h-full flex flex-col justify-between mt-8 md:mt-0">
                     <div className="flex items-center bg-[#2B0808] rounded-xl px-6 py-4 mb-8">
-                      <svg className="w-6 h-6 text-yellow-300 mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg
+                        className="w-6 h-6 text-yellow-300 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
                         <circle cx="12" cy="12" r="10" />
                         <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
                       </svg>
@@ -501,15 +548,27 @@ export default function Home() {
                       <div className="flex items-center">
                         <span className="w-6 h-6 flex items-center justify-center mr-4">
                           <svg className="w-5 h-5 text-[#C2D44B]" fill="currentColor" viewBox="0 0 20 20">
-                            <circle cx="10" cy="10" r="10" fill="#C2D44B"/>
-                            <path d="M7 10.5l2 2 4-4" stroke="#2B0808" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="10" cy="10" r="10" fill="#C2D44B" />
+                            <path
+                              d="M7 10.5l2 2 4-4"
+                              stroke="#2B0808"
+                              strokeWidth="2"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
                           </svg>
                         </span>
                         <span className="text-base md:text-lg text-[#FFE6B0]">Scanning website content</span>
                       </div>
                       <div className="flex items-center">
                         <span className="w-6 h-6 flex items-center justify-center mr-4">
-                          <svg className="w-5 h-5 animate-spin text-[#FFD34E]" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <svg
+                            className="w-5 h-5 animate-spin text-[#FFD34E]"
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
                             <circle className="opacity-20" cx="10" cy="10" r="9" stroke="#FFD34E" strokeWidth="3" />
                             <path d="M10 2a8 8 0 1 1-8 8" stroke="#FFD34E" strokeWidth="3" strokeLinecap="round" />
                           </svg>
@@ -519,7 +578,7 @@ export default function Home() {
                       <div className="flex items-center">
                         <span className="w-6 h-6 flex items-center justify-center mr-4">
                           <svg className="w-5 h-5" viewBox="0 0 20 20">
-                            <circle cx="10" cy="10" r="9" stroke="#FFE6B0" strokeWidth="2" fill="none" opacity="0.5"/>
+                            <circle cx="10" cy="10" r="9" stroke="#FFE6B0" strokeWidth="2" fill="none" opacity="0.5" />
                           </svg>
                         </span>
                         <span className="text-base md:text-lg text-[#FFE6B0]">Indexing content</span>
@@ -527,15 +586,25 @@ export default function Home() {
                       <div className="flex items-center">
                         <span className="w-6 h-6 flex items-center justify-center mr-4">
                           <svg className="w-5 h-5" viewBox="0 0 20 20">
-                            <circle cx="10" cy="10" r="9" stroke="#FFE6B0" strokeWidth="2" fill="none" opacity="0.5"/>
+                            <circle cx="10" cy="10" r="9" stroke="#FFE6B0" strokeWidth="2" fill="none" opacity="0.5" />
                           </svg>
                         </span>
                         <span className="text-base md:text-lg text-[#FFE6B0]">Building AI model</span>
                       </div>
                     </div>
                   </div>
-                  <div className="absolute -top-2 -left-1 md:-top-8 md:-left-2 rotate-[-6deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50" style={{ borderColor: '#FF90E8', background: '#250404', color: '#FF90E8' }}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#FF90E8' }}>
+                  <div
+                    className="absolute -top-2 -left-1 md:-top-8 md:-left-2 rotate-[-6deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50"
+                    style={{ borderColor: "#FF90E8", background: "#250404", color: "#FF90E8" }}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      style={{ color: "#FF90E8" }}
+                    >
                       <circle cx="12" cy="12" r="10" />
                       <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
                     </svg>
@@ -547,27 +616,49 @@ export default function Home() {
                     <div className="w-full max-w-xl flex flex-col gap-3 h-full">
                       <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
                         <BanknotesIcon className="w-6 h-6 text-[#FFD34E] mr-3" />
-                        <span className="text-base md:text-lg text-[#FFE6B0] font-medium">What's your refund policy?</span>
+                        <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
+                          What's your refund policy?
+                        </span>
                       </div>
                       <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
                         <ArchiveBoxIcon className="w-6 h-6 text-[#459EFD] mr-3" />
-                        <span className="text-base md:text-lg text-[#FFE6B0] font-medium">Can I expedite shipping?</span>
+                        <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
+                          Can I expedite shipping?
+                        </span>
                       </div>
                       <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
                         <TrashIcon className="w-6 h-6 text-[#FF4343] mr-3" />
-                        <span className="text-base md:text-lg text-[#FFE6B0] font-medium">How do I delete my account?</span>
+                        <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
+                          How do I delete my account?
+                        </span>
                       </div>
                       <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
-                        <svg className="w-6 h-6 text-[#FFE6B0] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" stroke="#FFE6B0" strokeWidth="2" fill="none"/>
-                          <path d="M12 8v8M8 12h8" stroke="#FFE6B0" strokeWidth="2" strokeLinecap="round"/>
+                        <svg
+                          className="w-6 h-6 text-[#FFE6B0] mr-3"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle cx="12" cy="12" r="10" stroke="#FFE6B0" strokeWidth="2" fill="none" />
+                          <path d="M12 8v8M8 12h8" stroke="#FFE6B0" strokeWidth="2" strokeLinecap="round" />
                         </svg>
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">Add knowledge</span>
                       </div>
                     </div>
                   </div>
-                  <div className="absolute -top-8 right-1 md:-top-10 md:right-20 rotate-[4deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50" style={{ borderColor: '#459EFD', background: '#250404', color: '#459EFD' }}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#459EFD' }}>
+                  <div
+                    className="absolute -top-8 right-1 md:-top-10 md:right-20 rotate-[4deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50"
+                    style={{ borderColor: "#459EFD", background: "#250404", color: "#459EFD" }}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      style={{ color: "#459EFD" }}
+                    >
                       <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5V6.5A2.5 2.5 0 016.5 4H20v13M4 19.5H20" />
                     </svg>
                     Knowledge bank
@@ -584,7 +675,11 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
                 <div className="md:sticky md:top-20">
                   <h2 className="text-5xl font-bold mb-4 text-secondary dark:text-foreground">Human in the loop</h2>
-                  <p className="text-lg text-secondary dark:text-foreground mb-8">Helper steps back when humans need to step in.<br /> <br /> Get notified in Slack when complex or high-priority issues arise, use @helper to quickly surface context, and easily return tickets to Helper once your team has resolved the issue.</p>
+                  <p className="text-lg text-secondary dark:text-foreground mb-8">
+                    Helper steps back when humans need to step in.
+                    <br /> <br /> Get notified in Slack when complex or high-priority issues arise, use @helper to
+                    quickly surface context, and easily return tickets to Helper once your team has resolved the issue.
+                  </p>
                   <Button className="bg-amber-500 hover:bg-amber-600 text-black font-medium px-8 py-6 rounded-md text-lg">
                     Get Started
                   </Button>
@@ -605,8 +700,13 @@ export default function Home() {
         {showFeatures && (
           <section className="py-20">
             <div className="container mx-auto px-4 max-w-7xl">
-              <h2 className="text-5xl font-bold text-secondary dark:text-foreground text-center mb-12">Measure your success</h2>
-              <p className="text-lg text-secondary dark:text-foreground text-center mb-12 max-w-3xl mx-auto">Helper provides comprehensive analytics to track the impact on your support operations. See faster response times, improved customer sentiment, and happier support agents.</p>
+              <h2 className="text-5xl font-bold text-secondary dark:text-foreground text-center mb-12">
+                Measure your success
+              </h2>
+              <p className="text-lg text-secondary dark:text-foreground text-center mb-12 max-w-3xl mx-auto">
+                Helper provides comprehensive analytics to track the impact on your support operations. See faster
+                response times, improved customer sentiment, and happier support agents.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch h-full min-h-[480px]">
                 <div className="md:col-span-2 flex flex-col justify-between h-full">
                   <div className="text-center"></div>
@@ -628,7 +728,9 @@ export default function Home() {
                       <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Agent satisfaction</div>
                     </div>
                     <span className="text-7xl mb-8 pt-4">😊</span>
-                    <span className="text-5xl font-bold mb-2" style={{ color: '#C2D44B' }}>92%</span>
+                    <span className="text-5xl font-bold mb-2" style={{ color: "#C2D44B" }}>
+                      92%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -641,10 +743,7 @@ export default function Home() {
           </section>
         )}
 
-        <footer
-          className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5"
-          style={{ backgroundColor: footerBgColor }}
-        >
+        <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: footerBgColor }}>
           <div className="flex items-center">
             <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
               <svg width="200" height="40" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
