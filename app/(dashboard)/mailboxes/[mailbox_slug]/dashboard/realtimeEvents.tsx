@@ -1,16 +1,16 @@
 "use client";
 
-import {
-  ChatBubbleLeftIcon,
-  CurrencyDollarIcon,
-  EnvelopeIcon,
-  FlagIcon,
-  HandThumbDownIcon,
-  HandThumbUpIcon,
-  StarIcon,
-} from "@heroicons/react/24/outline";
 import { AblyProvider, ChannelProvider } from "ably/react";
-import { BotIcon } from "lucide-react";
+import { 
+  BotIcon, 
+  DollarSign, 
+  Flag, 
+  Mail, 
+  MessageSquare, 
+  Star, 
+  ThumbsDown, 
+  ThumbsUp 
+} from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
@@ -93,13 +93,13 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
                 <div className="flex items-center gap-3 shrink-0">
                   {event.isVip && (
                     <div className="flex items-center gap-1 text-xs">
-                      <StarIcon className="w-4 h-4 text-bright" />
+                      <Star className="w-4 h-4 text-bright" />
                       VIP
                     </div>
                   )}
                   {event.value != null && (
                     <div className="flex items-center gap-1 text-xs">
-                      <CurrencyDollarIcon className="w-4 h-4 text-success" />
+                      <DollarSign className="w-4 h-4 text-success" />
                       <div>${(Number(event.value) / 100).toFixed(2)}</div>
                     </div>
                   )}
@@ -117,24 +117,24 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
 
               {event.type === "bad_reply" ? (
                 <div className="mt-6 flex items-center gap-2 text-destructive text-sm">
-                  <HandThumbDownIcon className="w-4 h-4" />
+                  <ThumbsDown className="w-4 h-4" />
                   <span className="flex-1 truncate">
                     Bad reply {event.description ? <>&mdash; {event.description}</> : null}
                   </span>
                 </div>
               ) : event.type === "good_reply" ? (
                 <div className="mt-6 flex items-center gap-2 text-success text-sm">
-                  <HandThumbUpIcon className="w-4 h-4" />
+                  <ThumbsUp className="w-4 h-4" />
                   Good reply
                 </div>
               ) : event.type === "email" ? (
                 <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
-                  <EnvelopeIcon className="w-4 h-4" />
+                  <Mail className="w-4 h-4" />
                   <div className="flex-1 truncate">{event.description}</div>
                 </div>
               ) : event.type === "chat" ? (
                 <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
-                  <ChatBubbleLeftIcon className="w-4 h-4" />
+                  <MessageSquare className="w-4 h-4" />
                   <div className="flex-1 truncate">{event.description}</div>
                 </div>
               ) : event.type === "ai_reply" ? (
@@ -144,7 +144,7 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
                 </div>
               ) : (
                 <div className="mt-6 flex items-center gap-2 text-muted-foreground text-sm">
-                  <FlagIcon className="w-4 h-4 text-bright" />
+                  <Flag className="w-4 h-4 text-bright" />
                   Human support requested
                 </div>
               )}

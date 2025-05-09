@@ -1,4 +1,4 @@
-import { PaperClipIcon } from "@heroicons/react/24/outline";
+import { Paperclip } from "lucide-react";
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
 import HumanizedTime from "@/components/humanizedTime";
@@ -114,7 +114,7 @@ export default function Message({
           <div className="p-4 pt-0 flex flex-col gap-2">
             {attachments.map((attachment) => (
               <a className="flex items-center gap-2" href={attachment.presignedUrl} target="_blank" download>
-                <PaperClipIcon className="h-4 w-4 shrink-0" />
+                <Paperclip className="h-4 w-4 shrink-0" />
                 <span className="flex-1 min-w-0 truncate underline">{attachment.name}</span>
               </a>
             ))}

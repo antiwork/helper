@@ -1,15 +1,16 @@
-import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
 import {
-  ArrowUpIcon,
-  ChatBubbleLeftIcon,
-  EnvelopeIcon,
-  InformationCircleIcon,
-  LinkIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+  ArrowUp,
+  Download,
+  Info,
+  Link as LinkIcon,
+  Mail,
+  MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
+  X,
+} from "lucide-react";
 import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
@@ -159,7 +160,7 @@ const ScrollToTopButton = ({
           onClick={scrollToTop}
           aria-label="Scroll to top"
         >
-          <ArrowUpIcon className="h-4 w-4 text-foreground" />
+          <ArrowUp className="h-4 w-4 text-foreground" />
         </a>
       </TooltipTrigger>
       <TooltipContent>Scroll to top</TooltipContent>
@@ -237,7 +238,7 @@ const ConversationHeader = ({
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
       <div id="conversation-close" className="sm:hidden">
-        <XMarkIcon
+        <X
           aria-label="Minimize conversation"
           className="text-primary h-5 w-5 cursor-pointer"
           onClick={minimize}
@@ -245,9 +246,9 @@ const ConversationHeader = ({
       </div>
       <div className="hidden sm:block">
         {conversationInfo?.source === "email" ? (
-          <EnvelopeIcon className="w-4 h-4" />
+          <Mail className="w-4 h-4" />
         ) : (
-          <ChatBubbleLeftIcon className="w-4 h-4" />
+          <MessageSquare className="w-4 h-4" />
         )}
       </div>
       <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
@@ -268,7 +269,7 @@ const ConversationHeader = ({
             <PanelRightOpen className="h-4 w-4" />
           )
         ) : (
-          <InformationCircleIcon className="h-5 w-5" />
+          <Info className="h-5 w-5" />
         )}
         <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
       </Button>
@@ -339,7 +340,7 @@ const CarouselPreviewContent = ({
 
                 <div className="mr-6 flex items-center">
                   <button onClick={() => FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)}>
-                    <ArrowDownTrayIcon className="text-primary h-5 w-5 shrink-0" />
+                    <Download className="text-primary h-5 w-5 shrink-0" />
                     <span className="sr-only">Download</span>
                   </button>
                 </div>

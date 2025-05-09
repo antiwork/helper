@@ -1,14 +1,14 @@
-import {
-  ArrowUturnLeftIcon,
-  ArrowUturnUpIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ExclamationCircleIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
 import { upperFirst } from "lodash-es";
-import { Bot } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
+  Bot,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  User
+} from "lucide-react";
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";

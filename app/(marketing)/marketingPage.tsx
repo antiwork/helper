@@ -2,18 +2,18 @@
 
 import { useUser } from "@clerk/nextjs";
 import {
-  ArrowPathIcon,
-  ArrowRightIcon,
-  BookOpenIcon,
-  HandThumbDownIcon,
-  InboxIcon,
-  MagnifyingGlassIcon,
-  PaperAirplaneIcon,
-  PlayIcon,
-  PlusCircleIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
-import { Shuffle } from "lucide-react";
+  ArrowRight,
+  Book,
+  Inbox,
+  Play,
+  PlusCircle,
+  RefreshCw,
+  Search,
+  Send,
+  Shuffle,
+  ThumbsDown,
+  Trash
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";

@@ -1,4 +1,4 @@
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";

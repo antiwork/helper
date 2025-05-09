@@ -1,4 +1,4 @@
-import { StarIcon, UserIcon } from "@heroicons/react/24/outline";
+import { Star, User } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/trpc/react";
@@ -51,7 +51,7 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
     data.assignedToMe > 0 && (
       <DashboardAlert
         key="assigned"
-        icon={<UserIcon className="h-5 w-5" />}
+        icon={<User className="h-5 w-5" />}
         variant="danger"
         href={`/mailboxes/${mailboxSlug}/mine`}
       >
@@ -62,7 +62,7 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
     data.vipOverdue > 0 && (
       <DashboardAlert
         key="vip"
-        icon={<StarIcon className="h-5 w-5" />}
+        icon={<Star className="h-5 w-5" />}
         variant="warning"
         href={`/mailboxes/${mailboxSlug}/conversations`}
       >

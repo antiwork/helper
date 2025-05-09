@@ -1,21 +1,25 @@
-import { PaperClipIcon } from "@heroicons/react/20/solid";
 import cx from "classnames";
 import { useMemo, useState, type JSX } from "react";
 import type { AttachedFile, Conversation, Message as MessageType, Note as NoteType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
 import "@/components/linkCta.css";
-import {
-  ArrowDownOnSquareIcon,
-  ChatBubbleLeftIcon,
-  EnvelopeIcon,
-  PencilSquareIcon,
-  UserIcon,
-} from "@heroicons/react/16/solid";
-import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
-import { SparklesIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { truncate } from "lodash-es";
-import { Bot, Frown, ThumbsDown, ThumbsUp } from "lucide-react";
+import { 
+  Bot, 
+  Download, 
+  Edit, 
+  Frown, 
+  Mail, 
+  MessageSquare, 
+  MoreHorizontal, 
+  Paperclip, 
+  Sparkles, 
+  ThumbsDown, 
+  ThumbsUp, 
+  User, 
+  XCircle 
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -61,14 +65,14 @@ const MessageItem = ({
     <span key={`${message.id}-from`} className="flex items-center gap-1">
       {userMessage ? (
         conversation.source === "email" ? (
-          <EnvelopeIcon className="h-3 w-3" />
+          <Mail className="h-3 w-3" />
         ) : (
-          <ChatBubbleLeftIcon className="h-3 w-3" />
+          <MessageSquare className="h-3 w-3" />
         )
       ) : message.type === "note" ? (
-        <PencilSquareIcon className="h-3 w-3" />
+        <Edit className="h-3 w-3" />
       ) : message.from ? (
-        <UserIcon className="h-3 w-3" />
+        <User className="h-3 w-3" />
       ) : (
         <Bot className="h-3 w-3" />
       )}
@@ -186,7 +190,7 @@ const MessageItem = ({
                         : "bg-border text-muted-foreground hover:text-muted-foreground",
                     )}
                   >
-                    <EllipsisHorizontalIcon className="h-8 w-8" />
+                    <MoreHorizontal className="h-8 w-8" />
                   </button>
                   {showQuotedContext ? quotedContext : null}
                 </>
@@ -206,7 +210,7 @@ const MessageItem = ({
                         }
                       }}
                     >
-                      <ArrowDownOnSquareIcon className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                       <span className="text-xs">Merged</span>
                     </button>
                   </TooltipTrigger>
@@ -221,7 +225,7 @@ const MessageItem = ({
               <Popover>
                 <PopoverTrigger asChild>
                   <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                    <SparklesIcon className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                     <span className="text-xs">View AI reasoning</span>
                   </button>
                 </PopoverTrigger>
@@ -283,7 +287,7 @@ const MessageItem = ({
               </div>
               {message.type === "message" && message.status === "failed" && (
                 <div className="align-center flex items-center justify-center gap-0.5 text-sm text-destructive">
-                  <XCircleIcon className="h-4 w-4" />
+                  <XCircle className="h-4 w-4" />
                   <span>Message failed to send</span>
                 </div>
               )}
@@ -319,7 +323,7 @@ const MessageItem = ({
                   </div>
 
                   <div className="inline-flex items-center gap-1 rounded-b border-t border-t-border p-2 text-xs">
-                    <PaperClipIcon className="h-4 w-4 shrink-0" />
+                    <Paperclip className="h-4 w-4 shrink-0" />
                     <span className="max-w-[10rem] truncate" title={file.name}>
                       {file.name}
                     </span>
