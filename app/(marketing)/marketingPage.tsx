@@ -109,7 +109,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
-                    <TrashIcon className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -121,7 +121,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                     accessed.
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
-                    <TrashIcon className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -220,7 +220,7 @@ Please reply with this information. We'll review your request within 1-2 busines
                       {prompt}
                     </div>
                     <button className="inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-primary hover:bg-secondary h-10 rounded text-xs w-10 px-0">
-                      <TrashIcon className="h-4 w-4" />
+                      <Trash className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
