@@ -47,7 +47,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
       <Link href={`${getBaseUrl()}/docs`} target="_blank">
         <Button variant="subtle">
           <span className="flex items-center">
-            <BookOpenIcon className="h-5 w-5 mr-2" />
+            <Book className="h-5 w-5 mr-2" />
             Docs
           </span>
         </Button>
@@ -64,7 +64,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
         <Link href="/mailboxes">
           <Button variant="subtle">
             <span className="flex items-center">
-              <InboxIcon className="h-5 w-5 mr-2" />
+              <Inbox className="h-5 w-5 mr-2" />
               Go to mailbox
             </span>
           </Button>
@@ -73,7 +73,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
         <Link href="/login">
           <Button variant="subtle">
             <span className="flex items-center">
-              <InboxIcon className="h-5 w-5 mr-2" />
+              <Inbox className="h-5 w-5 mr-2" />
               Login
             </span>
           </Button>
@@ -156,7 +156,7 @@ Please reply with this information. We'll review your request within 1-2 busines
             </div>
             <div className="flex justify-between">
               <button className="hidden md:inline-flex items-center justify-center text-primary bg-background border border-primary hover:bg-primary hover:text-primary-foreground h-10 rounded-md px-4 text-sm transition-colors duration-300">
-                <HandThumbDownIcon className="mr-2 h-4 w-4" />
+                <ThumbsDown className="mr-2 h-4 w-4" />
                 Bad reply
               </button>
               <div className="flex space-x-2">
