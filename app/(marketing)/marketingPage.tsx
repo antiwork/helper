@@ -161,11 +161,11 @@ Please reply with this information. We'll review your request within 1-2 busines
               </button>
               <div className="flex space-x-2">
                 <button className="inline-flex items-center justify-center text-primary bg-background border border-primary hover:bg-primary hover:text-primary-foreground h-10 rounded-md px-4 text-sm transition-colors duration-300">
-                  <ArrowPathIcon className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Generate draft
                 </button>
                 <button className="inline-flex items-center justify-center text-primary-foreground bg-primary hover:bg-primary h-10 rounded-md px-4 text-sm">
-                  <PaperAirplaneIcon className="mr-2 h-4 w-4" />
+                  <Send className="mr-2 h-4 w-4" />
                   Send
                 </button>
               </div>
