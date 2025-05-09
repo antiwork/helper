@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/icons/logoIconAmber.svg";
+import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
 
 export function SlackNotification() {
   return (

@@ -18,7 +18,7 @@ import SlackInterface from "@/components/slack-interface";
 import SlackNotification from "@/components/slack-notification";
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "./MarketingHeader";
-import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/(inbox)/_components/icons/logoIconAmber.svg";
+import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
 
 type PositionConfig = {
   bubbleVariant: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
