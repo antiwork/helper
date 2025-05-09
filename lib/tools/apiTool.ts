@@ -1,5 +1,6 @@
-import { generateText } from "ai";
+import { generateText, type Tool as AITool } from "ai";
 import { and, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { mapValues } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, ToolMetadata } from "@/db/schema";
@@ -38,14 +39,17 @@ Based on the user's conversation and the provided metadata, suggest appropriate 
 `;
 
 export const buildAITools = (tools: Tool[]) => {
-  const aiTools = tools.reduce<Record<string, any>>((acc, tool) => {
-    acc[tool.slug] = {
-      description: `${tool.name} - ${tool.description}`,
-      parameters: buildParameterSchema(tool),
-      execute: () => {},
-    };
-    return acc;
-  }, {});
+  const aiTools = tools.reduce<Record<string, Omit<AITool, "execute"> & { customerEmailParameter: string | null }>>(
+    (acc, tool) => {
+      acc[tool.slug] = {
+        description: `${tool.name} - ${tool.description}`,
+        parameters: buildParameterSchema(tool),
+        customerEmailParameter: tool.customerEmailParameter,
+      };
+      return acc;
+    },
+    {},
+  );
   return aiTools;
 };
 
@@ -160,6 +164,8 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
     prompt += `\nActions performed on similar conversations:\n${similarPrompt}`;
   }
 
+  const aiTools = buildAITools(mailboxTools);
+
   const { toolCalls } = await generateText({
     model: openai(GPT_4O_MINI_MODEL),
     tools: {
@@ -181,7 +187,10 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
         }),
         execute: async () => {},
       },
-      ...buildAITools(mailboxTools),
+      ...mapValues(aiTools, (tool) => ({
+        ...tool,
+        execute: async () => {},
+      })),
     },
     temperature: 0.5,
     maxTokens: 1000,
@@ -204,7 +213,11 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
       case "assign":
         return { type: "assign", clerkUserId: args.userId };
       default:
-        return { type: "tool", slug: toolName, parameters: args };
+        const parameters = args as Record<string, any>;
+        if (aiTools[toolName]?.customerEmailParameter) {
+          parameters[aiTools[toolName].customerEmailParameter] = conversation.emailFrom;
+        }
+        return { type: "tool", slug: toolName, parameters };
     }
   }) satisfies (typeof conversations.$inferInsert)["suggestedActions"];
 };
@@ -274,6 +287,7 @@ const buildRequestOptions = (tool: Tool, params: Record<string, any>, headers: H
 const buildParameterSchema = (tool: Tool) => {
   return z.object(
     (tool.parameters || []).reduce<Record<string, z.ZodType>>((acc, param) => {
+      if (param.name === tool.customerEmailParameter) return acc;
       const zodType = (z[param.type as keyof typeof z] as any)().describe(param.description || param.name);
       acc[param.name] = param.required ? zodType : zodType.optional();
       return acc;

@@ -1,6 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
+import { ReadPageToolConfig } from "@helperai/sdk";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
@@ -12,7 +13,6 @@ import {
 } from "@/lib/data/conversation";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
-import { ReadPageToolConfig } from "@/sdk/types";
 
 export const maxDuration = 60;
 

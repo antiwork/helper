@@ -9,7 +9,7 @@ import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
-import { sendScreenshot } from "@/lib/widget/messages";
+import { closeWidget, sendScreenshot } from "@/lib/widget/messages";
 
 type Props = {
   input: string;
@@ -127,6 +127,17 @@ export default function ChatInput({
   }, [screenshot]);
 
   const submit = () => {
+    const normalizedInput = input.trim().toLowerCase();
+    if (
+      ["exit", "cancel", "close", "stop", "quit", "end", "bye"].some((cmd) => normalizedInput === cmd) ||
+      normalizedInput.includes("exit chat") ||
+      normalizedInput.includes("exit this chat") ||
+      normalizedInput.includes("close this chat") ||
+      normalizedInput.includes("close chat")
+    ) {
+      closeWidget();
+      return;
+    }
     if (includeScreenshot) {
       sendScreenshot();
     } else {

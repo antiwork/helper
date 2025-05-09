@@ -384,16 +384,18 @@ export const generateConversationSubject = async (
   const subject =
     messages.length === 1 && messages[0] && messages[0].content.length <= 50
       ? messages[0].content
-      : await runAIQuery({
-          messages: messages.filter((m) => m.role === "user").map((m) => ({ role: "user", content: m.content })),
-          mailbox,
-          queryType: "response_generator",
-          system:
-            "Generate a brief, clear subject line (max 50 chars) that summarizes the main point of these messages. Respond with only the subject line, no other text.",
-          maxTokens: 50,
-          temperature: 0,
-          functionId: "generate-conversation-subject",
-        });
+      : (
+          await runAIQuery({
+            messages: messages.filter((m) => m.role === "user").map((m) => ({ role: "user", content: m.content })),
+            mailbox,
+            queryType: "response_generator",
+            system:
+              "Generate a brief, clear subject line (max 50 chars) that summarizes the main point of these messages. Respond with only the subject line, no other text.",
+            maxTokens: 50,
+            temperature: 0,
+            functionId: "generate-conversation-subject",
+          })
+        ).text;
 
   await db.update(conversations).set({ subject }).where(eq(conversations.id, conversationId));
 };

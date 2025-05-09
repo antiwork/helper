@@ -40,6 +40,9 @@ importers:
       '@helperai/react':
         specifier: workspace:*
         version: link:packages/react
+      '@helperai/sdk':
+        specifier: workspace:*
+        version: link:packages/sdk
       '@heroicons/react':
         specifier: ^2.0.18
         version: 2.2.0(react@19.1.0)
@@ -121,12 +124,9 @@ importers:
       '@readme/openapi-parser':
         specifier: ^2.6.0
         version: 2.7.0(openapi-types@12.1.3)
-      '@rrweb/record':
-        specifier: ^2.0.0-alpha.18
-        version: 2.0.0-alpha.18
       '@sentry/nextjs':
         specifier: ^9.15.0
-        version: 9.15.0(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(webpack@5.99.7)
+        version: 9.15.0(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(webpack@5.99.7(esbuild@0.19.12))
       '@slack/oauth':
         specifier: ^3.0.1
         version: 3.0.3
@@ -154,24 +154,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.66.0
         version: 5.74.11(react@19.1.0)
-      '@tauri-apps/api':
-        specifier: ^2.4.0
-        version: 2.5.0
-      '@tauri-apps/plugin-deep-link':
-        specifier: ^2.2.0
-        version: 2.2.1
-      '@tauri-apps/plugin-opener':
-        specifier: ^2.2.5
-        version: 2.2.6
-      '@tauri-apps/plugin-os':
-        specifier: ^2.2.0
-        version: 2.2.1
-      '@tauri-apps/plugin-process':
-        specifier: ^2.2.0
-        version: 2.2.1
-      '@tauri-apps/plugin-updater':
-        specifier: ^2.5.0
-        version: 2.7.1
       '@tiptap/core':
         specifier: ^2.4.0
         version: 2.11.9(@tiptap/pm@2.11.9)
@@ -214,6 +196,9 @@ importers:
       '@trpc/server':
         specifier: ^11.0.0-rc.700
         version: 11.1.2(typescript@5.8.3)
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
       '@upstash/redis':
         specifier: ^1.34.3
         version: 1.34.8
@@ -232,9 +217,6 @@ importers:
       ai:
         specifier: ^4.1.41
         version: 4.3.12(react@19.1.0)(zod@3.24.3)
-      apple-signin-auth:
-        specifier: ^1.7.8
-        version: 1.7.9
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.3
@@ -310,7 +292,7 @@ importers:
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
-      lodash:
+      lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
       lucide-react:
@@ -328,9 +310,6 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
-      modern-screenshot:
-        specifier: ^4.5.5
-        version: 4.6.0
       motion:
         specifier: ^12.0.0-alpha.2
         version: 12.9.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -409,9 +388,6 @@ importers:
       rrweb-player:
         specifier: ^1.0.0-alpha.4
         version: 1.0.0-alpha.4
-      scroll-into-view-if-needed:
-        specifier: ^3.1.0
-        version: 3.1.0
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -455,12 +431,6 @@ importers:
       '@babel/core':
         specifier: ^7.25.2
         version: 7.27.1
-      '@babel/preset-env':
-        specifier: ^7.25.4
-        version: 7.27.1(@babel/core@7.27.1)
-      '@babel/preset-typescript':
-        specifier: ^7.24.7
-        version: 7.27.1(@babel/core@7.27.1)
       '@clerk/types':
         specifier: ^4.56.1
         version: 4.56.1
@@ -476,9 +446,6 @@ importers:
       '@next/eslint-plugin-next':
         specifier: ^15.3.1
         version: 15.3.1
-      '@rrweb/types':
-        specifier: 2.0.0-alpha.18
-        version: 2.0.0-alpha.18
       '@svgr/webpack':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.8.3)
@@ -506,9 +473,6 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.6
         version: 9.0.9
-      '@types/lodash':
-        specifier: ^4.14.201
-        version: 4.17.16
       '@types/mailparser':
         specifier: ^3.4.5
         version: 3.4.5
@@ -542,9 +506,6 @@ importers:
       autoevals:
         specifier: ^0.0.117
         version: 0.0.117
-      babel-loader:
-        specifier: ^9.1.3
-        version: 9.2.1(@babel/core@7.27.1)(webpack@5.99.7)
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -599,12 +560,12 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.6.8
         version: 0.6.11(@ianvs/prettier-plugin-sort-imports@4.4.1(prettier@3.5.3))(prettier@3.5.3)
-      raw-loader:
-        specifier: ^4.0.2
-        version: 4.0.2(webpack@5.99.7)
       react-email:
         specifier: ^3.0.4
         version: 3.0.7(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      tsx:
+        specifier: ^4.19.4
+        version: 4.19.4
       typescript:
         specifier: ^5.5.4
         version: 5.8.3
@@ -620,12 +581,6 @@ importers:
       vitest:
         specifier: ^2.1.1
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.15.3)(jsdom@26.1.0)(lightningcss@1.29.2)(terser@5.39.0)
-      webpack:
-        specifier: ^5.94.0
-        version: 5.99.7(esbuild@0.19.12)(webpack-cli@5.1.4)
-      webpack-cli:
-        specifier: ^5.1.4
-        version: 5.1.4(webpack@5.99.7)
 
   packages/react:
     dependencies:
@@ -668,13 +623,50 @@ importers:
         version: 19.1.0(react@19.1.0)
       tsup:
         specifier: ^8.3.6
-        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.7.1)
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.7.1)
       typescript:
         specifier: ^5.3.3
         version: 5.8.3
       vitest:
         specifier: ^1.0.4
         version: 1.6.1(@edge-runtime/vm@3.2.0)(@types/node@22.15.3)(jsdom@23.2.0)(lightningcss@1.29.2)(terser@5.39.0)
+
+  packages/sdk:
+    dependencies:
+      '@rrweb/record':
+        specifier: ^2.0.0-alpha.18
+        version: 2.0.0-alpha.18
+      '@rrweb/types':
+        specifier: 2.0.0-alpha.18
+        version: 2.0.0-alpha.18
+      modern-screenshot:
+        specifier: ^4.5.5
+        version: 4.6.0
+      scroll-into-view-if-needed:
+        specifier: ^3.1.0
+        version: 3.1.0
+    devDependencies:
+      '@babel/preset-env':
+        specifier: ^7.25.4
+        version: 7.27.1(@babel/core@7.27.1)
+      '@babel/preset-typescript':
+        specifier: ^7.24.7
+        version: 7.27.1(@babel/core@7.27.1)
+      babel-loader:
+        specifier: ^9.1.3
+        version: 9.2.1(@babel/core@7.27.1)(webpack@5.99.7)
+      raw-loader:
+        specifier: ^4.0.2
+        version: 4.0.2(webpack@5.99.7)
+      typescript:
+        specifier: ^5.5.4
+        version: 5.8.3
+      webpack:
+        specifier: ^5.94.0
+        version: 5.99.7(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack-cli:
+        specifier: ^5.1.4
+        version: 5.1.4(webpack@5.99.7)
 
 packages:
 
@@ -5210,24 +5202,6 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@tauri-apps/api@2.5.0':
-    resolution: {integrity: sha512-Ldux4ip+HGAcPUmuLT8EIkk6yafl5vK0P0c0byzAKzxJh7vxelVtdPONjfgTm96PbN24yjZNESY8CKo8qniluA==}
-
-  '@tauri-apps/plugin-deep-link@2.2.1':
-    resolution: {integrity: sha512-8skZ6qIH/kWaV8d6jj3aPvvkIOuqkVk0APRDey9n9N3Ueu3n4MIbuxpAKR2EdoAyQxnXxPTNVyjw2D35/vfGyg==}
-
-  '@tauri-apps/plugin-opener@2.2.6':
-    resolution: {integrity: sha512-bSdkuP71ZQRepPOn8BOEdBKYJQvl6+jb160QtJX/i2H9BF6ZySY/kYljh76N2Ne5fJMQRge7rlKoStYQY5Jq1w==}
-
-  '@tauri-apps/plugin-os@2.2.1':
-    resolution: {integrity: sha512-cNYpNri2CCc6BaNeB6G/mOtLvg8dFyFQyCUdf2y0K8PIAKGEWdEcu8DECkydU2B+oj4OJihDPD2de5K6cbVl9A==}
-
-  '@tauri-apps/plugin-process@2.2.1':
-    resolution: {integrity: sha512-cF/k8J+YjjuowhNG1AboHNTlrGiOwgX5j6NzsX6WFf9FMzyZUchkCgZMxCdSE5NIgFX0vvOgLQhODFJgbMenLg==}
-
-  '@tauri-apps/plugin-updater@2.7.1':
-    resolution: {integrity: sha512-1OPqEY/z7NDVSeTEMIhD2ss/vXWdpfZ5Th2Mk0KtPR/RA6FKuOTDGZQhxoyYBk0pcZJ+nNZUbl/IujDCLBApjA==}
-
   '@testcontainers/postgresql@10.24.2':
     resolution: {integrity: sha512-s4k/QVSmpXFzxNBeft84x172Hx5tNiGeDRWwU8iOAHjtcnyXd4aBORF0GruNojTo7TOIuAM0ArBZUMqRBLJKwQ==}
 
@@ -5589,6 +5563,9 @@ packages:
 
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
+
+  '@types/lodash-es@4.17.12':
+    resolution: {integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==}
 
   '@types/lodash@4.17.16':
     resolution: {integrity: sha512-HX7Em5NYQAXKW+1T+FiuG27NGwzJfCX3s1GjOa7ujxZa52kjJLOr4FUxT+giF6Tgxv1e+/czV/iTtBw27WTU9g==}
@@ -6299,9 +6276,6 @@ packages:
   apparatus@0.0.10:
     resolution: {integrity: sha512-KLy/ugo33KZA7nugtQ7O0E1c8kQ52N3IvD/XgIh4w/Nr28ypfkwDfA67F1ev4N1m5D+BOk1+b2dEJDfpj/VvZg==}
     engines: {node: '>=0.2.6'}
-
-  apple-signin-auth@1.7.9:
-    resolution: {integrity: sha512-p/ggSSeM4CGr+9FI+D6OxMVkbKpt4p4wJQgBgABlgs/zJ/EXgqn1EQTMp9GCWVJHBB04PShp5c7Gh7ceZwEIDg==}
 
   archiver-utils@5.0.2:
     resolution: {integrity: sha512-wuLJMmIBQYCsGZgYLTy5FIB2pF6Lfb6cXMSF8Qywwk3t20zWnAi7zLcQFdKQmIB8wyZpY5ER38x08GbwtR2cLA==}
@@ -9441,6 +9415,9 @@ packages:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
 
@@ -10171,9 +10148,6 @@ packages:
 
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
-
-  node-rsa@1.1.1:
-    resolution: {integrity: sha512-Jd4cvbJMryN21r5HgxQOpMEqv+ooke/korixNNK3mGqfGJmy0M77WDDzo/05969+OkMy3XW1UuZsSmW9KQm7Fw==}
 
   nodemailer@6.10.1:
     resolution: {integrity: sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==}
@@ -12224,6 +12198,11 @@ packages:
         optional: true
       typescript:
         optional: true
+
+  tsx@4.19.4:
+    resolution: {integrity: sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
@@ -17392,7 +17371,7 @@ snapshots:
 
   '@sentry/core@9.15.0': {}
 
-  '@sentry/nextjs@9.15.0(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(webpack@5.99.7)':
+  '@sentry/nextjs@9.15.0(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(webpack@5.99.7(esbuild@0.19.12))':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/semantic-conventions': 1.32.0
@@ -17403,7 +17382,7 @@ snapshots:
       '@sentry/opentelemetry': 9.15.0(@opentelemetry/api@1.9.0)(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.53.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.32.0)
       '@sentry/react': 9.15.0(react@19.1.0)
       '@sentry/vercel-edge': 9.15.0
-      '@sentry/webpack-plugin': 3.3.1(webpack@5.99.7)
+      '@sentry/webpack-plugin': 3.3.1(webpack@5.99.7(esbuild@0.19.12))
       chalk: 3.0.0
       next: 15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       resolve: 1.22.8
@@ -17494,12 +17473,12 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@sentry/core': 9.15.0
 
-  '@sentry/webpack-plugin@3.3.1(webpack@5.99.7)':
+  '@sentry/webpack-plugin@3.3.1(webpack@5.99.7(esbuild@0.19.12))':
     dependencies:
       '@sentry/bundler-plugin-core': 3.3.1
       unplugin: 1.0.1
       uuid: 9.0.1
-      webpack: 5.99.7(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.99.7(esbuild@0.19.12)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -18138,28 +18117,6 @@ snapshots:
       '@tanstack/query-core': 5.74.9
       react: 19.1.0
 
-  '@tauri-apps/api@2.5.0': {}
-
-  '@tauri-apps/plugin-deep-link@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-opener@2.2.6':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-os@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-process@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
-  '@tauri-apps/plugin-updater@2.7.1':
-    dependencies:
-      '@tauri-apps/api': 2.5.0
-
   '@testcontainers/postgresql@10.24.2':
     dependencies:
       testcontainers: 10.24.2
@@ -18560,6 +18517,10 @@ snapshots:
       '@types/node': 22.15.3
 
   '@types/linkify-it@5.0.0': {}
+
+  '@types/lodash-es@4.17.12':
+    dependencies:
+      '@types/lodash': 4.17.16
 
   '@types/lodash@4.17.16': {}
 
@@ -19387,14 +19348,6 @@ snapshots:
   apparatus@0.0.10:
     dependencies:
       sylvester: 0.0.12
-
-  apple-signin-auth@1.7.9:
-    dependencies:
-      jsonwebtoken: 9.0.2
-      node-fetch: 2.7.0
-      node-rsa: 1.1.1
-    transitivePeerDependencies:
-      - encoding
 
   archiver-utils@5.0.2:
     dependencies:
@@ -23036,6 +22989,8 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
+  lodash-es@4.17.21: {}
+
   lodash.camelcase@4.3.0: {}
 
   lodash.castarray@4.4.0: {}
@@ -23982,10 +23937,6 @@ snapshots:
 
   node-releases@2.0.19: {}
 
-  node-rsa@1.1.1:
-    dependencies:
-      asn1: 0.2.6
-
   nodemailer@6.10.1: {}
 
   nodemailer@6.9.16: {}
@@ -24472,12 +24423,13 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.3)(yaml@2.7.1):
+  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.4)(yaml@2.7.1):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 2.4.2
       postcss: 8.5.3
+      tsx: 4.19.4
       yaml: 2.7.1
 
   postcss-selector-parser@6.0.10:
@@ -26104,6 +26056,17 @@ snapshots:
       ansi-escapes: 4.3.2
       iterm2-version: 4.2.0
 
+  terser-webpack-plugin@5.3.14(esbuild@0.19.12)(webpack@5.99.7(esbuild@0.19.12)):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      jest-worker: 27.5.1
+      schema-utils: 4.3.2
+      serialize-javascript: 6.0.2
+      terser: 5.39.0
+      webpack: 5.99.7(esbuild@0.19.12)
+    optionalDependencies:
+      esbuild: 0.19.12
+
   terser-webpack-plugin@5.3.14(esbuild@0.19.12)(webpack@5.99.7):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
@@ -26357,7 +26320,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.4.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.7.1):
+  tsup@8.4.0(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.7.1):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.25.3)
       cac: 6.7.14
@@ -26367,7 +26330,7 @@ snapshots:
       esbuild: 0.25.3
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.3)(yaml@2.7.1)
+      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.4)(yaml@2.7.1)
       resolve-from: 5.0.0
       rollup: 4.40.1
       source-map: 0.8.0-beta.0
@@ -26383,6 +26346,13 @@ snapshots:
       - supports-color
       - tsx
       - yaml
+
+  tsx@4.19.4:
+    dependencies:
+      esbuild: 0.25.3
+      get-tsconfig: 4.10.0
+    optionalDependencies:
+      fsevents: 2.3.3
 
   tunnel-agent@0.6.0:
     dependencies:
@@ -26889,6 +26859,37 @@ snapshots:
   webpack-sources@3.2.3: {}
 
   webpack-virtual-modules@0.5.0: {}
+
+  webpack@5.99.7(esbuild@0.19.12):
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.7
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.14.1
+      browserslist: 4.24.4
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.18.1
+      es-module-lexer: 1.7.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      json-parse-even-better-errors: 2.3.1
+      loader-runner: 4.3.0
+      mime-types: 2.1.35
+      neo-async: 2.6.2
+      schema-utils: 4.3.2
+      tapable: 2.2.1
+      terser-webpack-plugin: 5.3.14(esbuild@0.19.12)(webpack@5.99.7(esbuild@0.19.12))
+      watchpack: 2.4.2
+      webpack-sources: 3.2.3
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
 
   webpack@5.99.7(esbuild@0.19.12)(webpack-cli@5.1.4):
     dependencies:

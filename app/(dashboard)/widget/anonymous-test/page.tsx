@@ -1,5 +1,5 @@
 import { HelperProvider, type HelperConfig } from "@helperai/react";
-import { WidgetButtons } from "../test/WidgetButtons";
+import { WidgetButtons } from "../test/widgetButtons";
 
 export const dynamic = "force-dynamic";
 

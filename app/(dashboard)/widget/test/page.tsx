@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai/react";
-import { AppLayout } from "./_components/AppLayout";
-import { WidgetButtons } from "./WidgetButtons";
+import { AppLayout } from "./appLayout";
+import { WidgetButtons } from "./widgetButtons";
 
 export const dynamic = "force-dynamic";
 
