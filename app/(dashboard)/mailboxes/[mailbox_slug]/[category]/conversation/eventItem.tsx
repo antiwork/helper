@@ -27,9 +27,9 @@ const statusVerbs = {
 };
 
 const statusIcons = {
-  open: ArrowUturnUpIcon,
-  closed: ArrowUturnLeftIcon,
-  spam: ExclamationCircleIcon,
+  open: ArrowRightFromLine,
+  closed: ArrowLeftFromLine,
+  spam: AlertCircle,
 };
 
 export const EventItem = ({ event }: { event: ConversationEvent }) => {
@@ -54,12 +54,12 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const hasDetails = event.byUser || event.reason;
   const Icon =
     event.eventType === "resolved_by_ai"
-      ? CheckCircleIcon
+      ? CheckCircle
       : event.changes.assignedToAI
         ? Bot
         : event.changes.status
           ? statusIcons[event.changes.status]
-          : UserIcon;
+          : User;
 
   return (
     <div className="flex flex-col mx-auto">
@@ -68,7 +68,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
         onClick={() => setDetailsExpanded(!detailsExpanded)}
       >
         {hasDetails &&
-          (detailsExpanded ? <ChevronDownIcon className="h-3 w-3" /> : <ChevronRightIcon className="h-3 w-3" />)}
+          (detailsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />)}
         <Icon className="h-4 w-4" />
         <span className="flex items-center gap-1">{upperFirst(description)}</span>
         <span>·</span>
