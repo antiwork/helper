@@ -540,7 +540,7 @@ export const AssignedToLabel = ({
 
   return displayName ? (
     <div className={className} title={`Assigned to ${displayName}`}>
-      <UserIcon className="h-3 w-3" />
+      <User className="h-3 w-3" />
       {displayName}
     </div>
   ) : null;
