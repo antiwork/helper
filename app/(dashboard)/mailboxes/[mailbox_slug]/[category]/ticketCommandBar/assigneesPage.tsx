@@ -1,5 +1,4 @@
-import { UserIcon } from "@heroicons/react/24/outline";
-import { Bot } from "lucide-react";
+import { Bot, User } from "lucide-react";
 import type { CommandGroup } from "./types";
 
 type AssigneesPageProps = {
@@ -21,7 +20,7 @@ export const useAssigneesPage = ({
       {
         id: "unassign",
         label: "Unassign",
-        icon: UserIcon,
+        icon: User,
         onSelect: () => {
           if (onAssignTicket) {
             onAssignTicket(null);
@@ -43,7 +42,7 @@ export const useAssigneesPage = ({
       ...(orgMembers?.map((member) => ({
         id: member.id,
         label: `${member.displayName}${member.id === currentUserId ? " (You)" : ""}`,
-        icon: UserIcon,
+        icon: User,
         onSelect: () => {
           if (onAssignTicket) {
             onAssignTicket(member);

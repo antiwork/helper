@@ -1,6 +1,6 @@
 "use client";
 
-import { DocumentDuplicateIcon, EyeIcon, EyeSlashIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import { Copy, Eye, EyeOff, PlusCircle } from "lucide-react";
 import cx from "classnames";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -204,9 +204,9 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
                             }}
                           >
                             {showSecret ? (
-                              <EyeSlashIcon className="h-4 w-4 text-muted-foreground" />
+                              <EyeOff className="h-4 w-4 text-muted-foreground" />
                             ) : (
-                              <EyeIcon className="h-4 w-4 text-muted-foreground" />
+                              <Eye className="h-4 w-4 text-muted-foreground" />
                             )}
                           </button>
                         </TooltipTrigger>
@@ -233,7 +233,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
                                 className="text-primary flex cursor-pointer items-center gap-1"
                                 onClick={(e) => e.preventDefault()}
                               >
-                                <DocumentDuplicateIcon className="h-4 w-4 text-muted-foreground" />
+                                <Copy className="h-4 w-4 text-muted-foreground" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent>{copyTooltip.content || "Copy"}</TooltipContent>
@@ -268,7 +268,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
                 addEndpoint();
               }}
             >
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-4 w-4" />
               Add endpoint
             </Button>
           </div>

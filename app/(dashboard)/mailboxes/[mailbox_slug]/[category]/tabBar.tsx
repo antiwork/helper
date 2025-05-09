@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Plus, X } from "lucide-react";
 import { Reorder } from "motion/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
@@ -168,14 +168,14 @@ export const TabBar = () => {
                   }
                 }}
               >
-                <XMarkIcon className="w-4 h-4" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </Reorder.Item>
         ))}
       </Reorder.Group>
       <button className="self-center ml-1 p-2 rounded transition-colors hover:bg-muted" onClick={() => addTab()}>
-        <PlusIcon className="w-4 h-4" />
+        <Plus className="w-4 h-4" />
       </button>
     </div>
   );

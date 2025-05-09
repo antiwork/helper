@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowPathIcon, ClockIcon, PlusCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -195,7 +195,7 @@ const WebsiteCrawlSetting = () => {
                           {getStatusBadgeColor(latestCrawl.status).label}
                         </span>
                         <div className="flex items-center gap-1">
-                          <ClockIcon className="h-3 w-3" />
+                          <Clock className="h-3 w-3" />
                           {format(new Date(latestCrawl.startedAt), "MMM d, yyyy HH:mm")}
                         </div>
                       </div>
@@ -208,7 +208,7 @@ const WebsiteCrawlSetting = () => {
                       onClick={() => handleTriggerCrawl(website.id)}
                       disabled={triggerCrawlMutation.isPending || latestCrawl?.status === "loading"}
                     >
-                      <ArrowPathIcon
+                      <RefreshCw
                         className={`mr-2 h-4 w-4 ${latestCrawl?.status === "loading" ? "animate-spin" : ""}`}
                       />
                       {triggerCrawlMutation.isPending ? "Updating..." : "Update"}
@@ -219,7 +219,7 @@ const WebsiteCrawlSetting = () => {
                       onClick={() => handleDeleteWebsite(website.id)}
                       disabled={deleteWebsiteMutation.isPending}
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <Trash className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
                     </Button>
                   </div>
@@ -280,7 +280,7 @@ const WebsiteCrawlSetting = () => {
             </form>
           ) : (
             <Button variant="subtle" onClick={() => setShowAddWebsite(true)}>
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-4 w-4" />
               Add website
             </Button>
           )}

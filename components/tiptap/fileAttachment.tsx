@@ -1,4 +1,4 @@
-import { ArrowPathIcon, ExclamationTriangleIcon, PaperClipIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { AlertTriangle, Paperclip, RefreshCw, X } from "lucide-react";
 import cx from "classnames";
 import { forwardRef } from "react";
 import { UploadStatus, useFileUpload, type UnsavedFileInfo } from "@/components/fileUploadContext";
@@ -27,10 +27,10 @@ const FileAttachment = ({ fileInfo, onRetry }: { fileInfo: UnsavedFileInfo; onRe
   const baseIconStyles = "shrink-0 w-4 h-4";
   const deleteIcon = (
     <ActionIcon label="Delete" onClick={() => onDelete(fileInfo.file)}>
-      <XMarkIcon className={baseIconStyles} />
+      <X className={baseIconStyles} />
     </ActionIcon>
   );
-  let leftIcon = <PaperClipIcon className={`${baseIconStyles} text-foreground`} />;
+  let leftIcon = <Paperclip className={`${baseIconStyles} text-foreground`} />;
   let icon = null;
   switch (fileInfo.status) {
     case UploadStatus.UPLOADING:
@@ -41,7 +41,7 @@ const FileAttachment = ({ fileInfo, onRetry }: { fileInfo: UnsavedFileInfo; onRe
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <ExclamationTriangleIcon className={`${baseIconStyles} text-destructive-500`} />
+              <AlertTriangle className={`${baseIconStyles} text-destructive-500`} />
             </TooltipTrigger>
             <TooltipContent>Upload failed</TooltipContent>
           </Tooltip>
@@ -53,7 +53,7 @@ const FileAttachment = ({ fileInfo, onRetry }: { fileInfo: UnsavedFileInfo; onRe
             <Tooltip>
               <TooltipTrigger asChild>
                 <ActionIcon label="Retry" onClick={() => onRetry(fileInfo.file)}>
-                  <ArrowPathIcon className={baseIconStyles} />
+                  <RefreshCw className={baseIconStyles} />
                 </ActionIcon>
               </TooltipTrigger>
               <TooltipContent>Retry</TooltipContent>

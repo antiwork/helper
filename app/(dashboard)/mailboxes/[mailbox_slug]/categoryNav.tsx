@@ -1,9 +1,4 @@
-import {
-  InboxIcon as HeroInbox,
-  UserIcon as HeroUser,
-  UserMinusIcon as HeroUserMinus,
-  UsersIcon as HeroUsers,
-} from "@heroicons/react/24/outline";
+import { Inbox as HeroInbox, User as HeroUser, UserMinus as HeroUserMinus, Users as HeroUsers } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 import { Chip, ChipContainer, ChipVariant } from "@/components/ui/chip";

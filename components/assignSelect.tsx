@@ -1,6 +1,5 @@
 import { useUser } from "@clerk/nextjs";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { Bot, Check } from "lucide-react";
+import { Bot, Check, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -99,7 +98,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
       <PopoverTrigger asChild>
         <Button variant="outlined_subtle" className="whitespace-nowrap justify-between">
           {selectedMember?.displayName || "Anyone"}
-          <ChevronDownIcon className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start" onKeyDown={handleKeyDown}>

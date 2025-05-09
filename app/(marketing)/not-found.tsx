@@ -1,8 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
-import { Shuffle } from "lucide-react";
+import { BookOpen, Inbox, Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -25,7 +24,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
       <Link href={`${getBaseUrl()}/docs`} target="_blank">
         <Button variant="subtle">
           <span className="flex items-center">
-            <BookOpenIcon className="h-5 w-5 mr-2" />
+            <BookOpen className="h-5 w-5 mr-2" />
             Docs
           </span>
         </Button>
@@ -42,7 +41,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
         <Link href="/mailboxes">
           <Button variant="subtle">
             <span className="flex items-center">
-              <InboxIcon className="h-5 w-5 mr-2" />
+              <Inbox className="h-5 w-5 mr-2" />
               Go to mailbox
             </span>
           </Button>

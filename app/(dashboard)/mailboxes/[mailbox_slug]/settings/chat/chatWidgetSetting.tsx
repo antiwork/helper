@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import { ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { getBaseUrl } from "@/components/constants";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -88,7 +88,7 @@ const ChatWidgetSetting = ({
             className="hover:underline flex items-center gap-1"
           >
             Documentation
-            <ArrowTopRightOnSquareIcon className="size-4" />
+            <ExternalLink className="size-4" />
           </a>
         }
       >

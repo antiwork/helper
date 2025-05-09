@@ -1,6 +1,6 @@
 "use client";
 
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { Settings } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -173,7 +173,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
           <div className="text-xs truncate text-muted-foreground">/{tool.path}</div>
         </div>
         <Badge variant="default">{tool.requestMethod}</Badge>
-        <Cog6ToothIcon className="h-4 w-4 ml-4 text-muted-foreground" />
+        <Settings className="h-4 w-4 ml-4 text-muted-foreground" />
       </div>
     </div>
   );

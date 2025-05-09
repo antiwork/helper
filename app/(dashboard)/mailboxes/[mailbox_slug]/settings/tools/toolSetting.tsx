@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
         {!showApiForm && (
           <div>
             <Button variant="subtle" onClick={() => setShowApiForm(true)}>
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-4 w-4" />
               Connect API
             </Button>
           </div>

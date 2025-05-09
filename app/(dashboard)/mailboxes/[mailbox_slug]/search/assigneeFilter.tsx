@@ -1,5 +1,4 @@
-import { UserIcon } from "@heroicons/react/24/outline";
-import { Check } from "lucide-react";
+import { Check, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -29,7 +28,7 @@ export function AssigneeFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant={selectedAssignees.length ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <UserIcon className="h-4 w-4 mr-2" />
+          <User className="h-4 w-4 mr-2" />
           {selectedAssignees.length === 1
             ? members?.find((m) => m.id === selectedAssignees[0])?.displayName
             : selectedAssignees.length

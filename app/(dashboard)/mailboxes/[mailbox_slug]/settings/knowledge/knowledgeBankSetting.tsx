@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import { PlusCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
@@ -172,7 +172,7 @@ const KnowledgeBankSetting = () => {
             setShowNewFaqForm(true);
           }}
         >
-          <PlusCircleIcon className="mr-2 h-4 w-4" />
+          <PlusCircle className="mr-2 h-4 w-4" />
           Add Knowledge
         </Button>
       )}

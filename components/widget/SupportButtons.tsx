@@ -1,4 +1,4 @@
-import { ChatBubbleLeftRightIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
+import { MessagesSquare, ThumbsUp } from "lucide-react";
 import { UIMessage } from "ai";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -111,7 +111,7 @@ export default function SupportButtons({
                     }
               }
             >
-              <HandThumbUpIcon className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
+              <ThumbsUp className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
             </motion.div>
             That solved it!
           </button>
@@ -137,7 +137,7 @@ export default function SupportButtons({
                     }
               }
             >
-              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              <MessagesSquare className="h-4 w-4" />
             </motion.div>
             Talk to a human
           </button>

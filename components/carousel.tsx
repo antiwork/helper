@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/20/solid";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { createContext, useContext } from "react";
 import { useGlobalEventListener } from "./useGlobalEventListener";
 
@@ -60,7 +60,7 @@ export function createCarousel<ItemType>() {
       setCurrentIndex(newIndex);
     };
 
-    const ArrowIcon = direction === CarouselDirection.LEFT ? ArrowLeftIcon : ArrowRightIcon;
+    const ArrowIcon = direction === CarouselDirection.LEFT ? ArrowLeft : ArrowRight;
     const ariaLabel = direction === CarouselDirection.LEFT ? "previous" : "next";
 
     return (

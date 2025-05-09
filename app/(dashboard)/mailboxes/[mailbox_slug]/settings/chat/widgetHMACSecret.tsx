@@ -1,6 +1,6 @@
 "use client";
 
-import { DocumentDuplicateIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { Copy, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Input } from "@/components/ui/input";
@@ -32,9 +32,9 @@ const WidgetHMACSecret = ({ hmacSecret }: { hmacSecret: string }) => {
                     }}
                   >
                     {showSecret ? (
-                      <EyeSlashIcon className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <EyeIcon className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
                 </TooltipTrigger>
@@ -61,7 +61,7 @@ const WidgetHMACSecret = ({ hmacSecret }: { hmacSecret: string }) => {
                         className="text-primary flex cursor-pointer items-center gap-1"
                         onClick={(e) => e.preventDefault()}
                       >
-                        <DocumentDuplicateIcon className="h-4 w-4 text-muted-foreground" />
+                        <Copy className="h-4 w-4 text-muted-foreground" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>{copyTooltip.content || "Copy"}</TooltipContent>

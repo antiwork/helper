@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowPathIcon, CheckIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Check, RefreshCw, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import Popover from "@/components/popover";
@@ -61,9 +61,9 @@ const ApiCard = ({
   const refreshButton = (ariaAttributes: React.AriaAttributes) => (
     <Button variant="ghost" size="sm" disabled={isRefreshing} {...ariaAttributes}>
       {isRefreshed ? (
-        <CheckIcon className="h-4 w-4 mr-2" />
+        <Check className="h-4 w-4 mr-2" />
       ) : (
-        <ArrowPathIcon className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
       )}
       {isRefreshed ? "Refreshed" : "Refresh"}
     </Button>
@@ -122,9 +122,9 @@ const ApiCard = ({
                 disabled={isRefreshing}
               >
                 {isRefreshed ? (
-                  <CheckIcon className="h-4 w-4 mr-2" />
+                  <Check className="h-4 w-4 mr-2" />
                 ) : (
-                  <ArrowPathIcon className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                 )}
                 {isRefreshed ? "Refreshed" : "Refresh"}
               </Button>
@@ -140,7 +140,7 @@ const ApiCard = ({
               }}
               disabled={isDeleting}
             >
-              <TrashIcon className="h-4 w-4" />
+              <Trash className="h-4 w-4" />
             </Button>
           </div>
         </div>

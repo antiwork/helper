@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/nextjs";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/useAssignTicket";
@@ -277,7 +277,7 @@ const FormPage = ({ onOpenChange, children }: { onOpenChange: (open: boolean) =>
   return (
     <div className="flex-1 min-h-0 overflow-auto relative bg-background rounded">
       <Button variant="ghost" iconOnly className="absolute top-2 right-2" onClick={() => onOpenChange(false)}>
-        <XMarkIcon className="w-4 h-4" />
+        <X className="w-4 h-4" />
       </Button>
       {children}
     </div>

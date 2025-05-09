@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  BookOpenIcon,
-  Cog6ToothIcon,
-  ComputerDesktopIcon,
-  CreditCardIcon,
-  LinkIcon,
-  UserGroupIcon,
-  UsersIcon,
-} from "@heroicons/react/24/outline";
+  BookOpen,
+  CreditCard,
+  Link,
+  MonitorSmartphone,
+  Settings as SettingsIcon,
+  UserPlus,
+  Users
+} from "lucide-react";
 import React, { useState, useTransition } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import type { SupportAccount } from "@/app/types/global";
@@ -95,19 +95,19 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "Knowledge",
       id: "knowledge",
-      icon: BookOpenIcon,
+      icon: BookOpen,
       content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
     },
     {
       label: "Team",
       id: "team",
-      icon: UsersIcon,
+      icon: Users,
       content: <TeamSetting mailboxSlug={mailbox.slug} />,
     },
     {
       label: "Customers",
       id: "customers",
-      icon: UserGroupIcon,
+      icon: UserPlus,
       content: (
         <>
           <CustomerSetting
@@ -135,7 +135,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "In-App Chat",
       id: "in-app-chat",
-      icon: ComputerDesktopIcon,
+      icon: MonitorSmartphone,
       content: (
         <ChatWidgetSetting
           mailbox={mailbox}
@@ -151,7 +151,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "Integrations",
       id: "integrations",
-      icon: LinkIcon,
+      icon: Link,
       content: (
         <>
           <ToolSetting mailboxSlug={mailbox.slug} />
@@ -181,7 +181,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "Preferences",
       id: "preferences",
-      icon: Cog6ToothIcon,
+      icon: SettingsIcon,
       content: (
         <PreferencesSetting
           onChange={(updates) =>
@@ -199,7 +199,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     items.push({
       label: "Billing",
       id: "billing",
-      icon: CreditCardIcon,
+      icon: CreditCard,
       content: <Subscription />,
     });
   }

@@ -1,4 +1,4 @@
-import { PaperClipIcon } from "@heroicons/react/20/solid";
+import { Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { FileUploadProvider, UploadStatus, useFileUpload } from "@/components/fileUploadContext";
@@ -96,7 +96,7 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
             onChange={handleFileUpload}
             multiple
           />
-          <PaperClipIcon className="h-4 w-4 mr-1" />
+          <Paperclip className="h-4 w-4 mr-1" />
           Attach files
         </Button>
         <Button onClick={handleSubmit} disabled={isSubmitting}>

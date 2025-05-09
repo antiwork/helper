@@ -1,8 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { UserIcon } from "@heroicons/react/24/outline";
-import { Bot } from "lucide-react";
+import { Bot, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { Button } from "@/components/ui/button";
@@ -87,7 +86,7 @@ export const AssignPopoverButton = ({
               </>
             ) : (
               <>
-                <UserIcon className="h-4 w-4" />
+                <User className="h-4 w-4" />
                 {currentAssignee ? currentAssignee.displayName : "Unassigned"}
               </>
             )}

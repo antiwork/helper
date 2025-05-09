@@ -1,5 +1,4 @@
-import { ArrowUturnLeftIcon } from "@heroicons/react/16/solid";
-import { ArrowTopRightOnSquareIcon, CurrencyDollarIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import { CornerUpLeft, DollarSign, ExternalLink, Mail } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { AssignPopoverButton } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/assignPopoverButton";
@@ -72,7 +71,7 @@ const ConversationItem = ({
             updateStatus("closed");
           }}
         >
-          <ArrowUturnLeftIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          <CornerUpLeft className="h-4 w-4 text-muted-foreground hover:text-foreground" />
         </Button>
       )}
       <div className="flex items-center text-xs text-muted-foreground gap-2">
@@ -138,7 +137,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             {conversation.customerMetadata?.isVip && <Badge variant="bright">VIP</Badge>}
             {conversation.customerMetadata?.value && conversation.customerMetadata.value > 0 && (
               <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                <CurrencyDollarIcon className="h-4 w-4" />
+                <DollarSign className="h-4 w-4" />
                 {formatCurrency(conversation.customerMetadata.value)}
               </div>
             )}
@@ -159,7 +158,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
               }
             >
               <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2">
-                <EnvelopeIcon className="h-4 w-4" />
+                <Mail className="h-4 w-4" />
                 <a
                   className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline"
                   title={conversation.emailFrom ?? ""}
@@ -178,7 +177,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
               target="_blank"
               rel="noopener noreferrer"
             >
-              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4" />
               {label}
             </a>
           ))}

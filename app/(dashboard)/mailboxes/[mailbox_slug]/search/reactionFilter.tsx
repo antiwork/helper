@@ -1,4 +1,4 @@
-import { HandThumbDownIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,9 +20,9 @@ export function ReactionFilter({
       <DropdownMenuTrigger asChild>
         <Button variant={reactionType ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
           {reactionType === "thumbs-down" ? (
-            <HandThumbDownIcon className="h-4 w-4 mr-2" />
+            <ThumbsDown className="h-4 w-4 mr-2" />
           ) : (
-            <HandThumbUpIcon className="h-4 w-4 mr-2" />
+            <ThumbsUp className="h-4 w-4 mr-2" />
           )}
           {reactionType === "thumbs-up"
             ? "Positive reaction"

@@ -1,4 +1,4 @@
-import { StarIcon } from "@heroicons/react/24/outline";
+import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ export function VipFilter({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={isVip ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <StarIcon className="h-4 w-4 mr-2" />
+          <Star className="h-4 w-4 mr-2" />
           VIP
         </Button>
       </DropdownMenuTrigger>

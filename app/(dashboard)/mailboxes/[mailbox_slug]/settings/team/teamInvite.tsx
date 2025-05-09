@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusCircle, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ export function TeamInvite({ mailboxSlug, teamMembers }: TeamInviteProps) {
             onClick={() => setEmailInput("")}
             disabled={isInviting}
           >
-            <XMarkIcon className="h-4 w-4 text-gray-400" aria-hidden="true" />
+            <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -90,7 +90,7 @@ export function TeamInvite({ mailboxSlug, teamMembers }: TeamInviteProps) {
           <>Inviting...</>
         ) : (
           <>
-            <PlusCircleIcon className="mr-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             Invite New Member
           </>
         )}
