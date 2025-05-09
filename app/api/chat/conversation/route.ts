@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     isPrompt,
     isVisitor,
     assignedToAI: true,
+    anonymousSessionId: authResult.session.isAnonymous ? authResult.session.anonymousSessionId : undefined,
   });
 
   return corsResponse({ conversationSlug: newConversation.slug });

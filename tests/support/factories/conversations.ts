@@ -24,6 +24,7 @@ export const conversationFactory = {
         isPrompt: false,
         isVisitor: false,
         assignedToAI: false,
+        anonymousSessionId: null,
         ...overrides,
       })
       .returning();
