@@ -127,7 +127,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
               </div>
             </div>
             <Button variant="subtle" className="mt-4">
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-4 w-4" />
               Add Knowledge
             </Button>
           </div>
@@ -193,7 +193,7 @@ Please reply with this information. We'll review your request within 1-2 busines
                         key={tool}
                         className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
                       >
-                        <PlayIcon className="h-4 w-4" />
+                        <Play className="h-4 w-4" />
                         {tool}
                       </div>
                     ),
