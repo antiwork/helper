@@ -95,7 +95,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                 placeholder="Search knowledge bank..."
                 className=""
                 defaultValue="refund policy"
-                iconsPrefix={<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />}
+                iconsPrefix={<Search className="h-4 w-4 text-gray-400" />}
               />
             </div>
             <div className="divide-y divide-border">
