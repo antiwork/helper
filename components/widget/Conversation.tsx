@@ -1,6 +1,7 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { assertDefined } from "@/components/utils/assert";
@@ -253,14 +254,16 @@ export default function Conversation({
         resumeGuide={resumeGuide}
         status={status}
       />
-      <SupportButtons
-        conversationSlug={conversationSlug}
-        token={token}
-        messageStatus={status}
-        lastMessage={lastAIMessage}
-        onTalkToTeamClick={handleTalkToTeamClick}
-        isEscalated={isEscalated}
-      />
+      <AnimatePresence>
+        <SupportButtons
+          conversationSlug={conversationSlug}
+          token={token}
+          messageStatus={status}
+          lastMessage={lastAIMessage}
+          onTalkToTeamClick={handleTalkToTeamClick}
+          isEscalated={isEscalated}
+        />
+      </AnimatePresence>
       <ChatInput
         input={input}
         inputRef={inputRef}
