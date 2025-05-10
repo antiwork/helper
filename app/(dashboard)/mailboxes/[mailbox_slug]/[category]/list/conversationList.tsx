@@ -92,18 +92,20 @@ const SearchBar = ({
         </div>
         <div className="flex items-center gap-2">
           <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onSortChange}>
-            <SelectTrigger className="hidden sm:flex w-[180px]">
-              <SelectValue placeholder={variant === "desktop" ? "Sort by" : "Sort"} />
+            <SelectTrigger
+              variant="bare"
+              className={cn(
+                variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
+              )}
+            >
+              <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent className={cn("", variant === "desktop" ? "text-white bg-sidebar" : "bg-background")}>
-              <SelectGroup>
-                <SelectLabel>Sort By</SelectLabel>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+            <SelectContent>
+              {sortOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button
