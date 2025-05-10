@@ -16,12 +16,12 @@ export function ComparisonHistogram() {
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   return (
-    <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center h-full">
+    <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center min-h-[400px]">
       <div className="text-center mb-2">
         <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Response time</div>
       </div>
-      <div className="w-full h-full flex-1 flex items-end">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full flex-1 min-h-[300px]">
+        <ResponsiveContainer width="100%" height={400}>
           <BarChart
             data={data}
             barCategoryGap={isMobile ? 6 : 10}

@@ -413,9 +413,9 @@ export default function Home() {
         {showFeatures && (
           <section id="smarter-support" className="py-12 md:py-20">
             <div className="container mx-auto px-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 md:gap-16 gap-0 items-start">
-                <div className="md:sticky md:top-20">
-                  <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground">
+              <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-16 gap-0 items-start">
+                <div className="lg:sticky lg:top-20">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
                     Helper guides users and resolves issues-- before they become tickets.
                   </h2>
                   <div className="space-y-6 mb-12 mt-8">
@@ -462,62 +462,14 @@ export default function Home() {
                 </div>
 
                 <div className="order-1 md:order-2">
-                  <div className="md:hidden">
-                    <div
-                      className="relative h-[400px] flex items-center justify-center"
-                      onTouchStart={handleTouchStart}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                    >
-                      <div className="overflow-hidden w-full h-full flex items-center justify-center">
-                        <div
-                          className="flex transition-transform duration-500 ease-in-out h-full"
-                          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                        >
-                          <div className="w-full flex-shrink-0 flex items-center justify-center h-full">
-                            <Image
-                              src="/images/helpinghand-ui-mobile.png"
-                              alt="Helping Hand UI"
-                              width={600}
-                              height={800}
-                              className="w-full h-auto max-h-full object-contain"
-                            />
-                          </div>
-                          <div className="w-full flex-shrink-0 flex items-center justify-center h-full">
-                            <Image
-                              src="/images/citations-ui.png"
-                              alt="Citations UI"
-                              width={600}
-                              height={800}
-                              className="w-full h-auto max-h-full object-contain"
-                            />
-                          </div>
-                          <div className="w-full flex-shrink-0 flex items-center justify-center h-full">
-                            <Image
-                              src="/images/tool-usage-ui.png"
-                              alt="Tool Usage UI"
-                              width={600}
-                              height={800}
-                              className="w-full h-auto max-h-full object-contain"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-center gap-2 mt-8 absolute left-0 right-0 bottom-0">
-                        {[0, 1, 2].map((index) => (
-                          <button
-                            key={index}
-                            onClick={() => setCurrentSlide(index)}
-                            className={`w-2 h-2 rounded-full transition-colors ${currentSlide === index ? "bg-amber-500" : "bg-gray-400"}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="hidden md:flex flex-col gap-24">
+                  <div className="flex flex-col gap-24">
                     <RefundDemo />
-                    <CitationsDemo />
-                    <ToolsDemo />
+                    <div className="hidden lg:block">
+                      <CitationsDemo />
+                    </div>
+                    <div className="hidden lg:block">
+                      <ToolsDemo />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -528,21 +480,12 @@ export default function Home() {
         {showFeatures && (
           <section className="py-12 md:py-20">
             <div className="container mx-auto px-4">
-              <div className="mb-24 text-center md:text-center max-w-5xl mx-auto">
-                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left md:text-center ">
+              <div className="mb-24 text-left lg:text-center max-w-5xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left lg:text-center">
                   Helper delivers fast, accurate support by deeply understanding your content.
                 </h2>
-                <p className="text-lg md:text-xl text-secondary dark:text-foreground  mx-auto text-left md:text-center">
+                <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left lg:text-center mx-auto">
                   Website Knowledge syncs Helper with your site automatically. Knowledge Bank lets agents add answers on the fly. Together, they keep info consistent, speed up replies, and update as your policies change.
-
-
-
-
-
-
-
-
-
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center md:items-stretch">
@@ -689,11 +632,12 @@ export default function Home() {
         {showFeatures && (
           <section className="py-12 md:py-20">
             <div className="container mx-auto px-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-                <div className="md:sticky md:top-20">
-                  <h2 className="text-5xl font-bold mb-4 text-secondary dark:text-foreground">                    Helper steps back when humans need to step in.
+              <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-2 xl:gap-16 gap-0 items-start">
+                <div className="md:static xl:sticky xl:top-20">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
+                    Helper steps back when humans need to step in.
                   </h2>
-                  <p className="text-lg text-secondary dark:text-foreground mb-8">
+                  <p className="text-lg text-secondary dark:text-foreground mb-8 text-left">
                     Get notified in Slack when complex or high-priority issues arise, use @helper to
                     quickly surface context, and easily return tickets to Helper once your team has resolved the issue.
                   </p>
@@ -737,11 +681,35 @@ export default function Home() {
                   </Link>
                 </div>
                 <div className="space-y-12">
-                  <div id="slackInterface">
+                  <div id="slackInterface" className="hidden xl:block">
                     <SlackInterface />
                   </div>
-                  <div id="slackNotification">
+                  <div id="slackNotification" className="hidden xl:block">
                     <SlackNotification />
+                  </div>
+                  <div className="xl:hidden mt-12">
+                    <div className="relative">
+                      <div className="overflow-hidden">
+                        <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                          <div className="w-full flex-shrink-0">
+                            <SlackInterface />
+                          </div>
+                          <div className="w-full flex-shrink-0">
+                            <SlackNotification />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-center gap-2 mt-4">
+                        <button 
+                          onClick={() => setCurrentSlide(0)}
+                          className={`w-2 h-2 rounded-full ${currentSlide === 0 ? 'bg-[#FEB81D]' : 'bg-[#FEB81D]/30'}`}
+                        />
+                        <button 
+                          onClick={() => setCurrentSlide(1)}
+                          className={`w-2 h-2 rounded-full ${currentSlide === 1 ? 'bg-[#FEB81D]' : 'bg-[#FEB81D]/30'}`}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -751,14 +719,16 @@ export default function Home() {
 
         {showFeatures && (
           <section className="py-20">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <h2 className="text-5xl font-bold text-secondary dark:text-foreground text-center mb-12">
-                Measure your success
-              </h2>
-              <p className="text-lg text-secondary dark:text-foreground text-center mb-12 max-w-3xl mx-auto">
-                Helper provides comprehensive analytics to track the impact on your support operations. See faster
-                response times, improved customer sentiment, and happier support agents.
-              </p>
+            <div className="container px-4 max-w-7xl">
+              <div className="mb-24 text-left lg:text-center max-w-5xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left lg:text-center">
+                  Measure your success
+                </h2>
+                <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left lg:text-center mx-auto">
+                  Helper provides comprehensive analytics to track the impact on your support operations. See faster
+                  response times, improved customer sentiment, and happier support agents.
+                </p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch h-full min-h-[480px]">
                 <div className="md:col-span-2 flex flex-col justify-between h-full">
                   <div className="text-center"></div>

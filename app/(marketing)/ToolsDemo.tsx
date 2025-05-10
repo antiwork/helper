@@ -32,31 +32,31 @@ const tools = [
 export default function ToolsDemo() {
   const [hovered, setHovered] = useState<number | null>(null);
   return (
-    <div className="w-full min-h-[420px] flex flex-col items-center justify-center">
-      <div className="flex flex-col gap-14 w-full max-w-3xl mx-auto">
+    <div className="w-full min-h-[320px] md:min-h-[420px] flex flex-col items-center justify-center">
+      <div className="flex flex-col gap-8 md:gap-14 w-full max-w-3xl mx-auto">
         {tools.map((tool, i) => (
           <div
             key={tool.text}
             className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
           >
             <div
-              className={`flex items-center gap-4 border ${tool.border} rounded-full py-2 px-3 transition-transform duration-200 bg-transparent`}
+              className={`flex items-center gap-3 md:gap-4 border ${tool.border} rounded-full py-2 px-3 transition-transform duration-200 bg-transparent`}
               style={{
                 transform: hovered === i ? `rotate(${i % 2 === 0 ? "-3deg" : "3deg"})` : undefined,
                 boxShadow: hovered === i ? `0 2px 16px 0 ${tool.color}22` : undefined,
                 width: 'fit-content',
-                minWidth: 240,
-                maxWidth: 600,
+                minWidth: 200,
+                maxWidth: '100%',
               }}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
             >
               {hovered === i ? (
-                <span className="flex items-center justify-center w-7 h-7">{tool.completed.icon}</span>
+                <span className="flex items-center justify-center w-5 h-5 md:w-7 md:h-7">{tool.completed.icon}</span>
               ) : (
-                <span className="flex items-center justify-center w-7 h-7"><PlayCircle className="w-7 h-7" color={tool.color} fill="none" /></span>
+                <span className="flex items-center justify-center w-5 h-5 md:w-7 md:h-7"><PlayCircle className="w-5 h-5 md:w-7 md:h-7" color={tool.color} fill="none" /></span>
               )}
-              <span className="italic text-xl text-[#FFE6B0] whitespace-nowrap">
+              <span className="italic text-base md:text-xl text-[#FFE6B0] whitespace-nowrap">
                 {hovered === i ? tool.completed.text : tool.text}
               </span>
             </div>
