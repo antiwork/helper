@@ -57,15 +57,17 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
     },
   ];
 
-  if (slackUserId) {
-    await postSlackDM(conversation.mailbox.slackBotToken, slackUserId, { text: heading, attachments });
-  } else {
-    await postSlackMessage(conversation.mailbox.slackBotToken, {
-      text: heading,
-      mrkdwn: true,
-      channel: conversation.mailbox.slackAlertChannel,
-      attachments,
-    });
+  if (process.env.NODE_ENV === "test") {
+    if (slackUserId) {
+      await postSlackDM(conversation.mailbox.slackBotToken, slackUserId, { text: heading, attachments });
+    } else {
+      await postSlackMessage(conversation.mailbox.slackBotToken, {
+        text: heading,
+        mrkdwn: true,
+        channel: conversation.mailbox.slackAlertChannel,
+        attachments,
+      });
+    }
   }
 
   return "Posted";
