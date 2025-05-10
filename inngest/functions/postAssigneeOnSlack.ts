@@ -7,10 +7,6 @@ import { getClerkUser } from "@/lib/data/user";
 import { postSlackDM, postSlackMessage } from "@/lib/slack/client";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
-const isProduction = () => {
-  return process.env.NODE_ENV !== 'test';
-};
-
 export const notifySlackAssignment = async (conversationId: number, assignEvent: AssignEvent) => {
   if (!assignEvent.assignedToId) return "Not posted, no assignee";
 
@@ -32,7 +28,7 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
     return "Not posted, no assignee";
   }
 
-  if (isProduction()) {
+  if (process.env.NODE_ENV !== "test") {
     return "Posted";
   }
 
