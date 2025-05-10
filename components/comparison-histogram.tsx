@@ -16,7 +16,7 @@ export function ComparisonHistogram() {
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   return (
-    <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center min-h-[400px]">
+    <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] rounded-3xl p-4 md:p-10 flex flex-col items-center min-h-[400px] h-full flex-1">
       <div className="text-center mb-2">
         <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Response time</div>
       </div>

@@ -480,11 +480,11 @@ export default function Home() {
         {showFeatures && (
           <section className="py-12 md:py-20">
             <div className="container mx-auto px-4">
-              <div className="mb-24 text-left lg:text-center max-w-5xl mx-auto">
-                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left lg:text-center">
+              <div className="mb-24 text-left max-w-5xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left xl:text-center">
                   Helper delivers fast, accurate support by deeply understanding your content.
                 </h2>
-                <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left lg:text-center mx-auto">
+                <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left xl:text-center mx-auto">
                   Website Knowledge syncs Helper with your site automatically. Knowledge Bank lets agents add answers on the fly. Together, they keep info consistent, speed up replies, and update as your policies change.
                 </p>
               </div>
@@ -719,17 +719,17 @@ export default function Home() {
 
         {showFeatures && (
           <section className="py-20">
-            <div className="container px-4 max-w-7xl">
-              <div className="mb-24 text-left lg:text-center max-w-5xl mx-auto">
-                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left lg:text-center">
+            <div className="container px-4 ">
+              <div className="mb-24 text-left  max-w-5xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left xl:text-center">
                   Measure your success
                 </h2>
-                <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left lg:text-center mx-auto">
+                <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left xl:text-center mx-auto">
                   Helper provides comprehensive analytics to track the impact on your support operations. See faster
                   response times, improved customer sentiment, and happier support agents.
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch h-full min-h-[480px]">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch h-full min-h-[480px] ">
                 <div className="md:col-span-2 flex flex-col justify-between h-full">
                   <div className="text-center"></div>
                   <div className="h-full">
@@ -737,7 +737,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-8 h-full">
-                  <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col justify-between">
+                  <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col justify-between h-full">
                     <div className="text-center mb-2">
                       <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Customer sentiment</div>
                     </div>
@@ -745,7 +745,7 @@ export default function Home() {
                       <img src="/images/customer-sentiment.svg" alt="Customer sentiment" className="w-full max-w-xs" />
                     </div>
                   </div>
-                  <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col items-center justify-center">
+                  <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col items-center justify-center h-full">
                     <div className="text-center mb-2">
                       <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Agent satisfaction</div>
                     </div>
@@ -770,8 +770,8 @@ export default function Home() {
 {showFeatures && (
         <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
           <div className="container mx-auto px-4">
-            <h2 className="text-4xl font-bold mb-12 text-[#FFE6B0]">Knowledge base</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <h2 className="text-4xl font-bold mb-12">Knowledge base</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <Link href={`${docsBaseUrl}/docs`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
                 <span className="flex items-center justify-center w-10 h-10">
                   <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
