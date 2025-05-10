@@ -28,36 +28,36 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
     return "Not posted, no assignee";
   }
 
-  if (process.env.NODE_ENV === "test") {
-    const assignedBy = assignEvent.assignedById ? await getClerkUser(assignEvent.assignedById) : null;
-    const slackUserId = assignee.externalAccounts.find((account) => account.provider === "oauth_slack")?.externalId;
-    const heading = `_Message from ${conversation.emailFrom} assigned to *${slackUserId ? "you" : assignee.fullName}*${assignedBy ? ` by ${assignedBy.fullName}` : ""}_`;
-    const attachments = [
-      {
-        color: "#EF4444",
-        blocks: [
-          ...(assignEvent.message
-            ? [
-                {
-                  type: "section",
-                  text: {
-                    type: "mrkdwn",
-                    text: `*Note:* ${assignEvent.message}`,
-                  },
+  const assignedBy = assignEvent.assignedById ? await getClerkUser(assignEvent.assignedById) : null;
+  const slackUserId = assignee.externalAccounts.find((account) => account.provider === "oauth_slack")?.externalId;
+  const heading = `_Message from ${conversation.emailFrom} assigned to *${slackUserId ? "you" : assignee.fullName}*${assignedBy ? ` by ${assignedBy.fullName}` : ""}_`;
+  const attachments = [
+    {
+      color: "#EF4444",
+      blocks: [
+        ...(assignEvent.message
+          ? [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: `*Note:* ${assignEvent.message}`,
                 },
-              ]
-            : []),
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `<${getBaseUrl()}/mailboxes/${conversation.mailbox.slug}/conversations?id=${conversation.slug}|View in Helper>`,
-            },
+              },
+            ]
+          : []),
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `<${getBaseUrl()}/mailboxes/${conversation.mailbox.slug}/conversations?id=${conversation.slug}|View in Helper>`,
           },
-        ],
-      },
-    ];
+        },
+      ],
+    },
+  ];
 
+  if (process.env.NODE_ENV === "test") {
     if (slackUserId) {
       await postSlackDM(conversation.mailbox.slackBotToken, slackUserId, { text: heading, attachments });
     } else {
