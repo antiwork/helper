@@ -28,8 +28,10 @@ export const notifySlackAssignment = async (conversationId: number, assignEvent:
     return "Not posted, no assignee";
   }
 
+  
+  const assignedBy = assignEvent.assignedById ? await getClerkUser(assignEvent.assignedById) : null;
   const slackUserId = assignee.externalAccounts.find((account) => account.provider === "oauth_slack")?.externalId;
-  const heading = `_Message from ${conversation.emailFrom} assigned to *${slackUserId ? "you" : assignee.fullName}*${assignEvent.assignedById ? ` by ${(await getClerkUser(assignEvent.assignedById))?.fullName || ""}` : ""}_`;
+  const heading = `_Message from ${conversation.emailFrom} assigned to *${slackUserId ? "you" : assignee.fullName}*${assignedBy ? ` by ${assignedBy.fullName}` : ""}_`;
   const attachments = [
     {
       color: "#EF4444",
