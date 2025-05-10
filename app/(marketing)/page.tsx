@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { ArchiveBoxIcon, BanknotesIcon, BookOpenIcon, InboxIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon, CursorArrowRaysIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
-import { Shuffle } from "lucide-react";
+import { Shuffle, TriangleAlert, Sparkles, Search, Star, BookOpen, Clock, MessageSquare, FileCode, Monitor } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -526,18 +526,26 @@ export default function Home() {
         {showFeatures && (
           <section className="py-12 md:py-20">
             <div className="container mx-auto px-4">
-              <div className="mb-24 text-center md:text-center max-w-4xl mx-auto">
+              <div className="mb-24 text-center md:text-center max-w-5xl mx-auto">
                 <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left md:text-center ">
                   Helper delivers fast, accurate support by deeply understanding your content.
                 </h2>
                 <p className="text-lg md:text-xl text-secondary dark:text-foreground  mx-auto text-left md:text-center">
-                  Website Knowledge keeps Helper in sync with your site automatically. Knowledge Bank lets agents add
-                  custom answers on the fly, right from their inbox.
+                  Website Knowledge syncs Helper with your site automatically. Knowledge Bank lets agents add answers on the fly. Together, they keep info consistent, speed up replies, and update as your policies change.
+
+
+
+
+
+
+
+
+
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center md:items-stretch">
                 <div className="relative flex flex-col items-center md:items-end h-full px-4 md:px-0">
-                  <div className="bg-[#3B1B1B] dark:bg-[#2B0808] rounded-3xl p-8 max-w-xl w-full mx-auto h-full flex flex-col justify-between mt-8 md:mt-0">
+                  <div className="bg-[#3B1B1B] rounded-3xl p-8 max-w-xl w-full mx-auto h-full flex flex-col justify-between mt-8 md:mt-0">
                     <div className="flex items-center bg-[#2B0808] rounded-xl px-6 py-4 mb-8">
                       <svg
                         className="w-6 h-6 text-yellow-300 mr-3"
@@ -621,25 +629,25 @@ export default function Home() {
                 <div className="relative flex flex-col items-center md:items-start mt-16 md:mt-0 h-full px-4 md:px-0">
                   <div className="relative w-full flex justify-center md:justify-start h-full">
                     <div className="w-full max-w-xl flex flex-col gap-3 h-full">
-                      <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
+                      <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
                         <BanknotesIcon className="w-6 h-6 text-[#FFD34E] mr-3" />
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
                           What's your refund policy?
                         </span>
                       </div>
-                      <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
+                      <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
                         <ArchiveBoxIcon className="w-6 h-6 text-[#459EFD] mr-3" />
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
                           Can I expedite shipping?
                         </span>
                       </div>
-                      <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
+                      <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
                         <TrashIcon className="w-6 h-6 text-[#FF4343] mr-3" />
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
                           How do I delete my account?
                         </span>
                       </div>
-                      <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-[#2B0808] rounded-2xl px-6 py-4">
+                      <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
                         <svg
                           className="w-6 h-6 text-[#FFE6B0] mr-3"
                           fill="none"
@@ -681,12 +689,45 @@ export default function Home() {
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
                 <div className="md:sticky md:top-20">
-                  <h2 className="text-5xl font-bold mb-4 text-secondary dark:text-foreground">Human in the loop</h2>
+                  <h2 className="text-5xl font-bold mb-4 text-secondary dark:text-foreground">                    Helper steps back when humans need to step in.
+                  </h2>
                   <p className="text-lg text-secondary dark:text-foreground mb-8">
-                    Helper steps back when humans need to step in.
-                    <br /> <br /> Get notified in Slack when complex or high-priority issues arise, use @helper to
+                    Get notified in Slack when complex or high-priority issues arise, use @helper to
                     quickly surface context, and easily return tickets to Helper once your team has resolved the issue.
                   </p>
+                  <div className="space-y-6 mb-12">
+                    <div className="flex items-start gap-4">
+                      <TriangleAlert className="w-6 h-6 mt-1" style={{ color: "#FF4343" }} />
+                      <span>
+                        <span className="font-bold" style={{ color: "#FF4343" }}>Smart escalation</span>
+                        <span className="text-secondary dark:text-foreground">
+                          {" "}
+                          to human agents for complex issues.
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <Sparkles className="w-6 h-6 mt-1" style={{ color: "#C2D44B" }} />
+                      <span>
+                        
+                        <span className="font-bold" style={{ color: "#C2D44B" }}>@helper</span>
+                        <span className="text-secondary dark:text-foreground">
+                          {" "}
+                          commands for quick information retrieval.
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <Star className="w-6 h-6 mt-1" style={{ color: "#FEB81D" }} />
+                      <span>
+                        <span className="font-bold" style={{ color: "#FEB81D" }}>Priority notifications</span>
+                        <span className="text-secondary dark:text-foreground">
+                          {" "}
+                          for VIP customers.
+                        </span>
+                      </span>
+                    </div>
+                  </div>
                   <Button className="bg-amber-500 hover:bg-amber-600 text-black font-medium px-8 py-6 rounded-md text-lg">
                     Get Started
                   </Button>
@@ -756,47 +797,47 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Link href={`${docsBaseUrl}/docs`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
                 <span className="flex items-center justify-center w-10 h-10">
-                  <svg width="24" height="24" fill="none" stroke="#459EFD" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M12 4v16"/><path d="M4 4h16v16H4z"/></svg>
+                  <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Getting started</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                  <ArrowRightIcon className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/tools/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
                 <span className="flex items-center justify-center w-10 h-10">
-                  <svg width="24" height="24" fill="none" stroke="#C2D44B" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                  <Clock className="w-6 h-6" style={{ color: "#C2D44B" }} />
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Tools</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                  <ArrowRightIcon className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/api/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
                 <span className="flex items-center justify-center w-10 h-10">
-                  <svg width="24" height="24" fill="none" stroke="#FF90E8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                  <MessageSquare className="w-6 h-6" style={{ color: "#FF90E8" }} />
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Conversation api</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                  <ArrowRightIcon className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/api-reference/create-conversation`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
                 <span className="flex items-center justify-center w-10 h-10">
-                  <svg width="24" height="24" fill="none" stroke="#FF4343" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                  <FileCode className="w-6 h-6" style={{ color: "#FF4343" }} />
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Api references</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                  <ArrowRightIcon className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/widget/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
                 <span className="flex items-center justify-center w-10 h-10">
-                  <svg width="24" height="24" fill="none" stroke="#FFD34E" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M8 17v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2"/></svg>
+                  <Monitor className="w-6 h-6" style={{ color: "#FFD34E" }} />
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Chat widget</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                  <ArrowRightIcon className="w-6 h-6" />
                 </span>
               </Link>
             </div>
