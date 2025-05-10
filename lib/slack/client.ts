@@ -66,6 +66,10 @@ export const postSlackMessage = async (
     ephemeralUserId?: string;
   },
 ) => {
+  if (process.env.NODE_ENV !== "test") {
+    return "message-ts-placeholder";
+  }
+  
   const client = new WebClient(token);
   const postMessage = async () => {
     if (ephemeralUserId) {
@@ -221,6 +225,10 @@ export const postSlackDM = async (
   userId: string,
   options: Omit<ChatPostMessageArguments, "channel"> & Pick<ChannelAndAttachments, "attachments">,
 ) => {
+  if (process.env.NODE_ENV !== "test") {
+    return "message-ts-placeholder";
+  }
+  
   const client = new WebClient(token);
 
   const conversationResponse = await client.conversations.open({ users: userId });
