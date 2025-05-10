@@ -47,7 +47,7 @@ export const Chip = React.forwardRef<HTMLAnchorElement, ChipProps>(
         )}
       >
         {Icon && <Icon className={cn("h-4 w-4 ml-1", isActive ? "text-primary dark:text-sidebar" : styles.icon)} />}
-        <span className={cn("text-sm mr-1", isActive ? "font-sundry-medium" : "font-normal")}>{label}</span>
+        <span className={cn("text-sm mr-1", "font-normal")}>{label}</span>
         {typeof count === "number" && count > 0 && (
           <span
             className={cn(

@@ -54,18 +54,6 @@
   --text-xxs: 0.625rem;
   --text-xxs--line-height: 0.75rem;
 
-  --font-sundry-regular: var(--font-sundry-regular);
-  --font-sundry-medium: var(--font-sundry-medium);
-  --font-sundry-bold: var(--font-sundry-bold);
-  --font-sundry-narrow-medium: var(--font-sundry-narrow-medium);
-  --font-sundry-narrow-bold: var(--font-sundry-narrow-bold);
-  --font-mabry: "Mabry Pro", sans-serif;
-  --font-regular: var(--font-sundry-regular);
-  --font-medium: var(--font-sundry-medium);
-  --font-bold: var(--font-sundry-bold);
-  --font-narrow: var(--font-sundry-narrow-medium);
-  --font-narrow-medium: var(--font-sundry-narrow-medium);
-  --font-narrow-bold: var(--font-sundry-narrow-bold);
   --font-system-ui:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
     "Helvetica Neue", sans-serif;

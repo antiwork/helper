@@ -74,16 +74,6 @@ export const EmailTemplate: ResendEmail<Props> = ({ subject, previewText, childr
       <Preview>{previewText}</Preview>
       <Head>
         <title>{subject}</title>
-        <Font
-          fontFamily="Sundry-Regular"
-          fallbackFontFamily="sans-serif"
-          webFont={{
-            url: `${baseUrl}/fonts/Sundry-Regular.woff2`,
-            format: "woff2",
-          }}
-          fontWeight={400}
-          fontStyle="normal"
-        />
         <style>{globalStyles}</style>
       </Head>
       <Body style={{ backgroundColor: "hsl(42 100% 95%)" }} className="helper-email-content">

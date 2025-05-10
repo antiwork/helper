@@ -68,15 +68,13 @@ export default function NotFound() {
         </nav>
       </header>
 
-      <main className="grow flex flex-col items-center justify-center p-6 md:p-12">
-        <div className="text-center max-w-3xl mx-auto">
+      <main className="grow flex flex-col items-center justify-center h-screen bg-secondary-light dark:bg-secondary-dark text-center p-4">
+        <div className="max-w-md">
           <div className="flex justify-center mb-8">
             <Image src="/logo_icon.svg" alt="Helper" width={96} height={96} className="md:w-128 md:h-128" />
           </div>
-          <h1 className="font-sundry-narrow-bold text-4xl md:text-6xl lg:text-8xl font-bold mb-6 text-secondary dark:text-foreground">
-            Page not found
-          </h1>
-          <p className="text-lg md:text-xl mb-12 text-secondary dark:text-foreground sundry-narrow-medium">
+          <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-6 text-secondary dark:text-foreground">Oops!</h1>
+          <p className="text-lg md:text-xl mb-12 text-secondary dark:text-foreground">
             The page you're looking for doesn't exist or has been moved.
           </p>
           <Link href="/">
