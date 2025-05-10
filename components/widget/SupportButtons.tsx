@@ -1,8 +1,9 @@
-import { ChatBubbleLeftRightIcon, HandThumbDownIcon, HandThumbUpIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleLeftRightIcon, HandThumbDownIcon, HandThumbUpIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { UIMessage } from "ai";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { cn } from "@/lib/utils";
 
 type Props = {
   conversationSlug: string | null;
@@ -11,6 +12,7 @@ type Props = {
   lastMessage: UIMessage | undefined;
   onTalkToTeamClick: () => void;
   onAddDetailsClick: () => void;
+  isGumroadTheme: boolean;
   isEscalated?: boolean;
 };
 
@@ -21,6 +23,7 @@ export default function SupportButtons({
   lastMessage,
   onTalkToTeamClick,
   onAddDetailsClick,
+  isGumroadTheme,
   isEscalated = false,
 }: Props) {
   const [isHelpfulAnimating, setIsHelpfulAnimating] = useState(false);
@@ -29,6 +32,7 @@ export default function SupportButtons({
   const [isVisible, setIsVisible] = useState(true);
   const [hasClickedTalkToHuman, setHasClickedTalkToHuman] = useState(false);
   const [clickedAddDetailsOnMessageId, setClickedAddDetailsOnMessageId] = useState<string | null>(null);
+  const [dismissedAddDetails, setDismissedAddDetails] = useState(false);
 
   useEffect(() => {
     setClickedAddDetailsOnMessageId(null);
@@ -96,15 +100,27 @@ export default function SupportButtons({
     return null;
   }
   if (lastMessage.id === clickedAddDetailsOnMessageId) {
+    if (dismissedAddDetails) return null;
+    const arrowBase =
+      "absolute -bottom-2 left-6 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px]";
     return (
       <motion.div
-        className="text-xs text-gray-600 p-3"
+        className={cn("-mb-px relative text-sm h-10", isGumroadTheme ? "bg-gumroad-bg" : "bg-background")}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.3 }}
       >
-        Why didn't this help? Be as specific as you can.
+        <div className={cn("absolute inset-0 bg-black/5")} />
+        <div className="absolute inset-0 flex items-center gap-2 px-3">
+          <HandThumbDownIcon className="h-4 w-4 text-red-500" />
+          Why didn't this help? Be as specific as you can.
+          <button className="ml-auto" onClick={() => setDismissedAddDetails(true)}>
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+        </div>
+        <div className={cn(arrowBase, isGumroadTheme ? "border-t-gumroad-bg" : "border-t-background")} />
+        <div className={cn(arrowBase, "border-t-black/5")} />
       </motion.div>
     );
   }
@@ -147,7 +163,7 @@ export default function SupportButtons({
       {clickedAddDetailsOnMessageId ? (
         <button
           onClick={handleTalkToTeamClick}
-          className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted transition-colors duration-200 text-foreground"
+          className="flex items-center gap-2 rounded-full border border-gray-400 text-black px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
         >
           <motion.div
             className="w-4 h-4 origin-center"
@@ -174,7 +190,7 @@ export default function SupportButtons({
       ) : (
         <button
           onClick={handleAddDetailsClick}
-          className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm hover:bg-muted transition-colors duration-200 text-foreground"
+          className="flex items-center gap-2 rounded-full border border-gray-400 text-black px-4 py-2 text-sm hover:bg-gray-100 transition-colors duration-200"
         >
           <motion.div
             className="w-4 h-4 origin-center"

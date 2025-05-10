@@ -49,6 +49,7 @@ export default function Conversation({
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isEscalated, setIsEscalated] = useState(false);
+  const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
 
   useEffect(() => {
@@ -231,9 +232,18 @@ export default function Conversation({
     };
   }, [token]);
 
+  useEffect(() => {
+    setIsProvidingDetails(false);
+  }, [lastAIMessage]);
+
   const handleTalkToTeamClick = () => {
     setIsEscalated(true);
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
+  };
+
+  const handleAddDetailsClick = () => {
+    inputRef.current?.focus();
+    setIsProvidingDetails(true);
   };
 
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
@@ -261,6 +271,8 @@ export default function Conversation({
           messageStatus={status}
           lastMessage={lastAIMessage}
           onTalkToTeamClick={handleTalkToTeamClick}
+          onAddDetailsClick={handleAddDetailsClick}
+          isGumroadTheme={isGumroadTheme}
           isEscalated={isEscalated}
         />
       </AnimatePresence>
@@ -271,6 +283,7 @@ export default function Conversation({
         handleSubmit={handleSubmit}
         isLoading={isLoading}
         isGumroadTheme={isGumroadTheme}
+        placeholder={isProvidingDetails ? "Provide additional details..." : "Ask a question..."}
       />
     </>
   );
