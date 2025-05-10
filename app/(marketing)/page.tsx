@@ -1,20 +1,16 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { ArchiveBoxIcon, BanknotesIcon, BookOpenIcon, InboxIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArchiveBoxIcon, BanknotesIcon, BookOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon, CursorArrowRaysIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
-import { AnimatePresence, motion, PanInfo } from "framer-motion";
-import { Shuffle, TriangleAlert, Sparkles, Search, Star, BookOpen, Clock, MessageSquare, FileCode, Monitor } from "lucide-react";
-import Image from "next/image";
+import { motion } from "framer-motion";
+import { TriangleAlert, Sparkles, Star, BookOpen, Clock, MessageSquare, FileCode, Monitor } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
-import AnimatedCursor from "@/components/animated-cursor";
 import AnimatedTyping from "@/components/animated-typing";
 import ComparisonHistogram from "@/components/comparison-histogram";
 import { getBaseUrl } from "@/components/constants";
-import MessageBubble from "@/components/message-bubble";
-import ResponseTimeChart from "@/components/response-time-chart";
 import SlackInterface from "@/components/slack-interface";
 import SlackNotification from "@/components/slack-notification";
 import { Button } from "@/components/ui/button";
@@ -22,43 +18,6 @@ import { MarketingHeader } from "./MarketingHeader";
 import RefundDemo from "./RefundDemo";
 import CitationsDemo from "./CitationsDemo";
 import ToolsDemo from "./ToolsDemo";
-
-type PositionConfig = {
-  bubbleVariant: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
-  labelPosition: "left" | "right" | "top" | "bottom";
-};
-
-const featurePositions: Record<string, PositionConfig> = {
-  smarterSupport: { bubbleVariant: "bottomLeft", labelPosition: "top" },
-  knowledgeBank: { bubbleVariant: "bottomRight", labelPosition: "right" },
-  messageReactions: { bubbleVariant: "bottomRight", labelPosition: "right" },
-  shorthandReplies: { bubbleVariant: "bottomRight", labelPosition: "top" },
-  slackInterface: { bubbleVariant: "bottomLeft", labelPosition: "top" },
-  slackNotification: { bubbleVariant: "bottomLeft", labelPosition: "top" },
-  responseTimeChart: { bubbleVariant: "bottomRight", labelPosition: "bottom" },
-  finalToggle: { bubbleVariant: "bottomRight", labelPosition: "left" },
-};
-
-const featureBubbleTexts: Record<string, string> = {
-  smarterSupport: "Instead of just telling them what to do, I'll guide your customers through every step.",
-  knowledgeBank:
-    "Store critical policies, product details, and procedures, and I'll instantly retrieve and incorporate them into accurate responses.",
-  messageReactions:
-    "Feedback helps me learn what works and what doesn't, so I can step in confidently—and step aside when I shouldn't.",
-  shorthandReplies:
-    "Type simple instructions and watch I craft complete, professional responses while maintaining your voice.",
-  slackInterface:
-    "Slack is your support HQ. Ask me how many customers are asking about something—or assign, reply, and close tickets right from the thread.",
-  slackNotification: "If I need a human, I'll send a heads-up in Slack so your team can jump in fast.",
-  responseTimeChart:
-    "See how Helper dramatically reduces response times even as ticket volume increases, allowing your team to handle more inquiries with less stress.",
-  finalToggle: "Ready to see how AI can transform your customer support?",
-};
-
-const defaultPositionConfig: PositionConfig = {
-  bubbleVariant: "topRight",
-  labelPosition: "left",
-};
 
 export default function Home() {
   const [customerQuestions, setCustomerQuestions] = useState([
@@ -72,98 +31,18 @@ export default function Home() {
 
   const [showCustomerMessage, setShowCustomerMessage] = useState(false);
   const [showHelperMessage, setShowHelperMessage] = useState(false);
-  const [showCursor, setShowCursor] = useState(true);
   const [showFeatures, setShowFeatures] = useState(false);
-  const [activeBubble, setActiveBubble] = useState<string | null>(null);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [customerTypingComplete, setCustomerTypingComplete] = useState(false);
   const [helperTypingComplete, setHelperTypingComplete] = useState(false);
   const [showHelperButton, setShowHelperButton] = useState(false);
-  const [cursorAnimating, setCursorAnimating] = useState(true);
-  const [showSpotlight, setShowSpotlight] = useState(false);
   const showMeButtonRef = useRef<HTMLButtonElement>(null);
-  const lastActiveFeature = useRef<string | null>(null);
   const initialScrollComplete = useRef(false);
   const helperMessageRef = useRef<HTMLDivElement>(null);
-  const [currentBubbleText, setCurrentBubbleText] = useState("");
 
   const [footerBgColor, setFooterBgColor] = useState("#2B0808");
   const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
-  const [githubStars, setGithubStars] = useState(0);
-
-  const [currentPositionConfig, setCurrentPositionConfig] = useState<PositionConfig>({
-    bubbleVariant: "topRight",
-    labelPosition: "left",
-  });
 
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-
-  type Slide = {
-    src: string;
-    alt: string;
-    width: number;
-    height: number;
-  };
-
-  const slides: Slide[] = [
-    {
-      src: "/images/websiteknowledge-ui-1.png",
-      alt: "Website Knowledge UI",
-      width: 400,
-      height: 237,
-    },
-    {
-      src: "/images/knowledgebank-ui-1.png",
-      alt: "Knowledge Bank UI",
-      width: 250,
-      height: 237,
-    },
-    {
-      src: "/images/message-reactions-ui-1.png",
-      alt: "Message Reactions UI",
-      width: 400,
-      height: 237,
-    },
-  ];
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.targetTouches[0]) {
-      setTouchStart(e.targetTouches[0].clientX);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.targetTouches[0]) {
-      setTouchEnd(e.targetTouches[0].clientX);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 75) {
-      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-    }
-    if (touchStart - touchEnd < -75) {
-      setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-    }
-  };
-
-  useEffect(() => {
-    const updateInitialCursorPosition = () => {
-      if (cursorAnimating) {
-        setCursorPosition({
-          x: window.innerWidth - 50,
-          y: window.innerHeight - 50,
-        });
-      }
-    };
-
-    updateInitialCursorPosition();
-    window.addEventListener("resize", updateInitialCursorPosition);
-
-    return () => window.removeEventListener("resize", updateInitialCursorPosition);
-  }, [cursorAnimating]);
 
   useEffect(() => {
     const questionInterval = setInterval(() => {
@@ -194,58 +73,11 @@ export default function Home() {
     if (helperTypingComplete) {
       const buttonTimer = setTimeout(() => {
         setShowHelperButton(true);
-        setTimeout(() => {
-          if (showMeButtonRef.current) {
-            const buttonRect = showMeButtonRef.current.getBoundingClientRect();
-            const finalX = buttonRect.left + buttonRect.width / 2;
-            const finalY = window.scrollY + buttonRect.top + buttonRect.height / 2;
-            setCursorPosition({ x: finalX, y: finalY });
-            setCursorAnimating(false);
-            setShowSpotlight(true);
-          }
-        }, 100);
       }, 500);
       return () => clearTimeout(buttonTimer);
     }
   }, [helperTypingComplete]);
 
-  useEffect(() => {
-    fetch("https://api.github.com/repos/antiwork/helper")
-      .then((res) => res.json())
-      .then((data) => {
-        setGithubStars(data.stargazers_count || 0);
-      })
-      .catch(() => {});
-  }, []);
-
-  const generateRandomColors = useCallback(() => {
-    const generateRandomColor = () =>
-      `#${Math.floor(Math.random() * 16777215)
-        .toString(16)
-        .padStart(6, "0")}`;
-
-    const getContrastRatio = (color1: string, color2: string) => {
-      const luminance = (color: string) => {
-        const rgb = parseInt(color.slice(1), 16);
-        const r = (rgb >> 16) & 0xff;
-        const g = (rgb >> 8) & 0xff;
-        const b = (rgb >> 0) & 0xff;
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      };
-      const l1 = luminance(color1);
-      const l2 = luminance(color2);
-      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-    };
-
-    let bgColor, textColor;
-    do {
-      bgColor = generateRandomColor();
-      textColor = generateRandomColor();
-    } while (getContrastRatio(bgColor, textColor) < 4.5);
-
-    setFooterBgColor(bgColor);
-    setFooterTextColor(textColor);
-  }, []);
 
   useEffect(() => {
     if (showFeatures && !initialScrollComplete.current) {
@@ -260,26 +92,7 @@ export default function Home() {
             behavior: "smooth",
           });
 
-          setTimeout(() => {
-            setActiveBubble("smarterSupport");
-            setCurrentBubbleText(featureBubbleTexts.smarterSupport || "");
-            setCurrentPositionConfig(featurePositions.smarterSupport ?? defaultPositionConfig);
-
-            const dashboardImage = smarterSupportSection.querySelector("img");
-            if (dashboardImage) {
-              const imageRect = dashboardImage.getBoundingClientRect();
-              const cursorX = imageRect.left - 10;
-              const cursorY = window.scrollY + imageRect.top + imageRect.height / 2 + 160;
-              setCursorPosition({ x: cursorX, y: cursorY });
-            } else {
-              const rect = smarterSupportSection.getBoundingClientRect();
-              const cursorX = rect.left - 10;
-              const cursorY = window.scrollY + rect.top + rect.height / 2 + 160;
-              setCursorPosition({ x: cursorX, y: cursorY });
-            }
-
-            initialScrollComplete.current = true;
-          }, 800);
+          initialScrollComplete.current = true;
         }
       }, 500);
 
@@ -319,23 +132,6 @@ export default function Home() {
       </div>
 
       <div className="flex-grow pt-20">
-        {showCursor && (
-          <AnimatedCursor
-            position={cursorPosition}
-            animate={cursorAnimating}
-            showSpotlight={false}
-            labelPosition={currentPositionConfig.labelPosition}
-          />
-        )}
-
-        {currentBubbleText && (
-          <MessageBubble
-            position={cursorPosition}
-            text={currentBubbleText}
-            variant={currentPositionConfig.bubbleVariant}
-          />
-        )}
-
         <section className="min-h-screen flex items-center justify-center">
           <div className="container mx-auto px-4">
             <h1 className="text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">
@@ -655,7 +451,6 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <Sparkles className="w-6 h-6 mt-1" style={{ color: "#C2D44B" }} />
                       <span>
-                        
                         <span className="font-bold" style={{ color: "#C2D44B" }}>@helper</span>
                         <span className="text-secondary dark:text-foreground">
                           {" "}
