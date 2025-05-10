@@ -454,9 +454,11 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <Button className="bg-amber-500 hover:bg-amber-600 text-black font-medium px-8 py-6 rounded-md text-lg">
-                    Get Started
-                  </Button>
+                  <Link href="/login">
+                    <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
+                      Get started
+                    </Button>
+                  </Link>
                 </div>
 
                 <div className="order-1 md:order-2">
@@ -728,9 +730,11 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <Button className="bg-amber-500 hover:bg-amber-600 text-black font-medium px-8 py-6 rounded-md text-lg">
-                    Get Started
-                  </Button>
+                  <Link href="/login">
+                    <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
+                      Get started
+                    </Button>
+                  </Link>
                 </div>
                 <div className="space-y-12">
                   <div id="slackInterface">
@@ -783,9 +787,11 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex justify-center mt-12">
-                <Button className="bg-amber-500 hover:bg-amber-600 text-black font-medium px-8 py-6 rounded-md text-lg">
-                  Get started
-                </Button>
+                <Link href="/login">
+                  <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
+                    Get started
+                  </Button>
+                </Link>
               </div>
             </div>
           </section>
