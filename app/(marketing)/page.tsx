@@ -305,6 +305,10 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [currentSlide]);
 
+  const docsBaseUrl = getBaseUrl().includes("localhost") || getBaseUrl().includes("dev")
+    ? "https://helperai.dev"
+    : "https://helper.ai";
+
   return (
     <main className="bg-[#2B0808] text-white flex flex-col">
       <div className="fixed top-0 left-0 right-0 z-50">
@@ -742,6 +746,59 @@ export default function Home() {
             </div>
           </section>
         )}
+
+        <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold mb-12 text-[#FFE6B0]">Knowledge base</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Link href={`${docsBaseUrl}/docs`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
+                <span className="flex items-center justify-center w-10 h-10">
+                  <svg width="24" height="24" fill="none" stroke="#459EFD" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M12 4v16"/><path d="M4 4h16v16H4z"/></svg>
+                </span>
+                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Getting started</span>
+                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                </span>
+              </Link>
+              <Link href={`${docsBaseUrl}/docs/tools/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
+                <span className="flex items-center justify-center w-10 h-10">
+                  <svg width="24" height="24" fill="none" stroke="#C2D44B" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                </span>
+                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Tools</span>
+                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                </span>
+              </Link>
+              <Link href={`${docsBaseUrl}/docs/api/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
+                <span className="flex items-center justify-center w-10 h-10">
+                  <svg width="24" height="24" fill="none" stroke="#FF90E8" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                </span>
+                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Conversation api</span>
+                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                </span>
+              </Link>
+              <Link href={`${docsBaseUrl}/docs/api-reference/create-conversation`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
+                <span className="flex items-center justify-center w-10 h-10">
+                  <svg width="24" height="24" fill="none" stroke="#FF4343" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                </span>
+                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Api references</span>
+                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                </span>
+              </Link>
+              <Link href={`${docsBaseUrl}/docs/widget/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
+                <span className="flex items-center justify-center w-10 h-10">
+                  <svg width="24" height="24" fill="none" stroke="#FFD34E" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M8 17v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2"/></svg>
+                </span>
+                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Chat widget</span>
+                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
 
         <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: footerBgColor }}>
           <div className="flex items-center">
