@@ -19,6 +19,9 @@ import SlackInterface from "@/components/slack-interface";
 import SlackNotification from "@/components/slack-notification";
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "./MarketingHeader";
+import RefundDemo from "./RefundDemo";
+import CitationsDemo from "./CitationsDemo";
+import ToolsDemo from "./ToolsDemo";
 
 type PositionConfig = {
   bubbleVariant: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
@@ -446,7 +449,7 @@ export default function Home() {
                         </span>
                         <span className="text-secondary dark:text-foreground">
                           {" "}
-                          handle common requests automatically—no agent needed.
+                          handle common requests automatically. No agent needed.
                         </span>
                       </span>
                     </div>
@@ -510,9 +513,9 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="hidden md:flex flex-col gap-24">
-                    <Image src="/images/helpinghand-ui.png" alt="Helping Hand UI" width={600} height={800} />
-                    <Image src="/images/citations-ui.png" alt="Citations UI" width={600} height={800} />
-                    <Image src="/images/tool-usage-ui.png" alt="Tool Usage UI" width={600} height={800} />
+                    <RefundDemo />
+                    <CitationsDemo />
+                    <ToolsDemo />
                   </div>
                 </div>
               </div>
@@ -598,7 +601,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div
-                    className="absolute -top-2 -left-1 md:-top-8 md:-left-2 rotate-[-6deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50"
+                    className="absolute -top-2 -left-1 md:-top-8 md:-left-2 rotate-[-6deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50 transition-transform duration-200 hover:-rotate-12"
                     style={{ borderColor: "#FF90E8", background: "#250404", color: "#FF90E8" }}
                   >
                     <svg
@@ -652,7 +655,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div
-                    className="absolute -top-8 right-1 md:-top-10 md:right-20 rotate-[4deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50"
+                    className="absolute -top-8 right-1 md:-top-10 md:right-20 rotate-[4deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50 transition-transform duration-200 hover:rotate-12"
                     style={{ borderColor: "#459EFD", background: "#250404", color: "#459EFD" }}
                   >
                     <svg
