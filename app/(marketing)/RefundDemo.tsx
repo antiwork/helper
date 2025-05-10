@@ -1,25 +1,26 @@
 import { MousePointerClick, MousePointer } from "lucide-react";
 import AnimatedTyping from "@/components/animated-typing";
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, useInView } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 
 export default function RefundDemo() {
   const [messageDone, setMessageDone] = useState(false);
   const [pointerClicked, setPointerClicked] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  // Automatically trigger pointer click after typing
   useEffect(() => {
-    if (messageDone && !pointerClicked) {
+    if (isInView && messageDone && !pointerClicked) {
       const timer = setTimeout(() => setPointerClicked(true), 700);
       return () => clearTimeout(timer);
     }
-  }, [messageDone, pointerClicked]);
+  }, [messageDone, pointerClicked, isInView]);
 
   return (
-    <div className="relative min-h-[600px] md:min-h-[800px] flex flex-col items-center justify-center py-16 md:py-24 pb-40 md:pb-64">
-      <div className="absolute top-8 left-1/2 md:left-[60%] -translate-x-1/2 flex flex-col items-start z-20">
+    <div ref={ref} className="relative min-h-[600px] md:min-h-[800px] flex flex-col items-center justify-center py-16 md:py-24 pb-40 md:pb-64">
+      <div className="absolute top-8 left-[70%] lg:left-[50%] xl:left-[60%] -translate-x-1/2 flex flex-col items-start z-20">
         <div className="border border-[#FEB81D80] rounded-t-xl rounded-bl-xl rounded-br-none px-4 md:px-5 py-3 w-[320px] md:w-[440px] text-base md:text-lg font-medium text-[#FFE6B0] bg-[#250404]">
-          {!messageDone ? (
+          {!messageDone && isInView ? (
             <AnimatedTyping text="How do I request a refund on my recent order?" speed={28} onComplete={() => setMessageDone(true)} />
           ) : (
             <span>How do I request a refund on my recent order?</span>

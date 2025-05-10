@@ -416,7 +416,7 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-16 gap-0 items-start">
                 <div className="lg:sticky lg:top-20">
                   <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
-                    Helper guides users and resolves issues-- before they become tickets.
+                    Helper guides users and resolves issues before they become tickets.
                   </h2>
                   <div className="space-y-6 mb-12 mt-8">
                     <div className="flex items-start gap-4">
@@ -767,6 +767,7 @@ export default function Home() {
           </section>
         )}
 
+{showFeatures && (
         <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl font-bold mb-12 text-[#FFE6B0]">Knowledge base</h2>
@@ -819,6 +820,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        )}
 
         <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: footerBgColor }}>
           <div className="flex items-center">
