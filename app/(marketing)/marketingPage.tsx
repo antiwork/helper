@@ -498,7 +498,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                   className="font-sundry-narrow-bold text-xl px-8 py-8 bg-[#3D0C11] text-primary-foreground hover:bg-[#2D090D] transition-colors duration-300"
                 >
                   Start using Helper
-                  <ArrowRightIcon className="h-5 w-5 ml-2 jiggle-animation" />
+                  <ArrowRight className="h-5 w-5 ml-2 jiggle-animation" />
                 </Button>
               </Link>
             </div>
