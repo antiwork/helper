@@ -348,7 +348,16 @@
     transform: rotate(10deg);
   }
   60% {
-    transform: rotate(0deg);
+    transform: rotate(4deg);
+  }
+  70% {
+    transform: rotate(2deg);
+  }
+  80% {
+    transform: rotate(1deg);
+  }
+  90% {
+    transform: rotate(0.5deg);
   }
   100% {
     transform: rotate(0deg);
@@ -356,6 +365,6 @@
 }
 
 .animate-wave {
-  animation: wave 2s ease-in-out;
+  animation: wave 2s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform-origin: 70% 70%;
 }
