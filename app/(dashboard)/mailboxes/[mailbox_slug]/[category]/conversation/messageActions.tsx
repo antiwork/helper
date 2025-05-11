@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
-import { CornerUpLeft } from "lucide-react";
 import { isMacOS } from "@tiptap/core";
+import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { DraftedEmail } from "@/app/types/global";

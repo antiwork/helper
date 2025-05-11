@@ -1,3 +1,5 @@
+import { ChannelProvider } from "ably/react";
+import FileSaver from "file-saver";
 import {
   ArrowUp,
   Download,
@@ -9,8 +11,6 @@ import {
   PanelRightOpen,
   X,
 } from "lucide-react";
-import { ChannelProvider } from "ably/react";
-import FileSaver from "file-saver";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
@@ -238,18 +238,10 @@ const ConversationHeader = ({
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
       <div id="conversation-close" className="sm:hidden">
-        <X
-          aria-label="Minimize conversation"
-          className="text-primary h-5 w-5 cursor-pointer"
-          onClick={minimize}
-        />
+        <X aria-label="Minimize conversation" className="text-primary h-5 w-5 cursor-pointer" onClick={minimize} />
       </div>
       <div className="hidden sm:block">
-        {conversationInfo?.source === "email" ? (
-          <Mail className="w-4 h-4" />
-        ) : (
-          <MessageSquare className="w-4 h-4" />
-        )}
+        {conversationInfo?.source === "email" ? <Mail className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
       </div>
       <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
       <CopyLinkButton />

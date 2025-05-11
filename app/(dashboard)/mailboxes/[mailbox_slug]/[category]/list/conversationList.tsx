@@ -110,9 +110,7 @@ const SearchBar = ({
             asChild
           >
             <Link href={`/mailboxes/${params.mailbox_slug}/search`}>
-              <Search
-                className={cn("h-4 w-4", variant === "desktop" ? "text-white" : "text-foreground")}
-              />
+              <Search className={cn("h-4 w-4", variant === "desktop" ? "text-white" : "text-foreground")} />
             </Link>
           </Button>
         </div>

@@ -5,20 +5,20 @@ import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
 import "@/components/linkCta.css";
 import { truncate } from "lodash-es";
-import { 
-  Bot, 
-  Download, 
-  Edit, 
-  Frown, 
-  Mail, 
-  MessageSquare, 
-  MoreHorizontal, 
-  Paperclip, 
-  Sparkles, 
-  ThumbsDown, 
-  ThumbsUp, 
-  User, 
-  XCircle 
+import {
+  Bot,
+  Download,
+  Edit,
+  Frown,
+  Mail,
+  MessageSquare,
+  MoreHorizontal,
+  Paperclip,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+  XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/hooks/use-toast";

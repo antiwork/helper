@@ -7,7 +7,7 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronRight,
-  User
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
@@ -67,8 +67,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
         className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         onClick={() => setDetailsExpanded(!detailsExpanded)}
       >
-        {hasDetails &&
-          (detailsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />)}
+        {hasDetails && (detailsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />)}
         <Icon className="h-4 w-4" />
         <span className="flex items-center gap-1">{upperFirst(description)}</span>
         <span>·</span>

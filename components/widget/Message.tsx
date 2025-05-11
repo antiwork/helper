@@ -1,6 +1,6 @@
-import { Paperclip } from "lucide-react";
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
+import { Paperclip } from "lucide-react";
 import HumanizedTime from "@/components/humanizedTime";
 import { Attachment } from "@/components/widget/Conversation";
 import MessageElement from "@/components/widget/MessageElement";

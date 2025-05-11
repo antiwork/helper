@@ -1,16 +1,7 @@
 "use client";
 
 import { AblyProvider, ChannelProvider } from "ably/react";
-import { 
-  BotIcon, 
-  DollarSign, 
-  Flag, 
-  Mail, 
-  MessageSquare, 
-  Star, 
-  ThumbsDown, 
-  ThumbsUp 
-} from "lucide-react";
+import { BotIcon, DollarSign, Flag, Mail, MessageSquare, Star, ThumbsDown, ThumbsUp } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 import { useEffect, useRef } from "react";

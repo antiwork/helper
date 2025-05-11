@@ -1,5 +1,5 @@
-import { Inbox } from "lucide-react";
 import { upperFirst } from "lodash-es";
+import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

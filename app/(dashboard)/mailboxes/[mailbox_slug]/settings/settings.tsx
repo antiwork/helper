@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  BookOpen,
-  CreditCard,
-  Link,
-  MonitorSmartphone,
-  Settings as SettingsIcon,
-  UserPlus,
-  Users
-} from "lucide-react";
+import { BookOpen, CreditCard, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
 import React, { useState, useTransition } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import type { SupportAccount } from "@/app/types/global";

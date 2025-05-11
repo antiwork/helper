@@ -1,5 +1,5 @@
-import { AlertTriangle, Paperclip, RefreshCw, X } from "lucide-react";
 import cx from "classnames";
+import { AlertTriangle, Paperclip, RefreshCw, X } from "lucide-react";
 import { forwardRef } from "react";
 import { UploadStatus, useFileUpload, type UnsavedFileInfo } from "@/components/fileUploadContext";
 import LoadingSpinner from "@/components/loadingSpinner";

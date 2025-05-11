@@ -1,5 +1,5 @@
-import { AlertTriangle, ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { kebabCase, upperFirst } from "lodash-es";
+import { AlertTriangle, ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";

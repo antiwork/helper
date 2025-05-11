@@ -1,5 +1,5 @@
-import { MessagesSquare, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { UIMessage } from "ai";
+import { MessagesSquare, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -157,7 +157,6 @@ export default function SupportButtons({
           }
         >
           <ThumbsUp className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
-
         </motion.div>
         That solved it!
       </button>
