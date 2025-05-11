@@ -60,6 +60,28 @@ export async function generateMailboxReport(mailboxId: number) {
 
   const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
 
+  const openTicketsOverZeroCount = await db
+    .select({ count: sql`count(*)` })
+    .from(conversations)
+    .leftJoin(
+      platformCustomers,
+      and(
+        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.emailFrom, platformCustomers.email),
+      ),
+    )
+    .where(
+      and(
+        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.status, "open"),
+        isNull(conversations.mergedIntoId),
+        gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0),
+      ),
+    )
+    .then((result) => Number(result[0]?.count || 0));
+
+  const openTicketsOverZeroMessage = openTicketsOverZeroCount ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}` : null;
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -121,7 +143,9 @@ export async function generateMailboxReport(mailboxId: number) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: [openCountMessage, avgReplyTimeMessage, vipAvgReplyTimeMessage].filter(Boolean).join("\n"),
+      text: [openCountMessage, openTicketsOverZeroMessage, avgReplyTimeMessage, vipAvgReplyTimeMessage]
+        .filter(Boolean)
+        .join("\n"),
     },
   });
 
@@ -134,6 +158,7 @@ export async function generateMailboxReport(mailboxId: number) {
   return {
     success: true,
     openCountMessage,
+    openTicketsOverZeroMessage,
     avgReplyTimeMessage,
     vipAvgReplyTimeMessage,
   };

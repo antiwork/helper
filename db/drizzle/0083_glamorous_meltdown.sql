@@ -1,0 +1,2 @@
+ALTER TABLE "conversations_conversation" ADD COLUMN "anonymous_session_id" text;--> statement-breakpoint
+CREATE INDEX "conversations_anonymous_session_id_idx" ON "conversations_conversation" USING btree ("anonymous_session_id");

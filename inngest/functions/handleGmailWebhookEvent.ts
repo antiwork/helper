@@ -315,6 +315,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
             isPrompt: false,
             isVisitor: false,
             assignedToAI: mailbox.autoRespondEmailToChat,
+            anonymousSessionId: null,
           })
           .returning({
             id: conversations.id,

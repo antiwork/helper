@@ -11,14 +11,18 @@ export async function GET(req: Request) {
     return Response.json({ error: authResult.error }, { status: 401 });
   }
 
-  if (!authResult.session.email) {
-    return Response.json({ error: "Not authorized - Anonymous session" }, { status: 401 });
-  }
-
   const url = new URL(req.url);
   const cursor = url.searchParams.get("cursor");
 
-  const baseCondition = eq(conversationsTable.emailFrom, authResult.session.email);
+  let baseCondition;
+  if (authResult.session.isAnonymous && authResult.session.anonymousSessionId) {
+    baseCondition = eq(conversationsTable.anonymousSessionId, authResult.session.anonymousSessionId);
+  } else if (authResult.session.email) {
+    baseCondition = eq(conversationsTable.emailFrom, authResult.session.email);
+  } else {
+    return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
+  }
+
   const whereClause = cursor ? and(baseCondition, lt(conversationsTable.createdAt, new Date(cursor))) : baseCondition;
   const userConversations = await db.query.conversations.findMany({
     where: whereClause,

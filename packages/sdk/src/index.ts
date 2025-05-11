@@ -60,6 +60,7 @@ class HelperWidget {
   private readonly VISIBILITY_STORAGE_KEY = "helper_widget_visible";
   private readonly CONVERSATION_STORAGE_KEY = "helper_widget_conversation";
   private readonly MINIMIZED_STORAGE_KEY = "helper_widget_minimized";
+  private readonly ANONYMOUS_SESSION_TOKEN_KEY = "helper_widget_anonymous_session_token";
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
 
@@ -115,6 +116,8 @@ class HelperWidget {
         requestBody.emailHash = this.config.email_hash;
         requestBody.timestamp = this.config.timestamp;
         requestBody.customerMetadata = this.config.customer_metadata;
+      } else {
+        requestBody.currentToken = localStorage.getItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
       }
 
       const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/widget/session`, {
@@ -144,6 +147,11 @@ class HelperWidget {
               }, index * 800);
             });
           }, 2000);
+        }
+        if (this.isAnonymous()) {
+          localStorage.setItem(this.ANONYMOUS_SESSION_TOKEN_KEY, data.token);
+        } else {
+          localStorage.removeItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
         }
       }
       return true;
@@ -412,6 +420,11 @@ class HelperWidget {
               } else {
                 this.minimizeInternal();
               }
+              break;
+            case "CLEAR_ANONYMOUS_SESSION":
+              localStorage.removeItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
+              await this.createSessionWithRetry();
+              this.initFrameConfig();
               break;
           }
         }
