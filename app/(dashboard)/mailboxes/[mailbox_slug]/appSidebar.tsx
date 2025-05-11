@@ -1,9 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { ChevronsUpDown, Settings } from "lucide-react";
+import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -91,7 +89,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                       <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                       <span className="truncate text-base">{mailbox.name}</span>
                       <span className="ml-auto">
-                        {mailbox.slug === currentMailbox?.slug && <CheckCircleIcon className="text-foreground" />}
+                        {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground" />}
                       </span>
                     </Link>
                   </DropdownMenuItem>
@@ -113,7 +111,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                 isInbox && "bg-sidebar-accent",
               )}
             >
-              <HeroInbox className="h-4 w-4" />
+              <Inbox className="h-4 w-4" />
               <span className="font-sundry-narrow-medium">Inbox</span>
             </Link>
             <Link
@@ -179,7 +177,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
-                    <ChartBarIcon className="stroke-px text-sidebar-foreground" />
+                    <BarChart className="stroke-px text-sidebar-foreground" />
                     <span className="font-sundry-narrow-medium text-base text-sidebar-foreground">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>

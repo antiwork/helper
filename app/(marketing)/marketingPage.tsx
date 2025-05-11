@@ -2,18 +2,18 @@
 
 import { useUser } from "@clerk/nextjs";
 import {
-  ArrowPathIcon,
-  ArrowRightIcon,
-  BookOpenIcon,
-  HandThumbDownIcon,
-  InboxIcon,
-  MagnifyingGlassIcon,
-  PaperAirplaneIcon,
-  PlayIcon,
-  PlusCircleIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
-import { Shuffle } from "lucide-react";
+  ArrowRight,
+  Book,
+  Inbox,
+  Play,
+  PlusCircle,
+  RefreshCw,
+  Search,
+  Send,
+  Shuffle,
+  ThumbsDown,
+  Trash,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
@@ -47,7 +47,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
       <Link href={`${getBaseUrl()}/docs`} target="_blank">
         <Button variant="subtle">
           <span className="flex items-center">
-            <BookOpenIcon className="h-5 w-5 mr-2" />
+            <Book className="h-5 w-5 mr-2" />
             Docs
           </span>
         </Button>
@@ -64,7 +64,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
         <Link href="/mailboxes">
           <Button variant="subtle">
             <span className="flex items-center">
-              <InboxIcon className="h-5 w-5 mr-2" />
+              <Inbox className="h-5 w-5 mr-2" />
               Go to mailbox
             </span>
           </Button>
@@ -73,7 +73,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
         <Link href="/login">
           <Button variant="subtle">
             <span className="flex items-center">
-              <InboxIcon className="h-5 w-5 mr-2" />
+              <Inbox className="h-5 w-5 mr-2" />
               Login
             </span>
           </Button>
@@ -95,7 +95,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                 placeholder="Search knowledge bank..."
                 className=""
                 defaultValue="refund policy"
-                iconsPrefix={<MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />}
+                iconsPrefix={<Search className="h-4 w-4 text-gray-400" />}
               />
             </div>
             <div className="divide-y divide-border">
@@ -109,7 +109,7 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
-                    <TrashIcon className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -121,13 +121,13 @@ const CardContent = React.memo(({ type }: { type: string }) => {
                     accessed.
                   </div>
                   <Button variant="ghost" size="sm" iconOnly>
-                    <TrashIcon className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </div>
             <Button variant="subtle" className="mt-4">
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-4 w-4" />
               Add Knowledge
             </Button>
           </div>
@@ -156,16 +156,16 @@ Please reply with this information. We'll review your request within 1-2 busines
             </div>
             <div className="flex justify-between">
               <button className="hidden md:inline-flex items-center justify-center text-primary bg-background border border-primary hover:bg-primary hover:text-primary-foreground h-10 rounded-md px-4 text-sm transition-colors duration-300">
-                <HandThumbDownIcon className="mr-2 h-4 w-4" />
+                <ThumbsDown className="mr-2 h-4 w-4" />
                 Bad reply
               </button>
               <div className="flex space-x-2">
                 <button className="inline-flex items-center justify-center text-primary bg-background border border-primary hover:bg-primary hover:text-primary-foreground h-10 rounded-md px-4 text-sm transition-colors duration-300">
-                  <ArrowPathIcon className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Generate draft
                 </button>
                 <button className="inline-flex items-center justify-center text-primary-foreground bg-primary hover:bg-primary h-10 rounded-md px-4 text-sm">
-                  <PaperAirplaneIcon className="mr-2 h-4 w-4" />
+                  <Send className="mr-2 h-4 w-4" />
                   Send
                 </button>
               </div>
@@ -193,7 +193,7 @@ Please reply with this information. We'll review your request within 1-2 busines
                         key={tool}
                         className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
                       >
-                        <PlayIcon className="h-4 w-4" />
+                        <Play className="h-4 w-4" />
                         {tool}
                       </div>
                     ),
@@ -220,7 +220,7 @@ Please reply with this information. We'll review your request within 1-2 busines
                       {prompt}
                     </div>
                     <button className="inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-primary hover:bg-secondary h-10 rounded text-xs w-10 px-0">
-                      <TrashIcon className="h-4 w-4" />
+                      <Trash className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
@@ -498,7 +498,7 @@ export const MarketingPage = ({ githubStars }: { githubStars: number }) => {
                   className="font-sundry-narrow-bold text-xl px-8 py-8 bg-[#3D0C11] text-primary-foreground hover:bg-[#2D090D] transition-colors duration-300"
                 >
                   Start using Helper
-                  <ArrowRightIcon className="h-5 w-5 ml-2 jiggle-animation" />
+                  <ArrowRight className="h-5 w-5 ml-2 jiggle-animation" />
                 </Button>
               </Link>
             </div>

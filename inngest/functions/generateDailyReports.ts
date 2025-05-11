@@ -80,7 +80,9 @@ export async function generateMailboxReport(mailboxId: number) {
     )
     .then((result) => Number(result[0]?.count || 0));
 
-  const openTicketsOverZeroMessage = openTicketsOverZeroCount ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}` : null;
+  const openTicketsOverZeroMessage = openTicketsOverZeroCount
+    ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}`
+    : null;
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

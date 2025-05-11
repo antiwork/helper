@@ -1,14 +1,14 @@
 import {
-  ArrowUturnLeftIcon,
-  ArrowUturnUpIcon,
-  ChatBubbleLeftIcon,
-  EnvelopeIcon,
-  PencilSquareIcon,
-  PlayIcon,
-  ShieldExclamationIcon,
-  SparklesIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
+  CornerUpLeft as ArrowUturnLeftIcon,
+  CornerRightUp as ArrowUturnUpIcon,
+  MessageSquare as ChatBubbleLeftIcon,
+  Mail as EnvelopeIcon,
+  PenSquare as PencilSquareIcon,
+  Play as PlayIcon,
+  ShieldAlert as ShieldExclamationIcon,
+  Sparkles as SparklesIcon,
+  User as UserIcon,
+} from "lucide-react";
 import { useMemo, useRef } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";

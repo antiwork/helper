@@ -1,5 +1,4 @@
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from "@heroicons/react/20/solid";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react";
 import * as React from "react";
 import { Button, ButtonProps } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -65,14 +64,14 @@ PaginationNext.displayName = "PaginationNext";
 
 const PaginationFirst = ({ className, ...props }: React.ComponentProps<typeof Button>) => (
   <Button aria-label="Go to last page" className={cn("", className)} {...props}>
-    <ChevronDoubleLeftIcon className="h-4 w-4" />
+    <ChevronsLeft className="h-4 w-4" />
   </Button>
 );
 PaginationFirst.displayName = "PaginationFirst";
 
 const PaginationLast = ({ className, ...props }: React.ComponentProps<typeof Button>) => (
   <Button aria-label="Go to last page" className={cn("", className)} {...props}>
-    <ChevronDoubleRightIcon className="h-4 w-4" />
+    <ChevronsRight className="h-4 w-4" />
   </Button>
 );
 PaginationLast.displayName = "PaginationLast";

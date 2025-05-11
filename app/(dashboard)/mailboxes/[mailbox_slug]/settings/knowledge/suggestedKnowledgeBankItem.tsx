@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { Check, X } from "lucide-react";
 import { useState } from "react";
 import type { FAQ } from "@/app/types/global";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
           onClick={() => rejectFaq.mutate({ mailboxSlug, id: faq.id })}
           disabled={rejectFaq.isPending}
         >
-          <XMarkIcon className="h-4 w-4 mr-1" />
+          <X className="h-4 w-4 mr-1" />
           Reject
         </Button>
         <Button
@@ -46,7 +46,7 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
           onClick={() => acceptFaq.mutate({ mailboxSlug, id: faq.id, content })}
           disabled={acceptFaq.isPending}
         >
-          <CheckIcon className="h-4 w-4 mr-1" />
+          <Check className="h-4 w-4 mr-1" />
           Accept
         </Button>
       </div>

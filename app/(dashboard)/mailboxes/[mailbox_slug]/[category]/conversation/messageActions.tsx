@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
-import { ArrowUturnUpIcon } from "@heroicons/react/20/solid";
 import { isMacOS } from "@tiptap/core";
+import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { DraftedEmail } from "@/app/types/global";
@@ -271,7 +271,7 @@ export const MessageActions = () => {
         {(conversation?.status ?? searchParams.status) !== "spam" &&
           ((conversation?.status ?? searchParams.status) === "closed" ? (
             <Button variant="outlined" onClick={() => updateStatus("open")}>
-              <ArrowUturnUpIcon className="mr-2 h-4 w-4" />
+              <CornerUpLeft className="mr-2 h-4 w-4" />
               Reopen
             </Button>
           ) : (

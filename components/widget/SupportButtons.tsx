@@ -1,5 +1,5 @@
-import { ChatBubbleLeftRightIcon, HandThumbDownIcon, HandThumbUpIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { UIMessage } from "ai";
+import { MessagesSquare, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -113,10 +113,10 @@ export default function SupportButtons({
       >
         <div className={cn("absolute inset-0 bg-black/5")} />
         <div className="absolute inset-0 flex items-center gap-2 px-3">
-          <HandThumbDownIcon className="h-4 w-4 text-red-500" />
+          <ThumbsDown className="h-4 w-4 text-red-500" />
           Why didn't this help? Be as specific as you can.
           <button className="ml-auto" onClick={() => setDismissedAddDetails(true)}>
-            <XMarkIcon className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
         <div className={cn(arrowBase, isGumroadTheme ? "border-t-gumroad-bg" : "border-t-background")} />
@@ -156,7 +156,7 @@ export default function SupportButtons({
                 }
           }
         >
-          <HandThumbUpIcon className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
+          <ThumbsUp className={`h-4 w-4 ${isHelpful ? "text-green-600" : ""}`} />
         </motion.div>
         That solved it!
       </button>
@@ -183,7 +183,7 @@ export default function SupportButtons({
                   }
             }
           >
-            <ChatBubbleLeftRightIcon className="h-4 w-4" />
+            <MessagesSquare className="h-4 w-4" />
           </motion.div>
           Talk to a human
         </button>
@@ -210,7 +210,7 @@ export default function SupportButtons({
                   }
             }
           >
-            <HandThumbDownIcon className="h-4 w-4" />
+            <ThumbsDown className="h-4 w-4" />
           </motion.div>
           This didn't help
         </button>
