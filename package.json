@@ -47,7 +47,6 @@
     "@clerk/nextjs": "^6.9.6",
     "@helperai/react": "workspace:*",
     "@helperai/sdk": "workspace:*",
-    "@heroicons/react": "^2.0.18",
     "@inngest/middleware-sentry": "^0.1.1",
     "@lifeomic/attempt": "^3.1.0",
     "@mendable/firecrawl-js": "^1.16.0",
