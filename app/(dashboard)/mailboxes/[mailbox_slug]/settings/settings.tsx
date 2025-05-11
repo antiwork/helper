@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/pageHeader";
 import { Button } from "@/components/ui/button";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import { SidebarInfo } from "../getSidebarInfo";
 import ChatWidgetSetting from "./chat/chatWidgetSetting";
 import AutoCloseSetting, { AutoCloseUpdates } from "./customers/autoCloseSetting";
@@ -52,6 +53,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdates>({});
+  const utils = api.useUtils();
 
   const handleUpdateSettings = async () => {
     if (!hasPendingUpdates) return;
@@ -60,6 +62,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     try {
       await onUpdateSettings(pendingUpdates);
       setPendingUpdates({});
+      utils.mailbox.preferences.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
       toast({
         title: "Settings updated!",
         variant: "success",
