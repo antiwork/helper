@@ -2,11 +2,10 @@
 
 import { useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import { OAuthStrategy } from "@clerk/types";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loading from "@/app/(dashboard)/loading";
+import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -20,7 +19,6 @@ export function LoginForm() {
   const { signUp } = useSignUp();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { theme, systemTheme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -79,13 +77,7 @@ export function LoginForm() {
   return (
     <>
       <div className="mb-8 flex flex-col items-center gap-4">
-        <Image
-          src={theme === "dark" || systemTheme === "dark" ? "/logo-white.svg" : "/logo.svg"}
-          alt="Helper"
-          width="110"
-          height="32"
-          className="w-28"
-        />
+        <Logo />
         <p className="text-sm text-muted-foreground">Please sign in or sign up to continue</p>
       </div>
 
