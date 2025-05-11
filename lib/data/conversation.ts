@@ -110,19 +110,6 @@ export const updateConversation = async (
       reason: message,
     });
   }
-  if (updatedConversation.assignedToClerkId && current.assignedToClerkId !== updatedConversation.assignedToClerkId) {
-    await inngest.send({
-      name: "conversations/assigned",
-      data: {
-        conversationId: updatedConversation.id,
-        assignEvent: {
-          assignedToId: updatedConversation.assignedToClerkId,
-          assignedById: byUserId,
-          message,
-        },
-      },
-    });
-  }
   if (!current.assignedToAI && updatedConversation.assignedToAI) {
     const message = await tx.query.conversationMessages.findFirst({
       where: eq(conversationMessages.conversationId, updatedConversation.id),
