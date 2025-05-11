@@ -43,9 +43,6 @@ importers:
       '@helperai/sdk':
         specifier: workspace:*
         version: link:packages/sdk
-      '@heroicons/react':
-        specifier: ^2.0.18
-        version: 2.2.0(react@19.1.0)
       '@inngest/middleware-sentry':
         specifier: ^0.1.1
         version: 0.1.2(@sentry/core@9.15.0)(@sentry/types@9.15.0)(inngest@3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))
@@ -2453,11 +2450,6 @@ packages:
     resolution: {integrity: sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==}
     engines: {node: '>=6'}
     hasBin: true
-
-  '@heroicons/react@2.2.0':
-    resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
-    peerDependencies:
-      react: '>= 16 || ^19.0.0-rc'
 
   '@heroku-cli/color@1.1.16':
     resolution: {integrity: sha512-97bYxNaDe/+GCUAKu0V2qudQmR3NFRnv3SrQd2FTtOAa9OWKwkvoBs2WzT7MkNwP4DIpYL6W/e3CSfShfhzEMw==}
@@ -14910,10 +14902,6 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.5.0
       yargs: 17.7.2
-
-  '@heroicons/react@2.2.0(react@19.1.0)':
-    dependencies:
-      react: 19.1.0
 
   '@heroku-cli/color@1.1.16':
     dependencies:
