@@ -1,8 +1,5 @@
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { CurrencyDollarIcon, UserIcon } from "@heroicons/react/24/outline";
-import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { capitalize } from "lodash-es";
-import { Bot } from "lucide-react";
+import { Bot, DollarSign, Search, Send, User } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
@@ -113,9 +110,7 @@ const SearchBar = ({
             asChild
           >
             <Link href={`/mailboxes/${params.mailbox_slug}/search`}>
-              <MagnifyingGlassIcon
-                className={cn("h-4 w-4", variant === "desktop" ? "text-white" : "text-foreground")}
-              />
+              <Search className={cn("h-4 w-4", variant === "desktop" ? "text-white" : "text-foreground")} />
             </Link>
           </Button>
         </div>
@@ -378,7 +373,7 @@ const NewConversationModal = () => {
           iconOnly
           className="rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
         >
-          <PaperAirplaneIcon className="text-primary dark:text-primary-foreground h-4 w-4" />
+          <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -504,7 +499,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
                 title={`Value: ${conversation.platformCustomer.value}`}
               >
                 <div className="flex items-center gap-1 text-xs">
-                  <CurrencyDollarIcon className="h-3 w-3" />
+                  <DollarSign className="h-3 w-3" />
                   {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                 </div>
               </div>
@@ -543,7 +538,7 @@ export const AssignedToLabel = ({
 
   return displayName ? (
     <div className={className} title={`Assigned to ${displayName}`}>
-      <UserIcon className="h-3 w-3" />
+      <User className="h-3 w-3" />
       {displayName}
     </div>
   ) : null;

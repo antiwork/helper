@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowLeftIcon, ArrowPathIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useMediaQuery } from "react-responsive";
 import { Button } from "@/components/ui/button";
-import { useNativePlatform } from "@/components/useNativePlatform";
 
 export const NavigationButtons = () => {
-  const { isTauri } = useNativePlatform();
+  const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -50,7 +50,7 @@ export const NavigationButtons = () => {
     window.history.forward();
   };
 
-  if (!isTauri) return null;
+  if (!isStandalone) return null;
 
   return (
     <div className="flex">
@@ -61,7 +61,7 @@ export const NavigationButtons = () => {
         disabled={!canGoBack}
         className={!canGoBack ? "opacity-50 cursor-not-allowed" : ""}
       >
-        <ArrowLeftIcon className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4" />
       </Button>
       <Button
         variant="sidebar"
@@ -70,10 +70,10 @@ export const NavigationButtons = () => {
         disabled={!canGoForward}
         className={!canGoForward ? "opacity-50 cursor-not-allowed" : ""}
       >
-        <ArrowRightIcon className="w-4 h-4" />
+        <ArrowRight className="w-4 h-4" />
       </Button>
       <Button variant="sidebar" iconOnly onClick={() => window.location.reload()}>
-        <ArrowPathIcon className="w-4 h-4" />
+        <RefreshCw className="w-4 h-4" />
       </Button>
     </div>
   );

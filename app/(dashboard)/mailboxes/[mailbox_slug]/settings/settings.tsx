@@ -1,25 +1,16 @@
 "use client";
 
-import {
-  BookOpenIcon,
-  Cog6ToothIcon,
-  ComputerDesktopIcon,
-  CreditCardIcon,
-  LinkIcon,
-  UserGroupIcon,
-  UsersIcon,
-} from "@heroicons/react/24/outline";
+import { BookOpen, CreditCard, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
 import React, { useState, useTransition } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
-import NativeAppModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/nativeAppModal";
 import type { SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
 import { Button } from "@/components/ui/button";
-import { getTauriPlatform } from "@/components/useNativePlatform";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import ChatWidgetSetting from "./chat/chatWidgetSetting";
 import AutoCloseSetting, { AutoCloseUpdates } from "./customers/autoCloseSetting";
 import CustomerSetting, { type CustomerUpdates } from "./customers/customerSetting";
@@ -60,8 +51,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
   const [isTransitionPending, startTransition] = useTransition();
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdates>({});
-  const [showBilling] = useState(() => !getTauriPlatform());
-  const [showNativeAppModal, setShowNativeAppModal] = useState(false);
+  const utils = api.useUtils();
 
   const handleUpdateSettings = async () => {
     if (!hasPendingUpdates) return;
@@ -70,6 +60,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     try {
       await onUpdateSettings(pendingUpdates);
       setPendingUpdates({});
+      utils.mailbox.preferences.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
       toast({
         title: "Settings updated!",
         variant: "success",
@@ -97,19 +89,19 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "Knowledge",
       id: "knowledge",
-      icon: BookOpenIcon,
+      icon: BookOpen,
       content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
     },
     {
       label: "Team",
       id: "team",
-      icon: UsersIcon,
+      icon: Users,
       content: <TeamSetting mailboxSlug={mailbox.slug} />,
     },
     {
       label: "Customers",
       id: "customers",
-      icon: UserGroupIcon,
+      icon: UserPlus,
       content: (
         <>
           <CustomerSetting
@@ -137,7 +129,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "In-App Chat",
       id: "in-app-chat",
-      icon: ComputerDesktopIcon,
+      icon: MonitorSmartphone,
       content: (
         <ChatWidgetSetting
           mailbox={mailbox}
@@ -153,7 +145,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "Integrations",
       id: "integrations",
-      icon: LinkIcon,
+      icon: Link,
       content: (
         <>
           <ToolSetting mailboxSlug={mailbox.slug} />
@@ -183,7 +175,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     {
       label: "Preferences",
       id: "preferences",
-      icon: Cog6ToothIcon,
+      icon: SettingsIcon,
       content: (
         <PreferencesSetting
           onChange={(updates) =>
@@ -197,11 +189,11 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
     },
   ];
 
-  if (mailbox.billingEnabled && showBilling) {
+  if (mailbox.billingEnabled) {
     items.push({
       label: "Billing",
       id: "billing",
-      icon: CreditCardIcon,
+      icon: CreditCard,
       content: <Subscription />,
     });
   }
@@ -221,7 +213,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
             footer={
               <div className="border-t border-border">
                 <AccountDropdown
-                  setShowNativeAppModal={setShowNativeAppModal}
                   trigger={(children) => (
                     <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
                       {children}
@@ -233,7 +224,6 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
           />
         </div>
       </FileUploadProvider>
-      <NativeAppModal open={showNativeAppModal} onOpenChange={setShowNativeAppModal} />
     </div>
   );
 };

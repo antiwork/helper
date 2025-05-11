@@ -5,6 +5,7 @@ import cx from "classnames";
 import { jwtDecode } from "jwt-decode";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
+import { HelperWidgetConfig, MESSAGE_TYPE, RESUME_GUIDE } from "@helperai/sdk";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
@@ -13,9 +14,8 @@ import PreviousConversations from "@/components/widget/PreviousConversations";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
-import { MESSAGE_TYPE, RESUME_GUIDE, sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
+import { sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
-import { HelperWidgetConfig } from "../../../../packages/sdk/src/types";
 
 type DecodedPayload = {
   isWhitelabel?: boolean;
@@ -175,8 +175,12 @@ export default function Page() {
             >
               <div className="shrink-0 w-full h-full">
                 <div className="h-full overflow-y-auto p-4">
-                  {hasLoadedHistory && !isAnonymous && (
-                    <PreviousConversations token={token} onSelectConversation={onSelectConversation} />
+                  {currentView === "previous" && hasLoadedHistory && (
+                    <PreviousConversations
+                      token={token}
+                      onSelectConversation={onSelectConversation}
+                      isAnonymous={isAnonymous}
+                    />
                   )}
                 </div>
               </div>

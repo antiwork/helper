@@ -12,7 +12,7 @@ import { api } from "@/trpc/react";
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
   nonCore: "Non-core",
-  afk: "AFK",
+  afk: "Away",
 };
 
 export interface TeamMember {

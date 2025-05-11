@@ -1,4 +1,4 @@
-import { ChatBubbleLeftRightIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
+import { HelpCircle, MessagesSquare } from "lucide-react";
 import { EventItem } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/eventItem";
 import MessageItem from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageItem";
 import type { Message } from "@/app/types/global";
@@ -36,7 +36,7 @@ export const MessageThread = ({
       <div className="flex flex-1 flex-col gap-8 pb-4" onDoubleClick={handleDoubleClickWhitespace}>
         {conversation.isPrompt && (
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-            <QuestionMarkCircleIcon className="h-4 w-4 text-muted-foreground" />
+            <HelpCircle className="h-4 w-4 text-muted-foreground" />
             <span>Started this conversation from a prompt</span>
           </div>
         )}
@@ -66,7 +66,7 @@ export const MessageThread = ({
         {conversation.summary && conversation.summary.length > 0 && (
           <div className="mx-auto flex max-w-2xl flex-col gap-2">
             <div className="flex items-center gap-1 text-base text-muted-foreground">
-              <ChatBubbleLeftRightIcon className="h-4 w-4 shrink-0" />
+              <MessagesSquare className="h-4 w-4 shrink-0" />
               Conversation summary
             </div>
             <div className="flex flex-col">

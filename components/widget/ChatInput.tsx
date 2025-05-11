@@ -18,6 +18,7 @@ type Props = {
   handleSubmit: (screenshotData?: string) => void;
   isLoading: boolean;
   isGumroadTheme: boolean;
+  placeholder?: string;
 };
 
 const SCREENSHOT_KEYWORDS = [
@@ -65,6 +66,7 @@ export default function ChatInput({
   handleSubmit,
   isLoading,
   isGumroadTheme,
+  placeholder,
 }: Props) {
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
@@ -178,7 +180,7 @@ export default function ChatInput({
                 submit();
               }
             }}
-            placeholder="Ask a question..."
+            placeholder={placeholder}
             className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-white p-0 pr-3 outline-hidden focus:border-none focus:outline-hidden focus:ring-0 min-h-[24px] max-h-[200px]"
             disabled={isLoading}
           />

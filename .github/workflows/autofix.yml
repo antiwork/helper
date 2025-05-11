@@ -25,16 +25,16 @@ jobs:
 
       - run: pnpm install
 
+      - name: Build Packages
+        run: pnpm run-on-packages build
+        shell: bash
+
       - name: Lint
         run: pnpm run lint --fix
         shell: bash
 
       - name: Format
         run: pnpm run format --write
-        shell: bash
-
-      - name: Build React Package
-        run: pnpm run --filter=@helperai/react build
         shell: bash
 
       - name: Typecheck

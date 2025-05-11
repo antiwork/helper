@@ -1,9 +1,7 @@
 "use client";
 
-import { useAuth, useUser } from "@clerk/nextjs";
-import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { ChevronsUpDown, Download, Settings, X } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
+import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -11,7 +9,6 @@ import { useEffect, useState } from "react";
 import { InboxProvider } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/inbox";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
 import { NavigationButtons } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/navigationButtons";
-import { TauriDragArea } from "@/components/tauriDragArea";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,18 +27,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getTauriPlatform, useNativePlatform } from "@/components/useNativePlatform";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { AccountDropdown } from "./accountDropdown";
 import { CategoryNav } from "./categoryNav";
-import NativeAppModal, {
-  isMac,
-  isWindows,
-  LINUX_APPIMAGE_URL,
-  MAC_UNIVERSAL_INSTALLER_URL,
-  WINDOWS_INSTALLER_URL,
-} from "./nativeAppModal";
 
 declare global {
   interface Window {
@@ -54,9 +43,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const { data: { trialInfo } = {} } = api.organization.getOnboardingStatus.useQuery();
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const { nativePlatform, isLegacyTauri, isDesktopWeb } = useNativePlatform();
-  const { user } = useUser();
-  const [showNativeAppModal, setShowNativeAppModal] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug });
@@ -68,9 +54,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   });
 
   useEffect(() => {
-    setShowUpgradePrompt(
-      !!trialInfo && trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt && !getTauriPlatform(),
-    );
+    setShowUpgradePrompt(!!trialInfo && trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt);
   }, [trialInfo]);
 
   const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
@@ -78,15 +62,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const isInbox = pathname.includes("/conversations");
 
   return (
-    <Sidebar
-      className={cn(
-        "bg-sidebar text-sidebar-foreground border-r border-sidebar-border",
-        nativePlatform === "macos" && isLegacyTauri && "pt-6",
-      )}
-    >
-      {nativePlatform === "macos" && isLegacyTauri && (
-        <TauriDragArea className="top-0 left-0 w-(--sidebar-width) h-8" />
-      )}
+    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center justify-between">
@@ -109,7 +85,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                       <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                       <span className="truncate text-base">{mailbox.name}</span>
                       <span className="ml-auto">
-                        {mailbox.slug === currentMailbox?.slug && <CheckCircleIcon className="text-foreground" />}
+                        {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground" />}
                       </span>
                     </Link>
                   </DropdownMenuItem>
@@ -131,7 +107,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 isInbox && "bg-sidebar-accent",
               )}
             >
-              <HeroInbox className="h-4 w-4" />
+              <Inbox className="h-4 w-4" />
               <span className="font-sundry-narrow-medium">Inbox</span>
             </Link>
             <Link
@@ -192,50 +168,12 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               </div>
             </SidebarMenuItem>
           )}
-          {isDesktopWeb && user && !user.unsafeMetadata?.desktopAppPromptDismissed && (
-            <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
-              <div className="flex flex-col rounded-lg bg-sidebar-accent p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm">Get the desktop app</span>
-                  <Button
-                    variant="sidebar"
-                    size="sm"
-                    className="w-5 h-5 p-0"
-                    onClick={() =>
-                      void user?.update({
-                        unsafeMetadata: {
-                          ...user.unsafeMetadata,
-                          desktopAppPromptDismissed: true,
-                        },
-                      })
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button variant="bright" asChild>
-                  <a
-                    href={
-                      isMac() ? MAC_UNIVERSAL_INSTALLER_URL : isWindows() ? WINDOWS_INSTALLER_URL : LINUX_APPIMAGE_URL
-                    }
-                    download
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    {isMac() ? "Download for Mac" : isWindows() ? "Download for Windows" : "Download for Linux"}
-                  </a>
-                </Button>
-                <Button variant="sidebar-link" size="sm" onClick={() => setShowNativeAppModal(true)}>
-                  More options
-                </Button>
-              </div>
-            </SidebarMenuItem>
-          )}
           {!isMobile && (
             <>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
-                    <ChartBarIcon className="stroke-px text-sidebar-foreground" />
+                    <BarChart className="stroke-px text-sidebar-foreground" />
                     <span className="font-sundry-narrow-medium text-base text-sidebar-foreground">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
@@ -252,7 +190,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           )}
           <SidebarMenuItem>
             <AccountDropdown
-              setShowNativeAppModal={setShowNativeAppModal}
               trigger={(children) => (
                 <SidebarMenuButton
                   className={cn(
@@ -267,7 +204,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <NativeAppModal open={showNativeAppModal} onOpenChange={setShowNativeAppModal} />
     </Sidebar>
   );
 }

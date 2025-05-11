@@ -1,17 +1,19 @@
-import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
-import {
-  ArrowUpIcon,
-  ChatBubbleLeftIcon,
-  EnvelopeIcon,
-  InformationCircleIcon,
-  LinkIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
 import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import {
+  ArrowUp,
+  Download,
+  Info,
+  Link as LinkIcon,
+  Mail,
+  MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { useMediaQuery } from "react-responsive";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -41,7 +43,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import { useNativePlatform } from "@/components/useNativePlatform";
 import { assertDefined } from "@/components/utils/assert";
 import { conversationChannelId } from "@/lib/ably/channels";
 import { useAblyEvent } from "@/lib/ably/hooks";
@@ -74,10 +75,10 @@ export const useUndoneEmailStore = create<{
 );
 
 const CopyLinkButton = () => {
-  const { nativePlatform } = useNativePlatform();
+  const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const [copied, setCopied] = useState(false);
 
-  if (!nativePlatform) return null;
+  if (!isStandalone) return null;
 
   return (
     <Tooltip delayDuration={0}>
@@ -159,7 +160,7 @@ const ScrollToTopButton = ({
           onClick={scrollToTop}
           aria-label="Scroll to top"
         >
-          <ArrowUpIcon className="h-4 w-4 text-foreground" />
+          <ArrowUp className="h-4 w-4 text-foreground" />
         </a>
       </TooltipTrigger>
       <TooltipContent>Scroll to top</TooltipContent>
@@ -237,18 +238,10 @@ const ConversationHeader = ({
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
       <div id="conversation-close" className="sm:hidden">
-        <XMarkIcon
-          aria-label="Minimize conversation"
-          className="text-primary h-5 w-5 cursor-pointer"
-          onClick={minimize}
-        />
+        <X aria-label="Minimize conversation" className="text-primary h-5 w-5 cursor-pointer" onClick={minimize} />
       </div>
       <div className="hidden sm:block">
-        {conversationInfo?.source === "email" ? (
-          <EnvelopeIcon className="w-4 h-4" />
-        ) : (
-          <ChatBubbleLeftIcon className="w-4 h-4" />
-        )}
+        {conversationInfo?.source === "email" ? <Mail className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
       </div>
       <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
       <CopyLinkButton />
@@ -268,7 +261,7 @@ const ConversationHeader = ({
             <PanelRightOpen className="h-4 w-4" />
           )
         ) : (
-          <InformationCircleIcon className="h-5 w-5" />
+          <Info className="h-5 w-5" />
         )}
         <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
       </Button>
@@ -339,7 +332,7 @@ const CarouselPreviewContent = ({
 
                 <div className="mr-6 flex items-center">
                   <button onClick={() => FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)}>
-                    <ArrowDownTrayIcon className="text-primary h-5 w-5 shrink-0" />
+                    <Download className="text-primary h-5 w-5 shrink-0" />
                     <span className="sr-only">Download</span>
                   </button>
                 </div>
@@ -393,7 +386,6 @@ const ConversationContent = () => {
   });
 
   const { input } = useConversationsListInput();
-  const { nativePlatform } = useNativePlatform();
 
   const utils = api.useUtils();
   const conversationListInfo = utils.mailbox.conversations.list
@@ -460,20 +452,6 @@ const ConversationContent = () => {
 
   const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
 
-  useEffect(() => {
-    if ((nativePlatform === "ios" || nativePlatform === "android") && conversationInfo?.subject) {
-      window.ReactNativeWebView?.postMessage(
-        JSON.stringify({
-          type: "conversationLoaded",
-          subject: conversationInfo?.subject,
-        }),
-      );
-      window.__EXPO__?.onToggleSidebar(() => {
-        setSidebarVisible((prev) => !prev);
-      });
-    }
-  }, [nativePlatform, conversationInfo?.subject]);
-
   if (isAboveSm) {
     return (
       <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
@@ -495,14 +473,12 @@ const ConversationContent = () => {
                   previewFiles={previewFiles}
                   setPreviewFiles={setPreviewFiles}
                 />
-                {nativePlatform !== "ios" && nativePlatform !== "android" && (
-                  <ConversationHeader
-                    conversationMetadata={conversationMetadata}
-                    isAboveSm={isAboveSm}
-                    sidebarVisible={sidebarVisible}
-                    setSidebarVisible={setSidebarVisible}
-                  />
-                )}
+                <ConversationHeader
+                  conversationMetadata={conversationMetadata}
+                  isAboveSm={isAboveSm}
+                  sidebarVisible={sidebarVisible}
+                  setSidebarVisible={setSidebarVisible}
+                />
                 <ErrorContent />
                 <LoadingContent />
                 {!error && !isPending && (
@@ -549,14 +525,12 @@ const ConversationContent = () => {
           previewFiles={previewFiles}
           setPreviewFiles={setPreviewFiles}
         />
-        {nativePlatform !== "ios" && nativePlatform !== "android" && (
-          <ConversationHeader
-            conversationMetadata={conversationMetadata}
-            isAboveSm={isAboveSm}
-            sidebarVisible={sidebarVisible}
-            setSidebarVisible={setSidebarVisible}
-          />
-        )}
+        <ConversationHeader
+          conversationMetadata={conversationMetadata}
+          isAboveSm={isAboveSm}
+          sidebarVisible={sidebarVisible}
+          setSidebarVisible={setSidebarVisible}
+        />
         <ErrorContent />
         <LoadingContent />
         {!error && !isPending && (
@@ -578,12 +552,7 @@ const ConversationContent = () => {
       </div>
 
       {conversationInfo && sidebarVisible ? (
-        <div
-          className={cn(
-            "fixed z-20 inset-0",
-            nativePlatform === "ios" || nativePlatform === "android" ? "top-0" : "top-10",
-          )}
-        >
+        <div className="fixed z-20 inset-0 top-10">
           <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
         </div>
       ) : null}

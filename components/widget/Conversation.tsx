@@ -1,7 +1,9 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { ReadPageToolConfig } from "@helperai/sdk";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -14,7 +16,6 @@ import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
-import { ReadPageToolConfig } from "../../packages/sdk/src/types";
 
 type Props = {
   token: string | null;
@@ -48,6 +49,7 @@ export default function Conversation({
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isEscalated, setIsEscalated] = useState(false);
+  const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
 
   useEffect(() => {
@@ -230,9 +232,18 @@ export default function Conversation({
     };
   }, [token]);
 
+  useEffect(() => {
+    setIsProvidingDetails(false);
+  }, [lastAIMessage]);
+
   const handleTalkToTeamClick = () => {
     setIsEscalated(true);
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
+  };
+
+  const handleAddDetailsClick = () => {
+    inputRef.current?.focus();
+    setIsProvidingDetails(true);
   };
 
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
@@ -253,14 +264,18 @@ export default function Conversation({
         resumeGuide={resumeGuide}
         status={status}
       />
-      <SupportButtons
-        conversationSlug={conversationSlug}
-        token={token}
-        messageStatus={status}
-        lastMessage={lastAIMessage}
-        onTalkToTeamClick={handleTalkToTeamClick}
-        isEscalated={isEscalated}
-      />
+      <AnimatePresence>
+        <SupportButtons
+          conversationSlug={conversationSlug}
+          token={token}
+          messageStatus={status}
+          lastMessage={lastAIMessage}
+          onTalkToTeamClick={handleTalkToTeamClick}
+          onAddDetailsClick={handleAddDetailsClick}
+          isGumroadTheme={isGumroadTheme}
+          isEscalated={isEscalated}
+        />
+      </AnimatePresence>
       <ChatInput
         input={input}
         inputRef={inputRef}
@@ -268,6 +283,7 @@ export default function Conversation({
         handleSubmit={handleSubmit}
         isLoading={isLoading}
         isGumroadTheme={isGumroadTheme}
+        placeholder={isProvidingDetails ? "Provide additional details..." : "Ask a question..."}
       />
     </>
   );

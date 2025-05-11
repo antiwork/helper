@@ -1,5 +1,4 @@
-import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
-import { Check } from "lucide-react";
+import { Check, MessagesSquare } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -29,7 +28,7 @@ export function ResponderFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant={selectedResponders.length ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <ChatBubbleLeftRightIcon className="h-4 w-4 mr-2" />
+          <MessagesSquare className="h-4 w-4 mr-2" />
           {selectedResponders.length === 1
             ? members?.find((m) => m.id === selectedResponders[0])?.displayName
             : selectedResponders.length

@@ -1,9 +1,7 @@
 "use client";
 
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { CheckIcon, CurrencyDollarIcon, FunnelIcon, StarIcon } from "@heroicons/react/24/outline";
 import { omit } from "lodash-es";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, DollarSign, Filter, Search, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
@@ -211,14 +209,14 @@ export default function SearchPage() {
                 placeholder="Search conversations..."
                 iconsSuffix={
                   <div className="flex items-center gap-2">
-                    <MagnifyingGlassIcon className="hidden md:block h-5 w-5 text-muted-foreground" />
+                    <Search className="hidden md:block h-5 w-5 text-muted-foreground" />
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowFilters(!showFilters)}
                       className="md:hidden gap-1.5"
                     >
-                      <FunnelIcon className="h-5 w-5" />
+                      <Filter className="h-5 w-5" />
                       {getActiveFilterCount() > 0 && <span className="text-xs">({getActiveFilterCount()})</span>}
                     </Button>
                   </div>
@@ -308,7 +306,7 @@ export default function SearchPage() {
         {isSearching ? (
           searchResults.length === 0 && !isFetching ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
-              <MagnifyingGlassIcon className="h-12 w-12 mb-4" />
+              <Search className="h-12 w-12 mb-4" />
               <p className="text-lg">No conversations found</p>
             </div>
           ) : (
@@ -443,7 +441,7 @@ function SearchResultItem({
               ) : (
                 status === "closed" && (
                   <Badge variant="gray" className="gap-1.5">
-                    <CheckIcon className="h-3 w-3" />
+                    <Check className="h-3 w-3" />
                     Closed
                   </Badge>
                 )
@@ -454,7 +452,7 @@ function SearchResultItem({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Badge variant="bright" className="gap-1">
-                          <StarIcon className="h-3.5 w-3.5" />
+                          <Star className="h-3.5 w-3.5" />
                           {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                         </Badge>
                       </TooltipTrigger>
@@ -463,7 +461,7 @@ function SearchResultItem({
                   </TooltipProvider>
                 ) : (
                   <Badge variant="gray" className="gap-1">
-                    <CurrencyDollarIcon className="h-3 w-3" />
+                    <DollarSign className="h-3 w-3" />
                     {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                   </Badge>
                 ))}

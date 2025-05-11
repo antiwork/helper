@@ -1,5 +1,4 @@
-import { UserCircleIcon } from "@heroicons/react/24/outline";
-import { Check } from "lucide-react";
+import { Check, UserCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -34,7 +33,7 @@ export function CustomerFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant={selectedCustomers.length ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <UserCircleIcon className="h-4 w-4 mr-2" />
+          <UserCircle className="h-4 w-4 mr-2" />
           <span className="max-w-40 truncate">
             {selectedCustomers.length === 1
               ? selectedCustomers[0]

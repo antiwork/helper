@@ -1,5 +1,5 @@
-import { InboxIcon } from "@heroicons/react/24/outline";
 import { upperFirst } from "lodash-es";
+import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ export function StatusFilter({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={selectedStatuses.length ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <InboxIcon className="h-4 w-4 mr-2" />
+          <Inbox className="h-4 w-4 mr-2" />
           {selectedStatuses.length ? selectedStatuses.map((status) => upperFirst(status)).join(", ") : "Status"}
         </Button>
       </DropdownMenuTrigger>
