@@ -1,4 +1,4 @@
-import type { HelperConfig } from './types';
+import type { HelperConfig } from "./types";
 
 declare global {
   interface Window {
@@ -10,4 +10,4 @@ declare global {
       sendPrompt: (prompt: string) => void;
     };
   }
-} 
+}

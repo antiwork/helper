@@ -1,17 +1,17 @@
-import { render, screen, act } from '@testing-library/react';
-import React from 'react';
-import { HelperProvider } from '../../components/HelperProvider';
-import { generateHelperAuth } from '../../server/helper-auth';
-import { mockHelperWidget, setupTestEnv, cleanupTestEnv } from '../utils';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { act, render, screen } from "@testing-library/react";
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { HelperProvider } from "../../components/HelperProvider";
+import { generateHelperAuth } from "../../server/helper-auth";
+import { cleanupTestEnv, mockHelperWidget, setupTestEnv } from "../utils";
 
 // Mock client component
 const ClientComponent = () => {
   return <div data-testid="client-component">Client Component</div>;
 };
 
-describe('Server Component Integration', () => {
-  const mockEmail = 'test@example.com';
+describe("Server Component Integration", () => {
+  const mockEmail = "test@example.com";
   let mocks: ReturnType<typeof mockHelperWidget>;
 
   beforeEach(() => {
@@ -23,47 +23,47 @@ describe('Server Component Integration', () => {
     cleanupTestEnv();
   });
 
-  it('renders server component with generated HMAC', () => {
+  it("renders server component with generated HMAC", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
-      title: 'Test Helper',
+      title: "Test Helper",
       customer_metadata: {},
     };
 
     render(
       <HelperProvider {...mockConfig}>
         <div data-testid="server-content">Server Content</div>
-      </HelperProvider>
+      </HelperProvider>,
     );
 
-    expect(screen.getByTestId('server-content')).toBeInTheDocument();
+    expect(screen.getByTestId("server-content")).toBeInTheDocument();
   });
 
-  it('initializes Helper with correct HMAC configuration', () => {
+  it("initializes Helper with correct HMAC configuration", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
-      title: 'Test Helper',
+      title: "Test Helper",
       customer_metadata: {},
     };
 
     render(
       <HelperProvider {...mockConfig}>
         <div>Test Content</div>
-      </HelperProvider>
+      </HelperProvider>,
     );
 
-    const script = document.querySelector('script');
+    const script = document.querySelector("script");
     act(() => {
-      script?.dispatchEvent(new Event('load'));
+      script?.dispatchEvent(new Event("load"));
     });
 
     expect(mocks.mockInit).toHaveBeenCalledWith(mockConfig);
   });
 
-  it('works with nested client components', () => {
+  it("works with nested client components", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
-      title: 'Test Helper',
+      title: "Test Helper",
       customer_metadata: {},
     };
 
@@ -72,10 +72,10 @@ describe('Server Component Integration', () => {
         <div data-testid="server-content">
           <ClientComponent />
         </div>
-      </HelperProvider>
+      </HelperProvider>,
     );
 
-    expect(screen.getByTestId('server-content')).toBeInTheDocument();
-    expect(screen.getByTestId('client-component')).toBeInTheDocument();
+    expect(screen.getByTestId("server-content")).toBeInTheDocument();
+    expect(screen.getByTestId("client-component")).toBeInTheDocument();
   });
-}); 
+});

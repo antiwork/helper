@@ -93,7 +93,7 @@ A new section on the mailbox settings page is required to manage auto-assign rul
 
 Settings UI Components:
 
-- Create a new `AutoAssignSettings` component in `app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/autoAssignSettings.tsx`
+- Create a new `AutoAssignSettings` component in `app/(dashboard)/mailboxes/[mailbox_slug]/settings/autoAssignSettings.tsx`
 - Add the component to the settings tabs in `settings.tsx`
 
 The Auto-Assign Settings should include:
@@ -122,8 +122,8 @@ The Auto-Assign Settings should include:
 
 This involves changes to:
 
-- `app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/settings.tsx`: Add new auto-assign tab
-- `app/(dashboard)/mailboxes/[mailbox_slug]/settings/_components/autoAssignSettings.tsx`: New component for auto-assign configuration
+- `app/(dashboard)/mailboxes/[mailbox_slug]/settings/settings.tsx`: Add new auto-assign tab
+- `app/(dashboard)/mailboxes/[mailbox_slug]/settings/autoAssignSettings.tsx`: New component for auto-assign configuration
 - Create reusable components for rule form and table in `components/settings/autoAssign/`
 
 **Example Implementation (Partial):**
