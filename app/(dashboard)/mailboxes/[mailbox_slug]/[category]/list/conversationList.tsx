@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
-import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/useLayoutInfo";
 import { ConversationListItem } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -353,7 +352,6 @@ function useFilterHandlers() {
 }
 
 const NewConversationModal = () => {
-  const { setState: setLayoutState } = useLayoutInfo();
   const params = useParams<{ mailbox_slug: string }>();
   const mailboxSlug = params.mailbox_slug;
 

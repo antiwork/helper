@@ -9,31 +9,15 @@ import { ToolItem } from "./toolItem";
 export const MessageThread = ({
   conversation,
   onPreviewAttachment,
-  onDoubleClickWhiteSpace,
   mailboxSlug,
 }: {
   conversation: ConversationWithNewMessages;
   onPreviewAttachment: (message: Message, index: number) => void;
-
-  onDoubleClickWhiteSpace: (e: React.MouseEvent<HTMLDivElement>) => void;
   mailboxSlug: string;
 }) => {
-  const lastEmail = conversation.messages.filter((message) => message.type === "message").at(-1);
-
-  const handleDoubleClickWhitespace = (e: React.MouseEvent<HTMLDivElement>) => {
-    const isTextArea =
-      e.target instanceof Node &&
-      (e.target.nodeType === Node.TEXT_NODE ||
-        (e.target instanceof Element &&
-          ["P", "SPAN", "A", "STRONG", "EM", "U", "LI", "UL", "OL"].includes(e.target.tagName)));
-    if (!isTextArea) {
-      onDoubleClickWhiteSpace(e);
-    }
-  };
-
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-1 flex-col gap-8 pb-4" onDoubleClick={handleDoubleClickWhitespace}>
+      <div className="flex flex-1 flex-col gap-8 pb-4">
         {conversation.isPrompt && (
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
             <HelpCircle className="h-4 w-4 text-muted-foreground" />

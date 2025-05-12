@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { withMailboxAuth } from "@/components/withMailboxAuth";
 import { api } from "@/trpc/server";
 import { DashboardContent } from "./dashboardContent";
@@ -12,7 +13,7 @@ const DashboardPage = async (props: { params: Promise<PageProps> }) => {
   const currentMailbox = mailboxes.find((m) => m.slug === params.mailbox_slug);
 
   if (!currentMailbox) {
-    throw new Error("Mailbox not found");
+    return redirect("/mailboxes");
   }
 
   return <DashboardContent mailboxSlug={params.mailbox_slug} currentMailbox={currentMailbox} />;
