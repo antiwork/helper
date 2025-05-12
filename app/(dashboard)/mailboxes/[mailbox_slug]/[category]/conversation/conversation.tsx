@@ -25,7 +25,6 @@ import { MessageThread } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[categ
 import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/viewers";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/previewModal";
-import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/useLayoutInfo";
 import {
   DraftedEmail,
   type AttachedFile,
@@ -173,13 +172,11 @@ const MessageThreadPanel = ({
   contentRef,
   setPreviewFileIndex,
   setPreviewFiles,
-  setLayoutState,
 }: {
   scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
   contentRef: React.MutableRefObject<HTMLElement | null>;
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
-  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
 }) => {
   const { mailboxSlug, data: conversationInfo } = useConversationContext();
 
@@ -196,7 +193,6 @@ const MessageThreadPanel = ({
                 setPreviewFileIndex(currentIndex);
                 setPreviewFiles(message.files);
               }}
-              onDoubleClickWhiteSpace={() => setLayoutState((state) => ({ ...state, listHidden: !state.listHidden }))}
             />
           )}
         </div>
@@ -428,7 +424,6 @@ const ConversationContent = () => {
     ),
     subject: (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)"),
   };
-  const { setState: setLayoutState } = useLayoutInfo();
 
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
@@ -487,7 +482,6 @@ const ConversationContent = () => {
                     contentRef={contentRef}
                     setPreviewFileIndex={setPreviewFileIndex}
                     setPreviewFiles={setPreviewFiles}
-                    setLayoutState={setLayoutState}
                   />
                 )}
               </div>
@@ -541,7 +535,6 @@ const ConversationContent = () => {
                 contentRef={contentRef}
                 setPreviewFileIndex={setPreviewFileIndex}
                 setPreviewFiles={setPreviewFiles}
-                setLayoutState={setLayoutState}
               />
             </div>
             <div className="max-h-[50vh] border-t border-border">

@@ -1,6 +1,5 @@
 import { revalidatePath } from "next/cache";
 import { api } from "@/trpc/server";
-import { getSidebarInfo } from "../getSidebarInfo";
 import Settings, { type PendingUpdates } from "./settings";
 
 type PageProps = {
@@ -12,10 +11,9 @@ const Page = async (props: { params: Promise<PageProps> }) => {
   const mailboxPath = `/mailboxes/${params.mailbox_slug}` as const;
   const settingsPath = `${mailboxPath}/settings` as const;
 
-  const [supportAccount, mailboxData, sidebarInfo] = await Promise.all([
+  const [supportAccount, mailboxData] = await Promise.all([
     api.gmailSupportEmail.get({ mailboxSlug: params.mailbox_slug }),
     api.mailbox.get({ mailboxSlug: params.mailbox_slug }),
-    getSidebarInfo(params.mailbox_slug),
   ]);
 
   const handleUpdateSettings = async (pendingUpdates: PendingUpdates) => {
@@ -109,7 +107,6 @@ const Page = async (props: { params: Promise<PageProps> }) => {
         mailbox={mailboxData}
         onUpdateSettings={handleUpdateSettings}
         supportAccount={supportAccount ?? undefined}
-        sidebarInfo={sidebarInfo}
       />
     </>
   );

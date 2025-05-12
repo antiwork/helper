@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import { SidebarInfo } from "../getSidebarInfo";
 import ChatWidgetSetting from "./chat/chatWidgetSetting";
 import AutoCloseSetting, { AutoCloseUpdates } from "./customers/autoCloseSetting";
 import CustomerSetting, { type CustomerUpdates } from "./customers/customerSetting";
@@ -46,7 +45,6 @@ type SettingsProps = {
   onUpdateSettings: (pendingUpdates: PendingUpdates) => Promise<void>;
   mailbox: RouterOutputs["mailbox"]["get"];
   supportAccount?: SupportAccount;
-  sidebarInfo: SidebarInfo;
 };
 
 const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) => {
