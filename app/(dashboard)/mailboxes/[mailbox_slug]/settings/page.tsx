@@ -6,6 +6,7 @@ import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/acco
 import Loading from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/loading";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { PageHeader } from "@/components/pageHeader";
+import { Alert } from "@/components/ui/alert";
 import { api } from "@/trpc/react";
 import ChatWidgetSetting from "./chat/chatWidgetSetting";
 import AutoCloseSetting from "./customers/autoCloseSetting";
@@ -23,8 +24,9 @@ import ToolSetting from "./tools/toolSetting";
 
 export default function SettingsPage() {
   const params = useParams<{ mailbox_slug: string }>();
-  const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug: params.mailbox_slug });
+  const { data: mailbox, error } = api.mailbox.get.useQuery({ mailboxSlug: params.mailbox_slug });
 
+  if (error) return <Alert variant="destructive">Error loading mailbox: {error.message}</Alert>;
   if (!mailbox) return <Loading />;
 
   const items = [

@@ -41,11 +41,11 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate();
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
       toast({
-        title: "Error updating auto-close settings",
+        title: "Error updating chat widget settings",
         description: error.message,
       });
     },
@@ -55,7 +55,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     update({
       mailboxSlug: mailbox.slug,
       widgetDisplayMode: mode,
-      widgetDisplayMinValue: mode === "revenue_based" ? parseInt(minValue) : null,
+      widgetDisplayMinValue: mode === "revenue_based" && /^\d+$/.test(minValue) ? Number(minValue) : null,
       autoRespondEmailToChat: autoRespond,
       widgetHost: widgetHost || null,
     });
