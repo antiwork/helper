@@ -82,7 +82,7 @@ export const mailboxRouter = {
   update: mailboxProcedure
     .input(
       z.object({
-        slackAlertChannel: z.string().optional(),
+        slackAlertChannel: z.string().nullable().optional(),
         githubRepoOwner: z.string().optional(),
         githubRepoName: z.string().optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
@@ -138,22 +138,8 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
-  autoClose: mailboxProcedure.input(z.object({ mailboxId: z.number() })).mutation(async ({ input }) => {
-    const { mailboxId } = input;
-
-    const mailbox = await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, mailboxId),
-      columns: {
-        id: true,
-        autoCloseEnabled: true,
-      },
-    });
-
-    if (!mailbox) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Mailbox not found" });
-    }
-
-    if (!mailbox.autoCloseEnabled) {
+  autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
+    if (!ctx.mailbox.autoCloseEnabled) {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Auto-close is not enabled for this mailbox",
@@ -163,7 +149,7 @@ export const mailboxRouter = {
     await inngest.send({
       name: "conversations/auto-close.check",
       data: {
-        mailboxId: Number(mailboxId),
+        mailboxId: ctx.mailbox.id,
       },
     });
 

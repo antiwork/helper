@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "@/components/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,18 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   const [isEnabled, setIsEnabled] = useState(mailbox.vipThreshold !== null);
   const [threshold, setThreshold] = useState(mailbox.vipThreshold?.toString() ?? "100");
   const [responseHours, setResponseHours] = useState(mailbox.vipExpectedResponseHours?.toString() ?? "");
-  const { mutate: update } = api.mailbox.update.useMutation();
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating VIP settings",
+        description: error.message,
+      });
+    },
+  });
 
   const save = useDebouncedCallback(() => {
     if (isEnabled) {
@@ -110,7 +122,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                     id="vipChannel"
                     selectedChannelId={mailbox.vipChannelId ?? undefined}
                     mailbox={mailbox}
-                    onChange={(changes) => update({ mailboxSlug: mailbox.slug, vipChannelId: changes.alertChannel })}
+                    onChange={(vipChannelId) => update({ mailboxSlug: mailbox.slug, vipChannelId })}
                   />
                 ) : (
                   <Alert>

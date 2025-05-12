@@ -21,16 +21,25 @@ export const GitHubRepositories = ({
   id,
   selectedRepoFullName,
   mailbox,
-  onChange,
 }: {
   id: string;
   selectedRepoFullName?: string;
   mailbox: RouterOutputs["mailbox"]["get"];
-  onChange: (changes: GitHubUpdates) => void;
 }) => {
   const utils = api.useUtils();
   const [repositories, setRepositories] = useState<{ id: number; name: string; fullName: string; owner: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating GitHub settings",
+        description: error.message,
+      });
+    },
+  });
 
   useRunOnce(() => {
     const fetchRepositories = async () => {
@@ -61,7 +70,7 @@ export const GitHubRepositories = ({
 
   const handleRepoChange = (fullName: string) => {
     const [repoOwner, repoName] = fullName.split("/");
-    onChange({ repoOwner, repoName });
+    update({ mailboxSlug: mailbox.slug, githubRepoOwner: repoOwner, githubRepoName: repoName });
   };
 
   return (
@@ -80,13 +89,7 @@ export const GitHubRepositories = ({
   );
 };
 
-const GitHubSetting = ({
-  mailbox,
-  onChange,
-}: {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  onChange: (changes?: GitHubUpdates) => void;
-}) => {
+const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const router = useRouter();
   const { mutateAsync: disconnectGitHub } = api.mailbox.github.disconnect.useMutation();
   const [isGitHubConnected, setGitHubConnected] = useState(mailbox.githubConnected);
@@ -142,12 +145,7 @@ const GitHubSetting = ({
         <>
           <div className="grid gap-1">
             <Label htmlFor={repoUID}>Repository</Label>
-            <GitHubRepositories
-              id={repoUID}
-              selectedRepoFullName={selectedRepoFullName}
-              mailbox={mailbox}
-              onChange={onChange}
-            />
+            <GitHubRepositories id={repoUID} selectedRepoFullName={selectedRepoFullName} mailbox={mailbox} />
             <p className="mt-1 text-sm text-muted-foreground">
               Select a single repository where issues will be created. Only one repository can be linked per mailbox.
               {selectedRepoFullName && (
