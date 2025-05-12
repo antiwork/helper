@@ -7,7 +7,7 @@ import { conversationMessages, conversations, platformCustomers } from "@/db/sch
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { getClerkUser } from "@/lib/data/user";
-import { postSlackMessage } from "@/lib/slack/client";
+import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
 import {
   getActionButtons,
   handleMessageSlackAction,
@@ -224,8 +224,7 @@ export const updateVipMessageInSlack = async ({
       attachments,
     });
   } catch (error) {
-    // Can happen if the bot was removed from the Slack channel after the message was sent
-    if (error instanceof Error && error.message.includes("invalid_auth")) return;
+    if (isIgnorableSlackError(error)) return;
     throw error;
   }
 };
