@@ -3,13 +3,17 @@
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { getBaseUrl } from "@/components/constants";
+import { toast } from "@/components/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import CodeBlock from "./codeBlock";
 import WidgetHMACSecret from "./widgetHMACSecret";
@@ -28,49 +32,42 @@ const hmac = crypto.createHmac('sha256', hmacSecret)
 
 const WIDGET_SAMPLE_CODE = `<script src="https://helper.ai/widget/sdk.js" {{DATA_ATTRIBUTES}} async></script>`;
 
-const ChatWidgetSetting = ({
-  mailbox,
-  onChange,
-}: {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  onChange?: (changes: {
-    displayMode: WidgetMode;
-    displayMinValue?: number;
-    autoRespondEmailToChat?: boolean;
-    widgetHost?: string;
-  }) => void;
-}) => {
+const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [mode, setMode] = useState<WidgetMode>(mailbox.widgetDisplayMode ?? "off");
   const [minValue, setMinValue] = useState(mailbox.widgetDisplayMinValue?.toString() ?? "100");
   const [autoRespond, setAutoRespond] = useState(mailbox.autoRespondEmailToChat ?? false);
   const [widgetHost, setWidgetHost] = useState(mailbox.widgetHost ?? "");
 
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating chat widget settings",
+        description: error.message,
+      });
+    },
+  });
+
+  const save = useDebouncedCallback(() => {
+    update({
+      mailboxSlug: mailbox.slug,
+      widgetDisplayMode: mode,
+      widgetDisplayMinValue: mode === "revenue_based" && /^\d+$/.test(minValue) ? Number(minValue) : null,
+      autoRespondEmailToChat: autoRespond,
+      widgetHost: widgetHost || null,
+    });
+  }, 2000);
+
+  useOnChange(() => {
+    save();
+  }, [mode, minValue, autoRespond, widgetHost]);
+
   const handleSwitchChange = (checked: boolean) => {
     const newMode = checked ? "always" : "off";
     setMode(newMode);
-    onChange?.({
-      displayMode: newMode,
-      displayMinValue: undefined,
-    });
-  };
-
-  const handleModeChange = (value: "always" | "revenue_based") => {
-    setMode(value);
-    onChange?.({
-      displayMode: value,
-      displayMinValue: value === "revenue_based" ? parseInt(minValue) : undefined,
-    });
-  };
-
-  const handleMinValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setMinValue(newValue);
-    if (mode === "revenue_based") {
-      onChange?.({
-        displayMode: "revenue_based",
-        displayMinValue: parseInt(newValue),
-      });
-    }
   };
 
   const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", `data-mailbox="${mailbox.slug}"`);
@@ -388,7 +385,7 @@ export default async function RootLayout({
           <div className="space-y-4">
             <div className="flex flex-col space-y-2">
               <Label>Show chat icon for</Label>
-              <Select value={mode} onValueChange={handleModeChange}>
+              <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
                 <SelectTrigger className="w-[350px]">
                   <SelectValue placeholder="Select when to show chat icon" />
                 </SelectTrigger>
@@ -405,7 +402,7 @@ export default async function RootLayout({
                   id="min-value"
                   type="number"
                   value={minValue}
-                  onChange={handleMinValueChange}
+                  onChange={(e) => setMinValue(e.target.value)}
                   className="max-w-[200px]"
                   min="0"
                   step="1"
@@ -420,15 +417,7 @@ export default async function RootLayout({
         title="Email to Chat Auto-Response"
         description="Configure automatic email responses to redirect users to the chat widget"
         initialSwitchChecked={autoRespond}
-        onSwitchChange={(checked) => {
-          setAutoRespond(checked);
-          onChange?.({
-            displayMode: mode,
-            displayMinValue: mode === "revenue_based" ? parseInt(minValue) : undefined,
-            autoRespondEmailToChat: checked,
-            widgetHost: checked ? widgetHost : undefined,
-          });
-        }}
+        onSwitchChange={setAutoRespond}
       >
         {autoRespond && (
           <div className="space-y-4">
@@ -438,15 +427,7 @@ export default async function RootLayout({
                 id="widgetHost"
                 type="url"
                 value={widgetHost}
-                onChange={(e) => {
-                  setWidgetHost(e.target.value);
-                  onChange?.({
-                    displayMode: mode,
-                    displayMinValue: mode === "revenue_based" ? parseInt(minValue) : undefined,
-                    autoRespondEmailToChat: autoRespond,
-                    widgetHost: e.target.value,
-                  });
-                }}
+                onChange={(e) => setWidgetHost(e.target.value)}
                 placeholder="https://example.com"
                 className="max-w-[350px]"
               />

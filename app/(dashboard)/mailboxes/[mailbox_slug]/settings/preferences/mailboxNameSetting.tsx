@@ -1,34 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "@/components/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
+import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-export type MailboxNameUpdates =
-  | {
-      name: string;
-    }
-  | undefined
-  | null;
+const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
+  const [name, setName] = useState(mailbox.name);
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating preferences",
+        description: error.message,
+      });
+    },
+  });
 
-const MailboxNameSetting = ({
-  mailboxName,
-  onChange,
-}: {
-  mailboxName: string;
-  onChange: (updates: MailboxNameUpdates) => void;
-}) => {
-  const [name, setName] = useState(mailboxName);
+  const save = useDebouncedCallback(() => {
+    update({ mailboxSlug: mailbox.slug, name });
+  }, 2000);
 
-  const handleChange = (value: string) => {
-    setName(value);
-    onChange({ name: value });
-  };
+  useOnChange(() => {
+    save();
+  }, [name]);
 
   return (
     <SectionWrapper title="Mailbox name" description="Change the name of your mailbox">
       <div className="max-w-sm">
-        <Input value={name} onChange={(e) => handleChange(e.target.value)} placeholder="Enter mailbox name" />
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter mailbox name" />
       </div>
     </SectionWrapper>
   );

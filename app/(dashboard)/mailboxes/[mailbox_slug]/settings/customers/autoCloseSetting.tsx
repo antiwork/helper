@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -15,57 +17,35 @@ export type AutoCloseUpdates = {
   autoCloseDaysOfInactivity: number;
 };
 
-type AutoCloseSettingProps = {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  onChange: (changes?: AutoCloseUpdates) => void;
-  onSave: () => Promise<void>;
-};
-
-export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoCloseSettingProps) {
+export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) {
   const [isEnabled, setIsEnabled] = useState(mailbox.autoCloseEnabled);
-  const [daysOfInactivity, setDaysOfInactivity] = useState(mailbox.autoCloseDaysOfInactivity);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isRunningNow, setIsRunningNow] = useState(false);
+  const [daysOfInactivity, setDaysOfInactivity] = useState(mailbox.autoCloseDaysOfInactivity?.toString() ?? "30");
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating auto-close settings",
+        description: error.message,
+      });
+    },
+  });
 
-  const handleToggle = (checked: boolean) => {
-    onChange({
-      autoCloseEnabled: checked,
-      autoCloseDaysOfInactivity: daysOfInactivity,
+  const save = useDebouncedCallback(() => {
+    update({
+      mailboxSlug: mailbox.slug,
+      autoCloseEnabled: isEnabled,
+      autoCloseDaysOfInactivity: Number(daysOfInactivity),
     });
-    setIsEnabled(checked);
-  };
+  }, 2000);
 
-  const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (!isNaN(value) && value > 0) {
-      setDaysOfInactivity(value);
-      onChange({
-        autoCloseEnabled: isEnabled,
-        autoCloseDaysOfInactivity: value,
-      });
-    }
-  };
+  useOnChange(() => {
+    save();
+  }, [isEnabled, daysOfInactivity]);
 
-  const handleSave = async () => {
-    setIsUpdating(true);
-    try {
-      await onSave();
-      toast({
-        title: "Settings updated",
-        description: "Auto-close settings have been updated successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error updating settings",
-        description: "There was an error updating the auto-close settings.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const autoCloseMutation = api.mailbox.autoClose.useMutation({
+  const { mutate: runAutoClose, isPending: isAutoClosePending } = api.mailbox.autoClose.useMutation({
     onSuccess: () => {
       toast({
         title: "Auto-close triggered",
@@ -81,18 +61,6 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
     },
   });
 
-  const runAutoCloseNow = async () => {
-    setIsRunningNow(true);
-    try {
-      await autoCloseMutation.mutateAsync({
-        mailboxId: mailbox.id,
-        mailboxSlug: mailbox.slug,
-      });
-    } finally {
-      setIsRunningNow(false);
-    }
-  };
-
   return (
     <SectionWrapper
       title="Auto-close Inactive Tickets"
@@ -106,7 +74,7 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
               When enabled, tickets with no activity will be automatically closed.
             </p>
           </div>
-          <Switch id="auto-close-toggle" checked={isEnabled} onCheckedChange={handleToggle} />
+          <Switch id="auto-close-toggle" checked={isEnabled} onCheckedChange={setIsEnabled} />
         </div>
 
         {isEnabled && (
@@ -118,10 +86,10 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
                 type="number"
                 min="1"
                 value={daysOfInactivity}
-                onChange={handleDaysChange}
+                onChange={(e) => setDaysOfInactivity(e.target.value)}
                 className="w-24"
               />
-              <span className="text-sm text-muted-foreground">{daysOfInactivity === 1 ? "day" : "days"}</span>
+              <span className="text-sm text-muted-foreground">{daysOfInactivity === "1" ? "day" : "days"}</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Tickets with no activity for this many days will be automatically closed.
@@ -130,11 +98,12 @@ export default function AutoCloseSetting({ mailbox, onChange, onSave }: AutoClos
         )}
 
         <div className="flex justify-between">
-          <Button variant="outlined" onClick={runAutoCloseNow} disabled={!isEnabled || isRunningNow}>
-            {isRunningNow ? "Running..." : "Run auto-close now"}
-          </Button>
-          <Button onClick={handleSave} disabled={isUpdating}>
-            {isUpdating ? "Saving..." : "Save changes"}
+          <Button
+            variant="outlined"
+            onClick={() => runAutoClose({ mailboxSlug: mailbox.slug })}
+            disabled={!isEnabled || isAutoClosePending}
+          >
+            {isAutoClosePending ? "Running..." : "Run auto-close now"}
           </Button>
         </div>
       </div>

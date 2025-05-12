@@ -1,115 +1,116 @@
-import { revalidatePath } from "next/cache";
-import { api } from "@/trpc/server";
-import Settings, { type PendingUpdates } from "./settings";
+"use client";
 
-type PageProps = {
-  mailbox_slug: string;
-};
+import { BookOpen, CreditCard, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
+import { useParams } from "next/navigation";
+import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
+import Loading from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/loading";
+import { FileUploadProvider } from "@/components/fileUploadContext";
+import { PageHeader } from "@/components/pageHeader";
+import { Alert } from "@/components/ui/alert";
+import { api } from "@/trpc/react";
+import ChatWidgetSetting from "./chat/chatWidgetSetting";
+import AutoCloseSetting from "./customers/autoCloseSetting";
+import CustomerSetting from "./customers/customerSetting";
+import ConnectSupportEmail from "./integrations/connectSupportEmail";
+import GitHubSetting from "./integrations/githubSetting";
+import SlackSetting from "./integrations/slackSetting";
+import KnowledgeSetting from "./knowledge/knowledgeSetting";
+import PreferencesSetting from "./preferences/preferencesSetting";
+import SubNavigation from "./subNavigation";
+import Subscription from "./subscription";
+import TeamSetting from "./team/teamSetting";
+import MetadataEndpointSetting from "./tools/metadataEndpointSetting";
+import ToolSetting from "./tools/toolSetting";
 
-const Page = async (props: { params: Promise<PageProps> }) => {
-  const params = await props.params;
-  const mailboxPath = `/mailboxes/${params.mailbox_slug}` as const;
-  const settingsPath = `${mailboxPath}/settings` as const;
+export default function SettingsPage() {
+  const params = useParams<{ mailbox_slug: string }>();
+  const { data: mailbox, error } = api.mailbox.get.useQuery({ mailboxSlug: params.mailbox_slug });
 
-  const [supportAccount, mailboxData] = await Promise.all([
-    api.gmailSupportEmail.get({ mailboxSlug: params.mailbox_slug }),
-    api.mailbox.get({ mailboxSlug: params.mailbox_slug }),
-  ]);
+  if (error) return <Alert variant="destructive">Error loading mailbox: {error.message}</Alert>;
+  if (!mailbox) return <Loading />;
 
-  const handleUpdateSettings = async (pendingUpdates: PendingUpdates) => {
-    "use server";
+  const items = [
+    {
+      label: "Knowledge",
+      id: "knowledge",
+      icon: BookOpen,
+      content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
+    },
+    {
+      label: "Team",
+      id: "team",
+      icon: Users,
+      content: <TeamSetting mailboxSlug={mailbox.slug} />,
+    },
+    {
+      label: "Customers",
+      id: "customers",
+      icon: UserPlus,
+      content: (
+        <>
+          <CustomerSetting mailbox={mailbox} />
+          <AutoCloseSetting mailbox={mailbox} />
+        </>
+      ),
+    },
+    {
+      label: "In-App Chat",
+      id: "in-app-chat",
+      icon: MonitorSmartphone,
+      content: <ChatWidgetSetting mailbox={mailbox} />,
+    },
+    {
+      label: "Integrations",
+      id: "integrations",
+      icon: Link,
+      content: (
+        <>
+          <ToolSetting mailboxSlug={mailbox.slug} />
+          <MetadataEndpointSetting metadataEndpoint={mailbox.metadataEndpoint} />
+          <SlackSetting mailbox={mailbox} />
+          <GitHubSetting mailbox={mailbox} />
+          <ConnectSupportEmail />
+        </>
+      ),
+    },
+    {
+      label: "Preferences",
+      id: "preferences",
+      icon: SettingsIcon,
+      content: <PreferencesSetting mailbox={mailbox} />,
+    },
+  ];
 
-    if (pendingUpdates.slack) {
-      try {
-        await api.mailbox.update({
-          mailboxSlug: params.mailbox_slug,
-          slackAlertChannel: pendingUpdates.slack.alertChannel ?? undefined,
-        });
-      } catch (e) {
-        throw new Error("Failed to update Slack settings");
-      }
-    }
-
-    if (pendingUpdates.github) {
-      try {
-        await api.mailbox.update({
-          mailboxSlug: params.mailbox_slug,
-          githubRepoOwner: pendingUpdates.github.repoOwner ?? undefined,
-          githubRepoName: pendingUpdates.github.repoName ?? undefined,
-        });
-      } catch (e) {
-        throw new Error("Failed to update GitHub settings");
-      }
-    }
-
-    if (pendingUpdates.widget) {
-      await api.mailbox.update({
-        mailboxSlug: params.mailbox_slug,
-        widgetDisplayMode: pendingUpdates.widget.displayMode ?? undefined,
-        widgetDisplayMinValue: pendingUpdates.widget.displayMinValue ?? undefined,
-        autoRespondEmailToChat: pendingUpdates.widget.autoRespondEmailToChat ?? undefined,
-        widgetHost: pendingUpdates.widget.widgetHost ?? undefined,
-      });
-    }
-
-    if (pendingUpdates.customer) {
-      try {
-        await api.mailbox.update({
-          mailboxSlug: params.mailbox_slug,
-          vipThreshold: pendingUpdates.customer.vipThreshold ? Number(pendingUpdates.customer.vipThreshold) : undefined,
-          vipChannelId: pendingUpdates.customer.vipChannelId ?? undefined,
-          vipExpectedResponseHours: pendingUpdates.customer.vipExpectedResponseHours ?? undefined,
-        });
-      } catch (e) {
-        throw new Error("Failed to update customer settings");
-      }
-    }
-
-    if (pendingUpdates.autoClose) {
-      try {
-        await api.mailbox.update({
-          mailboxSlug: params.mailbox_slug,
-          autoCloseEnabled: pendingUpdates.autoClose.autoCloseEnabled,
-          autoCloseDaysOfInactivity: pendingUpdates.autoClose.autoCloseDaysOfInactivity,
-        });
-      } catch (e) {
-        throw new Error("Failed to update auto-close settings");
-      }
-    }
-
-    if (pendingUpdates.preferences) {
-      try {
-        if (pendingUpdates.preferences.mailboxNameSetting?.name) {
-          await api.mailbox.update({
-            mailboxSlug: params.mailbox_slug,
-            name: pendingUpdates.preferences.mailboxNameSetting.name,
-          });
-        }
-
-        await api.mailbox.preferences.update({
-          mailboxSlug: params.mailbox_slug,
-          preferences: {
-            confetti: pendingUpdates?.preferences?.confettiSetting?.confetti ?? false,
-            theme: pendingUpdates?.preferences?.themeSetting?.theme ?? undefined,
-          },
-        });
-      } catch (e) {
-        throw new Error("Failed to update preferences settings");
-      }
-    }
-    revalidatePath(settingsPath);
-  };
+  if (mailbox.billingEnabled) {
+    items.push({
+      label: "Billing",
+      id: "billing",
+      icon: CreditCard,
+      content: <Subscription />,
+    });
+  }
 
   return (
-    <>
-      <title>Settings</title>
-      <Settings
-        mailbox={mailboxData}
-        onUpdateSettings={handleUpdateSettings}
-        supportAccount={supportAccount ?? undefined}
-      />
-    </>
+    <div className="flex h-full flex-col">
+      <PageHeader title="Settings" />
+      <FileUploadProvider mailboxSlug={mailbox.slug}>
+        <div className="grow overflow-y-auto">
+          <SubNavigation
+            items={items}
+            footer={
+              <div className="border-t border-border">
+                <AccountDropdown
+                  trigger={(children) => (
+                    <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                      {children}
+                    </button>
+                  )}
+                />
+              </div>
+            }
+          />
+        </div>
+      </FileUploadProvider>
+    </div>
   );
-};
-
-export default Page;
+}

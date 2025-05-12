@@ -22,7 +22,7 @@ export const preferencesRouter = {
     .input(
       z.object({
         preferences: z.object({
-          confetti: z.boolean(),
+          confetti: z.boolean().optional(),
           theme: z
             .object({
               background: z.string().regex(/^#([0-9a-f]{6})$/i),
@@ -31,6 +31,7 @@ export const preferencesRouter = {
               accent: z.string().regex(/^#([0-9a-f]{6})$/i),
               sidebarBackground: z.string().regex(/^#([0-9a-f]{6})$/i),
             })
+            .nullable()
             .optional(),
         }),
       }),
@@ -39,7 +40,7 @@ export const preferencesRouter = {
       await db
         .update(mailboxes)
         .set({
-          preferences: input.preferences,
+          preferences: { confetti: false, ...ctx.mailbox.preferences, ...input.preferences },
         })
         .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
