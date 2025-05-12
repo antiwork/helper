@@ -87,6 +87,12 @@ Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
 _The app will start with placeholder values for other services - you can follow the instructions in [development.md](docs/services.md#optional-integrations) to enable them later._
 
+### Install dependencies
+
+```sh
+pnpm install
+```
+
 ### Seed the database with sample data
 
 ```sh
