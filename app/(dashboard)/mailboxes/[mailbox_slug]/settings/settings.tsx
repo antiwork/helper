@@ -1,90 +1,33 @@
 "use client";
 
 import { BookOpen, CreditCard, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
-import React, { useState, useTransition } from "react";
+import React from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import type { SupportAccount } from "@/app/types/global";
 import { FileUploadProvider } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
-import { Button } from "@/components/ui/button";
-import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
-import { api } from "@/trpc/react";
 import ChatWidgetSetting from "./chat/chatWidgetSetting";
-import AutoCloseSetting, { AutoCloseUpdates } from "./customers/autoCloseSetting";
-import CustomerSetting, { type CustomerUpdates } from "./customers/customerSetting";
+import AutoCloseSetting from "./customers/autoCloseSetting";
+import CustomerSetting from "./customers/customerSetting";
 import ConnectSupportEmail from "./integrations/connectSupportEmail";
-import GitHubSetting, { type GitHubUpdates } from "./integrations/githubSetting";
-import SlackSetting, { type SlackUpdates } from "./integrations/slackSetting";
+import GitHubSetting from "./integrations/githubSetting";
+import SlackSetting from "./integrations/slackSetting";
 import KnowledgeSetting from "./knowledge/knowledgeSetting";
-import PreferencesSetting, { PreferencesUpdates } from "./preferences/preferencesSetting";
+import PreferencesSetting from "./preferences/preferencesSetting";
 import SubNavigation from "./subNavigation";
 import Subscription from "./subscription";
 import TeamSetting from "./team/teamSetting";
 import MetadataEndpointSetting from "./tools/metadataEndpointSetting";
 import ToolSetting from "./tools/toolSetting";
 
-export type PendingUpdates = {
-  slack?: SlackUpdates;
-  github?: GitHubUpdates;
-
-  widget?: {
-    displayMode: (typeof mailboxes.$inferSelect)["widgetDisplayMode"];
-    displayMinValue?: number;
-    autoRespondEmailToChat?: boolean;
-    widgetHost?: string;
-  };
-  customer?: CustomerUpdates;
-  autoClose?: AutoCloseUpdates;
-  preferences?: PreferencesUpdates;
-};
-
 type SettingsProps = {
   children?: React.ReactElement<any> | React.ReactElement<any>[];
-  onUpdateSettings: (pendingUpdates: PendingUpdates) => Promise<void>;
   mailbox: RouterOutputs["mailbox"]["get"];
   supportAccount?: SupportAccount;
 };
 
-const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) => {
-  const [isTransitionPending, startTransition] = useTransition();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [pendingUpdates, setPendingUpdates] = useState<PendingUpdates>({});
-  const utils = api.useUtils();
-
-  const handleUpdateSettings = async () => {
-    if (!hasPendingUpdates) return;
-
-    startTransition(() => setIsUpdating(true));
-    try {
-      await onUpdateSettings(pendingUpdates);
-      setPendingUpdates({});
-      utils.mailbox.preferences.get.invalidate({ mailboxSlug: mailbox.slug });
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
-      toast({
-        title: "Settings updated!",
-        variant: "success",
-      });
-    } catch (e) {
-      const error = e instanceof Error ? e.message : "Something went wrong";
-      toast({
-        title: error,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const hasPendingUpdates =
-    Boolean(pendingUpdates.slack) ||
-    Boolean(pendingUpdates.github) ||
-    Boolean(pendingUpdates.widget) ||
-    Boolean(pendingUpdates.customer) ||
-    Boolean(pendingUpdates.autoClose) ||
-    Boolean(pendingUpdates.preferences);
-
+const Settings = ({ mailbox, supportAccount }: SettingsProps) => {
   const items = [
     {
       label: "Knowledge",
@@ -104,25 +47,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
       icon: UserPlus,
       content: (
         <>
-          <CustomerSetting
-            mailbox={mailbox}
-            onChange={(customerChanges) =>
-              setPendingUpdates({
-                ...pendingUpdates,
-                customer: customerChanges,
-              })
-            }
-          />
-          <AutoCloseSetting
-            mailbox={mailbox}
-            onChange={(autoCloseUpdates) => {
-              setPendingUpdates((prev) => ({
-                ...prev,
-                autoClose: autoCloseUpdates,
-              }));
-            }}
-            onSave={handleUpdateSettings}
-          />
+          <CustomerSetting mailbox={mailbox} />
+          <AutoCloseSetting mailbox={mailbox} />
         </>
       ),
     },
@@ -130,17 +56,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
       label: "In-App Chat",
       id: "in-app-chat",
       icon: MonitorSmartphone,
-      content: (
-        <ChatWidgetSetting
-          mailbox={mailbox}
-          onChange={(widgetChanges) =>
-            setPendingUpdates({
-              ...pendingUpdates,
-              widget: widgetChanges,
-            })
-          }
-        />
-      ),
+      content: <ChatWidgetSetting mailbox={mailbox} />,
     },
     {
       label: "Integrations",
@@ -150,24 +66,8 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
         <>
           <ToolSetting mailboxSlug={mailbox.slug} />
           <MetadataEndpointSetting metadataEndpoint={mailbox.metadataEndpoint} />
-          <SlackSetting
-            mailbox={mailbox}
-            onChange={(slackUpdates) => {
-              setPendingUpdates((prev) => ({
-                ...prev,
-                slack: slackUpdates,
-              }));
-            }}
-          />
-          <GitHubSetting
-            mailbox={mailbox}
-            onChange={(githubChanges) =>
-              setPendingUpdates({
-                ...pendingUpdates,
-                github: { ...pendingUpdates.github, ...githubChanges },
-              })
-            }
-          />
+          <SlackSetting mailbox={mailbox} />
+          <GitHubSetting mailbox={mailbox} />
           <ConnectSupportEmail supportAccount={supportAccount} />
         </>
       ),
@@ -176,16 +76,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
       label: "Preferences",
       id: "preferences",
       icon: SettingsIcon,
-      content: (
-        <PreferencesSetting
-          onChange={(updates) =>
-            setPendingUpdates({
-              ...pendingUpdates,
-              preferences: updates,
-            })
-          }
-        />
-      ),
+      content: <PreferencesSetting />,
     },
   ];
 
@@ -200,12 +91,7 @@ const Settings = ({ onUpdateSettings, mailbox, supportAccount }: SettingsProps) 
 
   return (
     <div className="flex h-full flex-col">
-      <PageHeader title="Settings">
-        <Button disabled={isUpdating || isTransitionPending || !hasPendingUpdates} onClick={handleUpdateSettings}>
-          Update settings
-        </Button>
-      </PageHeader>
-
+      <PageHeader title="Settings" />
       <FileUploadProvider mailboxSlug={mailbox.slug}>
         <div className="grow overflow-y-auto">
           <SubNavigation
