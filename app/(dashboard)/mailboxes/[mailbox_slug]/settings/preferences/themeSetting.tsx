@@ -6,6 +6,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -55,12 +56,13 @@ const ThemeSetting = ({
   });
 
   const save = useDebouncedCallback(() => {
+    if (!isEnabled && !preferences.preferences?.theme) return;
     update({ mailboxSlug: mailbox.slug, preferences: { theme: isEnabled ? theme : null } });
   }, 2000);
 
-  useEffect(() => {
+  useOnChange(() => {
     save();
-  }, [theme]);
+  }, [isEnabled, theme]);
 
   useEffect(() => {
     const root = document.documentElement;

@@ -31,7 +31,7 @@ const ConfettiSetting = ({
 
   const handleSwitchChange = (checked: boolean) => {
     setConfettiEnabled(checked);
-    update({ mailboxSlug: mailbox.slug, preferences: { confetti: confettiEnabled } });
+    update({ mailboxSlug: mailbox.slug, preferences: { confetti: checked } });
   };
 
   const handleTestConfetti = () => {

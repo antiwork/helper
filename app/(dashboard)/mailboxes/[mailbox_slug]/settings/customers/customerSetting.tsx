@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SlackChannels } from "../integrations/slackSetting";
@@ -52,7 +53,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     }
   }, 2000);
 
-  useEffect(() => {
+  useOnChange(() => {
     save();
   }, [isEnabled, threshold, responseHours]);
 

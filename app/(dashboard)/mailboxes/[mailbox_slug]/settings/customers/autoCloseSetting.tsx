@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -40,7 +41,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
     });
   }, 2000);
 
-  useEffect(() => {
+  useOnChange(() => {
     save();
   }, [isEnabled, daysOfInactivity]);
 

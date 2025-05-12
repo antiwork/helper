@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -27,7 +28,7 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
     update({ mailboxSlug: mailbox.slug, name });
   }, 2000);
 
-  useEffect(() => {
+  useOnChange(() => {
     save();
   }, [name]);
 
