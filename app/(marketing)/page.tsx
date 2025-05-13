@@ -22,11 +22,11 @@ import {
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
-import AnimatedTyping from "@/components/animated-typing";
-import ComparisonHistogram from "@/components/comparison-histogram";
+import AnimatedTyping from "./AnimatedTyping";
+import ComparisonHistogram from "./ComparisonHistogram";
 import { getBaseUrl } from "@/components/constants";
-import SlackInterface from "@/components/slack-interface";
-import SlackNotification from "@/components/slack-notification";
+import SlackInterface from "./SlackInterface";
+import SlackNotification from "./SlackNotification";
 import { Button } from "@/components/ui/button";
 import CitationsDemo from "./CitationsDemo";
 import { MarketingHeader } from "./MarketingHeader";

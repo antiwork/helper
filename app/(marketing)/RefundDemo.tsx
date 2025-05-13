@@ -1,7 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { MousePointer, MousePointerClick } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import AnimatedTyping from "@/components/animated-typing";
+import AnimatedTyping from "./AnimatedTyping";
 
 export default function RefundDemo() {
   const [messageDone, setMessageDone] = useState(false);
