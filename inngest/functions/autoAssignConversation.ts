@@ -198,7 +198,7 @@ export default inngest.createFunction(
       }),
     );
 
-    if (conversation.assignedToClerkId) return { message: "Skipped: already assigned" };
+    if (conversation.assignedToId) return { message: "Skipped: already assigned" };
     if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
 
     const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
@@ -222,7 +222,7 @@ export default inngest.createFunction(
     }
 
     await updateConversation(conversation.id, {
-      set: { assignedToClerkId: nextTeamMember.id },
+      set: { assignedToId: nextTeamMember.id },
       message: aiResult ? aiResult.reasoning : "Core member assigned by round robin",
     });
 

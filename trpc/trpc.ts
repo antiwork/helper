@@ -1,10 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { User } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { cache } from "react";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { db } from "@/db/client";
 import { env } from "@/lib/env";
 
 /**
@@ -101,7 +99,6 @@ export const protectedProcedure = t.procedure
   .use(sentryMiddleware)
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
-    // TODO: different error code? setActive in Clerk?
     if (!ctx.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -111,10 +108,3 @@ export const protectedProcedure = t.procedure
       },
     });
   });
-
-export const getAuthorizedMailbox = cache(
-  async (orgId: string, mailboxSlug: string) =>
-    await db.query.mailboxes.findFirst({
-      where: (mailboxes, { and, eq }) => and(eq(mailboxes.slug, mailboxSlug), eq(mailboxes.clerkOrganizationId, orgId)),
-    }),
-);

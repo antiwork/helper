@@ -1,4 +1,3 @@
-// Must be kept in sync with the scopes in Clerk Google OAuth settings
 export const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/userinfo.profile",

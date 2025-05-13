@@ -47,14 +47,14 @@ export default inngest.createFunction(
           .select({
             subject: conversations.subject,
             slug: conversations.slug,
-            assignedToClerkId: conversations.assignedToClerkId,
+            assignedToId: conversations.assignedToId,
             lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
           })
           .from(conversations)
           .where(
             and(
               eq(conversations.mailboxId, mailbox.id),
-              isNotNull(conversations.assignedToClerkId),
+              isNotNull(conversations.assignedToId),
               isNull(conversations.mergedIntoId),
               eq(conversations.status, "open"),
               gt(
@@ -79,7 +79,7 @@ export default inngest.createFunction(
                 `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
                 ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
                   const subject = conversation.subject;
-                  const assignee = usersById[conversation.assignedToClerkId!];
+                  const assignee = usersById[conversation.assignedToId!];
                   const assigneeEmail = assignee?.email;
                   const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
                   const mention = slackUserId ? `<@${slackUserId}>` : assignee?.user_metadata?.name || "Unknown";

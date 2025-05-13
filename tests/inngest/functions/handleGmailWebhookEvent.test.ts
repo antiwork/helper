@@ -778,7 +778,7 @@ describe("handleGmailWebhookEvent", () => {
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
       });
-      expect(conversation?.assignedToClerkId).toBe(staffUser.id);
+      expect(conversation?.assignedToId).toBe(staffUser.id);
     });
 
     it("does not assign conversation if already assigned", async () => {
@@ -790,7 +790,7 @@ describe("handleGmailWebhookEvent", () => {
 
       const { conversation } = await conversationFactory.create(mailbox.id, {
         conversationProvider: "gmail",
-        assignedToClerkId: existingAssignee.id,
+        assignedToId: existingAssignee.id,
       });
 
       mockHistories([
@@ -814,7 +814,7 @@ describe("handleGmailWebhookEvent", () => {
       const updatedConversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.id, conversation.id),
       });
-      expect(updatedConversation?.assignedToClerkId).toBe(existingAssignee.id);
+      expect(updatedConversation?.assignedToId).toBe(existingAssignee.id);
     });
 
     it("assigns to first staff member when multiple staff are CCed", async () => {
@@ -847,7 +847,7 @@ describe("handleGmailWebhookEvent", () => {
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
       });
-      expect(conversation?.assignedToClerkId).toBe(firstStaffUser.id);
+      expect(conversation?.assignedToId).toBe(firstStaffUser.id);
     });
 
     it("does not assign if no staff members are CCed", async () => {
@@ -874,7 +874,7 @@ describe("handleGmailWebhookEvent", () => {
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
       });
-      expect(conversation?.assignedToClerkId).toBeNull();
+      expect(conversation?.assignedToId).toBeNull();
     });
   });
 });

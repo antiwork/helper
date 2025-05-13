@@ -27,7 +27,7 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **`content`:** Markdown content for the help center.
 - **`db`:** Database migrations and schema definitions.
 - **`inngest/functions`:** Background functions powered by Inngest, responsible for tasks like email processing, AI response generation, and data updates.
-- **`lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, Stripe, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
+- **`lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
 - **`lib/ai`:** AI-related functionality including chat completion, response generation, embeddings, and tools. Contains core AI logic for:
   - Chat message generation and streaming
   - Response generation with custom prompts
@@ -57,7 +57,7 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **tRPC:** Used for building the API, offering type safety and efficient communication between the frontend and backend.
 - **Tailwind CSS and Nativewind:** Used for styling and UI components, ensuring consistency across web and mobile applications.
 - **Drizzle ORM:** Database access library, enabling type-safe queries and database interactions.
-- **Clerk:** For user authentication and user account management.
+- **Supabase:** For the database and user authentication.
 - **Inngest:** Serverless functions platform that powers background jobs and data processing.
 - **Ably:** Real-time messaging platform for live updates and notifications.
 - **Vercel AI SDK:** Used for building AI-powered features with streaming support, function calling, and type-safe AI responses.
@@ -112,7 +112,7 @@ Helper uses Inngest for managing background jobs and event-driven processes. The
 - File preview generation
 - Conversation embedding and indexing
 - Scheduled cleanup tasks
-- Webhook handling (Stripe, Gmail)
+- Webhook handling (Gmail, Slack)
 - Report generation
 - Notification delivery (Slack, email)
 

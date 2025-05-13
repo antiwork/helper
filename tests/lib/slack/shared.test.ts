@@ -10,7 +10,6 @@ import { handleMessageSlackAction } from "@/lib/slack/shared";
 
 vi.mock("@/lib/data/user", () => ({
   findUserViaSlack: vi.fn(),
-  getClerkUser: vi.fn(),
 }));
 
 vi.mock("@/lib/slack/client", () => ({

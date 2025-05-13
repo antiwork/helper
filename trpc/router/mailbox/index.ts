@@ -57,8 +57,8 @@ export const mailboxRouter = {
 
     const [all, mine, assigned] = await Promise.all([
       countOpenStatus(),
-      countOpenStatus(eq(conversations.assignedToClerkId, ctx.user.id)),
-      countOpenStatus(isNotNull(conversations.assignedToClerkId)),
+      countOpenStatus(eq(conversations.assignedToId, ctx.user.id)),
+      countOpenStatus(isNotNull(conversations.assignedToId)),
     ]);
 
     return {

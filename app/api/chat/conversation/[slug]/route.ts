@@ -67,7 +67,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       createdAt: message.createdAt.toISOString(),
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,
-      annotations: message.clerkUserId ? await getUserAnnotation(message.clerkUserId) : undefined,
+      annotations: message.userId ? await getUserAnnotation(message.userId) : undefined,
       experimental_attachments: (message.metadata as MessageMetadata)?.includesScreenshot
         ? attachments.filter((a) => a.messageId === message.id)
         : [],

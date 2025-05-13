@@ -116,32 +116,31 @@ export const ConversationListContextProvider = ({
   useAblyEventOnce<{
     id: number;
     status: string;
-    assignedToClerkId: string | null;
+    assignedToId: string | null;
     assignedToAI: boolean;
     previousValues: {
       status: string;
-      assignedToClerkId: string | null;
+      assignedToId: string | null;
       assignedToAI: boolean;
     };
   }>(
     conversationsListChannelId(input.mailboxSlug),
     "conversation.statusChanged",
-    ({ data: { id, status, assignedToClerkId, previousValues } }) => {
+    ({ data: { id, status, assignedToId, previousValues } }) => {
       // Currently this just removes and decrements the count; ideally we should also insert and increment the count when added to the current category
       // Check the conversation used to be in the current category
       const selectedStatus = input.status?.[0] ?? "open";
       if (previousValues.status !== selectedStatus) return;
-      if (input.category === "assigned" && previousValues.assignedToClerkId === null) return;
-      if (input.category === "unassigned" && previousValues.assignedToClerkId !== null) return;
-      if (input.category === "mine" && previousValues.assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0])
-        return;
+      if (input.category === "assigned" && previousValues.assignedToId === null) return;
+      if (input.category === "unassigned" && previousValues.assignedToId !== null) return;
+      if (input.category === "mine" && previousValues.assignedToId !== data?.pages[0]?.assignedToIds?.[0]) return;
 
       // Check the conversation is no longer in the current category
       if (
         status !== selectedStatus ||
-        (input.category === "assigned" && assignedToClerkId === null) ||
-        (input.category === "unassigned" && assignedToClerkId !== null) ||
-        (input.category === "mine" && assignedToClerkId !== data?.pages[0]?.assignedToClerkIds?.[0])
+        (input.category === "assigned" && assignedToId === null) ||
+        (input.category === "unassigned" && assignedToId !== null) ||
+        (input.category === "mine" && assignedToId !== data?.pages[0]?.assignedToIds?.[0])
       )
         removeConversationFromList((c) => c.id === id);
     },
@@ -156,7 +155,7 @@ export const ConversationListContextProvider = ({
             total: lastPage.total,
             hasGmailSupportEmail: lastPage.hasGmailSupportEmail,
             defaultSort: lastPage.defaultSort,
-            assignedToClerkIds: lastPage.assignedToClerkIds,
+            assignedToIds: lastPage.assignedToIds,
             nextCursor: lastPage.nextCursor,
           }
         : null,

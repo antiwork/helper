@@ -75,7 +75,7 @@ export const getNewGmailThreads = async (gmailSupportEmailId: number) => {
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
     })
     .then(assertDefinedOrRaiseNonRetriableError);
-  const client = await getGmailService(gmailSupportEmail);
+  const client = getGmailService(gmailSupportEmail);
   const response = await getLast10GmailThreads(client);
   assertSuccessResponseOrThrow(response);
   const threads = response.data.threads ?? [];
@@ -92,7 +92,7 @@ export const processGmailThread = async (
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
     })
     .then(assertDefinedOrRaiseNonRetriableError);
-  const client = await getGmailService(gmailSupportEmail);
+  const client = getGmailService(gmailSupportEmail);
   return processGmailThreadWithClient(client, gmailSupportEmail, gmailThreadId, conversationOverrides);
 };
 
@@ -119,10 +119,7 @@ export const processGmailThreadWithClient = async (
   const mailbox = await db.query.mailboxes
     .findFirst({
       where: eq(mailboxes.gmailSupportEmailId, gmailSupportEmail.id),
-      columns: {
-        id: true,
-        clerkOrganizationId: true,
-      },
+      columns: { id: true },
     })
     .then(assertDefinedOrRaiseNonRetriableError);
   const conversation = await db

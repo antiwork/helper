@@ -62,9 +62,7 @@ const publish = async (messageId: number) => {
         message,
         message.conversation.id,
         message.conversation.mailbox,
-        message.clerkUserId
-          ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.clerkUserId) })
-          : null,
+        message.userId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.userId) }) : null,
       ),
       trim: (data, amount) => ({
         ...data,

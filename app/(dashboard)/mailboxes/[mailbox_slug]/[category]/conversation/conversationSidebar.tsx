@@ -112,7 +112,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
           </div>
           <span className="text-muted-foreground">Assignee</span>
           <AssignPopoverButton
-            initialAssignedToClerkId={conversation.assignedToClerkId}
+            initialAssignedToId={conversation.assignedToId}
             assignedToAI={conversation.assignedToAI}
           />
         </div>

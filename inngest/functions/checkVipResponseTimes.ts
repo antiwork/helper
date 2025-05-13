@@ -35,7 +35,7 @@ export default inngest.createFunction(
         .where(
           and(
             eq(conversations.mailboxId, mailbox.id),
-            isNull(conversations.assignedToClerkId),
+            isNull(conversations.assignedToId),
             isNull(conversations.mergedIntoId),
             eq(conversations.status, "open"),
             gt(

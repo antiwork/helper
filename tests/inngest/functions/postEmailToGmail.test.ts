@@ -20,7 +20,6 @@ vi.mock("@/lib/resend/client", () => ({
 vi.mock("@/lib/emails/automatedRepliesLimitExceeded", () => ({
   default: vi.fn().mockReturnValue("Mock component"),
 }));
-vi.mock("@/lib/stripe/client");
 vi.spyOn(sentryUtils, "captureExceptionAndThrowIfDevelopment");
 
 beforeEach(() => {
@@ -130,7 +129,6 @@ describe("postEmailToGmail", () => {
               id: mailbox.id,
               name: mailbox.name,
               widgetHost: mailbox.widgetHost,
-              clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
             },
@@ -184,7 +182,6 @@ describe("postEmailToGmail", () => {
               id: mailbox.id,
               name: mailbox.name,
               widgetHost: mailbox.widgetHost,
-              clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
             },

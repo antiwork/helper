@@ -127,9 +127,6 @@ importers:
       '@slack/web-api':
         specifier: ^7.5.0
         version: 7.9.1
-      '@stripe/stripe-js':
-        specifier: ^4.1.0
-        version: 4.10.0
       '@supabase/auth-ui-react':
         specifier: ^0.4.7
         version: 0.4.7(@supabase/supabase-js@2.49.4)
@@ -397,9 +394,6 @@ importers:
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
-      stripe:
-        specifier: ^16.5.0
-        version: 16.12.0
       superjson:
         specifier: 2.2.1
         version: 2.2.1
@@ -4937,10 +4931,6 @@ packages:
 
   '@stitches/core@1.2.8':
     resolution: {integrity: sha512-Gfkvwk9o9kE9r9XNBmJRfV8zONvXThnm1tcuojL04Uy5uRyqg93DC83lDebl0rocZCfKSjUv+fWYtMQmEDJldg==}
-
-  '@stripe/stripe-js@4.10.0':
-    resolution: {integrity: sha512-KrMOL+sH69htCIXCaZ4JluJ35bchuCCznyPyrbN8JXSGQfwBI1SuIEMZNwvy8L8ykj29t6sa5BAAiL7fNoLZ8A==}
-    engines: {node: '>=12.16'}
 
   '@supabase/auth-js@2.69.1':
     resolution: {integrity: sha512-FILtt5WjCNzmReeRLq5wRs3iShwmnWgBvxHfqapC/VoljJl+W8hDAyFmf1NVw3zH+ZjZ05AKxiKxVeb0HNWRMQ==}
@@ -11825,10 +11815,6 @@ packages:
   strip-literal@2.1.1:
     resolution: {integrity: sha512-631UJ6O00eNGfMiWG78ck80dfBab8X6IVFB51jZK5Icd7XAs60Z5y7QdSd/wGIklnWvRbUNloVzhOKKmutxQ6Q==}
 
-  stripe@16.12.0:
-    resolution: {integrity: sha512-H7eFVLDxeTNNSn4JTRfL2//LzCbDrMSZ+2q1c7CanVWgK2qIW5TwS+0V7N9KcKZZNpYh/uCqK0PyZh/2UsaAtQ==}
-    engines: {node: '>=12.*'}
-
   strnum@1.1.2:
     resolution: {integrity: sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA==}
 
@@ -17895,8 +17881,6 @@ snapshots:
   '@standard-schema/spec@1.0.0': {}
 
   '@stitches/core@1.2.8': {}
-
-  '@stripe/stripe-js@4.10.0': {}
 
   '@supabase/auth-js@2.69.1':
     dependencies:
@@ -25960,11 +25944,6 @@ snapshots:
   strip-literal@2.1.1:
     dependencies:
       js-tokens: 9.0.1
-
-  stripe@16.12.0:
-    dependencies:
-      '@types/node': 22.15.3
-      qs: 6.14.0
 
   strnum@1.1.2: {}
 

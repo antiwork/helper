@@ -22,7 +22,7 @@ export const toolsRouter = {
         case "spam":
           return { type: "spam" as const };
         case "assign":
-          return { type: "assign" as const, clerkUserId: action.clerkUserId };
+          return { type: "assign" as const, userId: action.userId };
         case "tool":
           const { slug, parameters } = action;
           const tool = mailboxTools.find((t) => t.slug === slug);

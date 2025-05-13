@@ -45,8 +45,8 @@ export const convertConversationMessageToRaw = async (
     text = await render(reactEmail, { plainText: true });
   } else {
     html = email.body ?? undefined;
-    const user = email.clerkUserId
-      ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.clerkUserId) })
+    const user = email.userId
+      ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.userId) })
       : undefined;
     if (html && user) {
       html += `<p>Best,<br />${user.user_metadata?.name}</p>`;

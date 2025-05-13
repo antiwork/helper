@@ -57,19 +57,9 @@ export const env = createEnv({
     AWS_DEFAULT_REGION: defaultUnlessDeployed(z.string().min(1), "us-east-1"),
     AWS_PRIVATE_STORAGE_BUCKET_NAME: defaultUnlessDeployed(z.string().min(1), "helperai-private-storage-dev"),
     AWS_ENDPOINT: defaultUnlessDeployed(z.string().url().optional(), "https://minio.helperai.dev"),
-    CLERK_SECRET_KEY: z.string().min(1), // Secret key from https://dashboard.clerk.com
-    CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.string().min(1).default("/mailboxes"),
-    CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().min(1).default("/mailboxes"),
 
-    // For running database seeds, Set these up on https://dashboard.clerk.com
-    CLERK_INITIAL_ORGANIZATION_ID: z
-      .string()
-      .regex(/^org_\w+$/)
-      .optional(),
-    CLERK_INITIAL_USER_IDS: z
-      .string()
-      .regex(/^user_\w+(?:,user_\w+)*$/)
-      .optional(),
+    // For running database seeds
+    INITIAL_USER_EMAILS: z.string().default("support@gumroad.com").transform((v) => v.split(",")),
 
     // Optional integrations
 
@@ -82,15 +72,6 @@ export const env = createEnv({
     GITHUB_APP_ID: z.string().min(1).optional(),
     GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
     GITHUB_PRIVATE_KEY: z.string().min(1).optional(),
-    // Stripe subscription plan and credentials for paid organizations
-    STRIPE_PRICE_ID: z.string().min(1).optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
-    STRIPE_SECRET_KEY: z.string().min(1).optional(),
-    // Lets you consider your own org as having a paid subscription. If using Stripe in development you probably want this the same as CLERK_INITIAL_ORGANIZATION_ID
-    ADDITIONAL_PAID_ORGANIZATION_IDS: z
-      .string()
-      .regex(/^org_\w+(?:,org_\w+)*$/)
-      .optional(),
     // Token from https://jina.ai for the widget to read the current page
     JINA_API_TOKEN: z.string().min(1).optional(),
     // API key from https://www.firecrawl.dev to import help docs from a website
@@ -112,9 +93,6 @@ export const env = createEnv({
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1).default("/login"),
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1).default("/login"),
     NEXT_PUBLIC_VERCEL_ENV: defaultUnlessDeployed(
       z.enum(["development", "preview", "production"]) as any,
       "development",
@@ -132,9 +110,6 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

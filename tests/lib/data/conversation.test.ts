@@ -52,10 +52,6 @@ vi.mock("@/lib/ably/client", () => ({
   publishToAbly: vi.fn(),
 }));
 
-vi.mock("@/lib/data/organization", () => ({
-  getClerkOrganization: vi.fn(),
-}));
-
 describe("createConversation", () => {
   it("creates a new conversation", async () => {
     const { mailbox } = await userFactory.createRootUser();
@@ -147,10 +143,10 @@ describe("updateConversation", () => {
         id: conversation.id,
         status: "closed",
         assignedToAI: false,
-        assignedToClerkId: null,
+        assignedToId: null,
         previousValues: {
           status: "open",
-          assignedToClerkId: null,
+          assignedToId: null,
           assignedToAI: false,
         },
       },

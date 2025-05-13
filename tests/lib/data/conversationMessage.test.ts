@@ -35,16 +35,6 @@ vi.mock("@/inngest/client", () => ({
     send: vi.fn(),
   },
 }));
-vi.mock("@/lib/data/user", () => ({
-  getClerkUserList: vi.fn().mockResolvedValue({
-    data: [
-      {
-        id: "user_123",
-        fullName: "Test User",
-      },
-    ],
-  }),
-}));
 
 beforeEach(() => {
   vi.useRealTimers();
@@ -115,17 +105,17 @@ describe("getMessages", () => {
     const { message: message2 } = await conversationMessagesFactory.create(conversation.id, {
       role: "staff",
       createdAt: new Date("2023-01-02"),
-      clerkUserId: user.id,
+      userId: user.id,
     });
 
     const { note } = await noteFactory.create(conversation.id, {
       createdAt: new Date("2023-01-03"),
-      clerkUserId: user.id,
+      userId: user.id,
     });
 
     const { event } = await conversationEventsFactory.create(conversation.id, {
       createdAt: new Date("2023-01-04"),
-      byClerkUserId: user.id,
+      byUserId: user.id,
       reason: "Sent reply",
     });
 
@@ -165,7 +155,7 @@ describe("getMessages", () => {
     });
     await conversationMessagesFactory.create(conversation.id, {
       role: "staff",
-      clerkUserId: user.id,
+      userId: user.id,
     });
 
     const result = await getMessages(conversation.id, mailbox);
@@ -431,7 +421,7 @@ describe("createReply", () => {
 
   it("assigns the conversation to the user when replying to an unassigned conversation", async () => {
     const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToClerkId: null });
+    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
@@ -440,13 +430,13 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToClerkId).toBe(user.id);
+    expect(updatedConversation?.assignedToId).toBe(user.id);
   });
 
   it("does not change assignment when replying to an already assigned conversation", async () => {
     const { user, mailbox } = await userFactory.createRootUser();
     const { user: otherUser } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToClerkId: otherUser.id });
+    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: otherUser.id });
 
     await createReply({
       conversationId: conversation.id,
@@ -455,12 +445,12 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToClerkId).toBe(otherUser.id);
+    expect(updatedConversation?.assignedToId).toBe(otherUser.id);
   });
 
   it("handles reply without user (no assignment)", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToClerkId: null });
+    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
@@ -469,7 +459,7 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToClerkId).toBeNull();
+    expect(updatedConversation?.assignedToId).toBeNull();
   });
 
   it("handles file uploads", async () => {
@@ -549,7 +539,7 @@ describe("createConversationMessage", () => {
     const message = await createConversationMessage({
       conversationId: conversation.id,
       body: "Test message",
-      clerkUserId: user.id,
+      userId: user.id,
       role: "staff",
       isPerfect: false,
       isFlaggedAsBad: false,
@@ -581,7 +571,7 @@ describe("createConversationMessage", () => {
     const message = await createConversationMessage({
       conversationId: conversation.id,
       body: "Test message",
-      clerkUserId: user.id,
+      userId: user.id,
       role: "staff",
       isPerfect: false,
       isFlaggedAsBad: false,

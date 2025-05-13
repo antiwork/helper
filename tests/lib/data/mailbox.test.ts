@@ -12,10 +12,6 @@ vi.mock("@/lib/slack/client", () => ({
   uninstallSlackApp: vi.fn(),
 }));
 
-vi.mock("@/lib/data/organization", () => ({
-  getClerkOrganization: vi.fn(),
-}));
-
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -32,8 +28,6 @@ test("getMailboxInfo", async () => {
     slackConnected: false,
     slackConnectUrl: expect.any(String),
     slackAlertChannel: null,
-    clerkOrganizationId: mailbox.clerkOrganizationId,
-    subscription: null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
     widgetDisplayMode: "always",
     widgetDisplayMinValue: null,

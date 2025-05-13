@@ -16,10 +16,6 @@ vi.mock("@/lib/ai/tools", () => ({
   buildTools: vi.fn().mockImplementation(() => ({})),
 }));
 
-vi.mock("@/lib/data/organization", () => ({
-  getClerkOrganization: vi.fn(),
-}));
-
 describe("generateDraftResponse", () => {
   beforeEach(() => {
     vi.clearAllMocks();

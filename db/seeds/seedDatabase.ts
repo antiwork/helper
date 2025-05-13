@@ -16,6 +16,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { indexMessage } from "@/inngest/functions/indexConversation";
+import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
 
@@ -45,9 +46,6 @@ const checkIfAllTablesAreEmpty = async () => {
   return true;
 };
 
-// TODO:
-const INITIAL_USER_EMAILS = ["support@gumroad.com"];
-
 export const seedDatabase = async () => {
   if (await checkIfAllTablesAreEmpty()) {
     console.log("All tables are empty. Starting seed process...");
@@ -60,7 +58,7 @@ export const seedDatabase = async () => {
 
     const supabase = await createClient();
     const users = await Promise.all(
-      INITIAL_USER_EMAILS.map(async (email) =>
+      env.INITIAL_USER_EMAILS.map(async (email) =>
         assertDefined((await supabase.auth.admin.createUser({ email, password: "password" })).data.user),
       ),
     );
@@ -96,7 +94,7 @@ export const seedDatabase = async () => {
       if (conversation.id % 2 === 0) {
         await db
           .update(conversations)
-          .set({ assignedToClerkId: assertDefined(users[Math.floor(Math.random() * users.length)]).id })
+          .set({ assignedToId: assertDefined(users[Math.floor(Math.random() * users.length)]).id })
           .where(eq(conversations.id, conversation.id));
       }
 
@@ -107,7 +105,7 @@ export const seedDatabase = async () => {
         if (index % 2 === 0) {
           await db
             .update(conversationMessages)
-            .set({ clerkUserId: assertDefined(users[(index / 2) % users.length]).id })
+            .set({ userId: assertDefined(users[(index / 2) % users.length]).id })
             .where(eq(conversationMessages.id, message.id));
         }
       });

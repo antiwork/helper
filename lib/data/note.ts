@@ -25,7 +25,7 @@ export const addNote = async ({
       .values({
         conversationId,
         body: message,
-        clerkUserId: user?.id,
+        userId: user?.id,
         role: "staff",
         slackChannel,
         slackMessageTs,

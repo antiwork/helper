@@ -56,9 +56,3 @@ export type SupportAccount = {
   id: number;
   email: string;
 };
-
-export type Subscription = {
-  stripeSubscriptionId: string | null;
-  status: string | null;
-  canceledAt: Date | null;
-};

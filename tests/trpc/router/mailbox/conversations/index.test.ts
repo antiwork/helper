@@ -51,7 +51,7 @@ describe("conversationsRouter", () => {
       });
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { conversation: assignedConversation } = await conversationFactory.create(mailbox.id, {
-        assignedToClerkId: user.id,
+        assignedToId: user.id,
       });
 
       const caller = createCaller(createTestTRPCContext(user));
@@ -73,7 +73,7 @@ describe("conversationsRouter", () => {
         conversations: [{ slug: assignedConversation.slug }],
         total: 1,
         defaultSort: "oldest",
-        assignedToClerkIds: [user.id],
+        assignedToIds: [user.id],
       });
     });
 
@@ -149,7 +149,7 @@ describe("conversationsRouter", () => {
       expect(updatedConversation).toMatchObject({
         id: conversation.id,
         slug: conversation.slug,
-        assignedToClerkId: user.id,
+        assignedToId: user.id,
       });
 
       expect(inngest.send).toHaveBeenCalledWith({

@@ -26,7 +26,6 @@ export const userFactory = {
     const mailbox = await db
       .insert(mailboxes)
       .values({
-        clerkOrganizationId: "",
         name: mailboxName,
         slug: faker.helpers.slugify(mailboxName.toLowerCase()),
         promptUpdatedAt: faker.date.recent(),

@@ -22,8 +22,8 @@ export const conversations = pgTable(
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
-    assignedToId: integer(),
-    assignedToClerkId: text(),
+    unused_assignedToId: integer(),
+    assignedToId: text("assigned_to_clerk_id"),
     summary: jsonb().$type<string[]>(),
     embedding: vector({ dimensions: 1536 }),
     embeddingText: text(),
@@ -40,7 +40,7 @@ export const conversations = pgTable(
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }
-        | { type: "assign"; clerkUserId: string }
+        | { type: "assign"; userId: string }
         | {
             type: "tool";
             slug: string;
@@ -51,8 +51,8 @@ export const conversations = pgTable(
   },
   (table) => {
     return {
-      assignedToIdIdx: index("conversations_conversation_assigned_to_id_327a1b36").on(table.assignedToId),
-      assignedToClerkIdIdx: index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToClerkId),
+      unused_assignedToIdIdx: index("conversations_conversation_assigned_to_id_327a1b36").on(table.unused_assignedToId),
+      assignedToIdIdx: index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),
       closedAtIdx: index("conversations_conversation_closed_at_16474e94").on(table.closedAt),
       createdAtIdx: index("conversations_conversation_created_at_1ec48787").on(table.createdAt),
       emailFromIdx: index("conversations_conversation_email_from_aab3d292").on(table.emailFrom),

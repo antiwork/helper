@@ -14,10 +14,10 @@ import { api } from "@/trpc/react";
 import { useAssignTicket } from "./useAssignTicket";
 
 export const AssignPopoverButton = ({
-  initialAssignedToClerkId,
+  initialAssignedToId,
   assignedToAI = false,
 }: {
-  initialAssignedToClerkId: string | null;
+  initialAssignedToId: string | null;
   assignedToAI?: boolean;
 }) => {
   const { assignTicket } = useAssignTicket();
@@ -29,11 +29,11 @@ export const AssignPopoverButton = ({
   });
   const { user: currentUser } = useSession() ?? {};
 
-  const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null;
+  const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToId) ?? null;
 
   useEffect(() => {
-    setAssignedTo(assignedToAI ? { ai: true } : (orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null));
-  }, [initialAssignedToClerkId, orgMembers, assignedToAI]);
+    setAssignedTo(assignedToAI ? { ai: true } : (orgMembers.find((m) => m.id === initialAssignedToId) ?? null));
+  }, [initialAssignedToId, orgMembers, assignedToAI]);
 
   const toggleAssignModal = (open: boolean) => {
     setShowAssignModal(open);

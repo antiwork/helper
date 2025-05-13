@@ -41,7 +41,7 @@ export const conversationsRouter = {
       total,
       defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
       hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
-      assignedToClerkIds: input.assignee ?? null,
+      assignedToIds: input.assignee ?? null,
       nextCursor,
     };
   }),
@@ -155,7 +155,7 @@ export const conversationsRouter = {
       await updateConversation(ctx.conversation.id, {
         set: {
           status: input.status,
-          assignedToClerkId: input.assignedToId,
+          assignedToId: input.assignedToId,
           assignedToAI: input.assignedToAI,
         },
         byUserId: ctx.user.id,
@@ -311,7 +311,7 @@ export const conversationsRouter = {
         conversations,
         and(
           eq(conversations.mailboxId, ctx.mailbox.id),
-          eq(conversations.assignedToClerkId, ctx.user.id),
+          eq(conversations.assignedToId, ctx.user.id),
           eq(conversations.status, "open"),
         ),
       ),

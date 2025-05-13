@@ -50,7 +50,6 @@ export const membersRouter = {
         tags: { route: "mailbox.members.list" },
         extra: {
           mailboxId: ctx.mailbox.id,
-          organizationId: ctx.mailbox.clerkOrganizationId,
           mailboxSlug: ctx.mailbox.slug,
         },
       });

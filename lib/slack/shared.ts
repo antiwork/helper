@@ -123,7 +123,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
         await updateConversation(
           conversation.id,
           {
-            set: { assignedToClerkId: selectedUserId, assignedToAI: false },
+            set: { assignedToId: selectedUserId, assignedToAI: false },
             message: note || null,
             byUserId: user?.id ?? null,
           },
@@ -165,7 +165,6 @@ const openAssignModal = async (
   message: SlackMessage,
   conversation: typeof conversations.$inferSelect & {
     mailbox: {
-      clerkOrganizationId: string;
       slackBotToken: string | null;
     };
   },

@@ -31,7 +31,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   const result = await db
     .select({
-      id: emails.clerkUserId,
+      id: emails.userId,
       replyCount: count(emails.id),
     })
     .from(emails)
@@ -40,11 +40,11 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
       and(
         eq(conversations.mailboxId, mailbox.id),
         eq(emails.role, "staff"),
-        sql`${emails.clerkUserId} IN ${memberIds}`,
+        sql`${emails.userId} IN ${memberIds}`,
         ...dateConditions,
       ),
     )
-    .groupBy(emails.clerkUserId);
+    .groupBy(emails.userId);
 
   const replyCounts = result.reduce<Record<string, number>>((acc, member) => {
     if (member.id) acc[member.id] = member.replyCount;

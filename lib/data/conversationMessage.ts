@@ -69,7 +69,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         emailTo: true,
         emailCc: true,
         emailBcc: true,
-        clerkUserId: true,
+        userId: true,
         emailFrom: true,
         isPinned: true,
         role: true,
@@ -108,7 +108,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       role: true,
       slackChannel: true,
       slackMessageTs: true,
-      clerkUserId: true,
+      userId: true,
     },
     with: {
       files: true,
@@ -122,7 +122,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       type: true,
       createdAt: true,
       changes: true,
-      byClerkUserId: true,
+      byUserId: true,
       reason: true,
     },
   });
@@ -131,12 +131,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
 
   const messageInfos = await Promise.all(
     allMessages.map((message) =>
-      serializeMessage(
-        message,
-        conversationId,
-        mailbox,
-        (message.clerkUserId && membersById[message.clerkUserId]) || null,
-      ),
+      serializeMessage(message, conversationId, mailbox, (message.userId && membersById[message.userId]) || null),
     ),
   );
 
@@ -144,7 +139,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.clerkUserId ? (membersById[note.clerkUserId]?.user_metadata?.name ?? null) : null,
+      from: note.userId ? (membersById[note.userId]?.user_metadata?.name ?? null) : null,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -158,12 +153,12 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       ...event,
       changes: {
         ...event.changes,
-        assignedToUser: event.changes.assignedToClerkId
-          ? (membersById[event.changes.assignedToClerkId]?.user_metadata?.name ?? null)
-          : event.changes.assignedToClerkId,
+        assignedToUser: event.changes.assignedToId
+          ? (membersById[event.changes.assignedToId]?.user_metadata?.name ?? null)
+          : event.changes.assignedToId,
         assignedToAI: event.changes.assignedToAI,
       },
-      byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.user_metadata?.name ?? null) : null,
+      byUser: event.byUserId ? (membersById[event.byUserId]?.user_metadata?.name ?? null) : null,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -187,7 +182,7 @@ export const serializeMessage = async (
     | "emailTo"
     | "emailCc"
     | "emailBcc"
-    | "clerkUserId"
+    | "userId"
     | "emailFrom"
     | "isPinned"
     | "role"
@@ -314,10 +309,10 @@ export const createReply = async (
   if (!conversation) throw new Error("Conversation not found");
 
   return tx0.transaction(async (tx) => {
-    if (shouldAutoAssign && user && !conversation.assignedToClerkId) {
+    if (shouldAutoAssign && user && !conversation.assignedToId) {
       await updateConversation(
         conversationId,
-        { set: { assignedToClerkId: user.id, assignedToAI: false }, byUserId: null },
+        { set: { assignedToId: user.id, assignedToAI: false }, byUserId: null },
         tx,
       );
     }
@@ -326,7 +321,7 @@ export const createReply = async (
       {
         conversationId,
         body: message,
-        clerkUserId: user?.id,
+        userId: user?.id,
         emailCc: cc ?? (await getNonSupportParticipants(conversation)),
         emailBcc: bcc,
         slackChannel: slack?.channel,
@@ -500,7 +495,7 @@ export const createToolEvent = async ({
   error,
   parameters,
   userMessage,
-  clerkUserId,
+  userId,
   tx = db,
 }: {
   conversationId: number;
@@ -509,7 +504,7 @@ export const createToolEvent = async ({
   error?: any;
   parameters: Record<string, any>;
   userMessage: string;
-  clerkUserId?: string;
+  userId?: string;
   tx?: Transaction | typeof db;
 }) => {
   const message = await tx.insert(conversationMessages).values({
@@ -533,7 +528,7 @@ export const createToolEvent = async ({
     isPerfect: false,
     isFlaggedAsBad: false,
     status: "sent",
-    clerkUserId,
+    userId,
   });
 
   return message;

@@ -3,7 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { mailboxes, mailboxesMetadataApi, subscriptions } from "@/db/schema";
+import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
 import { env } from "@/lib/env";
 import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
@@ -44,14 +44,6 @@ const getSlackConnectUrl = (mailboxSlug: string): string | null => {
 };
 
 export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
-  const subscription = await db.query.subscriptions.findFirst({
-    where: and(eq(subscriptions.clerkOrganizationId, mailbox.clerkOrganizationId)),
-    columns: {
-      canceledAt: true,
-      status: true,
-      stripeSubscriptionId: true,
-    },
-  });
   const metadataEndpoint = await db.query.mailboxesMetadataApi.findFirst({
     where: and(
       eq(mailboxesMetadataApi.mailboxId, mailbox.id),
@@ -79,8 +71,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
     githubRepoOwner: mailbox.githubRepoOwner,
     githubRepoName: mailbox.githubRepoName,
-    clerkOrganizationId: mailbox.clerkOrganizationId,
-    subscription: subscription ?? null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
     widgetDisplayMode: mailbox.widgetDisplayMode,
     widgetDisplayMinValue: mailbox.widgetDisplayMinValue,

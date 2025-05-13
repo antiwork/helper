@@ -10,14 +10,13 @@ export const renewMailboxWatches = async () => {
     .select({
       accessToken: gmailSupportEmails.accessToken,
       refreshToken: gmailSupportEmails.refreshToken,
-      clerkUserId: gmailSupportEmails.clerkUserId,
     })
     .from(mailboxes)
     .innerJoin(gmailSupportEmails, eq(mailboxes.gmailSupportEmailId, gmailSupportEmails.id));
 
   for (const supportEmail of supportEmails) {
     try {
-      await subscribeToMailbox(await getGmailService(supportEmail));
+      await subscribeToMailbox(getGmailService(supportEmail));
     } catch (error) {
       Sentry.captureException(error);
     }
