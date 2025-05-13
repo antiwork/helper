@@ -1,5 +1,4 @@
-import { PlayCircle } from "lucide-react";
-import { ListOrdered, HandCoins, Receipt, Calendar } from "lucide-react";
+import { Calendar, HandCoins, ListOrdered, PlayCircle, Receipt } from "lucide-react";
 import { useState } from "react";
 
 const tools = [
@@ -7,7 +6,10 @@ const tools = [
     text: "Send me a list of my last 5 orders over $100.",
     color: "#FF90E8",
     border: "border-[#FF90E8]",
-    completed: { icon: <ListOrdered color="#FF90E8" className="w-7 h-7" />, text: "Recent orders over $100: #3214, #1322..." },
+    completed: {
+      icon: <ListOrdered color="#FF90E8" className="w-7 h-7" />,
+      text: "Recent orders over $100: #3214, #1322...",
+    },
   },
   {
     text: "What's my payout balance?",
@@ -35,18 +37,15 @@ export default function ToolsDemo() {
     <div className="w-full min-h-[320px] md:min-h-[420px] flex flex-col items-center justify-center">
       <div className="flex flex-col gap-8 md:gap-14 w-full max-w-3xl mx-auto">
         {tools.map((tool, i) => (
-          <div
-            key={tool.text}
-            className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
-          >
+          <div key={tool.text} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
             <div
               className={`flex items-center gap-3 md:gap-4 border ${tool.border} rounded-full py-2 px-3 transition-transform duration-200 bg-transparent`}
               style={{
                 transform: hovered === i ? `rotate(${i % 2 === 0 ? "-3deg" : "3deg"})` : undefined,
                 boxShadow: hovered === i ? `0 2px 16px 0 ${tool.color}22` : undefined,
-                width: 'fit-content',
+                width: "fit-content",
                 minWidth: 200,
-                maxWidth: '100%',
+                maxWidth: "100%",
               }}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
@@ -54,7 +53,9 @@ export default function ToolsDemo() {
               {hovered === i ? (
                 <span className="flex items-center justify-center w-5 h-5 md:w-7 md:h-7">{tool.completed.icon}</span>
               ) : (
-                <span className="flex items-center justify-center w-5 h-5 md:w-7 md:h-7"><PlayCircle className="w-5 h-5 md:w-7 md:h-7" color={tool.color} fill="none" /></span>
+                <span className="flex items-center justify-center w-5 h-5 md:w-7 md:h-7">
+                  <PlayCircle className="w-5 h-5 md:w-7 md:h-7" color={tool.color} fill="none" />
+                </span>
               )}
               <span className="italic text-base md:text-xl text-[#FFE6B0] whitespace-nowrap">
                 {hovered === i ? tool.completed.text : tool.text}
@@ -65,4 +66,4 @@ export default function ToolsDemo() {
       </div>
     </div>
   );
-} 
+}

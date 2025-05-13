@@ -1,9 +1,24 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Archive, Banknote, BookOpen, Trash2, ArrowRight, PlayCircle, MousePointer } from "lucide-react";
 import { motion } from "framer-motion";
-import { TriangleAlert, Sparkles, Star, BookOpen as BookOpenIcon, Clock, MessageSquare, FileCode, Monitor } from "lucide-react";
+import {
+  Archive,
+  ArrowRight,
+  Banknote,
+  BookOpen,
+  BookOpen as BookOpenIcon,
+  Clock,
+  FileCode,
+  MessageSquare,
+  Monitor,
+  MousePointer,
+  PlayCircle,
+  Sparkles,
+  Star,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
@@ -13,9 +28,9 @@ import { getBaseUrl } from "@/components/constants";
 import SlackInterface from "@/components/slack-interface";
 import SlackNotification from "@/components/slack-notification";
 import { Button } from "@/components/ui/button";
+import CitationsDemo from "./CitationsDemo";
 import { MarketingHeader } from "./MarketingHeader";
 import RefundDemo from "./RefundDemo";
-import CitationsDemo from "./CitationsDemo";
 import ToolsDemo from "./ToolsDemo";
 
 export default function Home() {
@@ -77,7 +92,6 @@ export default function Home() {
     }
   }, [helperTypingComplete]);
 
-
   useEffect(() => {
     if (showFeatures && !initialScrollComplete.current) {
       const timer = setTimeout(() => {
@@ -120,9 +134,8 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [currentSlide]);
 
-  const docsBaseUrl = getBaseUrl().includes("localhost") || getBaseUrl().includes("dev")
-    ? "https://helperai.dev"
-    : "https://helper.ai";
+  const docsBaseUrl =
+    getBaseUrl().includes("localhost") || getBaseUrl().includes("dev") ? "https://helperai.dev" : "https://helper.ai";
 
   return (
     <main className="bg-[#2B0808] text-white flex flex-col">
@@ -280,7 +293,8 @@ export default function Home() {
                   Helper delivers fast, accurate support by deeply understanding your content.
                 </h2>
                 <p className="text-lg md:text-xl text-secondary dark:text-foreground text-left xl:text-center mx-auto">
-                  Website Knowledge syncs Helper with your site automatically. Knowledge Bank lets agents add answers on the fly. Together, they keep info consistent, speed up replies, and update as your policies change.
+                  Website Knowledge syncs Helper with your site automatically. Knowledge Bank lets agents add answers on
+                  the fly. Together, they keep info consistent, speed up replies, and update as your policies change.
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center md:items-stretch">
@@ -433,14 +447,16 @@ export default function Home() {
                     Helper steps back when humans need to step in.
                   </h2>
                   <p className="text-lg text-secondary dark:text-foreground mb-8 text-left">
-                    Get notified in Slack when complex or high-priority issues arise, use @helper to
-                    quickly surface context, and easily return tickets to Helper once your team has resolved the issue.
+                    Get notified in Slack when complex or high-priority issues arise, use @helper to quickly surface
+                    context, and easily return tickets to Helper once your team has resolved the issue.
                   </p>
                   <div className="space-y-6 mb-12">
                     <div className="flex items-start gap-4">
                       <TriangleAlert className="w-6 h-6 mt-1" style={{ color: "#FF4343" }} />
                       <span>
-                        <span className="font-bold" style={{ color: "#FF4343" }}>Smart escalation</span>
+                        <span className="font-bold" style={{ color: "#FF4343" }}>
+                          Smart escalation
+                        </span>
                         <span className="text-secondary dark:text-foreground">
                           {" "}
                           to human agents for complex issues.
@@ -450,7 +466,9 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <Sparkles className="w-6 h-6 mt-1" style={{ color: "#C2D44B" }} />
                       <span>
-                        <span className="font-bold" style={{ color: "#C2D44B" }}>@helper</span>
+                        <span className="font-bold" style={{ color: "#C2D44B" }}>
+                          @helper
+                        </span>
                         <span className="text-secondary dark:text-foreground">
                           {" "}
                           commands for quick information retrieval.
@@ -460,11 +478,10 @@ export default function Home() {
                     <div className="flex items-start gap-4">
                       <Star className="w-6 h-6 mt-1" style={{ color: "#FEB81D" }} />
                       <span>
-                        <span className="font-bold" style={{ color: "#FEB81D" }}>Priority notifications</span>
-                        <span className="text-secondary dark:text-foreground">
-                          {" "}
-                          for VIP customers.
+                        <span className="font-bold" style={{ color: "#FEB81D" }}>
+                          Priority notifications
                         </span>
+                        <span className="text-secondary dark:text-foreground"> for VIP customers.</span>
                       </span>
                     </div>
                   </div>
@@ -484,7 +501,10 @@ export default function Home() {
                   <div className="xl:hidden mt-12">
                     <div className="relative">
                       <div className="overflow-hidden">
-                        <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                        <div
+                          className="flex transition-transform duration-300 ease-in-out"
+                          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                        >
                           <div className="w-full flex-shrink-0">
                             <SlackInterface />
                           </div>
@@ -494,13 +514,13 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="flex justify-center gap-2 mt-4">
-                        <button 
+                        <button
                           onClick={() => setCurrentSlide(0)}
-                          className={`w-2 h-2 rounded-full ${currentSlide === 0 ? 'bg-[#FEB81D]' : 'bg-[#FEB81D]/30'}`}
+                          className={`w-2 h-2 rounded-full ${currentSlide === 0 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
                         />
-                        <button 
+                        <button
                           onClick={() => setCurrentSlide(1)}
-                          className={`w-2 h-2 rounded-full ${currentSlide === 1 ? 'bg-[#FEB81D]' : 'bg-[#FEB81D]/30'}`}
+                          className={`w-2 h-2 rounded-full ${currentSlide === 1 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
                         />
                       </div>
                     </div>
@@ -561,59 +581,99 @@ export default function Home() {
           </section>
         )}
 
-{showFeatures && (
-        <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
-          <div className="container mx-auto px-4">
-            <h2 className="text-4xl font-bold mb-12">Knowledge base</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <Link href={`${docsBaseUrl}/docs`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
-                <span className="flex items-center justify-center w-10 h-10">
-                  <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
-                </span>
-                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Getting started</span>
-                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRight className="w-6 h-6" />
-                </span>
-              </Link>
-              <Link href={`${docsBaseUrl}/docs/tools/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
-                <span className="flex items-center justify-center w-10 h-10">
-                  <Clock className="w-6 h-6" style={{ color: "#C2D44B" }} />
-                </span>
-                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Tools</span>
-                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRight className="w-6 h-6" />
-                </span>
-              </Link>
-              <Link href={`${docsBaseUrl}/docs/api/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
-                <span className="flex items-center justify-center w-10 h-10">
-                  <MessageSquare className="w-6 h-6" style={{ color: "#FF90E8" }} />
-                </span>
-                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Conversation api</span>
-                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRight className="w-6 h-6" />
-                </span>
-              </Link>
-              <Link href={`${docsBaseUrl}/docs/api-reference/create-conversation`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
-                <span className="flex items-center justify-center w-10 h-10">
-                  <FileCode className="w-6 h-6" style={{ color: "#FF4343" }} />
-                </span>
-                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Api references</span>
-                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRight className="w-6 h-6" />
-                </span>
-              </Link>
-              <Link href={`${docsBaseUrl}/docs/widget/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
-                <span className="flex items-center justify-center w-10 h-10">
-                  <Monitor className="w-6 h-6" style={{ color: "#FFD34E" }} />
-                </span>
-                <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Chat widget</span>
-                <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRight className="w-6 h-6" />
-                </span>
-              </Link>
+        {showFeatures && (
+          <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
+            <div className="container mx-auto px-4">
+              <h2 className="text-4xl font-bold mb-12">Knowledge base</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <Link
+                  href={`${docsBaseUrl}/docs`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                  style={{ boxShadow: "none" }}
+                >
+                  <span className="flex items-center justify-center w-10 h-10">
+                    <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
+                  </span>
+                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                    Getting started
+                  </span>
+                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                    <ArrowRight className="w-6 h-6" />
+                  </span>
+                </Link>
+                <Link
+                  href={`${docsBaseUrl}/docs/tools/01-overview`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                  style={{ boxShadow: "none" }}
+                >
+                  <span className="flex items-center justify-center w-10 h-10">
+                    <Clock className="w-6 h-6" style={{ color: "#C2D44B" }} />
+                  </span>
+                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                    Tools
+                  </span>
+                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                    <ArrowRight className="w-6 h-6" />
+                  </span>
+                </Link>
+                <Link
+                  href={`${docsBaseUrl}/docs/api/01-overview`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                  style={{ boxShadow: "none" }}
+                >
+                  <span className="flex items-center justify-center w-10 h-10">
+                    <MessageSquare className="w-6 h-6" style={{ color: "#FF90E8" }} />
+                  </span>
+                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                    Conversation api
+                  </span>
+                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                    <ArrowRight className="w-6 h-6" />
+                  </span>
+                </Link>
+                <Link
+                  href={`${docsBaseUrl}/docs/api-reference/create-conversation`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                  style={{ boxShadow: "none" }}
+                >
+                  <span className="flex items-center justify-center w-10 h-10">
+                    <FileCode className="w-6 h-6" style={{ color: "#FF4343" }} />
+                  </span>
+                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                    Api references
+                  </span>
+                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                    <ArrowRight className="w-6 h-6" />
+                  </span>
+                </Link>
+                <Link
+                  href={`${docsBaseUrl}/docs/widget/01-overview`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                  style={{ boxShadow: "none" }}
+                >
+                  <span className="flex items-center justify-center w-10 h-10">
+                    <Monitor className="w-6 h-6" style={{ color: "#FFD34E" }} />
+                  </span>
+                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                    Chat widget
+                  </span>
+                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                    <ArrowRight className="w-6 h-6" />
+                  </span>
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
         )}
 
         <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: footerBgColor }}>

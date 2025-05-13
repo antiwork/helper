@@ -5,7 +5,10 @@ export default function CitationsDemo() {
 
   return (
     <div className="relative w-full max-w-3xl md:max-w-4xl mx-auto px-4 h-[300px] md:h-[400px] flex items-center justify-center">
-      <div className="absolute left-0 top-0 w-[280px] md:w-[440px] h-[200px] md:h-[280px] rounded-t-[22px] rounded-tr-[22px] rounded-br-[22px] rounded-bl-none border border-[#FEB81D80] bg-[#250404] p-4 md:p-8 flex flex-col justify-center" style={{zIndex:1}}>
+      <div
+        className="absolute left-0 top-0 w-[280px] md:w-[440px] h-[200px] md:h-[280px] rounded-t-[22px] rounded-tr-[22px] rounded-br-[22px] rounded-bl-none border border-[#FEB81D80] bg-[#250404] p-4 md:p-8 flex flex-col justify-center"
+        style={{ zIndex: 1 }}
+      >
         <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
           <div className="h-4 md:h-5 w-4/5 rounded-[8px] bg-[#3B1B1B] opacity-60 blur-[1px]" />
           <div className="h-4 md:h-5 w-3/4 rounded-[8px] bg-[#3B1B1B] opacity-60 blur-[1px]" />
@@ -17,7 +20,7 @@ export default function CitationsDemo() {
             <a
               href="#"
               className="underline"
-              onClick={e => e.preventDefault()}
+              onClick={(e) => e.preventDefault()}
               onMouseEnter={() => setTilt("refund")}
               onMouseLeave={() => setTilt(null)}
               onMouseDown={() => setTilt("refund")}
@@ -30,7 +33,7 @@ export default function CitationsDemo() {
             <a
               href="#"
               className="underline"
-              onClick={e => e.preventDefault()}
+              onClick={(e) => e.preventDefault()}
               onMouseEnter={() => setTilt("account")}
               onMouseLeave={() => setTilt(null)}
               onMouseDown={() => setTilt("account")}
@@ -87,4 +90,4 @@ export default function CitationsDemo() {
       </div>
     </div>
   );
-} 
+}
