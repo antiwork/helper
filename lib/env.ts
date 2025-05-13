@@ -23,10 +23,7 @@ export const env = createEnv({
    */
   server: {
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
-    POSTGRES_URL: defaultUnlessDeployed(
-      z.string().url(),
-      "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
-    ),
+    POSTGRES_URL: defaultUnlessDeployed(z.string().url(), "postgresql://postgres:postgres@127.0.0.1:54322/postgres"),
     POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
       z.string().url(),
       // Same as POSTGRES_URL unless using Supabase with built-in pooling
@@ -59,7 +56,10 @@ export const env = createEnv({
     AWS_ENDPOINT: defaultUnlessDeployed(z.string().url().optional(), "https://minio.helperai.dev"),
 
     // For running database seeds
-    INITIAL_USER_EMAILS: z.string().default("support@gumroad.com").transform((v) => v.split(",")),
+    INITIAL_USER_EMAILS: z
+      .string()
+      .default("support@gumroad.com")
+      .transform((v) => v.split(",")),
 
     // Optional integrations
 
@@ -100,8 +100,14 @@ export const env = createEnv({
 
     NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "http://127.0.0.1:54321"),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(z.string().min(1), "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"),
-    NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z.string().default("password").transform((str) => str.split(",")),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(
+      z.string().min(1),
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
+    ),
+    NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z
+      .string()
+      .default("password")
+      .transform((str) => str.split(",")),
 
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
   },
