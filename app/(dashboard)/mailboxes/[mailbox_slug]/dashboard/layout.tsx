@@ -1,14 +1,7 @@
 import React from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { withMailboxAuth } from "@/components/withMailboxAuth";
 
-function DashboardLayout({
-  params,
-  children,
-}: {
-  params: Promise<{ mailbox_slug: string }>;
-  children: React.ReactNode;
-}) {
+function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <main className="flex flex-col h-dvh text-foreground w-full bg-sidebar">{children}</main>
@@ -16,4 +9,4 @@ function DashboardLayout({
   );
 }
 
-export default withMailboxAuth(DashboardLayout);
+export default DashboardLayout;

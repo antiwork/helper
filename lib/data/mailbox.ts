@@ -92,7 +92,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     autoCloseEnabled: mailbox.autoCloseEnabled,
     autoCloseDaysOfInactivity: mailbox.autoCloseDaysOfInactivity,
     firecrawlEnabled: !!env.FIRECRAWL_API_KEY,
-    billingEnabled: !!env.STRIPE_PRICE_ID,
   };
 };
 

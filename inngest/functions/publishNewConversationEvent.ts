@@ -1,13 +1,12 @@
 import { eq } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { authUsers, conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/ably/channels";
 import { publishToAbly } from "@/lib/ably/client";
 import { serializeMessage } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
-import { getClerkUser } from "@/lib/data/user";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 export default inngest.createFunction(
@@ -62,7 +61,9 @@ const publish = async (messageId: number) => {
         message,
         message.conversation.id,
         message.conversation.mailbox,
-        await getClerkUser(message.clerkUserId),
+        message.clerkUserId
+          ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.clerkUserId) })
+          : null,
       ),
       trim: (data, amount) => ({
         ...data,

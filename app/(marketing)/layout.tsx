@@ -1,5 +1,4 @@
 import "@/app/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/react";
 import cx from "classnames";
 import type { Metadata } from "next";
@@ -50,18 +49,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       )}
     >
       <body className="h-full antialiased text-foreground bg-background font-regular">
-        <ClerkProvider appearance={{ variables: { colorPrimary: "hsl(0 67% 17%)" } }}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <NuqsAdapter>
-              <SentryContext />
-              <TRPCReactProvider>
-                <HelperProvider host={helperHost} {...config}>
-                  <HydrateClient>{children}</HydrateClient>
-                </HelperProvider>
-              </TRPCReactProvider>
-            </NuqsAdapter>
-          </ThemeProvider>
-        </ClerkProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <NuqsAdapter>
+            <SentryContext />
+            <TRPCReactProvider>
+              <HelperProvider host={helperHost} {...config}>
+                <HydrateClient>{children}</HydrateClient>
+              </HelperProvider>
+            </TRPCReactProvider>
+          </NuqsAdapter>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

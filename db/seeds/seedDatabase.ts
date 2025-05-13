@@ -9,7 +9,6 @@ import { faqsFactory } from "@tests/support/factories/faqs";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { toolsFactory } from "@tests/support/factories/tools";
-import { userFactory } from "@tests/support/factories/users";
 import { addDays, addHours, subDays, subHours } from "date-fns";
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
@@ -17,8 +16,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { indexMessage } from "@/inngest/functions/indexConversation";
-import { getClerkUser } from "@/lib/data/user";
-import { env } from "@/lib/env";
+import { createClient } from "@/lib/supabase/server";
 import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
 
 const getTables = async () => {
@@ -47,45 +45,34 @@ const checkIfAllTablesAreEmpty = async () => {
   return true;
 };
 
-const INITIAL_ORGANIZATION_ID = env.CLERK_INITIAL_ORGANIZATION_ID;
-const INITIAL_USER_IDS = env.CLERK_INITIAL_USER_IDS?.split(",") ?? [];
+// TODO:
+const INITIAL_USER_EMAILS = ["support@gumroad.com"];
 
 export const seedDatabase = async () => {
-  if (!INITIAL_ORGANIZATION_ID || !INITIAL_USER_IDS) {
-    throw new Error("CLERK_INITIAL_ORGANIZATION_ID and CLERK_INITIAL_USER_IDS must be set for seeds to run.");
-  }
-
   if (await checkIfAllTablesAreEmpty()) {
     console.log("All tables are empty. Starting seed process...");
-    const {
-      organization,
-      mailbox,
-      user: rootUser,
-    } = await userFactory.createRootUser({
-      userOverrides: {
-        id: INITIAL_USER_IDS[0],
-      },
-      organizationOverrides: {
-        id: INITIAL_ORGANIZATION_ID,
-      },
-      mailboxOverrides: {
-        name: "Gumroad",
-        slug: "gumroad",
-        promptUpdatedAt: addDays(new Date(), 1),
-        widgetHMACSecret: "9cff9d28-7333-4e29-8f01-c2945f1a887f",
-      },
+    const { mailbox } = await mailboxFactory.create({
+      name: "Gumroad",
+      slug: "gumroad",
+      promptUpdatedAt: addDays(new Date(), 1),
+      widgetHMACSecret: "9cff9d28-7333-4e29-8f01-c2945f1a887f",
     });
 
-    const users = await Promise.all(INITIAL_USER_IDS.map(async (userId) => await getClerkUser(userId)!));
+    const supabase = await createClient();
+    const users = await Promise.all(
+      INITIAL_USER_EMAILS.map(async (email) =>
+        assertDefined((await supabase.auth.admin.createUser({ email, password: "password" })).data.user),
+      ),
+    );
 
     await createSettingsPageRecords(mailbox);
 
-    const { mailbox: mailbox2 } = await mailboxFactory.create(organization.id, {
+    const { mailbox: mailbox2 } = await mailboxFactory.create({
       name: "Flexile",
       slug: "flexile",
     });
 
-    const { mailbox: mailbox3 } = await mailboxFactory.create(organization.id, {
+    const { mailbox: mailbox3 } = await mailboxFactory.create({
       name: "Helper",
       slug: "helper",
     });

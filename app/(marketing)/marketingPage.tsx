@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import {
   ArrowRight,
   Book,
@@ -22,6 +21,7 @@ import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useSession } from "@/components/useSession";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -31,16 +31,8 @@ const GitHubIcon = ({ className }: { className?: string }) => {
   );
 };
 
-const HeaderButton = ({ children, iconOnly }: { children: React.ReactNode; iconOnly?: boolean }) => {
-  return (
-    <Button variant="default" className="bg-white bg-opacity-10 text-white" iconOnly={iconOnly}>
-      {children}
-    </Button>
-  );
-};
-
 const LoginButtons = ({ githubStars }: { githubStars: number }) => {
-  const { isSignedIn } = useUser();
+  const session = useSession();
 
   return (
     <div className="flex space-x-2">
@@ -60,7 +52,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
           </span>
         </Button>
       </Link>
-      {isSignedIn ? (
+      {session ? (
         <Link href="/mailboxes">
           <Button variant="subtle">
             <span className="flex items-center">

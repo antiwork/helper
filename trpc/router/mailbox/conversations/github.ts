@@ -1,4 +1,3 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -47,7 +46,7 @@ export const githubRouter = {
         await addNote({
           conversationId: ctx.conversation.id,
           message: `Created GitHub issue [#${issueNumber}](${issueUrl})`,
-          user: await currentUser(),
+          user: ctx.user,
         });
 
         return {
@@ -98,7 +97,7 @@ export const githubRouter = {
         await addNote({
           conversationId: ctx.conversation.id,
           message: `Linked to GitHub issue [#${issue.number}](${issue.url})`,
-          user: await currentUser(),
+          user: ctx.user,
         });
 
         return {

@@ -29,10 +29,10 @@ vi.mock("googleapis", () => ({
 describe("gmailSupportEmailRouter", () => {
   describe("get", () => {
     it("returns the Gmail support email for the mailbox", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { gmailSupportEmail } = await gmailSupportEmailFactory.create();
       await db.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.id, mailbox.id));
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
 
@@ -44,8 +44,8 @@ describe("gmailSupportEmailRouter", () => {
     });
 
     it("returns null if no Gmail support email exists for the mailbox", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const { user, mailbox } = await userFactory.createRootUser();
+      const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
 
@@ -55,8 +55,8 @@ describe("gmailSupportEmailRouter", () => {
 
   describe("create", () => {
     it("creates a new Gmail support email for the mailbox", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const { user, mailbox } = await userFactory.createRootUser();
+      const caller = createCaller(createTestTRPCContext(user));
 
       const input = {
         email: "support@example.com",
@@ -93,11 +93,11 @@ describe("gmailSupportEmailRouter", () => {
 
   describe("delete", () => {
     it("deletes the Gmail support email for the mailbox", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { gmailSupportEmail } = await gmailSupportEmailFactory.create();
       await db.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.id, mailbox.id));
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.gmailSupportEmail.delete({ mailboxSlug: mailbox.slug });
 
@@ -114,8 +114,8 @@ describe("gmailSupportEmailRouter", () => {
     });
 
     it("throws an error if no Gmail support email exists for the mailbox", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const { user, mailbox } = await userFactory.createRootUser();
+      const caller = createCaller(createTestTRPCContext(user));
 
       await expect(caller.gmailSupportEmail.delete({ mailboxSlug: mailbox.slug })).rejects.toThrow(
         "Gmail support email not found",

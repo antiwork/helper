@@ -4,7 +4,6 @@ import { userFactory } from "@tests/support/factories/users";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateCompletion } from "@/lib/ai/core";
 import { generateDraftResponse } from "@/lib/ai/generateResponse";
-import { getClerkOrganization } from "@/lib/data/organization";
 
 vi.mock("@/lib/ai/core", () => ({
   generateEmbedding: vi.fn().mockResolvedValue([0.1, 0.2, 0.3]),
@@ -29,14 +28,12 @@ describe("generateDraftResponse", () => {
   it("handles metadata in the draft response generation", async () => {
     vi.mocked(generateCompletion).mockResolvedValueOnce({ text: "Your order is on its way!" } as any);
 
-    const { mailbox, organization } = await userFactory.createRootUser();
+    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
     const { message: lastUserEmail } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "What's the status of my order?",
     });
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
     const metadata = { orderId: "12345", orderStatus: "shipped" };
 
@@ -53,14 +50,12 @@ describe("generateDraftResponse", () => {
   it("generates a draft response without style linting when not configured", async () => {
     vi.mocked(generateCompletion).mockResolvedValueOnce({ text: "Here's how to reset your password..." } as any);
 
-    const { mailbox, organization } = await userFactory.createRootUser();
+    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
     const { message: lastUserEmail } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "How do I reset my password?",
     });
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
     const result = await generateDraftResponse(
       mailbox.id,

@@ -2,7 +2,6 @@ import { google } from "googleapis";
 import { getBaseUrl } from "@/components/constants";
 import { gmailSupportEmails } from "@/db/schema";
 import { env } from "@/lib/env";
-import { getOAuthAccessToken } from "../data/user";
 
 export const getGmailService = async (
   gmailSupportEmail: Pick<typeof gmailSupportEmails.$inferSelect, "clerkUserId" | "accessToken" | "refreshToken">,
@@ -14,7 +13,8 @@ export const getGmailService = async (
     forceRefreshOnFailure: true,
   });
   if (gmailSupportEmail.clerkUserId) {
-    auth.setCredentials({ access_token: await getOAuthAccessToken(gmailSupportEmail.clerkUserId, "oauth_google") });
+    // TODO: add this back in
+    // auth.setCredentials({ access_token: await getOAuthAccessToken(gmailSupportEmail.clerkUserId, "oauth_google") });
   } else {
     auth.setCredentials({
       access_token: gmailSupportEmail.accessToken,

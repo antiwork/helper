@@ -1,14 +1,12 @@
-import { User } from "@clerk/nextjs/server";
 import { KnownBlock } from "@slack/web-api";
 import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversations } from "@/db/schema";
+import { authUsers, conversations } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
 import { createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
-import { getOrganizationMembers } from "@/lib/data/organization";
-import { findUserViaSlack, getClerkUser } from "@/lib/data/user";
+import { findUserViaSlack } from "@/lib/data/user";
 import { openSlackModal, postSlackMessage } from "@/lib/slack/client";
 
 export const OPEN_ATTACHMENT_COLOR = "#EF4444";
@@ -86,11 +84,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
 
   if (payload.actions) {
     const action = payload.actions[0].action_id;
-    const user = await findUserViaSlack(
-      conversation.mailbox.clerkOrganizationId,
-      conversation.mailbox.slackBotToken,
-      payload.user.id,
-    );
+    const user = await findUserViaSlack(conversation.mailbox.slackBotToken, payload.user.id);
 
     if (!user) {
       await postSlackMessage(conversation.mailbox.slackBotToken, {
@@ -104,7 +98,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
     if (action === "assign") {
       await openAssignModal(message, conversation, payload.trigger_id);
     } else if (action === "respond_in_slack") {
-      await openRespondModal(message, conversation, user, payload.trigger_id);
+      await openRespondModal(message, conversation, payload.trigger_id);
     } else if (action === "close") {
       await db.transaction(async (tx) => {
         await updateConversation(
@@ -115,17 +109,13 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
       });
     }
   } else if (payload.type === "view_submission") {
-    const user = await findUserViaSlack(
-      conversation.mailbox.clerkOrganizationId,
-      conversation.mailbox.slackBotToken,
-      payload.user.id,
-    );
+    const user = await findUserViaSlack(conversation.mailbox.slackBotToken, payload.user.id);
 
     if (payload.view.callback_id === "assign_conversation") {
       const selectedUserId = payload.view.state.values.assign_to.user.selected_option.value;
       const note = payload.view.state.values.note.message.value;
 
-      const selectedUser = await getClerkUser(selectedUserId);
+      const selectedUser = await db.query.authUsers.findFirst({ where: eq(authUsers.id, selectedUserId) });
       if (!selectedUser) throw new Error(`User not found: ${selectedUserId}`);
 
       await db.transaction(async (tx) => {
@@ -197,21 +187,13 @@ const openAssignModal = async (
             type: "static_select",
             action_id: "user",
             placeholder: { type: "plain_text", text: "Select a user" },
-            options: (await getOrganizationMembers(conversation.mailbox.clerkOrganizationId)).data.flatMap((member) =>
-              member.publicUserData
-                ? [
-                    {
-                      text: {
-                        type: "plain_text",
-                        text: `${member.publicUserData.firstName || member.publicUserData.identifier} ${
-                          member.publicUserData.lastName || ""
-                        }`,
-                      },
-                      value: member.publicUserData?.userId || "",
-                    },
-                  ]
-                : [],
-            ),
+            options: (await db.query.authUsers.findMany()).map((member) => ({
+              text: {
+                type: "plain_text",
+                text: `${member.user_metadata?.name || member.email}`,
+              },
+              value: member.id,
+            })),
           },
         },
         {
@@ -233,7 +215,6 @@ const openAssignModal = async (
 const openRespondModal = async (
   message: SlackMessage,
   conversation: typeof conversations.$inferSelect & { mailbox: { slackBotToken: string | null } },
-  user: User,
   triggerId: string,
 ) => {
   const draft = await getLastAiGeneratedDraft(message.conversationId);

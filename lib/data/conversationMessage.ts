@@ -1,4 +1,3 @@
-import { User } from "@clerk/nextjs/server";
 import { addSeconds } from "date-fns";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
@@ -7,7 +6,7 @@ import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, DRAFT_STATUSES, files, mailboxes } from "@/db/schema";
+import { conversationMessages, DbOrAuthUser, DRAFT_STATUSES, files, mailboxes } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
@@ -20,7 +19,6 @@ import { PromptInfo } from "@/types/conversationMessages";
 import { formatBytes } from "../files";
 import { getConversationById, getNonSupportParticipants, updateConversation } from "./conversation";
 import { finishFileUpload } from "./files";
-import { getClerkUserList } from "./user";
 
 const isAiDraftStale = (draft: typeof conversationMessages.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
   return draft.status !== "draft" || draft.createdAt < mailbox.promptUpdatedAt;
@@ -128,9 +126,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     },
   });
 
-  const membersById = Object.fromEntries(
-    (await getClerkUserList(mailbox.clerkOrganizationId)).data.map((user) => [user.id, user]),
-  );
+  const membersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
 
   const messageInfos = await Promise.all(
     allMessages.map((message) =>
@@ -147,7 +143,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.clerkUserId ? (membersById[note.clerkUserId]?.fullName ?? null) : null,
+      from: note.clerkUserId ? (membersById[note.clerkUserId]?.user_metadata?.name ?? null) : null,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -162,11 +158,11 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       changes: {
         ...event.changes,
         assignedToUser: event.changes.assignedToClerkId
-          ? (membersById[event.changes.assignedToClerkId]?.fullName ?? null)
+          ? (membersById[event.changes.assignedToClerkId]?.user_metadata?.name ?? null)
           : event.changes.assignedToClerkId,
         assignedToAI: event.changes.assignedToAI,
       },
-      byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.fullName ?? null) : null,
+      byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.user_metadata?.name ?? null) : null,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -208,7 +204,7 @@ export const serializeMessage = async (
   },
   conversationId: number,
   mailbox: typeof mailboxes.$inferSelect,
-  user: User | null,
+  user?: DbOrAuthUser | null,
 ) => {
   const messageFiles =
     message.files ??
@@ -246,7 +242,7 @@ export const serializeMessage = async (
     emailTo: message.emailTo,
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
-    from: message.role === "staff" && user ? user.fullName : message.emailFrom,
+    from: message.role === "staff" && user ? (user.user_metadata?.name ?? user.email) : message.emailFrom,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:
@@ -301,7 +297,7 @@ export const createReply = async (
   }: {
     conversationId: number;
     message: string | null;
-    user: User | null;
+    user: DbOrAuthUser | null;
     cc?: string[] | null;
     bcc?: string[];
     fileSlugs?: string[];

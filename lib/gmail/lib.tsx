@@ -1,11 +1,10 @@
 import { Readable } from "stream";
 import { render } from "@react-email/render";
-import { and, desc, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files } from "@/db/schema";
-import { getClerkUser } from "@/lib/data/user";
+import { authUsers, conversationMessages, conversations, files } from "@/db/schema";
 import AIReplyEmail from "@/lib/emails/aiReply";
 import { getFileStream } from "@/lib/s3/utils";
 
@@ -45,9 +44,11 @@ export const convertConversationMessageToRaw = async (
     text = await render(reactEmail, { plainText: true });
   } else {
     html = email.body ?? undefined;
-    const user = await getClerkUser(email.clerkUserId);
+    const user = email.clerkUserId
+      ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.clerkUserId) })
+      : undefined;
     if (html && user) {
-      html += `<p>Best,<br />${user.firstName}</p>`;
+      html += `<p>Best,<br />${user.user_metadata?.name}</p>`;
     }
     text = html ? htmlToText(html) : undefined;
   }

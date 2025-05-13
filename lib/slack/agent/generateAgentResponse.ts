@@ -15,7 +15,7 @@ import { createReply } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { getMemberStats } from "@/lib/data/stats";
-import { findUserViaSlack, getClerkUserList } from "@/lib/data/user";
+import { findUserViaSlack } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { CLOSED_BY_AGENT_MESSAGE, MARKED_AS_SPAM_BY_AGENT_MESSAGE, REOPENED_BY_AGENT_MESSAGE } from "../constants";
 
@@ -119,17 +119,11 @@ export const generateAgentResponse = async (
         showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
         if (!slackUserId) return { error: "User not found" };
         const { user } = await client.users.info({ user: slackUserId });
-        const members = await getClerkUserList(mailbox.clerkOrganizationId);
+        const dbUser = await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId);
         if (user) {
           return {
             id: user.id,
-            clerkUserId: members.data.find((member) => {
-              const slackAccount = member.externalAccounts.find((account) => account.provider === "oauth_slack");
-              return (
-                slackAccount?.externalId === slackUserId ||
-                member.emailAddresses.some((email) => email.emailAddress === user.profile?.email)
-              );
-            })?.id,
+            dbUserId: dbUser?.id,
             name: user.profile?.real_name,
             email: user.profile?.email,
           };
@@ -142,12 +136,11 @@ export const generateAgentResponse = async (
       parameters: z.object({}),
       execute: async () => {
         showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
-        const members = await getClerkUserList(mailbox.clerkOrganizationId);
-        return members.data.map((member) => ({
+        const members = await db.query.authUsers.findMany();
+        return members.map((member) => ({
           id: member.id,
-          firstName: member.firstName,
-          lastName: member.lastName,
-          emails: member.emailAddresses.map((email) => email.emailAddress),
+          name: member.user_metadata?.name,
+          emails: member.email,
         }));
       },
     }),
@@ -262,7 +255,7 @@ export const generateAgentResponse = async (
             role: true,
           },
         });
-        const members = await getClerkUserList(mailbox.clerkOrganizationId);
+        const members = await db.query.authUsers.findMany();
         return messages.map((message) => ({
           id: message.id,
           content: message.cleanedUpText,
@@ -271,7 +264,7 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : members.data.find((member) => member.id === message.clerkUserId)?.fullName,
+              : members.find((member) => member.id === message.clerkUserId)?.user_metadata?.name,
           clerkUserId: message.clerkUserId,
         }));
       },
@@ -345,9 +338,7 @@ export const generateAgentResponse = async (
         await createReply({
           conversationId: conversation.id,
           message: confirmedReplyText,
-          user: slackUserId
-            ? await findUserViaSlack(mailbox.clerkOrganizationId, assertDefined(mailbox.slackBotToken), slackUserId)
-            : null,
+          user: slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null,
           close: false,
           shouldAutoAssign: false,
         });

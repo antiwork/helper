@@ -1,16 +1,13 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { setupOrganizationForNewUser } from "@/lib/auth/authService";
+import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
-import { getClerkOrganization } from "@/lib/data/organization";
 import { protectedProcedure } from "@/trpc/trpc";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
@@ -28,9 +25,7 @@ export { mailboxProcedure };
 
 export const mailboxRouter = {
   list: protectedProcedure.query(async ({ ctx }) => {
-    const organization = await getClerkOrganization(ctx.session.orgId);
     const allMailboxes = await db.query.mailboxes.findMany({
-      where: eq(mailboxes.clerkOrganizationId, organization.id),
       columns: {
         id: true,
         name: true,
@@ -39,10 +34,7 @@ export const mailboxRouter = {
     });
 
     if (allMailboxes.length === 0) {
-      const mailbox = await setupOrganizationForNewUser(
-        await getClerkOrganization(ctx.session.orgId),
-        assertDefined(await currentUser()),
-      );
+      const mailbox = await setupMailboxForNewUser(ctx.user);
       allMailboxes.push(mailbox);
     }
     return allMailboxes;
@@ -65,7 +57,7 @@ export const mailboxRouter = {
 
     const [all, mine, assigned] = await Promise.all([
       countOpenStatus(),
-      countOpenStatus(eq(conversations.assignedToClerkId, ctx.session.userId)),
+      countOpenStatus(eq(conversations.assignedToClerkId, ctx.user.id)),
       countOpenStatus(isNotNull(conversations.assignedToClerkId)),
     ]);
 

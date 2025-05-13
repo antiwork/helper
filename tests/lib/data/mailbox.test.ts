@@ -5,7 +5,6 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack, getMailboxInfo } from "@/lib/data/mailbox";
-import { getClerkOrganization } from "@/lib/data/organization";
 import { env } from "@/lib/env";
 import { uninstallSlackApp } from "@/lib/slack/client";
 
@@ -22,8 +21,7 @@ beforeEach(() => {
 });
 
 test("getMailboxInfo", async () => {
-  const { mailbox, organization } = await userFactory.createRootUser();
-  vi.mocked(getClerkOrganization).mockResolvedValue(organization);
+  const { mailbox } = await userFactory.createRootUser();
   const info = await getMailboxInfo(mailbox);
   expect(info).toEqual({
     id: mailbox.id,
@@ -51,7 +49,6 @@ test("getMailboxInfo", async () => {
     autoCloseDaysOfInactivity: 14,
     autoCloseEnabled: false,
     firecrawlEnabled: false,
-    billingEnabled: false,
   });
 
   const slackConnectUrl = new URL(info.slackConnectUrl!);

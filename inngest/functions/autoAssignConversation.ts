@@ -202,9 +202,7 @@ export default inngest.createFunction(
     if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
 
     const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
-    const teamMembers = assertDefinedOrRaiseNonRetriableError(
-      await getUsersWithMailboxAccess(mailbox.clerkOrganizationId, mailbox.id),
-    );
+    const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
 
     const activeTeamMembers = teamMembers.filter(
       (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,

@@ -1,11 +1,10 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, count, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
+import { authUsers, conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { generateDraftResponse } from "@/lib/ai/generateResponse";
@@ -19,7 +18,6 @@ import {
   serializeResponseAiDraft,
 } from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
-import { getOrganizationMembers } from "@/lib/data/organization";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
@@ -33,7 +31,7 @@ export { conversationProcedure };
 
 export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
-    const { list, where, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
+    const { list, where, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.user.id);
 
     const [{ results, nextCursor }, total] = await Promise.all([list, countSearchResults(where)]);
 
@@ -48,7 +46,7 @@ export const conversationsRouter = {
   }),
 
   listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
-    const { list } = await searchConversations(ctx.mailbox, input, ctx.session.userId);
+    const { list } = await searchConversations(ctx.mailbox, input, ctx.user.id);
     const { results, nextCursor } = await list;
 
     const messages = await db
@@ -94,7 +92,6 @@ export const conversationsRouter = {
   get: conversationProcedure.query(async ({ ctx }) => {
     const conversation = ctx.conversation;
     const draft = await getLastAiGeneratedDraft(conversation.id);
-    const user = assertDefined(await currentUser());
 
     return {
       ...(await serializeConversationWithMessages(ctx.mailbox, ctx.conversation)),
@@ -130,7 +127,7 @@ export const conversationsRouter = {
 
       await createReply({
         conversationId,
-        user: assertDefined(await currentUser()),
+        user: ctx.user,
         message: conversation.message?.trim() || null,
         fileSlugs: conversation.file_slugs,
         cc: conversation.cc,
@@ -148,10 +145,10 @@ export const conversationsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       if (input.assignedToId) {
-        const members = await getOrganizationMembers(ctx.session.orgId);
-        if (!members.data.some((m) => m.publicUserData?.userId === input.assignedToId)) {
-          throw new TRPCError({ code: "BAD_REQUEST" });
-        }
+        const assignee = await db.query.authUsers.findFirst({
+          where: eq(authUsers.id, input.assignedToId),
+        });
+        if (!assignee) throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
       await updateConversation(ctx.conversation.id, {
@@ -160,7 +157,7 @@ export const conversationsRouter = {
           assignedToClerkId: input.assignedToId,
           assignedToAI: input.assignedToAI,
         },
-        byUserId: ctx.session.userId,
+        byUserId: ctx.user.id,
         message: input.message ?? null,
       });
     }),
@@ -176,7 +173,7 @@ export const conversationsRouter = {
 
       if (Array.isArray(conversationFilter) && conversationFilter.length < 25) {
         for (const conversationId of conversationFilter) {
-          await updateConversation(conversationId, { set: { status }, byUserId: ctx.session.userId });
+          await updateConversation(conversationId, { set: { status }, byUserId: ctx.user.id });
         }
         return { updatedImmediately: true };
       }
@@ -185,7 +182,7 @@ export const conversationsRouter = {
         name: "conversations/bulk-update",
         data: {
           mailboxId: ctx.mailbox.id,
-          userId: ctx.session.userId,
+          userId: ctx.user.id,
           conversationFilter: input.conversationFilter,
           status: input.status,
         },
@@ -313,7 +310,7 @@ export const conversationsRouter = {
         conversations,
         and(
           eq(conversations.mailboxId, ctx.mailbox.id),
-          eq(conversations.assignedToClerkId, ctx.session.userId),
+          eq(conversations.assignedToClerkId, ctx.user.id),
           eq(conversations.status, "open"),
         ),
       ),

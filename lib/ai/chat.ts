@@ -30,7 +30,6 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
-import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { redis } from "@/lib/redis/client";
@@ -596,10 +595,6 @@ export const respondWithAI = async ({
       const assistantMessage = await handleAssistantMessage(cached, false);
       return createTextResponse(cached, assistantMessage.id.toString());
     }
-  }
-
-  if ((await getCachedSubscriptionStatus(mailbox.clerkOrganizationId)) === "free_trial_expired") {
-    return createTextResponse("Free trial expired. Please upgrade to continue using Helper.", Date.now().toString());
   }
 
   return createDataStreamResponse({

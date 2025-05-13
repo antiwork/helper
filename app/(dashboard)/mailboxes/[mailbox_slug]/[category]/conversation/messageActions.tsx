@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/nextjs";
 import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useSession } from "@/components/useSession";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
@@ -128,7 +128,7 @@ export const MessageActions = () => {
     }
   }, [storedMessage]);
 
-  const { user } = useUser();
+  const { user } = useSession() ?? {};
   const [showCommandBar, setShowCommandBar] = useState(false);
   const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
   const ccRef = useRef<HTMLInputElement>(null);
@@ -358,11 +358,11 @@ export const MessageActions = () => {
         enableFileUpload
         actionButtons={actionButtons}
         signature={
-          user?.firstName ? (
+          user?.user_metadata.name ? (
             <div className="mt-1 text-muted-foreground">
               Best,
               <br />
-              {user.firstName}
+              {user.user_metadata.name}
               <div className="text-xs mt-2">
                 Note: This signature will be automatically included in email responses, but not in live chat
                 conversations.

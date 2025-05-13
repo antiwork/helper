@@ -44,7 +44,7 @@ export const membersRouter = {
 
   list: mailboxProcedure.query(async ({ ctx }) => {
     try {
-      return await getUsersWithMailboxAccess(ctx.mailbox.clerkOrganizationId, ctx.mailbox.id);
+      return await getUsersWithMailboxAccess(ctx.mailbox.id);
     } catch (error) {
       captureExceptionAndLog(error, {
         tags: { route: "mailbox.members.list" },

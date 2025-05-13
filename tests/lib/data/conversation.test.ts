@@ -19,7 +19,6 @@ import {
   getRelatedConversations,
   updateConversation,
 } from "@/lib/data/conversation";
-import { getClerkOrganization } from "@/lib/data/organization";
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
 
 vi.mock("@/components/constants", () => ({
@@ -105,10 +104,8 @@ describe("updateConversation", () => {
   });
 
   it("publishes an Ably event when conversation is updated", async () => {
-    const { mailbox, organization } = await userFactory.createRootUser();
+    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
     const result = await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
@@ -127,10 +124,8 @@ describe("updateConversation", () => {
   });
 
   it("publishes an Ably event when conversation status changes to closed", async () => {
-    const { mailbox, organization } = await userFactory.createRootUser();
+    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
     const result = await updateConversation(conversation.id, { set: { status: "closed" } });
 

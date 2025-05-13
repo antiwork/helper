@@ -30,8 +30,8 @@
     "test": "pnpm run-on-packages test && pnpm run with-dev-env vitest",
     "test:watch": "pnpm run with-dev-env vitest --watch",
     "typecheck": "pnpm run-on-packages typecheck && pnpm run with-dev-env pnpm run build; BUILD_EXIT=$?; tsc --noEmit && ([ $BUILD_EXIT -eq 0 ] && npm run db:check || exit $BUILD_EXIT)",
-    "services:start": "(docker ps --filter 'name=helperai' --filter 'status=running' | grep -q helperai) || COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml up -d",
-    "services:stop": "COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml down",
+    "services:start": "pnpm with-dev-env pnpm supabase start && (docker ps --filter 'name=helperai' --filter 'status=running' | grep -q helperai) || COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml up -d",
+    "services:stop": "pnpm supabase stop && COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml down",
     "generate-ssl-certificates": "bash scripts/generate-ssl-certificates.sh",
     "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1",
     "with-dev-env": "dotenv -e ./.env.development.local -e ./.env.local --"
@@ -43,8 +43,6 @@
     "@aws-sdk/client-s3": "^3.658.1",
     "@aws-sdk/s3-presigned-post": "^3.665.0",
     "@aws-sdk/s3-request-presigner": "^3.665.0",
-    "@clerk/backend": "^1.30.2",
-    "@clerk/nextjs": "^6.9.6",
     "@helperai/react": "workspace:*",
     "@helperai/sdk": "workspace:*",
     "@inngest/middleware-sentry": "^0.1.1",
@@ -78,6 +76,10 @@
     "@slack/types": "^2.14.0",
     "@slack/web-api": "^7.5.0",
     "@stripe/stripe-js": "^4.1.0",
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@t3-oss/env-nextjs": "^0.11.0",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4.1.4",
@@ -177,7 +179,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@clerk/types": "^4.56.1",
     "@eslint/compat": "^1.2.8",
     "@faker-js/faker": "^9.0.1",
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
@@ -221,6 +222,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
     "react-email": "^3.0.4",
+    "supabase": "^2.22.12",
     "tsx": "^4.19.4",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.31.0",
@@ -235,7 +237,8 @@
       "protobufjs",
       "sharp",
       "ssh2",
-      "unrs-resolver"
+      "unrs-resolver",
+      "supabase"
     ],
     "ignoredBuiltDependencies": [
       "cpu-features"

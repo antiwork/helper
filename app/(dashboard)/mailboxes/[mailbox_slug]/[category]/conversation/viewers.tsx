@@ -7,11 +7,11 @@ type Props = {
   conversationSlug: string;
 };
 
-const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: string; image: string }[] }) => (
+const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: string }[] }) => (
   <div className="flex flex-col gap-2 py-2">
     {viewers.map((viewer, index) => (
       <div key={`${viewer.id}-more-${index}`} className="flex items-center gap-2">
-        <Avatar size="md" src={viewer.image} fallback={viewer.name} />
+        <Avatar size="md" src={undefined} fallback={viewer.name} />
         <p>{viewer.name}</p>
       </div>
     ))}

@@ -1,12 +1,12 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { BookOpen, Inbox, Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/components/useSession";
 
 const GitHubIcon = ({ className }: { className?: string }) => {
   return (
@@ -17,7 +17,7 @@ const GitHubIcon = ({ className }: { className?: string }) => {
 };
 
 const LoginButtons = ({ githubStars }: { githubStars: number }) => {
-  const { isSignedIn } = useUser();
+  const session = useSession();
 
   return (
     <div className="flex space-x-2">
@@ -37,7 +37,7 @@ const LoginButtons = ({ githubStars }: { githubStars: number }) => {
           </span>
         </Button>
       </Link>
-      {isSignedIn && (
+      {!!session && (
         <Link href="/mailboxes">
           <Button variant="subtle">
             <span className="flex items-center">

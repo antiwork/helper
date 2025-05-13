@@ -11,12 +11,10 @@ import { mockInngest } from "@tests/support/inngestUtils";
 import { count, eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
 import { handleGmailWebhookEvent } from "@/inngest/functions/handleGmailWebhookEvent";
-import { findUserByEmail } from "@/lib/data/user";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { s3UrlToS3Key, uploadFile } from "@/lib/s3/utils";
@@ -35,7 +33,6 @@ vi.mock("@/lib/s3/utils", async (importOriginal) => {
     uploadFile: vi.fn(),
   };
 });
-vi.mock("@/lib/data/user");
 
 mockInngest();
 
@@ -103,7 +100,6 @@ describe("handleGmailWebhookEvent", () => {
     vi.mocked(getGmailService).mockReturnValue({} as any);
     vi.mocked(generateFilePreview);
     vi.mocked(uploadFile).mockResolvedValue("mocked-s3-url");
-    vi.mocked(findUserByEmail).mockResolvedValue(null);
   });
 
   describe("unhappy paths", () => {
@@ -451,7 +447,7 @@ describe("handleGmailWebhookEvent", () => {
 
     it("keeps conversation open when email is from a staff user (first message)", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const staffUser = userFactory.buildMockUser();
+      const staffUser = await userFactory.createUser();
 
       // Mock a history with only one message to simulate a first message
       mockHistories([
@@ -465,11 +461,9 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage({
         raw: Buffer.from(
-          `From: ${assertDefined(staffUser.emailAddresses[0]).emailAddress}\r\nSubject: Test Email\r\nMessage-ID: <unique-message-id@example.com>\r\n\r\nThis is the email body`,
+          `From: ${staffUser.email}\r\nSubject: Test Email\r\nMessage-ID: <unique-message-id@example.com>\r\n\r\nThis is the email body`,
         ).toString("base64url"),
       });
-
-      vi.mocked(findUserByEmail).mockResolvedValueOnce(staffUser);
 
       await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
 
@@ -759,13 +753,7 @@ describe("handleGmailWebhookEvent", () => {
   describe("auto-assigning on CC", () => {
     it("assigns conversation to staff member when they are CCed", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const staffUser = userFactory.buildMockUser({
-        emailAddresses: [{ id: "1", emailAddress: "staff@example.com", verification: null, linkedTo: [] }],
-      });
-      vi.mocked(findUserByEmail).mockImplementation((_orgId, email) => {
-        if (email === "staff@example.com") return Promise.resolve(staffUser);
-        return Promise.resolve(null);
-      });
+      const staffUser = await userFactory.createUser();
 
       mockHistories([
         {
@@ -793,17 +781,13 @@ describe("handleGmailWebhookEvent", () => {
 
     it("does not assign conversation if already assigned", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const existingAssignee = userFactory.buildMockUser();
-      const ccedStaffUser = userFactory.buildMockUser({
-        emailAddresses: [{ id: "1", emailAddress: "staff@example.com", verification: null, linkedTo: [] }],
-      });
+      const existingAssignee = await userFactory.createUser();
+      const ccedStaffUser = await userFactory.createUser();
 
       const { conversation } = await conversationFactory.create(mailbox.id, {
         conversationProvider: "gmail",
         assignedToClerkId: existingAssignee.id,
       });
-
-      vi.mocked(findUserByEmail).mockResolvedValue(ccedStaffUser);
 
       mockHistories([
         {
@@ -831,14 +815,8 @@ describe("handleGmailWebhookEvent", () => {
 
     it("assigns to first staff member when multiple staff are CCed", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const firstStaffUser = userFactory.buildMockUser();
-      const secondStaffUser = userFactory.buildMockUser();
-
-      vi.mocked(findUserByEmail).mockImplementation(async (_orgId, email) => {
-        if (email === "staff1@example.com") return await Promise.resolve(firstStaffUser);
-        if (email === "staff2@example.com") return await Promise.resolve(secondStaffUser);
-        return await Promise.resolve(null);
-      });
+      const firstStaffUser = await userFactory.createUser();
+      const secondStaffUser = await userFactory.createUser();
 
       mockHistories([
         {

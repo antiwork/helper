@@ -25,12 +25,12 @@ export const env = createEnv({
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
     POSTGRES_URL: defaultUnlessDeployed(
       z.string().url(),
-      "postgresql://username:password@127.0.0.1:5435/helperai_development",
+      "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
     ),
     POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
       z.string().url(),
-      // Same as POSTGRES_URL unless using a cloud database provider with built-in pooling
-      "postgresql://username:password@127.0.0.1:5435/helperai_development",
+      // Same as POSTGRES_URL unless using Supabase with built-in pooling
+      "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
     ),
     DATABASE_URL: z.string().url().optional(),
     KV_UPSTASH_KV_REST_API_URL: defaultUnlessDeployed(z.string().url(), "http://localhost:8089"),
@@ -120,6 +120,10 @@ export const env = createEnv({
       "development",
     ),
 
+    NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "http://127.0.0.1:54321"),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+    NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z.string().default("password").transform((str) => str.split(",")),
+
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
   },
   /**
@@ -133,6 +137,9 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: process.env.NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS,
   },
   skipValidation: process.env.npm_lifecycle_event === "lint" || process.env.NODE_ENV === "test",
 });

@@ -1,54 +1,31 @@
-import type { Organization, User } from "@clerk/nextjs/server";
 import { faker } from "@faker-js/faker";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
+import { authUsers, mailboxes } from "@/db/schema";
 
-const buildMockUser = (overrides: Partial<User> = {}) => {
-  return {
-    id: faker.string.uuid(),
-    username: null,
-    emailAddresses: [
-      { id: faker.string.uuid(), emailAddress: faker.internet.email(), verification: null, linkedTo: [] },
-    ],
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    fullName: `${faker.person.firstName()} ${faker.person.lastName()}`,
-    externalAccounts: [],
-    ...overrides,
-  } as User;
-};
-
-const buildMockOrganization = (overrides: Partial<Organization> = {}) => {
-  return {
-    id: faker.string.uuid(),
-    name: faker.company.name(),
-    slug: faker.helpers.slugify(faker.company.name().toLowerCase()),
-    privateMetadata: {
-      automatedRepliesCount: 0,
-    },
-    ...overrides,
-  } as Organization;
+const createUser = async (overrides: Partial<typeof authUsers.$inferInsert> = {}) => {
+  return await db
+    .insert(authUsers)
+    .values({ id: faker.string.uuid(), email: faker.internet.email(), ...overrides })
+    .returning()
+    .then(takeUniqueOrThrow);
 };
 
 export const userFactory = {
   createRootUser: async ({
     userOverrides = {},
-    organizationOverrides = {},
     mailboxOverrides = {},
   }: {
-    userOverrides?: Partial<User>;
-    organizationOverrides?: Partial<Organization>;
+    userOverrides?: Partial<typeof authUsers.$inferInsert>;
     mailboxOverrides?: Partial<typeof mailboxes.$inferInsert>;
   } = {}) => {
-    const user = buildMockUser(userOverrides);
-    const organization = buildMockOrganization(organizationOverrides);
+    const user = await createUser(userOverrides);
 
     const mailboxName = `${faker.company.name()} Support`;
     const mailbox = await db
       .insert(mailboxes)
       .values({
-        clerkOrganizationId: organization.id,
+        clerkOrganizationId: "",
         name: mailboxName,
         slug: faker.helpers.slugify(mailboxName.toLowerCase()),
         promptUpdatedAt: faker.date.recent(),
@@ -66,8 +43,7 @@ export const userFactory = {
     return {
       user,
       mailbox,
-      organization,
     };
   },
-  buildMockUser,
+  createUser,
 };

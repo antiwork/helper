@@ -1,4 +1,3 @@
-import { User } from "@clerk/nextjs/server";
 import { conversationEventsFactory } from "@tests/support/factories/conversationEvents";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
@@ -23,7 +22,6 @@ import {
   getMessages,
   serializeResponseAiDraft,
 } from "@/lib/data/conversationMessage";
-import { getClerkUserList } from "@/lib/data/user";
 import { getSlackPermalink } from "@/lib/slack/client";
 
 vi.mock("@/lib/slack/client", () => ({
@@ -99,17 +97,14 @@ describe("serializeResponseAiDraft", () => {
 
 describe("getMessages", () => {
   it("returns messages, notes and events sorted by createdAt with correct fields", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    vi.mocked(getClerkUserList).mockResolvedValueOnce({
-      data: [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        } as User,
-      ],
+    const { user, mailbox } = await userFactory.createRootUser({
+      userOverrides: {
+        user_metadata: {
+          name: "Test User",
+        },
+      },
     });
+    const { conversation } = await conversationFactory.create(mailbox.id);
 
     const { message: message1 } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -144,7 +139,7 @@ describe("getMessages", () => {
 
     assert(result[1]?.type === "message");
     expect(result[1].id).toBe(message2.id);
-    expect(result[1].from).toBe(user.fullName);
+    expect(result[1].from).toBe(user.user_metadata?.name);
 
     assert(result[2]?.type === "note");
     expect(result[2].id).toBe(note.id);
@@ -157,15 +152,6 @@ describe("getMessages", () => {
   it("handles 'from' field correctly for different message roles", async () => {
     const { user, mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
-
-    vi.mocked(getClerkUserList).mockResolvedValueOnce({
-      data: [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        } as User,
-      ],
-    });
 
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -182,7 +168,7 @@ describe("getMessages", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].from).toBe("customer@example.com");
-    expect(result[1].from).toBe(user.fullName);
+    expect(result[1].from).toBe(user.user_metadata?.name);
   });
 
   it("includes files for messages", async () => {
@@ -190,10 +176,6 @@ describe("getMessages", () => {
     const { conversation } = await conversationFactory.create(mailbox.id);
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { file } = await fileFactory.create(message.id, { isInline: false, size: 1024 * 1024 });
-
-    vi.mocked(getClerkUserList).mockResolvedValueOnce({
-      data: [],
-    });
 
     const result = await getMessages(conversation.id, mailbox);
     assert(result[0]?.type === "message");
@@ -241,8 +223,7 @@ describe("getMessages", () => {
   });
 
   it("generates Slack links", async () => {
-    const { organization } = await userFactory.createRootUser();
-    const { mailbox } = await mailboxFactory.create(organization.id, { slackBotToken: "test-token" });
+    const { mailbox } = await mailboxFactory.create({ slackBotToken: "test-token" });
     const { conversation } = await conversationFactory.create(mailbox.id);
     await conversationMessagesFactory.create(conversation.id, {
       slackChannel: "test-channel",

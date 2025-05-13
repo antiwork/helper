@@ -5,7 +5,6 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { getClerkUserList } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 export function formatDuration(start: Date): string {
@@ -69,8 +68,7 @@ export default inngest.createFunction(
         if (!overdueAssignedConversations.length) continue;
 
         const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
-        const clerkUsers = await getClerkUserList(mailbox.clerkOrganizationId);
-        const clerkUsersById = new Map(clerkUsers.data.map((user) => [user.id, user]));
+        const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
 
         const blocks: KnownBlock[] = [
           {
@@ -81,10 +79,10 @@ export default inngest.createFunction(
                 `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
                 ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
                   const subject = conversation.subject;
-                  const assignee = clerkUsersById.get(conversation.assignedToClerkId!);
-                  const assigneeEmail = assignee?.emailAddresses[0]?.emailAddress;
+                  const assignee = usersById[conversation.assignedToClerkId!];
+                  const assigneeEmail = assignee?.email;
                   const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
-                  const mention = slackUserId ? `<@${slackUserId}>` : assignee?.fullName || "Unknown";
+                  const mention = slackUserId ? `<@${slackUserId}>` : assignee?.user_metadata?.name || "Unknown";
                   const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
                   return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
                 }),

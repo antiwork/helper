@@ -18,3 +18,4 @@ export * from "./tools";
 export * from "./guideSession";
 export * from "./agentThreads";
 export * from "./agentMessages";
+export * from "./auth";
