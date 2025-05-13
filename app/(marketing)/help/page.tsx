@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenIcon } from "@heroicons/react/24/outline";
+import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "../MarketingHeader";
@@ -18,7 +18,7 @@ export default function HelpPage() {
 
           <div className="bg-[#412020] rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-semibold mb-4 flex items-center">
-              <BookOpenIcon className="w-6 h-6 mr-2" />
+              <BookOpen className="w-6 h-6 mr-2" />
               Documentation
             </h2>
             <p className="mb-6">

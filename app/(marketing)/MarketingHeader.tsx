@@ -1,13 +1,12 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Menu } from "lucide-react";
+import { Menu, BookOpen, Inbox } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
 
 type MarketingHeaderProps = {
   bgColor?: string;
@@ -59,13 +58,13 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
           </Link>
           <Link href="/docs" target="_blank" rel="noopener noreferrer" className="flex items-center group">
             <span className="inline-flex items-center justify-center w-9 h-9 transition-colors duration-200 group-hover:text-amber-400 group-focus:text-amber-400">
-              <BookOpenIcon className="h-6 w-6" />
+              <BookOpen className="h-6 w-6" />
             </span>
           </Link>
           {isSignedIn ? (
             <Link href="/mailboxes" className="flex items-center group">
               <span className="inline-flex items-center justify-center w-9 h-9 transition-colors duration-200 group-hover:text-amber-400 group-focus:text-amber-400">
-                <InboxIcon className="h-6 w-6" />
+                <Inbox className="h-6 w-6" />
               </span>
             </Link>
           ) : (

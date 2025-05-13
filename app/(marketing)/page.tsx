@@ -1,10 +1,9 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { ArchiveBoxIcon, BanknotesIcon, BookOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { ArrowRightIcon, CursorArrowRaysIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
+import { Archive, Banknote, BookOpen, Trash2, ArrowRight, PlayCircle, MousePointer } from "lucide-react";
 import { motion } from "framer-motion";
-import { TriangleAlert, Sparkles, Star, BookOpen, Clock, MessageSquare, FileCode, Monitor } from "lucide-react";
+import { TriangleAlert, Sparkles, Star, BookOpen as BookOpenIcon, Clock, MessageSquare, FileCode, Monitor } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
@@ -216,7 +215,7 @@ export default function Home() {
                   </h2>
                   <div className="space-y-6 mb-12 mt-8">
                     <div className="flex items-start gap-4">
-                      <CursorArrowRaysIcon className="w-6 h-6 text-amber-400 mt-1" />
+                      <MousePointer className="w-6 h-6 text-amber-400 mt-1" />
                       <span>
                         <span className="font-bold text-bright">Helping hand</span>
                         <span className="text-secondary dark:text-foreground">
@@ -238,7 +237,7 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="flex items-start gap-4">
-                      <PlayCircleIcon className="w-6 h-6 mt-1" style={{ color: "#FF90E8" }} />
+                      <PlayCircle className="w-6 h-6 mt-1" style={{ color: "#FF90E8" }} />
                       <span>
                         <span className="font-bold" style={{ color: "#FF90E8" }}>
                           Tools
@@ -371,19 +370,19 @@ export default function Home() {
                   <div className="relative w-full flex justify-center md:justify-start h-full">
                     <div className="w-full max-w-xl flex flex-col gap-3 h-full">
                       <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
-                        <BanknotesIcon className="w-6 h-6 text-[#FFD34E] mr-3" />
+                        <Banknote className="w-6 h-6 text-[#FFD34E] mr-3" />
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
                           What's your refund policy?
                         </span>
                       </div>
                       <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
-                        <ArchiveBoxIcon className="w-6 h-6 text-[#459EFD] mr-3" />
+                        <Archive className="w-6 h-6 text-[#459EFD] mr-3" />
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
                           Can I expedite shipping?
                         </span>
                       </div>
                       <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
-                        <TrashIcon className="w-6 h-6 text-[#FF4343] mr-3" />
+                        <Trash2 className="w-6 h-6 text-[#FF4343] mr-3" />
                         <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
                           How do I delete my account?
                         </span>
@@ -573,7 +572,7 @@ export default function Home() {
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Getting started</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRightIcon className="w-6 h-6" />
+                  <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/tools/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
@@ -582,7 +581,7 @@ export default function Home() {
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Tools</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRightIcon className="w-6 h-6" />
+                  <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/api/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
@@ -591,7 +590,7 @@ export default function Home() {
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Conversation api</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRightIcon className="w-6 h-6" />
+                  <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/api-reference/create-conversation`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
@@ -600,7 +599,7 @@ export default function Home() {
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Api references</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRightIcon className="w-6 h-6" />
+                  <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
               <Link href={`${docsBaseUrl}/docs/widget/01-overview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group" style={{ boxShadow: 'none' }}>
@@ -609,7 +608,7 @@ export default function Home() {
                 </span>
                 <span className="text-lg font-bold" style={{ color: '#FFE6B0' }}>Chat widget</span>
                 <span className="ml-auto" style={{ color: '#FFE6B0' }}>
-                  <ArrowRightIcon className="w-6 h-6" />
+                  <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
             </div>
