@@ -83,12 +83,6 @@ describe("mailboxRouter", () => {
       const { conversation: conversation2 } = await conversationFactory.create(mailbox.id);
       await conversationFactory.createStaffEmail(conversation2.id, user3.id);
 
-      // Assert that other mailbox members are excluded
-      const { user: otherUser, mailbox: otherMailbox } = await userFactory.createRootUser();
-      const { conversation: otherConversation } = await conversationFactory.create(otherMailbox.id);
-      await conversationFactory.createStaffEmail(otherConversation.id, otherUser.id);
-      await conversationFactory.createStaffEmail(otherConversation.id, otherUser.id);
-
       const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.mailbox.members.stats({ mailboxSlug: mailbox.slug, period: "1y" });

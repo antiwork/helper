@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db/client";
-import { authUsers, conversationMessages } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
 import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/ably/channels";
 import { publishToAbly } from "@/lib/ably/client";

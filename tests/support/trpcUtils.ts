@@ -1,5 +1,5 @@
 import { User } from "@supabase/supabase-js";
-import { authUsers } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { createTRPCContext } from "@/trpc";
 
 export const createTestTRPCContext = (user: typeof authUsers.$inferSelect) =>

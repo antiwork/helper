@@ -1,7 +1,7 @@
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { DbOrAuthUser } from "@/db/schema";
 import { notes } from "@/db/schema/notes";
+import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { finishFileUpload } from "./files";
 
 export const addNote = async ({

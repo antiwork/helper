@@ -3,7 +3,8 @@ import { htmlToText } from "html-to-text";
 import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
-import { authUsers, conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
+import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {

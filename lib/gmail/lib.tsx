@@ -4,7 +4,8 @@ import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
-import { authUsers, conversationMessages, conversations, files } from "@/db/schema";
+import { conversationMessages, conversations, files } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import AIReplyEmail from "@/lib/emails/aiReply";
 import { getFileStream } from "@/lib/s3/utils";
 

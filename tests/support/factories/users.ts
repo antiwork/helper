@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { authUsers, mailboxes } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 
 const createUser = async (overrides: Partial<typeof authUsers.$inferInsert> = {}) => {
   return await db

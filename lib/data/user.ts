@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { authUsers } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
 

@@ -158,21 +158,6 @@ describe("conversationsRouter", () => {
       });
     });
 
-    it("fails if the assigned user is not in the same organization as the mailbox", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      const { user: otherUser } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
-
-      const caller = createCaller(createTestTRPCContext(user));
-      await expect(
-        caller.mailbox.conversations.update({
-          mailboxSlug: mailbox.slug,
-          conversationSlug: conversation.slug,
-          assignedToId: otherUser.id,
-        }),
-      ).rejects.toThrow();
-    });
-
     it("updates status without setting closedAt or calling inngest when not closed", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);

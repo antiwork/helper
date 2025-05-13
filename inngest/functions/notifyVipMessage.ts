@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { authUsers, conversationMessages, conversations, mailboxes } from "@/db/schema";
+import { conversationMessages, conversations, mailboxes } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";

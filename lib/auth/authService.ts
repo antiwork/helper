@@ -1,7 +1,8 @@
 import crypto from "crypto";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { DbOrAuthUser, mailboxes } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
+import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { GMAIL_SCOPES } from "./constants";

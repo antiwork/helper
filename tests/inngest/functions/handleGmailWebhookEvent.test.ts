@@ -753,7 +753,9 @@ describe("handleGmailWebhookEvent", () => {
   describe("auto-assigning on CC", () => {
     it("assigns conversation to staff member when they are CCed", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const staffUser = await userFactory.createUser();
+      const staffUser = await userFactory.createUser({
+        email: "staff@example.com",
+      });
 
       mockHistories([
         {
@@ -782,7 +784,9 @@ describe("handleGmailWebhookEvent", () => {
     it("does not assign conversation if already assigned", async () => {
       const { mailbox } = await setupGmailSupportEmail();
       const existingAssignee = await userFactory.createUser();
-      const ccedStaffUser = await userFactory.createUser();
+      await userFactory.createUser({
+        email: "staff@example.com",
+      });
 
       const { conversation } = await conversationFactory.create(mailbox.id, {
         conversationProvider: "gmail",
@@ -815,8 +819,12 @@ describe("handleGmailWebhookEvent", () => {
 
     it("assigns to first staff member when multiple staff are CCed", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const firstStaffUser = await userFactory.createUser();
-      const secondStaffUser = await userFactory.createUser();
+      const firstStaffUser = await userFactory.createUser({
+        email: "staff1@example.com",
+      });
+      await userFactory.createUser({
+        email: "staff2@example.com",
+      });
 
       mockHistories([
         {

@@ -150,7 +150,13 @@ describe("getMessages", () => {
   });
 
   it("handles 'from' field correctly for different message roles", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user, mailbox } = await userFactory.createRootUser({
+      userOverrides: {
+        user_metadata: {
+          name: "Test User",
+        },
+      },
+    });
     const { conversation } = await conversationFactory.create(mailbox.id);
 
     await conversationMessagesFactory.create(conversation.id, {

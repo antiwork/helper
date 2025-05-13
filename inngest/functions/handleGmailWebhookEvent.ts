@@ -12,7 +12,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
-import { authUsers, DbOrAuthUser } from "@/db/schema/auth";
+import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
