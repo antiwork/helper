@@ -22,15 +22,15 @@ import {
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
-import AnimatedTyping from "./AnimatedTyping";
-import ComparisonHistogram from "./ComparisonHistogram";
 import { getBaseUrl } from "@/components/constants";
-import SlackInterface from "./SlackInterface";
-import SlackNotification from "./SlackNotification";
 import { Button } from "@/components/ui/button";
+import AnimatedTyping from "./AnimatedTyping";
 import CitationsDemo from "./CitationsDemo";
+import ComparisonHistogram from "./ComparisonHistogram";
 import { MarketingHeader } from "./MarketingHeader";
 import RefundDemo from "./RefundDemo";
+import SlackInterface from "./SlackInterface";
+import SlackNotification from "./SlackNotification";
 import ToolsDemo from "./ToolsDemo";
 
 export default function Home() {

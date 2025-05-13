@@ -89,4 +89,4 @@ export function SlackInterface() {
   );
 }
 
-export default SlackInterface; 
+export default SlackInterface;

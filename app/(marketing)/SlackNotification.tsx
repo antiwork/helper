@@ -71,4 +71,4 @@ export function SlackNotification() {
   );
 }
 
-export default SlackNotification; 
+export default SlackNotification;

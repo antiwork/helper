@@ -36,4 +36,4 @@ export function AnimatedTyping({ text, speed = 50, onComplete }: AnimatedTypingP
   return <span>{displayText}</span>;
 }
 
-export default AnimatedTyping; 
+export default AnimatedTyping;

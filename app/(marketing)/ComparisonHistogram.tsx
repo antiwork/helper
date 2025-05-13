@@ -87,4 +87,4 @@ export function ComparisonHistogram() {
   );
 }
 
-export default ComparisonHistogram; 
+export default ComparisonHistogram;
