@@ -99,7 +99,8 @@ export const env = createEnv({
     ),
 
     NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "http://127.0.0.1:54321"),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+    // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(z.string().min(1), "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"),
     NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z.string().default("password").transform((str) => str.split(",")),
 
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking

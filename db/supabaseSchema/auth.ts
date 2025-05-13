@@ -2,6 +2,7 @@ import { pgSchema } from "drizzle-orm/pg-core";
 
 const authSchema = pgSchema("auth");
 
+// Deliberately a subset of the Supabase auth.users table, for simpler queries and testing
 export const authUsers = authSchema.table("users", (t) => ({
   id: t.text().primaryKey(),
   email: t.text(),
