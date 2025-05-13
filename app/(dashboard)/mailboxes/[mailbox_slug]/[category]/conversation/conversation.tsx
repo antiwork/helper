@@ -1,15 +1,16 @@
-import { ArrowDownTrayIcon } from "@heroicons/react/20/solid";
-import {
-  ArrowUpIcon,
-  ChatBubbleLeftIcon,
-  EnvelopeIcon,
-  InformationCircleIcon,
-  LinkIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
 import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import {
+  ArrowUp,
+  Download,
+  Info,
+  Link as LinkIcon,
+  Mail,
+  MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
@@ -24,7 +25,6 @@ import { MessageThread } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[categ
 import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/viewers";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/previewModal";
-import { useLayoutInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/useLayoutInfo";
 import {
   DraftedEmail,
   type AttachedFile,
@@ -159,7 +159,7 @@ const ScrollToTopButton = ({
           onClick={scrollToTop}
           aria-label="Scroll to top"
         >
-          <ArrowUpIcon className="h-4 w-4 text-foreground" />
+          <ArrowUp className="h-4 w-4 text-foreground" />
         </a>
       </TooltipTrigger>
       <TooltipContent>Scroll to top</TooltipContent>
@@ -172,13 +172,11 @@ const MessageThreadPanel = ({
   contentRef,
   setPreviewFileIndex,
   setPreviewFiles,
-  setLayoutState,
 }: {
   scrollRef: React.MutableRefObject<HTMLElement | null> & React.RefCallback<HTMLElement>;
   contentRef: React.MutableRefObject<HTMLElement | null>;
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
-  setLayoutState: React.Dispatch<React.SetStateAction<{ listHidden: boolean }>>;
 }) => {
   const { mailboxSlug, data: conversationInfo } = useConversationContext();
 
@@ -195,7 +193,6 @@ const MessageThreadPanel = ({
                 setPreviewFileIndex(currentIndex);
                 setPreviewFiles(message.files);
               }}
-              onDoubleClickWhiteSpace={() => setLayoutState((state) => ({ ...state, listHidden: !state.listHidden }))}
             />
           )}
         </div>
@@ -237,18 +234,10 @@ const ConversationHeader = ({
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
       <div id="conversation-close" className="sm:hidden">
-        <XMarkIcon
-          aria-label="Minimize conversation"
-          className="text-primary h-5 w-5 cursor-pointer"
-          onClick={minimize}
-        />
+        <X aria-label="Minimize conversation" className="text-primary h-5 w-5 cursor-pointer" onClick={minimize} />
       </div>
       <div className="hidden sm:block">
-        {conversationInfo?.source === "email" ? (
-          <EnvelopeIcon className="w-4 h-4" />
-        ) : (
-          <ChatBubbleLeftIcon className="w-4 h-4" />
-        )}
+        {conversationInfo?.source === "email" ? <Mail className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
       </div>
       <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
       <CopyLinkButton />
@@ -268,7 +257,7 @@ const ConversationHeader = ({
             <PanelRightOpen className="h-4 w-4" />
           )
         ) : (
-          <InformationCircleIcon className="h-5 w-5" />
+          <Info className="h-5 w-5" />
         )}
         <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
       </Button>
@@ -339,7 +328,7 @@ const CarouselPreviewContent = ({
 
                 <div className="mr-6 flex items-center">
                   <button onClick={() => FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)}>
-                    <ArrowDownTrayIcon className="text-primary h-5 w-5 shrink-0" />
+                    <Download className="text-primary h-5 w-5 shrink-0" />
                     <span className="sr-only">Download</span>
                   </button>
                 </div>
@@ -435,7 +424,6 @@ const ConversationContent = () => {
     ),
     subject: (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)"),
   };
-  const { setState: setLayoutState } = useLayoutInfo();
 
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
@@ -494,7 +482,6 @@ const ConversationContent = () => {
                     contentRef={contentRef}
                     setPreviewFileIndex={setPreviewFileIndex}
                     setPreviewFiles={setPreviewFiles}
-                    setLayoutState={setLayoutState}
                   />
                 )}
               </div>
@@ -548,7 +535,6 @@ const ConversationContent = () => {
                 contentRef={contentRef}
                 setPreviewFileIndex={setPreviewFileIndex}
                 setPreviewFiles={setPreviewFiles}
-                setLayoutState={setLayoutState}
               />
             </div>
             <div className="max-h-[50vh] border-t border-border">

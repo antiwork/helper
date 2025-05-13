@@ -12,10 +12,6 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-export type SlackUpdates = {
-  alertChannel?: string | null;
-};
-
 export const SlackChannels = ({
   id,
   selectedChannelId,
@@ -25,7 +21,7 @@ export const SlackChannels = ({
   id: string;
   selectedChannelId?: string;
   mailbox: RouterOutputs["mailbox"]["get"];
-  onChange: (changes: SlackUpdates) => void;
+  onChange: (channelId: string | null) => void;
 }) => {
   const utils = api.useUtils();
   const [alertChannelName, setAlertChannelName] = useState("");
@@ -64,7 +60,7 @@ export const SlackChannels = ({
 
     if (name === "" || name === "#") {
       setIsValid(true);
-      onChange({ alertChannel: null });
+      onChange(null);
       return;
     }
 
@@ -72,7 +68,7 @@ export const SlackChannels = ({
 
     if (channel?.id) {
       setIsValid(true);
-      onChange({ alertChannel: channel.id });
+      onChange(channel.id);
     } else {
       setIsValid(false);
     }
@@ -116,22 +112,27 @@ export const SlackChannels = ({
   );
 };
 
-const SlackSetting = ({
-  mailbox,
-  onChange,
-}: {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  onChange: (changes?: SlackUpdates) => void;
-}) => {
+const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const { mutateAsync: disconnectSlack } = api.mailbox.slack.disconnect.useMutation();
   const [isSlackConnected, setSlackConnected] = useState(mailbox.slackConnected);
   const channelUID = useId();
-
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating Slack settings",
+        description: error.message,
+      });
+    },
+  });
   useShowToastForSlackConnectStatus();
 
   const onDisconnectSlack = async () => {
     try {
-      const response = await disconnectSlack({ mailboxSlug: mailbox.slug });
+      await disconnectSlack({ mailboxSlug: mailbox.slug });
       setSlackConnected(false);
       toast({
         title: "Slack app uninstalled from your workspace",
@@ -158,7 +159,7 @@ const SlackSetting = ({
               id={channelUID}
               selectedChannelId={mailbox.slackAlertChannel ?? undefined}
               mailbox={mailbox}
-              onChange={onChange}
+              onChange={(slackAlertChannel) => update({ mailboxSlug: mailbox.slug, slackAlertChannel })}
             />
             <p className="mt-1 text-sm text-muted-foreground">
               Daily reports and notifications will be sent to this channel.

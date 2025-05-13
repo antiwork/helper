@@ -175,8 +175,12 @@ export default function Page() {
             >
               <div className="shrink-0 w-full h-full">
                 <div className="h-full overflow-y-auto p-4">
-                  {hasLoadedHistory && !isAnonymous && (
-                    <PreviousConversations token={token} onSelectConversation={onSelectConversation} />
+                  {currentView === "previous" && hasLoadedHistory && (
+                    <PreviousConversations
+                      token={token}
+                      onSelectConversation={onSelectConversation}
+                      isAnonymous={isAnonymous}
+                    />
                   )}
                 </div>
               </div>

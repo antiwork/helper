@@ -36,6 +36,7 @@ export const conversations = pgTable(
     isVisitor: boolean().notNull().default(false),
     assignedToAI: boolean().notNull().default(false),
     mergedIntoId: bigint({ mode: "number" }),
+    anonymousSessionId: text(),
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }
@@ -73,6 +74,7 @@ export const conversations = pgTable(
         table.status,
         table.assignedToId,
       ),
+      anonymousSessionIdIdx: index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     };
   },
 );

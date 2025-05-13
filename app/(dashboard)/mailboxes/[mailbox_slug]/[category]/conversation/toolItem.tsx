@@ -1,5 +1,5 @@
-import { BoltIcon, ChevronDownIcon, ChevronRightIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { kebabCase, upperFirst } from "lodash-es";
+import { AlertTriangle, ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -19,7 +19,7 @@ export const ToolItem = ({
   const parameters = message.metadata.parameters;
   const isSuccess = message.metadata.success;
   const apiResult = message.metadata.result;
-  const Icon = isSuccess ? BoltIcon : ExclamationTriangleIcon;
+  const Icon = isSuccess ? Zap : AlertTriangle;
 
   return (
     <div className="flex flex-col mx-auto max-w-full">
@@ -27,7 +27,7 @@ export const ToolItem = ({
         className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         onClick={() => setDetailsExpanded(!detailsExpanded)}
       >
-        {detailsExpanded ? <ChevronDownIcon className="h-3 w-3" /> : <ChevronRightIcon className="h-3 w-3" />}
+        {detailsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         <Icon className="h-4 w-4" />
         <span className="flex items-center gap-1">
           {tool.name}

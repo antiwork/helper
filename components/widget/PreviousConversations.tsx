@@ -1,7 +1,10 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { sendMessageToParent } from "@/lib/widget/messages";
 
 type Conversation = {
   slug: string;
@@ -18,6 +21,7 @@ type ConversationsResponse = {
 type Props = {
   token: string | null;
   onSelectConversation: (slug: string) => void;
+  isAnonymous: boolean;
 };
 
 function ConversationSkeleton() {
@@ -53,11 +57,13 @@ async function fetchConversations({
   return response.json();
 }
 
-export default function PreviousConversations({ token, onSelectConversation }: Props) {
+export default function PreviousConversations({ token, onSelectConversation, isAnonymous }: Props) {
   const { ref, inView } = useInView();
 
+  const [isCleared, setIsCleared] = useState(false);
+  const queryClient = useQueryClient();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", token],
     queryFn: ({ pageParam }) => fetchConversations({ token: token!, cursor: pageParam! }),
     getNextPageParam: (lastPage: ConversationsResponse) => lastPage.nextCursor,
     enabled: !!token,
@@ -65,12 +71,25 @@ export default function PreviousConversations({ token, onSelectConversation }: P
   });
 
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+    setIsCleared(false);
+  }, [token]);
+
+  useEffect(() => {
+    if (!isCleared && inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage, isCleared]);
 
   const conversations = data?.pages.flatMap((page) => page.conversations) ?? [];
+
+  const handleClearHistory = () => {
+    sendMessageToParent({ action: "CLEAR_ANONYMOUS_SESSION" });
+    setIsCleared(true);
+    queryClient.setQueryData(["conversations", token], {
+      pages: [],
+      pageParams: [],
+    });
+  };
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -80,10 +99,25 @@ export default function PreviousConversations({ token, onSelectConversation }: P
             <ConversationSkeleton key={i} />
           ))}
         </div>
-      ) : conversations.length === 0 ? (
+      ) : isCleared || conversations.length === 0 ? (
         <div className="flex h-40 items-center justify-center text-gray-500">No previous conversations found</div>
       ) : (
         <div className="space-y-3">
+          {isAnonymous && (
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleClearHistory}
+                    className="absolute flex items-center justify-center bottom-4 right-4 w-10 h-10 bg-white border border-gray-200 rounded-full hover:border-black transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Clear history</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {conversations.map((conversation) => (
             <button
               key={conversation.slug}

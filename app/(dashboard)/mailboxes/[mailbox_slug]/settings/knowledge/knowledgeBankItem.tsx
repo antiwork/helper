@@ -1,5 +1,5 @@
-import { CheckIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { truncate } from "lodash-es";
+import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { FAQ } from "@/app/types/global";
@@ -60,7 +60,7 @@ export const KnowledgeEditForm = ({
           <Button type="button" variant="subtle" onClick={onCancel}>
             {originalContent ? (
               <>
-                <XMarkIcon className="h-4 w-4 mr-2" />
+                <X className="h-4 w-4 mr-2" />
                 Reject
               </>
             ) : (
@@ -73,7 +73,7 @@ export const KnowledgeEditForm = ({
             "Saving..."
           ) : originalContent ? (
             <>
-              <CheckIcon className="h-4 w-4 mr-2" />
+              <Check className="h-4 w-4 mr-2" />
               Accept
             </>
           ) : (
@@ -211,7 +211,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
               onDelete();
             }}
           >
-            <TrashIcon className="h-4 w-4" />
+            <Trash className="h-4 w-4" />
             <span className="sr-only">Delete</span>
           </Button>
         </div>

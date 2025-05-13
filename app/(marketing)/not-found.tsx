@@ -1,8 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { BookOpenIcon, InboxIcon } from "@heroicons/react/24/outline";
-import { Shuffle } from "lucide-react";
+import { BookOpen, Inbox, Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";

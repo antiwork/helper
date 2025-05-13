@@ -1,6 +1,6 @@
 "use client";
 
-import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import { Copy } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 
@@ -19,7 +19,7 @@ const CopyButton = ({ code }: { code: string }) => {
           "Copied!"
         ) : (
           <>
-            <DocumentDuplicateIcon className="h-4 w-4 text-muted-foreground" />
+            <Copy className="h-4 w-4 text-muted-foreground" />
             Copy
           </>
         )}

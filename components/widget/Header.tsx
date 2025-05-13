@@ -59,20 +59,18 @@ const Header = React.memo(function Header({
             </TooltipTrigger>
             <TooltipContent>New conversation</TooltipContent>
           </Tooltip>
-          {!isAnonymous && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
-                  onClick={onShowPreviousConversations}
-                  aria-label="Show previous conversations"
-                >
-                  <History className="h-5 w-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>History</TooltipContent>
-            </Tooltip>
-          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="text-primary hover:text-muted-foreground p-1 rounded-full hover:bg-muted"
+                onClick={onShowPreviousConversations}
+                aria-label="Show previous conversations"
+              >
+                <History className="h-5 w-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>History</TooltipContent>
+          </Tooltip>
           {shouldShowMinimizeButton && (
             <Tooltip>
               <TooltipTrigger asChild>

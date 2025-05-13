@@ -162,29 +162,6 @@ describe("updateConversation", () => {
     });
   });
 
-  it("sends conversations/assigned event when assignedToId changes", async () => {
-    const { mailbox, user } = await userFactory.createRootUser();
-    const user2 = userFactory.buildMockUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-    await updateConversation(conversation.id, {
-      set: { assignedToClerkId: user.id },
-      byUserId: user2.id,
-      message: null,
-    });
-
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: "conversations/assigned",
-      data: {
-        conversationId: conversation.id,
-        assignEvent: {
-          assignedToId: user.id,
-          assignedById: user2.id,
-          message: null,
-        },
-      },
-    });
-  });
-
   it("sends embedding event when status changes to closed", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });

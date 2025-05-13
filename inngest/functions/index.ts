@@ -23,7 +23,6 @@ import importRecentGmailThreads from "./importRecentGmailThreads";
 import indexConversationMessage from "./indexConversation";
 import mergeSimilarConversations from "./mergeSimilarConversations";
 import notifyVipMessage from "./notifyVipMessage";
-import postAssigneeOnSlack from "./postAssigneeOnSlack";
 import postEmailToGmail from "./postEmailToGmail";
 import publishNewConversationEvent from "./publishNewConversationEvent";
 import renewMailboxWatches from "./renewMailboxWatches";
@@ -32,7 +31,6 @@ import suggestKnowledgeBankChanges from "./suggestKnowledgeBankChanges";
 import updateSuggestedActions from "./updateSuggestedActions";
 
 export default [
-  postAssigneeOnSlack,
   indexConversationMessage,
   embeddingConversation,
   bulkEmbeddingClosedConversations,

@@ -117,10 +117,18 @@ export const updateSlackMessage = async ({
   try {
     await client.chat.update({ channel, ts, attachments: attachments ?? [], blocks: blocks ?? [] });
   } catch (error) {
-    // Can happen if the bot was removed from the Slack channel after the message was sent
-    if (error instanceof Error && error.message.includes("invalid_auth")) return;
+    if (isIgnorableSlackError(error)) return;
     throw error;
   }
+};
+
+export const isIgnorableSlackError = (error: unknown) => {
+  return (
+    error instanceof Error &&
+    (error.message.includes("invalid_auth") ||
+      error.message.includes("not_in_channel") ||
+      error.message.includes("message_not_found"))
+  );
 };
 
 export const openSlackModal = async ({

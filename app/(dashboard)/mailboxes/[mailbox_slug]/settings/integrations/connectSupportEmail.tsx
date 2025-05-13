@@ -1,16 +1,19 @@
 import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import type { SupportAccount } from "@/app/types/global";
 import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
+import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccount }) => {
+const ConnectSupportEmail = () => {
   const params = useParams();
   const router = useRouter();
   const [error] = useQueryState("error");
   const { mutateAsync: deleteSupportEmailMutation } = api.gmailSupportEmail.delete.useMutation();
+  const { data: supportAccount, isLoading } = api.gmailSupportEmail.get.useQuery({
+    mailboxSlug: params.mailbox_slug as string,
+  });
 
   const handleConnectOrDisconnect = async () => {
     if (supportAccount) {
@@ -43,9 +46,13 @@ const ConnectSupportEmail = ({ supportAccount }: { supportAccount?: SupportAccou
           </p>
         </div>
       )}
-      <Button variant={supportAccount ? "destructive_outlined" : "subtle"} onClick={handleConnectOrDisconnect}>
-        {supportAccount ? `Disconnect ${supportAccount.email}` : "Connect your Gmail"}
-      </Button>
+      {isLoading ? (
+        <LoadingSpinner size="md" />
+      ) : (
+        <Button variant={supportAccount ? "destructive_outlined" : "subtle"} onClick={handleConnectOrDisconnect}>
+          {supportAccount ? `Disconnect ${supportAccount.email}` : "Connect your Gmail"}
+        </Button>
+      )}
     </SectionWrapper>
   );
 };

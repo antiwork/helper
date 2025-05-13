@@ -4,14 +4,6 @@ import type Stripe from "stripe";
 import { z } from "zod";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
-export const assignEventSchema = z.object({
-  assignedToId: z.string().nullable(),
-  message: z.string().nullable(),
-  assignedById: z.string().nullable(),
-});
-
-export type AssignEvent = z.infer<typeof assignEventSchema>;
-
 type StripeWebhookEvent = {
   name: "stripe/webhook";
   data: {
@@ -85,12 +77,6 @@ export const inngest = new Inngest({
       "conversations/draft.refresh": {
         data: z.object({
           conversationSlug: z.string(),
-        }),
-      },
-      "conversations/assigned": {
-        data: z.object({
-          conversationId: z.number(),
-          assignEvent: assignEventSchema,
         }),
       },
       "gmail/import-recent-threads": {

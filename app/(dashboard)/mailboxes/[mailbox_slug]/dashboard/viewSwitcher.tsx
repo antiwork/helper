@@ -1,5 +1,4 @@
-import { ChartBarIcon, InboxIcon } from "@heroicons/react/24/outline";
-import { ChevronsUpDown } from "lucide-react";
+import { BarChart, ChevronsUpDown, Inbox } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -29,13 +28,13 @@ export function ViewSwitcher({ mailboxSlug }: ViewSwitcherProps) {
       <DropdownMenuContent align="end" className="w-[160px]">
         <DropdownMenuItem asChild>
           <Link href={`/mailboxes/${mailboxSlug}/dashboard`} className="flex items-center gap-2">
-            <ChartBarIcon className="h-4 w-4" />
+            <BarChart className="h-4 w-4" />
             <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`/mailboxes/${mailboxSlug}/conversations`} className="flex items-center gap-2">
-            <InboxIcon className="h-4 w-4" />
+            <Inbox className="h-4 w-4" />
             <span>Inbox</span>
           </Link>
         </DropdownMenuItem>

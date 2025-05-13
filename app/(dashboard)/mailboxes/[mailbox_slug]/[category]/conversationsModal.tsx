@@ -1,4 +1,4 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/16/solid";
+import { ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -80,7 +80,7 @@ const ConversationsModal = ({
                           rel="noopener noreferrer"
                           className="hover:text-foreground transition-colors"
                         >
-                          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                          <ExternalLink className="h-4 w-4" />
                         </a>
                       </span>
                     </div>
@@ -108,7 +108,6 @@ const ConversationsModal = ({
                   mailboxSlug={mailboxSlug}
                   conversation={selectedConversationData}
                   onPreviewAttachment={() => {}}
-                  onDoubleClickWhiteSpace={() => {}}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">

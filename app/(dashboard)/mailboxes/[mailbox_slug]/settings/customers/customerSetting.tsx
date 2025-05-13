@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "@/components/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import { SlackChannels } from "../integrations/slackSetting";
 import SectionWrapper from "../sectionWrapper";
 
@@ -15,47 +19,50 @@ export type CustomerUpdates = {
   vipExpectedResponseHours?: number | null;
 };
 
-type CustomerSettingProps = {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  onChange: (changes: CustomerUpdates) => void;
-};
-
-const CustomerSetting = ({ mailbox, onChange }: CustomerSettingProps) => {
+const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [isEnabled, setIsEnabled] = useState(mailbox.vipThreshold !== null);
   const [threshold, setThreshold] = useState(mailbox.vipThreshold?.toString() ?? "100");
   const [responseHours, setResponseHours] = useState(mailbox.vipExpectedResponseHours?.toString() ?? "");
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating VIP settings",
+        description: error.message,
+      });
+    },
+  });
 
-  const updateSettings = (updates: Partial<CustomerUpdates>) => {
-    if (!isEnabled) return;
-    onChange({
-      vipThreshold: threshold,
-      vipChannelId: mailbox.vipChannelId,
-      vipExpectedResponseHours: responseHours ? Number(responseHours) : null,
-      ...updates,
-    });
-  };
+  const save = useDebouncedCallback(() => {
+    if (isEnabled) {
+      update({
+        mailboxSlug: mailbox.slug,
+        vipThreshold: Number(threshold),
+        vipExpectedResponseHours: responseHours ? Number(responseHours) : null,
+      });
+    } else {
+      update({
+        mailboxSlug: mailbox.slug,
+        vipThreshold: null,
+        vipChannelId: null,
+        vipExpectedResponseHours: null,
+      });
+    }
+  }, 2000);
+
+  useOnChange(() => {
+    save();
+  }, [isEnabled, threshold, responseHours]);
 
   return (
     <SectionWrapper
       title="VIP Customers"
       description="Configure settings for high-value customers"
       initialSwitchChecked={isEnabled}
-      onSwitchChange={(enabled) => {
-        setIsEnabled(enabled);
-        onChange(
-          enabled
-            ? {
-                vipThreshold: threshold,
-                vipChannelId: null,
-                vipExpectedResponseHours: responseHours ? Number(responseHours) : null,
-              }
-            : {
-                vipThreshold: null,
-                vipChannelId: null,
-                vipExpectedResponseHours: null,
-              },
-        );
-      }}
+      onSwitchChange={setIsEnabled}
     >
       {isEnabled && (
         <div className="space-y-8">
@@ -74,11 +81,7 @@ const CustomerSetting = ({ mailbox, onChange }: CustomerSettingProps) => {
                 step="0.01"
                 placeholder="Enter threshold value"
                 value={threshold}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  setThreshold(newValue);
-                  updateSettings({ vipThreshold: newValue || "0" });
-                }}
+                onChange={(e) => setThreshold(e.target.value)}
                 className="mt-2 max-w-sm"
               />
             </div>
@@ -97,11 +100,7 @@ const CustomerSetting = ({ mailbox, onChange }: CustomerSettingProps) => {
                   min="1"
                   step="1"
                   value={responseHours}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    setResponseHours(newValue);
-                    updateSettings({ vipExpectedResponseHours: Number(newValue) || null });
-                  }}
+                  onChange={(e) => setResponseHours(e.target.value)}
                 />
                 <span className="text-sm text-muted-foreground whitespace-nowrap">hours</span>
               </div>
@@ -124,7 +123,7 @@ const CustomerSetting = ({ mailbox, onChange }: CustomerSettingProps) => {
                     id="vipChannel"
                     selectedChannelId={mailbox.vipChannelId ?? undefined}
                     mailbox={mailbox}
-                    onChange={(changes) => updateSettings({ vipChannelId: changes.alertChannel })}
+                    onChange={(vipChannelId) => update({ mailboxSlug: mailbox.slug, vipChannelId })}
                   />
                 ) : (
                   <Alert>

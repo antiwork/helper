@@ -1,16 +1,13 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { ChartBarIcon, InboxIcon as HeroInbox } from "@heroicons/react/24/outline";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { ChevronsUpDown, Settings } from "lucide-react";
+import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { InboxProvider } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/inbox";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
-import type { SidebarInfo } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/getSidebarInfo";
 import { NavigationButtons } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/navigationButtons";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,19 +32,15 @@ import { api } from "@/trpc/react";
 import { AccountDropdown } from "./accountDropdown";
 import { CategoryNav } from "./categoryNav";
 
-type Props = {
-  mailboxSlug: string;
-  sidebarInfo: SidebarInfo;
-};
-
 declare global {
   interface Window {
     __unstable__onBeforeSetActive: () => void;
   }
 }
 
-export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
-  const { mailboxes, currentMailbox, trialInfo } = sidebarInfo;
+export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
+  const { data: mailboxes } = api.mailbox.list.useQuery();
+  const { data: { trialInfo } = {} } = api.organization.getOnboardingStatus.useQuery();
   const pathname = usePathname();
   const { isMobile } = useSidebar();
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -61,9 +54,10 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
   });
 
   useEffect(() => {
-    setShowUpgradePrompt(trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt);
+    setShowUpgradePrompt(!!trialInfo && trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt);
   }, [trialInfo]);
 
+  const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
   const isSettings = pathname.endsWith("/settings");
   const isInbox = pathname.includes("/conversations");
 
@@ -82,14 +76,14 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                   <ChevronsUpDown className="ml-auto text-sidebar-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
-                {mailboxes.map((mailbox) => (
+              <DropdownMenuContent className="w-(--radix-popper-anchor-width) font-sundry-narrow-medium">
+                {mailboxes?.map((mailbox) => (
                   <DropdownMenuItem key={mailbox.slug} asChild>
                     <Link href={`/mailboxes/${mailbox.slug}/conversations`} prefetch={false}>
                       <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                       <span className="truncate text-base">{mailbox.name}</span>
                       <span className="ml-auto">
-                        {mailbox.slug === currentMailbox?.slug && <CheckCircleIcon className="text-foreground" />}
+                        {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground" />}
                       </span>
                     </Link>
                   </DropdownMenuItem>
@@ -111,7 +105,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
                 isInbox && "bg-sidebar-accent",
               )}
             >
-              <HeroInbox className="h-4 w-4" />
+              <Inbox className="h-4 w-4" />
               <span>Inbox</span>
             </Link>
             <Link
@@ -135,7 +129,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {showUpgradePrompt && (
+          {trialInfo && showUpgradePrompt && (
             <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
               <div className="flex flex-col gap-2 rounded-lg bg-sidebar-accent p-3 text-center">
                 {trialInfo.subscriptionStatus !== "free_trial_expired" && (
@@ -177,7 +171,7 @@ export function AppSidebar({ mailboxSlug, sidebarInfo }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
-                    <ChartBarIcon className="stroke-px text-sidebar-foreground" />
+                    <BarChart className="stroke-px text-sidebar-foreground" />
                     <span className="text-base text-sidebar-foreground">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>

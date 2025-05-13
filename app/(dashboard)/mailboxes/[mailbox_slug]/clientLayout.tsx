@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 import { buildThemeCss, MailboxTheme } from "@/lib/themes";
-import { LayoutInfoProvider } from "./useLayoutInfo";
 
 const InboxThemeContext = createContext<{
   theme: MailboxTheme | undefined;
@@ -28,7 +27,7 @@ export default function InboxClientLayout({
   return (
     <InboxThemeContext.Provider value={{ theme, setTheme }}>
       <style>{themeCss}</style>
-      <LayoutInfoProvider>{children}</LayoutInfoProvider>
+      {children}
     </InboxThemeContext.Provider>
   );
 }

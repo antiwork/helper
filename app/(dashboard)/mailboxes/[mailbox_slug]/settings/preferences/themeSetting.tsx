@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
+import { toast } from "@/components/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
+import { RouterOutputs } from "@/trpc";
+import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
 export type ThemeUpdates = {
@@ -19,17 +23,17 @@ export type ThemeUpdates = {
 };
 
 const ThemeSetting = ({
-  themeData,
-  onChange,
+  mailbox,
+  preferences,
 }: {
-  themeData: ThemeUpdates;
-  onChange: (updates: ThemeUpdates) => void;
+  mailbox: RouterOutputs["mailbox"]["get"];
+  preferences: RouterOutputs["mailbox"]["preferences"]["get"];
 }) => {
   const { setTheme: setWindowTheme } = useInboxTheme();
 
-  const [isEnabled, setIsEnabled] = useState(!!themeData.theme);
+  const [isEnabled, setIsEnabled] = useState(!!preferences.preferences?.theme);
   const [theme, setTheme] = useState(
-    themeData.theme ?? {
+    preferences.preferences?.theme ?? {
       background: "#ffffff",
       foreground: "#000000",
       primary: "#000000",
@@ -37,6 +41,28 @@ const ThemeSetting = ({
       sidebarBackground: "#ffffff",
     },
   );
+
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.preferences.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating theme",
+        description: error.message,
+      });
+    },
+  });
+
+  const save = useDebouncedCallback(() => {
+    if (!isEnabled && !preferences.preferences?.theme) return;
+    update({ mailboxSlug: mailbox.slug, preferences: { theme: isEnabled ? theme : null } });
+  }, 2000);
+
+  useOnChange(() => {
+    save();
+  }, [isEnabled, theme]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -57,13 +83,11 @@ const ThemeSetting = ({
     (color: keyof NonNullable<ThemeUpdates["theme"]>) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setTheme({ ...theme, [color]: e.target.value });
       const normalized = /#([0-9a-f]{3})$/i.test(e.target.value) ? `#${normalizeHex(e.target.value)}` : e.target.value;
-      onChange({ theme: { ...theme, [color]: normalized } });
       if (/#([0-9a-f]{6})$/i.test(normalized)) debouncedSetWindowTheme({ ...theme, [color]: normalized });
     };
 
   const handleSwitchChange = (checked: boolean) => {
     setIsEnabled(checked);
-    if (!checked) onChange({ theme: undefined });
   };
 
   return (
