@@ -22,7 +22,7 @@ export const conversations = pgTable(
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
-    unused_assignedToId: integer(),
+    unused_assignedToId: integer("assigned_to_id"),
     assignedToId: text("assigned_to_clerk_id"),
     summary: jsonb().$type<string[]>(),
     embedding: vector({ dimensions: 1536 }),
@@ -72,7 +72,7 @@ export const conversations = pgTable(
       mailboxAssignedToStatusIdIdx: index("conversations_mailbox_assigned_to_status_id_idx").on(
         table.mailboxId,
         table.status,
-        table.assignedToId,
+        table.unused_assignedToId,
       ),
       anonymousSessionIdIdx: index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     };
