@@ -1,13 +1,8 @@
 import "@/app/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
-import { Analytics } from "@vercel/analytics/react";
-import cx from "classnames";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { HelperConfig, HelperProvider } from "@helperai/react";
-import { sundryBold, sundryMedium, sundryNarrowBold, sundryNarrowMedium, sundryRegular } from "@/components/fonts";
 import { SentryContext } from "@/components/sentryContext";
-import { ThemeProvider } from "@/components/themeProvider";
 import { env } from "@/lib/env";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
@@ -37,33 +32,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const helperHost = env.NODE_ENV === "development" ? "https://helperai.dev" : undefined;
 
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cx(
-        "h-full",
-        sundryRegular.variable,
-        sundryMedium.variable,
-        sundryBold.variable,
-        sundryNarrowMedium.variable,
-        sundryNarrowBold.variable,
-      )}
-    >
-      <body className="h-full antialiased text-foreground bg-background font-regular">
-        <ClerkProvider appearance={{ variables: { colorPrimary: "hsl(0 67% 17%)" } }}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <NuqsAdapter>
-              <SentryContext />
-              <TRPCReactProvider>
-                <HelperProvider host={helperHost} {...config}>
-                  <HydrateClient>{children}</HydrateClient>
-                </HelperProvider>
-              </TRPCReactProvider>
-            </NuqsAdapter>
-          </ThemeProvider>
-        </ClerkProvider>
-        <Analytics />
-      </body>
-    </html>
+    <NuqsAdapter>
+      <SentryContext />
+      <TRPCReactProvider>
+        <HelperProvider host={helperHost} {...config}>
+          <HydrateClient>{children}</HydrateClient>
+        </HelperProvider>
+      </TRPCReactProvider>
+    </NuqsAdapter>
   );
 }

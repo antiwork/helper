@@ -72,13 +72,11 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <div className="flex items-center justify-center">
                     <Avatar src={undefined} fallback={currentMailbox?.name ?? "(no name)"} size="sm" />
                   </div>
-                  <span className="font-sundry-narrow-bold text-lg text-sidebar-foreground truncate">
-                    {currentMailbox?.name}
-                  </span>
+                  <span className="text-lg text-sidebar-foreground truncate">{currentMailbox?.name}</span>
                   <ChevronsUpDown className="ml-auto text-sidebar-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-(--radix-popper-anchor-width) font-sundry-narrow-medium">
+              <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
                 {mailboxes?.map((mailbox) => (
                   <DropdownMenuItem key={mailbox.slug} asChild>
                     <Link href={`/mailboxes/${mailbox.slug}/conversations`} prefetch={false}>
@@ -108,7 +106,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               )}
             >
               <Inbox className="h-4 w-4" />
-              <span className="font-sundry-narrow-medium">Inbox</span>
+              <span>Inbox</span>
             </Link>
             <Link
               href={`/mailboxes/${mailboxSlug}/settings`}
@@ -119,7 +117,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               )}
             >
               <Settings className="h-4 w-4" />
-              <span className="font-sundry-narrow-medium">Settings</span>
+              <span>Settings</span>
             </Link>
           </div>
         ) : (
@@ -174,7 +172,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 <SidebarMenuButton asChild>
                   <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
                     <BarChart className="stroke-px text-sidebar-foreground" />
-                    <span className="font-sundry-narrow-medium text-base text-sidebar-foreground">Dashboard</span>
+                    <span className="text-base text-sidebar-foreground">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -182,7 +180,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 <SidebarMenuButton asChild isActive={isSettings}>
                   <Link href={`/mailboxes/${mailboxSlug}/settings`}>
                     <Settings className="stroke-px text-sidebar-foreground" />
-                    <span className="font-sundry-narrow-medium text-base text-sidebar-foreground">Settings</span>
+                    <span className="text-base text-sidebar-foreground">Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
