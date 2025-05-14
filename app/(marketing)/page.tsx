@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import {
   Archive,
@@ -34,7 +33,7 @@ import SlackNotification from "./SlackNotification";
 import ToolsDemo from "./ToolsDemo";
 
 export default function Home() {
-  const [customerQuestions, setCustomerQuestions] = useState([
+  const [customerQuestions] = useState([
     "How can Helper transform my customer support?",
     "How can Helper cut my response time in half?",
     "Can Helper integrate with our existing tools?",
@@ -98,7 +97,7 @@ export default function Home() {
         const smarterSupportSection = document.getElementById("smarter-support");
         if (smarterSupportSection) {
           const rect = smarterSupportSection.getBoundingClientRect();
-          const targetScrollY = window.scrollY + rect.top;
+          const targetScrollY = window.scrollY + rect.top - 40;
 
           window.scrollTo({
             top: targetScrollY,
@@ -192,17 +191,18 @@ export default function Home() {
                       />
                       {showHelperButton && (
                         <motion.div
+                          className="mt-4"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: 0.2 }}
                         >
-                          <button
+                          <Button
                             ref={showMeButtonRef}
                             onClick={handleShowMe}
-                            className="bg-bright text-black font-bold py-2 px-3 rounded-lg mt-4 transition-colors"
+                            className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                           >
                             Take the tour
-                          </button>
+                          </Button>
                         </motion.div>
                       )}
                     </div>

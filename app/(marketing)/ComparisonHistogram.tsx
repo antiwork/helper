@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useBreakpoint } from "@/components/useBreakpoint";
 
 export function ComparisonHistogram() {
-  const [data, setData] = useState([
+  const [data] = useState([
     { name: "Day 1", withHelper: 8, withoutHelper: 13 },
     { name: "Day 2", withHelper: 6, withoutHelper: 15 },
     { name: "Day 3", withHelper: 3, withoutHelper: 10 },
@@ -14,7 +15,7 @@ export function ComparisonHistogram() {
     { name: "Day 7", withHelper: 1, withoutHelper: 13 },
   ]);
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const { isAboveMd } = useBreakpoint("md");
   return (
     <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] rounded-3xl p-4 md:p-10 flex flex-col items-center min-h-[400px] h-full flex-1">
       <div className="text-center mb-2">
@@ -24,31 +25,31 @@ export function ComparisonHistogram() {
         <ResponsiveContainer width="100%" height={400}>
           <BarChart
             data={data}
-            barCategoryGap={isMobile ? 6 : 10}
-            barGap={isMobile ? 3 : 5}
+            barCategoryGap={isAboveMd ? 10 : 6}
+            barGap={isAboveMd ? 5 : 3}
             margin={
-              isMobile ? { top: 6, right: 6, left: 10, bottom: 28 } : { top: 10, right: 10, left: 30, bottom: 40 }
+              isAboveMd ? { top: 10, right: 10, left: 30, bottom: 40 } : { top: 6, right: 6, left: 10, bottom: 28 }
             }
           >
             <XAxis
               dataKey="name"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#FFE6B0", fontSize: isMobile ? 12 : 14, fontWeight: 500, dy: isMobile ? 8 : 12 }}
+              tick={{ fill: "#FFE6B0", fontSize: isAboveMd ? 14 : 12, fontWeight: 500, dy: isAboveMd ? 12 : 8 }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#fff", fontSize: isMobile ? 12 : 16, fontWeight: 400 }}
-              width={isMobile ? 28 : 40}
+              tick={{ fill: "#fff", fontSize: isAboveMd ? 16 : 12, fontWeight: 400 }}
+              width={isAboveMd ? 40 : 28}
               label={{
                 value: "minutes",
                 angle: -90,
                 position: "insideLeft",
                 fill: "#FFE6B0",
-                fontSize: isMobile ? 12 : 16,
+                fontSize: isAboveMd ? 16 : 12,
                 fontWeight: 500,
-                dx: isMobile ? -8 : -10,
+                dx: isAboveMd ? -10 : -8,
               }}
             />
             <Tooltip
@@ -61,14 +62,14 @@ export function ComparisonHistogram() {
               name="With Helper"
               fill="#FEB81D"
               radius={[8, 8, 8, 8]}
-              barSize={isMobile ? 18 : 32}
+              barSize={isAboveMd ? 32 : 18}
             />
             <Bar
               dataKey="withoutHelper"
               name="Without Helper"
               fill="#FF4343"
               radius={[8, 8, 8, 8]}
-              barSize={isMobile ? 18 : 32}
+              barSize={isAboveMd ? 32 : 18}
             />
           </BarChart>
         </ResponsiveContainer>

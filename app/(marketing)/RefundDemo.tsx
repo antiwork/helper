@@ -81,7 +81,7 @@ export default function RefundDemo() {
                       >
                         <motion.span
                           animate={pointerClicked ? { x: 30, y: 30, scale: [1, 0.9, 1] } : {}}
-                          transition={{ duration: 0.5, type: "spring" }}
+                          transition={{ duration: 0.5 }}
                           className="flex flex-col items-start"
                         >
                           <span
