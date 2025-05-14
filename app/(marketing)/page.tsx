@@ -91,21 +91,23 @@ export default function Home() {
     }
   }, [helperTypingComplete]);
 
+  const scrollToFeatures = () => {
+    const smarterSupportSection = document.getElementById("smarter-support");
+    if (smarterSupportSection) {
+      const rect = smarterSupportSection.getBoundingClientRect();
+      const targetScrollY = window.scrollY + rect.top - 40;
+      window.scrollTo({
+        top: targetScrollY,
+        behavior: "smooth",
+      });
+    }
+  };
+
   useEffect(() => {
     if (showFeatures && !initialScrollComplete.current) {
       const timer = setTimeout(() => {
-        const smarterSupportSection = document.getElementById("smarter-support");
-        if (smarterSupportSection) {
-          const rect = smarterSupportSection.getBoundingClientRect();
-          const targetScrollY = window.scrollY + rect.top - 40;
-
-          window.scrollTo({
-            top: targetScrollY,
-            behavior: "smooth",
-          });
-
-          initialScrollComplete.current = true;
-        }
+        scrollToFeatures();
+        initialScrollComplete.current = true;
       }, 500);
 
       return () => clearTimeout(timer);
@@ -113,8 +115,12 @@ export default function Home() {
   }, [showFeatures]);
 
   const handleShowMe = () => {
-    setShowFeatures(true);
-    initialScrollComplete.current = false;
+    if (showFeatures) {
+      scrollToFeatures();
+    } else {
+      setShowFeatures(true);
+      initialScrollComplete.current = false;
+    }
   };
 
   const handleCustomerTypingComplete = () => {
@@ -138,12 +144,10 @@ export default function Home() {
 
   return (
     <main className="bg-[#2B0808] text-white flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <MarketingHeader bgColor="#2B0808" />
-      </div>
+      <MarketingHeader bgColor="#2B0808" />
 
-      <div className="flex-grow pt-20">
-        <section className="min-h-screen flex items-center justify-center">
+      <div className="flex-grow">
+        <section className="flex items-center justify-center h-dvh pt-20">
           <div className="container mx-auto px-4">
             <h1 className="text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">
               Helper helps customers help themselves.
@@ -227,8 +231,8 @@ export default function Home() {
                     Helper guides users and resolves issues before they become tickets.
                   </h2>
                   <div className="space-y-6 mb-12 mt-8">
-                    <div className="flex items-start gap-4">
-                      <MousePointer className="w-6 h-6 text-amber-400 mt-1" />
+                    <div className="flex items-start gap-4 md:items-center">
+                      <MousePointer className="w-6 h-6 text-amber-400" />
                       <span>
                         <span className="font-bold text-bright">Helping hand</span>
                         <span className="text-secondary dark:text-foreground">
@@ -237,8 +241,8 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="flex items-start gap-4">
-                      <BookOpenIcon className="w-6 h-6 mt-1" style={{ color: "#459EFD" }} />
+                    <div className="flex items-start gap-4 md:items-center">
+                      <BookOpenIcon className="w-6 h-6" style={{ color: "#459EFD" }} />
                       <span>
                         <span className="font-bold" style={{ color: "#459EFD" }}>
                           Citations
@@ -249,8 +253,8 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="flex items-start gap-4">
-                      <PlayCircle className="w-6 h-6 mt-1" style={{ color: "#FF90E8" }} />
+                    <div className="flex items-start gap-4 md:items-center">
+                      <PlayCircle className="w-6 h-6" style={{ color: "#FF90E8" }} />
                       <span>
                         <span className="font-bold" style={{ color: "#FF90E8" }}>
                           Tools
@@ -451,8 +455,8 @@ export default function Home() {
                     context, and easily return tickets to Helper once your team has resolved the issue.
                   </p>
                   <div className="space-y-6 mb-12">
-                    <div className="flex items-start gap-4">
-                      <TriangleAlert className="w-6 h-6 mt-1" style={{ color: "#FF4343" }} />
+                    <div className="flex items-start gap-4 md:items-center">
+                      <TriangleAlert className="w-6 h-6" style={{ color: "#FF4343" }} />
                       <span>
                         <span className="font-bold" style={{ color: "#FF4343" }}>
                           Smart escalation
@@ -463,8 +467,8 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="flex items-start gap-4">
-                      <Sparkles className="w-6 h-6 mt-1" style={{ color: "#C2D44B" }} />
+                    <div className="flex items-start gap-4 md:items-center">
+                      <Sparkles className="w-6 h-6" style={{ color: "#C2D44B" }} />
                       <span>
                         <span className="font-bold" style={{ color: "#C2D44B" }}>
                           @helper
@@ -475,8 +479,8 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <div className="flex items-start gap-4">
-                      <Star className="w-6 h-6 mt-1" style={{ color: "#FEB81D" }} />
+                    <div className="flex items-start gap-4 md:items-center">
+                      <Star className="w-6 h-6" style={{ color: "#FEB81D" }} />
                       <span>
                         <span className="font-bold" style={{ color: "#FEB81D" }}>
                           Priority notifications
@@ -582,110 +586,114 @@ export default function Home() {
         )}
 
         {showFeatures && (
-          <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
-            <div className="container mx-auto px-4">
-              <h2 className="text-4xl font-bold mb-12">Knowledge base</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <Link
-                  href={`${docsBaseUrl}/docs`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
-                  style={{ boxShadow: "none" }}
-                >
-                  <span className="flex items-center justify-center w-10 h-10">
-                    <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
-                  </span>
-                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
-                    Getting started
-                  </span>
-                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
-                    <ArrowRight className="w-6 h-6" />
-                  </span>
-                </Link>
-                <Link
-                  href={`${docsBaseUrl}/docs/tools/01-overview`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
-                  style={{ boxShadow: "none" }}
-                >
-                  <span className="flex items-center justify-center w-10 h-10">
-                    <Clock className="w-6 h-6" style={{ color: "#C2D44B" }} />
-                  </span>
-                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
-                    Tools
-                  </span>
-                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
-                    <ArrowRight className="w-6 h-6" />
-                  </span>
-                </Link>
-                <Link
-                  href={`${docsBaseUrl}/docs/api/01-overview`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
-                  style={{ boxShadow: "none" }}
-                >
-                  <span className="flex items-center justify-center w-10 h-10">
-                    <MessageSquare className="w-6 h-6" style={{ color: "#FF90E8" }} />
-                  </span>
-                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
-                    Conversation api
-                  </span>
-                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
-                    <ArrowRight className="w-6 h-6" />
-                  </span>
-                </Link>
-                <Link
-                  href={`${docsBaseUrl}/docs/api-reference/create-conversation`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
-                  style={{ boxShadow: "none" }}
-                >
-                  <span className="flex items-center justify-center w-10 h-10">
-                    <FileCode className="w-6 h-6" style={{ color: "#FF4343" }} />
-                  </span>
-                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
-                    Api references
-                  </span>
-                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
-                    <ArrowRight className="w-6 h-6" />
-                  </span>
-                </Link>
-                <Link
-                  href={`${docsBaseUrl}/docs/widget/01-overview`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
-                  style={{ boxShadow: "none" }}
-                >
-                  <span className="flex items-center justify-center w-10 h-10">
-                    <Monitor className="w-6 h-6" style={{ color: "#FFD34E" }} />
-                  </span>
-                  <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
-                    Chat widget
-                  </span>
-                  <span className="ml-auto" style={{ color: "#FFE6B0" }}>
-                    <ArrowRight className="w-6 h-6" />
-                  </span>
-                </Link>
+          <>
+            <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
+              <div className="container mx-auto px-4">
+                <h2 className="text-4xl font-bold mb-12">Knowledge base</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <Link
+                    href={`${docsBaseUrl}/docs`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                    style={{ boxShadow: "none" }}
+                  >
+                    <span className="flex items-center justify-center w-10 h-10">
+                      <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                      Getting started
+                    </span>
+                    <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                      <ArrowRight className="w-6 h-6" />
+                    </span>
+                  </Link>
+                  <Link
+                    href={`${docsBaseUrl}/docs/tools/01-overview`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                    style={{ boxShadow: "none" }}
+                  >
+                    <span className="flex items-center justify-center w-10 h-10">
+                      <Clock className="w-6 h-6" style={{ color: "#C2D44B" }} />
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                      Tools
+                    </span>
+                    <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                      <ArrowRight className="w-6 h-6" />
+                    </span>
+                  </Link>
+                  <Link
+                    href={`${docsBaseUrl}/docs/api/01-overview`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                    style={{ boxShadow: "none" }}
+                  >
+                    <span className="flex items-center justify-center w-10 h-10">
+                      <MessageSquare className="w-6 h-6" style={{ color: "#FF90E8" }} />
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                      Conversation API
+                    </span>
+                    <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                      <ArrowRight className="w-6 h-6" />
+                    </span>
+                  </Link>
+                  <Link
+                    href={`${docsBaseUrl}/docs/api-reference/create-conversation`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                    style={{ boxShadow: "none" }}
+                  >
+                    <span className="flex items-center justify-center w-10 h-10">
+                      <FileCode className="w-6 h-6" style={{ color: "#FF4343" }} />
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                      API reference
+                    </span>
+                    <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                      <ArrowRight className="w-6 h-6" />
+                    </span>
+                  </Link>
+                  <Link
+                    href={`${docsBaseUrl}/docs/widget/01-overview`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                    style={{ boxShadow: "none" }}
+                  >
+                    <span className="flex items-center justify-center w-10 h-10">
+                      <Monitor className="w-6 h-6" style={{ color: "#FFD34E" }} />
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                      Chat widget
+                    </span>
+                    <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                      <ArrowRight className="w-6 h-6" />
+                    </span>
+                  </Link>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+            <footer
+              className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5"
+              style={{ backgroundColor: footerBgColor }}
+            >
+              <div className="flex items-center">
+                <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
+                  <svg width="200" height="40" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M57 91L41.4115 47.5L72.5885 47.5L57 91Z" fill={footerTextColor} />
+                    <path d="M25 91L9.41154 47.5L40.5885 47.5L25 91Z" fill={footerTextColor} />
+                  </svg>
+                </a>
+              </div>
+            </footer>
+          </>
         )}
-
-        <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: footerBgColor }}>
-          <div className="flex items-center">
-            <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
-              <svg width="200" height="40" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M57 91L41.4115 47.5L72.5885 47.5L57 91Z" fill={footerTextColor} />
-                <path d="M25 91L9.41154 47.5L40.5885 47.5L25 91Z" fill={footerTextColor} />
-              </svg>
-            </a>
-          </div>
-        </footer>
       </div>
     </main>
   );

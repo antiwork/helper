@@ -56,6 +56,7 @@ export function ComparisonHistogram() {
               contentStyle={{ backgroundColor: "#250404", border: "none", borderRadius: 8, color: "#fff" }}
               labelStyle={{ color: "#fff" }}
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              formatter={(value: number) => (value === 1 ? `${value} minute` : `${value} minutes`)}
             />
             <Bar
               dataKey="withHelper"

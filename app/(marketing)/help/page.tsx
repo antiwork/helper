@@ -8,9 +8,7 @@ import { MarketingHeader } from "../MarketingHeader";
 export default function HelpPage() {
   return (
     <main className="bg-[#2B0808] text-white min-h-screen">
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <MarketingHeader bgColor="#2B0808" />
-      </div>
+      <MarketingHeader bgColor="#2B0808" />
 
       <div className="container mx-auto px-4 pt-32 pb-20">
         <div className="max-w-3xl mx-auto">

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 type MarketingHeaderProps = {
   bgColor?: string;
@@ -28,8 +29,8 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
   return (
     <TooltipProvider delayDuration={0}>
       <header
-        className={`w-full transition-all duration-300 ${isScrolled ? "py-2 shadow-md" : "py-4"}`}
-        style={{ backgroundColor: isScrolled ? "#2B0808" : bgColor }}
+        className={cn("fixed top-0 z-50 pb-2 w-full transition-all duration-300", isScrolled ? "pt-2" : "pt-4")}
+        style={{ backgroundColor: bgColor }}
       >
         <div className="container mx-auto px-4 flex items-center justify-between">
           <Link href="/" className="flex items-center">

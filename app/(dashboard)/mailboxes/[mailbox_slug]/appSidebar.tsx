@@ -76,7 +76,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <ChevronsUpDown className="ml-auto text-sidebar-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-(--radix-popper-anchor-width) font-sundry-narrow-medium">
+              <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
                 {mailboxes?.map((mailbox) => (
                   <DropdownMenuItem key={mailbox.slug} asChild>
                     <Link href={`/mailboxes/${mailbox.slug}/conversations`} prefetch={false}>
@@ -160,7 +160,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 ) : (
                   <div className="text-xs">
                     Free trial until{" "}
-                    {new Date(trialInfo.freeTrialEndsAt!).toLocaleString("en-US", { month: "long", day: "numeric" })}
+                    {new Date(trialInfo.freeTrialEndsAt).toLocaleString("en-US", { month: "long", day: "numeric" })}
                   </div>
                 )}
               </div>
