@@ -584,9 +584,6 @@ class HelperWidget {
     }
     if (this.iframeWrapper && !this.isVisible) {
       this.iframeWrapper.classList.add("visible");
-      if (this.isMinimized) {
-        this.iframeWrapper.classList.add("minimized");
-      }
       if (!this.isIframeReady) {
         this.showLoadingOverlay();
       }
@@ -621,7 +618,6 @@ class HelperWidget {
     if (this.iframeWrapper && this.isVisible) {
       this.guideManager.clearSession();
       this.iframeWrapper.classList.remove("visible");
-      this.iframeWrapper.classList.remove("minimized");
       this.hideLoadingOverlay();
       this.isVisible = false;
       localStorage.setItem(this.VISIBILITY_STORAGE_KEY, "false");

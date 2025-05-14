@@ -40,7 +40,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
 
         <div className="p-4 flex flex-col gap-4 bg-sidebar">
           <div className="flex justify-between items-center">
-            <h3 className="scroll-m-20 text-3xl font-sundry-narrow-bold text-white tracking-tight">At a glance</h3>
+            <h3 className="scroll-m-20 text-3xl text-white tracking-tight">At a glance</h3>
             <TimeRangeSelector
               value={timeRange}
               onValueChange={(value) => {
@@ -71,9 +71,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
             </Panel>
           </div>
 
-          <h3 className="mt-6 scroll-m-20 text-3xl font-sundry-narrow-bold text-white tracking-tight">
-            What's happening?
-          </h3>
+          <h3 className="mt-6 scroll-m-20 text-3xl text-white tracking-tight">What's happening?</h3>
           <RealtimeEvents mailboxSlug={mailboxSlug} />
         </div>
       </div>

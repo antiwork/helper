@@ -11,7 +11,15 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatCurrency } from "@/components/utils/currency";
 import { conversationsListChannelId } from "@/lib/ably/channels";
 import { useAblyEvent } from "@/lib/ably/hooks";
@@ -58,7 +66,7 @@ const SearchBar = ({
               <SelectTrigger
                 variant="bare"
                 className={cn(
-                  "font-sundry-regular",
+                  "",
                   variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
                 )}
               >
@@ -66,16 +74,14 @@ const SearchBar = ({
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value} className="font-sundry-regular">
+                  <SelectItem key={option.value} value={option.value} className="">
                     {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : statusOptions[0] ? (
-            <div
-              className={cn("text-sm font-sundry-regular", variant === "desktop" ? "text-white" : "text-foreground")}
-            >
+            <div className={cn("text-sm", variant === "desktop" ? "text-white" : "text-foreground")}>
               {statusOptions[0].label}
             </div>
           ) : null}
@@ -85,7 +91,6 @@ const SearchBar = ({
             <SelectTrigger
               variant="bare"
               className={cn(
-                "font-sundry-regular",
                 variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
               )}
             >
@@ -93,7 +98,7 @@ const SearchBar = ({
             </SelectTrigger>
             <SelectContent>
               {sortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="font-sundry-regular">
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
@@ -428,7 +433,8 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
         <div className="flex justify-between gap-2">
           <div
             className={cn(
-              "line-clamp-1 break-all text-sm font-sundry-medium",
+              "line-clamp-1 break-all text-sm",
+              isActive && "font-medium",
               variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
             )}
           >
@@ -437,8 +443,9 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
           <div className="flex items-center justify-center space-x-1 text-right">
             <div
               className={cn(
-                "whitespace-nowrap text-xs font-sundry-regular",
-                variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
+                "whitespace-nowrap text-xs",
+                isActive && "font-medium",
+                variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
               )}
             >
               {conversation.status === "closed" ? (
@@ -457,8 +464,9 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
           <div className="min-w-0 flex-1">
             <div
               className={cn(
-                "line-clamp-1 text-xs font-sundry-regular",
-                variant === "desktop" ? "text-sidebar-foreground/80" : "text-muted-foreground",
+                "line-clamp-1 text-xs",
+                isActive && "font-medium",
+                variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
               )}
             >
               {conversation.subject}
@@ -468,8 +476,9 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             {(conversation.assignedToId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(
-                  "shrink-0 break-all flex items-center gap-1 text-xs font-sundry-regular",
-                  variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
+                  "shrink-0 break-all flex items-center gap-1 text-xs",
+                  isActive && "font-medium",
+                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
                 )}
                 assignedToId={conversation.assignedToId}
                 assignedToAI={conversation.assignedToAI}
@@ -478,8 +487,9 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             {conversation.platformCustomer?.isVip && (
               <div
                 className={cn(
-                  "shrink-0 text-right font-sundry-regular",
-                  variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
+                  "shrink-0 text-right",
+                  isActive && "font-medium",
+                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
                 )}
                 title="VIP Customer"
               >
@@ -491,8 +501,9 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             {conversation.platformCustomer?.value ? (
               <div
                 className={cn(
-                  "shrink-0 text-right font-sundry-regular",
-                  variant === "desktop" ? "text-sidebar-foreground/50" : "text-muted-foreground",
+                  "shrink-0 text-right",
+                  isActive && "font-medium",
+                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
                 )}
                 title={`Value: ${conversation.platformCustomer.value}`}
               >

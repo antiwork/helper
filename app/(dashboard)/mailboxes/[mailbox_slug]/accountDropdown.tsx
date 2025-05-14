@@ -34,9 +34,7 @@ export function AccountDropdown({ trigger }: { trigger: (children: ReactNode) =>
         {trigger(
           <>
             <Avatar fallback={user.email ?? ""} size="sm" />
-            <span className="grow truncate font-sundry-narrow-medium text-base">
-              {user.user_metadata.name ?? user.email}
-            </span>
+            <span className="grow truncate text-base">{user.user_metadata.name ?? user.email}</span>
             <ChevronUp className="ml-auto" />
           </>,
         )}

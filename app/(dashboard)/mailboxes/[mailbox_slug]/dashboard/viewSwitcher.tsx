@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 type ViewSwitcherProps = {
   mailboxSlug: string;
@@ -18,7 +19,7 @@ export function ViewSwitcher({ mailboxSlug }: ViewSwitcherProps) {
       <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10">
         <div className="flex items-center">
           <Image src="/helper_logo_02.svg" alt="Helper" width={20} height={20} priority />
-          <span className="font-sundry-narrow-bold text-xl mx-4">Helper</span>
+          <span className="text-xl mx-4">Helper</span>
           <div className="flex items-center gap-1 ml-40">
             <ChevronsUpDown className="h-4 w-4" />
           </div>

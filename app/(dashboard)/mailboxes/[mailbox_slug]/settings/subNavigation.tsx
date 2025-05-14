@@ -48,7 +48,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                     "flex items-center px-4 py-3 text-sm transition-colors duration-150 ease-in-out",
                     "max-w-[200px] cursor-pointer",
                     isSelected
-                      ? "font-sundry-medium border-b-2 border-bright bg-secondary"
+                      ? "border-b-2 border-bright bg-secondary"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
@@ -83,9 +83,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                 className={cx(
                   "flex h-12 items-center px-4 text-sm transition-colors duration-150 ease-in-out",
                   "overflow-hidden cursor-pointer",
-                  isSelected
-                    ? "font-sundry-medium bg-secondary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  isSelected ? "bg-secondary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <Icon

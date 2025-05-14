@@ -52,7 +52,7 @@ export const Avatar = ({ src, fallback, size = "md" }: CustomAvatarProps) => {
   return (
     <BaseAvatar className={sizeClasses[size]}>
       <AvatarImage src={src} />
-      <AvatarFallback className="font-sundry-narrow-medium text-bright-foreground bg-bright border border-primary-foreground">
+      <AvatarFallback className="text-bright-foreground bg-bright border border-primary-foreground">
         {fallback.slice(0, 2).toUpperCase()}
       </AvatarFallback>
     </BaseAvatar>
