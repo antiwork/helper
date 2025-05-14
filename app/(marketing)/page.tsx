@@ -521,10 +521,14 @@ export default function Home() {
                         <button
                           onClick={() => setCurrentSlide(0)}
                           className={`w-2 h-2 rounded-full ${currentSlide === 0 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
+                          aria-label="Show Slack interface slide"
+                          aria-pressed={currentSlide === 0}
                         />
                         <button
                           onClick={() => setCurrentSlide(1)}
                           className={`w-2 h-2 rounded-full ${currentSlide === 1 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
+                          aria-label="Show Slack notification slide"
+                          aria-pressed={currentSlide === 1}
                         />
                       </div>
                     </div>
