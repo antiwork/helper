@@ -160,7 +160,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 ) : (
                   <div className="text-xs">
                     Free trial until{" "}
-                    {new Date(trialInfo.freeTrialEndsAt).toLocaleString("en-US", { month: "long", day: "numeric" })}
+                    {new Date(trialInfo.freeTrialEndsAt!).toLocaleString("en-US", { month: "long", day: "numeric" })}
                   </div>
                 )}
               </div>
