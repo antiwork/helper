@@ -1,17 +1,23 @@
 "use client";
 
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { Provider } from "@supabase/supabase-js";
+// import { Auth } from "@supabase/auth-ui-react";
+// import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
 
 export default function LoginPage() {
   const { theme, systemTheme } = useTheme();
+  // const session = useSession();
+  // const router = useRouter();
+
+  // useEffect(() => {
+  //   if (session) {
+  //     router.push("/mailboxes");
+  //   }
+  // }, [session]);
 
   return (
     <div className="flex h-dvh w-screen flex-col items-center justify-center gap-3 px-6">
@@ -27,7 +33,7 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">Please sign in to continue</p>
         </div>
 
-        <Auth
+        {/* <Auth
           supabaseClient={supabase}
           appearance={{
             theme: ThemeSupa,
@@ -68,8 +74,8 @@ export default function LoginPage() {
             },
           }}
           providers={env.NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS.filter((provider) => provider !== "password") as Provider[]}
-          onlyThirdPartyProviders={env.NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS.includes("password")}
-        />
+          onlyThirdPartyProviders={!env.NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS.includes("password")}
+        /> */}
       </div>
     </div>
   );

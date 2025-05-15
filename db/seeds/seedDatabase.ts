@@ -17,7 +17,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { indexMessage } from "@/inngest/functions/indexConversation";
 import { env } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
 
 const getTables = async () => {
@@ -56,10 +56,12 @@ export const seedDatabase = async () => {
       widgetHMACSecret: "9cff9d28-7333-4e29-8f01-c2945f1a887f",
     });
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const users = await Promise.all(
       env.INITIAL_USER_EMAILS.map(async (email) =>
-        assertDefined((await supabase.auth.admin.createUser({ email, password: "password" })).data.user),
+        assertDefined(
+          (await supabase.auth.admin.createUser({ email, password: "password", email_confirm: true })).data.user,
+        ),
       ),
     );
 
@@ -296,3 +298,18 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
     .returning()
     .then(takeUniqueOrThrow);
 };
+
+if (env.NODE_ENV !== "development" && env.VERCEL_ENV !== "preview") {
+  console.log("This is a development-only script");
+  process.exit(1);
+}
+
+seedDatabase()
+  .then(() => {
+    console.log("Database seed completed");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("Database seed failed:", error);
+    process.exit(1);
+  });

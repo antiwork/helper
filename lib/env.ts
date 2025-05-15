@@ -32,6 +32,9 @@ export const env = createEnv({
     DATABASE_URL: z.string().url().optional(),
     KV_UPSTASH_KV_REST_API_URL: defaultUnlessDeployed(z.string().url(), "http://localhost:8089"),
     KV_UPSTASH_KV_REST_API_TOKEN: defaultUnlessDeployed(z.string().min(1), "example_token"),
+    SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "https://supabase.helperai.dev"),
+    // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
+    SUPABASE_SERVICE_ROLE_KEY: defaultUnlessDeployed(z.string().min(1), "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
     CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
@@ -98,7 +101,7 @@ export const env = createEnv({
       "development",
     ),
 
-    NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "http://127.0.0.1:54321"),
+    NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "https://supabase.helperai.dev"),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
     NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(
       z.string().min(1),
