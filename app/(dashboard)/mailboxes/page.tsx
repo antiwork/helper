@@ -1,5 +1,5 @@
-import { data } from "motion/react-client";
 import { redirect } from "next/navigation";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/trpc/server";
 
@@ -9,8 +9,8 @@ const Page = async () => {
     data: { user },
     error,
   } = await supabase.auth.getUser();
-  console.log(data, error);
-  if (!user) return redirect("/auth/login");
+  if (error) captureExceptionAndLog(error);
+  if (!user) return redirect("/login");
 
   const mailboxes = await api.mailbox.list();
   if (mailboxes.find(({ slug }) => slug === user.user_metadata.lastMailboxSlug))

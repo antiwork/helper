@@ -16,7 +16,7 @@ if (env.NODE_ENV === "development") {
 
 export const createClient = async () => {
   const cookieStore = await cookies();
-  return createServerClient(env.SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -34,4 +34,4 @@ export const createClient = async () => {
   });
 };
 
-export const createAdminClient = () => createBaseClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+export const createAdminClient = () => createBaseClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
