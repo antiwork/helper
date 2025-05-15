@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ error: string }> }) {
-  const params = await searchParams
+  const params = await searchParams;
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -22,5 +22,5 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
         </div>
       </div>
     </div>
-  )
+  );
 }

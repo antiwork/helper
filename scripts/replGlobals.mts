@@ -52,7 +52,7 @@ Object.entries({
   ilike,
   exists,
   notExists,
-  createAdminClient
+  createAdminClient,
 }).forEach(([key, value]) => {
   (globalThis as any)[key] = value;
 });

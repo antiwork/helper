@@ -33,7 +33,10 @@ export const env = createEnv({
     KV_UPSTASH_KV_REST_API_URL: defaultUnlessDeployed(z.string().url(), "http://localhost:8089"),
     KV_UPSTASH_KV_REST_API_TOKEN: defaultUnlessDeployed(z.string().min(1), "example_token"),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
-    SUPABASE_SERVICE_ROLE_KEY: defaultUnlessDeployed(z.string().min(1), "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"),
+    SUPABASE_SERVICE_ROLE_KEY: defaultUnlessDeployed(
+      z.string().min(1),
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
+    ),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
     CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
@@ -109,7 +112,10 @@ export const env = createEnv({
     // Determines which auth providers to show on the login page. Should match the auth options enabled in supabase/config.toml or on your cloud instance.
     NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z
       .string()
-      .regex(/^((password|google|github),?)+$/, "must be a comma-separated list of auth providers. Currently supported: password, google, github")
+      .regex(
+        /^((password|google|github),?)+$/,
+        "must be a comma-separated list of auth providers. Currently supported: password, google, github",
+      )
       .default("password")
       .transform((str) => str.split(",")),
 
