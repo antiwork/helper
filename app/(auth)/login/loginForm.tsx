@@ -128,36 +128,35 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             </form>
           )}
           {passwordEnabled && (googleEnabled || githubEnabled) && <Divider label="or" />}
-          {googleEnabled ||
-            (githubEnabled && (
-              <div className="flex flex-col gap-4">
-                {oauthError && <p className="text-sm text-destructive-500">{oauthError}</p>}
-                {githubEnabled && (
-                  <Button
-                    variant="subtle"
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                    onClick={() => handleSocialLogin("github")}
-                  >
-                    <GitHubLogo className="w-4 h-4 mr-2 fill-current" />
-                    Continue with Github
-                  </Button>
-                )}
-                {googleEnabled && (
-                  <Button
-                    variant="subtle"
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                    onClick={() => handleSocialLogin("google")}
-                  >
-                    <GoogleLogo className="w-4 h-4 mr-2 fill-current" />
-                    Continue with Google
-                  </Button>
-                )}
-              </div>
-            ))}
+          {(googleEnabled || githubEnabled) && (
+            <div className="flex flex-col gap-4">
+              {oauthError && <p className="text-sm text-destructive-500">{oauthError}</p>}
+              {githubEnabled && (
+                <Button
+                  variant="subtle"
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={() => handleSocialLogin("github")}
+                >
+                  <GitHubLogo className="w-4 h-4 mr-2 fill-current" />
+                  Continue with Github
+                </Button>
+              )}
+              {googleEnabled && (
+                <Button
+                  variant="subtle"
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={() => handleSocialLogin("google")}
+                >
+                  <GoogleLogo className="w-4 h-4 mr-2 fill-current" />
+                  Continue with Google
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
