@@ -26,13 +26,13 @@ import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
+import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
 import { createAndUploadFile } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { redis } from "@/lib/redis/client";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
@@ -590,7 +590,7 @@ export const respondWithAI = async ({
 
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
   if (isFirstMessage && isPromptConversation) {
-    const cached: string | null = await redis.get(cacheKey);
+    const cached: string | null = await cacheFor<string>(cacheKey).get();
     if (cached != null) {
       const assistantMessage = await handleAssistantMessage(cached, false);
       return createTextResponse(cached, assistantMessage.id.toString());
@@ -672,7 +672,7 @@ export const respondWithAI = async ({
           });
 
           if (finishReason === "stop" && isFirstMessage && !hasSensitiveToolCall && !hasRequestHumanSupportCall) {
-            await redis.set(cacheKey, responseText, { ex: 60 * 60 * 24 });
+            await cacheFor<string>(cacheKey).set(responseText, 60 * 60 * 24);
           }
         },
       });

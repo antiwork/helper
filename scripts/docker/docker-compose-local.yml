@@ -1,23 +1,4 @@
 services:
-  redis:
-    image: redis:7.0.12
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - 6382:6379
-    volumes:
-      - helperai_redisdata:/data
-
-  serverless-redis-http:
-    ports:
-      - "8089:80"
-    image: hiett/serverless-redis-http:latest
-    environment:
-      SRH_MODE: env
-      SRH_TOKEN: example_token
-      SRH_CONNECTION_STRING: "redis://redis:6379"
-    depends_on:
-      - redis
-
   nginx:
     image: nginx:1.27.2
     volumes:
@@ -66,5 +47,4 @@ services:
 
 volumes:
   helperai_pgdata:
-  helperai_redisdata:
   helperai_miniodata:

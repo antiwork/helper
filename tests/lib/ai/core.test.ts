@@ -2,13 +2,10 @@ import { createHash } from "crypto";
 import { embed } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateEmbedding } from "@/lib/ai/core";
-import { redis } from "@/lib/redis/client";
+import { cacheFor } from "@/lib/cache";
 
-vi.mock("@/lib/redis/client", () => ({
-  redis: {
-    get: vi.fn(),
-    set: vi.fn(),
-  },
+vi.mock("@/lib/cache", () => ({
+  cacheFor: vi.fn(),
 }));
 
 vi.mock("ai", () => ({
@@ -33,22 +30,26 @@ describe("generateEmbedding", () => {
   });
 
   it("returns cached embedding if available", async () => {
-    vi.mocked(redis.get).mockResolvedValue(mockEmbedding);
+    const mockCache = { get: vi.fn(), set: vi.fn() };
+    vi.mocked(cacheFor).mockReturnValue(mockCache);
+    mockCache.get.mockResolvedValue(mockEmbedding);
 
     const result = await generateEmbedding(mockInput);
 
     expect(result).toEqual(mockEmbedding);
-    expect(redis.get).toHaveBeenCalledWith(cacheKey);
+    expect(mockCache.get).toHaveBeenCalledWith();
     expect(embed).not.toHaveBeenCalled();
   });
 
   it("generates new embedding if not cached", async () => {
-    vi.mocked(redis.get).mockResolvedValue(null);
+    const mockCache = { get: vi.fn(), set: vi.fn() };
+    vi.mocked(cacheFor).mockReturnValue(mockCache);
+    mockCache.get.mockResolvedValue(null);
 
     const result = await generateEmbedding(mockInput);
 
     expect(result).toEqual(mockEmbedding);
-    expect(redis.get).toHaveBeenCalledWith(cacheKey);
+    expect(mockCache.get).toHaveBeenCalledWith();
     expect(embed).toHaveBeenCalledWith({
       model: expect.any(Object),
       value: mockInput,
@@ -57,11 +58,13 @@ describe("generateEmbedding", () => {
         functionId: "generate-embedding",
       },
     });
-    expect(redis.set).toHaveBeenCalledWith(cacheKey, mockEmbedding, { ex: 60 * 60 * 24 * 30 });
+    expect(mockCache.set).toHaveBeenCalledWith(mockEmbedding, 60 * 60 * 24 * 30);
   });
 
   it("uses custom functionId when provided", async () => {
-    vi.mocked(redis.get).mockResolvedValue(null);
+    const mockCache = { get: vi.fn(), set: vi.fn() };
+    vi.mocked(cacheFor).mockReturnValue(mockCache);
+    mockCache.get.mockResolvedValue(null);
     const customFunctionId = "custom-function-id";
 
     await generateEmbedding(mockInput, customFunctionId);
@@ -77,7 +80,9 @@ describe("generateEmbedding", () => {
   });
 
   it("replaces newlines with spaces in input", async () => {
-    vi.mocked(redis.get).mockResolvedValue(null);
+    const mockCache = { get: vi.fn(), set: vi.fn() };
+    vi.mocked(cacheFor).mockReturnValue(mockCache);
+    mockCache.get.mockResolvedValue(null);
     const inputWithNewlines = "Test\ninput\nwith\nnewlines";
 
     await generateEmbedding(inputWithNewlines);
@@ -93,12 +98,14 @@ describe("generateEmbedding", () => {
   });
 
   it("skips cache when skipCache option is true", async () => {
-    vi.mocked(redis.get).mockResolvedValue(mockEmbedding);
+    const mockCache = { get: vi.fn(), set: vi.fn() };
+    vi.mocked(cacheFor).mockReturnValue(mockCache);
+    mockCache.get.mockResolvedValue(mockEmbedding);
 
     const result = await generateEmbedding(mockInput, undefined, { skipCache: true });
 
     expect(result).toEqual(mockEmbedding);
-    expect(redis.get).not.toHaveBeenCalled();
+    expect(mockCache.get).not.toHaveBeenCalled();
     expect(embed).toHaveBeenCalledWith({
       model: expect.any(Object),
       value: mockInput,
@@ -107,6 +114,6 @@ describe("generateEmbedding", () => {
         functionId: "generate-embedding",
       },
     });
-    expect(redis.set).not.toHaveBeenCalled();
+    expect(mockCache.set).not.toHaveBeenCalled();
   });
 });
