@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { authUsers } from "@/db/supabaseSchema/auth";
+import { authIdentities, authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
@@ -101,7 +101,12 @@ export const updateUserMailboxData = async (
 };
 
 export const findUserViaSlack = cache(async (token: string, slackUserId: string) => {
-  // TODO: get by Slack provider
+  const linkedAccount = await db.query.authIdentities.findFirst({
+    where: and(eq(authIdentities.provider, "slack_oidc"), eq(authIdentities.provider_id, slackUserId)),
+  });
+  if (linkedAccount) {
+    return (await db.query.authUsers.findFirst({ where: eq(authUsers.id, linkedAccount.user_id) })) ?? null;
+  }
   const slackUser = await getSlackUser(token, slackUserId);
   return (await db.query.authUsers.findFirst({ where: eq(authUsers.email, slackUser?.profile?.email ?? "") })) ?? null;
 });

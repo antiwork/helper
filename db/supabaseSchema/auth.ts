@@ -1,3 +1,4 @@
+import { Provider } from "@supabase/supabase-js";
 import { pgSchema } from "drizzle-orm/pg-core";
 
 const authSchema = pgSchema("auth");
@@ -13,6 +14,16 @@ export const authUsers = authSchema.table("users", (t) => ({
     .timestamp()
     .defaultNow()
     .$onUpdate(() => new Date()),
+}));
+
+export const authIdentities = authSchema.table("identities", (t) => ({
+  id: t.text().primaryKey(),
+  user_id: t
+    .text()
+    .notNull()
+    .references(() => authUsers.id),
+  provider: t.text().notNull().$type<Provider>(),
+  provider_id: t.text().notNull(),
 }));
 
 export type DbOrAuthUser = {

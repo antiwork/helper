@@ -4,11 +4,9 @@ set -e
 
 cleanup() {
     echo "Shutting down..."
+    echo -e "\033[34mℹ️ The app will be stopped, but background services are still running. Use pnpm services:stop to stop them.\033[0m"
 
     pkill -P $$
-
-    echo -e "\033[34mℹ️ The app is stopped, but background services are still running. Use pnpm services:stop to stop them.\033[0m"
-
     exit 0
 }
 

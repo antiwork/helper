@@ -109,13 +109,9 @@ export const env = createEnv({
       z.string().min(1),
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
     ),
-    // Determines which auth providers to show on the login page. Should match the auth options enabled in supabase/config.toml or on your cloud instance.
+    // Comma-separated list of auth providers to show on the login page. Should match the auth options enabled in supabase/config.toml or on your cloud instance.
     NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z
       .string()
-      .regex(
-        /^((password|google|github),?)+$/,
-        "must be a comma-separated list of auth providers. Currently supported: password, google, github",
-      )
       .default("password")
       .transform((str) => str.split(",")),
 
