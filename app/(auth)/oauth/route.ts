@@ -16,5 +16,7 @@ export async function GET(request: Request) {
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${getBaseUrl()}/auth-error`);
+  return NextResponse.redirect(
+    `${getBaseUrl()}/auth-error?error=${searchParams.get("error_description")}&error_code=${searchParams.get("error_code")}`,
+  );
 }
