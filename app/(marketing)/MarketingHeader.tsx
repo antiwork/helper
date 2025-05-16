@@ -4,7 +4,6 @@ import { BookOpen, Inbox } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSession } from "@/components/useSession";
 import { cn } from "@/lib/utils";
@@ -73,7 +72,7 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
                 <p>Docs</p>
               </TooltipContent>
             </Tooltip>
-            {session ? (
+            {!!session && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link href="/mailboxes" className="flex items-center group">
@@ -86,12 +85,6 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
                   <p>Go to mailbox</p>
                 </TooltipContent>
               </Tooltip>
-            ) : (
-              <Link href="/login">
-                <Button variant="bright" size="sm" className="text-black">
-                  Get started
-                </Button>
-              </Link>
             )}
           </div>
         </div>

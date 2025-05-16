@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   Archive,
   ArrowRight,
@@ -18,6 +17,7 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
@@ -266,7 +266,7 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <Link href="/login">
+                  <Link href="/help">
                     <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
                       Get started
                     </Button>
@@ -489,7 +489,7 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <Link href="/login">
+                  <Link href="/help">
                     <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
                       Get started
                     </Button>
@@ -579,7 +579,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex justify-center mt-12">
-                <Link href="/login">
+                <Link href="/help">
                   <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
                     Get started
                   </Button>
