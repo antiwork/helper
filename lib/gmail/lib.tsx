@@ -1,11 +1,12 @@
 import { Readable } from "stream";
 import { render } from "@react-email/render";
-import { and, desc, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files } from "@/db/schema";
-import { getClerkUser } from "@/lib/data/user";
+import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import AIReplyEmail from "@/lib/emails/aiReply";
 import { getFileStream } from "@/lib/s3/utils";
 
@@ -45,9 +46,11 @@ export const convertConversationMessageToRaw = async (
     text = await render(reactEmail, { plainText: true });
   } else {
     html = email.body ?? undefined;
-    const user = await getClerkUser(email.clerkUserId);
-    if (html && user) {
-      html += `<p>Best,<br />${user.firstName}</p>`;
+    const user = email.userId
+      ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.userId) })
+      : undefined;
+    if (html && hasDisplayName(user)) {
+      html += `<p>Best,<br />${getFirstName(user)}</p>`;
     }
     text = html ? htmlToText(html) : undefined;
   }

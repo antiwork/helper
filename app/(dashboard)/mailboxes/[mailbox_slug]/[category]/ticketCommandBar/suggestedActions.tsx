@@ -56,7 +56,7 @@ export function SuggestedActions({
                 </Button>
               );
             case "assign":
-              const assignee = orgMembers?.find((m) => m.id === t.clerkUserId);
+              const assignee = orgMembers?.find((m) => m.id === t.userId);
               if (!assignee) return null;
               return (
                 <Button

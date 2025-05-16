@@ -1,10 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
+import { User } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { cache } from "react";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { db } from "@/db/client";
 import { env } from "@/lib/env";
 
 /**
@@ -19,12 +17,12 @@ import { env } from "@/lib/env";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = (opts: { headers: Headers; session: Awaited<ReturnType<typeof auth>> }) => {
+export const createTRPCContext = (opts: { headers: Headers; user: User | null }) => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   // eslint-disable-next-line no-console
-  console.log(">>> tRPC Request from", source, "by user ID", opts.session?.userId ?? "Unknown");
+  console.log(">>> tRPC Request from", source, "by user ID", opts.user?.id ?? "Unknown");
 
-  return { session: opts.session };
+  return { user: opts.user };
 };
 
 /**
@@ -101,20 +99,12 @@ export const protectedProcedure = t.procedure
   .use(sentryMiddleware)
   .use(timingMiddleware)
   .use(({ ctx, next }) => {
-    // TODO: different error code? setActive in Clerk?
-    if (!ctx.session?.userId || !ctx.session?.orgId) {
+    if (!ctx.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
     return next({
       ctx: {
-        session: { ...ctx.session, userId: ctx.session.userId, orgId: ctx.session.orgId },
+        user: ctx.user,
       },
     });
   });
-
-export const getAuthorizedMailbox = cache(
-  async (orgId: string, mailboxSlug: string) =>
-    await db.query.mailboxes.findFirst({
-      where: (mailboxes, { and, eq }) => and(eq(mailboxes.slug, mailboxSlug), eq(mailboxes.clerkOrganizationId, orgId)),
-    }),
-);

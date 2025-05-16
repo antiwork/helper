@@ -1,11 +1,9 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
-import { BookOpen, Inbox, Shuffle } from "lucide-react";
+import { Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 import { MarketingHeader } from "./MarketingHeader";
 

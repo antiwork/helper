@@ -84,8 +84,8 @@ export const updateConversation = async (
   const current = assertDefined(await tx.query.conversations.findFirst({ where: eq(conversations.id, id) }));
   if (dbUpdates.assignedToAI) {
     dbUpdates.status = "closed";
-    dbUpdates.assignedToClerkId = null;
-  } else if (dbUpdates.assignedToClerkId) {
+    dbUpdates.assignedToId = null;
+  } else if (dbUpdates.assignedToId) {
     dbUpdates.assignedToAI = false;
   }
   if (current.status !== "closed" && dbUpdates.status === "closed") {
@@ -98,7 +98,7 @@ export const updateConversation = async (
     .where(eq(conversations.id, id))
     .returning()
     .then(takeUniqueOrThrow);
-  const updatesToLog = (["status", "assignedToClerkId", "assignedToAI"] as const).filter(
+  const updatesToLog = (["status", "assignedToId", "assignedToAI"] as const).filter(
     (key) => current[key] !== updatedConversation[key],
   );
   if (updatesToLog.length > 0) {
@@ -106,7 +106,7 @@ export const updateConversation = async (
       conversationId: id,
       type: type ?? "update",
       changes: Object.fromEntries(updatesToLog.map((key) => [key, updatedConversation[key]])),
-      byClerkUserId: byUserId,
+      byUserId,
       reason: message,
     });
   }
@@ -145,7 +145,7 @@ export const updateConversation = async (
         if (
           current.status !== updatedConversation.status ||
           current.assignedToAI !== updatedConversation.assignedToAI ||
-          current.assignedToClerkId !== updatedConversation.assignedToClerkId
+          current.assignedToId !== updatedConversation.assignedToId
         ) {
           events.push(
             publishToAbly({
@@ -155,11 +155,11 @@ export const updateConversation = async (
                 id: updatedConversation.id,
                 status: updatedConversation.status,
                 assignedToAI: updatedConversation.assignedToAI,
-                assignedToClerkId: updatedConversation.assignedToClerkId,
+                assignedToId: updatedConversation.assignedToId,
                 previousValues: {
                   status: current.status,
                   assignedToAI: current.assignedToAI,
-                  assignedToClerkId: current.assignedToClerkId,
+                  assignedToId: current.assignedToId,
                 },
               },
             }),
@@ -191,7 +191,7 @@ export const serializeConversation = (
     updatedAt: conversation.updatedAt,
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
-    assignedToClerkId: conversation.assignedToClerkId,
+    assignedToId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
     platformCustomer: platformCustomer
       ? {

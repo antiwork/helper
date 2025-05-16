@@ -53,9 +53,9 @@ export const searchConversations = async (
     mailboxId: eq(conversations.mailboxId, mailbox.id),
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
-    ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToClerkId, filters.assignee) } : {}),
-    ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToClerkId) } : {}),
-    ...(filters.isAssigned === false ? { assignee: isNull(conversations.assignedToClerkId) } : {}),
+    ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToId, filters.assignee) } : {}),
+    ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToId) } : {}),
+    ...(filters.isAssigned === false ? { assignee: isNull(conversations.assignedToId) } : {}),
     ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
@@ -69,7 +69,7 @@ export const searchConversations = async (
                 and(
                   eq(conversationMessages.conversationId, conversations.id),
                   eq(conversationMessages.role, "staff"),
-                  filters.repliedBy?.length ? inArray(conversationMessages.clerkUserId, filters.repliedBy) : undefined,
+                  filters.repliedBy?.length ? inArray(conversationMessages.userId, filters.repliedBy) : undefined,
                   filters.repliedAfter ? gt(conversationMessages.createdAt, new Date(filters.repliedAfter)) : undefined,
                   filters.repliedBefore
                     ? lt(conversationMessages.createdAt, new Date(filters.repliedBefore))
@@ -220,7 +220,7 @@ const hasEvent = (where?: SQL) =>
 
 const hasStatusChangeEvent = (
   status: (typeof conversations.$inferSelect)["status"],
-  filters: { by?: "slack_bot" | "human"; byClerkId?: string[]; before?: string; after?: string },
+  filters: { by?: "slack_bot" | "human"; byUserId?: string[]; before?: string; after?: string },
   slackBotReason: string,
 ) =>
   hasEvent(
@@ -228,8 +228,8 @@ const hasStatusChangeEvent = (
       eq(conversationEvents.conversationId, conversations.id),
       filters.by === "slack_bot"
         ? eq(conversationEvents.reason, slackBotReason)
-        : isNotNull(conversationEvents.byClerkUserId),
-      filters.byClerkId?.length ? inArray(conversationEvents.byClerkUserId, filters.byClerkId) : undefined,
+        : isNotNull(conversationEvents.byUserId),
+      filters.byUserId?.length ? inArray(conversationEvents.byUserId, filters.byUserId) : undefined,
       eq(sql`${conversationEvents.changes}->>'status'`, status),
       filters.before ? lt(conversationEvents.createdAt, new Date(filters.before)) : undefined,
       filters.after ? gt(conversationEvents.createdAt, new Date(filters.after)) : undefined,

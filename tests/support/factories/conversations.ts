@@ -37,14 +37,14 @@ export const conversationFactory = {
   },
   createStaffEmail: async (
     conversationId: number,
-    clerkUserId: string,
+    userId: string,
     overrides: Partial<typeof conversationMessages.$inferInsert> = {},
   ) => {
     const [message] = await db
       .insert(conversationMessages)
       .values({
         conversationId,
-        clerkUserId,
+        userId,
         body: faker.lorem.paragraph(),
         role: "staff",
         status: "sent",

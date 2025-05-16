@@ -1,13 +1,14 @@
-import { useUser } from "@clerk/nextjs";
 import { useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 
 export const useSaveLatestMailboxSlug = (mailboxSlug: string | undefined) => {
-  const { user } = useUser();
   const lastMailboxSlug = useRef<string | null>(null);
   useEffect(() => {
-    if (mailboxSlug && lastMailboxSlug.current !== mailboxSlug && user) {
+    if (mailboxSlug && lastMailboxSlug.current !== mailboxSlug) {
       lastMailboxSlug.current = mailboxSlug;
-      user.update({ unsafeMetadata: { ...user.unsafeMetadata, lastMailboxSlug: mailboxSlug } });
+      supabase.auth.updateUser({ data: { lastMailboxSlug: mailboxSlug } });
     }
   }, [mailboxSlug]);
 };

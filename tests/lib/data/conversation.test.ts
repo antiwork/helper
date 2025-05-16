@@ -19,7 +19,6 @@ import {
   getRelatedConversations,
   updateConversation,
 } from "@/lib/data/conversation";
-import { getClerkOrganization } from "@/lib/data/organization";
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
 
 vi.mock("@/components/constants", () => ({
@@ -51,10 +50,6 @@ vi.mock("@/lib/ai", async () => {
 
 vi.mock("@/lib/ably/client", () => ({
   publishToAbly: vi.fn(),
-}));
-
-vi.mock("@/lib/data/organization", () => ({
-  getClerkOrganization: vi.fn(),
 }));
 
 describe("createConversation", () => {
@@ -105,10 +100,8 @@ describe("updateConversation", () => {
   });
 
   it("publishes an Ably event when conversation is updated", async () => {
-    const { mailbox, organization } = await userFactory.createRootUser();
+    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
     const result = await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
@@ -127,10 +120,8 @@ describe("updateConversation", () => {
   });
 
   it("publishes an Ably event when conversation status changes to closed", async () => {
-    const { mailbox, organization } = await userFactory.createRootUser();
+    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
-
-    vi.mocked(getClerkOrganization).mockResolvedValue(organization);
 
     const result = await updateConversation(conversation.id, { set: { status: "closed" } });
 
@@ -152,10 +143,10 @@ describe("updateConversation", () => {
         id: conversation.id,
         status: "closed",
         assignedToAI: false,
-        assignedToClerkId: null,
+        assignedToId: null,
         previousValues: {
           status: "open",
-          assignedToClerkId: null,
+          assignedToId: null,
           assignedToAI: false,
         },
       },

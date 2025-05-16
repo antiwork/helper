@@ -1,6 +1,5 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/peopleTable";
@@ -33,9 +32,6 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
               <ViewSwitcher mailboxSlug={mailboxSlug} />
             </div>
           </div>
-        </div>
-        <div className="ml-auto py-1">
-          <UserButton />
         </div>
       </div>
 

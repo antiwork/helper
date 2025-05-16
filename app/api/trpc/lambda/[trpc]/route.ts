@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { createClient } from "@/lib/supabase/server";
 import { appRouter, createTRPCContext } from "@/trpc";
 
 export const OPTIONS = () => {
@@ -14,11 +14,13 @@ const handler = async (req: any) => {
     endpoint: "/api/trpc/lambda",
     router: appRouter,
     req,
-    createContext: async () =>
-      createTRPCContext({
-        session: await auth(),
+    createContext: async () => {
+      const supabase = await createClient();
+      return createTRPCContext({
+        user: (await supabase.auth.getUser()).data.user,
         headers: req.headers,
-      }),
+      });
+    },
     onError({ error, path }) {
       // eslint-disable-next-line no-console
       console.error(`>>> tRPC Error on '${path}'`, error);

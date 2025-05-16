@@ -10,7 +10,7 @@ export const notes = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     body: text().notNull(),
-    clerkUserId: text(),
+    userId: text("clerk_user_id"),
     role: text(),
     conversationId: bigint({ mode: "number" }).notNull(),
     slackMessageTs: text(),
@@ -20,7 +20,7 @@ export const notes = pgTable(
     return {
       createdAtIdx: index("conversatio_created_5ad461_idx").on(table.createdAt),
       conversationIdIdx: index("conversations_note_conversation_id_a486ed4c").on(table.conversationId),
-      clerkUserIdIdx: index("conversations_note_clerk_user_id").on(table.clerkUserId),
+      userIdIdx: index("conversations_note_clerk_user_id").on(table.userId),
     };
   },
 );

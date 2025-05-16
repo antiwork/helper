@@ -1,13 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
 import Ably from "ably";
 import { NextRequest, NextResponse } from "next/server";
+import { getMailboxBySlug } from "@/lib/data/mailbox";
 import { env } from "@/lib/env";
-import { getAuthorizedMailbox } from "@/trpc";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session.userId || !session.orgId) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,7 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing mailboxSlug parameter" }, { status: 400 });
   }
 
-  const mailbox = await getAuthorizedMailbox(session.orgId, mailboxSlug);
+  const mailbox = await getMailboxBySlug(mailboxSlug);
   if (!mailbox) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // The Ably API key capabilities string is `[*]*`, meaning that it can grant access
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
   // https://ably.com/docs/auth/capabilities#wildcards
   const client = new Ably.Rest(env.ABLY_API_KEY);
   const data = await client.auth.createTokenRequest({
-    clientId: session.userId,
+    clientId: user.id,
     capability: {
       [`${mailbox.slug}:*`]: ["subscribe", "presence"],
     },

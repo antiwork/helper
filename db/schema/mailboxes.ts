@@ -16,7 +16,9 @@ export const mailboxes = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
     slug: varchar({ length: 50 }).notNull(),
-    clerkOrganizationId: text().notNull(),
+    unused_organizationId: text("clerk_organization_id")
+      .notNull()
+      .$default(() => ""),
     gmailSupportEmailId: bigint({ mode: "number" }),
     slackAlertChannel: text("slack_escalation_channel"),
     slackBotToken: text(),
@@ -62,7 +64,7 @@ export const mailboxes = pgTable(
   (table) => {
     return {
       createdAtIdx: index("mailboxes_mailbox_created_at_5d4ea7d0").on(table.createdAt),
-      clerkOrganizationIdIdx: index("mailboxes_mailbox_clerk_organization_id").on(table.clerkOrganizationId),
+      unused_organizationIdIdx: index("mailboxes_mailbox_clerk_organization_id").on(table.unused_organizationId),
       slugUnique: unique("mailboxes_mailbox_slug_key").on(table.slug),
       gmailSupportEmailIdUnique: unique("mailboxes_mailbox_support_email_id_key").on(table.gmailSupportEmailId),
     };

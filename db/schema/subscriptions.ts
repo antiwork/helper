@@ -1,7 +1,7 @@
 import { bigint, index, pgTable, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 
-export const subscriptions = pgTable(
+export const unused_subscriptions = pgTable(
   "mailboxes_subscription",
   {
     ...withTimestamps,

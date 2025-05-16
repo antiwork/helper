@@ -18,17 +18,17 @@ export const conversationEvents = pgTable(
     changes: jsonb()
       .$type<{
         status?: "open" | "closed" | "spam";
-        assignedToClerkId?: string | null;
+        assignedToId?: string | null;
         assignedToAI?: boolean;
         isVisible?: boolean;
       }>()
       .notNull(),
-    byClerkUserId: text(),
+    byUserId: text("by_clerk_user_id"),
     reason: text(),
   },
   (table) => ({
     conversationIdIdx: index("conversation_events_conversation_id_idx").on(table.conversationId),
-    byClerkUserIdIdx: index("conversation_events_by_clerk_user_id_idx").on(table.byClerkUserId),
+    byClerkIdIdx: index("conversation_events_by_clerk_user_id_idx").on(table.byUserId),
     typeCreatedAtIdx: index("conversation_events_type_created_at_idx").on(table.type, table.createdAt),
   }),
 );

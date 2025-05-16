@@ -4,7 +4,8 @@ import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
-import { getClerkUser } from "@/lib/data/user";
+import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -67,7 +68,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       createdAt: message.createdAt.toISOString(),
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,
-      annotations: message.clerkUserId ? await getUserAnnotation(message.clerkUserId) : undefined,
+      annotations: message.userId ? await getUserAnnotation(message.userId) : undefined,
       experimental_attachments: (message.metadata as MessageMetadata)?.includesScreenshot
         ? attachments.filter((a) => a.messageId === message.id)
         : [],
@@ -116,6 +117,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 }
 
 const getUserAnnotation = cache(async (userId: string) => {
-  const user = await getClerkUser(userId);
-  return user ? [{ user: { firstName: user.firstName } }] : undefined;
+  const user = await db.query.authUsers.findFirst({
+    where: eq(authUsers.id, userId),
+  });
+  return user ? [{ user: { name: hasDisplayName(user) ? getFirstName(user) : undefined } }] : undefined;
 });

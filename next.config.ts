@@ -15,6 +15,7 @@ let nextConfig: NextConfig = {
   /** We already do linting as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   poweredByHeader: false,
+  allowedDevOrigins: ["https://helperai.dev"],
   // https://github.com/nextauthjs/next-auth/discussions/9385#discussioncomment-8875108
   transpilePackages: ["next-auth"],
   serverExternalPackages: [

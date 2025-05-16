@@ -229,13 +229,13 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         case "conversations":
           break;
         case "assigned":
-          if (!newConversation.assignedToClerkId) return data;
+          if (!newConversation.assignedToId) return data;
           break;
         case "unassigned":
-          if (newConversation.assignedToClerkId) return data;
+          if (newConversation.assignedToId) return data;
           break;
         case "mine":
-          if (newConversation.assignedToClerkId !== firstPage.assignedToClerkIds?.[0]) return data;
+          if (newConversation.assignedToId !== firstPage.assignedToIds?.[0]) return data;
           break;
       }
 
@@ -473,14 +473,14 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {(conversation.assignedToClerkId || conversation.assignedToAI) && (
+            {(conversation.assignedToId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(
                   "shrink-0 break-all flex items-center gap-1 text-xs",
                   isActive && "font-medium",
                   variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
                 )}
-                assignedToClerkId={conversation.assignedToClerkId}
+                assignedToId={conversation.assignedToId}
                 assignedToAI={conversation.assignedToAI}
               />
             )}
@@ -521,11 +521,11 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
 };
 
 export const AssignedToLabel = ({
-  assignedToClerkId,
+  assignedToId,
   assignedToAI,
   className,
 }: {
-  assignedToClerkId: string | null;
+  assignedToId: string | null;
   assignedToAI?: boolean;
   className?: string;
 }) => {
@@ -543,7 +543,7 @@ export const AssignedToLabel = ({
     );
   }
 
-  const displayName = members?.find((m) => m.id === assignedToClerkId)?.displayName?.split(" ")[0];
+  const displayName = members?.find((m) => m.id === assignedToId)?.displayName?.split(" ")[0];
 
   return displayName ? (
     <div className={className} title={`Assigned to ${displayName}`}>

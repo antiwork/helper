@@ -1,4 +1,3 @@
-import { User } from "@clerk/nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { ParsedMailbox } from "email-addresses";
@@ -13,6 +12,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
+import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
@@ -20,7 +20,6 @@ import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, finishFileUpload } from "@/lib/data/files";
 import { matchesTransactionalEmailAddress } from "@/lib/data/transactionalEmailAddressRegex";
-import { findUserByEmail } from "@/lib/data/user";
 import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
@@ -66,21 +65,15 @@ const isThankYouOrAutoResponse = async (
 };
 
 const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailCc: string) => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, mailboxId),
-    columns: {
-      clerkOrganizationId: true,
-    },
-  });
-  if (!mailbox) return;
-
   const ccAddresses = extractAddresses(emailCc);
 
   for (const ccAddress of ccAddresses) {
-    const ccStaffUser = await findUserByEmail(mailbox.clerkOrganizationId, ccAddress);
+    const ccStaffUser = await db.query.authUsers.findFirst({
+      where: eq(authUsers.email, ccAddress),
+    });
     if (ccStaffUser) {
       await updateConversation(conversationId, {
-        set: { assignedToClerkId: ccStaffUser.id, assignedToAI: false },
+        set: { assignedToId: ccStaffUser.id, assignedToAI: false },
         message: "Auto-assigned based on CC",
         skipAblyEvents: true,
       });
@@ -99,7 +92,7 @@ export const createMessageAndProcessAttachments = async (
   gmailMessageId: string,
   gmailThreadId: string,
   conversation: { id: number; slug: string },
-  staffUser: User | null,
+  staffUser?: DbOrAuthUser,
 ) => {
   const references = parsedEmail.references
     ? Array.isArray(parsedEmail.references)
@@ -113,7 +106,7 @@ export const createMessageAndProcessAttachments = async (
   const newEmail = await createConversationMessage({
     role: staffUser ? "staff" : "user",
     status: staffUser ? "sent" : null,
-    clerkUserId: staffUser?.id,
+    userId: staffUser?.id,
     gmailMessageId,
     gmailThreadId,
     messageId: parsedEmail.messageId?.length ? parsedEmail.messageId : null,
@@ -137,11 +130,11 @@ export const createMessageAndProcessAttachments = async (
     const conversationRecord = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversation.id),
       columns: {
-        assignedToClerkId: true,
+        assignedToId: true,
       },
     });
 
-    if (!conversationRecord?.assignedToClerkId) {
+    if (!conversationRecord?.assignedToId) {
       await assignBasedOnCc(mailboxId, conversation.id, emailCc);
     }
   }
@@ -213,7 +206,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
     dataHistoryId: data.historyId,
   });
 
-  const client = await getGmailService(gmailSupportEmail);
+  const client = getGmailService(gmailSupportEmail);
   let histories = [];
 
   // The history ID on the GmailSupportEmail record expires after a certain amount of time, so we
@@ -286,7 +279,9 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
       );
 
-      const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
+      const staffUser = await db.query.authUsers.findFirst({
+        where: eq(authUsers.email, parsedEmailFrom.address),
+      });
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
       let shouldIgnore =

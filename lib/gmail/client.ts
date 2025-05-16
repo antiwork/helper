@@ -2,10 +2,9 @@ import { google } from "googleapis";
 import { getBaseUrl } from "@/components/constants";
 import { gmailSupportEmails } from "@/db/schema";
 import { env } from "@/lib/env";
-import { getOAuthAccessToken } from "../data/user";
 
-export const getGmailService = async (
-  gmailSupportEmail: Pick<typeof gmailSupportEmails.$inferSelect, "clerkUserId" | "accessToken" | "refreshToken">,
+export const getGmailService = (
+  gmailSupportEmail: Pick<typeof gmailSupportEmails.$inferSelect, "accessToken" | "refreshToken">,
 ) => {
   const auth = new google.auth.OAuth2({
     clientId: env.GOOGLE_CLIENT_ID,
@@ -13,14 +12,10 @@ export const getGmailService = async (
     redirectUri: `${getBaseUrl()}/api/connect/google/callback`,
     forceRefreshOnFailure: true,
   });
-  if (gmailSupportEmail.clerkUserId) {
-    auth.setCredentials({ access_token: await getOAuthAccessToken(gmailSupportEmail.clerkUserId, "oauth_google") });
-  } else {
-    auth.setCredentials({
-      access_token: gmailSupportEmail.accessToken,
-      refresh_token: gmailSupportEmail.refreshToken,
-    });
-  }
+  auth.setCredentials({
+    access_token: gmailSupportEmail.accessToken,
+    refresh_token: gmailSupportEmail.refreshToken,
+  });
   return google.gmail({ version: "v1", auth });
 };
 

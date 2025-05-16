@@ -1,16 +1,14 @@
-import { useUser } from "@clerk/nextjs";
 import { usePresence, usePresenceListener } from "ably/react";
 import { useMemo } from "react";
+import { useSession } from "@/components/useSession";
 import { conversationChannelId } from "@/lib/ably/channels";
+import { getFullName } from "@/lib/auth/authUtils";
 
 const useViewers = (mailboxSlug: string, conversationSlug: string) => {
-  const { user } = useUser();
+  const { user } = useSession() ?? {};
   const channel = conversationChannelId(mailboxSlug, conversationSlug);
-  usePresence(
-    { channelName: channel, skip: !user },
-    { id: user?.id, name: user?.fullName ?? user?.emailAddresses[0]?.emailAddress, image: user?.imageUrl },
-  );
-  const { presenceData } = usePresenceListener<{ id: string; name: string; image: string }>(channel);
+  usePresence({ channelName: channel, skip: !user }, { id: user?.id, name: user ? getFullName(user) : "" });
+  const { presenceData } = usePresenceListener<{ id: string; name: string }>(channel);
 
   return useMemo(() => {
     const uniqueViewers = new Set<string>();

@@ -48,7 +48,7 @@ export const processGmailThreads = async (gmailSupportEmailId: number, weekStart
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
     })
     .then(assertDefinedOrRaiseNonRetriableError);
-  const client = await getGmailService(gmailSupportEmail);
+  const client = getGmailService(gmailSupportEmail);
 
   const before = new Date(Math.min(addDays(weekStartDate, 7).getTime(), toInclusiveDate.getTime()));
 

@@ -25,8 +25,8 @@ describe("filesRouter", () => {
 
   describe("initiateUpload", () => {
     it("creates a file entry and returns a signed URL for inline files", async () => {
-      const { user, organization } = await userFactory.createRootUser();
-      const ctx = createTestTRPCContext(user, organization);
+      const { user } = await userFactory.createRootUser();
+      const ctx = createTestTRPCContext(user);
       const caller = createCaller(ctx);
 
       const result = await caller.mailbox.conversations.files.initiateUpload({
@@ -70,9 +70,9 @@ describe("filesRouter", () => {
     });
 
     it("uses private ACL for non-inline files", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
-      const ctx = createTestTRPCContext(user, organization);
+      const ctx = createTestTRPCContext(user);
       const caller = createCaller(ctx);
 
       const result = await caller.mailbox.conversations.files.initiateUpload({

@@ -14,7 +14,7 @@ export const gmailSupportEmails = pgTable(
     historyId: integer(),
     accessToken: encryptedField(),
     refreshToken: encryptedField(),
-    clerkUserId: text(),
+    unused_userId: text("clerk_user_id"),
   },
   (table) => {
     return {

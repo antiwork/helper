@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai/react";
+import { createClient } from "@/lib/supabase/server";
 import { AppLayout } from "./appLayout";
 import { WidgetButtons } from "./widgetButtons";
 
@@ -11,10 +11,13 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  const session = await auth();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { email, isVip, anonymous } = await searchParams;
 
-  if (!session) {
+  if (!user) {
     return <div>Not logged in</div>;
   }
 

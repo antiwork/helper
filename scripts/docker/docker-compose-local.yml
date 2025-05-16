@@ -1,15 +1,4 @@
 services:
-  db:
-    image: pgvector/pgvector:0.7.4-pg15
-    volumes:
-      - helperai_pgdata:/var/lib/postgresql/data
-    ports:
-      - 5435:5432
-    environment:
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: helperai_development
-
   redis:
     image: redis:7.0.12
     command: ["redis-server", "--appendonly", "yes"]

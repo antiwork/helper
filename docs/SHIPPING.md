@@ -9,7 +9,7 @@ A new table is needed to store auto-assign rules. This table will integrate with
 - `id` (serial, primary key)
 - `mailboxId` (integer, references mailboxes table)
 - `subtopicId` (integer, references subtopics table)
-- `assignees` (text array, stores Clerk user IDs of assignees)
+- `assignees` (text array, stores user IDs of assignees)
 - `replyWithAIFirst` (boolean, default false)
 - Note: Consider adding an index on `mailboxId` and `subtopicId` to improve query performance
 
