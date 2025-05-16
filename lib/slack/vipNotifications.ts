@@ -4,6 +4,7 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, platformCustomers } from "@/db/schema";
 import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
@@ -184,7 +185,7 @@ export const updateVipMessageInSlack = async ({
   email?: boolean;
   closed?: boolean;
 }) => {
-  const byUser = resolvingUser ? ` by ${resolvingUser.user_metadata?.name}` : "";
+  const byUser = resolvingUser ? ` by ${getFullName(resolvingUser)}` : "";
 
   let text = "";
   if (email && closed) {

@@ -13,6 +13,7 @@ import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
+import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 import { getSlackPermalink } from "@/lib/slack/client";
@@ -139,7 +140,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.userId ? (membersById[note.userId]?.user_metadata?.name ?? null) : null,
+      from: note.userId && membersById[note.userId] ? getFullName(membersById[note.userId]!) : null,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -153,12 +154,13 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       ...event,
       changes: {
         ...event.changes,
-        assignedToUser: event.changes.assignedToId
-          ? (membersById[event.changes.assignedToId]?.user_metadata?.name ?? null)
-          : event.changes.assignedToId,
+        assignedToUser:
+          event.changes.assignedToId && membersById[event.changes.assignedToId]
+            ? getFullName(membersById[event.changes.assignedToId]!)
+            : event.changes.assignedToId,
         assignedToAI: event.changes.assignedToAI,
       },
-      byUser: event.byUserId ? (membersById[event.byUserId]?.user_metadata?.name ?? null) : null,
+      byUser: event.byUserId && membersById[event.byUserId] ? getFullName(membersById[event.byUserId]!) : null,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -238,7 +240,7 @@ export const serializeMessage = async (
     emailTo: message.emailTo,
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
-    from: message.role === "staff" && user ? (user.user_metadata?.name ?? user.email) : message.emailFrom,
+    from: message.role === "staff" && user ? getFullName(user) : message.emailFrom,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:

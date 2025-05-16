@@ -16,7 +16,7 @@ describe("organizationRouter", () => {
       const { user } = await userFactory.createRootUser({
         userOverrides: {
           user_metadata: {
-            name: "Test User",
+            display_name: "Test User",
           },
         },
       });
@@ -27,7 +27,7 @@ describe("organizationRouter", () => {
       expect(result).toEqual([
         {
           id: user.id,
-          displayName: user.user_metadata?.name,
+          displayName: user.user_metadata?.display_name,
           email: user.email,
         },
       ]);

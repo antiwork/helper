@@ -3,6 +3,7 @@ import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
 
@@ -92,7 +93,7 @@ export const updateUserMailboxData = async (
 
   return {
     id: updatedUser.id,
-    displayName: updatedUser.user_metadata?.name ?? updatedUser.id,
+    displayName: getFullName(updatedUser),
     email: updatedUser.email ?? undefined,
     role: updatedMailboxData.role || "afk",
     keywords: updatedMailboxData.keywords || [],

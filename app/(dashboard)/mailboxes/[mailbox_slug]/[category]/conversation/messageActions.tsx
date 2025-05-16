@@ -16,6 +16,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
+import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
@@ -358,11 +359,11 @@ export const MessageActions = () => {
         enableFileUpload
         actionButtons={actionButtons}
         signature={
-          user?.user_metadata.name ? (
+          hasDisplayName(user) ? (
             <div className="mt-1 text-muted-foreground">
               Best,
               <br />
-              {user.user_metadata.name}
+              {getFirstName(user)}
               <div className="text-xs mt-2">
                 Note: This signature will be automatically included in email responses, but not in live chat
                 conversations.

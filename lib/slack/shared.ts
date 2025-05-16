@@ -4,6 +4,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFullName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
 import { createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
@@ -190,7 +191,7 @@ const openAssignModal = async (
             options: (await db.query.authUsers.findMany()).map((member) => ({
               text: {
                 type: "plain_text",
-                text: `${member.user_metadata?.name || member.email}`,
+                text: getFullName(member),
               },
               value: member.id,
             })),

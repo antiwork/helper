@@ -82,7 +82,9 @@ export default inngest.createFunction(
                   const assignee = usersById[conversation.assignedToId!];
                   const assigneeEmail = assignee?.email;
                   const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
-                  const mention = slackUserId ? `<@${slackUserId}>` : assignee?.user_metadata?.name || "Unknown";
+                  const mention = slackUserId
+                    ? `<@${slackUserId}>`
+                    : assignee?.user_metadata?.display_name || assignee?.email || "Unknown";
                   const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
                   return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
                 }),

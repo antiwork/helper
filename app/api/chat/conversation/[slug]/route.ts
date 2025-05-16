@@ -5,6 +5,7 @@ import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -119,5 +120,5 @@ const getUserAnnotation = cache(async (userId: string) => {
   const user = await db.query.authUsers.findFirst({
     where: eq(authUsers.id, userId),
   });
-  return user ? [{ user: { name: user.user_metadata?.name } }] : undefined;
+  return user ? [{ user: { name: hasDisplayName(user) ? getFirstName(user) : undefined } }] : undefined;
 });

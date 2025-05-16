@@ -12,9 +12,3 @@ export const GMAIL_AUTHORIZATION_PARAMS = {
   scope: GMAIL_SCOPES.join(" "),
   response_type: "code",
 };
-
-export const INVALID_SLACK_CREDENTIALS_ERROR = "invalidSlackCredentials";
-
-export const GUMROAD_ROOT_USER_ID = 1;
-export const GUMROAD_ROOT_USER_USERNAME = "gumroad";
-export const GUMROAD_ROOT_USER_DEVELOPMENT_PASSWORD = "password";

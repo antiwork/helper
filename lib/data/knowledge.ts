@@ -6,6 +6,7 @@ import { db } from "@/db/client";
 import { faqs, mailboxes } from "@/db/schema";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
+import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { findUserViaSlack } from "@/lib/data/user";
 import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slack/client";
@@ -34,7 +35,7 @@ export const approveSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user?.user_metadata?.name ?? null);
+    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -56,7 +57,7 @@ export const rejectSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user?.user_metadata?.name ?? null);
+    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,

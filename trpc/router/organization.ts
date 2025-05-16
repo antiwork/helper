@@ -10,7 +10,7 @@ export const organizationRouter = {
     const users = await db.query.authUsers.findMany();
     return users.map((user) => ({
       id: user.id,
-      displayName: user.user_metadata?.name ?? user.email ?? user.id,
+      displayName: user.user_metadata?.display_name ?? user.email ?? user.id,
       email: user.email,
     }));
   }),

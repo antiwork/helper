@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
+import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useAssignTicket } from "./useAssignTicket";
@@ -49,7 +50,7 @@ export const AssignPopoverButton = ({
 
     const selfAssignee = {
       id: currentUser.id,
-      displayName: currentUser.user_metadata.name || currentUser.email || currentUser.id,
+      displayName: getFullName(currentUser),
     };
     assignTicket(selfAssignee, null);
   });

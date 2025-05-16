@@ -1,6 +1,7 @@
 import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails } from "@/db/schema";
+import { getFullName } from "@/lib/auth/authUtils";
 import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
 
@@ -59,7 +60,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
       return {
         id: user.id,
         email: user.email ?? undefined,
-        displayName: user.user_metadata?.name,
+        displayName: getFullName(user),
         replyCount: replyCounts[user.id] || 0,
         role: mailboxRole,
       };

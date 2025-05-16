@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 import { getBaseUrl } from "@/components/constants";
 import { Avatar } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/components/useSession";
+import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
@@ -33,24 +33,13 @@ export function AccountDropdown({ trigger }: { trigger: (children: ReactNode) =>
       <DropdownMenuTrigger asChild>
         {trigger(
           <>
-            <Avatar fallback={user.email ?? ""} size="sm" />
-            <span className="grow truncate text-base">{user.user_metadata.name ?? user.email}</span>
+            <Avatar fallback={getFullName(user)} size="sm" />
+            <span className="grow truncate text-base">{getFullName(user)}</span>
             <ChevronUp className="ml-auto" />
           </>,
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
-        <Dialog>
-          <DialogTrigger asChild>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <span>Account settings</span>
-            </DropdownMenuItem>
-          </DialogTrigger>
-          <DialogContent className="max-w-none w-auto min-w-3xl min-h-2xl p-0 dark:text-background">
-            <DialogTitle className="sr-only">Account settings</DialogTitle>
-            {/* TODO */}
-          </DialogContent>
-        </Dialog>
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();

@@ -6,6 +6,7 @@ import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import AIReplyEmail from "@/lib/emails/aiReply";
 import { getFileStream } from "@/lib/s3/utils";
 
@@ -48,8 +49,8 @@ export const convertConversationMessageToRaw = async (
     const user = email.userId
       ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.userId) })
       : undefined;
-    if (html && user) {
-      html += `<p>Best,<br />${user.user_metadata?.name}</p>`;
+    if (html && hasDisplayName(user)) {
+      html += `<p>Best,<br />${getFirstName(user)}</p>`;
     }
     text = html ? htmlToText(html) : undefined;
   }

@@ -7,6 +7,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
+import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, getSearchResultIds, searchConversations } from "@/lib/data/conversation/search";
@@ -139,7 +140,7 @@ export const generateAgentResponse = async (
         const members = await db.query.authUsers.findMany();
         return members.map((member) => ({
           id: member.id,
-          name: member.user_metadata?.name,
+          name: getFullName(member),
           emails: member.email,
         }));
       },
@@ -264,7 +265,7 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : members.find((member) => member.id === message.userId)?.user_metadata?.name,
+              : getFullName(members.find((member) => member.id === message.userId)!),
           userId: message.userId,
         }));
       },
