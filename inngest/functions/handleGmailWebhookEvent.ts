@@ -18,12 +18,11 @@ import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
-import { createAndUploadFile, finishFileUpload } from "@/lib/data/files";
+import { createAndUploadFile, finishFileUpload, generateKey, uploadFile } from "@/lib/data/files";
 import { matchesTransactionalEmailAddress } from "@/lib/data/transactionalEmailAddressRegex";
 import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
-import { generateS3Key, getS3Url, uploadFile } from "@/lib/s3/utils";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
@@ -446,7 +445,7 @@ const processGmailAttachments = async (conversationSlug: string, messageId: numb
     attachments.map(async (attachment) => {
       try {
         const fileName = attachment.filename ?? "untitled";
-        const s3Key = generateS3Key(["attachments", conversationSlug], fileName);
+        const key = generateKey(["attachments", conversationSlug], fileName);
         const contentType = attachment.contentType ?? "application/octet-stream";
 
         const { id: fileId } = await db
@@ -454,7 +453,7 @@ const processGmailAttachments = async (conversationSlug: string, messageId: numb
           .values({
             messageId,
             name: fileName,
-            url: getS3Url(s3Key),
+            key,
             mimetype: contentType,
             size: attachment.size,
             isInline: false,
@@ -463,7 +462,7 @@ const processGmailAttachments = async (conversationSlug: string, messageId: numb
           .returning({ id: files.id })
           .then(takeUniqueOrThrow);
 
-        await uploadFile(attachment.content, s3Key, contentType);
+        await uploadFile(key, attachment.content, { mimetype: contentType });
         await generateFilePreview(fileId);
       } catch (error) {
         captureExceptionAndThrowIfDevelopment(error);
@@ -514,7 +513,7 @@ export const extractAndUploadInlineImages = async (html: string) => {
           isInline: true,
         });
 
-        processedHtml = processedHtml.replace(match, match.replace(/src="[^"]+"/i, `src="${file.url}"`));
+        processedHtml = processedHtml.replace(match, match.replace(/src="[^"]+"/i, `src="${file.key}"`));
         fileSlugs.push(file.slug);
       } catch (error) {
         captureExceptionAndLogIfDevelopment(error);

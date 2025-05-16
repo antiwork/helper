@@ -10,10 +10,6 @@ vi.mock("@/lib/env", () => ({
   },
 }));
 
-vi.mock("@/lib/s3/utils", () => ({
-  isS3Url: (url: string) => url.includes("s3.amazonaws.com"),
-}));
-
 describe("proxyExternalContent", () => {
   const mockSignature = "mocked-signature";
   const mockExpires = 1234567890;
@@ -121,14 +117,14 @@ describe("proxyExternalContent", () => {
     const htmlWithExcludedUrls = `
       <img src="https://helper.ai/logo.png">
       <img src="https://proxy.helperai.com/existing-proxy.png">
-      <img src="https://s3.amazonaws.com/bucket/image.jpg">
+      <img src="https://supabase.helperai.dev/bucket/image.jpg">
     `;
 
     const result = await proxyExternalContent(htmlWithExcludedUrls);
 
     expect(result).toContain('src="https://helper.ai/logo.png"');
     expect(result).toContain('src="https://proxy.helperai.com/existing-proxy.png"');
-    expect(result).toContain('src="https://s3.amazonaws.com/bucket/image.jpg"');
+    expect(result).toContain('src="https://supabase.helperai.dev/bucket/image.jpg"');
   });
 
   it("does not proxy non-URL attributes", async () => {

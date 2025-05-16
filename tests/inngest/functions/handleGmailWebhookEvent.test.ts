@@ -15,9 +15,9 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
 import { handleGmailWebhookEvent } from "@/inngest/functions/handleGmailWebhookEvent";
+import { uploadFile } from "@/lib/data/files";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
-import { s3UrlToS3Key, uploadFile } from "@/lib/s3/utils";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("google-auth-library");
@@ -26,8 +26,8 @@ vi.mock("@sentry/nextjs", () => ({
   captureException: vi.fn(),
 }));
 vi.mock("@/inngest/functions/generateFilePreview");
-vi.mock("@/lib/s3/utils", async (importOriginal) => {
-  const mod = await importOriginal<typeof import("@/lib/s3/utils")>();
+vi.mock("@/lib/data/files", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@/lib/data/files")>();
   return {
     ...mod,
     uploadFile: vi.fn(),
@@ -99,7 +99,7 @@ describe("handleGmailWebhookEvent", () => {
     } as any);
     vi.mocked(getGmailService).mockReturnValue({} as any);
     vi.mocked(generateFilePreview);
-    vi.mocked(uploadFile).mockResolvedValue("mocked-s3-url");
+    vi.mocked(uploadFile).mockResolvedValue("mocked-path");
   });
 
   describe("unhappy paths", () => {
@@ -631,7 +631,7 @@ describe("handleGmailWebhookEvent", () => {
 
       attachedFiles.forEach((file) => {
         expect(generateFilePreview).toHaveBeenCalledWith(file.id);
-        expect(uploadFile).toHaveBeenCalledWith(expect.anything(), s3UrlToS3Key(file.url), file.mimetype);
+        expect(uploadFile).toHaveBeenCalledWith(file.key, expect.anything(), { mimetype: file.mimetype });
       });
     });
 
@@ -693,7 +693,7 @@ describe("handleGmailWebhookEvent", () => {
 
       attachedFiles.forEach((file) => {
         expect(generateFilePreview).toHaveBeenCalledWith(file.id);
-        expect(uploadFile).toHaveBeenCalledWith(expect.anything(), s3UrlToS3Key(file.url), file.mimetype);
+        expect(uploadFile).toHaveBeenCalledWith(file.key, expect.anything(), { mimetype: file.mimetype });
       });
     });
 

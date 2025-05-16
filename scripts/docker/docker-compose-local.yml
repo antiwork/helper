@@ -10,41 +10,5 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000" # API port
-      - "9001:9001" # Console port
-    volumes:
-      - helperai_miniodata:/data
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-      start_period: 30s
-
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
-      if ! /usr/bin/mc ls myminio/helperai-private-storage-dev; then
-        echo 'Bucket helperai-private-storage-dev does not exist. Creating...'
-        /usr/bin/mc mb myminio/helperai-private-storage-dev;
-      else
-        echo 'Bucket helperai-private-storage-dev already exists.';
-      fi;
-      exit 0;
-      "
-
 volumes:
   helperai_pgdata:
-  helperai_miniodata:

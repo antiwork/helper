@@ -21,8 +21,6 @@ let nextConfig: NextConfig = {
   serverExternalPackages: [
     "ably",
     "natural",
-    "@aws-sdk/s3-request-presigner",
-    "@aws-sdk/s3-presigned-post",
     "picocolors",
   ],
   outputFileTracingIncludes: {

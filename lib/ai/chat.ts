@@ -29,11 +29,10 @@ import { buildTools } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
-import { createAndUploadFile } from "@/lib/data/files";
+import { createAndUploadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -80,7 +79,7 @@ export const loadScreenshotAttachments = async (messages: (typeof conversationMe
   });
   return await Promise.all(
     attachments.map(async (a) => {
-      const url = await createPresignedDownloadUrl(a.url);
+      const url = await getFileUrl(a);
       return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
     }),
   );

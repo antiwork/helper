@@ -94,14 +94,14 @@ describe("postEmailToGmail", () => {
       const { file: file1 } = await fileFactory.create(null, {
         isInline: true,
         name: "file1.pdf",
-        url: "https://your-bucket-name.s3.amazonaws.com/attachments/file1.pdf",
+        key: "file1.pdf",
         mimetype: "text/plain",
         messageId: message.id,
       });
       const { file: file2 } = await fileFactory.create(null, {
         isInline: false,
         name: "file2.jpg",
-        url: "https://your-bucket-name.s3.amazonaws.com/attachments/file2.jpg",
+        key: "file2.jpg",
         mimetype: "image/jpeg",
         messageId: message.id,
       });

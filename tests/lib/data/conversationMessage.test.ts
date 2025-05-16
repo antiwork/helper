@@ -27,9 +27,6 @@ import { getSlackPermalink } from "@/lib/slack/client";
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
 }));
-vi.mock("@/lib/s3/utils", () => ({
-  createPresignedDownloadUrl: vi.fn().mockResolvedValue("https://presigned-url.com"),
-}));
 vi.mock("@/inngest/client", () => ({
   inngest: {
     send: vi.fn(),

@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import { render } from "@react-email/render";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
@@ -7,8 +6,8 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
+import { downloadFile } from "@/lib/data/files";
 import AIReplyEmail from "@/lib/emails/aiReply";
-import { getFileStream } from "@/lib/s3/utils";
 
 export const convertConversationMessageToRaw = async (
   email: typeof conversationMessages.$inferSelect & {
@@ -26,7 +25,7 @@ export const convertConversationMessageToRaw = async (
       .map(async (file) => {
         return {
           filename: file.name,
-          content: Readable.from(await getFileStream(file.url)),
+          content: Buffer.from(await downloadFile(file)),
           contentType: file.mimetype,
         };
       }),

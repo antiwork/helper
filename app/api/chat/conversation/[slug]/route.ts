@@ -6,7 +6,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
-import { createPresignedDownloadUrl } from "@/lib/s3/utils";
+import { getFileUrl } from "@/lib/data/files";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -109,7 +109,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       attachments.map(async (a) => ({
         messageId: a.messageId?.toString(),
         name: a.name,
-        presignedUrl: await createPresignedDownloadUrl(a.url),
+        presignedUrl: await getFileUrl(a),
       })),
     ),
     isEscalated: !originalConversation.assignedToAI,

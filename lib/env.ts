@@ -54,11 +54,6 @@ export const env = createEnv({
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
     RESEND_API_KEY: z.string().min(1), // API key from https://resend.com for transactional emails
-    AWS_ACCESS_KEY_ID: defaultUnlessDeployed(z.string().min(1), "minioadmin"),
-    AWS_SECRET_ACCESS_KEY: defaultUnlessDeployed(z.string().min(1), "minioadmin"),
-    AWS_DEFAULT_REGION: defaultUnlessDeployed(z.string().min(1), "us-east-1"),
-    AWS_PRIVATE_STORAGE_BUCKET_NAME: defaultUnlessDeployed(z.string().min(1), "helperai-private-storage-dev"),
-    AWS_ENDPOINT: defaultUnlessDeployed(z.string().url().optional(), "https://minio.helperai.dev"),
 
     // For running database seeds
     INITIAL_USER_EMAILS: z

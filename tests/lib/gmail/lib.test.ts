@@ -1,19 +1,18 @@
-import { Readable } from "stream";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
 import { userFactory } from "@tests/support/factories/users";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { downloadFile } from "@/lib/data/files";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
-import { getFileStream } from "@/lib/s3/utils";
 
 beforeEach(() => {
   vi.useRealTimers();
 });
 
-vi.mock("@/lib/s3/utils", () => ({
-  getFileStream: vi.fn(),
+vi.mock("@/lib/data/files", () => ({
+  downloadFile: vi.fn(),
 }));
 
 const testComposerExtraOptions: ConstructorParameters<typeof MailComposer>[0] = {
@@ -147,7 +146,7 @@ describe("convertEmailToRaw", () => {
   it("properly converts an email with attachments", async () => {
     const time = new Date("2023-01-01");
     vi.setSystemTime(time);
-    vi.mocked(getFileStream).mockResolvedValue(Readable.from(Buffer.from("mock file content")));
+    vi.mocked(downloadFile).mockResolvedValue(new ArrayBuffer(8));
 
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, {
@@ -162,13 +161,13 @@ describe("convertEmailToRaw", () => {
     const { file: file1 } = await fileFactory.create(null, {
       isInline: true,
       name: "file1.pdf",
-      url: "https://your-bucket-name.s3.amazonaws.com/attachments/file1.pdf",
+      key: "attachments/file1.pdf",
       mimetype: "text/plain",
     });
     const { file: file2 } = await fileFactory.create(null, {
       isInline: false,
       name: "file2.jpg",
-      url: "https://your-bucket-name.s3.amazonaws.com/attachments/file2.jpg",
+      key: "attachments/file2.jpg",
       mimetype: "image/jpeg",
     });
 
@@ -189,8 +188,8 @@ describe("convertEmailToRaw", () => {
       "RnJvbTogZnJvbUBleGFtcGxlLmNvbQ0KVG86IHRvQGV4YW1wbGUuY29tDQpTdWJqZWN0OiBXaXRoIGF0dGFjaG1lbnRzDQpNZXNzYWdlLUlEOiA8dGVzdC1tZXNzYWdlLWlkPg0KRGF0ZTogU3VuLCAwMSBKYW4gMjAyMyAwMDowMDowMCArMDAwMA0KTUlNRS1WZXJzaW9uOiAxLjANCkNvbnRlbnQtVHlwZTogbXVsdGlwYXJ0L21peGVkOyBib3VuZGFyeT0iLS1fTm1QLXRlc3QtYm91bmRhcnktUGFydF8xIg0KDQotLS0tX05tUC10ZXN0LWJvdW5kYXJ5LVBhcnRfMQ0KQ29udGVudC1UeXBlOiBtdWx0aXBhcnQvYWx0ZXJuYXRpdmU7IGJvdW5kYXJ5PSItLV9ObVAtdGVzdC1ib3VuZGFyeS1QYXJ0XzIiDQoNCi0tLS1fTm1QLXRlc3QtYm91bmRhcnktUGFydF8yDQpDb250ZW50LVR5cGU6IHRleHQvcGxhaW47IGNoYXJzZXQ9dXRmLTgNCkNvbnRlbnQtVHJhbnNmZXItRW5jb2Rpbmc6IDdiaXQNCg0KQ29udGVudA0KLS0tLV9ObVAtdGVzdC1ib3VuZGFyeS1QYXJ0XzINCkNvbnRlbnQtVHlwZTogdGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04DQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiA3Yml0DQoNCkNvbnRlbnQNCi0tLS1fTm1QLXRlc3QtYm91bmRhcnktUGFydF8yLS0NCg0KLS0tLV9ObVAtdGVzdC1ib3VuZGFyeS1QYXJ0XzENCkNvbnRlbnQtVHlwZTogaW1hZ2UvanBlZzsgbmFtZT1maWxlMi5qcGcNCkNvbnRlbnQtVHJhbnNmZXItRW5jb2Rpbmc6IGJhc2U2NA0KQ29udGVudC1EaXNwb3NpdGlvbjogYXR0YWNobWVudDsgZmlsZW5hbWU9ZmlsZTIuanBnDQoNCmJXOWpheUJtYVd4bElHTnZiblJsYm5RPQ0KLS0tLV9ObVAtdGVzdC1ib3VuZGFyeS1QYXJ0XzEtLQ0K",
     );
 
-    expect(getFileStream).toHaveBeenCalledWith("https://your-bucket-name.s3.amazonaws.com/attachments/file2.jpg");
-    expect(getFileStream).toHaveBeenCalledTimes(1);
+    expect(downloadFile).toHaveBeenCalledWith("attachments/file2.jpg");
+    expect(downloadFile).toHaveBeenCalledTimes(1);
 
     const decodedResult = Buffer.from(result, "base64").toString("utf-8");
     expect(decodedResult).toContain(Buffer.from("mock file content").toString("base64"));

@@ -15,12 +15,11 @@ import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
 import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
-import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { PromptInfo } from "@/types/conversationMessages";
 import { formatBytes } from "../files";
 import { getConversationById, getNonSupportParticipants, updateConversation } from "./conversation";
-import { finishFileUpload } from "./files";
+import { finishFileUpload, getFileUrl } from "./files";
 
 const isAiDraftStale = (draft: typeof conversationMessages.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
   return draft.status !== "draft" || draft.createdAt < mailbox.promptUpdatedAt;
@@ -226,7 +225,7 @@ export const serializeMessage = async (
   let sanitizedBody = await sanitizeBody(message.body);
   filesData.forEach((f) => {
     if (f.isInline && sanitizedBody) {
-      sanitizedBody = sanitizedBody.replaceAll(`src="${f.url}"`, `src="${f.presignedUrl}"`);
+      sanitizedBody = sanitizedBody.replaceAll(`src="${f.key}"`, `src="${f.presignedUrl}"`);
     }
   });
 
@@ -262,13 +261,13 @@ export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
     inputFiles.map(async (file) =>
       file.isInline
-        ? { isInline: true as const, url: file.url, presignedUrl: await createPresignedDownloadUrl(file.url) }
+        ? { isInline: true as const, key: file.key, presignedUrl: await getFileUrl(file) }
         : {
             ...file,
             isInline: false as const,
             sizeHuman: formatBytes(file.size, 2),
-            presignedUrl: await createPresignedDownloadUrl(file.url),
-            previewUrl: file.previewUrl ? await createPresignedDownloadUrl(file.previewUrl) : null,
+            presignedUrl: await getFileUrl(file),
+            previewUrl: file.previewKey ? await getFileUrl(file, { preview: true }) : null,
           },
     ),
   );

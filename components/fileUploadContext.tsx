@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { createClient } from "@/lib/supabase/client";
 import { api } from "@/trpc/react";
 
 export enum UploadStatus {
@@ -13,7 +14,7 @@ export type UnsavedFileInfo = {
   file: File;
   blobUrl: string;
   status: UploadStatus;
-  url: string | null;
+  key: string | null;
   slug: string | null;
   inline: boolean;
 };
@@ -38,7 +39,7 @@ const generateUnsavedFileInfo = (file: File, inline: boolean): UnsavedFileInfo =
   inline,
   status: UploadStatus.UPLOADING,
   blobUrl: URL.createObjectURL(file),
-  url: null,
+  key: null,
   slug: null,
 });
 
@@ -102,7 +103,7 @@ export const FileUploadProvider = ({
         await new Promise((resolve) =>
           setTimeout(resolve, (unsavedFiles.filter((f) => f.status === UploadStatus.UPLOADING).length + 1) * 200),
         );
-        const { file, signedRequest } = await utils.client.mailbox.conversations.files.initiateUpload.mutate({
+        const { file, bucket, signedUpload } = await utils.client.mailbox.conversations.files.initiateUpload.mutate({
           conversationSlug: assertDefined(conversationSlug, "Conversation ID must be provided"),
           file: {
             fileName: unsavedFileInfo.file.name,
@@ -110,22 +111,16 @@ export const FileUploadProvider = ({
             isInline: unsavedFileInfo.inline,
           },
         });
-
-        const formData = new FormData();
-        for (const [key, value] of Object.entries(signedRequest.fields)) {
-          formData.append(key, value);
-        }
-        formData.append("file", unsavedFileInfo.file);
-
-        const response = await fetch(signedRequest.url, {
-          method: "POST",
-          body: formData,
-        });
-        if (!response.ok) throw new Error();
+        const supabase = createClient();
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .uploadToSignedUrl(signedUpload.path, signedUpload.token, unsavedFileInfo.file);
+        if (error) throw error;
+        if (!data) throw new Error("No data returned from Supabase");
 
         const updatedFile: UnsavedFileInfo = {
           slug: file.slug,
-          url: file.url,
+          key: data.path,
           status: UploadStatus.UPLOADED,
           file: unsavedFileInfo.file,
           blobUrl: unsavedFileInfo.blobUrl,
