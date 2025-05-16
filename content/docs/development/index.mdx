@@ -1,7 +1,11 @@
-# Local Development Guide
+---
+title: Local Development
+description: Customize and contribute to Helper
+---
 
-> [!TIP]
-> Make sure you follow the Quick Start in the [README](/README.md) first!
+<Callout>
+  Make sure you follow the Quick Start in the [README](https://github.com/antiwork/helper/blob/main/README.md) first!
+</Callout>
 
 ## Docker Services
 
@@ -15,8 +19,9 @@ The app uses Docker to run the following services locally:
 
 `pnpm dev` will automatically start and stop these services, or you can use `pnpm services:start` and `pnpm services:stop` to start and stop them manually.
 
-> [!TIP]
-> Nginx will attempt to listen on port 80 and 443, so if you have other containers or services running on those ports you will need to stop them first.
+<Callout>
+  Nginx will attempt to listen on port 80 and 443, so if you have other containers or services running on those ports you will need to stop them first.
+</Callout>
 
 ## Database Management
 

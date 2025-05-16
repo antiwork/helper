@@ -94,9 +94,9 @@ Access the application at [helperai.dev](https://helperai.dev) 🚀
 
 ## Docs
 
-- [Project structure](docs/OVERVIEW.md)
-- [Local development](docs/development.md)
-- [Deployment](docs/deployment.md)
+- [Project structure](https://helper.ai/docs/development/overview)
+- [Local development](https://helper.ai/docs/development)
+- [Deployment](https://helper.ai/docs/deployment)
 
 ## License
 

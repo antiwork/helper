@@ -1,0 +1,27 @@
+---
+title: Self Hosting
+description: Get started by hosting Helper on Vercel
+---
+
+Helper is intended to be deployed to [Vercel](https://vercel.com).
+
+<Callout type="warn">
+  Self hosting is a work in progress. Please let us know if you find issues or gaps!
+</Callout>
+
+1. Fork the repository.
+1. Create a Vercel project and import your fork.
+1. Connect essential services:
+   - [Supabase](https://supabase.com)
+   - Redis (we recommend [Upstash](https://upstash.com))
+   - [Inngest](https://www.inngest.com/cloud)
+   - S3-compatible storage
+1. Set up environment variables for required integrations (see the [README](https://github.com/antiwork/helper/blob/main/README.md#set-up-environment-variables) and [development guide](/docs/development#optional-integrations) for instructions).
+
+Vercel will automatically build and deploy your fork upon pushing to the main branch.
+
+You can optionally set up preview branches as long as your services support it.
+
+<Callout>
+  The script in `vercel.json` will automatically seed the database with sample data on preview branches. After that, the database will continue attempting to apply migrations, but it will not clear/re-seed the database. If you want a clean slate on the preview branch without creating a new PR, then you can temporarily modify `build:preview` in `package.json` to include `pnpm db:reset`, commit/push to Github, and then after the Vercel build completes, you can commit/push a revert commit.
+</Callout>

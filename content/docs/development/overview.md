@@ -1,4 +1,6 @@
-# Helper Codebase Architecture Overview
+---
+title: Codebase Overview
+---
 
 This document provides a high-level overview of the Helper codebase architecture, designed to help new developers understand the structure and contribute effectively. It covers key components, their interactions, and important concepts to grasp.
 
