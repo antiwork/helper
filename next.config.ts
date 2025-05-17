@@ -19,7 +19,6 @@ let nextConfig: NextConfig = {
   // https://github.com/nextauthjs/next-auth/discussions/9385#discussioncomment-8875108
   transpilePackages: ["next-auth"],
   serverExternalPackages: [
-    "ably",
     "natural",
     "picocolors",
   ],

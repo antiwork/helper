@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import useViewers from "./useViewers";
+import { conversationChannelId } from "@/lib/realtime/channels";
+import { useRealtimePresence } from "@/lib/realtime/hooks";
 
 type Props = {
   mailboxSlug: string;
@@ -19,7 +20,7 @@ const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: strin
 );
 
 const Viewers = ({ conversationSlug, mailboxSlug }: Props) => {
-  const viewers = useViewers(mailboxSlug, conversationSlug);
+  const { users: viewers } = useRealtimePresence(conversationChannelId(mailboxSlug, conversationSlug));
 
   if (viewers.length === 0) {
     return null;

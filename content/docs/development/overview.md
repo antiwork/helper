@@ -61,7 +61,6 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **Drizzle ORM:** Database access library, enabling type-safe queries and database interactions.
 - **Supabase:** For the database and user authentication.
 - **Inngest:** Serverless functions platform that powers background jobs and data processing.
-- **Ably:** Real-time messaging platform for live updates and notifications.
 - **Vercel AI SDK:** Used for building AI-powered features with streaming support, function calling, and type-safe AI responses.
 - **Vitest:** For running unit and integration tests.
 - **Sentry:** Error tracking and performance monitoring.

@@ -59,18 +59,7 @@ Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
 </details>
 
-<details>
-<summary>Ably</summary>
-
-1. Go to [ably.com](https://ably.com) and sign up or log in.
-2. Create a new app.
-3. Go to the "API Keys" tab for your new app.
-4. Copy the API key that has all capabilities enabled (usually the first one).
-5. Add the API key to your `.env.local` file as `ABLY_API_KEY`.
-
-</details>
-
-_The app will start with placeholder values for other services - you can follow the instructions in [development.md](docs/services.md#optional-integrations) to enable them later._
+_The app will start with placeholder values for other services - you can follow the instructions in the [development guide](https://helper.ai/docs/development#optional-integrations) to enable them later._
 
 ### Install dependencies
 

@@ -98,7 +98,6 @@
     "@vercel/analytics": "^1.4.1",
     "@vercel/functions": "^1.5.2",
     "@vercel/otel": "^1.10.0",
-    "ably": "^2.4.1",
     "ai": "^4.1.41",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.0",

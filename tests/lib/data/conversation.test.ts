@@ -7,8 +7,6 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversations, gmailSupportEmails } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { conversationChannelId, conversationsListChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
 import { runAIQuery } from "@/lib/ai";
 import {
   createConversation,
@@ -20,6 +18,8 @@ import {
   updateConversation,
 } from "@/lib/data/conversation";
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
+import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 
 vi.mock("@/components/constants", () => ({
   getBaseUrl: () => "https://example.com",
@@ -48,8 +48,8 @@ vi.mock("@/lib/ai", async () => {
   };
 });
 
-vi.mock("@/lib/ably/client", () => ({
-  publishToAbly: vi.fn(),
+vi.mock("@/lib/realtime/client", () => ({
+  publishToRealtime: vi.fn(),
 }));
 
 describe("createConversation", () => {
@@ -99,16 +99,16 @@ describe("updateConversation", () => {
     expect(result?.closedAt).toBeInstanceOf(Date);
   });
 
-  it("publishes an Ably event when conversation is updated", async () => {
+  it("publishes a realtime event when conversation is updated", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
 
     const result = await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
-    await vi.waitUntil(() => vi.mocked(publishToAbly).mock.calls.length === 1);
+    await vi.waitUntil(() => vi.mocked(publishToRealtime).mock.calls.length === 1);
 
     expect(result).not.toBeNull();
-    expect(publishToAbly).toHaveBeenCalledWith({
+    expect(publishToRealtime).toHaveBeenCalledWith({
       channel: conversationChannelId(mailbox.slug, conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
@@ -116,19 +116,21 @@ describe("updateConversation", () => {
         subject: "Updated Subject",
       }),
     });
-    expect(publishToAbly).not.toHaveBeenCalledWith(expect.objectContaining({ event: "conversation.statusChanged" }));
+    expect(publishToRealtime).not.toHaveBeenCalledWith(
+      expect.objectContaining({ event: "conversation.statusChanged" }),
+    );
   });
 
-  it("publishes an Ably event when conversation status changes to closed", async () => {
+  it("publishes a realtime event when conversation status changes to closed", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
 
     const result = await updateConversation(conversation.id, { set: { status: "closed" } });
 
-    await vi.waitUntil(() => vi.mocked(publishToAbly).mock.calls.length === 2);
+    await vi.waitUntil(() => vi.mocked(publishToRealtime).mock.calls.length === 2);
 
     expect(result).not.toBeNull();
-    expect(publishToAbly).toHaveBeenCalledWith({
+    expect(publishToRealtime).toHaveBeenCalledWith({
       channel: conversationChannelId(mailbox.slug, conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
@@ -136,7 +138,7 @@ describe("updateConversation", () => {
         status: "closed",
       }),
     });
-    expect(publishToAbly).toHaveBeenCalledWith({
+    expect(publishToRealtime).toHaveBeenCalledWith({
       channel: conversationsListChannelId(mailbox.slug),
       event: "conversation.statusChanged",
       data: {

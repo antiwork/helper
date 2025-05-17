@@ -74,7 +74,7 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
       await updateConversation(conversationId, {
         set: { assignedToId: ccStaffUser.id, assignedToAI: false },
         message: "Auto-assigned based on CC",
-        skipAblyEvents: true,
+        skipRealtimeEvents: true,
       });
       break;
     }

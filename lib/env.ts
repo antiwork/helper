@@ -48,7 +48,6 @@ export const env = createEnv({
 
     // Required integrations
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-    ABLY_API_KEY: z.string().min(1), // API key from https://ably.com for real-time events
     GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync

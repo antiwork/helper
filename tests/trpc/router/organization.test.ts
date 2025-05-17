@@ -6,7 +6,6 @@ import { createCaller } from "@/trpc";
 vi.mock("@/lib/env", () => ({
   env: {
     POSTGRES_URL: inject("TEST_DATABASE_URL"),
-    ABLY_API_KEY: "test_key",
   },
 }));
 

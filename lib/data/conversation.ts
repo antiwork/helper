@@ -8,10 +8,10 @@ import { db, Transaction } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { inngest } from "@/inngest/client";
-import { conversationChannelId, conversationsListChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
+import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";
 import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
@@ -71,13 +71,13 @@ export const updateConversation = async (
     byUserId = null,
     message = null,
     type = "update",
-    skipAblyEvents = false,
+    skipRealtimeEvents = false,
   }: {
     set?: Partial<typeof conversations.$inferInsert>;
     byUserId?: string | null;
     message?: string | null;
     type?: (typeof conversationEvents.$inferSelect)["type"];
-    skipAblyEvents?: boolean;
+    skipRealtimeEvents?: boolean;
   },
   tx: Transaction | typeof db = db,
 ) => {
@@ -131,12 +131,12 @@ export const updateConversation = async (
       data: { conversationSlug: updatedConversation.slug },
     });
   }
-  if (updatedConversation && !skipAblyEvents) {
+  if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
         const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
         const events = [
-          publishToAbly({
+          publishToRealtime({
             channel: conversationChannelId(mailbox.slug, updatedConversation.slug),
             event: "conversation.updated",
             data: serializeConversation(mailbox, updatedConversation),
@@ -148,7 +148,7 @@ export const updateConversation = async (
           current.assignedToId !== updatedConversation.assignedToId
         ) {
           events.push(
-            publishToAbly({
+            publishToRealtime({
               channel: conversationsListChannelId(mailbox.slug),
               event: "conversation.statusChanged",
               data: {

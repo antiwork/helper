@@ -5,8 +5,8 @@ import { ConversationListItem } from "@/app/types/global";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { assertDefined } from "@/components/utils/assert";
-import { conversationsListChannelId } from "@/lib/ably/channels";
-import { useAblyEventOnce } from "@/lib/ably/hooks";
+import { conversationsListChannelId } from "@/lib/realtime/channels";
+import { useRealtimeEventOnce } from "@/lib/realtime/hooks";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -113,7 +113,7 @@ export const ConversationListContextProvider = ({
     moveToNextConversation();
   };
 
-  useAblyEventOnce<{
+  useRealtimeEventOnce<{
     id: number;
     status: string;
     assignedToId: string | null;

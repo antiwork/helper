@@ -11,18 +11,10 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/components/utils/currency";
-import { conversationsListChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { conversationsListChannelId } from "@/lib/realtime/channels";
+import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -214,7 +206,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   );
 
   const utils = api.useUtils();
-  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
+  useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationListItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
     const sort = searchParams.sort ?? defaultSort;

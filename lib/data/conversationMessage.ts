@@ -373,7 +373,7 @@ export const createConversationMessage = async (
   if (message.role === "user") {
     await updateConversation(
       message.conversationId,
-      { set: { lastUserEmailCreatedAt: new Date() }, skipAblyEvents: true },
+      { set: { lastUserEmailCreatedAt: new Date() }, skipRealtimeEvents: true },
       tx,
     );
   }
