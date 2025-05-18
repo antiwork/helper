@@ -79,8 +79,12 @@ export function SlackInterface() {
               Sarah"
             </div>
             <div className="flex mt-2 space-x-2">
-              <button className="bg-[#FEB81D] text-black text-xs px-3 py-1 rounded font-bold cursor-default">Send</button>
-              <button className="bg-[#2B0808] text-white text-xs px-3 py-1 rounded font-bold cursor-default">edit</button>
+              <button className="bg-[#FEB81D] text-black text-xs px-3 py-1 rounded font-bold cursor-default">
+                Send
+              </button>
+              <button className="bg-[#2B0808] text-white text-xs px-3 py-1 rounded font-bold cursor-default">
+                edit
+              </button>
             </div>
           </div>
         </div>
