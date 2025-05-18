@@ -19,7 +19,7 @@ export default function CitationsDemo() {
           <li>
             <a
               href="#"
-              className="underline"
+              className="underline cursor-default"
               onClick={(e) => e.preventDefault()}
               onMouseEnter={() => setTilt("refund")}
               onMouseLeave={() => setTilt(null)}
@@ -32,7 +32,7 @@ export default function CitationsDemo() {
           <li>
             <a
               href="#"
-              className="underline"
+              className="underline cursor-default"
               onClick={(e) => e.preventDefault()}
               onMouseEnter={() => setTilt("account")}
               onMouseLeave={() => setTilt(null)}
