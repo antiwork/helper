@@ -80,7 +80,7 @@ const ThemeSetting = ({
         sidebarBackground: getComputedStyle(root).getPropertyValue("--sidebar-background").trim() || "#ffffff",
       });
     }
-  }, []);
+  }, [isEnabled]);
 
   const debouncedSetWindowTheme = useDebouncedCallback(setWindowTheme, 200);
 
