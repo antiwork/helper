@@ -1,0 +1,78 @@
+---
+title: Metadata Endpoint
+description: Helper can retrieve additional information about your customers when an email is received through a metadata endpoint you configure.
+---
+
+## How It Works
+
+When Helper receives an email from a customer, it will make a GET request to your configured endpoint with the customer's email and timestamp. You can return metadata to improve AI responses and enable more features in the mailbox.
+
+## Request Example
+
+```
+GET https://your-endpoint.com/customer?email=customer@example.com&timestamp=1684234567
+Authorization: Bearer dGhpcyBpcyBhbiBlbmNvZGVkIGhtYWMgc2lnbmF0dXJl
+```
+
+| Parameter       | Type   | In     | Description                                                                        |
+| --------------- | ------ | ------ | ---------------------------------------------------------------------------------- |
+| `email`         | string | query  | The customer's email address.                                                      |
++| `timestamp`     | number | query  | The current timestamp, optionally used for [HMAC authentication](#optional-hmac-authentication). |
+| `Authorization` | string | header | The HMAC signature for the request.                                                |
+
+## Response Format
+
+Your server must return a JSON response in this format:
+
+```json
+{
+  "success": true,
+  "user_info": {
+    "prompt": "Customer information to share with AI",
+    "metadata": {
+      "name": "Customer Name", // Optional: Customer's name
+      "value": 1000, // Optional: Numeric value for sorting/prioritization
+      "links": {
+        // Optional: Links to show alongside conversations
+        "Profile": "https://example.com/profile",
+        "Orders": "https://example.com/orders"
+      }
+    }
+  }
+}
+```
+
+| Parameter                  | Type    | Required | Description                                                                                                     |
+| -------------------------- | ------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| `success`                  | boolean | Yes      | Must be `true` for Helper to process the response.                                                              |
+| `user_info.prompt`         | string  | No       | Additional context about the customer that will be provided to the AI.                                          |
+| `user_info.metadata.name`  | string  | No       | Name of the customer.                                                                                           |
+| `user_info.metadata.value` | number  | No       | Numeric value representing the customer's worth/revenue. Enables sorting conversations by the customer's value. |
+| `user_info.metadata.links` | object  | No       | Key-value pairs of links to display in the sidebar, for agents to quickly access other backend apps.            |
+
+## Optional: HMAC Authentication
+
+Helper authenticates requests to your endpoint using HMAC-SHA256. We recommend you verify the request is legitimate by generating the same HMAC signature on your server and checking it matches the header.
+
+The signature is generated from the query string (`?email=...&timestamp=...`) and the HMAC secret shown in your settings.
+
+### HMAC Validation (Node.js Example)
+
+```javascript
+import crypto from "crypto";
+
+// Validate incoming request from Helper
+function validateHelperRequest(queryParams, authorizationHeader, hmacSecret) {
+  // Extract the Bearer token
+  const hmacSignature = authorizationHeader.replace("Bearer ", "");
+
+  // Create a URLSearchParams string from the query parameters
+  const serializedParams = new URLSearchParams(queryParams).toString();
+
+  // Generate the expected HMAC signature
+  const expectedHmac = crypto.createHmac("sha256", hmacSecret).update(serializedParams).digest("base64");
+
+  // Compare the signatures (consider using a time-safe comparison in production)
+  return hmacSignature === expectedHmac;
+}
+```
