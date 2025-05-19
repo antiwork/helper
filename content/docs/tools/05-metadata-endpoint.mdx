@@ -1,0 +1,118 @@
+---
+title: Metadata Endpoint
+description: Configure a metadata endpoint to provide customer information for your support conversations
+---
+
+# Metadata Endpoint
+
+Helper can retrieve additional information about your customers when an email is received through a metadata endpoint you configure. This allows you to provide contextual information that can be used for features like sorting conversations by customer value or displaying custom links.
+
+## How It Works
+
+When Helper receives an email from a customer, it will:
+
+1. Make a GET request to your configured endpoint with the customer's email and timestamp
+2. Authenticate the request using HMAC authentication
+3. Expect a JSON response containing customer metadata
+4. Use this metadata to enrich the conversation context
+
+## Response Format
+
+Your server must return a JSON response in this format:
+
+```json
+{
+  "success": true,
+  "user_info": {
+    "prompt": "Customer information to share with AI",
+    "metadata": {
+      "name": "Customer Name",         // Optional: Customer's name
+      "value": 1000,                   // Optional: Numeric value for sorting/prioritization
+      "links": {                       // Optional: Links to show alongside conversations
+        "Profile": "https://example.com/profile",
+        "Orders": "https://example.com/orders"
+      }
+    }
+  }
+}
+```
+
+### Field Descriptions
+
+- `success`: Must be `true` for Helper to process the response
+- `user_info.prompt`: Additional context about the customer that will be provided to the AI
+- `user_info.metadata.name`: Customer's name (optional)
+- `user_info.metadata.value`: Numeric value of the customer used for sorting and VIP features (optional)
+- `user_info.metadata.links`: Key-value pairs of links to display in Helper (optional)
+
+## Authentication
+
+Helper authenticates requests to your endpoint using HMAC-SHA256:
+
+1. Helper makes a GET request to your endpoint including query parameters
+2. An `Authorization` header is included with format: `Bearer {hmac_signature}`
+3. The HMAC signature is generated using the HMAC secret shown in your settings
+4. Your server should validate this signature to ensure the request is legitimate
+
+### Request Example
+
+```
+GET https://your-endpoint.com/customer?email=customer@example.com&timestamp=1684234567
+Authorization: Bearer dGhpcyBpcyBhbiBlbmNvZGVkIGhtYWMgc2lnbmF0dXJl
+```
+
+### HMAC Validation (Node.js Example)
+
+```javascript
+import crypto from 'crypto';
+
+// Validate incoming request from Helper
+function validateHelperRequest(queryParams, authorizationHeader, hmacSecret) {
+  // Extract the Bearer token
+  const hmacSignature = authorizationHeader.replace('Bearer ', '');
+  
+  // Create a URLSearchParams string from the query parameters
+  const serializedParams = new URLSearchParams(queryParams).toString();
+  
+  // Generate the expected HMAC signature
+  const expectedHmac = crypto
+    .createHmac('sha256', hmacSecret)
+    .update(serializedParams)
+    .digest('base64');
+  
+  // Compare the signatures (consider using a time-safe comparison in production)
+  return hmacSignature === expectedHmac;
+}
+```
+
+## Use Cases
+
+### Customer Prioritization
+
+By returning a `value` in the metadata, Helper can:
+- Sort conversations based on customer value
+- Highlight high-value customers in the dashboard
+- Trigger special workflows for VIP customers
+
+### Rich Context
+
+The `prompt` field allows you to provide rich context to Helper's AI when drafting responses:
+- Customer subscription status
+- Recent order information
+- Account health metrics
+- Support history
+
+### Quick Access Links
+
+The `links` object lets you provide direct access to customer information in your systems:
+- Customer profile pages
+- Order history
+- Billing information
+- Custom dashboards
+
+## Implementation Tips
+
+- Keep response times fast (under 5 seconds) to avoid slowing down email processing
+- Include error handling and logging in your endpoint
+- Consider caching customer data to improve response times
+- Make sure your endpoint is secure and accessible from Helper's servers
