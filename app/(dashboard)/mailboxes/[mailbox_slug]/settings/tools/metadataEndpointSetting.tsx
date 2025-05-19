@@ -1,7 +1,7 @@
 "use client";
 
 import cx from "classnames";
-import { Copy, Eye, EyeOff, ExternalLink, PlusCircle } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, PlusCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
