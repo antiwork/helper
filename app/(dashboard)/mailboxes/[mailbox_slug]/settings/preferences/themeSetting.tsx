@@ -46,7 +46,7 @@ const ThemeSetting = ({
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.preferences.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.preferences.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
       toast({
