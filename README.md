@@ -85,7 +85,7 @@ Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
 </details>
 
-_The app will start with placeholder values for other services - you can follow the instructions in [development.md](docs/services.md#optional-integrations) to enable them later._
+_The app will start with placeholder values for other services - you can follow the instructions in [development.md](docs/development.md#optional-integrations) to enable them later._
 
 ### Install dependencies
 
