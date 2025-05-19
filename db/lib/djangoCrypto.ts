@@ -261,6 +261,7 @@ export class PickleJS {
 export class DjangoCryptoCompat {
   private secret_key: string;
   private pickle: PickleJS;
+  private _derivedKey?: Buffer;
 
   constructor(secret_key: string) {
     this.secret_key = secret_key;
@@ -336,7 +337,10 @@ export class DjangoCryptoCompat {
   }
 
   deriveKey() {
-    // Django uses PBKDF2 to derive the encryption key
-    return crypto.pbkdf2Sync(this.secret_key, "django-cryptography", 30000, 32, "sha256");
+    if (!this._derivedKey) {
+      // Django uses PBKDF2 to derive the encryption key
+      this._derivedKey = crypto.pbkdf2Sync(this.secret_key, "django-cryptography", 30000, 32, "sha256");
+    }
+    return this._derivedKey;
   }
 }
