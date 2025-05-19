@@ -140,11 +140,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       title="Metadata Endpoint"
       description={
         <>
-          <span>
-            Add an endpoint to fetch relevant metadata when an email is received. Helper will return a JSON response in
-            this format:
-          </span>
-          <span className="block">{`{"success": true, "user_info": {"prompt": "Customer info", "metadata": {"label": "value"}}}`}</span>
+          <span>Add an endpoint for Helper to fetch customer value and metadata when an email is received.</span>
           <a
             href={`${getBaseUrl()}/docs/tools/05-metadata-endpoint`}
             target="_blank"
