@@ -45,21 +45,13 @@ export default function RefundDemo() {
           </div>
           <div className="flex h-[calc(100%-3rem)]">
             <aside className="flex flex-col gap-2 py-12 pl-4 md:pl-8 pr-2 md:pr-4 w-32 md:w-48 min-w-[100px] md:min-w-[140px] bg-transparent">
-              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded transition-colors hover:bg-[#2B0808]/60">
-                Dashboard
-              </span>
+              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded">Dashboard</span>
               <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded transition-colors border-l-4 border-[#FEB81D] bg-[#3B1B1B]">
                 Orders
               </span>
-              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded transition-colors hover:bg-[#2B0808]/60">
-                Profile
-              </span>
-              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded transition-colors hover:bg-[#2B0808]/60">
-                Wishlist
-              </span>
-              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded transition-colors hover:bg-[#2B0808]/60">
-                Settings
-              </span>
+              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded">Profile</span>
+              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded">Wishlist</span>
+              <span className="text-[#FFE6B0] text-sm md:text-base font-semibold px-2 py-1 rounded">Settings</span>
             </aside>
             <main className="flex-1 flex flex-col gap-8 py-12 pr-4 md:pr-8 relative">
               <div className="relative">
