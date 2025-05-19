@@ -14,11 +14,11 @@ GET https://your-endpoint.com/customer?email=customer@example.com&timestamp=1684
 Authorization: Bearer dGhpcyBpcyBhbiBlbmNvZGVkIGhtYWMgc2lnbmF0dXJl
 ```
 
-| Parameter       | Type   | In     | Description                                                                        |
-| --------------- | ------ | ------ | ---------------------------------------------------------------------------------- |
-| `email`         | string | query  | The customer's email address.                                                      |
-+| `timestamp`     | number | query  | The current timestamp, optionally used for [HMAC authentication](#optional-hmac-authentication). |
-| `Authorization` | string | header | The HMAC signature for the request.                                                |
+| Parameter       | Type        | In     | Description                         |
+| --------------- | ----------- | ------ | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `email`         | string      | query  | The customer's email address.       |
+| +               | `timestamp` | number | query                               | The current timestamp, optionally used for [HMAC authentication](#optional-hmac-authentication). |
+| `Authorization` | string      | header | The HMAC signature for the request. |
 
 ## Response Format
 
