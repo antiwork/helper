@@ -7,6 +7,7 @@ import { SentryContext } from "@/components/sentryContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
+import { NavigationRail } from "@/components/NavigationRail";
 
 export const metadata: Metadata = {
   title: "Helper",
@@ -38,7 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SentryContext />
         <TRPCReactProvider>
           <StandaloneDisplayIntegration />
-          <HydrateClient>{children}</HydrateClient>
+          <HydrateClient>
+            <div className="flex flex-row min-h-svh">
+              <NavigationRail />
+              <main className="flex-1 ml-14">{children}</main>
+            </div>
+          </HydrateClient>
         </TRPCReactProvider>
       </NuqsAdapter>
     </ClerkProvider>
