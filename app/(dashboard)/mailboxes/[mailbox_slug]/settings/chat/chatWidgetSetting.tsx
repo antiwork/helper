@@ -1,7 +1,8 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { getBaseUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -37,6 +38,12 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const [minValue, setMinValue] = useState(mailbox.widgetDisplayMinValue?.toString() ?? "100");
   const [autoRespond, setAutoRespond] = useState(mailbox.autoRespondEmailToChat ?? false);
   const [widgetHost, setWidgetHost] = useState(mailbox.widgetHost ?? "");
+  const { showChatWidget, setShowChatWidget } = useShowChatWidget();
+
+  useEffect(() => {
+    setShowChatWidget(mode !== "off");
+    return () => setShowChatWidget(false);
+  }, [mode]);
 
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.update.useMutation({
@@ -438,6 +445,12 @@ export default async function RootLayout({
           </div>
         )}
       </SectionWrapper>
+
+      {showChatWidget && (
+        <div className="fixed bottom-8 right-24 bg-primary text-primary-foreground px-3 py-1.5 rounded-md">
+          Try it out →
+        </div>
+      )}
     </div>
   );
 };

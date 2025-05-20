@@ -29,13 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     mailbox_slug: HELPER_MAILBOX_SLUG,
   };
 
-  const helperHost = env.NODE_ENV === "development" ? "https://helperai.dev" : undefined;
-
   return (
     <NuqsAdapter>
       <SentryContext />
       <TRPCReactProvider>
-        <HelperProvider host={helperHost} {...config}>
+        <HelperProvider host={env.AUTH_URL} {...config}>
           <HydrateClient>{children}</HydrateClient>
         </HelperProvider>
       </TRPCReactProvider>
