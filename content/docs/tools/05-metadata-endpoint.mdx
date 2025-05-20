@@ -54,6 +54,8 @@ Your server must return a JSON response in this format:
 
 Helper authenticates requests to your endpoint using HMAC-SHA256. We recommend you verify the request is legitimate by generating the same HMAC signature on your server and checking it matches the header.
 
+Verifying that requests are genuinely from Helper is an important security practice that prevents unauthorized access to your customer data. Without this verification, malicious actors could potentially forge requests to your endpoint to extract sensitive customer information.
+
 The signature is generated from the query string (`?email=...&timestamp=...`) and the HMAC secret shown in your settings.
 
 ### HMAC Validation (Node.js Example)
