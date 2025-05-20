@@ -21,7 +21,7 @@ export default function RefundDemo() {
       ref={ref}
       className="relative min-h-[600px] md:min-h-[800px] flex flex-col items-center justify-center py-16 md:py-24 pb-40 md:pb-64"
     >
-      <div className="absolute top-8 left-[70%] lg:left-[50%] xl:left-[60%] -translate-x-1/2 flex flex-col items-start z-20">
+      <div className="absolute top-8 right-0 flex flex-col items-start z-20">
         <div className="border border-[#FEB81D80] rounded-t-xl rounded-bl-xl rounded-br-none px-4 md:px-5 py-3 w-[320px] md:w-[440px] text-base md:text-lg font-medium text-[#FFE6B0] bg-[#250404]">
           {!messageDone && isInView ? (
             <AnimatedTyping
