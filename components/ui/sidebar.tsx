@@ -87,12 +87,10 @@ const Sidebar = React.forwardRef<
   }
 
   return (
-    <div className="group peer hidden md:block">
-      <div className="duration-200 relative h-svh w-(--sidebar-width) bg-transparent transition-[width] ease-linear" />
+    <div className="group peer hidden md:flex">
       <div
         className={cn(
-          "duration-200 fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] ease-linear md:flex",
-          side === "left" ? "left-0" : "right-0",
+          "duration-200 h-svh w-(--sidebar-width) transition-[width] ease-linear",
           variant === "floating" || variant === "inset" ? "p-2" : "",
           className,
         )}

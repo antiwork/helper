@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <HydrateClient>
             <div className="flex flex-row min-h-svh">
               <NavigationRail />
-              <main className="flex-1 ml-14">{children}</main>
+              <main className="flex-1">{children}</main>
             </div>
           </HydrateClient>
         </TRPCReactProvider>

@@ -63,7 +63,7 @@ export function NavigationRail() {
   return (
     <TooltipProvider delayDuration={0}>
       <nav
-        className="fixed left-0 top-0 z-30 h-svh w-14 flex flex-col items-center bg-sidebar border-r border-sidebar-border py-2 gap-2"
+        className="h-svh w-14 flex flex-col items-center bg-sidebar border-r border-sidebar-border py-2 gap-2"
         style={{ minWidth: 56 }}
       >
         <DropdownMenu>
