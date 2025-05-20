@@ -113,7 +113,7 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === "undefined" || window.innerWidth >= 768) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === 2 ? 0 : prev + 1));
+      setCurrentSlide((prev) => (prev === 1 ? 0 : prev + 1));
     }, 4000);
     return () => clearInterval(interval);
   }, [currentSlide]);
