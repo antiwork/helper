@@ -52,7 +52,9 @@ Your server must return a JSON response in this format:
 
 ## Optional: HMAC Authentication
 
-Helper authenticates requests to your endpoint using HMAC-SHA256. We recommend you verify the request is legitimate by generating the same HMAC signature on your server and checking it matches the header.
+Helper authenticates requests to your endpoint using HMAC-SHA256.
+
+We recommend you verify the request is legitimate by generating the same HMAC signature on your server and checking it matches the header. Without this verification, if a malicious actor discovers your metadata endpoint they could continuously make requests with different emails to try and scrape customer data.
 
 The signature is generated from the query string (`?email=...&timestamp=...`) and the HMAC secret shown in your settings.
 
