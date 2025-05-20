@@ -37,8 +37,10 @@ const KnowledgeBankSetting = () => {
   );
 
   const createMutation = api.mailbox.faqs.create.useMutation({
-    onSuccess: () => {
-      utils.mailbox.faqs.list.invalidate({ mailboxSlug: params.mailbox_slug });
+    onSuccess: (data) => {
+      utils.mailbox.faqs.list.setData({ mailboxSlug: params.mailbox_slug }, (old) =>
+        old ? [...old, data].sort((a, b) => a.content.localeCompare(b.content)) : [data],
+      );
       setShowNewFaqForm(false);
       setNewFaqContent("");
     },
