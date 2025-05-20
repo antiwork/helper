@@ -128,7 +128,7 @@ export default function Home() {
       <div className="flex-grow">
         <section className="flex items-center justify-center h-dvh pt-20">
           <div className="container mx-auto px-4">
-            <h1 className="text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">
+            <h1 className="text-5xl sm:text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">
               Helper helps customers help themselves.
             </h1>
 
