@@ -410,7 +410,7 @@ export const createAiDraft = async (
   conversationId: number,
   body: string,
   responseToId: number,
-  promptInfo: PromptInfo,
+  promptInfo: PromptInfo | null,
   tx: Transaction | typeof db = db,
 ): Promise<typeof conversationMessages.$inferSelect> => {
   if (!responseToId) {
