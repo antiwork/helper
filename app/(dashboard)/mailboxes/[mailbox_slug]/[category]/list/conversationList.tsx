@@ -104,19 +104,6 @@ const SearchBar = ({
               ))}
             </SelectContent>
           </Select>
-          <Button
-            variant="ghost"
-            size="sm"
-            iconOnly
-            desktop={variant === "desktop"}
-            aria-label="Search"
-            className="flex-none w-8"
-            asChild
-          >
-            <Link href={`/mailboxes/${params.mailbox_slug}/search`}>
-              <Search className={cn("h-4 w-4", variant === "desktop" ? "text-white" : "text-foreground")} />
-            </Link>
-          </Button>
         </div>
       </div>
     </div>

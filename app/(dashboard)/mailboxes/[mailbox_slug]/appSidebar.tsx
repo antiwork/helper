@@ -96,47 +96,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           </>
         )}
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          {trialInfo && showUpgradePrompt && (
-            <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
-              <div className="flex flex-col gap-2 rounded-lg bg-sidebar-accent p-3 text-center">
-                {trialInfo.subscriptionStatus !== "free_trial_expired" && (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex gap-2 justify-between">
-                      <div className="text-sm">AI resolutions</div>
-                      <div className="text-sm opacity-50">
-                        {trialInfo.resolutionsCount}/{trialInfo.resolutionsLimit}
-                      </div>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-sidebar-accent">
-                      <div
-                        className="h-2 rounded-full bg-sidebar-foreground"
-                        style={{
-                          width: `${((trialInfo.resolutionsCount ?? 0) / (trialInfo.resolutionsLimit ?? 1)) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-                <Button variant="bright" size="sm" onClick={() => startCheckout({ mailboxSlug })}>
-                  Upgrade
-                </Button>
-                {trialInfo.subscriptionStatus === "free_trial_expired" ? (
-                  <div className="text-xs">
-                    Your trial period has ended. Please upgrade to continue using AI features.
-                  </div>
-                ) : (
-                  <div className="text-xs">
-                    Free trial until{" "}
-                    {new Date(trialInfo.freeTrialEndsAt!).toLocaleString("en-US", { month: "long", day: "numeric" })}
-                  </div>
-                )}
-              </div>
-            </SidebarMenuItem>
-          )}
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
