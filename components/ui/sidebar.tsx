@@ -46,7 +46,7 @@ const SidebarProvider = React.forwardRef<HTMLDivElement, React.ComponentProps<"d
         <TooltipProvider delayDuration={0}>
           <div
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full text-sidebar-foreground has-data-[variant=inset]:bg-sidebar",
+              "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
               className,
             )}
             ref={ref}

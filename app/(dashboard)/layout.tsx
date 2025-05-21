@@ -41,8 +41,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <StandaloneDisplayIntegration />
           <HydrateClient>
             <div className="flex flex-row min-h-svh">
-              <NavigationRail />
-              <main className="flex-1">{children}</main>
+              <div className="hidden md:block text-sidebar-foreground">
+                <NavigationRail />
+              </div>
+              <main className="flex-1 text-foreground bg-background">{children}</main>
             </div>
           </HydrateClient>
         </TRPCReactProvider>
