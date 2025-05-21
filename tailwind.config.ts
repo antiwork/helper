@@ -22,6 +22,9 @@ const config: Config = {
             th: {
               color: "var(--foreground)",
             },
+            blockquote: {
+              color: "var(--foreground)",
+            },
           },
         },
       },
