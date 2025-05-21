@@ -44,6 +44,7 @@ export default inngest.createFunction(
     const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
 
     for (const mailbox of mailboxesList) {
+      if (mailbox.preferences?.disableTicketResponseTimeAlerts) continue;
       try {
         const overdueAssignedConversations = await db
           .select({

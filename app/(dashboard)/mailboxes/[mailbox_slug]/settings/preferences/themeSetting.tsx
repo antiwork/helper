@@ -23,18 +23,12 @@ export type ThemeUpdates = {
   };
 };
 
-const ThemeSetting = ({
-  mailbox,
-  preferences,
-}: {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  preferences: RouterOutputs["mailbox"]["preferences"]["get"];
-}) => {
+const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const { setTheme: setWindowTheme } = useInboxTheme();
 
-  const [isEnabled, setIsEnabled] = useState(!!preferences.preferences?.theme);
+  const [isEnabled, setIsEnabled] = useState(!!mailbox.preferences?.theme);
   const [theme, setTheme] = useState(
-    preferences.preferences?.theme ?? {
+    mailbox.preferences?.theme ?? {
       background: "#ffffff",
       foreground: "#000000",
       primary: "#000000",
@@ -44,9 +38,9 @@ const ThemeSetting = ({
   );
 
   const utils = api.useUtils();
-  const { mutate: update } = api.mailbox.preferences.update.useMutation({
+  const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.preferences.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
       toast({
@@ -58,7 +52,7 @@ const ThemeSetting = ({
   });
 
   const save = useDebouncedCallback(() => {
-    if (!isEnabled && !preferences.preferences?.theme) return;
+    if (!isEnabled && !mailbox.preferences?.theme) return;
     update({
       mailboxSlug: mailbox.slug,
       preferences: { theme: isEnabled ? mapValues(theme, (value) => `#${normalizeHex(value)}`) : null },

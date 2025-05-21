@@ -416,6 +416,9 @@ importers:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.3.1
         version: 4.4.1(prettier@3.5.3)
+      '@inngest/test':
+        specifier: ^0.1.6
+        version: 0.1.6(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
       '@next/eslint-plugin-next':
         specifier: ^15.3.1
         version: 15.3.1
@@ -2601,6 +2604,9 @@ packages:
       '@sentry/core': '>=8.0.0'
       '@sentry/types': '>=8.0.0'
       inngest: '>=3.0.0'
+
+  '@inngest/test@0.1.6':
+    resolution: {integrity: sha512-SDNjOlg0d1iz/8ZBi9dtd7sfOHFb8gqWXPGh0F+Lp8JtcVF+hzJBJn5ZOvdqdFzfNqsijVA3YwKCW9xFcC9ahg==}
 
   '@inquirer/checkbox@2.5.0':
     resolution: {integrity: sha512-sMgdETOfi2dUHT8r7TT1BTKOwNvdDGFDXYWtQ2J69SvlYNntk9I/gJe7r5yvMwwsuKnYbuRs3pNhx4tgNck5aA==}
@@ -14670,6 +14676,25 @@ snapshots:
       '@sentry/core': 9.15.0
       '@sentry/types': 9.15.0
       inngest: 3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
+
+  '@inngest/test@0.1.6(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)':
+    dependencies:
+      inngest: 3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
+      tinyspy: 3.0.2
+      ulid: 2.4.0
+    transitivePeerDependencies:
+      - '@sveltejs/kit'
+      - '@vercel/node'
+      - aws-lambda
+      - encoding
+      - express
+      - fastify
+      - h3
+      - hono
+      - koa
+      - next
+      - supports-color
+      - typescript
 
   '@inquirer/checkbox@2.5.0':
     dependencies:

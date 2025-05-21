@@ -48,7 +48,7 @@ export const mailboxes = pgTable(
     unused_escalationExpectedResolutionHours: integer("escalation_expected_resolution_hours"),
     preferences: jsonb()
       .$type<{
-        confetti: boolean;
+        confetti?: boolean;
         theme?: {
           background: string;
           foreground: string;
@@ -56,10 +56,9 @@ export const mailboxes = pgTable(
           accent: string;
           sidebarBackground: string;
         } | null;
+        disableTicketResponseTimeAlerts?: boolean;
       }>()
-      .default({
-        confetti: false,
-      }),
+      .default({}),
   },
   (table) => {
     return {

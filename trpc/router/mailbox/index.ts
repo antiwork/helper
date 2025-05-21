@@ -15,7 +15,6 @@ import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
-import { preferencesRouter } from "./preferences";
 import { mailboxProcedure } from "./procedure";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
@@ -87,10 +86,30 @@ export const mailboxRouter = {
         autoCloseEnabled: z.boolean().optional(),
         autoCloseDaysOfInactivity: z.number().optional(),
         name: z.string().optional(),
+        preferences: z
+          .object({
+            confetti: z.boolean().optional(),
+            theme: z
+              .object({
+                background: z.string().regex(/^#([0-9a-f]{6})$/i),
+                foreground: z.string().regex(/^#([0-9a-f]{6})$/i),
+                primary: z.string().regex(/^#([0-9a-f]{6})$/i),
+                accent: z.string().regex(/^#([0-9a-f]{6})$/i),
+                sidebarBackground: z.string().regex(/^#([0-9a-f]{6})$/i),
+              })
+              .nullable()
+              .optional(),
+            disableTicketResponseTimeAlerts: z.boolean().optional(),
+          })
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await db.update(mailboxes).set(input).where(eq(mailboxes.id, ctx.mailbox.id));
+      const preferences = { ...ctx.mailbox.preferences, ...(input.preferences ?? {}) };
+      await db
+        .update(mailboxes)
+        .set({ ...input, preferences })
+        .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
 
   latestEvents: mailboxProcedure
@@ -150,5 +169,4 @@ export const mailboxRouter = {
       message: "Auto-close job triggered successfully",
     };
   }),
-  preferences: preferencesRouter,
 } satisfies TRPCRouterRecord;

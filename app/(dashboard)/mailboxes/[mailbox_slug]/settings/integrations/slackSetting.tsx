@@ -6,6 +6,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useRunOnce } from "@/components/useRunOnce";
 import useShowToastForSlackConnectStatus from "@/components/useShowToastForSlackConnectStatus";
 import { RouterOutputs } from "@/trpc";
@@ -165,6 +166,25 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
               Daily reports and notifications will be sent to this channel.
             </p>
           </div>
+          <div className="flex items-center justify-between mt-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="ticket-response-alerts-toggle">Ticket response time alerts</Label>
+              <p className="text-sm text-muted-foreground">
+                Notifications about tickets waiting over 24 hours without a response.
+              </p>
+            </div>
+            <Switch
+              id="ticket-response-alerts-toggle"
+              checked={!mailbox.preferences?.disableTicketResponseTimeAlerts}
+              onCheckedChange={(checked) =>
+                update({
+                  mailboxSlug: mailbox.slug,
+                  preferences: { disableTicketResponseTimeAlerts: !checked },
+                })
+              }
+            />
+          </div>
+
           <div className="mt-4">
             <Button
               variant="destructive_outlined"
