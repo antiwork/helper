@@ -166,7 +166,6 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
               Daily reports and notifications will be sent to this channel.
             </p>
           </div>
-
           <div className="flex items-center justify-between mt-4">
             <div className="space-y-0.5">
               <Label htmlFor="ticket-response-alerts-toggle">Ticket response time alerts</Label>
