@@ -43,6 +43,7 @@ export default inngest.createFunction(
     const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
     for (const mailbox of mailboxesList) {
+      if (mailbox.preferences?.disableTicketResponseTimeAlerts) continue;
       try {
         const overdueAssignedConversations = await db
           .select({

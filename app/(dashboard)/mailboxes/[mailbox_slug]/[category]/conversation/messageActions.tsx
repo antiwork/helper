@@ -50,7 +50,7 @@ export const MessageActions = () => {
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
 
-  const { data: mailboxPreferences } = api.mailbox.preferences.get.useQuery({
+  const { data: mailboxPreferences } = api.mailbox.get.useQuery({
     mailboxSlug,
   });
 
