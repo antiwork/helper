@@ -146,7 +146,7 @@ describe("convertEmailToRaw", () => {
   it("properly converts an email with attachments", async () => {
     const time = new Date("2023-01-01");
     vi.setSystemTime(time);
-    vi.mocked(downloadFile).mockResolvedValue(new ArrayBuffer(8));
+    vi.mocked(downloadFile).mockResolvedValue(Buffer.from("mock file content").buffer);
 
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, {

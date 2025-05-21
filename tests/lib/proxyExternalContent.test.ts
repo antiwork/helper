@@ -7,6 +7,7 @@ vi.mock("@/lib/env", () => ({
     PROXY_SECRET_KEY: "test-secret-key",
     PROXY_URL: "https://proxy.helperai.com",
     AUTH_URL: "https://helper.ai",
+    NEXT_PUBLIC_SUPABASE_URL: "https://supabase.helperai.dev",
   },
 }));
 

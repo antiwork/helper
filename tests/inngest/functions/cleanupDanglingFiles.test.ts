@@ -6,7 +6,7 @@ import { subDays } from "date-fns";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { cleanupDanglingFiles } from "@/inngest/functions/cleanupDanglingFiles";
-import * as filesLib from "@/lib/data/files";
+import { deleteFiles } from "@/lib/data/files";
 
 vi.mock("@/lib/data/files", () => ({
   deleteFiles: vi.fn(),
@@ -46,18 +46,15 @@ describe("cleanupDanglingFiles", () => {
       [recentFile.id, associatedFile.id].sort((a, b) => a - b),
     );
 
-    expect(filesLib.deleteFiles).toHaveBeenCalledTimes(1);
-    expect(filesLib.deleteFiles).toHaveBeenCalledWith(
-      [oldFile1.key, oldFile1.previewKey, oldFile2.key].filter(Boolean),
-      false,
-    );
+    expect(deleteFiles).toHaveBeenCalledTimes(2);
+    expect(deleteFiles).toHaveBeenCalledWith([oldFile1.key, oldFile1.previewKey, oldFile2.key].filter(Boolean), false);
   });
 
   it("does not delete files if Supabase deletion fails", async () => {
     const twoDaysAgo = subDays(new Date(), 2);
     await fileFactory.create(null, { createdAt: twoDaysAgo });
 
-    vi.mocked(filesLib.deleteFiles).mockRejectedValueOnce(new Error("Deletion failed"));
+    vi.mocked(deleteFiles).mockRejectedValueOnce(new Error("Deletion failed"));
 
     await expect(cleanupDanglingFiles()).rejects.toThrow("Deletion failed");
 

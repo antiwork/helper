@@ -48,7 +48,7 @@ vi.mock("@/lib/ai", async () => {
   };
 });
 
-vi.mock("@/lib/realtime/client", () => ({
+vi.mock("@/lib/realtime/publish", () => ({
   publishToRealtime: vi.fn(),
 }));
 

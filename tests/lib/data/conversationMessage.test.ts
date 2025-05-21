@@ -22,6 +22,7 @@ import {
   getMessages,
   serializeResponseAiDraft,
 } from "@/lib/data/conversationMessage";
+import { getFileUrl } from "@/lib/data/files";
 import { getSlackPermalink } from "@/lib/slack/client";
 
 vi.mock("@/lib/slack/client", () => ({
@@ -32,6 +33,13 @@ vi.mock("@/inngest/client", () => ({
     send: vi.fn(),
   },
 }));
+vi.mock("@/lib/data/files", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/data/files")>();
+  return {
+    ...actual,
+    getFileUrl: vi.fn(),
+  };
+});
 
 beforeEach(() => {
   vi.useRealTimers();
@@ -170,6 +178,8 @@ describe("getMessages", () => {
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { file } = await fileFactory.create(message.id, { isInline: false, size: 1024 * 1024 });
 
+    vi.mocked(getFileUrl).mockResolvedValue("https://presigned-url.com");
+
     const result = await getMessages(conversation.id, mailbox);
     assert(result[0]?.type === "message");
     expect(result[0].files[0]).toEqual({
@@ -181,12 +191,13 @@ describe("getMessages", () => {
       mimetype: file.mimetype,
       isInline: false,
       presignedUrl: "https://presigned-url.com",
-      url: expect.any(String),
+      key: expect.any(String),
       sizeHuman: "1 MB",
       slug: file.slug,
       isPublic: file.isPublic,
       createdAt: file.createdAt,
       updatedAt: file.updatedAt,
+      previewKey: null,
       previewUrl: null,
     });
   });

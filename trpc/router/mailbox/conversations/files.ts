@@ -8,12 +8,6 @@ import { generateKey, PRIVATE_BUCKET_NAME, PUBLIC_BUCKET_NAME } from "@/lib/data
 import { createAdminClient } from "@/lib/supabase/server";
 import { protectedProcedure } from "@/trpc/trpc";
 
-const PUBLIC_ACL = "public-read";
-const PRIVATE_ACL = "private";
-
-const AWS_PRESIGNED_POST_FILE_MAX_SIZE = 26210000; // 25 MiB
-const AWS_PRESIGNED_POST_EXPIRY = 600; // 10 minutes
-
 export const filesRouter = {
   initiateUpload: protectedProcedure
     .input(

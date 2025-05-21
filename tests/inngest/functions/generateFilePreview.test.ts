@@ -15,7 +15,7 @@ describe("generateFilePreview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(downloadFile).mockResolvedValue(new ArrayBuffer(0));
-    vi.mocked(uploadFile).mockResolvedValue("https://example.com/preview.png");
+    vi.mocked(uploadFile).mockResolvedValue("preview.png");
     vi.mocked(fs.mkdtemp).mockResolvedValue("/tmp/preview-123456");
     vi.mocked(fs.stat).mockResolvedValue({ isFile: () => true } as import("fs").Stats);
     vi.mocked(fs.rm).mockResolvedValue(undefined);
