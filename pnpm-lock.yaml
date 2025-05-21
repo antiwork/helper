@@ -361,9 +361,6 @@ importers:
       remark-html:
         specifier: ^16.0.1
         version: 16.0.1
-      resend:
-        specifier: ^4.0.0
-        version: 4.4.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       rrweb-player:
         specifier: ^1.0.0-alpha.4
         version: 1.0.0-alpha.4
@@ -11033,10 +11030,6 @@ packages:
 
   requires-port@1.0.0:
     resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
-
-  resend@4.4.1:
-    resolution: {integrity: sha512-FR22bzMW3VfoyZSBc8ScGo8ShrMWHmWB0G3FrispzWCnYSEEK5M7pyRvZtInKmM/09lsJETKc2q66mX+dXPSmg==}
-    engines: {node: '>=18'}
 
   resolve-alpn@1.2.1:
     resolution: {integrity: sha512-0a1F4l73/ZFZOakJnQ3FvkJ2+gSTQWz/r2KE5OdDY0TxPm5h4GkqkWWfM47T7HsbnOtcJVEF4epCVy6u7Q3K+g==}
@@ -24621,13 +24614,6 @@ snapshots:
       - supports-color
 
   requires-port@1.0.0: {}
-
-  resend@4.4.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
-    dependencies:
-      '@react-email/render': 1.0.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-    transitivePeerDependencies:
-      - react
-      - react-dom
 
   resolve-alpn@1.2.1: {}
 

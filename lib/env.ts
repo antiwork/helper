@@ -52,7 +52,6 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
-    RESEND_API_KEY: z.string().min(1), // API key from https://resend.com for transactional emails
 
     // For running database seeds
     INITIAL_USER_EMAILS: z

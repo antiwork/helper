@@ -14,9 +14,6 @@ import { getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import * as sentryUtils from "@/lib/shared/sentry";
 
-vi.mock("@/lib/resend/client", () => ({
-  sendEmail: vi.fn(),
-}));
 vi.mock("@/lib/emails/automatedRepliesLimitExceeded", () => ({
   default: vi.fn().mockReturnValue("Mock component"),
 }));

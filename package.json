@@ -154,7 +154,6 @@
     "recharts": "^2.15.3",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
-    "resend": "^4.0.0",
     "rrweb-player": "^1.0.0-alpha.4",
     "server-only": "^0.0.1",
     "sharp": "^0.33.5",
