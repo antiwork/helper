@@ -40,7 +40,6 @@ export const mailboxes = pgTable(
     }),
     autoCloseEnabled: boolean().notNull().default(false),
     autoCloseDaysOfInactivity: integer().notNull().default(14),
-    disableTicketResponseTimeAlerts: boolean().notNull().default(false),
     unused_disableAutoResponseForVips: boolean("disable_auto_response_for_vips").notNull().default(false),
     unused_responseGeneratorPrompt: jsonb("response_generator_prompt").$type<string[]>(),
     unused_escalationEmailBody: text("escalation_email_body"),

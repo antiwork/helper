@@ -35,11 +35,7 @@ export default inngest.createFunction(
     if (isWeekend(new Date())) return { success: true, skipped: "weekend" };
 
     const mailboxesList = await db.query.mailboxes.findMany({
-      where: and(
-        isNotNull(mailboxes.slackBotToken), 
-        isNotNull(mailboxes.slackAlertChannel),
-        eq(mailboxes.disableTicketResponseTimeAlerts, false)
-      ),
+      where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
     });
 
     if (!mailboxesList.length) return;
