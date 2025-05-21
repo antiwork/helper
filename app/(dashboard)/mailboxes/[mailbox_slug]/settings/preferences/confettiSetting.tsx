@@ -8,16 +8,10 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-const ConfettiSetting = ({
-  mailbox,
-  preferences,
-}: {
-  mailbox: RouterOutputs["mailbox"]["get"];
-  preferences: RouterOutputs["mailbox"]["preferences"]["get"];
-}) => {
-  const [confettiEnabled, setConfettiEnabled] = useState(preferences.preferences?.confetti ?? false);
+const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
+  const [confettiEnabled, setConfettiEnabled] = useState(mailbox.preferences?.confetti ?? false);
   const utils = api.useUtils();
-  const { mutate: update } = api.mailbox.preferences.update.useMutation({
+  const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },

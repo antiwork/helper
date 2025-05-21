@@ -40,14 +40,13 @@ export const mailboxes = pgTable(
     }),
     autoCloseEnabled: boolean().notNull().default(false),
     autoCloseDaysOfInactivity: integer().notNull().default(14),
-    disableTicketResponseTimeAlerts: boolean().notNull().default(false),
     unused_disableAutoResponseForVips: boolean("disable_auto_response_for_vips").notNull().default(false),
     unused_responseGeneratorPrompt: jsonb("response_generator_prompt").$type<string[]>(),
     unused_escalationEmailBody: text("escalation_email_body"),
     unused_escalationExpectedResolutionHours: integer("escalation_expected_resolution_hours"),
     preferences: jsonb()
       .$type<{
-        confetti: boolean;
+        confetti?: boolean;
         theme?: {
           background: string;
           foreground: string;
@@ -55,10 +54,9 @@ export const mailboxes = pgTable(
           accent: string;
           sidebarBackground: string;
         } | null;
+        disableTicketResponseTimeAlerts?: boolean;
       }>()
-      .default({
-        confetti: false,
-      }),
+      .default({}),
   },
   (table) => {
     return {

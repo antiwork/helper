@@ -14,7 +14,7 @@ export default async function InboxLayout({
 }) {
   try {
     const mailboxSlug = (await params).mailbox_slug;
-    const { preferences } = await api.mailbox.preferences.get({ mailboxSlug });
+    const { preferences } = await api.mailbox.get({ mailboxSlug });
 
     return (
       // @ts-expect-error - need to update the React type definitions
