@@ -188,7 +188,7 @@ const openAssignModal = async (
             type: "static_select",
             action_id: "user",
             placeholder: { type: "plain_text", text: "Select a user" },
-            options: (await db.query.authUsers.findMany()).map((member) => ({
+            options: (await db.query.authUsers.findMany({ limit: 100 })).map((member) => ({
               text: {
                 type: "plain_text",
                 text: getFullName(member),

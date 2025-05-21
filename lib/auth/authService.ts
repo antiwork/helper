@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
-import { db } from "@/db/client";
+import { db, TransactionOrDb } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { updateUserMailboxData } from "@/lib/data/user";
@@ -10,10 +10,18 @@ import { GMAIL_SCOPES } from "./constants";
 const WIDGET_HMAC_SECRET_PREFIX = "hlpr_widget_";
 
 export const setupMailboxForNewUser = async (user: DbOrAuthUser) => {
-  const mailbox = await createInitialMailbox();
-  await updateUserMailboxData(user.id, mailbox.id, {
-    role: "core",
-    keywords: [],
+  const mailbox = await db.transaction(async (tx) => {
+    const mailbox = await createInitialMailbox(tx);
+    await updateUserMailboxData(
+      user.id,
+      mailbox.id,
+      {
+        role: "core",
+        keywords: [],
+      },
+      tx,
+    );
+    return mailbox;
   });
   return mailbox;
 };
@@ -27,7 +35,7 @@ export const gmailScopesGranted = (scopes: string[]) => {
   return true;
 };
 
-const createInitialMailbox = async () => {
+const createInitialMailbox = async (tx: TransactionOrDb) => {
   const mailbox = await db
     .insert(mailboxes)
     .values({

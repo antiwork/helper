@@ -47,6 +47,7 @@ const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
         pages: [[...eventsToAdd, ...firstPage], ...data.pages.slice(1)],
       };
     });
+    newEventsRef.current = [];
   }, 5000);
 
   useRealtimeEvent(dashboardChannelId(mailboxSlug), "event", (message) => {

@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
-import { db } from "@/db/client";
+import { db, TransactionOrDb } from "@/db/client";
 import { authIdentities, authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/server";
@@ -9,11 +9,12 @@ import { getSlackUser } from "../slack/client";
 
 export const createInvitation = async (inviterUserId: string, emailAddress: string) => {
   const supabase = await createClient();
-  return await supabase.auth.admin.inviteUserByEmail(emailAddress, {
+  const { error } = await supabase.auth.admin.inviteUserByEmail(emailAddress, {
     data: {
       inviter_user_id: inviterUserId,
     },
   });
+  if (error) throw error;
 };
 
 export const UserRoles = {
@@ -63,8 +64,9 @@ export const updateUserMailboxData = async (
     role?: UserRole;
     keywords?: MailboxAccess["keywords"];
   },
+  tx: TransactionOrDb = db,
 ): Promise<UserWithMailboxAccessData> => {
-  const user = await db.query.authUsers.findFirst({ where: eq(authUsers.id, userId) });
+  const user = await tx.query.authUsers.findFirst({ where: eq(authUsers.id, userId) });
 
   const userMetadata = user?.user_metadata || {};
   const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
@@ -77,7 +79,7 @@ export const updateUserMailboxData = async (
     updatedAt: new Date().toISOString(),
   };
 
-  const updatedUser = await db
+  const updatedUser = await tx
     .update(authUsers)
     .set({
       user_metadata: {

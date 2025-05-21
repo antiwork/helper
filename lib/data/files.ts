@@ -54,7 +54,8 @@ export const uploadFile = async (
 };
 
 export const generateKey = (basePathParts: string[], fileName: string) => {
-  return [...basePathParts, crypto.randomUUID(), fileName].join("/");
+  const sanitizedFileName = fileName.replace(/(^.*[\\/])|[^\w.-]/g, "_");
+  return [...basePathParts, crypto.randomUUID(), sanitizedFileName].join("/");
 };
 
 export const finishFileUpload = async (
@@ -155,6 +156,9 @@ export const createAndUploadFile = async ({
 export const deleteFiles = async (keys: string[], isPublic: boolean) => {
   const supabase = createAdminClient();
   for (const chunkKeys of chunk(keys, MAX_KEYS_PER_DELETE)) {
-    await supabase.storage.from(isPublic ? PUBLIC_BUCKET_NAME : PRIVATE_BUCKET_NAME).remove(chunkKeys);
+    const { error } = await supabase.storage
+      .from(isPublic ? PUBLIC_BUCKET_NAME : PRIVATE_BUCKET_NAME)
+      .remove(chunkKeys);
+    if (error) throw error;
   }
 };

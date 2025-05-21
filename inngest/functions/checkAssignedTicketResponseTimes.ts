@@ -41,6 +41,8 @@ export default inngest.createFunction(
 
     const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
+    const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
+
     for (const mailbox of mailboxesList) {
       try {
         const overdueAssignedConversations = await db
@@ -68,7 +70,6 @@ export default inngest.createFunction(
         if (!overdueAssignedConversations.length) continue;
 
         const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
-        const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
 
         const blocks: KnownBlock[] = [
           {
