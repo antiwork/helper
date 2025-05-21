@@ -14,7 +14,7 @@ vi.mock("fs/promises");
 describe("generateFilePreview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(downloadFile).mockResolvedValue(new ArrayBuffer(0));
+    vi.mocked(downloadFile).mockResolvedValue(new Uint8Array(0));
     vi.mocked(uploadFile).mockResolvedValue("preview.png");
     vi.mocked(fs.mkdtemp).mockResolvedValue("/tmp/preview-123456");
     vi.mocked(fs.stat).mockResolvedValue({ isFile: () => true } as import("fs").Stats);
