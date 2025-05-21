@@ -7,7 +7,7 @@ import { SentryContext } from "@/components/sentryContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
-import { NavigationRail } from "@/components/NavigationRail";
+import { NavigationRail } from "@/components/navigationRail";
 
 export const metadata: Metadata = {
   title: "Helper",
