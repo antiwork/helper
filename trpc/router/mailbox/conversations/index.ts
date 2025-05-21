@@ -1,5 +1,7 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, count, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { remark } from "remark";
+import remarkHtml from "remark-html";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
@@ -7,8 +9,8 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
+import { generateAIResponse, loadPreviousMessages } from "@/lib/ai/chat";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
-import { generateDraftResponse } from "@/lib/ai/generateResponse";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -203,11 +205,22 @@ export const conversationsRouter = {
       },
     });
     if (!lastUserMessage) throw new TRPCError({ code: "NOT_FOUND", message: "No user message found" });
-    const metadata: object = lastUserMessage?.metadata ?? {};
 
     const oldDraft = await getLastAiGeneratedDraft(ctx.conversation.id);
-    const { draftResponse, promptInfo } = await generateDraftResponse(ctx.mailbox.id, lastUserMessage, metadata);
-
+    const messages = await loadPreviousMessages(ctx.conversation.id);
+    const result = await generateAIResponse({
+      messages,
+      mailbox: ctx.mailbox,
+      conversationId: ctx.conversation.id,
+      email: lastUserMessage.emailFrom,
+      readPageTool: null,
+      guideEnabled: false,
+      addReasoning: false,
+    });
+    for await (const _ of result.textStream) {
+      // awaiting result.text doesn't appear to work without this
+    }
+    const draftResponse = await convertMarkdownToHtml(await result.text);
     const newDraft = await db.transaction(async (tx) => {
       if (oldDraft) {
         await tx
@@ -215,9 +228,8 @@ export const conversationsRouter = {
           .set({ status: "discarded" })
           .where(eq(conversationMessages.id, oldDraft.id));
       }
-      return await createAiDraft(ctx.conversation.id, draftResponse, lastUserMessage.id, promptInfo, tx);
+      return await createAiDraft(ctx.conversation.id, draftResponse, lastUserMessage.id, null, tx);
     });
-
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
@@ -348,3 +360,8 @@ export const conversationsRouter = {
     };
   }),
 } satisfies TRPCRouterRecord;
+
+const convertMarkdownToHtml = async (markdown: string): Promise<string> => {
+  const result = await remark().use(remarkHtml).process(markdown);
+  return result.toString();
+};

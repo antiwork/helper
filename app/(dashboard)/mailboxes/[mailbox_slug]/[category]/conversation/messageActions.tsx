@@ -119,6 +119,7 @@ export const MessageActions = () => {
       const message = conversation?.draft.body ?? "";
       setDraftedEmail((email) => ({ ...email, message }));
       setInitialMessageObject({ content: message });
+      editorRef.current?.editor?.commands.setContent(message);
     }
   }, [conversation?.draft?.id]);
 

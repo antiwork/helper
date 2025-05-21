@@ -34,9 +34,10 @@ export const CategoryNav = ({
       count: openCount?.mine ?? 0,
     },
     {
-      label: CATEGORY_LABELS.all,
-      icon: HeroInbox,
-      href: `/mailboxes/${mailboxSlug}/conversations`,
+      label: CATEGORY_LABELS.unassigned,
+      icon: HeroUserMinus,
+      href: `/mailboxes/${mailboxSlug}/unassigned`,
+      count: openCount?.unassigned ?? 0,
     },
     {
       label: CATEGORY_LABELS.assigned,
@@ -45,10 +46,9 @@ export const CategoryNav = ({
       count: openCount?.assigned ?? 0,
     },
     {
-      label: CATEGORY_LABELS.unassigned,
-      icon: HeroUserMinus,
-      href: `/mailboxes/${mailboxSlug}/unassigned`,
-      count: openCount?.unassigned ?? 0,
+      label: CATEGORY_LABELS.all,
+      icon: HeroInbox,
+      href: `/mailboxes/${mailboxSlug}/conversations`,
     },
   ];
 

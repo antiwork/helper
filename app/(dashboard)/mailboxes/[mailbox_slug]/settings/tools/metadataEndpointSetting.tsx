@@ -1,11 +1,12 @@
 "use client";
 
 import cx from "classnames";
-import { Copy, Eye, EyeOff, PlusCircle } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, PlusCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import type { MetadataEndpoint } from "@/app/types/global";
+import { getBaseUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,11 +140,16 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       title="Metadata Endpoint"
       description={
         <>
-          <span>
-            Add an endpoint to fetch relevant metadata when an email is received. Helper will return a JSON response in
-            this format:
-          </span>
-          <span className="block">{`{"success": true, "metadata": {"label": "value"}}`}</span>
+          <span>Add an endpoint for Helper to fetch customer value and metadata when an email is received.</span>
+          <a
+            href={`${getBaseUrl()}/docs/tools/05-metadata-endpoint`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline flex items-center gap-1 mt-1"
+          >
+            Documentation
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </>
       }
     >

@@ -16,6 +16,15 @@ const config: Config = {
             strong: {
               color: "var(--foreground)",
             },
+            code: {
+              color: "var(--foreground)",
+            },
+            th: {
+              color: "var(--foreground)",
+            },
+            blockquote: {
+              color: "var(--foreground)",
+            },
           },
         },
       },

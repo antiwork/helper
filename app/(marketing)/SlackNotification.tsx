@@ -32,7 +32,9 @@ export function SlackNotification() {
               This is outside my capabilities.
             </div>
             <div className="flex mt-2">
-              <button className="bg-[#FEB81D] text-black text-xs px-3 py-1 rounded font-bold">View conversation</button>
+              <button className="bg-[#FEB81D] text-black text-xs px-3 py-1 rounded font-bold cursor-default">
+                View conversation
+              </button>
             </div>
           </div>
         </div>

@@ -185,8 +185,8 @@ class HelperWidget {
   }
 
   private setShowWidget(showWidget: boolean): void {
-    this.showWidget = showWidget;
-    if (showWidget) {
+    this.showWidget = showWidget || this.showToggleButton === true;
+    if (this.showWidget) {
       this.addHelperIcon();
       if (this.notificationContainer) {
         this.notificationContainer.classList.add("with-widget");

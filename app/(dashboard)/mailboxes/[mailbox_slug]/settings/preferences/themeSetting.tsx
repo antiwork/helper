@@ -1,5 +1,6 @@
 "use client";
 
+import { mapValues } from "lodash-es";
 import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { toast } from "@/components/hooks/use-toast";
@@ -45,19 +46,23 @@ const ThemeSetting = ({
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.preferences.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.preferences.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
       toast({
         title: "Error updating theme",
         description: error.message,
+        variant: "destructive",
       });
     },
   });
 
   const save = useDebouncedCallback(() => {
     if (!isEnabled && !preferences.preferences?.theme) return;
-    update({ mailboxSlug: mailbox.slug, preferences: { theme: isEnabled ? theme : null } });
+    update({
+      mailboxSlug: mailbox.slug,
+      preferences: { theme: isEnabled ? mapValues(theme, (value) => `#${normalizeHex(value)}`) : null },
+    });
   }, 2000);
 
   useOnChange(() => {

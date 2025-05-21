@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 
 const secretKey = env.CRYPTO_SECRET;
 const nativeEncryptColumnSecret = env.ENCRYPT_COLUMN_SECRET;
+const djangoCrypto = new DjangoCryptoCompat(secretKey);
 
 export const encryptedField = customType<{ data: string }>({
   dataType() {
@@ -12,9 +13,7 @@ export const encryptedField = customType<{ data: string }>({
   },
 
   toDriver(value: string): Buffer {
-    const crypto = new DjangoCryptoCompat(secretKey);
-    const encrypted = crypto.encrypt(value);
-    return encrypted;
+    return djangoCrypto.encrypt(value);
   },
 
   fromDriver(value: unknown): string {
@@ -27,8 +26,7 @@ export const encryptedField = customType<{ data: string }>({
       throw new Error(`Unexpected value type: ${typeof value}`);
     }
 
-    const crypto = new DjangoCryptoCompat(secretKey);
-    const decrypted = crypto.decrypt(bufferValue);
+    const decrypted = djangoCrypto.decrypt(bufferValue);
     return decrypted.toString("utf-8");
   },
 });

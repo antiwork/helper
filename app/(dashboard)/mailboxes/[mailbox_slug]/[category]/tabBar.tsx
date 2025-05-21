@@ -123,6 +123,8 @@ export const TabBar = () => {
       subtree: true,
     });
 
+    updateCurrentTabTitle();
+
     return () => titleObserver.disconnect();
   }, []);
 

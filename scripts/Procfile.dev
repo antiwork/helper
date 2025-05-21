@@ -1,6 +1,6 @@
-web: PORT=$WEB_PORT pnpm dev:next
+web: PORT=3010 pnpm dev:next
 email: pnpm dev:email
 sdk: pnpm --filter=@helperai/sdk dev
 sdk-types: pnpm --filter=@helperai/sdk dev:types
 react: pnpm --filter=@helperai/react dev
-inngest: pnpm inngest-cli dev --no-discovery -u http://localhost:$WEB_PORT/api/inngest
+inngest: pnpm inngest-cli dev --no-discovery -u http://localhost:3010/api/inngest
