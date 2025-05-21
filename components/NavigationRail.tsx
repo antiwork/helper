@@ -23,14 +23,14 @@ export function NavigationRail() {
 
   useEffect(() => {
     if (!mailboxSlug && mailboxes && mailboxes.length > 0) {
-      setMailboxSlug(mailboxes[0].slug);
+      setMailboxSlug(mailboxes[0]?.slug || "");
     }
   }, [mailboxes, mailboxSlug]);
 
   useEffect(() => {
     // Try to extract mailbox slug from the path
     const match = pathname.match(/\/mailboxes\/([^/]+)/);
-    if (match) setMailboxSlug(match[1]);
+    if (match && match[1]) setMailboxSlug(match[1]);
   }, [pathname]);
 
   const navItems = [
@@ -66,31 +66,36 @@ export function NavigationRail() {
         className="h-svh w-14 flex flex-col items-center bg-sidebar border-r border-sidebar-border py-2 gap-2"
         style={{ minWidth: 56 }}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="sidebar" size="sm" className="flex flex-col items-center w-10 h-10 p-0" iconOnly aria-label="Switch mailbox">
-              <Avatar src={undefined} fallback={currentMailbox?.name ?? "?"} size="sm" />
-              <ChevronsUpDown className="w-4 h-4 mt-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
-            {mailboxes?.map((mailbox) => (
-              <DropdownMenuItem
-                key={mailbox.slug}
-                onClick={() => {
-                  setMailboxSlug(mailbox.slug);
-                  router.push(`/mailboxes/${mailbox.slug}/conversations`);
-                }}
-                className="flex items-center gap-2"
+        <div className="flex flex-col gap-2 flex-1 items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="sidebar"
+                size="sm"
+                className="flex flex-col items-center w-10 h-10 p-0 rounded-full transition-colors hover:bg-sidebar-accent/80"
+                iconOnly
+                aria-label="Switch mailbox"
               >
-                <Avatar src={undefined} fallback={mailbox.name} size="sm" />
-                <span className="truncate text-base">{mailbox.name}</span>
-                <span className="ml-auto">{mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex flex-col gap-2 flex-1 mt-4">
+                <Avatar src={undefined} fallback={currentMailbox?.name || "?"} size="sm" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
+              {mailboxes?.map((mailbox) => (
+                <DropdownMenuItem
+                  key={mailbox.slug}
+                  onClick={() => {
+                    setMailboxSlug(mailbox.slug || "");
+                    router.push(`/mailboxes/${mailbox.slug}/conversations`);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Avatar src={undefined} fallback={mailbox.name} size="sm" />
+                  <span className="truncate text-base">{mailbox.name}</span>
+                  <span className="ml-auto">{mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {navItems.map((item) => (
             <Tooltip key={item.label}>
               <TooltipTrigger asChild>
@@ -100,7 +105,12 @@ export function NavigationRail() {
                   size="sm"
                   iconOnly
                   aria-label={item.label}
-                  className={cn("w-10 h-10 flex items-center justify-center", item.active && "bg-sidebar-accent")}
+                  className={cn(
+                    "w-10 h-10 flex items-center justify-center rounded-full transition-colors",
+                    item.active
+                      ? "bg-sidebar-accent text-sidebar-foreground"
+                      : "hover:bg-sidebar-accent/80 text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                  )}
                 >
                   <Link href={item.href} prefetch={false}>
                     <item.icon className="w-5 h-5" />
@@ -118,7 +128,7 @@ export function NavigationRail() {
                 variant="sidebar"
                 size="sm"
                 iconOnly
-                className="w-10 h-10 flex items-center justify-center"
+                className="w-10 h-10 flex items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent/80"
                 aria-label="Account menu"
               >
                 {children}

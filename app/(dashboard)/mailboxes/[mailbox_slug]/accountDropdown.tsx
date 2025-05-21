@@ -44,19 +44,10 @@ export function AccountDropdown({ trigger }: { trigger: (children: ReactNode) =>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {trigger(
-          <>
-            <Avatar src={user?.imageUrl ?? undefined} fallback={user?.fullName?.[0] ?? "?"} size="sm" />
-            <div className="grow flex flex-col truncate items-start">
-              <span className="grow truncate text-base">{user?.fullName}</span>
-              <span className="text-xs text-muted-foreground truncate block">
-                {/* @todo uncomment once teams API is ready */}
-              </span>
-            </div>
-            <ChevronUp className="ml-auto" />
-          </>,
+          <Avatar src={user?.imageUrl ?? undefined} fallback={user?.fullName?.[0] ?? "?"} size="sm" />,
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
+      <DropdownMenuContent side="right" align="start" className="min-w-[180px] mb-2">
         <Dialog>
           <DialogTrigger asChild>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>

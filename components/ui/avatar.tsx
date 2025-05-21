@@ -3,6 +3,9 @@
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 const BaseAvatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -44,9 +47,9 @@ interface CustomAvatarProps {
 
 export const Avatar = ({ src, fallback, size = "md" }: CustomAvatarProps) => {
   const sizeClasses = {
-    sm: "h-5 w-5 text-xxs",
-    md: "h-8 w-8 text-xs",
-    lg: "h-12 w-12 text-sm",
+    sm: "h-5 w-5 text-xxs font-bold",
+    md: "h-8 w-8 text-xs font-bold",
+    lg: "h-12 w-12 text-sm font-bold",
   };
 
   return (
