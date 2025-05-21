@@ -32,7 +32,10 @@ const calculateCurrentTime = (time: Date, formatter: Formatter) => {
 
   if (duration.years && duration.years > 0) return formatter.years(duration.years);
   if (duration.months && duration.months > 0) return formatter.months(duration.months);
-  if (duration.days && duration.days > 0) return formatter.days(duration.days);
+  if (duration.days && duration.days > 0) {
+    const hours = duration.hours || 0;
+    return `${formatter.days(duration.days)}${hours > 0 ? ' ' + formatter.hours(hours) : ''}`;
+  }
   if (duration.hours && duration.hours > 0) return formatter.hours(duration.hours);
   if (duration.minutes && duration.minutes > 0) return formatter.minutes(duration.minutes);
   return "now";
