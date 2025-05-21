@@ -32,12 +32,12 @@ export const downloadFile = async (file: typeof files.$inferSelect) => {
   if (file.isPublic) {
     const response = await fetch(supabase.storage.from(PUBLIC_BUCKET_NAME).getPublicUrl(file.key).data.publicUrl);
     if (!response.ok) throw new Error(`Failed to download public file: ${file.key} (${response.statusText})`);
-    return response.arrayBuffer();
+    return response.bytes();
   }
 
   const { data, error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).download(file.key);
   if (error) throw error;
-  return data.arrayBuffer();
+  return data.bytes();
 };
 
 export const uploadFile = async (
