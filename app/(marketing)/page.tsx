@@ -33,10 +33,6 @@ import SlackNotification from "./SlackNotification";
 import ToolsDemo from "./ToolsDemo";
 
 export default function Home() {
-  // TODO: Remove when we split the marketing site from the dashboard
-  if (typeof window !== "undefined" && !["localhost", "helperai.dev", "helper.ai"].includes(window.location.hostname))
-    location.href = "/login";
-
   const [customerQuestions] = useState([
     "How can Helper transform my customer support?",
     "How can Helper cut my response time in half?",
@@ -124,6 +120,12 @@ export default function Home() {
 
   const docsBaseUrl =
     getBaseUrl().includes("localhost") || getBaseUrl().includes("dev") ? "https://helperai.dev" : "https://helper.ai";
+
+  // TODO: Remove when we split the marketing site from the dashboard
+  if (typeof window !== "undefined" && !["localhost", "helperai.dev", "helper.ai"].includes(window.location.hostname)) {
+    location.href = "/login";
+    return null;
+  }
 
   return (
     <main className="bg-[#2B0808] text-white flex flex-col">
