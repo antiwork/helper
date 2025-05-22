@@ -48,7 +48,7 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     return;
   }
 
-  const mailbox = mailboxInfo.currentMailbox;
+  const mailbox = mailboxInfo.mailboxes.find(({ id }) => id === agentThread.mailboxId) ?? mailboxInfo.currentMailbox;
   if (!mailbox) {
     await askWhichMailbox(event, mailboxInfo.mailboxes);
     return;
