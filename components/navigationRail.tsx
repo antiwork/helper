@@ -21,14 +21,8 @@ export function NavigationRail() {
   const pathname = usePathname();
   const router = useRouter();
   const [mailboxSlug, setMailboxSlug] = useState<string | null>(null);
-  const { data: mailboxes, error: mailboxError } = api.mailbox.list.useQuery();
-  const currentMailbox = mailboxSlug
-    ? mailboxes?.find((m) => m.slug === mailboxSlug)
-    : mailboxes?.[0];
-
-  if (mailboxError) {
-    console.error("Failed to fetch mailboxes:", mailboxError);
-  }
+  const { data: mailboxes } = api.mailbox.list.useQuery();
+  const currentMailbox = mailboxSlug ? mailboxes?.find((m) => m.slug === mailboxSlug) : mailboxes?.[0];
 
   useEffect(() => {
     if (!mailboxSlug && mailboxes && mailboxes.length > 0) {
