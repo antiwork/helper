@@ -2,10 +2,10 @@
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const BaseAvatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,

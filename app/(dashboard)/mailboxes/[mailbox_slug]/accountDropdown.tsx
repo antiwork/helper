@@ -43,9 +43,7 @@ export function AccountDropdown({ trigger }: { trigger: (children: ReactNode) =>
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {trigger(
-          <Avatar src={user?.imageUrl ?? undefined} fallback={user?.fullName?.[0] ?? "?"} size="sm" />,
-        )}
+        {trigger(<Avatar src={user?.imageUrl ?? undefined} fallback={user?.fullName?.[0] ?? "?"} size="sm" />)}
       </DropdownMenuTrigger>
       <DropdownMenuContent side="right" align="start" className="min-w-[180px] mb-2">
         <Dialog>

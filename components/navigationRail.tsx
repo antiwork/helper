@@ -1,25 +1,28 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Search, Settings } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BarChart, Inbox, Search, Settings, ChevronsUpDown, CheckCircle } from "lucide-react";
+import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
-import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
 
 export function NavigationRail() {
   const pathname = usePathname();
   const router = useRouter();
   const [mailboxSlug, setMailboxSlug] = useState<string | null>(null);
   const { data: mailboxes } = api.mailbox.list.useQuery();
-  const currentMailbox = mailboxSlug
-    ? mailboxes?.find((m) => m.slug === mailboxSlug)
-    : mailboxes?.[0];
+  const currentMailbox = mailboxSlug ? mailboxes?.find((m) => m.slug === mailboxSlug) : mailboxes?.[0];
 
   useEffect(() => {
     if (!mailboxSlug && mailboxes && mailboxes.length > 0) {
@@ -29,8 +32,8 @@ export function NavigationRail() {
 
   useEffect(() => {
     // Try to extract mailbox slug from the path
-    const match = pathname.match(/\/mailboxes\/([^/]+)/);
-    if (match && match[1]) setMailboxSlug(match[1]);
+    const match = /\/mailboxes\/([^/]+)/.exec(pathname);
+    if (match?.[1]) setMailboxSlug(match[1]);
   }, [pathname]);
 
   const navItems = [
@@ -91,7 +94,9 @@ export function NavigationRail() {
                 >
                   <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                   <span className="truncate text-base">{mailbox.name}</span>
-                  <span className="ml-auto">{mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}</span>
+                  <span className="ml-auto">
+                    {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
+                  </span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -109,7 +114,7 @@ export function NavigationRail() {
                     "w-10 h-10 flex items-center justify-center rounded-full transition-colors",
                     item.active
                       ? "bg-sidebar-accent text-sidebar-foreground"
-                      : "hover:bg-sidebar-accent/80 text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                      : "hover:bg-sidebar-accent/80 text-sidebar-foreground/60 hover:text-sidebar-foreground",
                   )}
                 >
                   <Link href={item.href} prefetch={false}>
@@ -117,7 +122,9 @@ export function NavigationRail() {
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right" align="center">{item.label}</TooltipContent>
+              <TooltipContent side="right" align="center">
+                {item.label}
+              </TooltipContent>
             </Tooltip>
           ))}
         </div>

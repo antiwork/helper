@@ -95,9 +95,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings" />
       <FileUploadProvider mailboxSlug={mailbox.slug}>
         <div className="grow overflow-y-auto">
-          <SubNavigation
-            items={items}
-          />
+          <SubNavigation items={items} />
         </div>
       </FileUploadProvider>
     </div>

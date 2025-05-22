@@ -3,11 +3,11 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDisplayIntegration";
+import { NavigationRail } from "@/components/navigationRail";
 import { SentryContext } from "@/components/sentryContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
-import { NavigationRail } from "@/components/navigationRail";
 
 export const metadata: Metadata = {
   title: "Helper",
