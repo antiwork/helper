@@ -385,7 +385,7 @@ export const generateAgentResponse = async (
     model: "gpt-4o",
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
-You are currently in the mailbox: ${mailbox.name}.
+You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat to access others.
 
 IMPORTANT GUIDELINES:
 - Always identify as "Helper" (never as "Helper AI" or any other variation)
