@@ -2,9 +2,9 @@
 import type { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
-import { getScriptOrigin } from ".";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
+import { scriptOrigin } from "./scriptOrigin";
 import { RESUME_GUIDE, type GuideSessionEventType } from "./utils";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -666,7 +666,7 @@ export class GuideManager {
     const eventsToSend = [...this.events];
 
     try {
-      const response = await fetch(`${getScriptOrigin()}/api/guide/event`, {
+      const response = await fetch(`${scriptOrigin}/api/guide/event`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.sessionToken}`,
@@ -758,7 +758,7 @@ export class GuideManager {
     };
 
     try {
-      const response = await fetch(`${getScriptOrigin()}/api/guide/event`, {
+      const response = await fetch(`${scriptOrigin}/api/guide/event`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.sessionToken}`,
@@ -781,7 +781,7 @@ export class GuideManager {
 
   public async resumeGuideSession(sessionId: string, token: string): Promise<void> {
     try {
-      const response = await fetch(`${getScriptOrigin()}/api/guide/resume`, {
+      const response = await fetch(`${scriptOrigin}/api/guide/resume`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

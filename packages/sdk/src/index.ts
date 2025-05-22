@@ -3,6 +3,7 @@
 import { Context } from "modern-screenshot";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
+import { scriptOrigin } from "./scriptOrigin";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -15,11 +16,6 @@ import {
   type HelperWidgetConfig,
   type NotificationStatus,
 } from "./utils";
-
-const scriptOrigin = new URL((window.document.currentScript as HTMLScriptElement)?.src).origin;
-if (!scriptOrigin) {
-  throw new Error("Script origin not found. The SDK is intended to run in a browser environment.");
-}
 
 declare global {
   interface Window {
