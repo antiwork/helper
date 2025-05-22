@@ -54,8 +54,16 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     return;
   }
 
-  if (!agentThread.mailboxId) {
-    await db.update(agentThreads).set({ mailboxId: mailbox.id }).where(eq(agentThreads.id, agentThread.id));
+  const mentionedMailbox = event.text ? findMentionedMailbox(event.text, mailboxInfo.mailboxes, mailbox) : null;
+  
+  if (!agentThread.mailboxId || mentionedMailbox) {
+    const mailboxToUse = mentionedMailbox || mailbox;
+    await db.update(agentThreads).set({ mailboxId: mailboxToUse.id }).where(eq(agentThreads.id, agentThread.id));
+    
+    if (mentionedMailbox && mailboxInfo.mailboxes.length > 1) {
+      await postMailboxSwitchMessage(new WebClient(assertDefined(mailboxToUse.slackBotToken)), 
+        event.channel, event.thread_ts ?? event.ts, mailboxToUse.name);
+    }
   }
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
@@ -146,5 +154,25 @@ const askWhichMailbox = async (event: GenericMessageEvent | AppMentionEvent, mai
     channel: event.channel,
     thread_ts: event.thread_ts ?? event.ts,
     text: `${WHICH_MAILBOX_MESSAGE} (${mailboxes.map((m) => m.name).join("/")})`,
+  });
+};
+
+const findMentionedMailbox = (messageText: string, mailboxes: Mailbox[], currentMailbox: Mailbox): Mailbox | null => {
+  if (mailboxes.length <= 1) return null;
+  
+  const lowercaseText = messageText.toLowerCase();
+  for (const mailbox of mailboxes) {
+    if (mailbox.id !== currentMailbox.id && lowercaseText.includes(mailbox.name.toLowerCase())) {
+      return mailbox;
+    }
+  }
+  return null;
+};
+
+const postMailboxSwitchMessage = async (client: WebClient, channel: string, threadTs: string, mailboxName: string) => {
+  await client.chat.postMessage({
+    channel,
+    thread_ts: threadTs,
+    text: `_Currently working in the ${mailboxName} mailbox_`,
   });
 };
