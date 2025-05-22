@@ -21,8 +21,14 @@ export function NavigationRail() {
   const pathname = usePathname();
   const router = useRouter();
   const [mailboxSlug, setMailboxSlug] = useState<string | null>(null);
-  const { data: mailboxes } = api.mailbox.list.useQuery();
-  const currentMailbox = mailboxSlug ? mailboxes?.find((m) => m.slug === mailboxSlug) : mailboxes?.[0];
+  const { data: mailboxes, error: mailboxError } = api.mailbox.list.useQuery();
+  const currentMailbox = mailboxSlug
+    ? mailboxes?.find((m) => m.slug === mailboxSlug)
+    : mailboxes?.[0];
+
+  if (mailboxError) {
+    console.error("Failed to fetch mailboxes:", mailboxError);
+  }
 
   useEffect(() => {
     if (!mailboxSlug && mailboxes && mailboxes.length > 0) {
@@ -40,25 +46,25 @@ export function NavigationRail() {
     {
       label: "Inbox",
       icon: Inbox,
-      href: mailboxSlug ? `/mailboxes/${mailboxSlug}/conversations` : "#",
+      href: `/mailboxes/${mailboxSlug}/conversations`,
       active: pathname.includes("/conversations"),
     },
     {
       label: "Search",
       icon: Search,
-      href: mailboxSlug ? `/mailboxes/${mailboxSlug}/search` : "#",
+      href: `/mailboxes/${mailboxSlug}/search`,
       active: pathname.includes("/search"),
     },
     {
       label: "Dashboard",
       icon: BarChart,
-      href: mailboxSlug ? `/mailboxes/${mailboxSlug}/dashboard` : "#",
+      href: `/mailboxes/${mailboxSlug}/dashboard`,
       active: pathname.includes("/dashboard"),
     },
     {
       label: "Settings",
       icon: Settings,
-      href: mailboxSlug ? `/mailboxes/${mailboxSlug}/settings` : "#",
+      href: `/mailboxes/${mailboxSlug}/settings`,
       active: pathname.endsWith("/settings"),
     },
   ];
@@ -79,7 +85,7 @@ export function NavigationRail() {
                 iconOnly
                 aria-label="Switch mailbox"
               >
-                <Avatar src={undefined} fallback={currentMailbox?.name || "?"} size="sm" />
+                <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
