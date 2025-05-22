@@ -55,14 +55,18 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
   }
 
   const mentionedMailbox = event.text ? findMentionedMailbox(event.text, mailboxInfo.mailboxes, mailbox) : null;
-  
+
   if (!agentThread.mailboxId || mentionedMailbox) {
     const mailboxToUse = mentionedMailbox || mailbox;
     await db.update(agentThreads).set({ mailboxId: mailboxToUse.id }).where(eq(agentThreads.id, agentThread.id));
-    
+
     if (mentionedMailbox && mailboxInfo.mailboxes.length > 1) {
-      await postMailboxSwitchMessage(new WebClient(assertDefined(mailboxToUse.slackBotToken)), 
-        event.channel, event.thread_ts ?? event.ts, mailboxToUse.name);
+      await postMailboxSwitchMessage(
+        new WebClient(assertDefined(mailboxToUse.slackBotToken)),
+        event.channel,
+        event.thread_ts ?? event.ts,
+        mailboxToUse.name,
+      );
     }
   }
 
@@ -159,7 +163,7 @@ const askWhichMailbox = async (event: GenericMessageEvent | AppMentionEvent, mai
 
 const findMentionedMailbox = (messageText: string, mailboxes: Mailbox[], currentMailbox: Mailbox): Mailbox | null => {
   if (mailboxes.length <= 1) return null;
-  
+
   const lowercaseText = messageText.toLowerCase();
   for (const mailbox of mailboxes) {
     if (mailbox.id !== currentMailbox.id && lowercaseText.includes(mailbox.name.toLowerCase())) {
