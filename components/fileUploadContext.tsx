@@ -14,7 +14,7 @@ export type UnsavedFileInfo = {
   file: File;
   blobUrl: string;
   status: UploadStatus;
-  key: string | null;
+  url: string | null;
   slug: string | null;
   inline: boolean;
 };
@@ -39,7 +39,7 @@ const generateUnsavedFileInfo = (file: File, inline: boolean): UnsavedFileInfo =
   inline,
   status: UploadStatus.UPLOADING,
   blobUrl: URL.createObjectURL(file),
-  key: null,
+  url: null,
   slug: null,
 });
 
@@ -103,14 +103,15 @@ export const FileUploadProvider = ({
         await new Promise((resolve) =>
           setTimeout(resolve, (unsavedFiles.filter((f) => f.status === UploadStatus.UPLOADING).length + 1) * 200),
         );
-        const { file, bucket, signedUpload } = await utils.client.mailbox.conversations.files.initiateUpload.mutate({
-          conversationSlug: assertDefined(conversationSlug, "Conversation ID must be provided"),
-          file: {
-            fileName: unsavedFileInfo.file.name,
-            fileSize: unsavedFileInfo.file.size,
-            isInline: unsavedFileInfo.inline,
-          },
-        });
+        const { file, bucket, signedUpload, isPublic } =
+          await utils.client.mailbox.conversations.files.initiateUpload.mutate({
+            conversationSlug: assertDefined(conversationSlug, "Conversation ID must be provided"),
+            file: {
+              fileName: unsavedFileInfo.file.name,
+              fileSize: unsavedFileInfo.file.size,
+              isInline: unsavedFileInfo.inline,
+            },
+          });
         const supabase = createClient();
         const { data, error } = await supabase.storage
           .from(bucket)
@@ -118,9 +119,16 @@ export const FileUploadProvider = ({
         if (error) throw error;
         if (!data) throw new Error("No data returned from Supabase");
 
+        let url;
+        if (isPublic) {
+          url = supabase.storage.from(bucket).getPublicUrl(data.path).data.publicUrl;
+        } else {
+          url = await utils.client.mailbox.conversations.files.getFileUrl.query({ slug: file.slug });
+        }
+
         const updatedFile: UnsavedFileInfo = {
           slug: file.slug,
-          key: data.path,
+          url,
           status: UploadStatus.UPLOADED,
           file: unsavedFileInfo.file,
           blobUrl: unsavedFileInfo.blobUrl,

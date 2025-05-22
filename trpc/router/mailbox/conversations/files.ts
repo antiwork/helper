@@ -1,10 +1,11 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import mime from "mime";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { files } from "@/db/schema";
-import { generateKey, PRIVATE_BUCKET_NAME, PUBLIC_BUCKET_NAME } from "@/lib/data/files";
+import { generateKey, getFileUrl, PRIVATE_BUCKET_NAME, PUBLIC_BUCKET_NAME } from "@/lib/data/files";
 import { createAdminClient } from "@/lib/supabase/server";
 import { protectedProcedure } from "@/trpc/trpc";
 
@@ -60,9 +61,15 @@ export const filesRouter = {
             name: fileRecord.name,
             key: fileRecord.key,
           },
+          isPublic,
           bucket,
           signedUpload: data,
         };
       },
     ),
+  getFileUrl: protectedProcedure.input(z.object({ slug: z.string() })).query(async ({ input: { slug } }) => {
+    const file = await db.query.files.findFirst({ where: eq(files.slug, slug) });
+    if (!file) throw new Error("File not found");
+    return getFileUrl(file);
+  }),
 } satisfies TRPCRouterRecord;
