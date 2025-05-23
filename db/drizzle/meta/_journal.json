@@ -610,6 +610,13 @@
       "when": 1747995673956,
       "tag": "0086_windy_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1748000533822,
+      "tag": "0087_storage_buckets",
+      "breakpoints": true
     }
   ]
 }
