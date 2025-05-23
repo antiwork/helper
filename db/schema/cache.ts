@@ -9,4 +9,4 @@ export const cache = pgTable(
     expiresAt: timestamp(),
   },
   (table) => [unique("cache_key_idx").on(table.key), index("cache_expires_at_idx").on(table.expiresAt)],
-);
+).enableRLS();
