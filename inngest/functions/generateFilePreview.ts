@@ -6,7 +6,7 @@ import sharp from "sharp";
 import { db } from "@/db/client";
 import { files } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { downloadFile, generateS3Key, uploadFile } from "@/lib/s3/utils";
+import { downloadFile, generateKey, uploadFile } from "@/lib/data/files";
 
 const PREVIEW_SIZE = { width: 500, height: 500 };
 const PREVIEW_FORMAT = "png";
@@ -16,7 +16,7 @@ export const generateFilePreview = async (fileId: number) => {
     where: eq(files.id, fileId),
   });
 
-  if (!file || !!file.previewUrl) return;
+  if (!file || !!file.previewKey) return;
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "preview-"));
   const uuid = crypto.randomUUID();
@@ -24,17 +24,20 @@ export const generateFilePreview = async (fileId: number) => {
   const previewFilePath = path.join(tempDir, `preview_${uuid}.${PREVIEW_FORMAT}`);
 
   try {
-    await downloadFile(file.url, tempFilePath);
+    await fs.writeFile(tempFilePath, Buffer.from(await downloadFile(file)));
 
     if (file.mimetype.startsWith("image/")) {
       await sharp(tempFilePath).resize(PREVIEW_SIZE).toFormat(PREVIEW_FORMAT).toFile(previewFilePath);
     }
 
     if (await fs.stat(previewFilePath).catch(() => null)) {
-      const previewS3Key = generateS3Key(["previews"], file.name);
+      const key = generateKey(["previews"], file.name);
       const fileContent = await fs.readFile(previewFilePath);
-      const previewUrl = await uploadFile(fileContent, previewS3Key, `image/${PREVIEW_FORMAT}`);
-      await db.update(files).set({ previewUrl }).where(eq(files.id, fileId));
+      const finalKey = await uploadFile(key, fileContent, {
+        mimetype: `image/${PREVIEW_FORMAT}`,
+        isPublic: file.isPublic,
+      });
+      await db.update(files).set({ previewKey: finalKey }).where(eq(files.id, fileId));
     }
   } finally {
     // Clean up temporary files

@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { cacheFor } from "@/lib/cache";
 import { env } from "@/lib/env";
-import { redis } from "@/lib/redis/client";
 import { assertDefined } from "../../components/utils/assert";
 import { runAIObjectQuery } from "./index";
 
@@ -48,12 +48,12 @@ export const generateReadPageTool = async (
 ): Promise<{ toolName: string; toolDescription: string; pageContent: string } | null> => {
   if (!env.JINA_API_TOKEN) return null;
 
-  const cacheKey = generateCacheKey(currentURL, email);
-  const cachedResult = await redis.get<{
+  const cache = cacheFor<{
     toolName: string;
     toolDescription: string;
     pageContent: string;
-  }>(cacheKey);
+  }>(generateCacheKey(currentURL, email));
+  const cachedResult = await cache.get();
 
   if (cachedResult) {
     return cachedResult;
@@ -96,7 +96,7 @@ export const generateReadPageTool = async (
   };
 
   // Cache the result for 1 hour
-  await redis.set(cacheKey, result, { ex: 60 * 60 });
+  await cache.set(result, 60 * 60);
 
   return result;
 };

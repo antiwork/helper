@@ -40,10 +40,7 @@ export const searchSchema = z.object({
         .enum(["human", "slack_bot"])
         .optional()
         .describe("Filter tickets closed by a human or the Helper Slack agent"),
-      byClerkId: z
-        .array(z.string().regex(/^user_/))
-        .optional()
-        .describe("Filter tickets closed by specific team members"),
+      byUserId: z.array(z.string()).optional().describe("Filter tickets closed by specific team members"),
       before: z.string().datetime().optional().describe("Tickets closed before this date"),
       after: z.string().datetime().optional().describe("Tickets closed after this date"),
     })
@@ -56,10 +53,7 @@ export const searchSchema = z.object({
         .enum(["human", "slack_bot"])
         .optional()
         .describe("Filter tickets reopened by a human or the Helper Slack agent"),
-      byClerkId: z
-        .array(z.string().regex(/^user_/))
-        .optional()
-        .describe("Filter tickets reopened by specific team members"),
+      byUserId: z.array(z.string()).optional().describe("Filter tickets reopened by specific team members"),
       before: z.string().datetime().optional().describe("Tickets reopened before this date"),
       after: z.string().datetime().optional().describe("Tickets reopened after this date"),
     })
@@ -72,10 +66,7 @@ export const searchSchema = z.object({
         .enum(["human", "slack_bot"])
         .optional()
         .describe("Filter tickets marked as spam by a human or the Helper Slack agent"),
-      byClerkId: z
-        .array(z.string().regex(/^user_/))
-        .optional()
-        .describe("Filter tickets marked as spam by specific team members"),
+      byUserId: z.array(z.string()).optional().describe("Filter tickets marked as spam by specific team members"),
       before: z.string().datetime().optional().describe("Tickets marked as spam before this date"),
       after: z.string().datetime().optional().describe("Tickets marked as spam after this date"),
     })

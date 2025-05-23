@@ -18,12 +18,12 @@ vi.mock("@/lib/data/conversationMessage", () => ({
 describe("messagesRouter", () => {
   describe("flagAsBad", () => {
     it("flags an AI message as bad", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const userMessage = await conversationFactory.createUserEmail(conversation.id);
       const { message: aiMessage } = await conversationMessagesFactory.createDraft(conversation.id, userMessage.id);
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.messages.flagAsBad({
         mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
@@ -48,10 +48,10 @@ describe("messagesRouter", () => {
     });
 
     it("throws an error when trying to flag a non-existent message", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       await expect(
         caller.mailbox.conversations.messages.flagAsBad({
@@ -64,11 +64,11 @@ describe("messagesRouter", () => {
     });
 
     it("throws an error when trying to flag a user message", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const userMessage = await conversationFactory.createUserEmail(conversation.id);
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       await expect(
         caller.mailbox.conversations.messages.flagAsBad({

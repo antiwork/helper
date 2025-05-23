@@ -4,8 +4,9 @@ import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
-import { getClerkUser } from "@/lib/data/user";
-import { createPresignedDownloadUrl } from "@/lib/s3/utils";
+import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
+import { getFileUrl } from "@/lib/data/files";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -67,7 +68,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       createdAt: message.createdAt.toISOString(),
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,
-      annotations: message.clerkUserId ? await getUserAnnotation(message.clerkUserId) : undefined,
+      annotations: message.userId ? await getUserAnnotation(message.userId) : undefined,
       experimental_attachments: (message.metadata as MessageMetadata)?.includesScreenshot
         ? attachments.filter((a) => a.messageId === message.id)
         : [],
@@ -108,7 +109,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       attachments.map(async (a) => ({
         messageId: a.messageId?.toString(),
         name: a.name,
-        presignedUrl: await createPresignedDownloadUrl(a.url),
+        presignedUrl: await getFileUrl(a),
       })),
     ),
     isEscalated: !originalConversation.assignedToAI,
@@ -116,6 +117,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 }
 
 const getUserAnnotation = cache(async (userId: string) => {
-  const user = await getClerkUser(userId);
-  return user ? [{ user: { firstName: user.firstName } }] : undefined;
+  const user = await db.query.authUsers.findFirst({
+    where: eq(authUsers.id, userId),
+  });
+  return user ? [{ user: { name: hasDisplayName(user) ? getFirstName(user) : undefined } }] : undefined;
 });

@@ -1,11 +1,22 @@
-import { Organization, User } from "@clerk/nextjs/server";
+import { User } from "@supabase/supabase-js";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { createTRPCContext } from "@/trpc";
-import { createTestAuthSession } from "./authUtils";
 
-export const createTestTRPCContext = (user: User, organization: Organization) =>
+export const createTestTRPCContext = (user: typeof authUsers.$inferSelect) =>
   createTRPCContext({
-    session: createTestAuthSession(user, organization),
+    user: createTestAuthUser(user),
     headers: new Headers({
       "x-trpc-source": "test",
     }),
   });
+
+const createTestAuthUser = (user: typeof authUsers.$inferSelect): User => {
+  return {
+    id: user.id,
+    email: user.email ?? undefined,
+    user_metadata: user.user_metadata ?? {},
+    app_metadata: {},
+    aud: "authenticated",
+    created_at: user.created_at?.toISOString() ?? new Date().toISOString(),
+  };
+};

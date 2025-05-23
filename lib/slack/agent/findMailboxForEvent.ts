@@ -3,21 +3,22 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { cacheFor } from "@/lib/cache";
 import { Mailbox } from "@/lib/data/mailbox";
-import { redis } from "@/lib/redis/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";
 
 export const WHICH_MAILBOX_MESSAGE = "Which mailbox is this about?";
 
 const cachedChannelInfo = async (token: string, teamId: string, channelId: string) => {
-  const cachedValue = await redis.get<string>(`slack:channel:${teamId}:${channelId}`);
+  const cache = cacheFor<string>(`slack:channel:${teamId}:${channelId}`);
+  const cachedValue = await cache.get();
   if (cachedValue) return cachedValue;
 
   const client = new WebClient(token);
   const response = await client.conversations.info({ channel: channelId });
   const info = `${response.channel?.name}\n${response.channel?.purpose?.value}\n${response.channel?.topic?.value}`;
-  await redis.set(`slack:channel:${teamId}:${channelId}`, info, { ex: 60 * 60 * 24 });
+  await cache.set(info, 60 * 60 * 24);
   return info;
 };
 

@@ -1,20 +1,13 @@
-import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import type { TRPCRouterRecord } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import mime from "mime";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { files } from "@/db/schema";
-import { env } from "@/lib/env";
-import { s3Client } from "@/lib/s3/client";
-import { generateS3Key, getS3Url } from "@/lib/s3/utils";
+import { generateKey, getFileUrl, PRIVATE_BUCKET_NAME, PUBLIC_BUCKET_NAME } from "@/lib/data/files";
+import { createAdminClient } from "@/lib/supabase/server";
 import { protectedProcedure } from "@/trpc/trpc";
-
-const PUBLIC_ACL = "public-read";
-const PRIVATE_ACL = "private";
-
-const AWS_PRESIGNED_POST_FILE_MAX_SIZE = 26210000; // 25 MiB
-const AWS_PRESIGNED_POST_EXPIRY = 600; // 10 minutes
 
 export const filesRouter = {
   initiateUpload: protectedProcedure
@@ -41,25 +34,13 @@ export const filesRouter = {
       }) => {
         const isPublic = isInline;
         const contentType = mime.getType(fileName) ?? "application/octet-stream";
-        const acl = isPublic ? PUBLIC_ACL : PRIVATE_ACL;
+        const bucket = isPublic ? PUBLIC_BUCKET_NAME : PRIVATE_BUCKET_NAME;
 
-        const s3Key = generateS3Key(["attachments", unauthorizedConversationSlug], fileName);
+        const supabase = createAdminClient();
+        const key = generateKey(["attachments", unauthorizedConversationSlug], fileName);
 
-        const signedRequest = await createPresignedPost(s3Client, {
-          Bucket: env.AWS_PRIVATE_STORAGE_BUCKET_NAME,
-          Key: s3Key,
-          Conditions: [
-            // https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-HTTPPOSTConstructPolicy.html
-            ["eq", "$Content-Type", contentType],
-            ["eq", "$acl", acl],
-            ["content-length-range", 0, AWS_PRESIGNED_POST_FILE_MAX_SIZE],
-          ],
-          Fields: {
-            acl,
-            "Content-Type": contentType,
-          },
-          Expires: AWS_PRESIGNED_POST_EXPIRY,
-        });
+        const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(key);
+        if (error) throw error;
 
         const fileRecord = await db
           .insert(files)
@@ -69,7 +50,7 @@ export const filesRouter = {
             size: fileSize,
             isInline,
             isPublic,
-            url: getS3Url(s3Key),
+            key,
           })
           .returning()
           .then(takeUniqueOrThrow);
@@ -78,10 +59,17 @@ export const filesRouter = {
           file: {
             slug: fileRecord.slug,
             name: fileRecord.name,
-            url: fileRecord.url,
+            key: fileRecord.key,
           },
-          signedRequest,
+          isPublic,
+          bucket,
+          signedUpload: data,
         };
       },
     ),
+  getFileUrl: protectedProcedure.input(z.object({ slug: z.string() })).query(async ({ input: { slug } }) => {
+    const file = await db.query.files.findFirst({ where: eq(files.slug, slug) });
+    if (!file) throw new Error("File not found");
+    return getFileUrl(file);
+  }),
 } satisfies TRPCRouterRecord;

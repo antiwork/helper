@@ -1,4 +1,3 @@
-import { User } from "@clerk/nextjs/server";
 import { addSeconds } from "date-fns";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
@@ -12,15 +11,15 @@ import { conversationEvents } from "@/db/schema/conversationEvents";
 import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
+import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
+import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
-import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { PromptInfo } from "@/types/conversationMessages";
 import { formatBytes } from "../files";
 import { getConversationById, getNonSupportParticipants, updateConversation } from "./conversation";
-import { finishFileUpload } from "./files";
-import { getClerkUserList } from "./user";
+import { finishFileUpload, getFileUrl } from "./files";
 
 const isAiDraftStale = (draft: typeof conversationMessages.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
   return draft.status !== "draft" || draft.createdAt < mailbox.promptUpdatedAt;
@@ -70,7 +69,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         emailTo: true,
         emailCc: true,
         emailBcc: true,
-        clerkUserId: true,
+        userId: true,
         emailFrom: true,
         isPinned: true,
         role: true,
@@ -109,7 +108,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       role: true,
       slackChannel: true,
       slackMessageTs: true,
-      clerkUserId: true,
+      userId: true,
     },
     with: {
       files: true,
@@ -123,23 +122,16 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       type: true,
       createdAt: true,
       changes: true,
-      byClerkUserId: true,
+      byUserId: true,
       reason: true,
     },
   });
 
-  const membersById = Object.fromEntries(
-    (await getClerkUserList(mailbox.clerkOrganizationId)).data.map((user) => [user.id, user]),
-  );
+  const membersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
 
   const messageInfos = await Promise.all(
     allMessages.map((message) =>
-      serializeMessage(
-        message,
-        conversationId,
-        mailbox,
-        (message.clerkUserId && membersById[message.clerkUserId]) || null,
-      ),
+      serializeMessage(message, conversationId, mailbox, (message.userId && membersById[message.userId]) || null),
     ),
   );
 
@@ -147,7 +139,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.clerkUserId ? (membersById[note.clerkUserId]?.fullName ?? null) : null,
+      from: note.userId && membersById[note.userId] ? getFullName(membersById[note.userId]!) : null,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -161,12 +153,13 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       ...event,
       changes: {
         ...event.changes,
-        assignedToUser: event.changes.assignedToClerkId
-          ? (membersById[event.changes.assignedToClerkId]?.fullName ?? null)
-          : event.changes.assignedToClerkId,
+        assignedToUser:
+          event.changes.assignedToId && membersById[event.changes.assignedToId]
+            ? getFullName(membersById[event.changes.assignedToId]!)
+            : event.changes.assignedToId,
         assignedToAI: event.changes.assignedToAI,
       },
-      byUser: event.byClerkUserId ? (membersById[event.byClerkUserId]?.fullName ?? null) : null,
+      byUser: event.byUserId && membersById[event.byUserId] ? getFullName(membersById[event.byUserId]!) : null,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -190,7 +183,7 @@ export const serializeMessage = async (
     | "emailTo"
     | "emailCc"
     | "emailBcc"
-    | "clerkUserId"
+    | "userId"
     | "emailFrom"
     | "isPinned"
     | "role"
@@ -208,7 +201,7 @@ export const serializeMessage = async (
   },
   conversationId: number,
   mailbox: typeof mailboxes.$inferSelect,
-  user: User | null,
+  user?: DbOrAuthUser | null,
 ) => {
   const messageFiles =
     message.files ??
@@ -232,7 +225,7 @@ export const serializeMessage = async (
   let sanitizedBody = await sanitizeBody(message.body);
   filesData.forEach((f) => {
     if (f.isInline && sanitizedBody) {
-      sanitizedBody = sanitizedBody.replaceAll(`src="${f.url}"`, `src="${f.presignedUrl}"`);
+      sanitizedBody = sanitizedBody.replaceAll(`src="${f.key}"`, `src="${f.presignedUrl}"`);
     }
   });
 
@@ -246,7 +239,7 @@ export const serializeMessage = async (
     emailTo: message.emailTo,
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
-    from: message.role === "staff" && user ? user.fullName : message.emailFrom,
+    from: message.role === "staff" && user ? getFullName(user) : message.emailFrom,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:
@@ -268,13 +261,13 @@ export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
     inputFiles.map(async (file) =>
       file.isInline
-        ? { isInline: true as const, url: file.url, presignedUrl: await createPresignedDownloadUrl(file.url) }
+        ? { isInline: true as const, key: file.key, presignedUrl: await getFileUrl(file) }
         : {
             ...file,
             isInline: false as const,
             sizeHuman: formatBytes(file.size, 2),
-            presignedUrl: await createPresignedDownloadUrl(file.url),
-            previewUrl: file.previewUrl ? await createPresignedDownloadUrl(file.previewUrl) : null,
+            presignedUrl: await getFileUrl(file),
+            previewUrl: file.previewKey ? await getFileUrl(file, { preview: true }) : null,
           },
     ),
   );
@@ -301,7 +294,7 @@ export const createReply = async (
   }: {
     conversationId: number;
     message: string | null;
-    user: User | null;
+    user: DbOrAuthUser | null;
     cc?: string[] | null;
     bcc?: string[];
     fileSlugs?: string[];
@@ -317,10 +310,10 @@ export const createReply = async (
   if (!conversation) throw new Error("Conversation not found");
 
   return tx0.transaction(async (tx) => {
-    if (shouldAutoAssign && user && !conversation.assignedToClerkId) {
+    if (shouldAutoAssign && user && !conversation.assignedToId) {
       await updateConversation(
         conversationId,
-        { set: { assignedToClerkId: user.id, assignedToAI: false }, byUserId: null },
+        { set: { assignedToId: user.id, assignedToAI: false }, byUserId: null },
         tx,
       );
     }
@@ -329,7 +322,7 @@ export const createReply = async (
       {
         conversationId,
         body: message,
-        clerkUserId: user?.id,
+        userId: user?.id,
         emailCc: cc ?? (await getNonSupportParticipants(conversation)),
         emailBcc: bcc,
         slackChannel: slack?.channel,
@@ -380,7 +373,7 @@ export const createConversationMessage = async (
   if (message.role === "user") {
     await updateConversation(
       message.conversationId,
-      { set: { lastUserEmailCreatedAt: new Date() }, skipAblyEvents: true },
+      { set: { lastUserEmailCreatedAt: new Date() }, skipRealtimeEvents: true },
       tx,
     );
   }
@@ -503,7 +496,7 @@ export const createToolEvent = async ({
   error,
   parameters,
   userMessage,
-  clerkUserId,
+  userId,
   tx = db,
 }: {
   conversationId: number;
@@ -512,7 +505,7 @@ export const createToolEvent = async ({
   error?: any;
   parameters: Record<string, any>;
   userMessage: string;
-  clerkUserId?: string;
+  userId?: string;
   tx?: Transaction | typeof db;
 }) => {
   const message = await tx.insert(conversationMessages).values({
@@ -536,7 +529,7 @@ export const createToolEvent = async ({
     isPerfect: false,
     isFlaggedAsBad: false,
     status: "sent",
-    clerkUserId,
+    userId,
   });
 
   return message;

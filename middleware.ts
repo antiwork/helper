@@ -1,20 +1,7 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import * as Sentry from "@sentry/nextjs";
+import { NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-const isAuthenticatedRoute = createRouteMatcher(["/mailboxes(.*)", "/dashboard(.*)"]);
-
-export default clerkMiddleware(
-  async (auth, request) => {
-    if (isAuthenticatedRoute(request)) {
-      await auth.protect();
-    }
-    const { userId } = await auth();
-    Sentry.setUser({ id: userId ?? undefined });
-  },
-  {
-    afterSignUpUrl: "/mailboxes",
-  },
-);
+export const middleware = (request: NextRequest) => updateSession(request);
 
 export const config = {
   matcher: [

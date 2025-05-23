@@ -7,6 +7,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
+import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, getSearchResultIds, searchConversations } from "@/lib/data/conversation/search";
@@ -15,7 +16,7 @@ import { createReply } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { getMemberStats } from "@/lib/data/stats";
-import { findUserViaSlack, getClerkUserList } from "@/lib/data/user";
+import { findUserViaSlack } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { CLOSED_BY_AGENT_MESSAGE, MARKED_AS_SPAM_BY_AGENT_MESSAGE, REOPENED_BY_AGENT_MESSAGE } from "../constants";
 
@@ -119,17 +120,11 @@ export const generateAgentResponse = async (
         showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
         if (!slackUserId) return { error: "User not found" };
         const { user } = await client.users.info({ user: slackUserId });
-        const members = await getClerkUserList(mailbox.clerkOrganizationId);
+        const dbUser = await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId);
         if (user) {
           return {
             id: user.id,
-            clerkUserId: members.data.find((member) => {
-              const slackAccount = member.externalAccounts.find((account) => account.provider === "oauth_slack");
-              return (
-                slackAccount?.externalId === slackUserId ||
-                member.emailAddresses.some((email) => email.emailAddress === user.profile?.email)
-              );
-            })?.id,
+            dbUserId: dbUser?.id,
             name: user.profile?.real_name,
             email: user.profile?.email,
           };
@@ -142,12 +137,11 @@ export const generateAgentResponse = async (
       parameters: z.object({}),
       execute: async () => {
         showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
-        const members = await getClerkUserList(mailbox.clerkOrganizationId);
-        return members.data.map((member) => ({
+        const members = await db.query.authUsers.findMany();
+        return members.map((member) => ({
           id: member.id,
-          firstName: member.firstName,
-          lastName: member.lastName,
-          emails: member.emailAddresses.map((email) => email.emailAddress),
+          name: getFullName(member),
+          emails: member.email,
         }));
       },
     }),
@@ -257,12 +251,12 @@ export const generateAgentResponse = async (
             id: true,
             cleanedUpText: true,
             createdAt: true,
-            clerkUserId: true,
+            userId: true,
             emailFrom: true,
             role: true,
           },
         });
-        const members = await getClerkUserList(mailbox.clerkOrganizationId);
+        const members = await db.query.authUsers.findMany();
         return messages.map((message) => ({
           id: message.id,
           content: message.cleanedUpText,
@@ -271,21 +265,21 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : members.data.find((member) => member.id === message.clerkUserId)?.fullName,
-          clerkUserId: message.clerkUserId,
+              : getFullName(members.find((member) => member.id === message.userId)!),
+          userId: message.userId,
         }));
       },
     }),
     assignTickets: tool({
       description: "Assign tickets to a team member or the current user",
       parameters: z.object({
-        clerkUserId: z.string().regex(/^user_(\w+)$/),
+        userId: z.string(),
         ids: z.array(z.union([z.string(), z.number()])).optional(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
-      execute: async ({ clerkUserId, ...input }) => {
-        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { clerkUserId, ...input } });
-        return await updateTickets({ assignedToClerkId: clerkUserId }, input, "Assigned by agent", "assign");
+      execute: async ({ userId, ...input }) => {
+        showStatus(`Assigning tickets...`, { toolName: "assignTickets", parameters: { userId, ...input } });
+        return await updateTickets({ assignedToId: userId }, input, "Assigned by agent", "assign");
       },
     }),
     unassignTickets: tool({
@@ -295,7 +289,7 @@ export const generateAgentResponse = async (
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
       execute: async (input) => {
-        return await updateTickets({ assignedToClerkId: null }, input, "Unassigned by agent", "unassign");
+        return await updateTickets({ assignedToId: null }, input, "Unassigned by agent", "unassign");
       },
     }),
     closeTickets: tool({
@@ -345,9 +339,7 @@ export const generateAgentResponse = async (
         await createReply({
           conversationId: conversation.id,
           message: confirmedReplyText,
-          user: slackUserId
-            ? await findUserViaSlack(mailbox.clerkOrganizationId, assertDefined(mailbox.slackBotToken), slackUserId)
-            : null,
+          user: slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null,
           close: false,
           shouldAutoAssign: false,
         });
@@ -428,7 +420,7 @@ const findConversation = async (id: string | number, mailbox: Mailbox) => {
 const formatConversation = (
   conversation: Pick<
     Conversation,
-    "id" | "slug" | "subject" | "status" | "emailFrom" | "lastUserEmailCreatedAt" | "assignedToClerkId" | "assignedToAI"
+    "id" | "slug" | "subject" | "status" | "emailFrom" | "lastUserEmailCreatedAt" | "assignedToId" | "assignedToAI"
   >,
   mailbox: Mailbox,
   platformCustomer?: PlatformCustomer | null,
@@ -441,7 +433,7 @@ const formatConversation = (
     status: conversation.status,
     emailFrom: conversation.emailFrom,
     lastUserMessageAt: conversation.lastUserEmailCreatedAt,
-    assignedTo: conversation.assignedToClerkId,
+    assignedToUserId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
     isVip: platformCustomer?.isVip || false,
     url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,

@@ -40,6 +40,13 @@ export async function setupDockerTestDb() {
   });
   console.log("Migrations applied successfully.");
 
+  console.log("Creating mock Supabase tables...");
+  await db.execute(sql`CREATE SCHEMA IF NOT EXISTS auth;`);
+  await db.execute(
+    sql`CREATE TABLE auth.users (id text PRIMARY KEY NOT NULL, email text, raw_user_meta_data jsonb, created_at timestamp DEFAULT now(), updated_at timestamp DEFAULT now());`,
+  );
+  console.log("Mock Supabase tables created successfully.");
+
   console.log("Confirming database connection...");
   const confirmDatabaseReady = await db.execute(sql`SELECT 1`);
   console.log("Database connection confirmed.");
@@ -63,7 +70,7 @@ export const truncateDb = async () => {
     .map((name) => `"public"."${name}"`)
     .join(", ");
   try {
-    await db.execute(sql`TRUNCATE TABLE ${sql.raw(tables)} CASCADE;`);
+    await db.execute(sql`TRUNCATE TABLE ${sql.raw(tables)}, auth.users CASCADE;`);
   } catch (error) {
     console.log(error);
   }

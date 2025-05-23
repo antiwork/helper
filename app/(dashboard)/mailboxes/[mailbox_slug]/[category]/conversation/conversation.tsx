@@ -1,4 +1,3 @@
-import { ChannelProvider } from "ably/react";
 import FileSaver from "file-saver";
 import {
   ArrowUp,
@@ -42,10 +41,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import { assertDefined } from "@/components/utils/assert";
-import { conversationChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
+import { conversationChannelId } from "@/lib/realtime/channels";
+import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -363,12 +361,12 @@ const MergedContent = () => {
 
 const ConversationContent = () => {
   const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
-  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
+  useRealtimeEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
     utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
       data ? { ...data, ...event.data } : null,
     );
   });
-  useAblyEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
+  useRealtimeEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
     const message = { ...event.data, createdAt: new Date(event.data.createdAt) } as Awaited<
       ReturnType<typeof serializeMessage>
     >;
@@ -553,15 +551,10 @@ const ConversationContent = () => {
   );
 };
 
-const Conversation = () => {
-  const { mailboxSlug, currentConversationSlug } = useConversationListContext();
-  return (
-    <ChannelProvider channelName={conversationChannelId(mailboxSlug, assertDefined(currentConversationSlug))}>
-      <ConversationContextProvider>
-        <ConversationContent />
-      </ConversationContextProvider>
-    </ChannelProvider>
-  );
-};
+const Conversation = () => (
+  <ConversationContextProvider>
+    <ConversationContent />
+  </ConversationContextProvider>
+);
 
 export default Conversation;

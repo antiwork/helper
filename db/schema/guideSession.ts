@@ -53,7 +53,7 @@ export const guideSessions = pgTable(
     index("guide_sessions_status_idx").on(table.status),
     unique("guide_sessions_uuid_unique").on(table.uuid),
   ],
-);
+).enableRLS();
 
 export const guideSessionEvents = pgTable(
   "guide_session_events",
@@ -71,7 +71,7 @@ export const guideSessionEvents = pgTable(
     index("guide_session_events_type_idx").on(table.type),
     index("guide_session_events_mailbox_id_idx").on(table.mailboxId),
   ],
-);
+).enableRLS();
 
 export const guideSessionReplays = pgTable(
   "guide_session_replays",
@@ -89,7 +89,7 @@ export const guideSessionReplays = pgTable(
     index("guide_session_replays_timestamp_idx").on(table.timestamp),
     index("guide_session_replays_mailbox_id_idx").on(table.mailboxId),
   ],
-);
+).enableRLS();
 
 export const guideSessionsRelations = relations(guideSessions, ({ one, many }) => ({
   platformCustomer: one(platformCustomers, {

@@ -11,18 +11,10 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/components/utils/currency";
-import { conversationsListChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { conversationsListChannelId } from "@/lib/realtime/channels";
+import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -214,7 +206,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   );
 
   const utils = api.useUtils();
-  useAblyEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
+  useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationListItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
     const sort = searchParams.sort ?? defaultSort;
@@ -229,13 +221,13 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         case "conversations":
           break;
         case "assigned":
-          if (!newConversation.assignedToClerkId) return data;
+          if (!newConversation.assignedToId) return data;
           break;
         case "unassigned":
-          if (newConversation.assignedToClerkId) return data;
+          if (newConversation.assignedToId) return data;
           break;
         case "mine":
-          if (newConversation.assignedToClerkId !== firstPage.assignedToClerkIds?.[0]) return data;
+          if (newConversation.assignedToId !== firstPage.assignedToIds?.[0]) return data;
           break;
       }
 
@@ -473,14 +465,14 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {(conversation.assignedToClerkId || conversation.assignedToAI) && (
+            {(conversation.assignedToId || conversation.assignedToAI) && (
               <AssignedToLabel
                 className={cn(
                   "shrink-0 break-all flex items-center gap-1 text-xs",
                   isActive && "font-medium",
                   variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
                 )}
-                assignedToClerkId={conversation.assignedToClerkId}
+                assignedToId={conversation.assignedToId}
                 assignedToAI={conversation.assignedToAI}
               />
             )}
@@ -521,11 +513,11 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
 };
 
 export const AssignedToLabel = ({
-  assignedToClerkId,
+  assignedToId,
   assignedToAI,
   className,
 }: {
-  assignedToClerkId: string | null;
+  assignedToId: string | null;
   assignedToAI?: boolean;
   className?: string;
 }) => {
@@ -543,7 +535,7 @@ export const AssignedToLabel = ({
     );
   }
 
-  const displayName = members?.find((m) => m.id === assignedToClerkId)?.displayName?.split(" ")[0];
+  const displayName = members?.find((m) => m.id === assignedToId)?.displayName?.split(" ")[0];
 
   return displayName ? (
     <div className={className} title={`Assigned to ${displayName}`}>

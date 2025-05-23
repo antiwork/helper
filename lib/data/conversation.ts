@@ -8,10 +8,10 @@ import { db, Transaction } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { inngest } from "@/inngest/client";
-import { conversationChannelId, conversationsListChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
+import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";
 import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
@@ -71,21 +71,21 @@ export const updateConversation = async (
     byUserId = null,
     message = null,
     type = "update",
-    skipAblyEvents = false,
+    skipRealtimeEvents = false,
   }: {
     set?: Partial<typeof conversations.$inferInsert>;
     byUserId?: string | null;
     message?: string | null;
     type?: (typeof conversationEvents.$inferSelect)["type"];
-    skipAblyEvents?: boolean;
+    skipRealtimeEvents?: boolean;
   },
   tx: Transaction | typeof db = db,
 ) => {
   const current = assertDefined(await tx.query.conversations.findFirst({ where: eq(conversations.id, id) }));
   if (dbUpdates.assignedToAI) {
     dbUpdates.status = "closed";
-    dbUpdates.assignedToClerkId = null;
-  } else if (dbUpdates.assignedToClerkId) {
+    dbUpdates.assignedToId = null;
+  } else if (dbUpdates.assignedToId) {
     dbUpdates.assignedToAI = false;
   }
   if (current.status !== "closed" && dbUpdates.status === "closed") {
@@ -98,7 +98,7 @@ export const updateConversation = async (
     .where(eq(conversations.id, id))
     .returning()
     .then(takeUniqueOrThrow);
-  const updatesToLog = (["status", "assignedToClerkId", "assignedToAI"] as const).filter(
+  const updatesToLog = (["status", "assignedToId", "assignedToAI"] as const).filter(
     (key) => current[key] !== updatedConversation[key],
   );
   if (updatesToLog.length > 0) {
@@ -106,7 +106,7 @@ export const updateConversation = async (
       conversationId: id,
       type: type ?? "update",
       changes: Object.fromEntries(updatesToLog.map((key) => [key, updatedConversation[key]])),
-      byClerkUserId: byUserId,
+      byUserId,
       reason: message,
     });
   }
@@ -131,12 +131,12 @@ export const updateConversation = async (
       data: { conversationSlug: updatedConversation.slug },
     });
   }
-  if (updatedConversation && !skipAblyEvents) {
+  if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
         const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
         const events = [
-          publishToAbly({
+          publishToRealtime({
             channel: conversationChannelId(mailbox.slug, updatedConversation.slug),
             event: "conversation.updated",
             data: serializeConversation(mailbox, updatedConversation),
@@ -145,21 +145,21 @@ export const updateConversation = async (
         if (
           current.status !== updatedConversation.status ||
           current.assignedToAI !== updatedConversation.assignedToAI ||
-          current.assignedToClerkId !== updatedConversation.assignedToClerkId
+          current.assignedToId !== updatedConversation.assignedToId
         ) {
           events.push(
-            publishToAbly({
+            publishToRealtime({
               channel: conversationsListChannelId(mailbox.slug),
               event: "conversation.statusChanged",
               data: {
                 id: updatedConversation.id,
                 status: updatedConversation.status,
                 assignedToAI: updatedConversation.assignedToAI,
-                assignedToClerkId: updatedConversation.assignedToClerkId,
+                assignedToId: updatedConversation.assignedToId,
                 previousValues: {
                   status: current.status,
                   assignedToAI: current.assignedToAI,
-                  assignedToClerkId: current.assignedToClerkId,
+                  assignedToId: current.assignedToId,
                 },
               },
             }),
@@ -191,7 +191,7 @@ export const serializeConversation = (
     updatedAt: conversation.updatedAt,
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
-    assignedToClerkId: conversation.assignedToClerkId,
+    assignedToId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
     platformCustomer: platformCustomer
       ? {

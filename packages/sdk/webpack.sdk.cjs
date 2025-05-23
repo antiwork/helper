@@ -1,11 +1,9 @@
 // @ts-nocheck
 
 const path = require("path");
-const webpack = require("webpack");
 
 module.exports = (env) => {
   const isProduction = env.production;
-  const EMBED_URL = isProduction ? "https://helper.ai/widget/embed" : `https://helperai.dev/widget/embed`;
 
   const baseConfig = {
     mode: isProduction ? "production" : "development",
@@ -40,11 +38,6 @@ module.exports = (env) => {
         },
       ],
     },
-    plugins: [
-      new webpack.DefinePlugin({
-        __EMBED_URL__: JSON.stringify(EMBED_URL),
-      }),
-    ],
     optimization: {
       minimize: isProduction,
     },

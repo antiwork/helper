@@ -5,7 +5,7 @@ import { isWithinTokenLimit as isWithinTokenLimitForEmbeddings } from "gpt-token
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import openai from "@/lib/ai/openai";
-import { redis } from "@/lib/redis/client";
+import { cacheFor } from "@/lib/cache";
 
 export const GPT_4O_MODEL = "gpt-4o";
 export const GPT_4_1_MODEL = "gpt-4.1";
@@ -30,10 +30,10 @@ export const generateEmbedding = async (
   const input = value.replaceAll("\n", " ");
 
   const inputHash = createHash("md5").update(input).digest("hex");
-  const cacheKey = `embedding:${inputHash}`;
+  const cache = cacheFor<number[]>(`embedding:${inputHash}`);
 
   if (!skipCache) {
-    const cachedEmbedding = await redis.get<number[]>(cacheKey);
+    const cachedEmbedding = await cache.get();
     if (cachedEmbedding) {
       return cachedEmbedding;
     }
@@ -50,7 +50,7 @@ export const generateEmbedding = async (
 
   // Cache the result (expires in 30 days)
   if (!skipCache) {
-    await redis.set(cacheKey, embedding, { ex: 60 * 60 * 24 * 30 });
+    await cache.set(embedding, 60 * 60 * 24 * 30);
   }
 
   return embedding;

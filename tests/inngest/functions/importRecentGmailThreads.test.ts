@@ -9,12 +9,10 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { getNewGmailThreads, processGmailThread } from "@/inngest/functions/importRecentGmailThreads";
-import { findUserByEmail } from "@/lib/data/user";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread } from "@/lib/gmail/client";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("@sentry/nextjs");
-vi.mock("@/lib/data/user");
 
 mockInngest();
 
@@ -37,7 +35,6 @@ describe("getNewGmailThreads", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(getGmailService).mockReturnValue({} as any);
-    vi.mocked(findUserByEmail).mockResolvedValue(null);
   });
 
   it("returns new Gmail threads", async () => {
@@ -78,7 +75,6 @@ describe("processGmailThread", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(getGmailService).mockReturnValue({} as any);
-    vi.mocked(findUserByEmail).mockResolvedValue(null);
   });
 
   it("processes a Gmail thread and creates a conversation with messages", async () => {

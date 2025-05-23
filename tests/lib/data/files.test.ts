@@ -7,15 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { finishFileUpload } from "@/lib/data/files";
 
-vi.mock("@aws-sdk/client-s3", () => ({
-  S3Client: vi.fn(),
-  PutObjectCommand: vi.fn(),
-}));
-
-vi.mock("@aws-sdk/s3-request-presigner", () => ({
-  getSignedUrl: vi.fn().mockResolvedValue("https://example.com/signed-url"),
-}));
-
 const inngest = mockInngest();
 
 describe("fileUploader", () => {

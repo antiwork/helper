@@ -3,9 +3,9 @@ import { db } from "@/db/client";
 import { conversationEvents, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
-import { dashboardChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
 import { createHumanSupportRequestEventPayload } from "@/lib/data/dashboardEvent";
+import { dashboardChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 
 export default inngest.createFunction(
   { id: "publish-request-human-support" },
@@ -35,7 +35,7 @@ export default inngest.createFunction(
         }),
       );
 
-      await publishToAbly({
+      await publishToRealtime({
         channel: dashboardChannelId(mailboxSlug),
         event: "event",
         data: createHumanSupportRequestEventPayload(event, mailbox),

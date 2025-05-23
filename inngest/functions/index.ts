@@ -16,8 +16,6 @@ import generateWeeklyReports, { generateMailboxWeeklyReport } from "./generateWe
 import handleAutoResponse from "./handleAutoResponse";
 import handleGmailWebhookEvent from "./handleGmailWebhookEvent";
 import handleSlackAgentMessage from "./handleSlackAgentMessage";
-import handleStripeWebhookEvent from "./handleStripeWebhookEvent";
-import hardDeleteRecordsForNonPayingOrgs from "./hardDeleteRecordsForNonPayingOrgs";
 import importGmailThreads from "./importGmailThreads";
 import importRecentGmailThreads from "./importRecentGmailThreads";
 import indexConversationMessage from "./indexConversation";
@@ -39,7 +37,6 @@ export default [
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,
   publishNewConversationEvent,
-  handleStripeWebhookEvent,
   cleanupDanglingFiles,
   postEmailToGmail,
   handleGmailWebhookEvent,
@@ -47,7 +44,6 @@ export default [
   importRecentGmailThreads,
   importGmailThreads,
   renewMailboxWatches,
-  hardDeleteRecordsForNonPayingOrgs,
   generateWeeklyReports,
   generateMailboxWeeklyReport,
   notifyVipMessage,

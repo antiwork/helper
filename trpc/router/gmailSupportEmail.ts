@@ -30,7 +30,7 @@ export const gmailSupportEmailRouter = {
     .mutation(async ({ ctx, input }) => {
       const { gmailSupportEmail } = await db.transaction(async (tx) => {
         const gmailSupportEmail = await createGmailSupportEmail(ctx.mailbox.slug, input, tx);
-        const gmailService = await getGmailService(gmailSupportEmail);
+        const gmailService = getGmailService(gmailSupportEmail);
         await subscribeToMailbox(gmailService);
         return { gmailSupportEmail };
       });
@@ -47,7 +47,7 @@ export const gmailSupportEmailRouter = {
       if (!gmailSupportEmail) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Gmail support email not found" });
       }
-      const gmailService = await getGmailService(gmailSupportEmail);
+      const gmailService = getGmailService(gmailSupportEmail);
       await gmailService.users.stop({ userId: "me" });
       await deleteGmailSupportEmail(tx, gmailSupportEmail.id);
       return { message: "Support email deleted successfully." };

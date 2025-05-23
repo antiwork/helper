@@ -6,9 +6,9 @@ import { subDays } from "date-fns";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { cleanupDanglingFiles } from "@/inngest/functions/cleanupDanglingFiles";
-import * as s3Utils from "@/lib/s3/utils";
+import { deleteFiles } from "@/lib/data/files";
 
-vi.mock("@/lib/s3/utils", () => ({
+vi.mock("@/lib/data/files", () => ({
   deleteFiles: vi.fn(),
 }));
 
@@ -28,7 +28,7 @@ describe("cleanupDanglingFiles", () => {
 
     const { file: oldFile1 } = await fileFactory.create(null, {
       createdAt: twoDaysAgo,
-      previewUrl: "https://example.com/oldFile1.png",
+      previewKey: "oldFile1.png",
     });
     const { file: oldFile2 } = await fileFactory.create(null, { createdAt: yesterday });
     const { file: recentFile } = await fileFactory.create(null, { createdAt: today });
@@ -46,17 +46,17 @@ describe("cleanupDanglingFiles", () => {
       [recentFile.id, associatedFile.id].sort((a, b) => a - b),
     );
 
-    expect(s3Utils.deleteFiles).toHaveBeenCalledTimes(1);
-    expect(s3Utils.deleteFiles).toHaveBeenCalledWith([oldFile1.url, oldFile1.previewUrl, oldFile2.url].filter(Boolean));
+    expect(deleteFiles).toHaveBeenCalledTimes(2);
+    expect(deleteFiles).toHaveBeenCalledWith([oldFile1.key, oldFile1.previewKey, oldFile2.key].filter(Boolean), false);
   });
 
-  it("does not delete files if S3 deletion fails", async () => {
+  it("does not delete files if Supabase deletion fails", async () => {
     const twoDaysAgo = subDays(new Date(), 2);
     await fileFactory.create(null, { createdAt: twoDaysAgo });
 
-    vi.mocked(s3Utils.deleteFiles).mockRejectedValueOnce(new Error("S3 deletion failed"));
+    vi.mocked(deleteFiles).mockRejectedValueOnce(new Error("Deletion failed"));
 
-    await expect(cleanupDanglingFiles()).rejects.toThrow("S3 deletion failed");
+    await expect(cleanupDanglingFiles()).rejects.toThrow("Deletion failed");
 
     const remainingFiles = await db.query.files.findMany();
     expect(remainingFiles.length).toEqual(1);

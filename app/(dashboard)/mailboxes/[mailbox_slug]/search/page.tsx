@@ -474,10 +474,10 @@ function SearchResultItem({
             )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {conversation.assignedToClerkId && (
+            {conversation.assignedToId && (
               <AssignedToLabel
                 className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
-                assignedToClerkId={conversation.assignedToClerkId}
+                assignedToId={conversation.assignedToId}
               />
             )}
             <div className="text-xs text-gray-500 dark:text-gray-400">

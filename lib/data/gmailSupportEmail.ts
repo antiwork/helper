@@ -30,7 +30,7 @@ export const createGmailSupportEmail = async (
         expiresAt: Date;
       }
     | {
-        clerkUserId: string;
+        userId: string;
       }
   ),
   tx: Transaction | typeof db = db,
@@ -41,7 +41,7 @@ export const createGmailSupportEmail = async (
       email: info.email,
       ...("accessToken" in info
         ? { accessToken: info.accessToken, refreshToken: info.refreshToken, expiresAt: info.expiresAt }
-        : { clerkUserId: info.clerkUserId }),
+        : { userId: info.userId }),
     })
     .returning()
     .then(takeUniqueOrThrow);

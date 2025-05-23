@@ -1,4 +1,3 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, eq, exists, gte, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -75,7 +74,7 @@ export const messagesRouter = {
     .mutation(async ({ input: { message, fileSlugs, cc, bcc, shouldAutoAssign, shouldClose, responseToId }, ctx }) => {
       const id = await createReply({
         conversationId: ctx.conversation.id,
-        user: assertDefined(await currentUser()),
+        user: ctx.user,
         message,
         fileSlugs,
         // TODO Add proper email validation on the frontend and backend using Zod,

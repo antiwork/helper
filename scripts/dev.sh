@@ -4,23 +4,16 @@ set -e
 
 cleanup() {
     echo "Shutting down..."
-
-    # Stop Docker containers
-    if [ -z "$SKIP_SETUP" ]; then
-        pnpm services:stop
-    fi
+    echo -e "\033[34mℹ️ The app will be stopped, but background services are still running. Use pnpm services:stop to stop them.\033[0m"
 
     pkill -P $$
-
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM
 
-if [ -z "$SKIP_SETUP" ]; then
-    if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
-        pnpm generate-ssl-certificates
-    fi
+if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
+    pnpm generate-ssl-certificates
 fi
 
 corepack enable
@@ -43,9 +36,7 @@ elif [ -f ".vercel/project.json" ]; then
     pnpm vercel env pull --environment=development
 fi
 
-if [ -z "$SKIP_SETUP" ]; then
-    pnpm db:migrate
-fi
+pnpm db:migrate
 
 # Add the local CA to the Node.js environment
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"

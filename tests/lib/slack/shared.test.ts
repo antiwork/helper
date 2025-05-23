@@ -10,7 +10,6 @@ import { handleMessageSlackAction } from "@/lib/slack/shared";
 
 vi.mock("@/lib/data/user", () => ({
   findUserViaSlack: vi.fn(),
-  getClerkUser: vi.fn(),
 }));
 
 vi.mock("@/lib/slack/client", () => ({
@@ -41,7 +40,7 @@ describe("handleSlackAction", () => {
   it("opens a Slack modal when the action is respond_in_slack", async () => {
     const { user, mailbox } = await userFactory.createRootUser({
       userOverrides: {
-        emailAddresses: [{ id: "test", emailAddress: "user@example.com", verification: null, linkedTo: [] }],
+        email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
@@ -75,7 +74,7 @@ describe("handleSlackAction", () => {
   it("closes the conversation when the action is close", async () => {
     const { user, mailbox } = await userFactory.createRootUser({
       userOverrides: {
-        emailAddresses: [{ id: "test", emailAddress: "user@example.com", verification: null, linkedTo: [] }],
+        email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
@@ -134,7 +133,7 @@ describe("handleSlackAction", () => {
   it("creates a reply when the sending method is email", async () => {
     const { user, mailbox } = await userFactory.createRootUser({
       userOverrides: {
-        emailAddresses: [{ id: "test", emailAddress: "user@example.com", verification: null, linkedTo: [] }],
+        email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
@@ -175,7 +174,7 @@ describe("handleSlackAction", () => {
   it("creates a reply and closes the conversation when the sending method is email_and_close", async () => {
     const { user, mailbox } = await userFactory.createRootUser({
       userOverrides: {
-        emailAddresses: [{ id: "test", emailAddress: "user@example.com", verification: null, linkedTo: [] }],
+        email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
@@ -216,7 +215,7 @@ describe("handleSlackAction", () => {
   it("adds a note when the sending method is note", async () => {
     const { user, mailbox } = await userFactory.createRootUser({
       userOverrides: {
-        emailAddresses: [{ id: "test", emailAddress: "user@example.com", verification: null, linkedTo: [] }],
+        email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });

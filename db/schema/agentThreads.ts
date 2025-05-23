@@ -13,16 +13,11 @@ export const agentThreads = pgTable(
     slackChannel: text().notNull(),
     threadTs: text().notNull(),
   },
-  (table) => {
-    return {
-      mailboxIdIdx: index("agent_threads_mailbox_id_idx").on(table.mailboxId),
-      slackChannelThreadTsIdx: index("agent_threads_slack_channel_thread_ts_idx").on(
-        table.slackChannel,
-        table.threadTs,
-      ),
-    };
-  },
-);
+  (table) => [
+    index("agent_threads_mailbox_id_idx").on(table.mailboxId),
+    index("agent_threads_slack_channel_thread_ts_idx").on(table.slackChannel, table.threadTs),
+  ],
+).enableRLS();
 
 export const agentThreadsRelations = relations(agentThreads, ({ one, many }) => ({
   mailbox: one(mailboxes, {

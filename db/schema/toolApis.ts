@@ -16,10 +16,8 @@ const toolApis = pgTable(
     schema: text(),
     authenticationToken: nativeEncryptedField(),
   },
-  (table) => ({
-    toolApisMailboxIdIdx: index("tool_apis_mailbox_id_idx").on(table.mailboxId),
-  }),
-);
+  (table) => [index("tool_apis_mailbox_id_idx").on(table.mailboxId)],
+).enableRLS();
 
 export const toolApisRelations = relations(toolApis, ({ many, one }) => ({
   tools: many(tools),

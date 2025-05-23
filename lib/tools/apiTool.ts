@@ -57,7 +57,7 @@ export const callToolApi = async (
   conversation: Conversation,
   tool: Tool,
   params: Record<string, any>,
-  clerkUserId?: string,
+  userId?: string,
 ) => {
   validateParameters(tool, params);
 
@@ -76,7 +76,7 @@ export const callToolApi = async (
         error instanceof Error ? (error.cause instanceof Error ? error.cause.message : error.message) : "Unknown error",
       parameters: params,
       userMessage: "The API returned an error",
-      clerkUserId,
+      userId,
     });
     return {
       success: false,
@@ -97,7 +97,7 @@ export const callToolApi = async (
       error: { status: response.status, statusText: response.statusText, body: responseBody },
       parameters: params,
       userMessage: "The API returned an error",
-      clerkUserId,
+      userId,
     });
     return {
       success: false,
@@ -112,7 +112,7 @@ export const callToolApi = async (
     data,
     parameters: params,
     userMessage: "Tool executed successfully.",
-    clerkUserId,
+    userId,
   });
 
   return {
@@ -211,7 +211,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
       case "spam":
         return { type: "spam" };
       case "assign":
-        return { type: "assign", clerkUserId: args.userId };
+        return { type: "assign", userId: args.userId };
       default:
         const parameters = args as Record<string, any>;
         if (aiTools[toolName]?.customerEmailParameter) {
@@ -324,7 +324,7 @@ const buildSimilarConversationActionsPrompt = async (embeddingText: string, mail
         similarConversations.map((c) => c.id),
       ),
       eq(conversationEvents.type, "update"),
-      isNotNull(conversationEvents.byClerkUserId),
+      isNotNull(conversationEvents.byUserId),
     ),
     orderBy: (events, { asc }) => [asc(events.createdAt)],
     limit: 50,
@@ -335,7 +335,7 @@ const buildSimilarConversationActionsPrompt = async (embeddingText: string, mail
     "Mark as spam": actions.filter((a) => a.changes.status === "spam").length,
   };
 
-  actions.forEach(({ changes: { assignedToClerkId: id } }) => {
+  actions.forEach(({ changes: { assignedToId: id } }) => {
     if (!id) return;
     counts[`Assigned to user ID ${id}`] = (counts[`Assigned to user ID ${id}`] ?? 0) + 1;
   });
@@ -347,7 +347,7 @@ const buildSimilarConversationActionsPrompt = async (embeddingText: string, mail
         similarConversations.map((c) => c.id),
       ),
       eq(conversationMessages.role, "tool"),
-      isNotNull(conversationMessages.clerkUserId),
+      isNotNull(conversationMessages.userId),
     ),
     orderBy: (messages, { asc }) => [asc(messages.createdAt)],
     limit: 50,

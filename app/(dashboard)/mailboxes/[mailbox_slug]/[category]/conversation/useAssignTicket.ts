@@ -26,7 +26,7 @@ export const useAssignTicket = () => {
         pages: data.pages.map((page) => ({
           ...page,
           conversations: page.conversations.map((c) =>
-            c.slug === currentConversationSlug ? { ...c, assignedToClerkId: assignedToId, assignedToAI } : c,
+            c.slug === currentConversationSlug ? { ...c, assignedToId, assignedToAI } : c,
           ),
         })),
       };
@@ -39,7 +39,7 @@ export const useAssignTicket = () => {
           : "Unassigned ticket",
     });
     if (
-      (input.category === "mine" && assignedToId !== conversationListData?.assignedToClerkIds?.[0]) ||
+      (input.category === "mine" && assignedToId !== conversationListData?.assignedToIds?.[0]) ||
       (input.category === "unassigned" && assignedToId) ||
       (input.category === "assigned" && !assignedToId)
     ) {

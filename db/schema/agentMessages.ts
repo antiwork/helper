@@ -17,13 +17,11 @@ export const agentMessages = pgTable(
     slackChannel: text(),
     messageTs: text(),
   },
-  (table) => {
-    return {
-      agentThreadIdIdx: index("agent_messages_agent_thread_id_idx").on(table.agentThreadId),
-      slackMessageUniqueIdx: uniqueIndex("agent_messages_slack_unique_idx").on(table.slackChannel, table.messageTs),
-    };
-  },
-);
+  (table) => [
+    index("agent_messages_agent_thread_id_idx").on(table.agentThreadId),
+    uniqueIndex("agent_messages_slack_unique_idx").on(table.slackChannel, table.messageTs),
+  ],
+).enableRLS();
 
 export const agentMessagesRelations = relations(agentMessages, ({ one }) => ({
   thread: one(agentThreads, {

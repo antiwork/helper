@@ -92,7 +92,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
       id: true,
       createdAt: true,
       role: true,
-      clerkUserId: true,
+      userId: true,
       cleanedUpText: true,
       emailTo: true,
     },

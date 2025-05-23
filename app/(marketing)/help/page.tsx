@@ -22,19 +22,21 @@ export default function HelpPage() {
             <p className="mb-6">
               Find comprehensive guides and documentation to help you get started with Helper as quickly as possible.
             </p>
-            <div className="space-y-4">
-              <div className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors">
-                <h3 className="font-medium mb-2">Getting Started Guide</h3>
+            <div className="flex flex-col gap-4">
+              <Link
+                href="/docs/deployment"
+                className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors"
+              >
+                <h3 className="font-medium mb-2">Self Hosting Guide</h3>
                 <p className="text-sm text-gray-300">Learn the basics of setting up Helper for your support team</p>
-              </div>
-              <div className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors">
-                <h3 className="font-medium mb-2">API Reference</h3>
-                <p className="text-sm text-gray-300">Detailed information about Helper's API endpoints</p>
-              </div>
-              <div className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors">
+              </Link>
+              <Link
+                href="/docs/widget"
+                className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors"
+              >
                 <h3 className="font-medium mb-2">Integration Guides</h3>
-                <p className="text-sm text-gray-300">Connect Helper with your existing tools and workflows</p>
-              </div>
+                <p className="text-sm text-gray-300">Connect Helper with your site and workflows</p>
+              </Link>
             </div>
           </div>
 

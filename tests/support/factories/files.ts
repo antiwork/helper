@@ -10,7 +10,7 @@ export const fileFactory = {
       .values({
         messageId: conversationMessageId,
         name: faker.lorem.sentence(),
-        url: faker.internet.url(),
+        key: faker.string.uuid(),
         size: faker.number.int({ min: 1000, max: 1000000 }),
         mimetype: faker.system.mimeType(),
         isInline: false,
