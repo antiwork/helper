@@ -76,7 +76,6 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     name: "slack/agent.message",
     data: {
       slackUserId: event.user ?? null,
-      currentMailboxId: mailbox.id,
       statusMessageTs: await postThinkingMessage(client, event.channel, event.thread_ts ?? event.ts),
       agentThreadId: agentThread.id,
     },
