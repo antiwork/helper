@@ -103,7 +103,7 @@ export const ChipContainer = ({
   return (
     <div className="relative group" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       {showLeft && (
-        <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+        <div className="absolute left-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-r from-sidebar via-sidebar via-[40%] to-transparent z-10 hidden md:block" />
       )}
       {showLeft && (
         <button
@@ -134,7 +134,7 @@ export const ChipContainer = ({
         {children}
       </div>
       {showRight && (
-        <div className="absolute right-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10" />
+        <div className="absolute right-0 top-0 h-full w-14 pointer-events-none bg-gradient-to-l from-sidebar via-sidebar via-[40%] to-transparent z-10 hidden md:block" />
       )}
       {showRight && (
         <button

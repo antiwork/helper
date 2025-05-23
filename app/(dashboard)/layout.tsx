@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDisplayIntegration";
+import { NavigationRail } from "@/components/navigationRail";
 import { SentryContext } from "@/components/sentryContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TRPCReactProvider } from "@/trpc/react";
@@ -38,7 +39,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SentryContext />
         <TRPCReactProvider>
           <StandaloneDisplayIntegration />
-          <HydrateClient>{children}</HydrateClient>
+          <HydrateClient>
+            <div className="flex flex-row min-h-svh w-full">
+              <div className="hidden md:block text-sidebar-foreground">
+                <NavigationRail />
+              </div>
+              <main className="flex-1 text-foreground bg-background w-full min-w-0">{children}</main>
+            </div>
+          </HydrateClient>
         </TRPCReactProvider>
       </NuqsAdapter>
     </ClerkProvider>

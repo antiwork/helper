@@ -23,24 +23,6 @@ export function PageHeader({ title, children }: PageHeaderProps) {
   return (
     <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border px-4">
       <div className="flex items-center gap-4">
-        {isSettings ? (
-          <>
-            {isMobile ? (
-              <AppSidebarOpen mailboxSlug={mailboxSlug} />
-            ) : (
-              <>
-                <Button variant="ghost" iconOnly asChild>
-                  <Link href={`/mailboxes/${mailboxSlug}/conversations`}>
-                    <ArrowLeft className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Avatar src={undefined} fallback={mailboxSlug.toUpperCase().slice(0, 2)} size="sm" />
-              </>
-            )}
-          </>
-        ) : (
-          <AppSidebarOpen mailboxSlug={mailboxSlug} />
-        )}
         <h1 className="text-lg">{title}</h1>
       </div>
       <div className="flex items-center gap-2">{children}</div>
