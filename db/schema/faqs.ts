@@ -19,18 +19,13 @@ export const faqs = pgTable(
     slackChannel: text(),
     slackMessageTs: text(),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("faqs_mailbox_created_at_idx").on(table.createdAt),
-      mailboxIdIdx: index("faqs_mailbox_id_idx").on(table.mailboxId),
-      faqEmbeddingIdx: index("faqs_embedding_index").using(
-        "hnsw",
-        table.embedding.asc().nullsLast().op("vector_cosine_ops"),
-      ),
-      messageIdUnique: unique("faqs_message_id_key").on(table.messageId),
-    };
-  },
-);
+  (table) => [
+    index("faqs_mailbox_created_at_idx").on(table.createdAt),
+    index("faqs_mailbox_id_idx").on(table.mailboxId),
+    index("faqs_embedding_index").using("hnsw", table.embedding.asc().nullsLast().op("vector_cosine_ops")),
+    unique("faqs_message_id_key").on(table.messageId),
+  ],
+).enableRLS();
 
 export const faqsRelations = relations(faqs, ({ one }) => ({
   mailbox: one(mailboxes, {

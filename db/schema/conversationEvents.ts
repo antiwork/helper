@@ -26,12 +26,12 @@ export const conversationEvents = pgTable(
     byUserId: text("by_clerk_user_id"),
     reason: text(),
   },
-  (table) => ({
-    conversationIdIdx: index("conversation_events_conversation_id_idx").on(table.conversationId),
-    byClerkIdIdx: index("conversation_events_by_clerk_user_id_idx").on(table.byUserId),
-    typeCreatedAtIdx: index("conversation_events_type_created_at_idx").on(table.type, table.createdAt),
-  }),
-);
+  (table) => [
+    index("conversation_events_conversation_id_idx").on(table.conversationId),
+    index("conversation_events_by_clerk_user_id_idx").on(table.byUserId),
+    index("conversation_events_type_created_at_idx").on(table.type, table.createdAt),
+  ],
+).enableRLS();
 
 export const conversationEventsRelations = relations(conversationEvents, ({ one }) => ({
   conversation: one(conversations, {

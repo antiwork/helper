@@ -49,35 +49,28 @@ export const conversations = pgTable(
       )[]
     >(),
   },
-  (table) => {
-    return {
-      unused_assignedToIdIdx: index("conversations_conversation_assigned_to_id_327a1b36").on(table.unused_assignedToId),
-      assignedToIdIdx: index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),
-      closedAtIdx: index("conversations_conversation_closed_at_16474e94").on(table.closedAt),
-      createdAtIdx: index("conversations_conversation_created_at_1ec48787").on(table.createdAt),
-      emailFromIdx: index("conversations_conversation_email_from_aab3d292").on(table.emailFrom),
-      // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
-      emailFromLikeIdx: index("conversations_conversation_email_from_aab3d292_like").on(table.emailFrom),
-      lastUserEmailCreatedAtIdx: index("conversations_conversation_last_user_email_created_at_fc6b89db").on(
-        table.lastUserEmailCreatedAt,
-      ),
-      mailboxIdIdx: index("conversations_conversation_mailbox_id_7fb25662").on(table.mailboxId),
-      // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
-      slugLikeIdx: index("conversations_conversation_slug_9924e9b1_like").on(table.slug),
-      embeddingVectorIdx: index("embedding_vector_index").using(
-        "hnsw",
-        table.embedding.asc().nullsLast().op("vector_cosine_ops"),
-      ),
-      slugUnique: unique("conversations_conversation_slug_key").on(table.slug),
-      mailboxAssignedToStatusIdIdx: index("conversations_mailbox_assigned_to_status_id_idx").on(
-        table.mailboxId,
-        table.status,
-        table.unused_assignedToId,
-      ),
-      anonymousSessionIdIdx: index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
-    };
-  },
-);
+  (table) => [
+    index("conversations_conversation_assigned_to_id_327a1b36").on(table.unused_assignedToId),
+    index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),
+    index("conversations_conversation_closed_at_16474e94").on(table.closedAt),
+    index("conversations_conversation_created_at_1ec48787").on(table.createdAt),
+    index("conversations_conversation_email_from_aab3d292").on(table.emailFrom),
+    // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
+    index("conversations_conversation_email_from_aab3d292_like").on(table.emailFrom),
+    index("conversations_conversation_last_user_email_created_at_fc6b89db").on(table.lastUserEmailCreatedAt),
+    index("conversations_conversation_mailbox_id_7fb25662").on(table.mailboxId),
+    // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
+    index("conversations_conversation_slug_9924e9b1_like").on(table.slug),
+    index("embedding_vector_index").using("hnsw", table.embedding.asc().nullsLast().op("vector_cosine_ops")),
+    unique("conversations_conversation_slug_key").on(table.slug),
+    index("conversations_mailbox_assigned_to_status_id_idx").on(
+      table.mailboxId,
+      table.status,
+      table.unused_assignedToId,
+    ),
+    index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
+  ],
+).enableRLS();
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
   mailbox: one(mailboxes, {

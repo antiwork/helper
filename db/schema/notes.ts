@@ -16,14 +16,12 @@ export const notes = pgTable(
     slackMessageTs: text(),
     slackChannel: text(),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("conversatio_created_5ad461_idx").on(table.createdAt),
-      conversationIdIdx: index("conversations_note_conversation_id_a486ed4c").on(table.conversationId),
-      userIdIdx: index("conversations_note_clerk_user_id").on(table.userId),
-    };
-  },
-);
+  (table) => [
+    index("conversatio_created_5ad461_idx").on(table.createdAt),
+    index("conversations_note_conversation_id_a486ed4c").on(table.conversationId),
+    index("conversations_note_clerk_user_id").on(table.userId),
+  ],
+).enableRLS();
 
 export const notesRelations = relations(notes, ({ one, many }) => ({
   conversation: one(conversations, {

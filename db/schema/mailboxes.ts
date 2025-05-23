@@ -60,15 +60,13 @@ export const mailboxes = pgTable(
       }>()
       .default({}),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("mailboxes_mailbox_created_at_5d4ea7d0").on(table.createdAt),
-      unused_organizationIdIdx: index("mailboxes_mailbox_clerk_organization_id").on(table.unused_organizationId),
-      slugUnique: unique("mailboxes_mailbox_slug_key").on(table.slug),
-      gmailSupportEmailIdUnique: unique("mailboxes_mailbox_support_email_id_key").on(table.gmailSupportEmailId),
-    };
-  },
-);
+  (table) => [
+    index("mailboxes_mailbox_created_at_5d4ea7d0").on(table.createdAt),
+    index("mailboxes_mailbox_clerk_organization_id").on(table.unused_organizationId),
+    unique("mailboxes_mailbox_slug_key").on(table.slug),
+    unique("mailboxes_mailbox_support_email_id_key").on(table.gmailSupportEmailId),
+  ],
+).enableRLS();
 
 export const mailboxesRelations = relations(mailboxes, ({ one, many }) => ({
   mailboxesMetadataApi: one(mailboxesMetadataApi),

@@ -16,15 +16,13 @@ export const gmailSupportEmails = pgTable(
     refreshToken: encryptedField(),
     unused_userId: text("clerk_user_id"),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("mailboxes_gmailsupportemail_created_at_321a00f1").on(table.createdAt),
-      // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
-      emailIdxLike: index("mailboxes_supportemail_email_99536dd8_like").on(table.email),
-      emailUnique: unique("mailboxes_supportemail_email_key").on(table.email),
-    };
-  },
-);
+  (table) => [
+    index("mailboxes_gmailsupportemail_created_at_321a00f1").on(table.createdAt),
+    // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
+    index("mailboxes_supportemail_email_99536dd8_like").on(table.email),
+    unique("mailboxes_supportemail_email_key").on(table.email),
+  ],
+).enableRLS();
 
 export const gmailSupportEmailsRelations = relations(gmailSupportEmails, ({ many }) => ({
   mailboxes: many(mailboxes),

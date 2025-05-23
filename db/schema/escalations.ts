@@ -15,13 +15,11 @@ export const unused_escalations = pgTable(
     summary: text(),
     clerkUserId: text(),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("conversatio_created_176a78_idx").on(table.createdAt),
-      conversationIdIdx: index("conversations_escalation_conversation_id_6a4dba67").on(table.conversationId),
-    };
-  },
-);
+  (table) => [
+    index("conversatio_created_176a78_idx").on(table.createdAt),
+    index("conversations_escalation_conversation_id_6a4dba67").on(table.conversationId),
+  ],
+).enableRLS();
 
 export const escalationsRelations = relations(unused_escalations, ({ one }) => ({
   conversation: one(conversations, {

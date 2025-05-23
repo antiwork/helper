@@ -74,30 +74,24 @@ export const conversationMessages = pgTable(
     reactionFeedback: text(),
     reactionCreatedAt: timestamp({ withTimezone: true }),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("conversatio_created_c4e0d1_idx").on(table.createdAt.asc().nullsLast()),
-      conversationIdIdx: index("conversations_email_conversation_id_391ad973").on(
-        table.conversationId.asc().nullsLast(),
-      ),
-      gmailMessageIdIdx: index("conversations_email_gmail_message_id_3f6ee5ab").on(
-        table.gmailMessageId.asc().nullsLast(),
-      ),
-      gmailThreadIdIdx: index("conversations_email_gmail_thread_id_68f031bf").on(table.gmailThreadId.asc().nullsLast()),
-      isPinnedIdx: index("conversations_email_is_pinned_ab83d24f").on(table.isPinned.asc().nullsLast()),
-      messageIdIdx: index("conversations_email_message_id_a19e9ac9").on(table.messageId.asc().nullsLast()),
-      responseToIdIdx: index("conversations_email_response_to_id_af0048dc").on(table.responseToId.asc().nullsLast()),
-      userIdIdx: index("conversations_email_clerk_user_id").on(table.userId.asc().nullsLast()),
-      searchIndexIdx: index("search_index_idx").using("gin", sql`string_to_array(${table.searchIndex}, ' ') array_ops`),
-      reasonIdx: index("messages_reason_idx").using("btree", table.reason).concurrently(),
-      slackMessageTsIdx: index("messages_slack_message_ts_idx").using("btree", table.slackMessageTs).concurrently(),
-      reactionCountIdx: index("messages_reaction_count_idx")
-        .on(table.reactionType, table.reactionCreatedAt)
-        .where(isNull(table.deletedAt))
-        .concurrently(),
-    };
-  },
-);
+  (table) => [
+    index("conversatio_created_c4e0d1_idx").on(table.createdAt.asc().nullsLast()),
+    index("conversations_email_conversation_id_391ad973").on(table.conversationId.asc().nullsLast()),
+    index("conversations_email_gmail_message_id_3f6ee5ab").on(table.gmailMessageId.asc().nullsLast()),
+    index("conversations_email_gmail_thread_id_68f031bf").on(table.gmailThreadId.asc().nullsLast()),
+    index("conversations_email_is_pinned_ab83d24f").on(table.isPinned.asc().nullsLast()),
+    index("conversations_email_message_id_a19e9ac9").on(table.messageId.asc().nullsLast()),
+    index("conversations_email_response_to_id_af0048dc").on(table.responseToId.asc().nullsLast()),
+    index("conversations_email_clerk_user_id").on(table.userId.asc().nullsLast()),
+    index("search_index_idx").using("gin", sql`string_to_array(${table.searchIndex}, ' ') array_ops`),
+    index("messages_reason_idx").using("btree", table.reason).concurrently(),
+    index("messages_slack_message_ts_idx").using("btree", table.slackMessageTs).concurrently(),
+    index("messages_reaction_count_idx")
+      .on(table.reactionType, table.reactionCreatedAt)
+      .where(isNull(table.deletedAt))
+      .concurrently(),
+  ],
+).enableRLS();
 
 export const conversationMessageRelations = relations(conversationMessages, ({ one, many }) => ({
   conversation: one(conversations, {
