@@ -37,6 +37,10 @@ export const env = createEnv({
       z.string().min(1),
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
     ),
+    SUPABASE_JWT_SECRET: defaultUnlessDeployed(
+      z.string().min(1),
+      "super-secret-jwt-token-with-at-least-32-characters-long",
+    ),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
     CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
@@ -52,6 +56,9 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
+
+    RESEND_API_KEY: z.string().min(1).optional(),
+    RESEND_FROM_EMAIL: z.string().email().optional(),
 
     // For running database seeds
     INITIAL_USER_EMAILS: z
