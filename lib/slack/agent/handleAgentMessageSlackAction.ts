@@ -32,7 +32,6 @@ export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMe
         slackUserId: payload.user.id,
         confirmedReplyText: payload.state.values.proposed_message.proposed_message.value,
         agentThreadId: agentMessage.agentThreadId,
-        currentMailboxId: mailbox.id,
         statusMessageTs: await postThinkingMessage(client, agentThread.slackChannel, agentThread.threadTs),
       },
     });

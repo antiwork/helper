@@ -60,7 +60,7 @@ export default inngest.createFunction(
               isNull(conversations.mergedIntoId),
               eq(conversations.status, "open"),
               gt(
-                sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
+                sql`EXTRACT(EPOCH FROM (${new Date()} - ${conversations.lastUserEmailCreatedAt})) / 3600`,
                 24, // 24 hours threshold
               ),
             ),

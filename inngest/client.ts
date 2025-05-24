@@ -143,7 +143,6 @@ export const inngest = new Inngest({
       "slack/agent.message": {
         data: z.object({
           slackUserId: z.string().nullable(),
-          currentMailboxId: z.number(),
           statusMessageTs: z.string(),
           agentThreadId: z.number(),
           confirmedReplyText: z.string().optional(),
