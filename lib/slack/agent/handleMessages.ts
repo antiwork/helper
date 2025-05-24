@@ -176,6 +176,6 @@ const postMailboxSwitchMessage = async (client: WebClient, channel: string, thre
   await client.chat.postMessage({
     channel,
     thread_ts: threadTs,
-    text: `_Currently working in the ${mailboxName} mailbox_`,
+    text: `_Switched to the ${mailboxName} mailbox_`,
   });
 };
