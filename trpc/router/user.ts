@@ -40,7 +40,7 @@ export const userRouter = {
         from: env.RESEND_FROM_ADDRESS,
         to: assertDefined(user.email),
         subject: "Your OTP for Helper",
-        react: await OtpEmail({ otp: data.properties.email_otp }),
+        react: OtpEmail({ otp: data.properties.email_otp }),
       });
       return { email: true };
     }
