@@ -90,44 +90,49 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       },
     });
 
-  const messages = await findMessages(eq(conversationMessages.conversationId, conversationId));
-  const mergedMessages = await findMessages(
-    inArray(
-      conversationMessages.conversationId,
-      db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
+  const [messages, mergedMessages, noteRecords, eventRecords, members] = await Promise.all([
+    findMessages(eq(conversationMessages.conversationId, conversationId)),
+    findMessages(
+      inArray(
+        conversationMessages.conversationId,
+        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
+      ),
     ),
-  );
+    db.query.notes.findMany({
+      where: eq(notes.conversationId, conversationId),
+      columns: {
+        id: true,
+        createdAt: true,
+        body: true,
+        role: true,
+        slackChannel: true,
+        slackMessageTs: true,
+        userId: true,
+      },
+      with: {
+        files: true,
+      },
+    }),
+    db.query.conversationEvents.findMany({
+      where: and(
+        eq(conversationEvents.conversationId, conversationId),
+        ne(conversationEvents.type, "reasoning_toggled"),
+      ),
+      columns: {
+        id: true,
+        type: true,
+        createdAt: true,
+        changes: true,
+        byUserId: true,
+        reason: true,
+      },
+    }),
+    db.query.authUsers.findMany(),
+  ]);
+
   const allMessages = [...messages, ...mergedMessages];
 
-  const noteRecords = await db.query.notes.findMany({
-    where: eq(notes.conversationId, conversationId),
-    columns: {
-      id: true,
-      createdAt: true,
-      body: true,
-      role: true,
-      slackChannel: true,
-      slackMessageTs: true,
-      userId: true,
-    },
-    with: {
-      files: true,
-    },
-  });
-
-  const eventRecords = await db.query.conversationEvents.findMany({
-    where: and(eq(conversationEvents.conversationId, conversationId), ne(conversationEvents.type, "reasoning_toggled")),
-    columns: {
-      id: true,
-      type: true,
-      createdAt: true,
-      changes: true,
-      byUserId: true,
-      reason: true,
-    },
-  });
-
-  const membersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
+  const membersById = Object.fromEntries(members.map((user) => [user.id, user]));
 
   const messageInfos = await Promise.all(
     allMessages.map((message) =>
@@ -207,19 +212,6 @@ export const serializeMessage = async (
     message.files ??
     (await db.query.files.findMany({ where: and(eq(files.messageId, message.id), eq(files.isPublic, false)) }));
 
-  const draftEmail =
-    message.role === "user"
-      ? await db.query.conversationMessages.findFirst({
-          where: and(
-            eq(conversationMessages.conversationId, message.conversationId),
-            eq(conversationMessages.role, "ai_assistant"),
-            isNotNull(conversationMessages.promptInfo),
-            eq(conversationMessages.responseToId, message.id),
-          ),
-          orderBy: [desc(conversationMessages.createdAt)],
-        })
-      : null;
-
   const filesData = await serializeFiles(messageFiles);
 
   let sanitizedBody = await sanitizeBody(message.body);
@@ -246,7 +238,6 @@ export const serializeMessage = async (
       mailbox.slackBotToken && message.slackChannel && message.slackMessageTs
         ? await getSlackPermalink(mailbox.slackBotToken, message.slackChannel, message.slackMessageTs)
         : null,
-    draft: draftEmail ? serializeResponseAiDraft(draftEmail, mailbox) : null,
     files: filesData.flatMap((f) => (f.isInline ? [] : [f])),
     metadata: message.metadata,
     reactionType: message.reactionType,

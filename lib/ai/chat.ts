@@ -77,11 +77,14 @@ export const loadScreenshotAttachments = async (messages: (typeof conversationMe
       messages.filter((m) => (m.metadata as MessageMetadata)?.includesScreenshot).map((m) => m.id),
     ),
   });
-  return await Promise.all(
+  const attachmentsWithUrls = await Promise.all(
     attachments.map(async (a) => {
       const url = await getFileUrl(a);
       return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
     }),
+  );
+  return attachmentsWithUrls.filter((a): a is { messageId: number; name: string; contentType: string; url: string } =>
+    Boolean(a.url),
   );
 };
 

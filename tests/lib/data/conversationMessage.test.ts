@@ -202,30 +202,6 @@ describe("getMessages", () => {
     });
   });
 
-  it("includes draft for user messages", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-    const { message: userMessage } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
-    const { message: draft } = await conversationMessagesFactory.create(conversation.id, {
-      role: "ai_assistant",
-      responseToId: userMessage.id,
-      promptInfo: {
-        pinned_replies: "Pinned replies",
-        past_conversations: null,
-        metadata: null,
-      },
-    });
-
-    const result = await getMessages(conversation.id, mailbox);
-    assert(result[0]?.type === "message");
-    expect(result[0].draft).toEqual({
-      id: draft.id,
-      responseToId: userMessage.id,
-      body: draft.body,
-      isStale: true,
-    });
-  });
-
   it("generates Slack links", async () => {
     const { mailbox } = await mailboxFactory.create({ slackBotToken: "test-token" });
     const { conversation } = await conversationFactory.create(mailbox.id);

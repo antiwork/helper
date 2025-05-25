@@ -4,6 +4,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
 import { files } from "@/db/schema";
 import { inngest } from "@/inngest/client";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export const PUBLIC_BUCKET_NAME = "public-uploads";
@@ -17,14 +18,19 @@ export const getFileUrl = async (file: typeof files.$inferSelect, { preview = fa
 
   if (!key) throw new Error(`File ${file.id} has no ${preview ? "preview key" : "key"}`);
 
-  if (file.isPublic) {
-    const { data } = supabase.storage.from(PUBLIC_BUCKET_NAME).getPublicUrl(key);
-    return data.publicUrl;
-  }
+  try {
+    if (file.isPublic) {
+      const { data } = supabase.storage.from(PUBLIC_BUCKET_NAME).getPublicUrl(key);
+      return data.publicUrl;
+    }
 
-  const { data, error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).createSignedUrl(key, 60 * 60 * 24 * 30);
-  if (error) throw error;
-  return data.signedUrl;
+    const { data, error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).createSignedUrl(key, 60 * 60 * 24 * 30);
+    if (error) throw error;
+    return data.signedUrl;
+  } catch (e) {
+    captureExceptionAndLog(e);
+    return null;
+  }
 };
 
 export const downloadFile = async (file: typeof files.$inferSelect) => {
