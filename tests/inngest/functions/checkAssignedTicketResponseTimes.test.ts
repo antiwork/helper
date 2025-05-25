@@ -17,9 +17,11 @@ vi.mock("@/lib/data/user", () => ({
 
 describe("checkAssignedTicketResponseTimes", () => {
   const t = new InngestTestEngine({ function: checkAssignedTicketResponseTimes });
+  const now = new Date("2024-01-15T10:00:00Z");
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(now);
   });
 
   it("sends a Slack alert for overdue assigned tickets", async () => {
@@ -31,7 +33,7 @@ describe("checkAssignedTicketResponseTimes", () => {
       },
     });
 
-    const overdueDate = subDays(new Date(), 2);
+    const overdueDate = subDays(now, 2);
     await conversationFactory.create(mailbox.id, {
       assignedToId: user.id,
       lastUserEmailCreatedAt: overdueDate,
@@ -69,7 +71,7 @@ describe("checkAssignedTicketResponseTimes", () => {
       },
     });
 
-    const recentDate = subHours(new Date(), 12); // Only 12 hours ago, under the 24 hour threshold
+    const recentDate = subHours(now, 12); // Only 12 hours ago, under the 24 hour threshold
     await conversationFactory.create(mailbox.id, {
       assignedToId: user.id,
       lastUserEmailCreatedAt: recentDate,
@@ -94,7 +96,7 @@ describe("checkAssignedTicketResponseTimes", () => {
       },
     });
 
-    const overdueDate = subDays(new Date(), 2);
+    const overdueDate = subDays(now, 2);
     await conversationFactory.create(mailbox.id, {
       assignedToId: user.id,
       lastUserEmailCreatedAt: overdueDate,
