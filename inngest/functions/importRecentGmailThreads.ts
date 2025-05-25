@@ -5,8 +5,8 @@ import { simpleParser } from "mailparser";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails, mailboxes } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
-import { findUserByEmail } from "@/lib/data/user";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -75,7 +75,7 @@ export const getNewGmailThreads = async (gmailSupportEmailId: number) => {
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
     })
     .then(assertDefinedOrRaiseNonRetriableError);
-  const client = await getGmailService(gmailSupportEmail);
+  const client = getGmailService(gmailSupportEmail);
   const response = await getLast10GmailThreads(client);
   assertSuccessResponseOrThrow(response);
   const threads = response.data.threads ?? [];
@@ -92,7 +92,7 @@ export const processGmailThread = async (
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
     })
     .then(assertDefinedOrRaiseNonRetriableError);
-  const client = await getGmailService(gmailSupportEmail);
+  const client = getGmailService(gmailSupportEmail);
   return processGmailThreadWithClient(client, gmailSupportEmail, gmailThreadId, conversationOverrides);
 };
 
@@ -119,10 +119,7 @@ export const processGmailThreadWithClient = async (
   const mailbox = await db.query.mailboxes
     .findFirst({
       where: eq(mailboxes.gmailSupportEmailId, gmailSupportEmail.id),
-      columns: {
-        id: true,
-        clerkOrganizationId: true,
-      },
+      columns: { id: true },
     })
     .then(assertDefinedOrRaiseNonRetriableError);
   const conversation = await db
@@ -159,7 +156,9 @@ export const processGmailThreadWithClient = async (
         : extractQuotations(processedHtml),
     );
     // Process messages serially since we rely on the database ID for message ordering
-    const staffUser = await findUserByEmail(mailbox.clerkOrganizationId, parsedEmailFrom.address);
+    const staffUser = await db.query.authUsers.findFirst({
+      where: eq(authUsers.email, parsedEmailFrom.address),
+    });
     await createMessageAndProcessAttachments(
       mailbox.id,
       parsedEmail,

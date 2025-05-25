@@ -1,4 +1,3 @@
-// Must be kept in sync with the scopes in Clerk Google OAuth settings
 export const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/userinfo.profile",
@@ -13,9 +12,3 @@ export const GMAIL_AUTHORIZATION_PARAMS = {
   scope: GMAIL_SCOPES.join(" "),
   response_type: "code",
 };
-
-export const INVALID_SLACK_CREDENTIALS_ERROR = "invalidSlackCredentials";
-
-export const GUMROAD_ROOT_USER_ID = 1;
-export const GUMROAD_ROOT_USER_USERNAME = "gumroad";
-export const GUMROAD_ROOT_USER_DEVELOPMENT_PASSWORD = "password";

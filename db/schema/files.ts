@@ -11,25 +11,23 @@ export const files = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
-    url: text().notNull(),
+    key: text("url").notNull(),
     mimetype: text().notNull(),
     size: integer().notNull(),
     messageId: bigint("message_id", { mode: "number" }),
     noteId: bigint("note_id", { mode: "number" }),
-    previewUrl: text(),
+    previewKey: text("preview_url"),
     isInline: boolean().notNull(),
     isPublic: boolean().notNull(),
     slug: randomSlugField("slug"),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("conversatio_created_9fddde_idx").on(table.createdAt),
-      messageIdIdx: index("conversations_file_message_id_idx").on(table.messageId),
-      noteIdIdx: index("conversations_file_note_id_idx").on(table.noteId),
-      slugUnique: unique("conversations_file_slug_key").on(table.slug),
-    };
-  },
-);
+  (table) => [
+    index("conversatio_created_9fddde_idx").on(table.createdAt),
+    index("conversations_file_message_id_idx").on(table.messageId),
+    index("conversations_file_note_id_idx").on(table.noteId),
+    unique("conversations_file_slug_key").on(table.slug),
+  ],
+).enableRLS();
 
 export const filesRelations = relations(files, ({ one }) => ({
   message: one(conversationMessages, {

@@ -4,7 +4,6 @@ import { userFactory } from "@tests/support/factories/users";
 import { subDays, subHours } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import checkAssignedTicketResponseTimes from "@/inngest/functions/checkAssignedTicketResponseTimes";
-import { getClerkUserList } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 vi.mock("@/lib/slack/client", () => ({
@@ -36,13 +35,12 @@ describe("checkAssignedTicketResponseTimes", () => {
 
     const overdueDate = subDays(now, 2);
     await conversationFactory.create(mailbox.id, {
-      assignedToClerkId: user.id,
+      assignedToId: user.id,
       lastUserEmailCreatedAt: overdueDate,
       status: "open",
     });
 
-    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.emailAddresses[0]!.emailAddress, "SLACK123"]]));
-    vi.mocked(getClerkUserList).mockResolvedValue({ data: [user] });
+    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
 
     await t.execute();
 
@@ -75,13 +73,12 @@ describe("checkAssignedTicketResponseTimes", () => {
 
     const recentDate = subHours(now, 12); // Only 12 hours ago, under the 24 hour threshold
     await conversationFactory.create(mailbox.id, {
-      assignedToClerkId: user.id,
+      assignedToId: user.id,
       lastUserEmailCreatedAt: recentDate,
       status: "open",
     });
 
-    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.emailAddresses[0]!.emailAddress, "SLACK123"]]));
-    vi.mocked(getClerkUserList).mockResolvedValue({ data: [user] });
+    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
 
     await t.execute();
 
@@ -101,13 +98,12 @@ describe("checkAssignedTicketResponseTimes", () => {
 
     const overdueDate = subDays(now, 2);
     await conversationFactory.create(mailbox.id, {
-      assignedToClerkId: user.id,
+      assignedToId: user.id,
       lastUserEmailCreatedAt: overdueDate,
       status: "open",
     });
 
-    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.emailAddresses[0]!.emailAddress, "SLACK123"]]));
-    vi.mocked(getClerkUserList).mockResolvedValue({ data: [user] });
+    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
 
     await t.execute();
 

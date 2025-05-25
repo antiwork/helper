@@ -11,9 +11,9 @@ export const conversationEventsFactory = {
         conversationId,
         changes: {
           status: "open",
-          assignedToClerkId: null,
+          assignedToId: null,
         },
-        byClerkUserId: faker.string.uuid(),
+        byUserId: faker.string.uuid(),
         reason: faker.lorem.sentence(),
         ...overrides,
       })

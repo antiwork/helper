@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/nextjs";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Command } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useSession } from "@/components/useSession";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useAssigneesPage } from "./assigneesPage";
@@ -34,7 +34,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
   const pageRef = useRef<string>("main");
-  const { user: currentUser } = useUser();
+  const { user: currentUser } = useSession() ?? {};
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
     refetchOnWindowFocus: false,

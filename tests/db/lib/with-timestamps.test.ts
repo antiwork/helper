@@ -18,7 +18,6 @@ describe("withTimestamps", () => {
       .values({
         name: "Test Mailbox",
         slug: "test-mailbox",
-        clerkOrganizationId: "clerk-org-id",
         promptUpdatedAt: time,
         widgetHMACSecret: "secret",
       })

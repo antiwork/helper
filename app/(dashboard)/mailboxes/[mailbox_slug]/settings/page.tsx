@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, CreditCard, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
+import { BookOpen, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
 import { useParams } from "next/navigation";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import Loading from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/loading";
@@ -17,7 +17,6 @@ import SlackSetting from "./integrations/slackSetting";
 import KnowledgeSetting from "./knowledge/knowledgeSetting";
 import PreferencesSetting from "./preferences/preferencesSetting";
 import SubNavigation from "./subNavigation";
-import Subscription from "./subscription";
 import TeamSetting from "./team/teamSetting";
 import MetadataEndpointSetting from "./tools/metadataEndpointSetting";
 import ToolSetting from "./tools/toolSetting";
@@ -80,15 +79,6 @@ export default function SettingsPage() {
       content: <PreferencesSetting mailbox={mailbox} />,
     },
   ];
-
-  if (mailbox.billingEnabled) {
-    items.push({
-      label: "Billing",
-      id: "billing",
-      icon: CreditCard,
-      content: <Subscription />,
-    });
-  }
 
   return (
     <div className="flex h-full flex-col">

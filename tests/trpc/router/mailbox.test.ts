@@ -1,46 +1,22 @@
-import { currentUser, User } from "@clerk/nextjs/server";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { getMailboxInfo } from "@/lib/data/mailbox";
-import { getClerkOrganization } from "@/lib/data/organization";
-import { getClerkUserList, UserRoles } from "@/lib/data/user";
+import { UserRoles } from "@/lib/data/user";
 import { createCaller } from "@/trpc";
-
-vi.mock("@/lib/data/user", () => ({
-  getClerkUserList: vi.fn(),
-  UserRoles: {
-    CORE: "core",
-    NON_CORE: "nonCore",
-    AFK: "afk",
-  },
-  updateUserMailboxData: vi.fn(),
-}));
-
-vi.mock("@/lib/data/organization", () => ({
-  getClerkOrganization: vi.fn(),
-}));
-
-vi.mock("@clerk/nextjs/server", () => ({
-  currentUser: vi.fn(),
-}));
 
 describe("mailboxRouter", () => {
   describe("list", () => {
     it("returns a list of mailboxes for the user's organization", async () => {
-      const { user, organization, mailbox } = await userFactory.createRootUser();
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
+      const { user, mailbox } = await userFactory.createRootUser();
+      const { mailbox: mailbox2 } = await mailboxFactory.create();
 
-      const { mailbox: mailbox2 } = await mailboxFactory.create(organization.id);
-      const { organization: otherOrg } = await userFactory.createRootUser();
-      await mailboxFactory.create(otherOrg.id);
-
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.mailbox.list();
 
@@ -60,12 +36,9 @@ describe("mailboxRouter", () => {
     });
 
     it("creates a mailbox if user has no mailboxes", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
-      vi.mocked(currentUser).mockResolvedValue(user);
-
+      const { user, mailbox } = await userFactory.createRootUser();
       await db.delete(mailboxes).where(eq(mailboxes.id, mailbox.id));
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.mailbox.list();
 
@@ -76,10 +49,9 @@ describe("mailboxRouter", () => {
 
   describe("update", () => {
     it("updates slack settings", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
+      const { user, mailbox } = await userFactory.createRootUser();
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       const promptUpdatedAtBefore = mailbox.promptUpdatedAt;
 
@@ -100,82 +72,51 @@ describe("mailboxRouter", () => {
 
   describe("members", () => {
     it("returns a list of mailbox members", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
+      const { user, mailbox } = await userFactory.createRootUser();
 
-      const user2 = userFactory.buildMockUser();
+      const user2 = await userFactory.createUser();
       const { conversation: conversation1 } = await conversationFactory.create(mailbox.id);
       await conversationFactory.createStaffEmail(conversation1.id, user2.id);
       await conversationFactory.createStaffEmail(conversation1.id, user2.id);
 
-      const user3 = userFactory.buildMockUser();
+      const user3 = await userFactory.createUser();
       const { conversation: conversation2 } = await conversationFactory.create(mailbox.id);
       await conversationFactory.createStaffEmail(conversation2.id, user3.id);
 
-      // Assert that other mailbox members are excluded
-      const { user: otherUser, mailbox: otherMailbox } = await userFactory.createRootUser();
-      const { conversation: otherConversation } = await conversationFactory.create(otherMailbox.id);
-      await conversationFactory.createStaffEmail(otherConversation.id, otherUser.id);
-      await conversationFactory.createStaffEmail(otherConversation.id, otherUser.id);
-
-      // Mock the Clerk user list response
-      vi.mocked(getClerkUserList).mockResolvedValue({
-        data: [
-          {
-            id: user.id,
-            emailAddresses: [{ emailAddress: user.emailAddresses[0]?.emailAddress }] as User["emailAddresses"],
-            fullName: user.fullName,
-          } as User,
-          {
-            id: user2.id,
-            emailAddresses: [{ emailAddress: user2.emailAddresses[0]?.emailAddress }] as User["emailAddresses"],
-            fullName: user2.fullName,
-          } as User,
-          {
-            id: user3.id,
-            emailAddresses: [{ emailAddress: user3.emailAddresses[0]?.emailAddress }] as User["emailAddresses"],
-            fullName: user3.fullName,
-          } as User,
-        ],
-      });
-
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       const result = await caller.mailbox.members.stats({ mailboxSlug: mailbox.slug, period: "1y" });
 
       expect(result.sort((a, b) => a.replyCount - b.replyCount)).toEqual([
         {
           id: user.id,
-          email: user.emailAddresses[0]?.emailAddress,
-          displayName: user.fullName,
+          email: user.email,
+          displayName: user.email,
           replyCount: 0,
           role: UserRoles.AFK,
         },
         {
           id: user3.id,
-          email: user3.emailAddresses[0]?.emailAddress,
-          displayName: user3.fullName,
+          email: user3.email,
+          displayName: user3.email,
           replyCount: 1,
           role: UserRoles.AFK,
         },
         {
           id: user2.id,
-          email: user2.emailAddresses[0]?.emailAddress,
-          displayName: user2.fullName,
+          email: user2.email,
+          displayName: user2.email,
           replyCount: 2,
           role: UserRoles.AFK,
         },
       ]);
-
-      expect(getClerkUserList).toHaveBeenCalledWith(organization.id);
     });
   });
   describe("get", () => {
     it("returns info for the requested mailbox", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
+      const { user, mailbox } = await userFactory.createRootUser();
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
 
       expect(await caller.mailbox.get({ mailboxSlug: mailbox.slug })).toEqual(await getMailboxInfo(mailbox));
     });

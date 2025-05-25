@@ -3,6 +3,7 @@
 import { Context } from "modern-screenshot";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
+import { scriptOrigin } from "./scriptOrigin";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -15,8 +16,6 @@ import {
   type HelperWidgetConfig,
   type NotificationStatus,
 } from "./utils";
-
-declare const __EMBED_URL__: string;
 
 declare global {
   interface Window {
@@ -120,7 +119,7 @@ class HelperWidget {
         requestBody.currentToken = localStorage.getItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
       }
 
-      const response = await fetch(`${new URL(__EMBED_URL__).origin}/api/widget/session`, {
+      const response = await fetch(`${scriptOrigin}/api/widget/session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -266,7 +265,7 @@ class HelperWidget {
     this.iframe = document.createElement("iframe");
     this.iframe.className = "helper-widget-iframe";
     this.iframe.allow = "microphone *";
-    this.iframe.src = __EMBED_URL__;
+    this.iframe.src = `${scriptOrigin}/widget/embed`;
 
     if (this.iframeWrapper) {
       this.iframeWrapper.appendChild(this.iframe);
@@ -315,8 +314,6 @@ class HelperWidget {
     });
 
     window.addEventListener("message", async (event: MessageEvent) => {
-      const embedOrigin = new URL(__EMBED_URL__).origin;
-
       // Handle messages from our iframe
       if (event.data && event.data.type === this.messageType) {
         const { action, requestId, content } = event.data.payload || {};
@@ -362,7 +359,7 @@ class HelperWidget {
                     response,
                   },
                 },
-                "*",
+                scriptOrigin,
               );
             }
           } catch (error) {
@@ -376,14 +373,14 @@ class HelperWidget {
                     error: error instanceof Error ? error.message : String(error),
                   },
                 },
-                "*",
+                scriptOrigin,
               );
             }
           }
           return;
         }
 
-        if (event.origin === embedOrigin) {
+        if (event.origin === scriptOrigin) {
           const { action, content } = event.data.payload;
           switch (action) {
             case CLOSE_ACTION:
@@ -548,10 +545,7 @@ class HelperWidget {
 
   private sendMessageToEmbed(message: any): void {
     if (this.isIframeReady && this.iframe?.contentWindow) {
-      this.iframe.contentWindow.postMessage(
-        { type: this.messageType, payload: message },
-        new URL(__EMBED_URL__).origin,
-      );
+      this.iframe.contentWindow.postMessage({ type: this.messageType, payload: message }, scriptOrigin);
     } else {
       this.messageQueue.push(message);
       if (!this.iframe) {
@@ -837,7 +831,7 @@ class HelperWidget {
 
   private async updateNotificationStatus(notificationId: number, status: "read" | "dismissed"): Promise<void> {
     try {
-      await fetch(`${new URL(__EMBED_URL__).origin}/api/widget/notification/${notificationId}`, {
+      await fetch(`${scriptOrigin}/api/widget/notification/${notificationId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -1,4 +1,3 @@
-import { User } from "@clerk/nextjs/server";
 import { conversationEventsFactory } from "@tests/support/factories/conversationEvents";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
@@ -23,30 +22,24 @@ import {
   getMessages,
   serializeResponseAiDraft,
 } from "@/lib/data/conversationMessage";
-import { getClerkUserList } from "@/lib/data/user";
+import { getFileUrl } from "@/lib/data/files";
 import { getSlackPermalink } from "@/lib/slack/client";
 
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
-}));
-vi.mock("@/lib/s3/utils", () => ({
-  createPresignedDownloadUrl: vi.fn().mockResolvedValue("https://presigned-url.com"),
 }));
 vi.mock("@/inngest/client", () => ({
   inngest: {
     send: vi.fn(),
   },
 }));
-vi.mock("@/lib/data/user", () => ({
-  getClerkUserList: vi.fn().mockResolvedValue({
-    data: [
-      {
-        id: "user_123",
-        fullName: "Test User",
-      },
-    ],
-  }),
-}));
+vi.mock("@/lib/data/files", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/data/files")>();
+  return {
+    ...actual,
+    getFileUrl: vi.fn(),
+  };
+});
 
 beforeEach(() => {
   vi.useRealTimers();
@@ -99,17 +92,14 @@ describe("serializeResponseAiDraft", () => {
 
 describe("getMessages", () => {
   it("returns messages, notes and events sorted by createdAt with correct fields", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    vi.mocked(getClerkUserList).mockResolvedValueOnce({
-      data: [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        } as User,
-      ],
+    const { user, mailbox } = await userFactory.createRootUser({
+      userOverrides: {
+        user_metadata: {
+          display_name: "Test User",
+        },
+      },
     });
+    const { conversation } = await conversationFactory.create(mailbox.id);
 
     const { message: message1 } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -120,17 +110,17 @@ describe("getMessages", () => {
     const { message: message2 } = await conversationMessagesFactory.create(conversation.id, {
       role: "staff",
       createdAt: new Date("2023-01-02"),
-      clerkUserId: user.id,
+      userId: user.id,
     });
 
     const { note } = await noteFactory.create(conversation.id, {
       createdAt: new Date("2023-01-03"),
-      clerkUserId: user.id,
+      userId: user.id,
     });
 
     const { event } = await conversationEventsFactory.create(conversation.id, {
       createdAt: new Date("2023-01-04"),
-      byClerkUserId: user.id,
+      byUserId: user.id,
       reason: "Sent reply",
     });
 
@@ -144,7 +134,7 @@ describe("getMessages", () => {
 
     assert(result[1]?.type === "message");
     expect(result[1].id).toBe(message2.id);
-    expect(result[1].from).toBe(user.fullName);
+    expect(result[1].from).toBe(user.user_metadata?.display_name);
 
     assert(result[2]?.type === "note");
     expect(result[2].id).toBe(note.id);
@@ -155,17 +145,14 @@ describe("getMessages", () => {
   });
 
   it("handles 'from' field correctly for different message roles", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    vi.mocked(getClerkUserList).mockResolvedValueOnce({
-      data: [
-        {
-          id: user.id,
-          fullName: user.fullName,
-        } as User,
-      ],
+    const { user, mailbox } = await userFactory.createRootUser({
+      userOverrides: {
+        user_metadata: {
+          display_name: "Test User",
+        },
+      },
     });
+    const { conversation } = await conversationFactory.create(mailbox.id);
 
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -173,7 +160,7 @@ describe("getMessages", () => {
     });
     await conversationMessagesFactory.create(conversation.id, {
       role: "staff",
-      clerkUserId: user.id,
+      userId: user.id,
     });
 
     const result = await getMessages(conversation.id, mailbox);
@@ -182,7 +169,7 @@ describe("getMessages", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].from).toBe("customer@example.com");
-    expect(result[1].from).toBe(user.fullName);
+    expect(result[1].from).toBe(user.user_metadata?.display_name);
   });
 
   it("includes files for messages", async () => {
@@ -191,9 +178,7 @@ describe("getMessages", () => {
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { file } = await fileFactory.create(message.id, { isInline: false, size: 1024 * 1024 });
 
-    vi.mocked(getClerkUserList).mockResolvedValueOnce({
-      data: [],
-    });
+    vi.mocked(getFileUrl).mockResolvedValue("https://presigned-url.com");
 
     const result = await getMessages(conversation.id, mailbox);
     assert(result[0]?.type === "message");
@@ -206,12 +191,13 @@ describe("getMessages", () => {
       mimetype: file.mimetype,
       isInline: false,
       presignedUrl: "https://presigned-url.com",
-      url: expect.any(String),
+      key: expect.any(String),
       sizeHuman: "1 MB",
       slug: file.slug,
       isPublic: file.isPublic,
       createdAt: file.createdAt,
       updatedAt: file.updatedAt,
+      previewKey: null,
       previewUrl: null,
     });
   });
@@ -241,8 +227,7 @@ describe("getMessages", () => {
   });
 
   it("generates Slack links", async () => {
-    const { organization } = await userFactory.createRootUser();
-    const { mailbox } = await mailboxFactory.create(organization.id, { slackBotToken: "test-token" });
+    const { mailbox } = await mailboxFactory.create({ slackBotToken: "test-token" });
     const { conversation } = await conversationFactory.create(mailbox.id);
     await conversationMessagesFactory.create(conversation.id, {
       slackChannel: "test-channel",
@@ -444,7 +429,7 @@ describe("createReply", () => {
 
   it("assigns the conversation to the user when replying to an unassigned conversation", async () => {
     const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToClerkId: null });
+    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
@@ -453,13 +438,13 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToClerkId).toBe(user.id);
+    expect(updatedConversation?.assignedToId).toBe(user.id);
   });
 
   it("does not change assignment when replying to an already assigned conversation", async () => {
     const { user, mailbox } = await userFactory.createRootUser();
     const { user: otherUser } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToClerkId: otherUser.id });
+    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: otherUser.id });
 
     await createReply({
       conversationId: conversation.id,
@@ -468,12 +453,12 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToClerkId).toBe(otherUser.id);
+    expect(updatedConversation?.assignedToId).toBe(otherUser.id);
   });
 
   it("handles reply without user (no assignment)", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToClerkId: null });
+    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
@@ -482,7 +467,7 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToClerkId).toBeNull();
+    expect(updatedConversation?.assignedToId).toBeNull();
   });
 
   it("handles file uploads", async () => {
@@ -562,7 +547,7 @@ describe("createConversationMessage", () => {
     const message = await createConversationMessage({
       conversationId: conversation.id,
       body: "Test message",
-      clerkUserId: user.id,
+      userId: user.id,
       role: "staff",
       isPerfect: false,
       isFlaggedAsBad: false,
@@ -594,7 +579,7 @@ describe("createConversationMessage", () => {
     const message = await createConversationMessage({
       conversationId: conversation.id,
       body: "Test message",
-      clerkUserId: user.id,
+      userId: user.id,
       role: "staff",
       isPerfect: false,
       isFlaggedAsBad: false,

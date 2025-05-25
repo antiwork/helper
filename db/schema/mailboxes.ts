@@ -16,7 +16,9 @@ export const mailboxes = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
     slug: varchar({ length: 50 }).notNull(),
-    clerkOrganizationId: text().notNull(),
+    unused_organizationId: text("clerk_organization_id")
+      .notNull()
+      .$default(() => ""),
     gmailSupportEmailId: bigint({ mode: "number" }),
     slackAlertChannel: text("slack_escalation_channel"),
     slackBotToken: text(),
@@ -35,7 +37,7 @@ export const mailboxes = pgTable(
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
     isWhitelabel: boolean().notNull().default(false),
-    onboardingMetadata: jsonb().$type<OnboardingMetadata>().default({
+    unused_onboardingMetadata: jsonb("onboarding_metadata").$type<OnboardingMetadata>().default({
       completed: false,
     }),
     autoCloseEnabled: boolean().notNull().default(false),
@@ -58,15 +60,13 @@ export const mailboxes = pgTable(
       }>()
       .default({}),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("mailboxes_mailbox_created_at_5d4ea7d0").on(table.createdAt),
-      clerkOrganizationIdIdx: index("mailboxes_mailbox_clerk_organization_id").on(table.clerkOrganizationId),
-      slugUnique: unique("mailboxes_mailbox_slug_key").on(table.slug),
-      gmailSupportEmailIdUnique: unique("mailboxes_mailbox_support_email_id_key").on(table.gmailSupportEmailId),
-    };
-  },
-);
+  (table) => [
+    index("mailboxes_mailbox_created_at_5d4ea7d0").on(table.createdAt),
+    index("mailboxes_mailbox_clerk_organization_id").on(table.unused_organizationId),
+    unique("mailboxes_mailbox_slug_key").on(table.slug),
+    unique("mailboxes_mailbox_support_email_id_key").on(table.gmailSupportEmailId),
+  ],
+).enableRLS();
 
 export const mailboxesRelations = relations(mailboxes, ({ one, many }) => ({
   mailboxesMetadataApi: one(mailboxesMetadataApi),

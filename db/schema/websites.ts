@@ -21,14 +21,12 @@ export const websites = pgTable(
     url: text("url").notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("websites_created_at_idx").on(table.createdAt),
-      mailboxIdIdx: index("websites_mailbox_id_idx").on(table.mailboxId),
-      urlIdx: index("websites_url_idx").on(table.url),
-    };
-  },
-);
+  (table) => [
+    index("websites_created_at_idx").on(table.createdAt),
+    index("websites_mailbox_id_idx").on(table.mailboxId),
+    index("websites_url_idx").on(table.url),
+  ],
+).enableRLS();
 
 export const websitePages = pgTable(
   "website_docs_pages",
@@ -45,19 +43,14 @@ export const websitePages = pgTable(
     embedding: vector({ dimensions: 1536 }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("website_pages_created_at_idx").on(table.createdAt),
-      websiteIdIdx: index("website_pages_website_id_idx").on(table.websiteId),
-      websiteCrawlIdIdx: index("website_pages_website_crawl_id_idx").on(table.websiteCrawlId),
-      urlIdx: index("website_pages_url_idx").on(table.url),
-      pageEmbeddingIdx: index("website_pages_embedding_index").using(
-        "hnsw",
-        table.embedding.asc().nullsLast().op("vector_cosine_ops"),
-      ),
-    };
-  },
-);
+  (table) => [
+    index("website_pages_created_at_idx").on(table.createdAt),
+    index("website_pages_website_id_idx").on(table.websiteId),
+    index("website_pages_website_crawl_id_idx").on(table.websiteCrawlId),
+    index("website_pages_url_idx").on(table.url),
+    index("website_pages_embedding_index").using("hnsw", table.embedding.asc().nullsLast().op("vector_cosine_ops")),
+  ],
+).enableRLS();
 
 export const websiteCrawls = pgTable(
   "website_docs_crawls",
@@ -72,14 +65,12 @@ export const websiteCrawls = pgTable(
     startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("website_crawls_created_at_idx").on(table.createdAt),
-      websiteIdIdx: index("website_crawls_website_id_idx").on(table.websiteId),
-      statusIdx: index("website_crawls_status_idx").on(table.status),
-    };
-  },
-);
+  (table) => [
+    index("website_crawls_created_at_idx").on(table.createdAt),
+    index("website_crawls_website_id_idx").on(table.websiteId),
+    index("website_crawls_status_idx").on(table.status),
+  ],
+).enableRLS();
 
 export const websitesRelations = relations(websites, ({ one, many }) => ({
   mailbox: one(mailboxes, {

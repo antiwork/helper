@@ -1,9 +1,62 @@
 import { eq } from "drizzle-orm";
+import { chunk } from "lodash-es";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
 import { files } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { generateS3Key, uploadFile } from "@/lib/s3/utils";
+import { createAdminClient } from "@/lib/supabase/server";
+
+export const PUBLIC_BUCKET_NAME = "public-uploads";
+export const PRIVATE_BUCKET_NAME = "private-uploads";
+
+const MAX_KEYS_PER_DELETE = 1000;
+
+export const getFileUrl = async (file: typeof files.$inferSelect, { preview = false }: { preview?: boolean } = {}) => {
+  const supabase = createAdminClient();
+  const key = preview ? file.previewKey : file.key;
+
+  if (!key) throw new Error(`File ${file.id} has no ${preview ? "preview key" : "key"}`);
+
+  if (file.isPublic) {
+    const { data } = supabase.storage.from(PUBLIC_BUCKET_NAME).getPublicUrl(key);
+    return data.publicUrl;
+  }
+
+  const { data, error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).createSignedUrl(key, 60 * 60 * 24 * 30);
+  if (error) throw error;
+  return data.signedUrl;
+};
+
+export const downloadFile = async (file: typeof files.$inferSelect) => {
+  const supabase = createAdminClient();
+  if (file.isPublic) {
+    const response = await fetch(supabase.storage.from(PUBLIC_BUCKET_NAME).getPublicUrl(file.key).data.publicUrl);
+    if (!response.ok) throw new Error(`Failed to download public file: ${file.key} (${response.statusText})`);
+    return response.bytes();
+  }
+
+  const { data, error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).download(file.key);
+  if (error) throw error;
+  return data.bytes();
+};
+
+export const uploadFile = async (
+  key: string,
+  data: Buffer,
+  { mimetype, isPublic = false }: { mimetype?: string; isPublic?: boolean } = {},
+) => {
+  const supabase = createAdminClient();
+  const { data: storedFile, error } = await supabase.storage
+    .from(isPublic ? PUBLIC_BUCKET_NAME : PRIVATE_BUCKET_NAME)
+    .upload(key, data, { contentType: mimetype });
+  if (error) throw error;
+  return storedFile.path;
+};
+
+export const generateKey = (basePathParts: string[], fileName: string) => {
+  const sanitizedFileName = fileName.replace(/(^.*[\\/])|[^\w.-]/g, "_");
+  return [...basePathParts, crypto.randomUUID(), sanitizedFileName].join("/");
+};
 
 export const finishFileUpload = async (
   {
@@ -67,8 +120,13 @@ export const createAndUploadFile = async ({
   messageId?: number;
   noteId?: number;
 }) => {
-  const s3Key = generateS3Key([prefix], fileName);
-  const s3Url = await uploadFile(data, s3Key, mimetype);
+  const supabase = createAdminClient();
+  const key = generateKey([prefix], fileName);
+  const { data: storedFile, error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).upload(key, data, {
+    contentType: mimetype,
+  });
+
+  if (error) throw error;
 
   const file = await db
     .insert(files)
@@ -78,7 +136,7 @@ export const createAndUploadFile = async ({
       size: data.length,
       isInline,
       isPublic: false,
-      url: s3Url,
+      key: storedFile.path,
       messageId,
       noteId,
     })
@@ -93,4 +151,14 @@ export const createAndUploadFile = async ({
   }
 
   return file;
+};
+
+export const deleteFiles = async (keys: string[], isPublic: boolean) => {
+  const supabase = createAdminClient();
+  for (const chunkKeys of chunk(keys, MAX_KEYS_PER_DELETE)) {
+    const { error } = await supabase.storage
+      .from(isPublic ? PUBLIC_BUCKET_NAME : PRIVATE_BUCKET_NAME)
+      .remove(chunkKeys);
+    if (error) throw error;
+  }
 };

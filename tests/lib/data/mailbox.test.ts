@@ -5,7 +5,6 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack, getMailboxInfo } from "@/lib/data/mailbox";
-import { getClerkOrganization } from "@/lib/data/organization";
 import { env } from "@/lib/env";
 import { uninstallSlackApp } from "@/lib/slack/client";
 
@@ -13,32 +12,23 @@ vi.mock("@/lib/slack/client", () => ({
   uninstallSlackApp: vi.fn(),
 }));
 
-vi.mock("@/lib/data/organization", () => ({
-  getClerkOrganization: vi.fn(),
-}));
-
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 test("getMailboxInfo", async () => {
-  const { mailbox, organization } = await userFactory.createRootUser();
-  vi.mocked(getClerkOrganization).mockResolvedValue(organization);
+  const { mailbox } = await userFactory.createRootUser();
   const info = await getMailboxInfo(mailbox);
   expect(info).toEqual({
     id: mailbox.id,
     name: mailbox.name,
     slug: mailbox.slug,
-    preferences: {
-      confetti: false,
-    },
+    preferences: {},
     hasMetadataEndpoint: false,
     metadataEndpoint: null,
     slackConnected: false,
     slackConnectUrl: expect.any(String),
     slackAlertChannel: null,
-    clerkOrganizationId: mailbox.clerkOrganizationId,
-    subscription: null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
     widgetDisplayMode: "always",
     widgetDisplayMinValue: null,
@@ -54,7 +44,6 @@ test("getMailboxInfo", async () => {
     autoCloseDaysOfInactivity: 14,
     autoCloseEnabled: false,
     firecrawlEnabled: false,
-    billingEnabled: false,
   });
 
   const slackConnectUrl = new URL(info.slackConnectUrl!);

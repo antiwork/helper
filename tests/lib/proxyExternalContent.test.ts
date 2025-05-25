@@ -7,11 +7,8 @@ vi.mock("@/lib/env", () => ({
     PROXY_SECRET_KEY: "test-secret-key",
     PROXY_URL: "https://proxy.helperai.com",
     AUTH_URL: "https://helper.ai",
+    NEXT_PUBLIC_SUPABASE_URL: "https://supabase.helperai.dev",
   },
-}));
-
-vi.mock("@/lib/s3/utils", () => ({
-  isS3Url: (url: string) => url.includes("s3.amazonaws.com"),
 }));
 
 describe("proxyExternalContent", () => {
@@ -121,14 +118,14 @@ describe("proxyExternalContent", () => {
     const htmlWithExcludedUrls = `
       <img src="https://helper.ai/logo.png">
       <img src="https://proxy.helperai.com/existing-proxy.png">
-      <img src="https://s3.amazonaws.com/bucket/image.jpg">
+      <img src="https://supabase.helperai.dev/bucket/image.jpg">
     `;
 
     const result = await proxyExternalContent(htmlWithExcludedUrls);
 
     expect(result).toContain('src="https://helper.ai/logo.png"');
     expect(result).toContain('src="https://proxy.helperai.com/existing-proxy.png"');
-    expect(result).toContain('src="https://s3.amazonaws.com/bucket/image.jpg"');
+    expect(result).toContain('src="https://supabase.helperai.dev/bucket/image.jpg"');
   });
 
   it("does not proxy non-URL attributes", async () => {

@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { createHydrationHelpers } from "@trpc/react-query/rsc";
 import { headers } from "next/headers";
 import { cache } from "react";
+import { createClient } from "@/lib/supabase/server";
 import { createCaller, createTRPCContext, type AppRouter } from "@/trpc";
 import { createQueryClient } from "./query-client";
 
@@ -13,8 +13,9 @@ export const createContext = cache(async (source: string) => {
   const heads = new Headers(await headers());
   heads.set("x-trpc-source", source);
 
+  const supabase = await createClient();
   return createTRPCContext({
-    session: await auth(),
+    user: (await supabase.auth.getUser()).data.user,
     headers: heads,
   });
 });

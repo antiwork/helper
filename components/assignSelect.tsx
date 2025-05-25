@@ -1,9 +1,9 @@
-import { useUser } from "@clerk/nextjs";
 import { Bot, Check, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 
 export type AssigneeOption =
@@ -21,7 +21,7 @@ interface AssignSelectProps {
 }
 
 export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelected }: AssignSelectProps) => {
-  const { user: currentUser } = useUser();
+  const { user } = useSession() ?? {};
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -33,8 +33,8 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
 
   const sortedMembers =
     orgMembers?.sort((a, b) => {
-      if (a.id === currentUser?.id) return -1;
-      if (b.id === currentUser?.id) return 1;
+      if (a.id === user?.id) return -1;
+      if (b.id === user?.id) return 1;
       return a.displayName.localeCompare(b.displayName);
     }) || [];
   const filteredMembers = sortedMembers.filter((member) =>
@@ -120,7 +120,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                     {item.id === "ai" ? <Bot className="h-4 w-4" /> : null}
                     <span className="flex-1 min-w-0 truncate">
                       {item.displayName}
-                      {item.id === currentUser?.id && " (You)"}
+                      {item.id === user?.id && " (You)"}
                     </span>
                   </span>
                 </CommandItem>

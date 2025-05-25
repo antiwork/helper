@@ -1,5 +1,4 @@
 import "@/app/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDisplayIntegration";
@@ -32,15 +31,13 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider appearance={{ variables: { colorPrimary: "hsl(0 67% 17%)" } }}>
-      <NuqsAdapter>
-        <Toaster />
-        <SentryContext />
-        <TRPCReactProvider>
-          <StandaloneDisplayIntegration />
-          <HydrateClient>{children}</HydrateClient>
-        </TRPCReactProvider>
-      </NuqsAdapter>
-    </ClerkProvider>
+    <NuqsAdapter>
+      <Toaster />
+      <SentryContext />
+      <TRPCReactProvider>
+        <StandaloneDisplayIntegration />
+        <HydrateClient>{children}</HydrateClient>
+      </TRPCReactProvider>
+    </NuqsAdapter>
   );
 }

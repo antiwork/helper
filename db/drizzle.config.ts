@@ -11,6 +11,7 @@ if (env.NODE_ENV === "production") {
 const updatedUrl = parsedUrl.toString();
 
 export default {
+  schemaFilter: ["public"],
   schema: "db/schema",
   out: "db/drizzle",
   dialect: "postgresql",
