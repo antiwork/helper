@@ -8,6 +8,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { cacheFor } from "@/lib/cache";
 import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 import { publicProcedure } from "../trpc";
 
@@ -36,12 +37,19 @@ export const userRouter = {
 
     if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
       const resend = new Resend(env.RESEND_API_KEY);
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: env.RESEND_FROM_ADDRESS,
         to: assertDefined(user.email),
         subject: "Your OTP for Helper",
         react: OtpEmail({ otp: data.properties.email_otp }),
       });
+      if (error) {
+        captureExceptionAndLog(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to send OTP: ${error.message}`,
+        });
+      }
       return { email: true };
     }
 

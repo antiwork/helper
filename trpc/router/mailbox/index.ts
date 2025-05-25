@@ -1,5 +1,5 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
@@ -25,6 +25,7 @@ export { mailboxProcedure };
 export const mailboxRouter = {
   list: protectedProcedure.query(async ({ ctx }) => {
     const allMailboxes = await db.query.mailboxes.findMany({
+      where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
       columns: {
         id: true,
         name: true,

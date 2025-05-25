@@ -37,7 +37,7 @@ export const mailboxes = pgTable(
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
     isWhitelabel: boolean().notNull().default(false),
-    onboardingMetadata: jsonb().$type<OnboardingMetadata>().default({
+    unused_onboardingMetadata: jsonb("onboarding_metadata").$type<OnboardingMetadata>().default({
       completed: false,
     }),
     autoCloseEnabled: boolean().notNull().default(false),

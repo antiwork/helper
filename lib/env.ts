@@ -24,6 +24,26 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
+    // Set these for both local development and when deploying
+    OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
+    GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
+    GOOGLE_CLIENT_SECRET: z.string().min(1),
+    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
+    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
+
+    // Set these before deploying
+    CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
+    ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
+      z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
+      "1234567890abcdef1234567890abcdef",
+    ),
+    WIDGET_JWT_SECRET: defaultUnlessDeployed(z.string().min(1), "example_jwt_secret"),
+
+    // Set these before or after deploying to receive one-time passwords by email
+    RESEND_API_KEY: z.string().min(1).optional(),
+    RESEND_FROM_ADDRESS: z.string().min(1).optional(),
+
+    // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
     POSTGRES_URL: defaultUnlessDeployed(z.string().url(), "postgresql://postgres:postgres@127.0.0.1:54322/postgres"),
     POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
@@ -37,36 +57,9 @@ export const env = createEnv({
       z.string().min(1),
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
     ),
-    SUPABASE_JWT_SECRET: defaultUnlessDeployed(
-      z.string().min(1),
-      "super-secret-jwt-token-with-at-least-32-characters-long",
-    ),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
-    CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
-    ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
-      z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
-      "1234567890abcdef1234567890abcdef",
-    ),
-    WIDGET_JWT_SECRET: defaultUnlessDeployed(z.string().min(1), "example_jwt_secret"),
-
-    // Required integrations
-    OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-    GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
-    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
-    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
-
-    RESEND_API_KEY: z.string().min(1).optional(),
-    RESEND_FROM_ADDRESS: z.string().email().optional(),
-
-    // For running database seeds
-    INITIAL_USER_EMAILS: z
-      .string()
-      .default("support@gumroad.com")
-      .transform((v) => v.split(",")),
-
-    // Optional integrations
+    // Other optional integrations
 
     // Slack OAuth client credentials from https://api.slack.com/apps
     SLACK_CLIENT_ID: z.string().min(1).optional(),
@@ -91,6 +84,12 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
     DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
+
+    // For running database seeds
+    INITIAL_USER_EMAILS: z
+      .string()
+      .default("support@gumroad.com")
+      .transform((v) => v.split(",")),
   },
 
   /**
@@ -109,11 +108,6 @@ export const env = createEnv({
       z.string().min(1),
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
     ),
-    // Comma-separated list of auth providers to show on the login page. Should match the auth options enabled in supabase/config.toml or on your cloud instance.
-    NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: z
-      .string()
-      .default("password")
-      .transform((str) => str.split(",")),
 
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
   },
@@ -127,7 +121,6 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS: process.env.NEXT_PUBLIC_SUPABASE_AUTH_OPTIONS,
   },
   skipValidation: process.env.npm_lifecycle_event === "lint" || process.env.NODE_ENV === "test",
 });

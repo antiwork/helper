@@ -125,7 +125,7 @@ export const parseMessagesWithMocks = (input: string) => {
     unused_escalationExpectedResolutionHours: null,
     autoCloseEnabled: false,
     autoCloseDaysOfInactivity: 14,
-    onboardingMetadata: {
+    unused_onboardingMetadata: {
       completed: true,
     },
     preferences: {
