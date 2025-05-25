@@ -58,7 +58,7 @@ export const env = createEnv({
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
 
     RESEND_API_KEY: z.string().min(1).optional(),
-    RESEND_FROM_EMAIL: z.string().email().optional(),
+    RESEND_FROM_ADDRESS: z.string().email().optional(),
 
     // For running database seeds
     INITIAL_USER_EMAILS: z

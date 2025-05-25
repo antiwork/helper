@@ -160,21 +160,21 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
-                {dashboardUrl && (
-                  <Alert variant="bright">
-                    You have not yet set up Resend for email sending. You can find the OTP code in the{" "}
-                    <a
-                      href={dashboardUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:no-underline"
-                    >
-                      Supabase dashboard
-                    </a>{" "}
-                    instead.
-                  </Alert>
-                )}
               </div>
+              {dashboardUrl && (
+                <Alert variant="bright">
+                  You have not yet set up Resend for email sending. You can find the OTP code in the{" "}
+                  <a
+                    href={dashboardUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:no-underline"
+                  >
+                    Supabase dashboard
+                  </a>{" "}
+                  instead.
+                </Alert>
+              )}
               {otpError && <p className="text-sm text-red-500 text-center">{otpError}</p>}
             </div>
           </motion.div>

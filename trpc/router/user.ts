@@ -6,7 +6,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { cacheFor } from "@/lib/cache";
-import { OtpEmail } from "@/lib/emails/otp";
+import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
 import { publicProcedure } from "../trpc";
@@ -34,10 +34,10 @@ export const userRouter = {
       });
     }
 
-    if (env.RESEND_API_KEY && env.RESEND_FROM_EMAIL) {
+    if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
       const resend = new Resend(env.RESEND_API_KEY);
       await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
+        from: env.RESEND_FROM_ADDRESS,
         to: assertDefined(user.email),
         subject: "Your OTP for Helper",
         react: await OtpEmail({ otp: data.properties.email_otp }),
@@ -47,15 +47,15 @@ export const userRouter = {
 
     await cacheFor<string>(`otp:${user.id}`).set(data.properties.email_otp.toString(), 60 * 5);
     let dashboardUrl: string | null = null;
-    const [_, projectId] = env.NEXT_PUBLIC_SUPABASE_URL?.match(/https:\/\/([a-zA-Z0-9_-]+)\.supabase\.co/) ?? [];
+    const [_, projectId] = /https:\/\/([a-zA-Z0-9_-]+)\.supabase\.co/.exec(env.NEXT_PUBLIC_SUPABASE_URL) ?? [];
     if (projectId) {
       const {
         rows: [cacheTable],
       } = await db.execute(sql`
         SELECT c.oid AS id
         FROM pg_class c
-        JOIN pg_namespace nc on nc.oid = c.relnamespace
-        WHERE c.relname = 'cache' and nc.nspname = 'public'
+        JOIN pg_namespace nc ON nc.oid = c.relnamespace
+        WHERE c.relname = 'cache' AND nc.nspname = 'public'
       `);
       dashboardUrl = `https://supabase.com/dashboard/project/${projectId}/editor/${cacheTable?.id}?filter=key:eq:otp:${user.id}`;
     }

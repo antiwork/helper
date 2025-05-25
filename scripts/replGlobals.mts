@@ -29,6 +29,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 const db = createDbClient(env.POSTGRES_URL_NON_POOLING, { max: 1 });
 
 Object.entries({
+  env,
   db,
   inngest,
   explainAnalyze,
