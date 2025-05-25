@@ -40,7 +40,7 @@ export default function PreviewModal({ file }: PreviewModalProps) {
         <LoadingSpinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
       ) : null}
       <div className="flex w-full items-center">
-        {mediaType == "pdf" && !error ? (
+        {mediaType == "pdf" && !error && file.presignedUrl ? (
           <object
             data={file.presignedUrl}
             type="application/pdf"
@@ -58,7 +58,7 @@ export default function PreviewModal({ file }: PreviewModalProps) {
           </object>
         ) : null}
 
-        {mediaType == "image" && !error ? (
+        {mediaType == "image" && !error && file.presignedUrl ? (
           <img
             className="max-h-[80vh] w-full rounded-b object-contain"
             src={file.presignedUrl}
@@ -71,7 +71,7 @@ export default function PreviewModal({ file }: PreviewModalProps) {
           />
         ) : null}
 
-        {mediaType == "video" && !error ? (
+        {mediaType == "video" && !error && file.presignedUrl ? (
           <video
             className="max-h-[80vh] w-full rounded-b"
             src={file.presignedUrl}
@@ -91,7 +91,7 @@ export default function PreviewModal({ file }: PreviewModalProps) {
             Media preview is not available for this file type.
             <br />
             Please{" "}
-            <a href={file.presignedUrl} download className="underline">
+            <a href={file.presignedUrl ?? undefined} download className="underline">
               download
             </a>{" "}
             the file to see it.
