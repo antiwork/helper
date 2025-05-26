@@ -11,13 +11,15 @@ export const membersRouter = {
     .input(
       z.object({
         userId: z.string(),
-        role: z.enum(["core", "nonCore", "afk"]),
+        displayName: z.string().optional(),
+        role: z.enum(["core", "nonCore", "afk"]).optional(),
         keywords: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
+          displayName: input.displayName,
           role: input.role,
           keywords: input.keywords,
         });

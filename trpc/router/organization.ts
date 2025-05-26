@@ -1,8 +1,7 @@
-import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
+import { type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { createInvitation } from "@/lib/data/user";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { addUser } from "@/lib/data/user";
 import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {
@@ -14,26 +13,14 @@ export const organizationRouter = {
       email: user.email,
     }));
   }),
-  inviteMember: protectedProcedure
+  addMember: protectedProcedure
     .input(
       z.object({
         email: z.string().email(),
+        displayName: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        await createInvitation(ctx.user.id, input.email);
-      } catch (error) {
-        captureExceptionAndLog(error, {
-          extra: {
-            email: input.email,
-            userId: ctx.user.id,
-          },
-        });
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to invite team member",
-        });
-      }
+      await addUser(ctx.user.id, input.email, input.displayName);
     }),
 } satisfies TRPCRouterRecord;

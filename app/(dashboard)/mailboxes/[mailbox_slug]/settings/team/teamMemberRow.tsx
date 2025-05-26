@@ -29,20 +29,19 @@ type TeamMemberRowProps = {
 };
 
 const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
-  // Local state for this row's keywords and role
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
+  const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
 
-  // Get the utility functions for cache management
   const utils = api.useUtils();
 
-  // Reset the input when the member data changes
   useEffect(() => {
     setKeywordsInput(member.keywords.join(", "));
     setRole(member.role);
     setLocalKeywords(member.keywords);
-  }, [member.keywords, member.role]);
+    setDisplayNameInput(member.displayName || "");
+  }, [member.keywords, member.role, member.displayName]);
 
   const { mutate: updateTeamMember } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
@@ -54,6 +53,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
                 ...m,
                 role: data.role,
                 keywords: data.keywords,
+                displayName: data.displayName,
               }
             : m,
         );
@@ -68,6 +68,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
 
       setKeywordsInput(member.keywords.join(", "));
       setRole(member.role);
+      setDisplayNameInput(member.displayName || "");
     },
   });
 
@@ -81,11 +82,17 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     });
   }, 800);
 
-  // Handle role changes
+  const debouncedUpdateDisplayName = useDebouncedCallback((newDisplayName: string) => {
+    updateTeamMember({
+      mailboxSlug,
+      userId: member.id,
+      displayName: newDisplayName,
+    });
+  }, 800);
+
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
 
-    // Clear keywords if not nonCore
     const newKeywords = newRole !== "nonCore" ? [] : localKeywords;
 
     if (newRole !== "nonCore") {
@@ -93,7 +100,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
       setLocalKeywords([]);
     }
 
-    // Update immediately for role changes (no debounce)
     updateTeamMember({
       mailboxSlug,
       userId: member.id,
@@ -102,7 +108,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     });
   };
 
-  // Handle keyword changes
   const handleKeywordsChange = (value: string) => {
     setKeywordsInput(value);
     const newKeywords = value
@@ -113,10 +118,22 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     debouncedUpdateKeywords(newKeywords);
   };
 
+  const handleDisplayNameChange = (value: string) => {
+    setDisplayNameInput(value);
+    debouncedUpdateDisplayName(value);
+  };
+
   return (
     <TableRow>
-      <TableCell>{member.displayName || ""}</TableCell>
       <TableCell>{member.email || ""}</TableCell>
+      <TableCell>
+        <Input
+          value={displayNameInput}
+          onChange={(e) => handleDisplayNameChange(e.target.value)}
+          placeholder="Enter display name"
+          className="w-full max-w-sm"
+        />
+      </TableCell>
       <TableCell>
         <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
           <SelectTrigger className="w-[180px]">
