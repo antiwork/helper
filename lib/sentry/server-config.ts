@@ -3,14 +3,13 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
-import { TRPCError } from "@trpc/server";
 import { commonConfig } from "./common-config";
 
 Sentry.init({
   ...commonConfig,
   beforeSend: (event) => {
     const exception = event.exception?.values?.[0];
-    if (exception instanceof TRPCError && exception.code === "NOT_FOUND") return null;
+    if (exception?.type === "TRPCError" && exception.value?.includes("NOT_FOUND")) return null;
     return event;
   },
 });
