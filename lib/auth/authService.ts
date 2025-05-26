@@ -12,15 +12,10 @@ const WIDGET_HMAC_SECRET_PREFIX = "hlpr_widget_";
 export const setupMailboxForNewUser = async (user: DbOrAuthUser) => {
   const mailbox = await db.transaction(async (tx) => {
     const mailbox = await createInitialMailbox(tx);
-    await updateUserMailboxData(
-      user.id,
-      mailbox.id,
-      {
-        role: "core",
-        keywords: [],
-      },
-      tx,
-    );
+    await updateUserMailboxData(user.id, mailbox.id, {
+      role: "core",
+      keywords: [],
+    });
     return mailbox;
   });
   return mailbox;
