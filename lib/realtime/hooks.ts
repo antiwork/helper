@@ -65,7 +65,7 @@ export const useRealtimePresence = (roomName: string) => {
               values[0] ? [{ id: values[0].id, name: values[0].name }] : [],
             ),
             "id",
-          ).filter(u => u.id !== user.id),
+          ).filter((u) => u.id !== user.id),
         );
       })
       .subscribe(async (status) => {
