@@ -194,8 +194,8 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
     },
   });
   const mailbox = gmailSupportEmail?.mailboxes[0];
-  if (!mailbox) {
-    return `Gmail support email record not found for ${data.emailAddress}`;
+  if (!mailbox || !gmailSupportEmail?.accessToken || !gmailSupportEmail.refreshToken) {
+    return `Valid gmail support email record not found for ${data.emailAddress}`;
   }
   Sentry.setContext("gmailSupportEmail info", {
     mailboxId: mailbox.id,

@@ -1,17 +1,18 @@
 import { and, eq } from "drizzle-orm";
 import { cache } from "react";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
-import { db, TransactionOrDb } from "@/db/client";
+import { db } from "@/db/client";
 import { authIdentities, authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
 
-export const createInvitation = async (inviterUserId: string, emailAddress: string) => {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.admin.inviteUserByEmail(emailAddress, {
-    data: {
+export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
+  const supabase = createAdminClient();
+  const { error } = await supabase.auth.admin.createUser({
+    email: emailAddress,
+    user_metadata: {
       inviter_user_id: inviterUserId,
+      display_name: displayName,
     },
   });
   if (error) throw error;
@@ -49,7 +50,7 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
 
     return {
       id: user.id,
-      displayName: user.user_metadata?.name ?? user.id,
+      displayName: user.user_metadata?.display_name ?? null,
       email: user.email ?? undefined,
       role: access?.role || "afk",
       keywords: access?.keywords || [],
@@ -61,12 +62,17 @@ export const updateUserMailboxData = async (
   userId: string,
   mailboxId: number,
   updates: {
+    displayName?: string;
     role?: UserRole;
     keywords?: MailboxAccess["keywords"];
   },
-  tx: TransactionOrDb = db,
 ): Promise<UserWithMailboxAccessData> => {
-  const user = await tx.query.authUsers.findFirst({ where: eq(authUsers.id, userId) });
+  const supabase = createAdminClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.admin.getUserById(userId);
+  if (error) throw error;
 
   const userMetadata = user?.user_metadata || {};
   const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
@@ -79,19 +85,21 @@ export const updateUserMailboxData = async (
     updatedAt: new Date().toISOString(),
   };
 
-  const updatedUser = await tx
-    .update(authUsers)
-    .set({
-      user_metadata: {
-        ...userMetadata,
-        mailboxAccess: {
-          ...mailboxAccess,
-          [mailboxId]: updatedMailboxData,
-        },
+  const {
+    data: { user: updatedUser },
+    error: updateError,
+  } = await supabase.auth.admin.updateUserById(userId, {
+    user_metadata: {
+      ...userMetadata,
+      ...(updates.displayName && { display_name: updates.displayName }),
+      mailboxAccess: {
+        ...mailboxAccess,
+        [mailboxId]: updatedMailboxData,
       },
-    })
-    .returning()
-    .then(takeUniqueOrThrow);
+    },
+  });
+  if (updateError) throw updateError;
+  if (!updatedUser) throw new Error("Failed to update user");
 
   return {
     id: updatedUser.id,
