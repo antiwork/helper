@@ -76,7 +76,6 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     widgetDisplayMode: mailbox.widgetDisplayMode,
     widgetDisplayMinValue: mailbox.widgetDisplayMinValue,
     widgetHost: mailbox.widgetHost,
-    autoRespondEmailToChat: mailbox.autoRespondEmailToChat,
     vipThreshold: mailbox.vipThreshold,
     vipChannelId: mailbox.vipChannelId,
     vipExpectedResponseHours: mailbox.vipExpectedResponseHours,

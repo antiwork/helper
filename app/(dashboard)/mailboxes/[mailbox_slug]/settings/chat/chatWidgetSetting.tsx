@@ -15,7 +15,7 @@ import { useOnChange } from "@/components/useOnChange";
 import { mailboxes } from "@/db/schema";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import SectionWrapper from "../sectionWrapper";
+import SectionWrapper, { SwitchSectionWrapper } from "../sectionWrapper";
 import CodeBlock from "./codeBlock";
 import WidgetHMACSecret from "./widgetHMACSecret";
 
@@ -36,7 +36,9 @@ const WIDGET_SAMPLE_CODE = `<script src="https://helper.ai/widget/sdk.js" {{DATA
 const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [mode, setMode] = useState<WidgetMode>(mailbox.widgetDisplayMode ?? "off");
   const [minValue, setMinValue] = useState(mailbox.widgetDisplayMinValue?.toString() ?? "100");
-  const [autoRespond, setAutoRespond] = useState(mailbox.autoRespondEmailToChat ?? false);
+  const [autoRespond, setAutoRespond] = useState<"off" | "draft" | "reply">(
+    mailbox.preferences?.autoRespondEmailToChat ?? "off",
+  );
   const [widgetHost, setWidgetHost] = useState(mailbox.widgetHost ?? "");
   const { showChatWidget, setShowChatWidget } = useShowChatWidget();
 
@@ -63,7 +65,9 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
       mailboxSlug: mailbox.slug,
       widgetDisplayMode: mode,
       widgetDisplayMinValue: mode === "revenue_based" && /^\d+$/.test(minValue) ? Number(minValue) : null,
-      autoRespondEmailToChat: autoRespond,
+      preferences: {
+        autoRespondEmailToChat: autoRespond === "off" ? null : autoRespond,
+      },
       widgetHost: widgetHost || null,
     });
   }, 2000);
@@ -382,7 +386,7 @@ export default async function RootLayout({
           </TabsContent>
         </Tabs>
       </SectionWrapper>
-      <SectionWrapper
+      <SwitchSectionWrapper
         title="Chat Icon Visibility"
         description="Choose when your customers can see the chat widget on your website or app"
         initialSwitchChecked={mode !== "off"}
@@ -418,16 +422,54 @@ export default async function RootLayout({
             )}
           </div>
         )}
-      </SectionWrapper>
+      </SwitchSectionWrapper>
 
       <SectionWrapper
         title="Email to Chat Auto-Response"
         description="Configure automatic email responses to redirect users to the chat widget"
-        initialSwitchChecked={autoRespond}
-        onSwitchChange={setAutoRespond}
+        action={
+          <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="off">Off</TabsTrigger>
+              <TabsTrigger value="draft">Draft</TabsTrigger>
+              <TabsTrigger value="reply">Reply</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        }
       >
-        {autoRespond && (
+        {autoRespond === "off" && (
+          <p className="text-sm text-muted-foreground">
+            No automatic responses will be sent to customers who email your support address.
+          </p>
+        )}
+
+        {autoRespond === "draft" && (
           <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              AI will generate draft responses that you can review and send manually.
+            </p>
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="widgetHost">Chat widget host URL</Label>
+              <Input
+                id="widgetHost"
+                type="url"
+                value={widgetHost}
+                onChange={(e) => setWidgetHost(e.target.value)}
+                placeholder="https://example.com"
+                className="max-w-[350px]"
+              />
+              <p className="text-sm text-muted-foreground">
+                The URL where your chat widget is installed. Users will be redirected here to continue the conversation.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {autoRespond === "reply" && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              AI will automatically send responses to customers and redirect them to your chat widget.
+            </p>
             <div className="flex flex-col space-y-2">
               <Label htmlFor="widgetHost">Chat widget host URL</Label>
               <Input

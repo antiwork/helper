@@ -3,7 +3,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { checkTokenCountAndSummarizeIfNeeded, respondWithAI } from "@/lib/ai/chat";
+import { checkTokenCountAndSummarizeIfNeeded, generateDraftResponse, respondWithAI } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
@@ -48,6 +48,11 @@ export const handleAutoResponse = async (messageId: number) => {
   }
 
   if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
+
+  if (message.conversation.mailbox.preferences?.autoRespondEmailToChat === "draft") {
+    await generateDraftResponse(message.conversation.id, message.conversation.mailbox);
+    return;
+  }
 
   const emailText = (await getTextWithConversationSubject(message.conversation, message)).trim();
   if (emailText.length === 0) return { message: "Skipped - email text is empty" };

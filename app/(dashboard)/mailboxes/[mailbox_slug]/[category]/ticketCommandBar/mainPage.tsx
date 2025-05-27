@@ -37,7 +37,7 @@ export const useMainPage = ({
   const utils = api.useUtils();
 
   const dismissToastRef = useRef<() => void>(() => {});
-  const { mutate: generateDraft } = api.mailbox.conversations.refreshDraft.useMutation({
+  const { mutate: generateDraft } = api.mailbox.conversations.generateDraft.useMutation({
     onMutate: () => {
       dismissToastRef.current = toast({
         title: "Generating draft...",

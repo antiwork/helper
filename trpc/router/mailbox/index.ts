@@ -79,7 +79,6 @@ export const mailboxRouter = {
         githubRepoName: z.string().optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
         widgetDisplayMinValue: z.number().nullable().optional(),
-        autoRespondEmailToChat: z.boolean().optional(),
         widgetHost: z.string().nullable().optional(),
         vipThreshold: z.number().nullable().optional(),
         vipChannelId: z.string().nullable().optional(),
@@ -100,6 +99,7 @@ export const mailboxRouter = {
               })
               .nullable()
               .optional(),
+            autoRespondEmailToChat: z.enum(["draft", "reply"]).nullable().optional(),
             disableTicketResponseTimeAlerts: z.boolean().optional(),
           })
           .optional(),
