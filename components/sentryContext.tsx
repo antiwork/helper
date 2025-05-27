@@ -1,13 +1,13 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import { useSession } from "@/components/useSession";
 
 export const SentryContext = () => {
-  const { user } = useUser();
+  const { user } = useSession() ?? {};
   useEffect(() => {
-    Sentry.setUser({ id: user?.id, email: user?.primaryEmailAddress?.emailAddress });
+    Sentry.setUser({ id: user?.id, email: user?.email });
   }, [user]);
 
   return null;

@@ -1,5 +1,4 @@
 import { env } from "@/lib/env";
-import { isS3Url } from "@/lib/s3/utils";
 
 export const proxyExternalContent = async (html: string | null) => {
   if (!html) return html;
@@ -59,9 +58,9 @@ const replaceAsync = async (
 
 const shouldProxyUrl = (url: string) =>
   url.startsWith("http") &&
-  !url.startsWith("https://proxy.helperai.com/") &&
+  !url.startsWith(`${env.PROXY_URL}/`) &&
   !url.startsWith(`${env.AUTH_URL}/`) &&
-  !isS3Url(url);
+  !url.startsWith(`${env.NEXT_PUBLIC_SUPABASE_URL}/`);
 
 const proxyUrl = async (url: string) => {
   if (!env.PROXY_SECRET_KEY || !env.PROXY_URL) return url;

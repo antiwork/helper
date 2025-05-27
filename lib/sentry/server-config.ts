@@ -5,4 +5,11 @@
 import * as Sentry from "@sentry/nextjs";
 import { commonConfig } from "./common-config";
 
-Sentry.init({ ...commonConfig });
+Sentry.init({
+  ...commonConfig,
+  beforeSend: (event) => {
+    const exception = event.exception?.values?.[0];
+    if (exception?.type === "TRPCError" && exception.value?.includes("NOT_FOUND")) return null;
+    return event;
+  },
+});

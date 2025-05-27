@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationMessages } from "./conversationMessages";
 import { conversations } from "./conversations";
@@ -20,15 +20,13 @@ export const messageNotifications = pgTable(
     sentAt: timestamp({ withTimezone: true }),
     readAt: timestamp({ withTimezone: true }),
   },
-  (table) => {
-    return {
-      messageIdIdx: index("message_notifications_message_id_idx").on(table.messageId),
-      conversationIdIdx: index("message_notifications_conversation_id_idx").on(table.conversationId),
-      platformCustomerIdIdx: index("message_notifications_platform_customer_id_idx").on(table.platformCustomerId),
-      statusIdx: index("message_notifications_status_idx").on(table.status),
-    };
-  },
-);
+  (table) => [
+    index("message_notifications_message_id_idx").on(table.messageId),
+    index("message_notifications_conversation_id_idx").on(table.conversationId),
+    index("message_notifications_platform_customer_id_idx").on(table.platformCustomerId),
+    index("message_notifications_status_idx").on(table.status),
+  ],
+).enableRLS();
 
 export const messageNotificationRelations = relations(messageNotifications, ({ one }) => ({
   message: one(conversationMessages, {

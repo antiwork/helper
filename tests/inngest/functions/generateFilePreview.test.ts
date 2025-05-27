@@ -4,18 +4,18 @@ import sharp from "sharp";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
-import { downloadFile, uploadFile } from "@/lib/s3/utils";
+import { downloadFile, uploadFile } from "@/lib/data/files";
 
 // Mock external dependencies
-vi.mock("@/lib/s3/utils");
+vi.mock("@/lib/data/files");
 vi.mock("sharp");
 vi.mock("fs/promises");
 
 describe("generateFilePreview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(downloadFile).mockResolvedValue(undefined);
-    vi.mocked(uploadFile).mockResolvedValue("https://example.com/preview.png");
+    vi.mocked(downloadFile).mockResolvedValue(new Uint8Array(0));
+    vi.mocked(uploadFile).mockResolvedValue("preview.png");
     vi.mocked(fs.mkdtemp).mockResolvedValue("/tmp/preview-123456");
     vi.mocked(fs.stat).mockResolvedValue({ isFile: () => true } as import("fs").Stats);
     vi.mocked(fs.rm).mockResolvedValue(undefined);
@@ -24,9 +24,9 @@ describe("generateFilePreview", () => {
   it("generates a preview for an image file", async () => {
     const { file } = await fileFactory.create(null, {
       name: "test.jpg",
-      url: "https://example.com/test.jpg",
+      key: "test.jpg",
       mimetype: "image/jpeg",
-      previewUrl: null,
+      previewKey: null,
     });
 
     vi.mocked(sharp).mockReturnValue({
@@ -41,18 +41,18 @@ describe("generateFilePreview", () => {
       where: (files, { eq }) => eq(files.id, file.id),
     });
 
-    expect(downloadFile).toHaveBeenCalledWith("https://example.com/test.jpg", expect.any(String));
+    expect(downloadFile).toHaveBeenCalledWith(file);
     expect(sharp).toHaveBeenCalled();
     expect(uploadFile).toHaveBeenCalled();
-    expect(updatedFile?.previewUrl).toBe("https://example.com/preview.png");
+    expect(updatedFile?.previewKey).toBe("preview.png");
   });
 
   it("does not generate a preview if the file already has a previewUrl", async () => {
     const { file } = await fileFactory.create(null, {
       name: "test.jpg",
-      url: "https://example.com/test.jpg",
+      key: "test.jpg",
       mimetype: "image/jpeg",
-      previewUrl: "https://example.com/existing-preview.png",
+      previewKey: "existing-preview.png",
     });
 
     await generateFilePreview(file.id);
@@ -65,9 +65,9 @@ describe("generateFilePreview", () => {
   it("does not update the database and cleans up temporary files on error", async () => {
     const { file } = await fileFactory.create(null, {
       name: "test.jpg",
-      url: "https://example.com/test.jpg",
+      key: "test.jpg",
       mimetype: "image/jpeg",
-      previewUrl: null,
+      previewKey: null,
     });
 
     vi.mocked(sharp).mockReturnValue({
@@ -84,6 +84,6 @@ describe("generateFilePreview", () => {
     const updatedFile = await db.query.files.findFirst({
       where: (files, { eq }) => eq(files.id, file.id),
     });
-    expect(updatedFile?.previewUrl).toBeNull();
+    expect(updatedFile?.previewKey).toBeNull();
   });
 });

@@ -4,12 +4,11 @@ import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 
 export const mailboxFactory = {
-  create: async (organizationId: string, overrides: Partial<typeof mailboxes.$inferInsert> = {}) => {
+  create: async (overrides: Partial<typeof mailboxes.$inferInsert> = {}) => {
     const mailboxName = `${faker.company.name()} Support`;
     const mailbox = await db
       .insert(mailboxes)
       .values({
-        clerkOrganizationId: organizationId,
         name: mailboxName,
         slug: faker.helpers.slugify(mailboxName.toLowerCase()),
         promptUpdatedAt: faker.date.recent(),

@@ -303,7 +303,7 @@ const MessageItem = ({
               {message.files.map((file, idx) => (
                 <a
                   key={idx}
-                  href={file.presignedUrl}
+                  href={file.presignedUrl ?? undefined}
                   title={file.name}
                   target="_blank"
                   rel="noopener noreferrer"

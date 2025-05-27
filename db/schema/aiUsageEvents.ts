@@ -30,19 +30,17 @@ export const aiUsageEvents = pgTable(
     cost: numeric({ precision: 12, scale: 7 }).notNull(),
     mailboxId: bigint({ mode: "number" }),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("mailboxes_aiusageevent_created_at_74823d57").on(table.createdAt.asc().nullsLast()),
-      mailboxIdIdx: index("mailboxes_aiusageevent_mailbox_id_a4908f79").on(table.mailboxId.asc().nullsLast()),
-      modelNameIdx: index("mailboxes_aiusageevent_model_name_84b8ca7a").on(table.modelName.asc().nullsLast()),
-      // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
-      modelNameLikeIdx: index("mailboxes_aiusageevent_model_name_84b8ca7a_like").on(table.modelName.asc().nullsLast()),
-      queryTypeIdx: index("mailboxes_aiusageevent_query_type_b4a486cb").on(table.queryType.asc().nullsLast()),
-      // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
-      queryTypeLikeIdx: index("mailboxes_aiusageevent_query_type_b4a486cb_like").on(table.queryType.asc().nullsLast()),
-    };
-  },
-);
+  (table) => [
+    index("mailboxes_aiusageevent_created_at_74823d57").on(table.createdAt.asc().nullsLast()),
+    index("mailboxes_aiusageevent_mailbox_id_a4908f79").on(table.mailboxId.asc().nullsLast()),
+    index("mailboxes_aiusageevent_model_name_84b8ca7a").on(table.modelName.asc().nullsLast()),
+    // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
+    index("mailboxes_aiusageevent_model_name_84b8ca7a_like").on(table.modelName.asc().nullsLast()),
+    index("mailboxes_aiusageevent_query_type_b4a486cb").on(table.queryType.asc().nullsLast()),
+    // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
+    index("mailboxes_aiusageevent_query_type_b4a486cb_like").on(table.queryType.asc().nullsLast()),
+  ],
+).enableRLS();
 
 export const aiUsageEventsRelations = relations(aiUsageEvents, ({ one }) => ({
   mailbox: one(mailboxes, {

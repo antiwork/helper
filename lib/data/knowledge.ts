@@ -1,11 +1,12 @@
-import { User } from "@clerk/nextjs/server";
 import { KnownBlock } from "@slack/web-api";
 import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { faqs, mailboxes } from "@/db/schema";
+import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
+import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { findUserViaSlack } from "@/lib/data/user";
 import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slack/client";
@@ -13,7 +14,7 @@ import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slac
 export const approveSuggestedEdit = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user: User | null,
+  user: DbOrAuthUser | null,
   content?: string,
 ) => {
   await db.transaction(async (tx) => {
@@ -34,7 +35,7 @@ export const approveSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user?.fullName ?? null);
+    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -48,7 +49,7 @@ export const approveSuggestedEdit = async (
 export const rejectSuggestedEdit = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user: User | null,
+  user: DbOrAuthUser | null,
 ) => {
   await db.transaction(async (tx) => {
     await tx.delete(faqs).where(eq(faqs.id, knowledge.id));
@@ -56,7 +57,7 @@ export const rejectSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user?.fullName ?? null);
+    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -81,7 +82,7 @@ export const handleKnowledgeBankSlackAction = async (
 
   if (payload.actions) {
     const action = payload.actions[0].action_id;
-    const user = await findUserViaSlack(mailbox.clerkOrganizationId, mailbox.slackBotToken, payload.user.id);
+    const user = await findUserViaSlack(mailbox.slackBotToken, payload.user.id);
 
     if (!user) {
       await postSlackMessage(mailbox.slackBotToken, {
@@ -100,7 +101,7 @@ export const handleKnowledgeBankSlackAction = async (
       await openTweakSuggestedEditModal(knowledge, mailbox, payload.trigger_id);
     }
   } else if (payload.type === "view_submission") {
-    const user = await findUserViaSlack(mailbox.clerkOrganizationId, mailbox.slackBotToken, payload.user.id);
+    const user = await findUserViaSlack(mailbox.slackBotToken, payload.user.id);
     if (payload.view.callback_id === "tweak_suggested_edit") {
       const content = payload.view.state.values.content.content.value;
       await approveSuggestedEdit(knowledge, mailbox, user, content);

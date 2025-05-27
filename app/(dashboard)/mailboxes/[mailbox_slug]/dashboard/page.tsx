@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { withMailboxAuth } from "@/components/withMailboxAuth";
 import { api } from "@/trpc/server";
 import { DashboardContent } from "./dashboardContent";
 
@@ -19,4 +18,4 @@ const DashboardPage = async (props: { params: Promise<PageProps> }) => {
   return <DashboardContent mailboxSlug={params.mailbox_slug} currentMailbox={currentMailbox} />;
 };
 
-export default withMailboxAuth(DashboardPage);
+export default DashboardPage;

@@ -4,7 +4,7 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
-import { TeamInvite } from "./teamInvite";
+import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 
 type TeamSettingProps = {
@@ -21,13 +21,13 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       fullWidth
     >
       <div className="w-full space-y-6">
-        <TeamInvite mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
+        <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
               </TableRow>

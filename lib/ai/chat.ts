@@ -26,15 +26,13 @@ import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit
 import openai from "@/lib/ai/openai";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
+import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
-import { createAndUploadFile } from "@/lib/data/files";
+import { createAndUploadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
-import { getCachedSubscriptionStatus } from "@/lib/data/organization";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { redis } from "@/lib/redis/client";
-import { createPresignedDownloadUrl } from "@/lib/s3/utils";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -79,11 +77,14 @@ export const loadScreenshotAttachments = async (messages: (typeof conversationMe
       messages.filter((m) => (m.metadata as MessageMetadata)?.includesScreenshot).map((m) => m.id),
     ),
   });
-  return await Promise.all(
+  const attachmentsWithUrls = await Promise.all(
     attachments.map(async (a) => {
-      const url = await createPresignedDownloadUrl(a.url);
+      const url = await getFileUrl(a);
       return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
     }),
+  );
+  return attachmentsWithUrls.filter((a): a is { messageId: number; name: string; contentType: string; url: string } =>
+    Boolean(a.url),
   );
 };
 
@@ -591,15 +592,11 @@ export const respondWithAI = async ({
 
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
   if (isFirstMessage && isPromptConversation) {
-    const cached: string | null = await redis.get(cacheKey);
+    const cached: string | null = await cacheFor<string>(cacheKey).get();
     if (cached != null) {
       const assistantMessage = await handleAssistantMessage(cached, false);
       return createTextResponse(cached, assistantMessage.id.toString());
     }
-  }
-
-  if ((await getCachedSubscriptionStatus(mailbox.clerkOrganizationId)) === "free_trial_expired") {
-    return createTextResponse("Free trial expired. Please upgrade to continue using Helper.", Date.now().toString());
   }
 
   return createDataStreamResponse({
@@ -677,7 +674,7 @@ export const respondWithAI = async ({
           });
 
           if (finishReason === "stop" && isFirstMessage && !hasSensitiveToolCall && !hasRequestHumanSupportCall) {
-            await redis.set(cacheKey, responseText, { ex: 60 * 60 * 24 });
+            await cacheFor<string>(cacheKey).set(responseText, 60 * 60 * 24);
           }
         },
       });

@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { Bot, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
@@ -9,15 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useSession } from "@/components/useSession";
+import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useAssignTicket } from "./useAssignTicket";
 
 export const AssignPopoverButton = ({
-  initialAssignedToClerkId,
+  initialAssignedToId,
   assignedToAI = false,
 }: {
-  initialAssignedToClerkId: string | null;
+  initialAssignedToId: string | null;
   assignedToAI?: boolean;
 }) => {
   const { assignTicket } = useAssignTicket();
@@ -27,13 +28,13 @@ export const AssignPopoverButton = ({
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
-  const { user: currentUser } = useUser();
+  const { user: currentUser } = useSession() ?? {};
 
-  const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null;
+  const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToId) ?? null;
 
   useEffect(() => {
-    setAssignedTo(assignedToAI ? { ai: true } : (orgMembers.find((m) => m.id === initialAssignedToClerkId) ?? null));
-  }, [initialAssignedToClerkId, orgMembers, assignedToAI]);
+    setAssignedTo(assignedToAI ? { ai: true } : (orgMembers.find((m) => m.id === initialAssignedToId) ?? null));
+  }, [initialAssignedToId, orgMembers, assignedToAI]);
 
   const toggleAssignModal = (open: boolean) => {
     setShowAssignModal(open);
@@ -49,7 +50,7 @@ export const AssignPopoverButton = ({
 
     const selfAssignee = {
       id: currentUser.id,
-      displayName: currentUser.fullName || currentUser.username || currentUser.id,
+      displayName: getFullName(currentUser),
     };
     assignTicket(selfAssignee, null);
   });

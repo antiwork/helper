@@ -2,12 +2,12 @@ import { eq } from "drizzle-orm";
 import { NonRetriableError } from "inngest";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
-import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/ably/channels";
-import { publishToAbly } from "@/lib/ably/client";
 import { serializeMessage } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
-import { getClerkUser } from "@/lib/data/user";
+import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 export default inngest.createFunction(
@@ -55,14 +55,14 @@ const publish = async (messageId: number) => {
   });
   const published = [];
   if (message && message?.role !== "ai_assistant") {
-    await publishToAbly({
+    await publishToRealtime({
       channel: conversationChannelId(message.conversation.mailbox.slug, message.conversation.slug),
       event: "conversation.message",
       data: await serializeMessage(
         message,
         message.conversation.id,
         message.conversation.mailbox,
-        await getClerkUser(message.clerkUserId),
+        message.userId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.userId) }) : null,
       ),
       trim: (data, amount) => ({
         ...data,
@@ -72,7 +72,7 @@ const publish = async (messageId: number) => {
     published.push("conversation.message");
   }
   if (message?.role === "user" && message.conversation.status === "open") {
-    await publishToAbly({
+    await publishToRealtime({
       channel: conversationsListChannelId(message.conversation.mailbox.slug),
       event: "conversation.new",
       data: message.conversation,
@@ -80,12 +80,12 @@ const publish = async (messageId: number) => {
     published.push("conversation.new");
   }
   if (message) {
-    await publishToAbly({
+    await publishToRealtime({
       channel: dashboardChannelId(message.conversation.mailbox.slug),
       event: "event",
       data: createMessageEventPayload(message, message.conversation.mailbox),
     });
     published.push("realtime.event");
   }
-  return `Message ${message?.id} published to Ably: ${published.join(", ") || "none"}`;
+  return `Events for message ${message?.id} published: ${published.join(", ") || "none"}`;
 };
