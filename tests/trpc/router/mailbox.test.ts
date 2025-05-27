@@ -3,12 +3,22 @@ import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { UserRoles } from "@/lib/data/user";
 import { createCaller } from "@/trpc";
+
+vi.mock("@/lib/data/user", () => ({
+  UserRoles: {
+    CORE: "core",
+    NON_CORE: "nonCore",
+    AFK: "afk",
+  },
+  updateUserMailboxData: vi.fn(),
+  getUsersWithMailboxAccess: vi.fn(),
+}));
 
 describe("mailboxRouter", () => {
   describe("list", () => {
