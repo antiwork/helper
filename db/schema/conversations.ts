@@ -69,6 +69,7 @@ export const conversations = pgTable(
       table.unused_assignedToId,
     ),
     index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
+    index("conversations_merged_into_id_idx").on(table.mergedIntoId),
   ],
 ).enableRLS();
 

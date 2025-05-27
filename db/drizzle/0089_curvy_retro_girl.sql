@@ -1,0 +1,1 @@
+CREATE INDEX "conversations_merged_into_id_idx" ON "conversations_conversation" USING btree ("merged_into_id");
