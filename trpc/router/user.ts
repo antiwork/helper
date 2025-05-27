@@ -18,14 +18,9 @@ export const userRouter = {
       where: eq(authUsers.email, input.email),
     });
     if (!user) {
-      const emailParts = input.email.split("@");
-      if (emailParts.length === 2) {
-        const emailDomain = emailParts[1];
-        const isSignupAllowed = env.EMAIL_DOMAINS.some((domain) => domain === emailDomain);
-
-        if (isSignupAllowed) {
-          return { signupPossible: true };
-        }
+      const [_, emailDomain] = input.email.split("@");
+      if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+        return { signupPossible: true };
       }
 
       throw new TRPCError({

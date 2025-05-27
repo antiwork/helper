@@ -83,6 +83,12 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY: z.string().min(1).optional(),
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
+    // Optionally allow automatic signups from specific domains (e.g. your company's email domain)
+    EMAIL_SIGNUP_DOMAINS: z
+      .string()
+      .default("")
+      .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
+
     DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
 
     // For running database seeds
@@ -90,11 +96,6 @@ export const env = createEnv({
       .string()
       .default("support@gumroad.com")
       .transform((v) => v.split(",")),
-
-    EMAIL_DOMAINS: z
-      .string()
-      .default("")
-      .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
   },
 
   /**
