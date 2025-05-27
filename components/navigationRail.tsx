@@ -1,9 +1,8 @@
 "use client";
 
-import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Search, Settings } from "lucide-react";
+import { BarChart, CheckCircle, Inbox, Search, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -17,24 +16,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
-export function NavigationRail() {
+export function NavigationRail({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mailboxSlug, setMailboxSlug] = useState<string | null>(null);
   const { data: mailboxes } = api.mailbox.list.useQuery();
-  const currentMailbox = mailboxSlug ? mailboxes?.find((m) => m.slug === mailboxSlug) : mailboxes?.[0];
-
-  useEffect(() => {
-    if (!mailboxSlug && mailboxes && mailboxes.length > 0) {
-      setMailboxSlug(mailboxes[0]?.slug || "");
-    }
-  }, [mailboxes, mailboxSlug]);
-
-  useEffect(() => {
-    // Try to extract mailbox slug from the path
-    const match = /\/mailboxes\/([^/]+)/.exec(pathname);
-    if (match?.[1]) setMailboxSlug(match[1]);
-  }, [pathname]);
+  const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
 
   const navItems = [
     {
@@ -70,37 +56,44 @@ export function NavigationRail() {
         style={{ minWidth: 56 }}
       >
         <div className="flex flex-col gap-2 flex-1 items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="sidebar"
-                size="sm"
-                className="flex flex-col items-center w-10 h-10 p-0 rounded-full transition-colors hover:bg-sidebar-accent/80"
-                iconOnly
-                aria-label="Switch mailbox"
-              >
-                <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
-              {mailboxes?.map((mailbox) => (
-                <DropdownMenuItem
-                  key={mailbox.slug}
-                  onClick={() => {
-                    setMailboxSlug(mailbox.slug || "");
-                    router.push(`/mailboxes/${mailbox.slug}/conversations`);
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Avatar src={undefined} fallback={mailbox.name} size="sm" />
-                  <span className="truncate text-base">{mailbox.name}</span>
-                  <span className="ml-auto">
-                    {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Tooltip delayDuration={0}>
+            <DropdownMenu>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="sidebar"
+                    size="sm"
+                    className="flex flex-col items-center w-10 h-10 p-0 rounded-full transition-colors hover:bg-sidebar-accent/80"
+                    iconOnly
+                    aria-label="Switch mailbox"
+                  >
+                    <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
+                {mailboxes?.map((mailbox) => (
+                  <DropdownMenuItem
+                    key={mailbox.slug}
+                    onClick={() => {
+                      const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
+                      router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Avatar src={undefined} fallback={mailbox.name} size="sm" />
+                    <span className="truncate text-base">{mailbox.name}</span>
+                    <span className="ml-auto">
+                      {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <TooltipContent side="right" align="center">
+              {currentMailbox?.name}
+            </TooltipContent>
+          </Tooltip>
           {navItems.map((item) => (
             <Tooltip key={item.label}>
               <TooltipTrigger asChild>
@@ -129,19 +122,7 @@ export function NavigationRail() {
           ))}
         </div>
         <div className="mt-auto mb-2">
-          <AccountDropdown
-            trigger={(children) => (
-              <Button
-                variant="sidebar"
-                size="sm"
-                iconOnly
-                className="w-10 h-10 flex items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent/80"
-                aria-label="Account menu"
-              >
-                {children}
-              </Button>
-            )}
-          />
+          <AccountDropdown />
         </div>
       </nav>
     </TooltipProvider>

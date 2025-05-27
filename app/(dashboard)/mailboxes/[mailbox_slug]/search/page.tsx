@@ -171,21 +171,7 @@ export default function SearchPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      <div className="flex  justify-between border-b border-border px-2 py-4">
-        <Button
-          variant="ghost"
-          iconOnly
-          className="mt-1 hidden md:flex"
-          onClick={() => {
-            if (window.history.length > 1) {
-              router.back();
-            } else {
-              router.push(`/mailboxes/${params.mailbox_slug}/conversations`);
-            }
-          }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+      <div className="flex justify-between border-b border-border px-2 py-4">
         <div className="flex-1 max-w-5xl mx-auto flex flex-col gap-3 md:px-0">
           <div className="flex items-center gap-2 px-2 md:px-0">
             <Button
@@ -299,7 +285,6 @@ export default function SearchPage() {
             />
           </div>
         </div>
-        <div className="w-1 lg:w-10" />
       </div>
 
       <div className="flex-1 overflow-y-auto md:p-4" ref={resultsContainerRef}>

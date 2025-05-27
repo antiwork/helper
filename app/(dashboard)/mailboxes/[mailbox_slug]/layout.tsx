@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { redirect } from "next/navigation";
 import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
+import { NavigationRail } from "@/components/navigationRail";
 import { env } from "@/lib/env";
 import { HelperProvider } from "@/packages/react/dist/cjs";
 import { api } from "@/trpc/server";
@@ -19,7 +20,14 @@ export default async function InboxLayout({
     return (
       // @ts-expect-error - need to update the React type definitions
       <HelperProvider host={env.AUTH_URL} mailbox_slug={mailboxSlug} show_toggle_button>
-        <InboxClientLayout theme={preferences?.theme}>{children}</InboxClientLayout>
+        <div className="flex flex-row min-h-svh w-full">
+          <div className="hidden md:block text-sidebar-foreground">
+            <NavigationRail mailboxSlug={mailboxSlug} />
+          </div>
+          <main className="flex-1 text-foreground bg-background w-full min-w-0">
+            <InboxClientLayout theme={preferences?.theme}>{children}</InboxClientLayout>
+          </main>
+        </div>
       </HelperProvider>
     );
   } catch (e) {
