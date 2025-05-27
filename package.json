@@ -32,8 +32,8 @@
     "test:unit": "pnpm run with-dev-env vitest",
     "test:watch": "pnpm test:unit --watch",
     "typecheck": "pnpm run-on-packages typecheck && pnpm run with-dev-env pnpm run build; BUILD_EXIT=$?; tsc --noEmit && ([ $BUILD_EXIT -eq 0 ] && npm run db:check || exit $BUILD_EXIT)",
-    "services:start": "pnpm with-dev-env pnpm supabase start && (docker ps --filter 'name=helperai' --filter 'status=running' | grep -q helperai) || COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml up -d",
-    "services:stop": "pnpm supabase stop && COMPOSE_PROJECT_NAME=helperai docker compose -f scripts/docker/docker-compose-local.yml down",
+    "services:start": "pnpm with-dev-env pnpm supabase start",
+    "services:stop": "pnpm supabase stop && docker stop helperai-nginx || true",
     "generate-ssl-certificates": "bash scripts/generate-ssl-certificates.sh",
     "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1",
     "with-dev-env": "dotenv -e ./.env.development.local -e ./.env.local --"
