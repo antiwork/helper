@@ -85,20 +85,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings" />
       <FileUploadProvider mailboxSlug={mailbox.slug}>
         <div className="grow overflow-y-auto">
-          <SubNavigation
-            items={items}
-            footer={
-              <div className="border-t border-border">
-                <AccountDropdown
-                  trigger={(children) => (
-                    <button className="flex h-12 w-full items-center gap-2 px-4 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                      {children}
-                    </button>
-                  )}
-                />
-              </div>
-            }
-          />
+          <SubNavigation items={items} />
         </div>
       </FileUploadProvider>
     </div>

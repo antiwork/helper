@@ -8,7 +8,6 @@ import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
-import { ViewSwitcher } from "./viewSwitcher";
 
 export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
 
@@ -25,16 +24,6 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-sidebar text-white px-4 flex items-center border-b border-white/20">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center">
-            <div className="py-1">
-              <ViewSwitcher mailboxSlug={mailboxSlug} />
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="flex-1 overflow-y-auto min-h-0">
         <DashboardAlerts mailboxSlug={mailboxSlug} />
 

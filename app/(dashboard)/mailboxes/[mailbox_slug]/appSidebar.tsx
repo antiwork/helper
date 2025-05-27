@@ -1,32 +1,14 @@
 "use client";
 
-import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Settings } from "lucide-react";
+import { Inbox, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { InboxProvider } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/inbox";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
-import { NavigationButtons } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/navigationButtons";
-import { Avatar } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import { AccountDropdown } from "./accountDropdown";
 import { CategoryNav } from "./categoryNav";
 
 declare global {
@@ -42,43 +24,12 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
 
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug });
 
-  const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
   const isSettings = pathname.endsWith("/settings");
   const isInbox = pathname.includes("/conversations");
 
   return (
     <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center justify-between">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="only:flex-1 w-auto min-w-0 data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5! h-10">
-                  <div className="flex items-center justify-center">
-                    <Avatar src={undefined} fallback={currentMailbox?.name ?? "(no name)"} size="sm" />
-                  </div>
-                  <span className="text-lg text-sidebar-foreground truncate">{currentMailbox?.name}</span>
-                  <ChevronsUpDown className="ml-auto text-sidebar-foreground" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
-                {mailboxes?.map((mailbox) => (
-                  <DropdownMenuItem key={mailbox.slug} asChild>
-                    <Link href={`/mailboxes/${mailbox.slug}/conversations`} prefetch={false}>
-                      <Avatar src={undefined} fallback={mailbox.name} size="sm" />
-                      <span className="truncate text-base">{mailbox.name}</span>
-                      <span className="ml-auto">
-                        {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground" />}
-                      </span>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <NavigationButtons />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      <SidebarHeader />
       <SidebarContent className="flex flex-col flex-1 overflow-hidden">
         {isMobile ? (
           <div className="flex flex-col gap-2 p-2">
@@ -112,44 +63,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           </>
         )}
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          {!isMobile && (
-            <>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
-                    <BarChart className="stroke-px text-sidebar-foreground" />
-                    <span className="text-base text-sidebar-foreground">Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isSettings}>
-                  <Link href={`/mailboxes/${mailboxSlug}/settings`}>
-                    <Settings className="stroke-px text-sidebar-foreground" />
-                    <span className="text-base text-sidebar-foreground">Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </>
-          )}
-          <SidebarMenuItem>
-            <AccountDropdown
-              trigger={(children) => (
-                <SidebarMenuButton
-                  className={cn(
-                    "data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:p-1.5! text-sidebar-foreground",
-                    "h-10 px-2 mb-2 md:h-8 md:mb-0",
-                  )}
-                >
-                  {children}
-                </SidebarMenuButton>
-              )}
-            />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
