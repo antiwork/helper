@@ -24,7 +24,7 @@ describe("toolsRouter", () => {
 
   describe("list", () => {
     it("returns available tools for a conversation", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id, {
         suggestedActions: [
           {
@@ -44,7 +44,7 @@ describe("toolsRouter", () => {
         authenticationToken: "test-token",
       });
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
       const result = await caller.mailbox.conversations.tools.list({
         mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
@@ -68,14 +68,14 @@ describe("toolsRouter", () => {
 
   describe("run", () => {
     it("executes a tool, stores the result, and triggers draft refresh", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       await toolsFactory.create({
         mailboxId: mailbox.id,
         slug: "test-tool",
       });
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
       const params = { test: "params" };
 
       const result = await caller.mailbox.conversations.tools.run({
@@ -97,10 +97,10 @@ describe("toolsRouter", () => {
     });
 
     it("throws NOT_FOUND when tool does not exist", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
       await expect(
         caller.mailbox.conversations.tools.run({
           mailboxSlug: mailbox.slug,
@@ -112,7 +112,7 @@ describe("toolsRouter", () => {
     });
 
     it("throws BAD_REQUEST when tool execution fails", async () => {
-      const { user, mailbox, organization } = await userFactory.createRootUser();
+      const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       await toolsFactory.create({
         mailboxId: mailbox.id,
@@ -121,7 +121,7 @@ describe("toolsRouter", () => {
 
       vi.mocked(callToolApi).mockRejectedValueOnce(new ToolApiError("Tool execution failed", ""));
 
-      const caller = createCaller(createTestTRPCContext(user, organization));
+      const caller = createCaller(createTestTRPCContext(user));
       await expect(
         caller.mailbox.conversations.tools.run({
           mailboxSlug: mailbox.slug,

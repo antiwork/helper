@@ -4,14 +4,13 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
 import { inngest } from "@/inngest/client";
 import { runAIObjectQuery } from "@/lib/ai";
+import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
 import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
-import { redis } from "@/lib/redis/client";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
-const REDIS_ROUND_ROBIN_KEY_PREFIX = "auto-assign-message-queue";
+const CACHE_ROUND_ROBIN_KEY_PREFIX = "auto-assign-message-queue";
 
 const getCoreTeamMembers = (teamMembers: UserWithMailboxAccessData[]): UserWithMailboxAccessData[] => {
   return teamMembers.filter((member) => member.role === UserRoles.CORE);
@@ -98,34 +97,14 @@ const getNextCoreTeamMemberInRotation = async (
 ): Promise<UserWithMailboxAccessData | null> => {
   if (coreTeamMembers.length === 0) return null;
 
-  const redisKey = `${REDIS_ROUND_ROBIN_KEY_PREFIX}:${mailboxId}`;
+  const cache = cacheFor<number>(`${CACHE_ROUND_ROBIN_KEY_PREFIX}:${mailboxId}`);
 
-  let lastAssignedIndex = 0;
-  try {
-    const lastAssignedIndexStr = await redis.get(redisKey);
-
-    if (lastAssignedIndexStr !== null) {
-      const parsedIndex = parseInt(lastAssignedIndexStr as string, 10);
-
-      if (!isNaN(parsedIndex) && parsedIndex >= 0) {
-        lastAssignedIndex = parsedIndex;
-      }
-    }
-  } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
-  }
-
+  const lastAssignedIndex = (await cache.get()) ?? 0;
   const nextIndex = (lastAssignedIndex + 1) % coreTeamMembers.length;
 
-  try {
-    await redis.set(redisKey, nextIndex.toString());
-  } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
-  }
+  await cache.set(nextIndex);
 
-  const nextMember = coreTeamMembers[nextIndex] || null;
-
-  return nextMember;
+  return coreTeamMembers[nextIndex] ?? null;
 };
 
 const getConversationContent = (conversationData: {
@@ -198,13 +177,11 @@ export default inngest.createFunction(
       }),
     );
 
-    if (conversation.assignedToClerkId) return { message: "Skipped: already assigned" };
+    if (conversation.assignedToId) return { message: "Skipped: already assigned" };
     if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
 
     const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
-    const teamMembers = assertDefinedOrRaiseNonRetriableError(
-      await getUsersWithMailboxAccess(mailbox.clerkOrganizationId, mailbox.id),
-    );
+    const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
 
     const activeTeamMembers = teamMembers.filter(
       (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,
@@ -224,7 +201,7 @@ export default inngest.createFunction(
     }
 
     await updateConversation(conversation.id, {
-      set: { assignedToClerkId: nextTeamMember.id },
+      set: { assignedToId: nextTeamMember.id },
       message: aiResult ? aiResult.reasoning : "Core member assigned by round robin",
     });
 

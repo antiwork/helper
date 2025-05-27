@@ -1,6 +1,5 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/peopleTable";
@@ -9,7 +8,6 @@ import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
-import { ViewSwitcher } from "./viewSwitcher";
 
 export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
 

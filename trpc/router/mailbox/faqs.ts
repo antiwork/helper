@@ -1,4 +1,3 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -119,7 +118,7 @@ export const faqsRouter = {
         throw new TRPCError({ code: "NOT_FOUND", message: "Knowledge entry not found" });
       }
 
-      await approveSuggestedEdit(knowledge, ctx.mailbox, await currentUser(), input.content);
+      await approveSuggestedEdit(knowledge, ctx.mailbox, ctx.user, input.content);
     }),
   reject: mailboxProcedure
     .input(
@@ -140,6 +139,6 @@ export const faqsRouter = {
         throw new TRPCError({ code: "NOT_FOUND", message: "Knowledge entry not found" });
       }
 
-      await rejectSuggestedEdit(knowledge, ctx.mailbox, await currentUser());
+      await rejectSuggestedEdit(knowledge, ctx.mailbox, ctx.user);
     }),
 } satisfies TRPCRouterRecord;

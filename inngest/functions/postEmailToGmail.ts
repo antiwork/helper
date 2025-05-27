@@ -34,7 +34,6 @@ export const postEmailToGmail = async (emailId: number) => {
             columns: {
               id: true,
               slug: true,
-              clerkOrganizationId: true,
               name: true,
               widgetHost: true,
             },
@@ -69,7 +68,7 @@ export const postEmailToGmail = async (emailId: number) => {
       orderBy: desc(conversationMessages.createdAt),
     });
 
-    const gmailService = await getGmailService(email.conversation.mailbox.gmailSupportEmail);
+    const gmailService = getGmailService(email.conversation.mailbox.gmailSupportEmail);
     const gmailSupportEmailAddress = email.conversation.mailbox.gmailSupportEmail.email;
 
     const rawEmail = await convertConversationMessageToRaw(

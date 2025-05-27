@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
-import { getClerkUser } from "@/lib/data/user";
 import { postVipMessageToSlack, updateVipMessageInSlack } from "@/lib/slack/vipNotifications";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
@@ -78,7 +78,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
         slackBotToken: mailbox.slackBotToken,
         slackChannel: mailbox.vipChannelId,
         slackMessageTs: originalMessage.slackMessageTs,
-        user: message.clerkUserId ? await getClerkUser(message.clerkUserId) : null,
+        user: message.userId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.userId) }) : null,
         email: true,
         closed: conversation.status === "closed",
       });

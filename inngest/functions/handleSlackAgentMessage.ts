@@ -6,24 +6,25 @@ import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
 import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
-import { getMailboxById } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";
 
 export const handleSlackAgentMessage = async (
   slackUserId: string | null,
-  currentMailboxId: number,
   statusMessageTs: string,
   agentThreadId: number,
   confirmedReplyText: string | null,
 ) => {
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(currentMailboxId));
   const agentThread = assertDefinedOrRaiseNonRetriableError(
     await db.query.agentThreads.findFirst({
       where: eq(agentThreads.id, agentThreadId),
+      with: {
+        mailbox: true,
+      },
     }),
   );
+  const mailbox = assertDefined(agentThread.mailbox);
 
   const messages = await getThreadMessages(
     assertDefined(mailbox.slackBotToken),
@@ -183,16 +184,10 @@ export default inngest.createFunction(
   { id: "slack-agent-message-handler" },
   { event: "slack/agent.message" },
   async ({ event, step }) => {
-    const { slackUserId, currentMailboxId, statusMessageTs, agentThreadId, confirmedReplyText } = event.data;
+    const { slackUserId, statusMessageTs, agentThreadId, confirmedReplyText } = event.data;
 
     const result = await step.run("process-agent-message", async () => {
-      return await handleSlackAgentMessage(
-        slackUserId,
-        currentMailboxId,
-        statusMessageTs,
-        agentThreadId,
-        confirmedReplyText ?? null,
-      );
+      return await handleSlackAgentMessage(slackUserId, statusMessageTs, agentThreadId, confirmedReplyText ?? null);
     });
 
     return { result };

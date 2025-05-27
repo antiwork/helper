@@ -1,25 +1,24 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextResponse, type NextRequest } from "next/server";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { getMailboxBySlug } from "@/lib/data/mailbox";
 import { listRepositories } from "@/lib/github/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { getAuthorizedMailbox } from "@/trpc";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const installationId = request.nextUrl.searchParams.get("installation_id");
 
-  const user = await currentUser();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(`${getBaseUrl()}/login`);
-  if (typeof user.unsafeMetadata.lastMailboxSlug !== "string")
-    return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
+  if (typeof user.user_metadata.lastMailboxSlug !== "string") return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
 
-  const session = await auth();
-  if (!session.orgId) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
-
-  const mailbox = await getAuthorizedMailbox(session.orgId, user.unsafeMetadata.lastMailboxSlug);
+  const mailbox = await getMailboxBySlug(user.user_metadata.lastMailboxSlug);
   if (!mailbox) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
 
   const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);

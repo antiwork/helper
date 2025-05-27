@@ -5,7 +5,6 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { getClerkUserList } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 export function formatDuration(start: Date): string {
@@ -42,6 +41,8 @@ export default inngest.createFunction(
 
     const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
+    const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
+
     for (const mailbox of mailboxesList) {
       if (mailbox.preferences?.disableTicketResponseTimeAlerts) continue;
       try {
@@ -49,18 +50,18 @@ export default inngest.createFunction(
           .select({
             subject: conversations.subject,
             slug: conversations.slug,
-            assignedToClerkId: conversations.assignedToClerkId,
+            assignedToId: conversations.assignedToId,
             lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
           })
           .from(conversations)
           .where(
             and(
               eq(conversations.mailboxId, mailbox.id),
-              isNotNull(conversations.assignedToClerkId),
+              isNotNull(conversations.assignedToId),
               isNull(conversations.mergedIntoId),
               eq(conversations.status, "open"),
               gt(
-                sql`EXTRACT(EPOCH FROM (NOW() - ${conversations.lastUserEmailCreatedAt})) / 3600`,
+                sql`EXTRACT(EPOCH FROM (${new Date()} - ${conversations.lastUserEmailCreatedAt})) / 3600`,
                 24, // 24 hours threshold
               ),
             ),
@@ -70,8 +71,6 @@ export default inngest.createFunction(
         if (!overdueAssignedConversations.length) continue;
 
         const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
-        const clerkUsers = await getClerkUserList(mailbox.clerkOrganizationId);
-        const clerkUsersById = new Map(clerkUsers.data.map((user) => [user.id, user]));
 
         const blocks: KnownBlock[] = [
           {
@@ -82,10 +81,12 @@ export default inngest.createFunction(
                 `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
                 ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
                   const subject = conversation.subject;
-                  const assignee = clerkUsersById.get(conversation.assignedToClerkId!);
-                  const assigneeEmail = assignee?.emailAddresses[0]?.emailAddress;
+                  const assignee = usersById[conversation.assignedToId!];
+                  const assigneeEmail = assignee?.email;
                   const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
-                  const mention = slackUserId ? `<@${slackUserId}>` : assignee?.fullName || "Unknown";
+                  const mention = slackUserId
+                    ? `<@${slackUserId}>`
+                    : assignee?.user_metadata?.display_name || assignee?.email || "Unknown";
                   const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
                   return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
                 }),

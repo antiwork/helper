@@ -1,7 +1,6 @@
 import React from "react";
 import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { withMailboxAuth } from "@/components/withMailboxAuth";
 
 async function ConversationsLayout({
   params,
@@ -20,4 +19,4 @@ async function ConversationsLayout({
   );
 }
 
-export default withMailboxAuth(ConversationsLayout);
+export default ConversationsLayout;

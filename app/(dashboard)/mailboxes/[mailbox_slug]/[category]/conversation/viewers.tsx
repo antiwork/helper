@@ -1,17 +1,18 @@
 import { Avatar } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import useViewers from "./useViewers";
+import { conversationChannelId } from "@/lib/realtime/channels";
+import { useRealtimePresence } from "@/lib/realtime/hooks";
 
 type Props = {
   mailboxSlug: string;
   conversationSlug: string;
 };
 
-const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: string; image: string }[] }) => (
+const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: string }[] }) => (
   <div className="flex flex-col gap-2 py-2">
     {viewers.map((viewer, index) => (
       <div key={`${viewer.id}-more-${index}`} className="flex items-center gap-2">
-        <Avatar size="md" src={viewer.image} fallback={viewer.name} />
+        <Avatar size="md" src={undefined} fallback={viewer.name} />
         <p>{viewer.name}</p>
       </div>
     ))}
@@ -19,7 +20,7 @@ const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: strin
 );
 
 const Viewers = ({ conversationSlug, mailboxSlug }: Props) => {
-  const viewers = useViewers(mailboxSlug, conversationSlug);
+  const { users: viewers } = useRealtimePresence(conversationChannelId(mailboxSlug, conversationSlug));
 
   if (viewers.length === 0) {
     return null;

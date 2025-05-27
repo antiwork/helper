@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { createClient } from "@/lib/supabase/client";
 import { api } from "@/trpc/react";
 
 export enum UploadStatus {
@@ -102,30 +103,32 @@ export const FileUploadProvider = ({
         await new Promise((resolve) =>
           setTimeout(resolve, (unsavedFiles.filter((f) => f.status === UploadStatus.UPLOADING).length + 1) * 200),
         );
-        const { file, signedRequest } = await utils.client.mailbox.conversations.files.initiateUpload.mutate({
-          conversationSlug: assertDefined(conversationSlug, "Conversation ID must be provided"),
-          file: {
-            fileName: unsavedFileInfo.file.name,
-            fileSize: unsavedFileInfo.file.size,
-            isInline: unsavedFileInfo.inline,
-          },
-        });
+        const { file, bucket, signedUpload, isPublic } =
+          await utils.client.mailbox.conversations.files.initiateUpload.mutate({
+            conversationSlug: assertDefined(conversationSlug, "Conversation ID must be provided"),
+            file: {
+              fileName: unsavedFileInfo.file.name,
+              fileSize: unsavedFileInfo.file.size,
+              isInline: unsavedFileInfo.inline,
+            },
+          });
+        const supabase = createClient();
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .uploadToSignedUrl(signedUpload.path, signedUpload.token, unsavedFileInfo.file);
+        if (error) throw error;
+        if (!data) throw new Error("No data returned from Supabase");
 
-        const formData = new FormData();
-        for (const [key, value] of Object.entries(signedRequest.fields)) {
-          formData.append(key, value);
+        let url;
+        if (isPublic) {
+          url = supabase.storage.from(bucket).getPublicUrl(data.path).data.publicUrl;
+        } else {
+          url = await utils.client.mailbox.conversations.files.getFileUrl.query({ slug: file.slug });
         }
-        formData.append("file", unsavedFileInfo.file);
-
-        const response = await fetch(signedRequest.url, {
-          method: "POST",
-          body: formData,
-        });
-        if (!response.ok) throw new Error();
 
         const updatedFile: UnsavedFileInfo = {
           slug: file.slug,
-          url: file.url,
+          url,
           status: UploadStatus.UPLOADED,
           file: unsavedFileInfo.file,
           blobUrl: unsavedFileInfo.blobUrl,

@@ -1,7 +1,5 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
-import { assertDefined } from "@/components/utils/assert";
 import { addNote } from "@/lib/data/note";
 import { conversationProcedure } from "./procedure";
 
@@ -14,12 +12,11 @@ export const notesRouter = {
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const user = assertDefined(await currentUser());
       const note = await addNote({
         conversationId: ctx.conversation.id,
         message: input.message,
         fileSlugs: input.fileSlugs,
-        user,
+        user: ctx.user,
       });
       return { id: note.id };
     }),

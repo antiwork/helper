@@ -14,17 +14,15 @@ export const platformCustomers = pgTable(
     value: numeric({ precision: 12, scale: 2 }),
     links: jsonb().$type<Record<string, string>>(),
   },
-  (table) => {
-    return {
-      createdAtIdx: index("mailboxes_platformcustomer_created_at_73183c2a").on(table.createdAt),
-      mailboxIdIdx: index("mailboxes_platformcustomer_mailbox_id_58ea76bf").on(table.mailboxId),
-      emailUnique: unique("mailboxes_platformcustomer_email_key").on(table.email),
-      emailIlike: index("mailboxes_platformcustomer_email_ilike")
-        .using("gin", sql`${table.email} gin_trgm_ops`)
-        .concurrently(),
-    };
-  },
-);
+  (table) => [
+    index("mailboxes_platformcustomer_created_at_73183c2a").on(table.createdAt),
+    index("mailboxes_platformcustomer_mailbox_id_58ea76bf").on(table.mailboxId),
+    unique("mailboxes_platformcustomer_email_key").on(table.email),
+    index("mailboxes_platformcustomer_email_ilike")
+      .using("gin", sql`${table.email} gin_trgm_ops`)
+      .concurrently(),
+  ],
+).enableRLS();
 
 export const platformCustomersRelations = relations(platformCustomers, ({ one }) => ({
   mailbox: one(mailboxes, {

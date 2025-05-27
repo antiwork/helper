@@ -1,7 +1,7 @@
-import { User } from "@clerk/nextjs/server";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { notes } from "@/db/schema/notes";
+import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { finishFileUpload } from "./files";
 
 export const addNote = async ({
@@ -14,7 +14,7 @@ export const addNote = async ({
 }: {
   conversationId: number;
   message: string;
-  user: User | null;
+  user: DbOrAuthUser | null;
   slackChannel?: string | null;
   slackMessageTs?: string | null;
   fileSlugs?: string[];
@@ -25,7 +25,7 @@ export const addNote = async ({
       .values({
         conversationId,
         body: message,
-        clerkUserId: user?.id,
+        userId: user?.id,
         role: "staff",
         slackChannel,
         slackMessageTs,

@@ -1,8 +1,9 @@
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails } from "@/db/schema";
+import { getFullName } from "@/lib/auth/authUtils";
 import { Mailbox } from "@/lib/data/mailbox";
-import { getClerkUserList, UserRole, UserRoles } from "@/lib/data/user";
+import { UserRole, UserRoles } from "@/lib/data/user";
 
 type DateRange = {
   startDate?: Date;
@@ -18,7 +19,7 @@ export type MemberStats = {
 }[];
 
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
-  const { data: allUsers } = await getClerkUserList(mailbox.clerkOrganizationId);
+  const allUsers = await db.query.authUsers.findMany();
   const memberIds = allUsers.map((user) => user.id);
 
   const dateConditions = [];
@@ -31,7 +32,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   const result = await db
     .select({
-      id: emails.clerkUserId,
+      id: emails.userId,
       replyCount: count(emails.id),
     })
     .from(emails)
@@ -40,11 +41,11 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
       and(
         eq(conversations.mailboxId, mailbox.id),
         eq(emails.role, "staff"),
-        sql`${emails.clerkUserId} IN ${memberIds}`,
+        sql`${emails.userId} IN ${memberIds}`,
         ...dateConditions,
       ),
     )
-    .groupBy(emails.clerkUserId);
+    .groupBy(emails.userId);
 
   const replyCounts = result.reduce<Record<string, number>>((acc, member) => {
     if (member.id) acc[member.id] = member.replyCount;
@@ -53,13 +54,13 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   return allUsers
     .map((user) => {
-      const mailboxAccess = user.publicMetadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
+      const mailboxAccess = user.user_metadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
       const mailboxRole = mailboxAccess?.[mailbox.id.toString()]?.role || UserRoles.AFK;
 
       return {
         id: user.id,
-        email: user.emailAddresses[0]?.emailAddress,
-        displayName: user.fullName,
+        email: user.email ?? undefined,
+        displayName: getFullName(user),
         replyCount: replyCounts[user.id] || 0,
         role: mailboxRole,
       };

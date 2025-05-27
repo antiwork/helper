@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { env } from "@/lib/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { MailboxTheme } from "@/lib/themes";
 
 export type WidgetSessionPayload = {
@@ -34,9 +35,11 @@ export function createWidgetSession(
 ): string {
   let anonymousSessionId: string | undefined;
   if (currentToken) {
-    const decoded = jwt.verify(currentToken, jwtSecret()) as WidgetSessionPayload;
-    if (decoded.mailboxSlug === payload.mailboxSlug) {
-      anonymousSessionId = decoded.anonymousSessionId;
+    try {
+      const decoded = verifyWidgetSession(currentToken);
+      if (decoded.mailboxSlug === payload.mailboxSlug) anonymousSessionId = decoded.anonymousSessionId;
+    } catch (e) {
+      captureExceptionAndLog(e);
     }
   }
   const isAnonymous = !payload.email;
@@ -55,8 +58,8 @@ export function verifyWidgetSession(token: string): WidgetSessionPayload {
   try {
     const decoded = jwt.verify(token, jwtSecret()) as WidgetSessionPayload;
     return decoded;
-  } catch {
-    throw new Error("Invalid or expired token");
+  } catch (e) {
+    throw new Error("Invalid or expired token", { cause: e });
   }
 }
 

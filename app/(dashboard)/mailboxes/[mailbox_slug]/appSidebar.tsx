@@ -1,35 +1,14 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
-import { BarChart, CheckCircle, ChevronsUpDown, Inbox, Settings } from "lucide-react";
+import { Inbox, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { InboxProvider } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/inbox";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
-import { NavigationButtons } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/navigationButtons";
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import { AccountDropdown } from "./accountDropdown";
 import { CategoryNav } from "./categoryNav";
 
 declare global {
@@ -40,22 +19,10 @@ declare global {
 
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const { data: mailboxes } = api.mailbox.list.useQuery();
-  const { data: { trialInfo } = {} } = api.organization.getOnboardingStatus.useQuery();
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug });
-
-  const { mutate: startCheckout } = api.billing.startCheckout.useMutation({
-    onSuccess: (data) => {
-      window.location.href = data.url;
-    },
-  });
-
-  useEffect(() => {
-    setShowUpgradePrompt(!!trialInfo && trialInfo.subscriptionStatus !== "paid" && !!trialInfo.freeTrialEndsAt);
-  }, [trialInfo]);
 
   const isSettings = pathname.endsWith("/settings");
   const isInbox = pathname.includes("/conversations");
@@ -111,14 +78,3 @@ const ConversationListContent = ({ mailboxSlug }: { mailboxSlug: string }) => (
 const ConversationList = dynamic(() => Promise.resolve(ConversationListContent), {
   ssr: false,
 });
-
-const DeleteAccountListener = () => {
-  const { isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/login");
-    }
-  }, [isLoaded, isSignedIn]);
-  return null;
-};

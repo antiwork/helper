@@ -1,23 +1,21 @@
 "use client";
 
-import { AblyProvider, ChannelProvider } from "ably/react";
 import { BotIcon, DollarSign, Flag, Mail, MessageSquare, Star, ThumbsDown, ThumbsUp } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
-import { getGlobalAblyClient } from "@/components/ablyClient";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { dashboardChannelId } from "@/lib/ably/channels";
-import { useAblyEvent } from "@/lib/ably/hooks";
+import { dashboardChannelId } from "@/lib/realtime/channels";
+import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
-const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
+const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
   const { ref: loadMoreRef, inView } = useInView();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = api.mailbox.latestEvents.useInfiniteQuery(
@@ -49,9 +47,10 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
         pages: [[...eventsToAdd, ...firstPage], ...data.pages.slice(1)],
       };
     });
+    newEventsRef.current = [];
   }, 5000);
 
-  useAblyEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
+  useRealtimeEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
     newEventsRef.current = [...newEventsRef.current, message.data];
     addNewEvents();
   });
@@ -152,16 +151,6 @@ const RealtimeEventsContent = ({ mailboxSlug }: { mailboxSlug: string }) => {
         {isFetchingNextPage && <div className="text-muted-foreground">Loading more events...</div>}
       </div>
     </div>
-  );
-};
-
-const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
-  return (
-    <AblyProvider client={getGlobalAblyClient(mailboxSlug)}>
-      <ChannelProvider channelName={dashboardChannelId(mailboxSlug)}>
-        <RealtimeEventsContent mailboxSlug={mailboxSlug} />
-      </ChannelProvider>
-    </AblyProvider>
   );
 };
 

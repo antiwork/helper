@@ -6,7 +6,9 @@ const defaultUnlessDeployed = <V extends z.ZodString | z.ZodOptional<z.ZodString
   ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
 
 const defaultRootUrl =
-  process.env.VERCEL_ENV === "production" ? "https://helper.ai" : `https://${process.env.VERCEL_URL ?? "helperai.dev"}`;
+  process.env.VERCEL_ENV === "production"
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : `https://${process.env.VERCEL_URL ?? "helperai.dev"}`;
 
 export const env = createEnv({
   extends: [vercel()],
@@ -22,21 +24,14 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
-    POSTGRES_URL: defaultUnlessDeployed(
-      z.string().url(),
-      "postgresql://username:password@127.0.0.1:5435/helperai_development",
-    ),
-    POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
-      z.string().url(),
-      // Same as POSTGRES_URL unless using a cloud database provider with built-in pooling
-      "postgresql://username:password@127.0.0.1:5435/helperai_development",
-    ),
-    DATABASE_URL: z.string().url().optional(),
-    KV_UPSTASH_KV_REST_API_URL: defaultUnlessDeployed(z.string().url(), "http://localhost:8089"),
-    KV_UPSTASH_KV_REST_API_TOKEN: defaultUnlessDeployed(z.string().min(1), "example_token"),
-    NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
+    // Set these for both local development and when deploying
+    OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
+    GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
+    GOOGLE_CLIENT_SECRET: z.string().min(1),
+    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
+    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
 
+    // Set these before deploying
     CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
     ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
       z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
@@ -44,34 +39,27 @@ export const env = createEnv({
     ),
     WIDGET_JWT_SECRET: defaultUnlessDeployed(z.string().min(1), "example_jwt_secret"),
 
-    // Required integrations
-    OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-    ABLY_API_KEY: z.string().min(1), // API key from https://ably.com for real-time events
-    GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
-    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
-    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
-    RESEND_API_KEY: z.string().min(1), // API key from https://resend.com for transactional emails
-    AWS_ACCESS_KEY_ID: defaultUnlessDeployed(z.string().min(1), "minioadmin"),
-    AWS_SECRET_ACCESS_KEY: defaultUnlessDeployed(z.string().min(1), "minioadmin"),
-    AWS_DEFAULT_REGION: defaultUnlessDeployed(z.string().min(1), "us-east-1"),
-    AWS_PRIVATE_STORAGE_BUCKET_NAME: defaultUnlessDeployed(z.string().min(1), "helperai-private-storage-dev"),
-    AWS_ENDPOINT: defaultUnlessDeployed(z.string().url().optional(), "https://minio.helperai.dev"),
-    CLERK_SECRET_KEY: z.string().min(1), // Secret key from https://dashboard.clerk.com
-    CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.string().min(1).default("/mailboxes"),
-    CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.string().min(1).default("/mailboxes"),
+    // Set these before or after deploying to receive one-time passwords by email
+    RESEND_API_KEY: z.string().min(1).optional(),
+    RESEND_FROM_ADDRESS: z.string().min(1).optional(),
 
-    // For running database seeds, Set these up on https://dashboard.clerk.com
-    CLERK_INITIAL_ORGANIZATION_ID: z
-      .string()
-      .regex(/^org_\w+$/)
-      .optional(),
-    CLERK_INITIAL_USER_IDS: z
-      .string()
-      .regex(/^user_\w+(?:,user_\w+)*$/)
-      .optional(),
+    // Set these when deploying if you're not using Vercel with the Supabase integration
+    AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
+    POSTGRES_URL: defaultUnlessDeployed(z.string().url(), "postgresql://postgres:postgres@127.0.0.1:54322/postgres"),
+    POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
+      z.string().url(),
+      // Same as POSTGRES_URL unless using Supabase with built-in pooling
+      "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+    ),
+    DATABASE_URL: z.string().url().optional(),
+    // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
+    SUPABASE_SERVICE_ROLE_KEY: defaultUnlessDeployed(
+      z.string().min(1),
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
+    ),
+    NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
-    // Optional integrations
+    // Other optional integrations
 
     // Slack OAuth client credentials from https://api.slack.com/apps
     SLACK_CLIENT_ID: z.string().min(1).optional(),
@@ -82,15 +70,6 @@ export const env = createEnv({
     GITHUB_APP_ID: z.string().min(1).optional(),
     GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
     GITHUB_PRIVATE_KEY: z.string().min(1).optional(),
-    // Stripe subscription plan and credentials for paid organizations
-    STRIPE_PRICE_ID: z.string().min(1).optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
-    STRIPE_SECRET_KEY: z.string().min(1).optional(),
-    // Lets you consider your own org as having a paid subscription. If using Stripe in development you probably want this the same as CLERK_INITIAL_ORGANIZATION_ID
-    ADDITIONAL_PAID_ORGANIZATION_IDS: z
-      .string()
-      .regex(/^org_\w+(?:,org_\w+)*$/)
-      .optional(),
     // Token from https://jina.ai for the widget to read the current page
     JINA_API_TOKEN: z.string().min(1).optional(),
     // API key from https://www.firecrawl.dev to import help docs from a website
@@ -105,6 +84,12 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
     DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
+
+    // For running database seeds
+    INITIAL_USER_EMAILS: z
+      .string()
+      .default("support@gumroad.com")
+      .transform((v) => v.split(",")),
   },
 
   /**
@@ -112,12 +97,16 @@ export const env = createEnv({
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().min(1).default("/login"),
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().min(1).default("/login"),
     NEXT_PUBLIC_VERCEL_ENV: defaultUnlessDeployed(
       z.enum(["development", "preview", "production"]) as any,
       "development",
+    ),
+
+    NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "https://supabase.helperai.dev"),
+    // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(
+      z.string().min(1),
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
     ),
 
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
@@ -128,11 +117,10 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   skipValidation: process.env.npm_lifecycle_event === "lint" || process.env.NODE_ENV === "test",
 });

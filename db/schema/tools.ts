@@ -38,12 +38,12 @@ export const tools = pgTable(
     availableInChat: boolean().notNull().default(false),
     customerEmailParameter: text(),
   },
-  (table) => ({
-    toolsMailboxIdIdx: index("tools_mailbox_id_idx").on(table.mailboxId),
-    toolsToolApiIdIdx: index("tools_tool_api_id_idx").on(table.toolApiId),
-    uniqueSlugIdx: uniqueIndex("unique_slug_idx").on(table.slug),
-  }),
-);
+  (table) => [
+    index("tools_mailbox_id_idx").on(table.mailboxId),
+    index("tools_tool_api_id_idx").on(table.toolApiId),
+    uniqueIndex("unique_slug_idx").on(table.slug),
+  ],
+).enableRLS();
 
 export const toolsRelations = relations(tools, ({ one }) => ({
   mailbox: one(mailboxes, {

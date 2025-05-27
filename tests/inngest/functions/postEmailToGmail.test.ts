@@ -10,31 +10,13 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import { postEmailToGmail } from "@/inngest/functions/postEmailToGmail";
-import { getClerkOrganization, setPrivateMetadata } from "@/lib/data/organization";
 import { getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import * as sentryUtils from "@/lib/shared/sentry";
 
-vi.mock("@/lib/resend/client", () => ({
-  sendEmail: vi.fn(),
-}));
 vi.mock("@/lib/emails/automatedRepliesLimitExceeded", () => ({
   default: vi.fn().mockReturnValue("Mock component"),
 }));
-vi.mock("@/lib/stripe/client");
-vi.mock("@/lib/data/user", () => ({
-  getClerkUser: vi.fn(),
-  getRootUserByOrganizationId: vi.fn(),
-}));
-vi.mock("@/lib/data/organization", async () => {
-  const actual = await vi.importActual("@/lib/data/organization");
-  return {
-    ...actual,
-    getClerkOrganization: vi.fn(),
-    setPrivateMetadata: vi.fn(),
-    getOrganizationAdminUsers: vi.fn(),
-  };
-});
 vi.spyOn(sentryUtils, "captureExceptionAndThrowIfDevelopment");
 
 beforeEach(() => {
@@ -55,7 +37,7 @@ vi.mock("@/lib/gmail/lib", () => ({
 }));
 
 const setupConversationForGmailSending = async () => {
-  const { mailbox, organization } = await userFactory.createRootUser();
+  const { mailbox } = await userFactory.createRootUser();
 
   const { conversation } = await conversationFactory.create(mailbox.id, {
     conversationProvider: "gmail",
@@ -79,7 +61,6 @@ const setupConversationForGmailSending = async () => {
   return {
     conversation,
     mailbox: { ...updatedMailbox, gmailSupportEmail },
-    organization,
   };
 };
 
@@ -101,7 +82,7 @@ const assertMarkFailed = async (emailId: number) => {
 describe("postEmailToGmail", () => {
   describe("on success", () => {
     it("properly posts to Gmail", async () => {
-      const { conversation, mailbox, organization } = await setupConversationForGmailSending();
+      const { conversation, mailbox } = await setupConversationForGmailSending();
 
       const { message } = await conversationMessagesFactory.createEnqueued(conversation.id, {
         body: "Content",
@@ -110,14 +91,14 @@ describe("postEmailToGmail", () => {
       const { file: file1 } = await fileFactory.create(null, {
         isInline: true,
         name: "file1.pdf",
-        url: "https://your-bucket-name.s3.amazonaws.com/attachments/file1.pdf",
+        key: "file1.pdf",
         mimetype: "text/plain",
         messageId: message.id,
       });
       const { file: file2 } = await fileFactory.create(null, {
         isInline: false,
         name: "file2.jpg",
-        url: "https://your-bucket-name.s3.amazonaws.com/attachments/file2.jpg",
+        key: "file2.jpg",
         mimetype: "image/jpeg",
         messageId: message.id,
       });
@@ -133,9 +114,6 @@ describe("postEmailToGmail", () => {
         },
       } as any);
 
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
-      vi.mocked(setPrivateMetadata).mockResolvedValue(organization);
-
       expect(await postEmailToGmail(message.id)).toBeNull();
       expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
       expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
@@ -148,7 +126,6 @@ describe("postEmailToGmail", () => {
               id: mailbox.id,
               name: mailbox.name,
               widgetHost: mailbox.widgetHost,
-              clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
             },
@@ -176,7 +153,7 @@ describe("postEmailToGmail", () => {
     });
 
     it("includes the correct threadId for reply emails", async () => {
-      const { conversation, mailbox, organization } = await setupConversationForGmailSending();
+      const { conversation, mailbox } = await setupConversationForGmailSending();
       await conversationMessagesFactory.create(conversation.id, {
         body: "User email that initiated the conversation",
         role: "user",
@@ -190,9 +167,6 @@ describe("postEmailToGmail", () => {
         body: "Content",
       });
 
-      vi.mocked(getClerkOrganization).mockResolvedValue(organization);
-      vi.mocked(setPrivateMetadata).mockResolvedValue(organization);
-
       expect(await postEmailToGmail(message.id)).toBeNull();
       expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
       expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
@@ -205,7 +179,6 @@ describe("postEmailToGmail", () => {
               id: mailbox.id,
               name: mailbox.name,
               widgetHost: mailbox.widgetHost,
-              clerkOrganizationId: mailbox.clerkOrganizationId,
               slug: mailbox.slug,
               gmailSupportEmail: mailbox.gmailSupportEmail,
             },
