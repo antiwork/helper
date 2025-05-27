@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       false;
   }
 
-  const token = createWidgetSession(
+  const token = await createWidgetSession(
     {
       email,
       mailboxSlug,

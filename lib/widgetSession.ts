@@ -18,46 +18,60 @@ export type WidgetSessionPayload = {
   anonymousSessionId?: string;
 };
 
-const jwtSecret = () => {
-  const secret = env.WIDGET_JWT_SECRET;
-  if (!secret) {
-    throw new Error("WIDGET_JWT_SECRET is not set");
+const getMailboxJwtSecret = async (mailboxSlug: string): Promise<string> => {
+  const mailboxRecord = await db.query.mailboxes.findFirst({
+    where: eq(mailboxes.slug, mailboxSlug),
+    columns: {
+      widgetHMACSecret: true,
+    },
+  });
+
+  if (!mailboxRecord?.widgetHMACSecret) {
+    throw new Error(`Mailbox ${mailboxSlug} not found or missing widgetHMACSecret`);
   }
-  return secret;
+
+  return mailboxRecord.widgetHMACSecret;
 };
 
-export function createWidgetSession(
+export async function createWidgetSession(
   payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & {
     email?: string;
     isWhitelabel: boolean;
   },
   currentToken?: string | null,
-): string {
+): Promise<string> {
   let anonymousSessionId: string | undefined;
   if (currentToken) {
     try {
-      const decoded = verifyWidgetSession(currentToken);
+      const decoded = await verifyWidgetSession(currentToken);
       if (decoded.mailboxSlug === payload.mailboxSlug) anonymousSessionId = decoded.anonymousSessionId;
     } catch (e) {
       captureExceptionAndLog(e);
     }
   }
   const isAnonymous = !payload.email;
+  const secret = await getMailboxJwtSecret(payload.mailboxSlug);
   return jwt.sign(
     {
       ...payload,
       isAnonymous,
       anonymousSessionId: isAnonymous ? (anonymousSessionId ?? crypto.randomUUID()) : undefined,
     },
-    jwtSecret(),
+    secret,
     { expiresIn: isAnonymous ? "7d" : "12h" },
   );
 }
 
-export function verifyWidgetSession(token: string): WidgetSessionPayload {
+export async function verifyWidgetSession(token: string): Promise<WidgetSessionPayload> {
   try {
-    const decoded = jwt.verify(token, jwtSecret()) as WidgetSessionPayload;
-    return decoded;
+    const decoded = jwt.decode(token) as WidgetSessionPayload;
+    if (!decoded?.mailboxSlug) {
+      throw new Error("Invalid token: missing mailboxSlug");
+    }
+    
+    const secret = await getMailboxJwtSecret(decoded.mailboxSlug);
+    const verified = jwt.verify(token, secret) as WidgetSessionPayload;
+    return verified;
   } catch (e) {
     throw new Error("Invalid or expired token", { cause: e });
   }

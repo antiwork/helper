@@ -46,7 +46,7 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   const token = authHeader.slice(7);
   let session;
   try {
-    session = verifyWidgetSession(token);
+    session = await verifyWidgetSession(token);
   } catch (error) {
     return { success: false, error: "Invalid session token" };
   }
