@@ -425,7 +425,10 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx.update(conversationMessages).set({ cleanedUpText, encryptedCleanedUpText: cleanedUpText }).where(eq(conversationMessages.id, message.id));
+  await tx
+    .update(conversationMessages)
+    .set({ cleanedUpText, encryptedCleanedUpText: cleanedUpText })
+    .where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
