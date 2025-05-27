@@ -18,6 +18,11 @@ export const userRouter = {
       where: eq(authUsers.email, input.email),
     });
     if (!user) {
+      const [_, emailDomain] = input.email.split("@");
+      if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+        return { signupPossible: true };
+      }
+
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "User not found",
@@ -69,4 +74,22 @@ export const userRouter = {
     }
     return { email: false, dashboardUrl, otp: env.NODE_ENV === "development" ? data.properties.email_otp : undefined };
   }),
+  createUser: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        displayName: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const supabase = createAdminClient();
+      const { error } = await supabase.auth.admin.createUser({
+        email: input.email,
+        user_metadata: {
+          display_name: input.displayName,
+        },
+      });
+      if (error) throw error;
+      return { success: true };
+    }),
 } satisfies TRPCRouterRecord;
