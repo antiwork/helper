@@ -70,15 +70,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
     startSignInMutation.mutate({ email });
   };
-  
+
   const handleDisplayNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setDisplayNameError(null);
 
-    createUserMutation.mutate({ 
-      email, 
-      displayName: displayName.trim() 
+    createUserMutation.mutate({
+      email,
+      displayName: displayName.trim(),
     });
   };
 
@@ -122,9 +122,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           className="w-28"
         />
         <p className="text-sm text-muted-foreground">
-          {step === "email" 
-            ? "Please sign in to continue" 
-            : step === "displayName" 
+          {step === "email"
+            ? "Please sign in to continue"
+            : step === "displayName"
               ? "Enter your name to create your account"
               : "Enter the verification code sent to your email"}
         </p>
