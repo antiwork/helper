@@ -267,7 +267,7 @@ describe("handleGmailWebhookEvent", () => {
     it("short-circuits if the Gmail support email record is not found", async () => {
       const result = await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
 
-      expect(result).toBe(`Gmail support email record not found for ${GMAIL_SUPPORT_EMAIL_ADDRESS}`);
+      expect(result).toBe(`Valid gmail support email record not found for ${GMAIL_SUPPORT_EMAIL_ADDRESS}`);
       expect(getMessagesFromHistoryId).not.toHaveBeenCalled();
       expect(getMessageById).not.toHaveBeenCalled();
       expect(generateFilePreview).not.toHaveBeenCalled();
