@@ -68,7 +68,7 @@ export async function verifyWidgetSession(token: string): Promise<WidgetSessionP
     if (!decoded?.mailboxSlug) {
       throw new Error("Invalid token: missing mailboxSlug");
     }
-    
+
     const secret = await getMailboxJwtSecret(decoded.mailboxSlug);
     const verified = jwt.verify(token, secret) as WidgetSessionPayload;
     return verified;
