@@ -405,11 +405,13 @@ export const createAiDraft = async (
     {
       conversationId,
       body: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false })),
+      encryptedBody: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false })),
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo,
       cleanedUpText: body,
+      encryptedCleanedUpText: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -423,7 +425,7 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx.update(conversationMessages).set({ cleanedUpText }).where(eq(conversationMessages.id, message.id));
+  await tx.update(conversationMessages).set({ cleanedUpText, encryptedCleanedUpText: cleanedUpText }).where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
@@ -503,7 +505,9 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
+    encryptedBody: userMessage,
     cleanedUpText: userMessage,
+    encryptedCleanedUpText: userMessage,
     metadata: {
       tool: {
         id: tool.id,
