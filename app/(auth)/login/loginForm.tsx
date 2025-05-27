@@ -19,9 +19,11 @@ import { api } from "@/trpc/react";
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState(env.NODE_ENV === "development" ? "support@gumroad.com" : "");
+  const [displayName, setDisplayName] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [step, setStep] = useState<"email" | "displayName" | "otp">("email");
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardUrl, setDashboardUrl] = useState<string | null>(null);
@@ -30,7 +32,10 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const startSignInMutation = api.user.startSignIn.useMutation({
     onSuccess: (data) => {
-      if (data.email) {
+      if (data.signupPossible) {
+        setStep("displayName");
+        setEmailError(null);
+      } else if (data.email) {
         setStep("otp");
         setEmailError(null);
       } else {
@@ -48,12 +53,33 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     },
   });
 
+  const createUserMutation = api.user.createUser.useMutation({
+    onSuccess: () => {
+      startSignInMutation.mutate({ email });
+    },
+    onError: (error) => {
+      setDisplayNameError(error.message);
+      setIsLoading(false);
+    },
+  });
+
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setEmailError(null);
 
     startSignInMutation.mutate({ email });
+  };
+  
+  const handleDisplayNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setDisplayNameError(null);
+
+    createUserMutation.mutate({ 
+      email, 
+      displayName: displayName.trim() 
+    });
   };
 
   const handleOtpSubmit = async () => {
@@ -96,7 +122,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           className="w-28"
         />
         <p className="text-sm text-muted-foreground">
-          {step === "email" ? "Please sign in to continue" : "Enter the verification code sent to your email"}
+          {step === "email" 
+            ? "Please sign in to continue" 
+            : step === "displayName" 
+              ? "Enter your name to create your account"
+              : "Enter the verification code sent to your email"}
         </p>
       </div>
       <AnimatePresence mode="wait">
@@ -130,6 +160,47 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   </Button>
                 </div>
                 {emailError && <p className="text-sm text-red-500">{emailError}</p>}
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        {step === "displayName" && (
+          <motion.div
+            key="displayname-form"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <form onSubmit={handleDisplayNameSubmit}>
+              <div className="flex flex-col gap-3">
+                <div className="relative grid gap-2">
+                  <Label htmlFor="displayName" className="sr-only">
+                    Display Name
+                  </Label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    required
+                    autoFocus
+                    placeholder="Your name"
+                    className="pr-10"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                  <Button
+                    variant="ghost"
+                    type="submit"
+                    size="sm"
+                    iconOnly
+                    className="absolute right-1 top-1 mr-px mt-px"
+                    disabled={!displayName.trim() || isLoading}
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+                {displayNameError && <p className="text-sm text-red-500">{displayNameError}</p>}
               </div>
             </form>
           </motion.div>

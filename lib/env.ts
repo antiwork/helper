@@ -90,6 +90,11 @@ export const env = createEnv({
       .string()
       .default("support@gumroad.com")
       .transform((v) => v.split(",")),
+    
+    EMAIL_DOMAINS: z
+      .string()
+      .default("")
+      .transform((v) => v ? v.split(",").map(d => d.trim()) : []),
   },
 
   /**
