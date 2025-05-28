@@ -26,6 +26,8 @@ export const handleAutoResponse = async (messageId: number) => {
     .then(assertDefined);
 
   if (message.conversation.status === "spam") return { message: "Skipped - conversation is spam" };
+  if (message.role === "staff") return { message: "Skipped - message is from staff" };
+  if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   await ensureCleanedUpText(message);
 
@@ -46,8 +48,6 @@ export const handleAutoResponse = async (messageId: number) => {
       });
     }
   }
-
-  if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   if (message.conversation.mailbox.preferences?.autoRespondEmailToChat === "draft") {
     await generateDraftResponse(message.conversation.id, message.conversation.mailbox);

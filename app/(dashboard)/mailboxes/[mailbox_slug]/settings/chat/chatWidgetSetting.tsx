@@ -425,8 +425,8 @@ export default async function RootLayout({
       </SwitchSectionWrapper>
 
       <SectionWrapper
-        title="Email to Chat Auto-Response"
-        description="Configure automatic email responses to redirect users to the chat widget"
+        title="Respond to email inquiries with chat"
+        description="Automatically respond to emails as if the customer was using the chat widget."
         action={
           <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
             <TabsList className="grid w-full grid-cols-3">
@@ -437,53 +437,21 @@ export default async function RootLayout({
           </Tabs>
         }
       >
-        {autoRespond === "off" && (
-          <p className="text-sm text-muted-foreground">
-            No automatic responses will be sent to customers who email your support address.
-          </p>
-        )}
-
-        {autoRespond === "draft" && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              AI will generate draft responses that you can review and send manually.
-            </p>
-            <div className="flex flex-col space-y-2">
-              <Label htmlFor="widgetHost">Chat widget host URL</Label>
-              <Input
-                id="widgetHost"
-                type="url"
-                value={widgetHost}
-                onChange={(e) => setWidgetHost(e.target.value)}
-                placeholder="https://example.com"
-                className="max-w-[350px]"
-              />
-              <p className="text-sm text-muted-foreground">
-                The URL where your chat widget is installed. Users will be redirected here to continue the conversation.
-              </p>
-            </div>
-          </div>
-        )}
-
         {autoRespond === "reply" && (
-          <div className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <Label htmlFor="widgetHost">Chat widget host URL</Label>
+            <Input
+              id="widgetHost"
+              type="url"
+              value={widgetHost}
+              onChange={(e) => setWidgetHost(e.target.value)}
+              placeholder="https://example.com"
+              className="max-w-[350px]"
+            />
             <p className="text-sm text-muted-foreground">
-              AI will automatically send responses to customers and redirect them to your chat widget.
+              The URL where your chat widget is installed. If set, the customer will be able to continue the
+              conversation in the chat widget.
             </p>
-            <div className="flex flex-col space-y-2">
-              <Label htmlFor="widgetHost">Chat widget host URL</Label>
-              <Input
-                id="widgetHost"
-                type="url"
-                value={widgetHost}
-                onChange={(e) => setWidgetHost(e.target.value)}
-                placeholder="https://example.com"
-                className="max-w-[350px]"
-              />
-              <p className="text-sm text-muted-foreground">
-                The URL where your chat widget is installed. Users will be redirected here to continue the conversation.
-              </p>
-            </div>
           </div>
         )}
       </SectionWrapper>
