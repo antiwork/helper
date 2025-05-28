@@ -1,4 +1,6 @@
+import { Message } from "ai";
 import { create } from "zustand";
+import { PromptInfo } from "@/lib/ai/promptInfo";
 
 type View = "chat" | "previous";
 
@@ -9,6 +11,8 @@ type WidgetViewState = {
   setIsNewConversation: (isNew: boolean) => void;
   handleSelectConversation: (slug: string) => string;
   handleNewConversation: () => void;
+  showingPromptInfo?: { promptInfo: PromptInfo; message: Message };
+  togglePromptInfo: (promptInfo?: { promptInfo: PromptInfo; message: Message }) => void;
 };
 
 export const useWidgetView = create<WidgetViewState>((set) => ({
@@ -26,4 +30,6 @@ export const useWidgetView = create<WidgetViewState>((set) => ({
   handleNewConversation: () => {
     set({ currentView: "chat", isNewConversation: true });
   },
+
+  togglePromptInfo: (promptInfo) => set({ showingPromptInfo: promptInfo }),
 }));

@@ -4,6 +4,8 @@ import { Paperclip } from "lucide-react";
 import HumanizedTime from "@/components/humanizedTime";
 import { Attachment } from "@/components/widget/Conversation";
 import MessageElement from "@/components/widget/MessageElement";
+import { useWidgetView } from "@/components/widget/useWidgetView";
+import { PromptInfo } from "@/lib/ai/promptInfo";
 
 const USER_ROLE = "user";
 
@@ -32,12 +34,20 @@ export default function Message({
   attachments,
   hideReasoning = false,
 }: Props) {
+  const { togglePromptInfo } = useWidgetView();
+
   const idFromAnnotation =
     message.annotations?.find(
       (annotation): annotation is { id: string | number } =>
         typeof annotation === "object" && annotation !== null && "id" in annotation,
     )?.id ?? null;
   const persistedId = idFromAnnotation ?? (!message.id.startsWith("client_") ? message.id : null);
+
+  const promptInfo =
+    message.annotations?.find(
+      (annotation): annotation is { promptInfo: PromptInfo } =>
+        typeof annotation === "object" && annotation !== null && "promptInfo" in annotation,
+    )?.promptInfo ?? null;
 
   const reasoningStarted = data?.some(
     (item) => typeof item === "object" && item !== null && "event" in item && item.event === "reasoningStarted",
@@ -113,7 +123,13 @@ export default function Message({
         {!message.experimental_attachments?.length && attachments.length > 0 && (
           <div className="p-4 pt-0 flex flex-col gap-2">
             {attachments.map((attachment) => (
-              <a className="flex items-center gap-2" href={attachment.presignedUrl} target="_blank" download>
+              <a
+                key={attachment.name}
+                className="flex items-center gap-2"
+                href={attachment.presignedUrl}
+                target="_blank"
+                download
+              >
                 <Paperclip className="h-4 w-4 shrink-0" />
                 <span className="flex-1 min-w-0 truncate underline">{attachment.name}</span>
               </a>
@@ -125,6 +141,17 @@ export default function Message({
         <span className="text-xs text-gray-400" title={message.createdAt ? message.createdAt.toLocaleString() : ""}>
           {message.createdAt ? <HumanizedTime time={message.createdAt.toISOString()} /> : null}
         </span>
+        {promptInfo && (
+          <>
+            <span className="text-xs text-gray-400">·</span>
+            <button
+              onClick={() => togglePromptInfo({ promptInfo, message })}
+              className="text-xs text-gray-400 hover:text-gray-600 underline"
+            >
+              Details
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

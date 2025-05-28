@@ -11,6 +11,7 @@ import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
+import PromptDetailsModal from "@/components/widget/PromptDetailsModal";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
@@ -49,6 +50,8 @@ export default function Page() {
     setIsNewConversation,
     handleSelectConversation,
     handleNewConversation,
+    showingPromptInfo,
+    togglePromptInfo,
   } = useWidgetView();
 
   const { setScreenshot } = useScreenshotStore();
@@ -166,6 +169,13 @@ export default function Page() {
           title={headerTitle}
         />
         <div className="relative flex-1 overflow-hidden">
+          {showingPromptInfo && (
+            <PromptDetailsModal
+              onClose={() => togglePromptInfo()}
+              message={showingPromptInfo.message}
+              promptInfo={showingPromptInfo.promptInfo}
+            />
+          )}
           <LazyMotion features={domAnimation}>
             <m.div
               className="absolute inset-0 flex"

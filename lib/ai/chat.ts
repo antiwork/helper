@@ -24,6 +24,7 @@ import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
 import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
+import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
@@ -132,6 +133,7 @@ export const buildPromptMessages = async (
 ): Promise<{
   messages: CoreMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
+  promptInfo: Omit<PromptInfo, "availableTools">;
 }> => {
   const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
 
@@ -141,16 +143,19 @@ export const buildPromptMessages = async (
       new Date().toISOString(),
     ),
     guideEnabled ? GUIDE_INSTRUCTIONS : null,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-  let systemPrompt = prompt.join("\n");
+  let systemPrompt = prompt;
   if (knowledgeBank) {
     systemPrompt += `\n${knowledgeBank}`;
   }
   if (websitePagesPrompt) {
     systemPrompt += `\n${websitePagesPrompt}`;
   }
-  systemPrompt += email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  const userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  systemPrompt += userPrompt;
 
   return {
     messages: [
@@ -160,6 +165,12 @@ export const buildPromptMessages = async (
       },
     ],
     sources: websitePages,
+    promptInfo: {
+      systemPrompt,
+      knowledgeBank,
+      websitePagesPrompt,
+      userPrompt,
+    },
   };
 };
 
@@ -314,6 +325,7 @@ export const generateAIResponse = async ({
     steps: any;
     traceId: string;
     sources: { url: string; pageTitle: string }[];
+    promptInfo: PromptInfo;
   }) => Promise<void>;
   model?: LanguageModelV1;
   addReasoning?: boolean;
@@ -326,7 +338,11 @@ export const generateAIResponse = async ({
   const query = lastMessage?.content || "";
 
   const coreMessages = convertToCoreMessages(messages, { tools: {} });
-  const { messages: systemMessages, sources } = await buildPromptMessages(mailbox, email, query, guideEnabled);
+  const {
+    messages: systemMessages,
+    sources,
+    promptInfo,
+  } = await buildPromptMessages(mailbox, email, query, guideEnabled);
 
   const tools = await buildTools(conversationId, email, mailbox, true, guideEnabled);
   if (readPageTool) {
@@ -429,6 +445,10 @@ export const generateAIResponse = async ({
           steps,
           traceId,
           sources: sources.map((source) => ({ url: source.url, pageTitle: source.pageTitle })),
+          promptInfo: {
+            ...promptInfo,
+            availableTools: Object.keys(tools),
+          },
         });
       }
     },
@@ -514,6 +534,7 @@ export const respondWithAI = async ({
   readPageTool,
   guideEnabled,
   onResponse,
+  isAdmin = false,
   reasoningEnabled = true,
 }: {
   conversation: Conversation;
@@ -531,6 +552,7 @@ export const respondWithAI = async ({
     isFirstMessage: boolean;
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
+  isAdmin?: boolean;
   reasoningEnabled?: boolean;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
@@ -615,7 +637,7 @@ export const respondWithAI = async ({
         guideEnabled,
         addReasoning: reasoningEnabled,
         dataStream,
-        async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources }) {
+        async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>
             step.toolCalls.some((toolCall: any) => toolCall.toolName.includes("fetch_user_information")),
           );
@@ -666,6 +688,10 @@ export const respondWithAI = async ({
               url: source.url ?? "",
               title: source.title ?? "",
             });
+          }
+
+          if (isAdmin) {
+            dataStream.writeMessageAnnotation({ promptInfo });
           }
 
           dataStream.writeMessageAnnotation({

@@ -13,10 +13,10 @@ import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
+import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
-import { PromptInfo } from "@/types/conversationMessages";
 import { formatBytes } from "../files";
 import { getConversationById, getNonSupportParticipants, updateConversation } from "./conversation";
 import { finishFileUpload, getFileUrl } from "./files";
@@ -408,7 +408,7 @@ export const createAiDraft = async (
       role: "ai_assistant",
       status: "draft",
       responseToId,
-      promptInfo,
+      promptInfo: promptInfo ? { details: promptInfo } : null,
       cleanedUpText: body,
       isPerfect: false,
       isFlaggedAsBad: false,

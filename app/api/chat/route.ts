@@ -12,6 +12,7 @@ import {
   getConversationBySlugAndMailbox,
 } from "@/lib/data/conversation";
 import { type Mailbox } from "@/lib/data/mailbox";
+import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 
 export const maxDuration = 60;
@@ -80,6 +81,12 @@ export async function POST(request: Request) {
     screenshotData?.replace("data:image/png;base64,", ""),
   );
 
+  const supabase = await createClient();
+  let isAdmin = false;
+  if ((await supabase.auth.getUser()).data.user?.id) {
+    isAdmin = true;
+  }
+
   return await respondWithAI({
     conversation,
     mailbox,
@@ -90,6 +97,7 @@ export async function POST(request: Request) {
     guideEnabled,
     sendEmail: false,
     reasoningEnabled: false,
+    isAdmin,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||
