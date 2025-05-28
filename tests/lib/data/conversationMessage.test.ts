@@ -337,16 +337,17 @@ describe("createReply", () => {
     const updatedConversation = await getConversationById(conversation.id);
     expect(updatedConversation?.status).toBe("closed");
 
-    expect(inngest.send).toHaveBeenCalledWith([{
-      name: "conversations/message.created",
-      data: { messageId, conversationId: conversation.id },
-    },
-    {
-      name: "conversations/email.enqueued",
-      data: { messageId },
-      ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-    },
-  ]);
+    expect(inngest.send).toHaveBeenCalledWith([
+      {
+        name: "conversations/message.created",
+        data: { messageId, conversationId: conversation.id },
+      },
+      {
+        name: "conversations/email.enqueued",
+        data: { messageId },
+        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      },
+    ]);
   });
 
   it("creates a reply without closing the conversation", async () => {
@@ -542,10 +543,12 @@ describe("createConversationMessage", () => {
     expect(message).toBeTruthy();
     expect(message.body).toBe("Test message");
 
-    expect(inngest.send).toHaveBeenCalledWith([{
-      name: "conversations/message.created",
-      data: { messageId: message.id, conversationId: message.conversationId },
-    }]);
+    expect(inngest.send).toHaveBeenCalledWith([
+      {
+        name: "conversations/message.created",
+        data: { messageId: message.id, conversationId: message.conversationId },
+      },
+    ]);
 
     expect(inngest.send).not.toHaveBeenCalledWith(
       expect.objectContaining({
