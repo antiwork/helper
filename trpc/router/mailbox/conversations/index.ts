@@ -34,18 +34,23 @@ export { conversationProcedure };
 
 export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
-    const { list, where, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.user.id);
+    const { list, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.user.id);
 
-    const [{ results, nextCursor }, total] = await Promise.all([list, countSearchResults(where)]);
+    const { results, nextCursor } = await list;
 
     return {
       conversations: results,
-      total,
       defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
       hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       assignedToIds: input.assignee ?? null,
       nextCursor,
     };
+  }),
+
+  count: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
+    const { where } = await searchConversations(ctx.mailbox, input, ctx.user.id);
+    const total = await countSearchResults(where);
+    return { total };
   }),
 
   listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {

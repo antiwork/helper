@@ -78,8 +78,6 @@ export const ConversationListContextProvider = ({
   }, 1000);
 
   const removeConversationFromList = (condition: (conversation: ConversationListItem) => boolean) => {
-    const updatedTotal = lastPage ? lastPage.total - 1 : 0;
-
     utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
       if (!data) return data;
       return {
@@ -87,7 +85,6 @@ export const ConversationListContextProvider = ({
         pages: data.pages.map((page) => ({
           ...page,
           conversations: page.conversations.filter((c) => !condition(c)),
-          total: updatedTotal,
         })),
       };
     });
@@ -152,7 +149,6 @@ export const ConversationListContextProvider = ({
       conversationListData: lastPage
         ? {
             conversations,
-            total: lastPage.total,
             hasGmailSupportEmail: lastPage.hasGmailSupportEmail,
             defaultSort: lastPage.defaultSort,
             assignedToIds: lastPage.assignedToIds,
