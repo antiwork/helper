@@ -389,7 +389,9 @@ export const createConversationMessage = async (
     });
   }
 
-  await inngest.send(eventsToSend);
+  if (eventsToSend.length > 0) {
+    await inngest.send(eventsToSend);
+  }
 
   return message;
 };
