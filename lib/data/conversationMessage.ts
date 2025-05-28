@@ -369,23 +369,31 @@ export const createConversationMessage = async (
     );
   }
 
+  const eventPromises = [];
+
   if (message.status !== "draft") {
-    await inngest.send({
-      name: "conversations/message.created",
-      data: {
-        messageId: message.id,
-        conversationId: message.conversationId,
-      },
-    });
+    eventPromises.push(
+      inngest.send({
+        name: "conversations/message.created",
+        data: {
+          messageId: message.id,
+          conversationId: message.conversationId,
+        },
+      })
+    );
   }
 
   if (message.status === "queueing") {
-    await inngest.send({
-      name: "conversations/email.enqueued",
-      data: { messageId: message.id },
-      ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-    });
+    eventPromises.push(
+      inngest.send({
+        name: "conversations/email.enqueued",
+        data: { messageId: message.id },
+        ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      })
+    );
   }
+
+  await Promise.all(eventPromises);
 
   return message;
 };
