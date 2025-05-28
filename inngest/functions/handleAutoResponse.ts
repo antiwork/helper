@@ -51,14 +51,16 @@ export const handleAutoResponse = async (messageId: number) => {
   if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   if (message.conversation.mailbox.preferences?.autoRespondEmailToChat === "draft") {
-    await generateDraftResponse(message.conversation.id, message.conversation.mailbox);
-    return;
+    const aiDraft = await generateDraftResponse(message.conversation.id, message.conversation.mailbox);
+    return { message: "Draft response generated", draftId: aiDraft.id };
   }
 
   const emailText = (await getTextWithConversationSubject(message.conversation, message)).trim();
   if (emailText.length === 0) return { message: "Skipped - email text is empty" };
 
-  const messageText = cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "");
+  const messageText = cleanUpTextForAI(
+    [message.conversation.subject ?? "", message.cleanedUpText ?? message.body ?? ""].join("\n\n"),
+  );
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
 
   const response = await respondWithAI({
