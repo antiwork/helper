@@ -33,7 +33,6 @@ test("getMailboxInfo", async () => {
     widgetDisplayMode: "always",
     widgetDisplayMinValue: null,
     widgetHost: null,
-    autoRespondEmailToChat: false,
     vipThreshold: null,
     vipChannelId: null,
     vipExpectedResponseHours: null,
