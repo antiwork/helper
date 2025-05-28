@@ -379,7 +379,7 @@ export const createConversationMessage = async (
           messageId: message.id,
           conversationId: message.conversationId,
         },
-      })
+      }),
     );
   }
 
@@ -389,7 +389,7 @@ export const createConversationMessage = async (
         name: "conversations/email.enqueued",
         data: { messageId: message.id },
         ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-      })
+      }),
     );
   }
 
