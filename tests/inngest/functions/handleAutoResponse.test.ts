@@ -13,7 +13,7 @@ import * as retrieval from "@/lib/data/retrieval";
 
 vi.mock("@/lib/ai/chat");
 vi.mock("@/lib/data/retrieval");
-vi.mock("@lib/data/platformCustomer");
+vi.mock("@/lib/data/platformCustomer");
 vi.mock("@sentry/nextjs", () => ({
   setContext: vi.fn(),
   captureException: vi.fn(),
