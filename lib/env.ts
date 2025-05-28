@@ -37,7 +37,7 @@ export const env = createEnv({
       z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
       "1234567890abcdef1234567890abcdef",
     ),
-    // WIDGET_JWT_SECRET has been replaced with per-mailbox widgetHMACSecret
+    WIDGET_JWT_SECRET: defaultUnlessDeployed(z.string().min(1), "example_jwt_secret"),
 
     // Set these before or after deploying to receive one-time passwords by email
     RESEND_API_KEY: z.string().min(1).optional(),

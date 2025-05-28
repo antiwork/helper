@@ -63,17 +63,26 @@ export async function createWidgetSession(
 }
 
 export async function verifyWidgetSession(token: string): Promise<WidgetSessionPayload> {
-  try {
-    const decoded = jwt.decode(token) as WidgetSessionPayload;
-    if (!decoded?.mailboxSlug) {
-      throw new Error("Invalid token: missing mailboxSlug");
-    }
+  const decoded = jwt.decode(token) as WidgetSessionPayload;
+  if (!decoded?.mailboxSlug) {
+    throw new Error("Invalid token: missing mailboxSlug");
+  }
 
+  try {
     const secret = await getMailboxJwtSecret(decoded.mailboxSlug);
     const verified = jwt.verify(token, secret) as WidgetSessionPayload;
     return verified;
   } catch (e) {
-    throw new Error("Invalid or expired token", { cause: e });
+    try {
+      const globalSecret = env.WIDGET_JWT_SECRET;
+      if (!globalSecret) {
+        throw new Error("WIDGET_JWT_SECRET is not set");
+      }
+      const verified = jwt.verify(token, globalSecret) as WidgetSessionPayload;
+      return verified;
+    } catch (fallbackError) {
+      throw new Error("Invalid or expired token", { cause: e });
+    }
   }
 }
 
