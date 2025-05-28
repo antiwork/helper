@@ -313,6 +313,7 @@ export const createReply = async (
       {
         conversationId,
         body: message,
+        encryptedBody: message,
         userId: user?.id,
         emailCc: cc ?? (await getNonSupportParticipants(conversation)),
         emailBcc: bcc,
@@ -407,15 +408,19 @@ export const createAiDraft = async (
     throw new Error("responseToId is required");
   }
 
+  const sanitizedBody = DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false }));
+
   return await createConversationMessage(
     {
       conversationId,
-      body: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false })),
+      body: sanitizedBody,
+      encryptedBody: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo,
       cleanedUpText: body,
+      encryptedCleanedUpText: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -429,7 +434,10 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx.update(conversationMessages).set({ cleanedUpText }).where(eq(conversationMessages.id, message.id));
+  await tx
+    .update(conversationMessages)
+    .set({ cleanedUpText, encryptedCleanedUpText: cleanedUpText })
+    .where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
@@ -509,7 +517,9 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
+    encryptedBody: userMessage,
     cleanedUpText: userMessage,
+    encryptedCleanedUpText: userMessage,
     metadata: {
       tool: {
         id: tool.id,

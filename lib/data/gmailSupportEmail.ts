@@ -40,7 +40,13 @@ export const createGmailSupportEmail = async (
     .values({
       email: info.email,
       ...("accessToken" in info
-        ? { accessToken: info.accessToken, refreshToken: info.refreshToken, expiresAt: info.expiresAt }
+        ? {
+            accessToken: info.accessToken,
+            encryptedAccessToken: info.accessToken,
+            refreshToken: info.refreshToken,
+            encryptedRefreshToken: info.refreshToken,
+            expiresAt: info.expiresAt,
+          }
         : { userId: info.userId }),
     })
     .returning()
