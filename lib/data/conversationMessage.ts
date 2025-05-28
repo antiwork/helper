@@ -313,6 +313,7 @@ export const createReply = async (
       {
         conversationId,
         body: message,
+        encryptedBody: message,
         userId: user?.id,
         emailCc: cc ?? (await getNonSupportParticipants(conversation)),
         emailBcc: bcc,
@@ -401,11 +402,13 @@ export const createAiDraft = async (
     throw new Error("responseToId is required");
   }
 
+  const sanitizedBody = DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false }));
+
   return await createConversationMessage(
     {
       conversationId,
-      body: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false })),
-      encryptedBody: DOMPurify.sanitize(marked.parse(body.trim().replace(/\n\n+/g, "\n\n"), { async: false })),
+      body: sanitizedBody,
+      encryptedBody: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
