@@ -369,9 +369,11 @@ export const createConversationMessage = async (
     );
   }
 
+  const eventsToSend = [];
+
   if (message.status !== "draft") {
-    await inngest.send({
-      name: "conversations/message.created",
+    eventsToSend.push({
+      name: "conversations/message.created" as const,
       data: {
         messageId: message.id,
         conversationId: message.conversationId,
@@ -380,11 +382,15 @@ export const createConversationMessage = async (
   }
 
   if (message.status === "queueing") {
-    await inngest.send({
-      name: "conversations/email.enqueued",
+    eventsToSend.push({
+      name: "conversations/email.enqueued" as const,
       data: { messageId: message.id },
       ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
     });
+  }
+
+  if (eventsToSend.length > 0) {
+    await inngest.send(eventsToSend);
   }
 
   return message;
