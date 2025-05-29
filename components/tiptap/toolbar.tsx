@@ -56,6 +56,7 @@ const Toolbar = ({
       return;
     }
 
+    setOpen(true);
     const { from, to, empty } = editor.state.selection;
     const label = empty ? "" : editor.state.doc.textBetween(from, to, "");
     
@@ -76,6 +77,7 @@ const Toolbar = ({
       const linkElement = target.closest('a');
       if (linkElement) {
         if (editor.isActive("link")) {
+          setOpen(true);
           const linkMark = editor.getAttributes("link");
           const text = linkElement.textContent || "";
           setLinkData({ url: linkMark.href || "", text });

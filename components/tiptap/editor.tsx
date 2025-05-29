@@ -315,7 +315,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
           )}
         </div>
         <div className="flex w-full justify-between md:justify-start">
-          <div className="w-full">
+          <div className="w-full md:w-auto">
             <Toolbar
               {...{
                 open: toolbarOpen,
