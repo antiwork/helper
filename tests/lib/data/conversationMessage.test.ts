@@ -320,6 +320,9 @@ const inngest = mockInngest();
 
 describe("createReply", () => {
   it("creates a reply and closes the conversation", async () => {
+    const time = new Date("2023-01-01 01:00:00");
+    vi.setSystemTime(time);
+
     const { user, mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
 
@@ -334,10 +337,17 @@ describe("createReply", () => {
     const updatedConversation = await getConversationById(conversation.id);
     expect(updatedConversation?.status).toBe("closed");
 
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: "conversations/message.created",
-      data: { messageId, conversationId: conversation.id },
-    });
+    expect(inngest.send).toHaveBeenCalledWith([
+      {
+        name: "conversations/message.created",
+        data: { messageId, conversationId: conversation.id },
+      },
+      {
+        name: "conversations/email.enqueued",
+        data: { messageId },
+        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      },
+    ]);
   });
 
   it("creates a reply without closing the conversation", async () => {
@@ -533,10 +543,12 @@ describe("createConversationMessage", () => {
     expect(message).toBeTruthy();
     expect(message.body).toBe("Test message");
 
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: "conversations/message.created",
-      data: { messageId: message.id, conversationId: message.conversationId },
-    });
+    expect(inngest.send).toHaveBeenCalledWith([
+      {
+        name: "conversations/message.created",
+        data: { messageId: message.id, conversationId: message.conversationId },
+      },
+    ]);
 
     expect(inngest.send).not.toHaveBeenCalledWith(
       expect.objectContaining({
@@ -562,11 +574,17 @@ describe("createConversationMessage", () => {
       status: "queueing",
     });
 
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: "conversations/email.enqueued",
-      data: { messageId: message.id },
-      ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-    });
+    expect(inngest.send).toHaveBeenCalledWith([
+      {
+        name: "conversations/message.created",
+        data: { messageId: message.id, conversationId: message.conversationId },
+      },
+      {
+        name: "conversations/email.enqueued",
+        data: { messageId: message.id },
+        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      },
+    ]);
   });
 });
 
