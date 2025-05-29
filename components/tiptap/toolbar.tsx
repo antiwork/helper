@@ -59,7 +59,7 @@ const Toolbar = ({
     setOpen(true);
     const { from, to, empty } = editor.state.selection;
     const label = empty ? "" : editor.state.doc.textBetween(from, to, "");
-    
+
     if (editor.isActive("link")) {
       const linkMark = editor.getAttributes("link");
       setLinkData({ url: linkMark.href || "", text: label });
@@ -74,7 +74,7 @@ const Toolbar = ({
 
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const linkElement = target.closest('a');
+      const linkElement = target.closest("a");
       if (linkElement) {
         if (editor.isActive("link")) {
           setOpen(true);
@@ -88,9 +88,9 @@ const Toolbar = ({
     };
 
     const editorElement = editor.view.dom;
-    editorElement.addEventListener('click', handleClick);
+    editorElement.addEventListener("click", handleClick);
     return () => {
-      editorElement.removeEventListener('click', handleClick);
+      editorElement.removeEventListener("click", handleClick);
     };
   }, [editor]);
 
@@ -128,16 +128,14 @@ const Toolbar = ({
         tr.delete(from, to).insert(from, textNode);
         editor.view.dispatch(tr);
       }
-    } else {
-      if (linkData.text && linkData.url) {
-        const { from, to } = editor.state.selection;
-        const linkMark = editor.state.schema.marks.link?.create({ href: linkData.url });
-        if (!linkMark) return;
-        const textNode = editor.state.schema.text(linkData.text, [linkMark]);
-        editor.view.dispatch(editor.state.tr.delete(from, to).insert(from, textNode));
-      } else if (linkData.url) {
-        editor.chain().focus().setLink({ href: linkData.url }).run();
-      }
+    } else if (linkData.text && linkData.url) {
+      const { from, to } = editor.state.selection;
+      const linkMark = editor.state.schema.marks.link?.create({ href: linkData.url });
+      if (!linkMark) return;
+      const textNode = editor.state.schema.text(linkData.text, [linkMark]);
+      editor.view.dispatch(editor.state.tr.delete(from, to).insert(from, textNode));
+    } else if (linkData.url) {
+      editor.chain().focus().setLink({ href: linkData.url }).run();
     }
     editor.view.focus();
     setLinkModalOpen(false);
@@ -310,8 +308,8 @@ const Toolbar = ({
       <div
         className={cn(
           isAboveMd
-          ? "flex flex-wrap gap-1 absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
-          : "flex flex-1 min-w-0 gap-1",
+            ? "flex flex-wrap gap-1 absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
+            : "flex flex-1 min-w-0 gap-1",
           open && isAboveMd && "left-3",
           !open && !isAboveMd && "hidden",
         )}

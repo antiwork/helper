@@ -333,11 +333,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               }}
             />
           </div>
-          {toolbarOpen && !isAboveMd ? null : (
-            <div className="flex-shrink-0 whitespace-nowrap">
-              {actionButtons}
-            </div>
-          )}
+          {toolbarOpen && !isAboveMd ? null : <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div>}
         </div>
       </div>
     );
