@@ -85,12 +85,7 @@ export function verifyWidgetSession(
     const verified = jwt.verify(token, mailbox.widgetHMACSecret) as WidgetSessionPayload;
     return verified;
   } catch (e) {
-    try {
-      const verified = jwt.verify(token, env.WIDGET_JWT_SECRET) as WidgetSessionPayload;
-      return verified;
-    } catch (fallbackError) {
-      throw new Error("Invalid or expired token", { cause: e });
-    }
+    throw new Error("Invalid or expired token", { cause: e });
   }
 }
 
