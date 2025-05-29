@@ -11,7 +11,7 @@ import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import SectionWrapper from "../sectionWrapper";
+import { SwitchSectionWrapper } from "../sectionWrapper";
 
 export type ThemeUpdates = {
   theme?: {
@@ -90,7 +90,7 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   };
 
   return (
-    <SectionWrapper
+    <SwitchSectionWrapper
       title="Custom Theme"
       description="Choose the appearance of your mailbox with custom colors"
       initialSwitchChecked={isEnabled}
@@ -179,7 +179,7 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
           </div>
         </div>
       )}
-    </SectionWrapper>
+    </SwitchSectionWrapper>
   );
 };
 

@@ -85,6 +85,13 @@ export default function SearchPage() {
     },
   );
 
+  const { data: countData } = api.mailbox.conversations.count.useQuery(
+    { mailboxSlug: params.mailbox_slug, ...searchOptions },
+    {
+      enabled: isSearching,
+    },
+  );
+
   const { mutateAsync: bulkUpdate, isPending: isBulkUpdating } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: () => {
       toast({
@@ -95,7 +102,7 @@ export default function SearchPage() {
   });
 
   const searchResults = data?.pages.flatMap((page) => page.conversations) ?? [];
-  const totalResults = data?.pages[data.pages.length - 1]?.total ?? 0;
+  const totalResults = countData?.total ?? 0;
 
   const updateFilter = (updates: Partial<typeof searchParams>) => {
     setFilterValues((prev) => ({ ...prev, ...updates }));
@@ -112,7 +119,7 @@ export default function SearchPage() {
           void fetchNextPage();
         }
       },
-      { rootMargin: "500px", root: resultsContainerRef.current },
+      { rootMargin: "500px" },
     );
 
     if (loadMoreRef.current) {
@@ -155,6 +162,7 @@ export default function SearchPage() {
     setAllConversationsSelected(false);
     setSelectedConversations([]);
     void utils.mailbox.conversations.list.invalidate();
+    void utils.mailbox.conversations.count.invalidate();
     if (!updatedImmediately) {
       toast({ title: "Starting update, refresh to see status." });
     }

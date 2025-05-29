@@ -60,7 +60,6 @@ describe("conversationsRouter", () => {
           expect.objectContaining({ slug: conversation.slug }),
           expect.objectContaining({ slug: assignedConversation.slug }),
         ]),
-        total: 2,
       });
 
       expect(
@@ -71,7 +70,6 @@ describe("conversationsRouter", () => {
         }),
       ).toMatchObject({
         conversations: [{ slug: assignedConversation.slug }],
-        total: 1,
         defaultSort: "oldest",
         assignedToIds: [user.id],
       });
@@ -110,6 +108,20 @@ describe("conversationsRouter", () => {
         "low@example.com",
         "no-value@example.com",
       ]);
+    });
+  });
+
+  describe("count", () => {
+    it("returns the total number of conversations", async () => {
+      const { user } = await userFactory.createRootUser();
+      const { mailbox } = await mailboxFactory.create();
+      await conversationFactory.create(mailbox.id);
+      await conversationFactory.create(mailbox.id);
+
+      const caller = createCaller(createTestTRPCContext(user));
+      const result = await caller.mailbox.conversations.count({ ...defaultParams, mailboxSlug: mailbox.slug });
+
+      expect(result.total).toBe(2);
     });
   });
 

@@ -1,7 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, count, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
-import { remark } from "remark";
-import remarkHtml from "remark-html";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
@@ -9,17 +7,12 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { inngest } from "@/inngest/client";
-import { generateAIResponse, loadPreviousMessages } from "@/lib/ai/chat";
+import { generateDraftResponse } from "@/lib/ai/chat";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
 import { countSearchResults, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import {
-  createAiDraft,
-  createReply,
-  getLastAiGeneratedDraft,
-  serializeResponseAiDraft,
-} from "@/lib/data/conversationMessage";
+import { createReply, getLastAiGeneratedDraft, serializeResponseAiDraft } from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { mailboxProcedure } from "../procedure";
@@ -34,18 +27,23 @@ export { conversationProcedure };
 
 export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
-    const { list, where, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.user.id);
+    const { list, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.user.id);
 
-    const [{ results, nextCursor }, total] = await Promise.all([list, countSearchResults(where)]);
+    const { results, nextCursor } = await list;
 
     return {
       conversations: results,
-      total,
       defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
       hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       assignedToIds: input.assignee ?? null,
       nextCursor,
     };
+  }),
+
+  count: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
+    const { where } = await searchConversations(ctx.mailbox, input, ctx.user.id);
+    const total = await countSearchResults(where);
+    return { total };
   }),
 
   listWithPreview: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
@@ -192,44 +190,8 @@ export const conversationsRouter = {
       });
       return { updatedImmediately: false };
     }),
-  refreshDraft: conversationProcedure.mutation(async ({ ctx }) => {
-    const lastUserMessage = await db.query.conversationMessages.findFirst({
-      where: and(eq(conversationMessages.conversationId, ctx.conversation.id), eq(conversationMessages.role, "user")),
-      orderBy: desc(conversationMessages.createdAt),
-      with: {
-        conversation: {
-          columns: {
-            subject: true,
-          },
-        },
-      },
-    });
-    if (!lastUserMessage) throw new TRPCError({ code: "NOT_FOUND", message: "No user message found" });
-
-    const oldDraft = await getLastAiGeneratedDraft(ctx.conversation.id);
-    const messages = await loadPreviousMessages(ctx.conversation.id);
-    const result = await generateAIResponse({
-      messages,
-      mailbox: ctx.mailbox,
-      conversationId: ctx.conversation.id,
-      email: lastUserMessage.emailFrom,
-      readPageTool: null,
-      guideEnabled: false,
-      addReasoning: false,
-    });
-    for await (const _ of result.textStream) {
-      // awaiting result.text doesn't appear to work without this
-    }
-    const draftResponse = await convertMarkdownToHtml(await result.text);
-    const newDraft = await db.transaction(async (tx) => {
-      if (oldDraft) {
-        await tx
-          .update(conversationMessages)
-          .set({ status: "discarded" })
-          .where(eq(conversationMessages.id, oldDraft.id));
-      }
-      return await createAiDraft(ctx.conversation.id, draftResponse, lastUserMessage.id, null, tx);
-    });
+  generateDraft: conversationProcedure.mutation(async ({ ctx }) => {
+    const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
@@ -360,8 +322,3 @@ export const conversationsRouter = {
     };
   }),
 } satisfies TRPCRouterRecord;
-
-const convertMarkdownToHtml = async (markdown: string): Promise<string> => {
-  const result = await remark().use(remarkHtml).process(markdown);
-  return result.toString();
-};

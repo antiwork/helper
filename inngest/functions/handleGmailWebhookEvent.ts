@@ -116,7 +116,9 @@ export const createMessageAndProcessAttachments = async (
     emailCc: emailCc ? extractAddresses(emailCc) : null,
     emailBcc: emailBcc ? extractAddresses(emailBcc) : null,
     body: processedHtml,
+    encryptedBody: processedHtml,
     cleanedUpText,
+    encryptedCleanedUpText: cleanedUpText,
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
@@ -308,7 +310,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
             source: "email",
             isPrompt: false,
             isVisitor: false,
-            assignedToAI: mailbox.autoRespondEmailToChat,
+            assignedToAI: !!mailbox.preferences?.autoRespondEmailToChat,
             anonymousSessionId: null,
           })
           .returning({
@@ -355,7 +357,11 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
         conversation,
         staffUser,
       );
-      if (conversation.status === "closed" && !conversation.assignedToAI && !shouldIgnore) {
+      if (
+        conversation.status === "closed" &&
+        (!conversation.assignedToAI || mailbox.preferences?.autoRespondEmailToChat === "draft") &&
+        !shouldIgnore
+      ) {
         await updateConversation(conversation.id, { set: { status: "open" } });
       }
 
