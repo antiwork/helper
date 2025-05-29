@@ -11,8 +11,8 @@ type WidgetViewState = {
   setIsNewConversation: (isNew: boolean) => void;
   handleSelectConversation: (slug: string) => string;
   handleNewConversation: () => void;
-  showingPromptInfo?: { promptInfo: PromptInfo; message: Message };
-  togglePromptInfo: (promptInfo?: { promptInfo: PromptInfo; message: Message }) => void;
+  showingPromptInfo?: { promptInfo: PromptInfo; message: Message; allMessages: Message[] };
+  togglePromptInfo: (promptInfo?: { promptInfo: PromptInfo; message: Message; allMessages: Message[] }) => void;
 };
 
 export const useWidgetView = create<WidgetViewState>((set) => ({

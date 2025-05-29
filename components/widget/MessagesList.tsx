@@ -1,4 +1,4 @@
-import { JSONValue, type Message as AIMessage } from "ai";
+import { JSONValue } from "ai";
 import { Fragment } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { Attachment } from "@/components/widget/Conversation";
@@ -83,6 +83,7 @@ export default function MessagesList({
                   <Message
                     key={`${message.id || index}-guide-result`}
                     message={message}
+                    allMessages={messages}
                     attachments={allAttachments.filter((a) => a.messageId === message.id)}
                     conversationSlug={conversationSlug}
                     token={token}
@@ -99,6 +100,7 @@ export default function MessagesList({
             <Message
               key={`${message.id || index}-message`}
               message={message}
+              allMessages={messages}
               attachments={allAttachments.filter((a) => a.messageId === message.id)}
               conversationSlug={conversationSlug}
               token={token}

@@ -137,7 +137,7 @@ export const buildPromptMessages = async (
 }> => {
   const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
 
-  const prompt = [
+  const systemPrompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
       "{{CURRENT_DATE}}",
       new Date().toISOString(),
@@ -147,28 +147,28 @@ export const buildPromptMessages = async (
     .filter(Boolean)
     .join("\n");
 
-  let systemPrompt = prompt;
+  let prompt = systemPrompt;
   if (knowledgeBank) {
-    systemPrompt += `\n${knowledgeBank}`;
+    prompt += `\n${knowledgeBank}`;
   }
   if (websitePagesPrompt) {
-    systemPrompt += `\n${websitePagesPrompt}`;
+    prompt += `\n${websitePagesPrompt}`;
   }
   const userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
-  systemPrompt += userPrompt;
+  prompt += userPrompt;
 
   return {
     messages: [
       {
         role: "system",
-        content: systemPrompt,
+        content: prompt,
       },
     ],
     sources: websitePages,
     promptInfo: {
       systemPrompt,
       knowledgeBank,
-      websitePagesPrompt,
+      websitePages: websitePages.map((page) => ({ url: page.url, title: page.pageTitle, similarity: page.similarity })),
       userPrompt,
     },
   };

@@ -172,6 +172,7 @@ export default function Page() {
           {showingPromptInfo && (
             <PromptDetailsModal
               onClose={() => togglePromptInfo()}
+              allMessages={showingPromptInfo.allMessages}
               message={showingPromptInfo.message}
               promptInfo={showingPromptInfo.promptInfo}
             />

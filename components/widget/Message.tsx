@@ -17,6 +17,7 @@ export type MessageWithReaction = Message & {
 
 type Props = {
   message: MessageWithReaction;
+  allMessages: Message[];
   conversationSlug: string | null;
   token: string | null;
   data: JSONValue[] | null;
@@ -27,6 +28,7 @@ type Props = {
 
 export default function Message({
   message,
+  allMessages,
   conversationSlug,
   token,
   data,
@@ -145,7 +147,7 @@ export default function Message({
           <>
             <span className="text-xs text-gray-400">·</span>
             <button
-              onClick={() => togglePromptInfo({ promptInfo, message })}
+              onClick={() => togglePromptInfo({ promptInfo, message, allMessages })}
               className="text-xs text-gray-400 hover:text-gray-600 underline"
             >
               Details

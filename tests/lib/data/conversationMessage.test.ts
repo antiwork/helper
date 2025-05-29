@@ -62,11 +62,7 @@ describe("serializeResponseAiDraft", () => {
     const { conversation } = await conversationFactory.create(mailbox.id);
     const params = {
       role: "ai_assistant" as const,
-      promptInfo: {
-        pinned_replies: "Pinned replies",
-        past_conversations: "Past conversations",
-        metadata: "Metadata",
-      },
+      promptInfo: {},
     };
     const { message: draft1 } = await conversationMessagesFactory.create(conversation.id, {
       ...params,
