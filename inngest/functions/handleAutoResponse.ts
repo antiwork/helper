@@ -3,7 +3,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { checkTokenCountAndSummarizeIfNeeded, respondWithAI } from "@/lib/ai/chat";
+import { checkTokenCountAndSummarizeIfNeeded, generateDraftResponse, respondWithAI } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
@@ -26,6 +26,7 @@ export const handleAutoResponse = async (messageId: number) => {
     .then(assertDefined);
 
   if (message.conversation.status === "spam") return { message: "Skipped - conversation is spam" };
+  if (message.role === "staff") return { message: "Skipped - message is from staff" };
 
   await ensureCleanedUpText(message);
 
@@ -49,10 +50,17 @@ export const handleAutoResponse = async (messageId: number) => {
 
   if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
+  if (message.conversation.mailbox.preferences?.autoRespondEmailToChat === "draft") {
+    const aiDraft = await generateDraftResponse(message.conversation.id, message.conversation.mailbox);
+    return { message: "Draft response generated", draftId: aiDraft.id };
+  }
+
   const emailText = (await getTextWithConversationSubject(message.conversation, message)).trim();
   if (emailText.length === 0) return { message: "Skipped - email text is empty" };
 
-  const messageText = cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "");
+  const messageText = cleanUpTextForAI(
+    [message.conversation.subject ?? "", message.cleanedUpText ?? message.body ?? ""].join("\n\n"),
+  );
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
 
   const response = await respondWithAI({

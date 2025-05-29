@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "crypto";
 import { fireworks } from "@ai-sdk/fireworks";
+import { TRPCError } from "@trpc/server";
 import {
   appendClientMessage,
   convertToCoreMessages,
@@ -16,6 +17,8 @@ import {
   type Tool,
 } from "ai";
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { remark } from "remark";
+import remarkHtml from "remark-html";
 import { z } from "zod";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
@@ -28,7 +31,12 @@ import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { createConversationMessage, getMessagesOnly } from "@/lib/data/conversationMessage";
+import {
+  createAiDraft,
+  createConversationMessage,
+  getLastAiGeneratedDraft,
+  getMessagesOnly,
+} from "@/lib/data/conversationMessage";
 import { createAndUploadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
@@ -720,4 +728,50 @@ const createTextResponse = (text: string, messageId: string) => {
 
 const hashQuery = (query: string): string => {
   return createHash("md5").update(query).digest("hex");
+};
+
+const convertMarkdownToHtml = async (markdown: string): Promise<string> => {
+  const result = await remark().use(remarkHtml).process(markdown);
+  return result.toString();
+};
+
+export const generateDraftResponse = async (conversationId: number, mailbox: Mailbox) => {
+  const lastUserMessage = await db.query.conversationMessages.findFirst({
+    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
+    orderBy: desc(conversationMessages.createdAt),
+    with: {
+      conversation: {
+        columns: {
+          subject: true,
+        },
+      },
+    },
+  });
+  if (!lastUserMessage) throw new TRPCError({ code: "NOT_FOUND", message: "No user message found" });
+
+  const oldDraft = await getLastAiGeneratedDraft(conversationId);
+  const messages = await loadPreviousMessages(conversationId);
+  const result = await generateAIResponse({
+    messages,
+    mailbox,
+    conversationId,
+    email: lastUserMessage.emailFrom,
+    readPageTool: null,
+    guideEnabled: false,
+    addReasoning: false,
+  });
+  for await (const _ of result.textStream) {
+    // awaiting result.text doesn't appear to work without this
+  }
+  const draftResponse = await convertMarkdownToHtml(await result.text);
+  const newDraft = await db.transaction(async (tx) => {
+    if (oldDraft) {
+      await tx
+        .update(conversationMessages)
+        .set({ status: "discarded" })
+        .where(eq(conversationMessages.id, oldDraft.id));
+    }
+    return await createAiDraft(conversationId, draftResponse, lastUserMessage.id, null, tx);
+  });
+  return newDraft;
 };

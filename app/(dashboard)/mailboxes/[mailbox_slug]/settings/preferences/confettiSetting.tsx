@@ -6,7 +6,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import SectionWrapper from "../sectionWrapper";
+import { SwitchSectionWrapper } from "../sectionWrapper";
 
 const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [confettiEnabled, setConfettiEnabled] = useState(mailbox.preferences?.confetti ?? false);
@@ -33,14 +33,14 @@ const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   };
 
   return (
-    <SectionWrapper
+    <SwitchSectionWrapper
       title="Confetti Settings"
       description="Enable full-page confetti animation when closing a ticket"
       initialSwitchChecked={confettiEnabled}
       onSwitchChange={handleSwitchChange}
     >
       {confettiEnabled && <Button onClick={handleTestConfetti}>Test Confetti</Button>}
-    </SectionWrapper>
+    </SwitchSectionWrapper>
   );
 };
 

@@ -11,7 +11,7 @@ import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SlackChannels } from "../integrations/slackSetting";
-import SectionWrapper from "../sectionWrapper";
+import { SwitchSectionWrapper } from "../sectionWrapper";
 
 export type CustomerUpdates = {
   vipThreshold?: string | null;
@@ -58,7 +58,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   }, [isEnabled, threshold, responseHours]);
 
   return (
-    <SectionWrapper
+    <SwitchSectionWrapper
       title="VIP Customers"
       description="Configure settings for high-value customers"
       initialSwitchChecked={isEnabled}
@@ -138,7 +138,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
           </div>
         </div>
       )}
-    </SectionWrapper>
+    </SwitchSectionWrapper>
   );
 };
 

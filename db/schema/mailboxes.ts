@@ -31,7 +31,6 @@ export const mailboxes = pgTable(
     widgetHMACSecret: varchar({ length: 255 }).notNull(),
     widgetDisplayMode: text().$type<"always" | "revenue_based" | "off">().notNull().default("always"),
     widgetDisplayMinValue: bigint({ mode: "number" }),
-    autoRespondEmailToChat: boolean().notNull().default(false),
     widgetHost: text(),
     vipThreshold: bigint({ mode: "number" }),
     vipChannelId: text(),
@@ -42,6 +41,7 @@ export const mailboxes = pgTable(
     }),
     autoCloseEnabled: boolean().notNull().default(false),
     autoCloseDaysOfInactivity: integer().notNull().default(14),
+    unused_autoRespondEmailToChat: boolean("auto_respond_email_to_chat").notNull().default(false),
     unused_disableAutoResponseForVips: boolean("disable_auto_response_for_vips").notNull().default(false),
     unused_responseGeneratorPrompt: jsonb("response_generator_prompt").$type<string[]>(),
     unused_escalationEmailBody: text("escalation_email_body"),
@@ -56,6 +56,7 @@ export const mailboxes = pgTable(
           accent: string;
           sidebarBackground: string;
         } | null;
+        autoRespondEmailToChat?: "draft" | "reply" | null;
         disableTicketResponseTimeAlerts?: boolean;
       }>()
       .default({}),
