@@ -45,11 +45,13 @@ export async function POST(request: Request) {
     where: eq(mailboxes.slug, mailboxSlug),
     columns: {
       id: true,
+      slug: true,
       widgetDisplayMode: true,
       widgetDisplayMinValue: true,
       isWhitelabel: true,
       preferences: true,
       name: true,
+      widgetHMACSecret: true,
     },
   });
 
@@ -95,17 +97,7 @@ export async function POST(request: Request) {
       false;
   }
 
-  const token = createWidgetSession(
-    {
-      email,
-      mailboxSlug,
-      showWidget,
-      isWhitelabel: mailboxRecord.isWhitelabel ?? false,
-      theme: mailboxRecord.preferences?.theme,
-      title: mailboxRecord.name,
-    },
-    currentToken,
-  );
+  const token = createWidgetSession(mailboxRecord, { email, showWidget, currentToken });
 
   let notifications;
   if (platformCustomer) {
