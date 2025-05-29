@@ -26,7 +26,7 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
   return (
     <div
       ref={containerRef}
-      className="flex w-full sm:w-96 flex-col gap-2 rounded-b border border-border bg-background p-4 shadow-lg"
+      className="flex w-full sm:w-96 flex-col gap-2 rounded-lg border border-border bg-background p-4 shadow-lg"
     >
       <Input
         ref={inputRef}

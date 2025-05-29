@@ -14,7 +14,6 @@ import ToolbarImage from "./icons/image.svg";
 import ToolbarItalic from "./icons/italic.svg";
 import ToolbarLink from "./icons/link.svg";
 import ToolbarOrderedList from "./icons/ordered-list.svg";
-import { Slice, Fragment } from "@tiptap/core";
 
 type ToolbarProps = {
   editor: Editor | null;
@@ -51,6 +50,11 @@ const Toolbar = ({
   const toggleLinkModal = (open: boolean) => {
     if (!open) return setLinkModalOpen(false);
     if (!editor) return;
+
+    if (isLinkModalOpen) {
+      setLinkModalOpen(false);
+      return;
+    }
 
     const { from, to, empty } = editor.state.selection;
     const label = empty ? "" : editor.state.doc.textBetween(from, to, "");
@@ -90,9 +94,9 @@ const Toolbar = ({
 
   useEffect(() => {
     if (isLinkModalOpen) {
-      activeLinkElement?.classList.add("bg-primary/20", "dark:bg-primary/20");
+      activeLinkElement?.classList.add("bg-primary/10", "dark:bg-primary/10");
     } else {
-      activeLinkElement?.classList.remove("bg-primary/20", "dark:bg-primary/20");
+      activeLinkElement?.classList.remove("bg-primary/10", "dark:bg-primary/10");
       setActiveLinkElement(null);
     }
   }, [isLinkModalOpen, activeLinkElement]);
