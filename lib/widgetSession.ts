@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { Mailbox } from "@/lib/data/mailbox";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { MailboxTheme } from "@/lib/themes";
@@ -33,52 +34,59 @@ const getMailboxJwtSecret = async (mailboxSlug: string): Promise<string> => {
   return mailboxRecord.widgetHMACSecret;
 };
 
-export async function createWidgetSession(
-  payload: Omit<WidgetSessionPayload, "isAnonymous" | "email"> & {
+export function createWidgetSession(
+  mailbox: Pick<Mailbox, "slug" | "widgetHMACSecret" | "isWhitelabel" | "preferences" | "name">,
+  {
+    email,
+    showWidget,
+    currentToken,
+  }: {
     email?: string;
-    isWhitelabel: boolean;
+    showWidget: boolean;
+    currentToken?: string | null;
   },
-  currentToken?: string | null,
-): Promise<string> {
+) {
   let anonymousSessionId: string | undefined;
   if (currentToken) {
     try {
-      const decoded = await verifyWidgetSession(currentToken);
-      if (decoded.mailboxSlug === payload.mailboxSlug) anonymousSessionId = decoded.anonymousSessionId;
+      const decoded = verifyWidgetSession(currentToken, mailbox);
+      if (decoded.mailboxSlug === mailbox.slug) anonymousSessionId = decoded.anonymousSessionId;
     } catch (e) {
       captureExceptionAndLog(e);
     }
   }
-  const isAnonymous = !payload.email;
-  const secret = await getMailboxJwtSecret(payload.mailboxSlug);
+  const isAnonymous = !email;
   return jwt.sign(
     {
-      ...payload,
+      email,
+      showWidget,
+      mailboxSlug: mailbox.slug,
+      isWhitelabel: mailbox.isWhitelabel ?? false,
+      theme: mailbox.preferences?.theme,
+      title: mailbox.name,
       isAnonymous,
       anonymousSessionId: isAnonymous ? (anonymousSessionId ?? crypto.randomUUID()) : undefined,
     },
-    secret,
+    mailbox.widgetHMACSecret,
     { expiresIn: isAnonymous ? "7d" : "12h" },
   );
 }
 
-export async function verifyWidgetSession(token: string): Promise<WidgetSessionPayload> {
+export function verifyWidgetSession(
+  token: string,
+  mailbox: Pick<Mailbox, "slug" | "widgetHMACSecret">,
+): WidgetSessionPayload {
   const decoded = jwt.decode(token) as WidgetSessionPayload;
-  if (!decoded?.mailboxSlug) {
-    throw new Error("Invalid token: missing mailboxSlug");
+  if (decoded?.mailboxSlug !== mailbox.slug) {
+    throw new Error("Invalid token: mailboxSlug mismatch");
   }
 
   try {
-    const secret = await getMailboxJwtSecret(decoded.mailboxSlug);
-    const verified = jwt.verify(token, secret) as WidgetSessionPayload;
+    const verified = jwt.verify(token, mailbox.widgetHMACSecret) as WidgetSessionPayload;
     return verified;
   } catch (e) {
     try {
-      const globalSecret = env.WIDGET_JWT_SECRET;
-      if (!globalSecret) {
-        throw new Error("WIDGET_JWT_SECRET is not set");
-      }
-      const verified = jwt.verify(token, globalSecret) as WidgetSessionPayload;
+      const verified = jwt.verify(token, env.WIDGET_JWT_SECRET) as WidgetSessionPayload;
       return verified;
     } catch (fallbackError) {
       throw new Error("Invalid or expired token", { cause: e });
