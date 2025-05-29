@@ -27,7 +27,7 @@ export function NavigationRail({ mailboxSlug }: { mailboxSlug: string }) {
       label: "Inbox",
       icon: Inbox,
       href: `/mailboxes/${mailboxSlug}/conversations`,
-      active: pathname.includes("/conversations"),
+      active: !pathname.includes("/search") && !pathname.includes("/dashboard") && !pathname.endsWith("/settings"),
     },
     {
       label: "Search",
