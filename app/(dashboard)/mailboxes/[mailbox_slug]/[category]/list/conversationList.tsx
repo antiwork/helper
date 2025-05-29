@@ -112,7 +112,6 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     "conversations";
 
   const conversations = conversationListData?.conversations ?? [];
-  const total = conversationListData?.total ?? 0;
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
 
   const status = openCount
@@ -297,7 +296,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
             )}
           </div>
         </div>
-        {total > 0 && (
+        {conversations.length > 0 && (
           <div className="absolute bottom-4 right-4 z-10 self-end">
             <NewConversationModal />
           </div>
