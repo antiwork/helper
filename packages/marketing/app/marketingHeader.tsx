@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Inbox } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -13,7 +13,6 @@ type MarketingHeaderProps = {
 
 export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,20 +70,6 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
                 <p>Docs</p>
               </TooltipContent>
             </Tooltip>
-            {!!session && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href="/mailboxes" className="flex items-center group">
-                    <span className="inline-flex items-center justify-center w-9 h-9 transition-colors duration-200 group-hover:text-amber-400 group-focus:text-amber-400">
-                      <Inbox className="h-6 w-6" />
-                    </span>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Go to mailbox</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
         </div>
       </header>

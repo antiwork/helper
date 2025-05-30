@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <NuqsAdapter>
         <body className={inter.className}>
           <HelperProvider
-            host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://helper.ai"}
+            host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://help.gumroad.com"}
             mailbox_slug="helper"
           >
             <div className="flex flex-col min-h-screen">{children}</div>
