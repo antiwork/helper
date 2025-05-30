@@ -20,17 +20,17 @@ import {
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { getBaseUrl } from "@/lib/utils";
-import { Button } from "../components/ui/button";
-import AnimatedTyping from "./animatedTyping";
-import CitationsDemo from "./citationsDemo";
-import ComparisonHistogram from "./comparisonHistogram";
-import LogoIconAmber from "./logoIconAmber.svg";
-import { MarketingHeader } from "./marketingHeader";
-import RefundDemo from "./refundDemo";
-import SlackInterface from "./slackInterface";
-import SlackNotification from "./slackNotification";
-import ToolsDemo from "./toolsDemo";
+import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
+import { getBaseUrl } from "@/components/constants";
+import { Button } from "@/components/ui/button";
+import AnimatedTyping from "./AnimatedTyping";
+import CitationsDemo from "./CitationsDemo";
+import ComparisonHistogram from "./ComparisonHistogram";
+import { MarketingHeader } from "./MarketingHeader";
+import RefundDemo from "./RefundDemo";
+import SlackInterface from "./SlackInterface";
+import SlackNotification from "./SlackNotification";
+import ToolsDemo from "./ToolsDemo";
 
 export default function Home() {
   const [customerQuestions] = useState([
@@ -48,6 +48,7 @@ export default function Home() {
   const [helperTypingComplete, setHelperTypingComplete] = useState(false);
   const [showHelperButton, setShowHelperButton] = useState(false);
   const showMeButtonRef = useRef<HTMLButtonElement>(null);
+  const initialScrollComplete = useRef(false);
   const helperMessageRef = useRef<HTMLDivElement>(null);
 
   const [footerBgColor, setFooterBgColor] = useState("#2B0808");
@@ -117,7 +118,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [currentSlide]);
 
-  const docsBaseUrl = getBaseUrl().includes("localhost") ? "http://localhost:3011" : "https://helper.ai";
+  const docsBaseUrl =
+    getBaseUrl().includes("localhost") || getBaseUrl().includes("dev") ? "https://helperai.dev" : "https://helper.ai";
+
+  // TODO: Remove when we split the marketing site from the dashboard
+  if (typeof window !== "undefined" && !["localhost", "helperai.dev", "helper.ai"].includes(window.location.hostname)) {
+    location.href = "/login";
+    return null;
+  }
 
   return (
     <main className="bg-[#2B0808] text-white flex flex-col">
@@ -242,12 +250,11 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                  asChild
-                >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
-                </Button>
+                <Link href="/login">
+                  <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
+                    Get started
+                  </Button>
+                </Link>
               </div>
 
               <div className="order-1 md:order-2">
@@ -457,12 +464,11 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                  asChild
-                >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
-                </Button>
+                <Link href="/login">
+                  <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
+                    Get started
+                  </Button>
+                </Link>
               </div>
               <div className="space-y-12">
                 <div id="slackInterface" className="hidden xl:block">
@@ -508,7 +514,7 @@ export default function Home() {
         </section>
 
         <section className="py-20">
-          <div className="container mx-auto px-4">
+          <div className="container px-4 ">
             <div className="mb-24 text-left  max-w-5xl mx-auto">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 text-secondary dark:text-foreground text-left xl:text-center">
                 Measure your success
@@ -531,7 +537,7 @@ export default function Home() {
                     <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Customer sentiment</div>
                   </div>
                   <div className="flex-1 flex items-center justify-center">
-                    <img src="/customer-sentiment.svg" alt="Customer sentiment" className="w-full max-w-xs" />
+                    <img src="/images/customer-sentiment.svg" alt="Customer sentiment" className="w-full max-w-xs" />
                   </div>
                 </div>
                 <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col items-center justify-center h-full">
@@ -546,12 +552,11 @@ export default function Home() {
               </div>
             </div>
             <div className="flex justify-center mt-12">
-              <Button
-                className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                asChild
-              >
-                <Link href="https://github.com/antiwork/helper">Get started</Link>
-              </Button>
+              <Link href="/login">
+                <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
+                  Get started
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

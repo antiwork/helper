@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import LogoIconAmber from "./icons/logoIconAmber.svg";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import LogoIconAmber from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/logoIconAmber.svg";
 
 export function SlackInterface() {
   return (

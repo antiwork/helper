@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { HelperProvider } from "@helperai/react";
 import "./globals.css";
-import { MarketingHeader } from "../components/MarketingHeader";
+import { getBaseUrl } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,7 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <NuqsAdapter>
         <body className={inter.className}>
-          <HelperProvider mailbox_slug={process.env.NEXT_PUBLIC_HELPER_MAILBOX_SLUG || ""}>
+          <HelperProvider
+            host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://helper.ai"}
+            mailbox_slug="helper"
+          >
             <div className="flex flex-col min-h-screen">{children}</div>
           </HelperProvider>
         </body>

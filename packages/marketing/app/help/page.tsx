@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { MarketingHeader } from "../../components/MarketingHeader";
 import { Button } from "../../components/ui/button";
+import { MarketingHeader } from "../marketingHeader";
 
 export default function HelpPage() {
   return (
