@@ -16,7 +16,7 @@ describe("HelperProvider", () => {
 
   it("renders children", () => {
     render(
-      <HelperProvider {...createTestConfig()}>
+      <HelperProvider host="https://helper.ai" {...createTestConfig()}>
         <div data-testid="child">Child content</div>
       </HelperProvider>,
     );
@@ -26,7 +26,7 @@ describe("HelperProvider", () => {
 
   it("injects Helper script", () => {
     render(
-      <HelperProvider {...createTestConfig()}>
+      <HelperProvider host="https://helper.ai" {...createTestConfig()}>
         <div>Child content</div>
       </HelperProvider>,
     );
@@ -38,7 +38,7 @@ describe("HelperProvider", () => {
   it("initializes Helper widget with correct config", () => {
     const config = createTestConfig();
     render(
-      <HelperProvider {...config}>
+      <HelperProvider host="https://helper.ai" {...config}>
         <div>Child content</div>
       </HelperProvider>,
     );
@@ -54,7 +54,7 @@ describe("HelperProvider", () => {
 
   it("cleans up script on unmount", () => {
     const { unmount } = render(
-      <HelperProvider {...createTestConfig()}>
+      <HelperProvider host="https://helper.ai" {...createTestConfig()}>
         <div>Child content</div>
       </HelperProvider>,
     );

@@ -20,13 +20,12 @@ export default async function WidgetTest({
   const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
 
   const config: HelperConfig = {
-    // eslint-disable-next-line no-restricted-properties
-    mailbox_slug: process.env.HELPER_MAILBOX_SLUG!,
+    mailboxSlug: "gumroad",
     ...helperAuth,
     title: "Support & Help",
-    experimental_read_page: false,
-    enable_guide: true,
-    customer_metadata: anonymous
+    experimentalReadPage: false,
+    enableGuide: true,
+    customerMetadata: anonymous
       ? null
       : {
           name: "John Doe",

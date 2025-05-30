@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <RootProvider>
             <HelperProvider
               host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://help.gumroad.com"}
-              mailbox_slug="helper"
+              mailboxSlug="helper"
             >
               <div className="flex flex-col min-h-screen">{children}</div>
             </HelperProvider>

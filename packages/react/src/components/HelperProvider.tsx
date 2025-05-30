@@ -11,7 +11,7 @@ import { ClientHelperProvider } from "./ClientHelperProvider";
  */
 export type HelperProviderProps = HelperConfig & {
   children: React.ReactNode;
-  host?: string;
+  host: string;
 };
 
 /**

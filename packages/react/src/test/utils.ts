@@ -29,11 +29,11 @@ export const setupTestEnv = () => {
 
 export const createTestConfig = (overrides: Partial<HelperConfig> = {}): HelperConfig => ({
   email: "test@example.com",
-  email_hash: "hash",
-  mailbox_slug: "test-mailbox",
+  emailHash: "hash",
+  mailboxSlug: "test-mailbox",
   timestamp: 123456789,
   title: "Test Helper",
-  customer_metadata: {},
+  customerMetadata: {},
   ...overrides,
 });
 

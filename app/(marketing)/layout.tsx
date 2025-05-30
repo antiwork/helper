@@ -25,8 +25,8 @@ const HELPER_MAILBOX_SLUG = "helper";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const config: HelperConfig = {
     title: "Support",
-    icon_color: "#FEB61C",
-    mailbox_slug: HELPER_MAILBOX_SLUG,
+    iconColor: "#FEB61C",
+    mailboxSlug: HELPER_MAILBOX_SLUG,
   };
 
   return (

@@ -17,17 +17,18 @@
 export type HelperConfig = {
   title?: string;
   email?: string;
-  email_hash?: string;
-  mailbox_slug: string;
+  emailHash?: string;
+  mailboxSlug: string;
   timestamp?: number;
-  customer_metadata?: {
+  customerMetadata?: {
     name?: string | null;
     value?: number | null;
     links?: Record<string, string> | null;
   } | null;
-  icon_color?: string | null;
-  experimental_read_page?: boolean;
-  enable_guide?: boolean;
+  iconColor?: string | null;
+  experimentalReadPage?: boolean;
+  enableGuide?: boolean;
+  showToggleButton?: boolean;
   theme?: {
     background: string;
     foreground: string;

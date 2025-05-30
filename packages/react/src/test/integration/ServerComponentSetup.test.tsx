@@ -27,11 +27,11 @@ describe("Server Component Integration", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
       title: "Test Helper",
-      customer_metadata: {},
+      customerMetadata: {},
     };
 
     render(
-      <HelperProvider {...mockConfig}>
+      <HelperProvider host="https://helper.ai" {...mockConfig}>
         <div data-testid="server-content">Server Content</div>
       </HelperProvider>,
     );
@@ -47,7 +47,7 @@ describe("Server Component Integration", () => {
     };
 
     render(
-      <HelperProvider {...mockConfig}>
+      <HelperProvider host="https://helper.ai" {...mockConfig}>
         <div>Test Content</div>
       </HelperProvider>,
     );
@@ -68,7 +68,7 @@ describe("Server Component Integration", () => {
     };
 
     render(
-      <HelperProvider {...mockConfig}>
+      <HelperProvider host="https://helper.ai" {...mockConfig}>
         <div data-testid="server-content">
           <ClientComponent />
         </div>
