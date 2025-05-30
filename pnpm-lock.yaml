@@ -567,6 +567,82 @@ importers:
         specifier: ^2.1.1
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.15.3)(jsdom@26.1.0)(lightningcss@1.29.2)(terser@5.39.0)
 
+  packages/marketing:
+    dependencies:
+      '@helperai/react':
+        specifier: workspace:*
+        version: link:../react
+      '@radix-ui/react-tooltip':
+        specifier: ^1.2.3
+        version: 1.2.4(@types/react-dom@19.1.2(@types/react@19.1.2))(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      class-variance-authority:
+        specifier: ^0.7.0
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      framer-motion:
+        specifier: ^11.0.8
+        version: 11.18.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      lucide-react:
+        specifier: ^0.501.0
+        version: 0.501.0(react@19.1.0)
+      motion:
+        specifier: ^12.0.0-alpha.2
+        version: 12.9.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next:
+        specifier: 15.3.1
+        version: 15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      nuqs:
+        specifier: ^2.1.1
+        version: 2.4.3(next@15.3.1(patch_hash=6136a35a16842a486c7748f4001d967b883146da25e941d3044ea1d69515edeb)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+      react:
+        specifier: 19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: 19.1.0
+        version: 19.1.0(react@19.1.0)
+      recharts:
+        specifier: ^2.12.2
+        version: 2.15.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      tailwind-merge:
+        specifier: ^3.2.0
+        version: 3.2.0
+    devDependencies:
+      '@svgr/webpack':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@5.8.3)
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.15.3
+      '@types/react':
+        specifier: 19.1.2
+        version: 19.1.2
+      '@types/react-dom':
+        specifier: 19.1.2
+        version: 19.1.2(@types/react@19.1.2)
+      eslint:
+        specifier: ^9.25.1
+        version: 9.25.1(jiti@2.4.2)
+      eslint-config-next:
+        specifier: 15.3.1
+        version: 15.3.1(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3)
+      postcss:
+        specifier: ^8.4.41
+        version: 8.5.3
+      tailwindcss:
+        specifier: ^4.1.4
+        version: 4.1.5
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.5)
+      typescript:
+        specifier: ^5.5.4
+        version: 5.8.3
+
   packages/react:
     dependencies:
       crypto-js:
@@ -8034,6 +8110,20 @@ packages:
   forwarded-parse@2.1.2:
     resolution: {integrity: sha512-alTFZZQDKMporBH77856pXgzhEzaUVmLCDk+egLgIgHst3Tpndzz8MnKe+GzRJRfvVdn69HhpW7cmXzvtLvJAw==}
 
+  framer-motion@11.18.2:
+    resolution: {integrity: sha512-5F5Och7wrvtLVElIpclDT0CBzMVg3dL22B64aZwHtsIY8RB4mXICLrkajK4G9R+ieSAGcgrLeae2SeUTg2pr6w==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   framer-motion@12.9.4:
     resolution: {integrity: sha512-yaeGDmGQ3eCQEwZ95/pRQMaSh/Q4E2CK6JYOclG/PdjyQad0MULJ+JFVV8911Fl5a6tF6o0wgW8Dpl5Qx4Adjg==}
     peerDependencies:
@@ -9762,8 +9852,14 @@ packages:
     resolution: {integrity: sha512-ijd12vjqUBr5Btqqflu0c/o8Oed5JpdaE0AKO9TjGxCgywYwnzt6ynR1ySjhgxGxrYVeXC0t1P11f1zlRiE93Q==}
     engines: {node: '>=16.20.1'}
 
+  motion-dom@11.18.1:
+    resolution: {integrity: sha512-g76KvA001z+atjfxczdRtw/RXOM3OMSdd1f4DL77qCTF/+avrRJiawSG4yDibEQ215sr9kpinSlX2pCTJ9zbhw==}
+
   motion-dom@12.9.4:
     resolution: {integrity: sha512-25TWkQPj5I18m+qVjXGtCsxboY11DaRC5HMjd29tHKExazW4Zf4XtAagBdLpyKsVuAxEQ6cx5/E4AB21PFpLnQ==}
+
+  motion-utils@11.18.1:
+    resolution: {integrity: sha512-49Kt+HKjtbJKLtgO/LKj9Ld+6vw9BjH5d9sc40R/kVyH8GLAXgT42M2NnuPcJNuA3s9ZfZBUcwIgpmZWGEE+hA==}
 
   motion-utils@12.9.4:
     resolution: {integrity: sha512-BW3I65zeM76CMsfh3kHid9ansEJk9Qvl+K5cu4DVHKGsI52n76OJ4z2CUJUV+Mn3uEP9k1JJA3tClG0ggSrRcg==}
@@ -20994,6 +21090,15 @@ snapshots:
 
   forwarded-parse@2.1.2: {}
 
+  framer-motion@11.18.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      motion-dom: 11.18.1
+      motion-utils: 11.18.1
+      tslib: 2.8.1
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
   framer-motion@12.9.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       motion-dom: 12.9.4
@@ -23249,9 +23354,15 @@ snapshots:
       - socks
       - supports-color
 
+  motion-dom@11.18.1:
+    dependencies:
+      motion-utils: 11.18.1
+
   motion-dom@12.9.4:
     dependencies:
       motion-utils: 12.9.4
+
+  motion-utils@11.18.1: {}
 
   motion-utils@12.9.4: {}
 
