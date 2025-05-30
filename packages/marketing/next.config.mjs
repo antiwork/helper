@@ -1,5 +1,7 @@
+import { createMDX } from "fumadocs-mdx/next";
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+let nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@helperai/react"],
   images: {
@@ -13,5 +15,8 @@ const nextConfig = {
     return config;
   },
 };
+
+const withMDX = createMDX({ configPath: "./content/source.config.ts" });
+nextConfig = withMDX(nextConfig);
 
 export default nextConfig;

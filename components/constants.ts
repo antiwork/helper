@@ -13,3 +13,10 @@ export const getBaseUrl = () => {
   if (typeof window !== "undefined") return window.location.origin;
   return env.AUTH_URL;
 };
+
+export const getDocsUrl = () => {
+  if (getBaseUrl() === "https://helperai.dev") {
+    return "http://localhost:3011";
+  }
+  return "https://helper.ai";
+};

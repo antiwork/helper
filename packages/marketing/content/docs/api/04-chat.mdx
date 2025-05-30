@@ -1,0 +1,279 @@
+---
+title: Chat API
+description: Send and receive messages in a Helper conversation
+---
+
+# Chat API
+
+The Chat API allows you to send messages to Helper and receive AI-generated responses. This API follows the Vercel AI SDK streaming response format, making it compatible with various client libraries.
+
+## Send Message
+
+```
+POST /api/chat
+```
+
+Sends a message to Helper and returns a streaming response with the AI-generated reply.
+
+### Headers
+
+| Header          | Value              | Description                                 |
+| --------------- | ------------------ | ------------------------------------------- |
+| `Authorization` | `Bearer <token>`   | Session token obtained from the Session API |
+| `Content-Type`  | `application/json` | Type of the request payload                 |
+
+### Request Parameters
+
+| Parameter          | Type   | Required | Description                                              |
+| ------------------ | ------ | -------- | -------------------------------------------------------- |
+| `message`          | object | Yes      | Message object containing the content to send to Helper. |
+| `conversationSlug` | string | Yes      | Slug of the conversation to send the message to.         |
+
+### Message Object
+
+The message object should have the following structure:
+
+| Field     | Type   | Required | Description                                                                |
+| --------- | ------ | -------- | -------------------------------------------------------------------------- |
+| `role`    | string | Yes      | Either `"user"` or `"assistant"`.                                          |
+| `content` | string | Yes      | Text content of the message.                                               |
+| `id`      | string | No       | Unique identifier for the message. If not provided, one will be generated. |
+
+### Example Request Body
+
+```json
+{
+  "message": {
+    "role": "user",
+    "content": "How can I update my shipping address?",
+    "id": "msg_1234"
+  },
+  "conversationSlug": "abc123def456"
+}
+```
+
+### Response
+
+The response is a streaming response following the Vercel AI SDK format, with events for:
+
+- Text content chunks
+- Tool calls (if any)
+- Final message annotations
+
+The full response is assembled by concatenating the text chunks as they arrive.
+
+### Error Responses
+
+| Status Code | Error                    | Description                                                   |
+| ----------- | ------------------------ | ------------------------------------------------------------- |
+| 401         | `Invalid token`          | The session token is invalid or expired.                      |
+| 404         | `Mailbox not found`      | The mailbox specified in the session doesn't exist.           |
+| 404         | `Conversation not found` | The specified conversation doesn't exist.                     |
+| 401         | `Unauthorized`           | The user doesn't have permission to access this conversation. |
+
+## Streaming Responses
+
+The chat API uses a streaming response format that follows the Vercel AI SDK standard. This allows for real-time display of AI responses as they're generated.
+
+For detailed information about the data stream protocol, refer to the [Vercel AI SDK Stream Protocol documentation](https://sdk.vercel.ai/docs/ai-sdk-ui/stream-protocol#data-stream-protocol).
+
+### Response Format
+
+The response is a stream of server-sent events (SSE), with each event containing a part of the response:
+
+```
+data: {"type":"text","value":"Hello! I'd be happy to help you update your shipping address. "}
+data: {"type":"text","value":"You can change your shipping address by following these steps:"}
+data: {"type":"text","value":"\n\n1. Log into your account\n2. Go to 'Account Settings'\n3. Select 'Addresses'\n4. Click 'Edit' next to your existing address or 'Add New Address'\n5. Update the information and save your changes"}
+data: {"type":"text","value":"\n\nIs there anything else you need help with today?"}
+data: {"type":"messageAnnotation","value":{"id":"12345","traceId":"trace_abc123"}}
+```
+
+### Handling Streams in JavaScript
+
+You can use the Vercel AI SDK or manually handle the streams:
+
+**Using Vercel AI SDK (recommended)**
+
+```javascript
+import { useChat } from "ai/react";
+
+function ChatComponent() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: "https://helper.ai/api/chat",
+    headers: {
+      Authorization: `Bearer ${sessionToken}`,
+    },
+    body: {
+      conversationSlug: conversationSlug,
+    },
+  });
+
+  // Render your chat UI using messages, input, etc.
+}
+```
+
+**Manual Stream Handling**
+
+```javascript
+async function sendMessage(content) {
+  const response = await fetch("https://helper.ai/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionToken}`,
+    },
+    body: JSON.stringify({
+      message: { role: "user", content },
+      conversationSlug: conversationSlug,
+    }),
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  let responseText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split("\n");
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = JSON.parse(line.substring(6));
+        if (data.type === "text") {
+          responseText += data.value;
+          // Update UI with new text
+        }
+      }
+    }
+  }
+
+  return responseText;
+}
+```
+
+## Metadata and Parameters
+
+### Tool Integration
+
+The chat API can utilize tools that you've configured in your Helper mailbox. When Helper decides to use a tool, the response will include tool call information.
+
+## Example Integration
+
+Here's a complete example of how to use the Chat API in a simple web application:
+
+```javascript
+// First, create a session
+async function createSession(email, mailboxSlug) {
+  const timestamp = Date.now();
+  const emailHash = await generateHmac(email, timestamp); // Implementation depends on your backend
+
+  const response = await fetch("https://helper.ai/api/widget/session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      emailHash,
+      mailboxSlug,
+      timestamp,
+      currentURL: window.location.href,
+    }),
+  });
+
+  return await response.json();
+}
+
+// Then create a conversation
+async function createConversation(token) {
+  const response = await fetch("https://helper.ai/api/chat/conversation", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      isPrompt: false,
+    }),
+  });
+
+  return await response.json();
+}
+
+// Finally, send a message and handle the streaming response
+async function sendMessage(token, conversationSlug, messageContent) {
+  const response = await fetch("https://helper.ai/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      message: { role: "user", content: messageContent },
+      conversationSlug,
+    }),
+  });
+
+  // Handle streaming response
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  let fullResponse = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split("\n");
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        try {
+          const data = JSON.parse(line.substring(6));
+          if (data.type === "text") {
+            fullResponse += data.value;
+            // Update UI with incremental response
+            updateResponseUI(fullResponse);
+          }
+        } catch (e) {
+          console.error("Error parsing response chunk", e);
+        }
+      }
+    }
+  }
+
+  return fullResponse;
+}
+
+// Example usage
+async function startChat() {
+  const { token } = await createSession("user@example.com", "your-mailbox");
+  const { conversationSlug } = await createConversation(token);
+
+  document.getElementById("send-button").addEventListener("click", async () => {
+    const messageInput = document.getElementById("message-input");
+    const message = messageInput.value;
+    messageInput.value = "";
+
+    // Display user message
+    addMessageToUI("user", message);
+
+    // Show typing indicator
+    showTypingIndicator();
+
+    // Send to API and get streaming response
+    await sendMessage(token, conversationSlug, message);
+
+    // Hide typing indicator when done
+    hideTypingIndicator();
+  });
+}
+
+startChat();
+```

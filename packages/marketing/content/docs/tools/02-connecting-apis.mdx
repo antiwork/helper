@@ -1,0 +1,97 @@
+---
+title: Connecting APIs
+description: How to connect your APIs to Helper using OpenAPI specifications
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+# Connecting APIs
+
+Helper can integrate with your existing APIs through OpenAPI specifications, allowing it to perform actions in your application when helping your customers.
+
+## Prerequisites
+
+Before connecting your API to Helper, ensure you have:
+
+1. An OpenAPI specification (version 3.0 or higher) for your API
+2. API credentials if your API requires authentication
+3. Access to your Helper mailbox settings
+
+## Connection Process
+
+<Steps>
+<Step>
+### Access API Settings
+
+Navigate to your mailbox settings and find the "Tools" section. This is where you can manage all your API connections.
+
+</Step>
+
+<Step>
+### Add a New API
+
+Click the "Connect API" button to start the connection process.
+
+</Step>
+
+<Step>
+### Provide API Details
+
+You'll need to provide the following information:
+
+- **API Name**: A descriptive name for your API
+- **OpenAPI Spec URL**: The URL where your OpenAPI specification is hosted
+- **API Key** (optional): If your API requires authentication, provide the API key
+
+</Step>
+
+<Step>
+### Import Tools
+
+After providing the necessary information, Helper will:
+
+1. Fetch the OpenAPI specification from the provided URL
+2. Parse the specification to identify available endpoints
+3. Convert these endpoints into tools that Helper can use
+4. Display the imported tools for your review
+
+</Step>
+
+<Step>
+### Configure Tools
+
+Once the tools are imported, you can:
+
+- Enable or disable specific tools
+- Configure which tools are available in chat
+- Set up any additional parameters required for the tools
+
+</Step>
+</Steps>
+
+## Authentication
+
+Helper supports API key authentication for your APIs. When connecting an API that requires authentication:
+
+1. Provide your API key during the connection process
+2. Helper securely stores this key and uses it when making API calls
+3. All API calls are made server-to-server, keeping your API key secure
+
+## Updating API Connections
+
+You can update your API connections at any time:
+
+1. Navigate to the "Tools" section in your mailbox settings
+2. Find the API you want to update
+3. Click the edit button to modify the API details
+4. You can update the OpenAPI spec URL, API key, or other settings
+5. Helper will re-import the tools based on the updated specification
+
+## Troubleshooting
+
+If you encounter issues when connecting your API:
+
+- Ensure your OpenAPI specification is valid and accessible
+- Check that the API key has the necessary permissions
+- Verify that your API is accessible from Helper's servers
+- Review the error messages in the Helper interface for specific issues

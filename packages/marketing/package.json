@@ -7,13 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "fumadocs-mdx content/source.config.ts"
   },
   "dependencies": {
     "@helperai/react": "workspace:*",
     "@radix-ui/react-tooltip": "^1.2.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "fumadocs-core": "^15.2.11",
+    "fumadocs-openapi": "^8.1.2",
+    "fumadocs-ui": "^15.2.11",
     "lucide-react": "^0.501.0",
     "motion": "^12.0.0-alpha.2",
     "next": "15.3.1",
