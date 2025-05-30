@@ -1,9 +1,9 @@
-import type { HelperConfig } from "./types";
+import type { HelperWidgetConfig } from "@helperai/sdk";
 
 declare global {
   interface Window {
     HelperWidget: {
-      init: (config: HelperConfig) => void;
+      init: (config: HelperWidgetConfig) => void;
       show: () => void;
       hide: () => void;
       toggle: () => void;

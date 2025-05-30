@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { HelperConfig } from "../types";
+import type { HelperWidgetConfig } from "../types";
 
 export const mockHelperWidget = () => {
   const mockShow = vi.fn();
@@ -27,7 +27,7 @@ export const setupTestEnv = () => {
   process.env.HELPER_MAILBOX_SLUG = "test-mailbox";
 };
 
-export const createTestConfig = (overrides: Partial<HelperConfig> = {}): HelperConfig => ({
+export const createTestConfig = (overrides: Partial<HelperWidgetConfig> = {}): HelperWidgetConfig => ({
   email: "test@example.com",
   emailHash: "hash",
   mailboxSlug: "test-mailbox",

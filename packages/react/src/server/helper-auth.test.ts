@@ -28,10 +28,10 @@ describe("helper-auth", () => {
       expect(result).toEqual({
         email,
         timestamp: mockTimestamp,
-        email_hash: expect.any(String),
-        mailbox_slug: "test-mailbox",
+        emailHash: expect.any(String),
+        mailboxSlug: "test-mailbox",
       });
-      expect(result.email_hash).toHaveLength(64);
+      expect(result.emailHash).toHaveLength(64);
     });
 
     it("uses provided parameters over environment variables", () => {
@@ -49,10 +49,10 @@ describe("helper-auth", () => {
       expect(result).toEqual({
         email,
         timestamp: mockTimestamp,
-        email_hash: expect.any(String),
-        mailbox_slug: "param-mailbox",
+        emailHash: expect.any(String),
+        mailboxSlug: "param-mailbox",
       });
-      expect(result.email_hash).toHaveLength(64);
+      expect(result.emailHash).toHaveLength(64);
     });
 
     it("throws error if HMAC secret is not provided", () => {
