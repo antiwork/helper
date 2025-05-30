@@ -14,8 +14,8 @@ const constructMessagesForConversationSummary = (
   const allEmailsContent = emails
     .map((email) => {
       if (email.role === "tool") {
-        const metadata = email.metadata as ToolMetadata;
-        return `Tool called: ${metadata.tool.name}\nResult: ${JSON.stringify(metadata.result)}`;
+        const metadata = email.metadata as ToolMetadata | null;
+        return `Tool called: ${metadata?.tool?.name || "Unknown"}\nResult: ${JSON.stringify(metadata?.result)}`;
       }
       return `From: ${HELPER_TO_AI_ROLES_MAPPING[email.role]}\nContent: ${cleanUpTextForAI(email.cleanedUpText ?? "")}`;
     })
