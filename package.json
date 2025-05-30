@@ -226,6 +226,9 @@
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.1.1"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
