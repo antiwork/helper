@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function EmbedLayout({ children }: { children: React.ReactNode }) {
-  return <main>{children}</main>;
+  return <main className="light">{children}</main>;
 }

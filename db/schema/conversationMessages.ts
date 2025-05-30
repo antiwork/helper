@@ -1,7 +1,7 @@
 import { isNull, relations, sql } from "drizzle-orm";
 import { bigint, boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { encryptedField, nativeEncryptedField } from "@/db/lib/encryptedField";
-import { PromptInfo } from "@/types/conversationMessages";
+import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CustomerInfo } from "@/types/customerInfo";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversations } from "./conversations";
@@ -66,7 +66,7 @@ export const conversationMessages = pgTable(
     pastRepliesContext: text(),
 
     isFlaggedAsBad: boolean().notNull(),
-    promptInfo: jsonb().$type<PromptInfo>(),
+    promptInfo: jsonb().$type<{ details?: PromptInfo }>(),
     reason: varchar({ length: 65535 }),
     deletedAt: timestamp({ withTimezone: true }),
     searchIndex: text(),

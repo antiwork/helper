@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai/react";
-import { createClient } from "@/lib/supabase/server";
+import { getBaseUrl } from "@/components/constants";
 import { AppLayout } from "./appLayout";
 import { WidgetButtons } from "./widgetButtons";
 
@@ -11,15 +11,11 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { email, isVip, anonymous } = await searchParams;
-
-  if (!user) {
-    return <div>Not logged in</div>;
+  if (getBaseUrl() !== "https://helperai.dev") {
+    return <div>Only available in development</div>;
   }
+
+  const { email, isVip, anonymous } = await searchParams;
 
   const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
 

@@ -3,6 +3,7 @@ import { AlertTriangle, ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
+import { JsonView } from "@/components/jsonView";
 import { ToolMetadata } from "@/db/schema/conversationMessages";
 
 export const formatParameter = (name: string) => upperFirst(kebabCase(name).replaceAll("-", " "));
@@ -75,45 +76,4 @@ export const ToolItem = ({
       )}
     </div>
   );
-};
-
-const JsonView = ({ data, level = 0 }: { data: any; level?: number }) => {
-  const indent = level * 2;
-
-  if (Array.isArray(data)) {
-    if (data.length === 0) return <span>(empty)</span>;
-
-    return (
-      <div>
-        <div style={{ marginLeft: `${indent}ch` }}>
-          {data.map((item, index) => (
-            <div key={index}>
-              <JsonView data={item} level={level + 1} />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (data && typeof data === "object") {
-    const entries = Object.entries(data);
-
-    if (entries.length === 0) return <span>(empty)</span>;
-
-    return (
-      <div>
-        <div style={{ marginLeft: `${indent}ch` }}>
-          {entries.map(([key, value]) => (
-            <div key={key}>
-              <span>{key}: </span>
-              <JsonView data={value} level={level + 1} />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return <span className="text-foreground">{String(data)}</span>;
 };

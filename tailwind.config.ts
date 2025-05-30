@@ -18,6 +18,7 @@ const config: Config = {
             },
             code: {
               color: "var(--foreground)",
+              backgroundColor: "var(--muted)",
             },
             th: {
               color: "var(--foreground)",

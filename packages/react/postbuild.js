@@ -23,7 +23,7 @@ const { glob } = require("glob-promise");
       dts: ".d.ts",
     },
     esm: {
-      js: ".js",
+      js: ".mjs",
       dts: ".d.mts", // .d.mts for ESM declaration files
     },
   };
