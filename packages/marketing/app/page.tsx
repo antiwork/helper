@@ -20,17 +20,17 @@ import {
 import { motion } from "motion/react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { getBaseUrl } from "../components/constants";
-import { Button } from "../components/ui/button";
 import AnimatedTyping from "../components/AnimatedTyping";
 import CitationsDemo from "../components/CitationsDemo";
 import ComparisonHistogram from "../components/ComparisonHistogram";
+import { getBaseUrl } from "../components/constants";
+import LogoIconAmber from "../components/icons/logoIconAmber.svg";
 import { MarketingHeader } from "../components/MarketingHeader";
 import RefundDemo from "../components/RefundDemo";
 import SlackInterface from "../components/SlackInterface";
 import SlackNotification from "../components/SlackNotification";
 import ToolsDemo from "../components/ToolsDemo";
-import LogoIconAmber from "../components/icons/logoIconAmber.svg";
+import { Button } from "../components/ui/button";
 
 export default function Home() {
   const [customerQuestions] = useState([

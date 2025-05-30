@@ -15,9 +15,7 @@ export default function HelpPage() {
             <h1 className="text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight lg:text-6xl">
               Help Center
             </h1>
-            <p className="mt-5 max-w-xl mx-auto text-xl text-gray-300">
-              Find resources and support for Helper
-            </p>
+            <p className="mt-5 max-w-xl mx-auto text-xl text-gray-300">Find resources and support for Helper</p>
           </div>
 
           <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
@@ -62,9 +60,7 @@ export default function HelpPage() {
               </p>
               <div className="mt-5">
                 <Link href="mailto:support@helper.ai">
-                  <Button>
-                    Contact support
-                  </Button>
+                  <Button>Contact support</Button>
                 </Link>
               </div>
             </div>

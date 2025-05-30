@@ -1,5 +1,5 @@
-import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
@@ -26,7 +26,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -41,7 +41,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     if (asChild) {
       return (
         <span
-          className={cn(buttonVariants({ variant, size, className }), iconOnly && "p-0 flex items-center justify-center")}
+          className={cn(
+            buttonVariants({ variant, size, className }),
+            iconOnly && "p-0 flex items-center justify-center",
+          )}
         />
       );
     }
@@ -52,7 +55,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Button.displayName = "Button";
 

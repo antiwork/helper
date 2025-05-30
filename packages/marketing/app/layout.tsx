@@ -1,7 +1,7 @@
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Metadata } from "next";
-import { HelperProvider } from "@helperai/react";
 import { Inter } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { HelperProvider } from "@helperai/react";
 import "./globals.css";
 import { MarketingHeader } from "../components/MarketingHeader";
 
@@ -26,12 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <NuqsAdapter>
         <body className={inter.className}>
-          <HelperProvider
-            mailbox_slug={process.env.NEXT_PUBLIC_HELPER_MAILBOX_SLUG || ""}
-          >
-            <div className="flex flex-col min-h-screen">
-              {children}
-            </div>
+          <HelperProvider mailbox_slug={process.env.NEXT_PUBLIC_HELPER_MAILBOX_SLUG || ""}>
+            <div className="flex flex-col min-h-screen">{children}</div>
           </HelperProvider>
         </body>
       </NuqsAdapter>
