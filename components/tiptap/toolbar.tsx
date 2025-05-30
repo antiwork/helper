@@ -45,20 +45,63 @@ const Toolbar = ({
   const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
   const [linkData, setLinkData] = useState({ url: "", text: "" });
+  const [activeLinkElement, setActiveLinkElement] = useState<HTMLElement | null>(null);
   useEffect(() => setLinkData({ url: "", text: "" }), [editor]);
   const toggleLinkModal = (open: boolean) => {
     if (!open) return setLinkModalOpen(false);
     if (!editor) return;
 
-    if (editor.isActive("link")) {
-      editor.chain().focus().unsetLink().run();
-    } else {
-      const { from, to, empty } = editor.state.selection;
-      const label = empty ? "" : editor.state.doc.textBetween(from, to, "");
-      setLinkData({ url: "", text: label });
-      setLinkModalOpen(true);
+    if (isLinkModalOpen) {
+      setLinkModalOpen(false);
+      return;
     }
+
+    setOpen(true);
+    const { from, to, empty } = editor.state.selection;
+    const label = empty ? "" : editor.state.doc.textBetween(from, to, "");
+
+    if (editor.isActive("link")) {
+      const linkMark = editor.getAttributes("link");
+      setLinkData({ url: linkMark.href || "", text: label });
+    } else {
+      setLinkData({ url: "", text: label });
+    }
+    setLinkModalOpen(true);
   };
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const linkElement = target.closest("a");
+      if (linkElement) {
+        if (editor.isActive("link")) {
+          setOpen(true);
+          const linkMark = editor.getAttributes("link");
+          const text = linkElement.textContent || "";
+          setLinkData({ url: linkMark.href || "", text });
+          setLinkModalOpen(true);
+          setActiveLinkElement(linkElement);
+        }
+      }
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener("click", handleClick);
+    return () => {
+      editorElement.removeEventListener("click", handleClick);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (isLinkModalOpen) {
+      activeLinkElement?.classList.add("bg-primary/10", "dark:bg-primary/10");
+    } else {
+      activeLinkElement?.classList.remove("bg-primary/10", "dark:bg-primary/10");
+      setActiveLinkElement(null);
+    }
+  }, [isLinkModalOpen, activeLinkElement]);
 
   const isValidUrl = (url: string) => {
     try {
@@ -70,20 +113,31 @@ const Toolbar = ({
   };
 
   const setLink = () => {
-    if (editor && linkData.text && isValidUrl(linkData.url)) {
-      const { state, dispatch } = editor.view;
-      const { tr, selection } = state;
-      const { from, to } = selection;
-      const linkMark = state.schema.marks.link?.create({ href: linkData.url });
+    if (!editor) return;
+
+    if (editor.isActive("link")) {
+      if (!linkData.url) {
+        editor.chain().focus().unsetLink().run();
+      } else {
+        editor.chain().focus().extendMarkRange("link").run();
+        const { from, to } = editor.state.selection;
+        const linkMark = editor.state.schema.marks.link?.create({ href: linkData.url });
+        if (!linkMark) return;
+        const textNode = editor.state.schema.text(linkData.text, [linkMark]);
+        const tr = editor.state.tr;
+        tr.delete(from, to).insert(from, textNode);
+        editor.view.dispatch(tr);
+      }
+    } else if (linkData.text && linkData.url) {
+      const { from, to } = editor.state.selection;
+      const linkMark = editor.state.schema.marks.link?.create({ href: linkData.url });
       if (!linkMark) return;
-
-      const textNode = state.schema.text(linkData.text, [linkMark]);
-
-      tr.delete(from, to);
-      tr.insert(from, textNode);
-      dispatch(tr);
-      editor.view.focus();
+      const textNode = editor.state.schema.text(linkData.text, [linkMark]);
+      editor.view.dispatch(editor.state.tr.delete(from, to).insert(from, textNode));
+    } else if (linkData.url) {
+      editor.chain().focus().setLink({ href: linkData.url }).run();
     }
+    editor.view.focus();
     setLinkModalOpen(false);
   };
 
@@ -253,10 +307,9 @@ const Toolbar = ({
       )}
       <div
         className={cn(
-          "flex flex-wrap gap-1",
           isAboveMd
-            ? "absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
-            : "relative gap-2",
+            ? "flex flex-wrap gap-1 absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
+            : "flex flex-1 min-w-0 gap-1",
           open && isAboveMd && "left-3",
           !open && !isAboveMd && "hidden",
         )}

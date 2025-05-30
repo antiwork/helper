@@ -314,24 +314,26 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             </BubbleMenu>
           )}
         </div>
-        <div className="flex justify-between md:justify-start">
-          <Toolbar
-            {...{
-              open: toolbarOpen,
-              setOpen: setToolbarOpen,
-              editor,
-              uploadFileAttachments,
-              uploadInlineImages,
-              customToolbar,
-              enableImageUpload,
-              enableFileUpload,
-              isRecording,
-              isRecordingSupported,
-              startRecording,
-              stopRecording,
-            }}
-          />
-          {toolbarOpen && !isAboveMd ? null : actionButtons}
+        <div className="flex w-full justify-between md:justify-start">
+          <div className="w-full md:w-auto">
+            <Toolbar
+              {...{
+                open: toolbarOpen,
+                setOpen: setToolbarOpen,
+                editor,
+                uploadFileAttachments,
+                uploadInlineImages,
+                customToolbar,
+                enableImageUpload,
+                enableFileUpload,
+                isRecording,
+                isRecordingSupported,
+                startRecording,
+                stopRecording,
+              }}
+            />
+          </div>
+          {toolbarOpen && !isAboveMd ? null : <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div>}
         </div>
       </div>
     );

@@ -26,7 +26,7 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
   return (
     <div
       ref={containerRef}
-      className="flex w-full sm:w-96 items-center gap-2 rounded-b border border-border bg-background p-4 shadow-lg"
+      className="flex w-full sm:w-96 flex-col gap-2 rounded-lg border border-border bg-background p-4 shadow-lg"
     >
       <Input
         ref={inputRef}
@@ -38,12 +38,19 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
         onKeyDown={handleKeyDown}
         className="h-10"
       />
+      <Input
+        type="text"
+        placeholder="Link text"
+        value={linkData.text}
+        onChange={(e) => setLinkData({ ...linkData, text: e.target.value })}
+        className="h-10"
+      />
       <button
         type="button"
         onClick={setLink}
         className="border-primary bg-primary hover:bg-primary inline-flex h-10 items-center justify-center rounded-lg border px-4 text-sm text-primary-foreground"
       >
-        Add link
+        {linkData.text ? "Update link" : "Add link"}
       </button>
     </div>
   );
