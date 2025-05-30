@@ -546,7 +546,7 @@ export const respondWithAI = async ({
   readPageTool,
   guideEnabled,
   onResponse,
-  isAdmin = false,
+  isHelperUser = false,
   reasoningEnabled = true,
 }: {
   conversation: Conversation;
@@ -564,7 +564,7 @@ export const respondWithAI = async ({
     isFirstMessage: boolean;
     humanSupportRequested: boolean;
   }) => void | Promise<void>;
-  isAdmin?: boolean;
+  isHelperUser?: boolean;
   reasoningEnabled?: boolean;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
@@ -702,7 +702,7 @@ export const respondWithAI = async ({
             });
           }
 
-          if (isAdmin) {
+          if (isHelperUser) {
             dataStream.writeMessageAnnotation({ promptInfo });
           }
 

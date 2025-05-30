@@ -82,9 +82,9 @@ export async function POST(request: Request) {
   );
 
   const supabase = await createClient();
-  let isAdmin = false;
+  let isHelperUser = false;
   if ((await supabase.auth.getUser()).data.user?.id) {
-    isAdmin = true;
+    isHelperUser = true;
   }
 
   return await respondWithAI({
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     guideEnabled,
     sendEmail: false,
     reasoningEnabled: false,
-    isAdmin,
+    isHelperUser,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||
