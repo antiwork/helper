@@ -182,7 +182,7 @@ export const buildTools = async (
 
   if (includeMailboxTools) {
     const mailboxTools = await getMailboxToolsForChat(mailbox);
-    const aiTools = buildAITools(mailboxTools);
+    const aiTools = buildAITools(mailboxTools, email);
 
     for (const [slug, aiTool] of Object.entries(aiTools)) {
       const mailboxTool = mailboxTools.find((t) => t.slug === slug);
