@@ -1,4 +1,4 @@
-import { NuqsAdapter } from "nuqs/adapters";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Metadata } from "next";
 import { HelperProvider } from "@helperai/react";
 import { Inter } from "next/font/google";
@@ -27,11 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <NuqsAdapter>
         <body className={inter.className}>
           <HelperProvider
-            config={{
-              apiKey: process.env.NEXT_PUBLIC_HELPER_API_KEY,
-              baseUrl: process.env.NEXT_PUBLIC_HELPER_BASE_URL,
-              mailboxSlug: process.env.NEXT_PUBLIC_HELPER_MAILBOX_SLUG,
-            }}
+            mailbox_slug={process.env.NEXT_PUBLIC_HELPER_MAILBOX_SLUG || ""}
           >
             <div className="flex flex-col min-h-screen">
               {children}

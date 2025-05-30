@@ -40,9 +40,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, iconOnly = false, ...props }, ref) => {
     if (asChild) {
       return (
-        <div
+        <span
           className={cn(buttonVariants({ variant, size, className }), iconOnly && "p-0 flex items-center justify-center")}
-          {...props}
         />
       );
     }
