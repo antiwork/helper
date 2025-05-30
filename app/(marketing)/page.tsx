@@ -250,7 +250,7 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-                <Link href="/login">
+                <Link href="https://github.com/antiwork/helper" target="_blank" rel="noopener noreferrer">
                   <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
                     Get started
                   </Button>
@@ -464,7 +464,7 @@ export default function Home() {
                     </span>
                   </div>
                 </div>
-                <Link href="/login">
+                <Link href="https://github.com/antiwork/helper" target="_blank" rel="noopener noreferrer">
                   <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
                     Get started
                   </Button>
@@ -552,7 +552,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex justify-center mt-12">
-              <Link href="/login">
+              <Link href="https://github.com/antiwork/helper" target="_blank" rel="noopener noreferrer">
                 <Button className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200">
                   Get started
                 </Button>
