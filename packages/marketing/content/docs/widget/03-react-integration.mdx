@@ -1,0 +1,164 @@
+---
+title: React/Next.js Integration
+description: Integrate the Helper Chat Widget with React or Next.js applications
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+The [`@helperai/react`](https://www.npmjs.com/package/@helperai/react) package provides first-class support for integrating the Helper Chat Widget into your React or Next.js applications. This integration offers a more seamless developer experience with TypeScript support and React hooks.
+
+## Get Started
+
+<Steps>
+<Step>
+### Install the Package
+
+Install the package using npm:
+
+```bash
+npm install @helperai/react
+```
+
+</Step>
+
+<Step>
+### Add the Provider
+
+Add the `HelperProvider` to your root layout:
+
+```tsx
+// app/layout.tsx or similar
+import { HelperProvider } from "@helperai/react";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <HelperProvider mailbox="YOUR_MAILBOX_SLUG">{children}</HelperProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+</Step>
+</Steps>
+
+## Customize the Widget
+
+Customize the widget by adding props to the `HelperProvider`:
+
+```tsx
+<HelperProvider mailbox="YOUR_MAILBOX_SLUG" title="My Helper Widget" icon_color="#ff0000" show_toggle_button={true}>
+  {children}
+</HelperProvider>
+```
+
+The `HelperProvider` accepts the following props:
+
+| Prop                 | Type    | Required | Description                                 |
+| -------------------- | ------- | -------- | ------------------------------------------- |
+| `mailbox`            | string  | Yes      | Your mailbox slug                           |
+| `title`              | string  | No       | Custom title for the chat widget            |
+| `icon_color`         | string  | No       | A custom color for the widget icon          |
+| `show_toggle_button` | boolean | No       | Override the "Chat Icon Visibility" setting |
+
+## Add Contextual Help Buttons
+
+Use the `useHelper` hook to add contextual help buttons:
+
+```tsx
+import { useHelper } from "@helperai/react";
+
+export function SupportButton() {
+  const { show, sendPrompt } = useHelper();
+
+  return (
+    <div>
+      <button
+        onClick={() => {
+          sendPrompt("How do I change my plan?");
+        }}
+      >
+        Get Help
+      </button>
+      <button
+        onClick={() => {
+          show();
+        }}
+      >
+        Open chat
+      </button>
+    </div>
+  );
+}
+```
+
+## Authenticate Your Users
+
+<Steps>
+<Step>
+### Add Environment Variables
+
+Add your Helper authentication credentials to your environment variables:
+
+```bash
+HELPER_HMAC_SECRET=your_hmac_secret
+HELPER_MAILBOX_SLUG=your_mailbox_slug
+```
+
+For local development, add these to your environment file (e.g., `.env.local`), and for production, add them to your deployment environment.
+
+</Step>
+
+<Step>
+### Set Up Authentication
+
+Call `generateHelperAuth` in your root layout and pass the result to the `HelperProvider`:
+
+```tsx
+// app/layout.tsx or similar
+import { generateHelperAuth, HelperProvider } from "@helperai/react";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth(); // Your auth solution
+  if (!session?.user?.email) return children;
+
+  const helperAuth = await generateHelperAuth({
+    email: session.user.email,
+    metadata: {
+      value: "CUSTOMER_VALUE", // Optional: Revenue value
+      name: "CUSTOMER_NAME", // Optional: Customer name
+      links: {
+        Profile: "https://example.com/profile",
+      },
+    },
+  });
+
+  return (
+    <html>
+      <body>
+        <HelperProvider {...helperAuth}>{children}</HelperProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+The `generateHelperAuth` function accepts the following metadata options:
+
+| Option  | Type   | Description                                      |
+| ------- | ------ | ------------------------------------------------ |
+| `value` | number | Revenue value of the customer                    |
+| `name`  | string | Name of the customer                             |
+| `links` | object | Key-value pairs of links related to the customer |
+
+</Step>
+</Steps>
+
+### Security Considerations
+
+- Never expose your HMAC secret on the client side
+- Always generate the HMAC hash on your server
+- Use HTTPS to prevent man-in-the-middle attacks
+- Validate the timestamp on your server to prevent replay attacks

@@ -3,7 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { getBaseUrl } from "@/components/constants";
+import { getDocsUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
@@ -90,7 +90,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
         title="Widget Installation"
         description={
           <a
-            href={`${getBaseUrl()}/docs/widget/01-overview`}
+            href={`${getDocsUrl()}/docs/widget/01-overview`}
             target="_blank"
             rel="noopener noreferrer"
             className="hover:underline flex items-center gap-1"

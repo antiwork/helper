@@ -1,0 +1,45 @@
+{
+  "name": "@helperai/marketing",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3011",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "fumadocs-mdx content/source.config.ts"
+  },
+  "dependencies": {
+    "@helperai/react": "workspace:*",
+    "@radix-ui/react-tooltip": "^1.2.3",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "fumadocs-core": "^15.2.11",
+    "fumadocs-openapi": "^8.1.2",
+    "fumadocs-ui": "^15.2.11",
+    "lucide-react": "^0.501.0",
+    "motion": "^12.0.0-alpha.2",
+    "next": "15.3.1",
+    "next-themes": "^0.4.6",
+    "nuqs": "^2.1.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "recharts": "^2.12.2",
+    "tailwind-merge": "^3.2.0"
+  },
+  "devDependencies": {
+    "@svgr/webpack": "^8.1.0",
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.1.2",
+    "@types/react-dom": "19.1.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.25.1",
+    "eslint-config-next": "15.3.1",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^4.1.8",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.5.4"
+  }
+}
