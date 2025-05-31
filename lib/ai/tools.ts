@@ -182,7 +182,7 @@ export const buildTools = async (
 
   if (includeMailboxTools) {
     const mailboxTools = await getMailboxToolsForChat(mailbox);
-    const aiTools = buildAITools(mailboxTools);
+    const aiTools = buildAITools(mailboxTools, email);
 
     for (const [slug, aiTool] of Object.entries(aiTools)) {
       const mailboxTool = mailboxTools.find((t) => t.slug === slug);
@@ -193,9 +193,6 @@ export const buildTools = async (
         parameters: aiTool.parameters,
         execute: async (params, { messages }) => {
           const conversation = assertDefined(await getConversationById(conversationId));
-          if (mailboxTool.customerEmailParameter) {
-            params = { ...params, [mailboxTool.customerEmailParameter]: conversation.emailFrom };
-          }
           const result = await callToolApi(conversation, mailboxTool, params);
           return reasoningMiddleware(JSON.stringify(result), messages);
         },

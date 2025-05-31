@@ -32,7 +32,14 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
 
   const { isExecuting, handleToolExecution } = useToolExecution();
 
-  const updateParameters = (name: string, value: string | number) => {
+  const updateParameters = (name: string, value: string | number | undefined) => {
+    if (value === undefined) {
+      setParameters((prev) => {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      });
+      return;
+    }
     setParameters((prev) => ({
       ...prev,
       [name]: value,
@@ -71,7 +78,10 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
             id={name}
             value={parameters[name] ?? ""}
             onChange={(e) => {
-              updateParameters(name, type === "number" ? Number(e.target.value) : e.target.value);
+              updateParameters(
+                name,
+                e.target.value === "" ? undefined : type === "number" ? Number(e.target.value) : e.target.value,
+              );
               setInvalidFields(invalidFields.filter((field) => field !== name));
             }}
             className={invalidFields.includes(name) ? "border-destructive" : ""}
