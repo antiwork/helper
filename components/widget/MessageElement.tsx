@@ -1,8 +1,8 @@
 import { formatDuration } from "date-fns";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import type { MessageWithReaction } from "@/components/widget/Message";
+import MessageMarkdown from "@/components/widget/MessageMarkdown";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type Reasoning = {
@@ -92,27 +92,20 @@ export default function MessageElement({
         </button>
       )}
       {showReasoning && reasoning && (
-        <ReactMarkdown className="border-l border-gray-500 mt-2 text-sm text-gray-800 px-2 mb-4 prose-p:mb-2">
+        <MessageMarkdown className="border-l border-gray-500 mt-2 text-sm text-gray-800 px-2 mb-4 prose-p:mb-2">
           {reasoning.message}
-        </ReactMarkdown>
+        </MessageMarkdown>
       )}
       {hasContent ? (
-        <ReactMarkdown
+        <MessageMarkdown
           className={`prose prose-sm max-w-none text-sm ${message.role === "user" ? "text-primary-foreground **:text-primary-foreground" : "text-foreground **:text-foreground"}`}
-          components={{
-            a: ({ children, ...props }: any) => (
-              <a target="_blank" rel="noopener noreferrer" {...props}>
-                {children}
-              </a>
-            ),
-          }}
         >
           {message.parts?.find(
             (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
           )
             ? "_Escalated to a human! You will be contacted soon by email._"
             : message.content}
-        </ReactMarkdown>
+        </MessageMarkdown>
       ) : (
         <div className="relative h-4 w-20 overflow-hidden rounded-lg">
           <div className={`${loadingClasses} ball-1`}></div>

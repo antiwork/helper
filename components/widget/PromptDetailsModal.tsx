@@ -1,8 +1,8 @@
 import type { Message } from "ai";
 import { ChevronDown, ChevronRight, Info, X } from "lucide-react";
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
 import { JsonView } from "@/components/jsonView";
+import MessageMarkdown from "@/components/widget/MessageMarkdown";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 
 type Props = {
@@ -50,7 +50,7 @@ export default function PromptDetailsModal({ onClose, allMessages, message, prom
         <div>
           <h3 className="text-xs font-semibold mb-2">Response Text</h3>
           <div className="border border-black rounded-lg p-4">
-            <ReactMarkdown className="prose prose-sm max-w-none">{message.content}</ReactMarkdown>
+            <MessageMarkdown className="prose prose-sm max-w-none">{message.content}</MessageMarkdown>
           </div>
         </div>
 
@@ -58,24 +58,27 @@ export default function PromptDetailsModal({ onClose, allMessages, message, prom
           <div>
             <h3 className="text-xs font-semibold mb-2">Prompt</h3>
             <div className="space-y-2">
-              {promptSections.map((section) => (
-                <div key={section.key}>
-                  <button
-                    onClick={() => toggleSection(section.key)}
-                    className="w-full flex items-center gap-1 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    {expandedSections[section.key] ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                    <span className="font-medium">{section.title}</span>
-                  </button>
-                  {expandedSections[section.key] && (
-                    <ReactMarkdown className="pl-5 prose prose-sm max-w-none">{section.content}</ReactMarkdown>
-                  )}
-                </div>
-              ))}
+              {promptSections.map(
+                (section) =>
+                  section.content && (
+                    <div key={section.key}>
+                      <button
+                        onClick={() => toggleSection(section.key)}
+                        className="w-full flex items-center gap-1 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                      >
+                        {expandedSections[section.key] ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                        <span className="font-medium">{section.title}</span>
+                      </button>
+                      {expandedSections[section.key] && (
+                        <MessageMarkdown className="pl-5 prose prose-sm max-w-none">{section.content}</MessageMarkdown>
+                      )}
+                    </div>
+                  ),
+              )}
               <div>
                 <button
                   onClick={() => toggleSection("messageThread")}
@@ -92,12 +95,14 @@ export default function PromptDetailsModal({ onClose, allMessages, message, prom
                   <div className="pl-5 space-y-3">
                     {allMessages
                       .filter((msg) => msg.createdAt && message.createdAt && msg.createdAt < message.createdAt)
-                      .map((msg, index) => (
-                        <ReactMarkdown
-                          key={index}
-                          className="prose prose-sm max-w-none"
-                        >{`**${msg.role === "user" ? "User" : "Assistant"}:** ${msg.content}`}</ReactMarkdown>
-                      ))}
+                      .map((msg, index) => {
+                        const content = `**${msg.role === "user" ? "User" : "Assistant"}:** ${msg.content}`;
+                        return (
+                          <MessageMarkdown key={index} className="prose prose-sm max-w-none">
+                            {content}
+                          </MessageMarkdown>
+                        );
+                      })}
                   </div>
                 )}
               </div>
