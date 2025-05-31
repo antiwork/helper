@@ -59,21 +59,42 @@ const remarkAutolink = () => {
     const walk = (node: any): void => {
       if (node.type === "text" && node.value && typeof node.value === "string" && !isInsideLink(node)) {
         const urlRegex = /(https?:\/\/[^\s<>"\[\]{}|\\^`]+?)(?=[.,;:!?)\]}]*(?:\s|$))/gi;
-        const parts = node.value.split(urlRegex);
+        const matches = Array.from(node.value.matchAll(urlRegex));
 
-        if (parts.length > 1) {
+        if (matches.length > 0) {
           const newChildren: any[] = [];
-          parts.forEach((part: string) => {
-            if (urlRegex.test(part)) {
+          let lastIndex = 0;
+
+          matches.forEach((match: unknown) => {
+            const regexMatch = match as RegExpMatchArray;
+            const url = regexMatch[1];
+            if (!url || regexMatch.index === undefined) return;
+
+            const matchStart = regexMatch.index;
+            const matchEnd = matchStart + url.length;
+
+            if (lastIndex < matchStart) {
               newChildren.push({
-                type: "link",
-                url: part,
-                children: [{ type: "text", value: part }],
+                type: "text",
+                value: node.value.slice(lastIndex, matchStart),
               });
-            } else if (part) {
-              newChildren.push({ type: "text", value: part });
             }
+
+            newChildren.push({
+              type: "link",
+              url,
+              children: [{ type: "text", value: url }],
+            });
+
+            lastIndex = matchEnd;
           });
+
+          if (lastIndex < node.value.length) {
+            newChildren.push({
+              type: "text",
+              value: node.value.slice(lastIndex),
+            });
+          }
 
           if (newChildren.length > 0) {
             nodesToReplace.push({ node, newChildren });
