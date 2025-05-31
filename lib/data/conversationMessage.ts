@@ -250,17 +250,24 @@ export const serializeMessage = async (
 
 export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
-    inputFiles.map(async (file) =>
-      file.isInline
-        ? { isInline: true as const, key: file.key, presignedUrl: await getFileUrl(file) }
-        : {
-            ...file,
-            isInline: false as const,
-            sizeHuman: formatBytes(file.size, 2),
-            presignedUrl: await getFileUrl(file),
-            previewUrl: file.previewKey ? await getFileUrl(file, { preview: true }) : null,
-          },
-    ),
+    inputFiles.map(async (file) => {
+      if (file.isInline) {
+        return { isInline: true as const, key: file.key, presignedUrl: await getFileUrl(file) };
+      }
+
+      const [presignedUrl, previewUrl] = await Promise.all([
+        getFileUrl(file),
+        file.previewKey ? getFileUrl(file, { preview: true }) : null,
+      ]);
+
+      return {
+        ...file,
+        isInline: false as const,
+        sizeHuman: formatBytes(file.size, 2),
+        presignedUrl,
+        previewUrl,
+      };
+    }),
   );
 
 type OptionalMessageAttributes = "updatedAt" | "createdAt";
