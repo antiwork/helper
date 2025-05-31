@@ -16,6 +16,17 @@ export const getMailboxToolsForChat = async (mailbox: Mailbox, tx: Transaction |
   });
 };
 
+export const getMailboxToolsForAnonymousChat = async (mailbox: Mailbox, tx: Transaction | typeof db = db): Promise<Tool[]> => {
+  return await tx.query.tools.findMany({
+    where: and(
+      eq(toolsTable.mailboxId, mailbox.id),
+      eq(toolsTable.enabled, true),
+      eq(toolsTable.availableInChat, true),
+      eq(toolsTable.availableInAnonymousChat, true),
+    ),
+  });
+};
+
 export const fetchOpenApiSpec = async (url: string, apiKey: string | null): Promise<string> => {
   const response = await fetch(url, {
     headers: apiKey
@@ -60,6 +71,7 @@ export const importToolsFromSpec = async ({
         ...tool,
         enabled: existingTool?.enabled ?? true,
         availableInChat: existingTool?.availableInChat ?? false,
+        availableInAnonymousChat: existingTool?.availableInAnonymousChat ?? false,
         updatedAt: new Date(),
       })
       .where(eq(toolsTable.slug, tool.slug));

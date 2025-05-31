@@ -36,6 +36,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
       settings: {
         enabled,
         availableInChat: tool.availableInChat,
+        availableInAnonymousChat: tool.availableInAnonymousChat,
         customerEmailParameter: tool.customerEmailParameter,
       },
     });
@@ -51,6 +52,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
           settings: {
             enabled: editingTool.enabled,
             availableInChat: editingTool.availableInChat,
+            availableInAnonymousChat: editingTool.availableInAnonymousChat,
             customerEmailParameter: editingTool.customerEmailParameter,
           },
         });
@@ -118,6 +120,23 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
                 setEditingTool((tool) => (tool ? { ...tool, availableInChat: checked } : tool))
               }
               disabled={updateToolMutation.isPending || !editingTool.enabled}
+            />
+          </div>
+          <div className="flex items-start justify-between gap-8">
+            <div>
+              <div className="text-sm">Available in anonymous chats</div>
+              <div className="text-xs text-muted-foreground">
+                Customer email may not be verified
+              </div>
+            </div>
+            <Switch
+              id="available-in-anonymous-chat"
+              aria-label="Make available in anonymous chats"
+              checked={editingTool.availableInAnonymousChat}
+              onCheckedChange={(checked) =>
+                setEditingTool((tool) => (tool ? { ...tool, availableInAnonymousChat: checked } : tool))
+              }
+              disabled={updateToolMutation.isPending || !editingTool.enabled || !editingTool.availableInChat}
             />
           </div>
           {editingTool.availableInChat && editingTool.parameters && editingTool.parameters.length > 0 && (
