@@ -1,0 +1,1 @@
+ALTER TABLE "tools" ADD COLUMN "available_in_anonymous_chat" boolean DEFAULT false NOT NULL;

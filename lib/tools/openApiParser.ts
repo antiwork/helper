@@ -116,6 +116,7 @@ const createTool = (
   authenticationToken: apiToken,
   enabled: true,
   availableInChat: false,
+  availableInAnonymousChat: false,
   customerEmailParameter: null,
 });
 
