@@ -25,164 +25,9 @@ yarn add @helperai/react
 pnpm add @helperai/react
 ```
 
-## Quick Start
+## Docs
 
-1. Add your Helper credentials to `.env.local`:
-
-```bash
-HELPER_HMAC_SECRET=your_secret_from_helper_dashboard
-HELPER_MAILBOX_SLUG=your_mailbox_slug
-```
-
-2. Use in your application (Next.js example):
-
-```tsx
-// app/layout.tsx
-import { generateHelperAuth, HelperProvider } from "@helperai/react";
-
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth(); // Your auth solution
-  if (!session?.user?.email) return children;
-
-  const helperAuth = await generateHelperAuth({
-    email: session.user.email,
-  });
-
-  const config = {
-    ...helperAuth,
-    title: "Support",
-  };
-
-  return (
-    <html>
-      <body>
-        <HelperProvider {...config}>{children}</HelperProvider>
-      </body>
-    </html>
-  );
-}
-```
-
-For other frameworks, ensure authentication is always generated server-side:
-
-```tsx
-// pages/api/helper-auth.ts
-import { generateHelperAuth } from "@helperai/react/server";
-
-export default async function handler(req, res) {
-  const session = await getSession(req); // Your auth solution
-  if (!session?.user?.email) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const helperAuth = await generateHelperAuth({
-    email: session.user.email,
-  });
-
-  res.json(helperAuth);
-}
-```
-
-### Anonymous Sessions
-
-Helper also supports anonymous sessions that don't require user authentication. Here's how to implement them:
-
-```tsx
-// app/public-chat.tsx
-import { HelperProvider } from "@helperai/react";
-
-export default async function PublicChat() {
-  const config = {
-    mailbox_slug: process.env.HELPER_MAILBOX_SLUG,
-    title: "Public Support Chat",
-  };
-
-  return (
-    <div>
-      <h1>Public Support Chat</h1>
-      <HelperProvider {...config}>
-        <ChatContent />
-      </HelperProvider>
-    </div>
-  );
-}
-```
-
-For API routes:
-
-```tsx
-// pages/api/public-helper-auth.ts
-export default async function handler(req, res) {
-  res.json({
-    mailbox_slug: process.env.HELPER_MAILBOX_SLUG,
-  });
-}
-```
-
-## Configuration
-
-### Session Types
-
-Helper supports two types of sessions:
-
-#### Authenticated Sessions
-
-Require user email and generate secure HMAC authentication:
-
-```typescript
-const config = await generateHelperAuth({
-  email: user.email,
-  // Optional: provide HMAC secret directly instead of using env var
-  hmacSecret: "your_secret",
-  // Optional: provide mailbox slug directly instead of using env var
-  mailboxSlug: "your_mailbox",
-});
-```
-
-#### Anonymous Sessions
-
-Only require a mailbox slug, no authentication needed:
-
-```typescript
-const config = {
-  mailbox_slug: "your_mailbox",
-  title: "Support Chat", // optional
-};
-```
-
-Note: Anonymous sessions have limited functionality:
-
-- No conversation history
-- No user-specific features
-- Messages are not associated with an email address
-
-### Customer Metadata Examples
-
-Below are common patterns for different use cases:
-
-```typescript
-// SaaS Application
-const metadata = {
-  name: user.displayName,
-  value: user.lifetimeValue, // Total value from all subscriptions
-  links: {
-    "User Profile": `/users/${user.id}`,
-    "Billing History": `/users/${user.id}/billing`,
-    "Support Tickets": `/users/${user.id}/tickets`,
-  },
-};
-
-// E-commerce Platform
-const metadata = {
-  name: customer.name,
-  value: customer.totalSpent, // Total spent across all orders
-  links: {
-    "Customer Profile": `/customers/${customer.id}`,
-    "Order History": `/customers/${customer.id}/orders`,
-    "Return Requests": `/customers/${customer.id}/returns`,
-  },
-};
-```
+[Getting Started](https://helper.ai/docs/widget/03-react-integration)
 
 ## Best Practices
 
@@ -221,7 +66,7 @@ const {
 
 ```typescript
 <HelperProvider
-  {...authConfig}
+  {...config}
 >
   {children}
 </HelperProvider>

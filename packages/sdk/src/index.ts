@@ -65,7 +65,7 @@ class HelperWidget {
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
-    this.showToggleButton = config.show_toggle_button ?? null;
+    this.showToggleButton = config.showToggleButton ?? null;
     this.isMinimized = localStorage.getItem(this.MINIMIZED_STORAGE_KEY) === "true";
     this.guideManager = new GuideManager(this);
   }
@@ -100,21 +100,21 @@ class HelperWidget {
 
     try {
       const requestBody: Record<string, any> = {
-        mailboxSlug: this.config.mailbox_slug,
+        mailboxSlug: this.config.mailboxSlug,
         currentURL: window.location.href,
       };
 
       if (!this.isAnonymous()) {
-        if (!this.config.email_hash || !this.config.timestamp) {
+        if (!this.config.emailHash || !this.config.timestamp) {
           // eslint-disable-next-line no-console
           console.error("Email authentication fields missing");
           return;
         }
 
         requestBody.email = this.config.email;
-        requestBody.emailHash = this.config.email_hash;
+        requestBody.emailHash = this.config.emailHash;
         requestBody.timestamp = this.config.timestamp;
-        requestBody.customerMetadata = this.config.customer_metadata;
+        requestBody.customerMetadata = this.config.customerMetadata;
       } else {
         requestBody.currentToken = localStorage.getItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
       }
@@ -196,7 +196,7 @@ class HelperWidget {
   }
 
   private validateConfig(): boolean {
-    if (!this.config.mailbox_slug) {
+    if (!this.config.mailboxSlug) {
       // eslint-disable-next-line no-console
       console.error("Invalid config, missing required fields", this.config);
       return false;
@@ -239,7 +239,7 @@ class HelperWidget {
   }
 
   public getIconColors(): { backgroundColor: string; foregroundColor: string } {
-    const backgroundColor = this.config.icon_color || "#222";
+    const backgroundColor = this.config.iconColor || "#222";
     const foregroundColor = this.isLightColor(backgroundColor) ? "#000000" : "#FFFFFF";
     return { backgroundColor, foregroundColor };
   }
@@ -528,7 +528,7 @@ class HelperWidget {
     this.toggleButton = document.createElement("button");
     this.toggleButton.className = "helper-widget-toggle-button";
 
-    if (this.config.mailbox_slug === GUMROAD_MAILBOX_SLUG) {
+    if (this.config.mailboxSlug === GUMROAD_MAILBOX_SLUG) {
       this.toggleButton.classList.add("gumroad-theme");
     }
 
@@ -809,7 +809,7 @@ class HelperWidget {
   private createNotificationBubble(id: string): HTMLDivElement {
     const bubble = document.createElement("div");
     bubble.className = "notification-bubble";
-    if (this.config.mailbox_slug === GUMROAD_MAILBOX_SLUG) {
+    if (this.config.mailboxSlug === GUMROAD_MAILBOX_SLUG) {
       bubble.classList.add("gumroad-theme");
     }
 
@@ -915,7 +915,7 @@ export default HelperWidget;
 
 if (typeof window !== "undefined" && window.document.currentScript?.dataset.mailbox) {
   HelperWidget.init({
-    mailbox_slug: window.document.currentScript.dataset.mailbox,
+    mailboxSlug: window.document.currentScript.dataset.mailbox,
     ...(window.helperWidgetConfig || {}),
   });
 }

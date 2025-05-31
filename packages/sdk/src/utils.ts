@@ -5,18 +5,18 @@ export type { InteractiveElement } from "./domTree";
 export type HelperWidgetConfig = {
   title?: string;
   email?: string;
-  email_hash?: string;
-  mailbox_slug: string;
+  emailHash?: string;
+  mailboxSlug: string;
   timestamp?: number;
-  customer_metadata?: {
+  customerMetadata?: {
     name?: string | null;
     value?: number | null;
     links?: Record<string, string> | null;
   } | null;
-  icon_color?: string | null;
-  experimental_read_page?: boolean;
-  show_toggle_button?: boolean;
-  enable_guide?: boolean;
+  iconColor?: string | null;
+  experimentalReadPage?: boolean;
+  showToggleButton?: boolean;
+  enableGuide?: boolean;
   theme?: {
     background: string;
     foreground: string;

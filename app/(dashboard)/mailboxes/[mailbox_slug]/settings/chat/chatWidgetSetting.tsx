@@ -3,7 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { getDocsUrl } from "@/components/constants";
+import { getBaseUrl, getDocsUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ const hmac = crypto.createHmac('sha256', hmacSecret)
   .update(\`\${email}:\${timestamp}\`)
   .digest('hex'); // Format of content is "email:timestamp"`;
 
-const WIDGET_SAMPLE_CODE = `<script src="https://helper.ai/widget/sdk.js" {{DATA_ATTRIBUTES}} async></script>`;
+const WIDGET_SAMPLE_CODE = `<script src="${getBaseUrl()}/widget/sdk.js" {{DATA_ATTRIBUTES}} async></script>`;
 
 const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [mode, setMode] = useState<WidgetMode>(mailbox.widgetDisplayMode ?? "off");
@@ -242,7 +242,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html>
       <body>
-        <HelperProvider mailbox="${mailbox.slug}">
+        <HelperProvider host="${getBaseUrl()}" mailboxSlug="${mailbox.slug}">
           {children}
         </HelperProvider>
       </body>
@@ -263,9 +263,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <CodeBlock
                     code={`
 <HelperProvider
-  mailbox="${mailbox.slug}"
+  host="${getBaseUrl()}"
+  mailboxSlug="${mailbox.slug}"
   title="My Helper Widget"
-  icon_color="#ff0000"
+  iconColor="#ff0000"
 >
   {children}
 </HelperProvider>
@@ -370,7 +371,7 @@ export default async function RootLayout({
   return (
     <html>
       <body>
-        <HelperProvider {...helperAuth}>
+        <HelperProvider host="${getBaseUrl()}" {...helperAuth}>
           {children}
         </HelperProvider>
       </body>

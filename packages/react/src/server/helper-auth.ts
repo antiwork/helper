@@ -59,7 +59,7 @@ export function generateHelperAuth({ email, hmacSecret, mailboxSlug }: HelperAut
   return {
     email,
     timestamp,
-    email_hash: hmac,
-    mailbox_slug: finalMailboxSlug,
+    emailHash: hmac,
+    mailboxSlug: finalMailboxSlug,
   };
 }

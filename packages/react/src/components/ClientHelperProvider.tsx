@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
-import type { HelperConfig } from "../types";
+import { useEffect } from "react";
+import type { HelperWidgetConfig } from "../types";
 
-type ClientHelperProviderProps = HelperConfig & {
-  host?: string;
+type ClientHelperProviderProps = HelperWidgetConfig & {
+  host: string;
   onError?: (error: Error) => void;
 };
 
-export function ClientHelperProvider({ host = "https://helper.ai", onError, ...props }: ClientHelperProviderProps) {
+export function ClientHelperProvider({ host, onError, ...props }: ClientHelperProviderProps) {
   useEffect(() => {
     const script = document.createElement("script");
     script.src = `${host}/widget/sdk.js`;

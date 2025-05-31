@@ -18,8 +18,7 @@ export default async function InboxLayout({
     const { preferences } = await api.mailbox.get({ mailboxSlug });
 
     return (
-      // @ts-expect-error - need to update the React type definitions
-      <HelperProvider host={env.AUTH_URL} mailbox_slug={mailboxSlug} show_toggle_button>
+      <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
         <div className="flex flex-row min-h-svh w-full">
           <div className="hidden md:block text-sidebar-foreground">
             <NavigationRail mailboxSlug={mailboxSlug} />
