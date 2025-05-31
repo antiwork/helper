@@ -125,9 +125,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
           <div className="flex items-start justify-between gap-8">
             <div>
               <div className="text-sm">Available in anonymous chats</div>
-              <div className="text-xs text-muted-foreground">
-                Customer email may not be verified
-              </div>
+              <div className="text-xs text-muted-foreground">Customer email may not be verified</div>
             </div>
             <Switch
               id="available-in-anonymous-chat"

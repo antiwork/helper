@@ -9,7 +9,7 @@ import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
-import { getMailboxToolsForChat, getMailboxToolsForAnonymousChat } from "@/lib/data/tools";
+import { getMailboxToolsForAnonymousChat, getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
@@ -181,9 +181,7 @@ export const buildTools = async (
   }
 
   if (includeMailboxTools) {
-    const mailboxTools = email 
-      ? await getMailboxToolsForChat(mailbox)
-      : await getMailboxToolsForAnonymousChat(mailbox);
+    const mailboxTools = email ? await getMailboxToolsForChat(mailbox) : await getMailboxToolsForAnonymousChat(mailbox);
     const aiTools = buildAITools(mailboxTools, email);
 
     for (const [slug, aiTool] of Object.entries(aiTools)) {

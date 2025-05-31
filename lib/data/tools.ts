@@ -16,7 +16,10 @@ export const getMailboxToolsForChat = async (mailbox: Mailbox, tx: Transaction |
   });
 };
 
-export const getMailboxToolsForAnonymousChat = async (mailbox: Mailbox, tx: Transaction | typeof db = db): Promise<Tool[]> => {
+export const getMailboxToolsForAnonymousChat = async (
+  mailbox: Mailbox,
+  tx: Transaction | typeof db = db,
+): Promise<Tool[]> => {
   return await tx.query.tools.findMany({
     where: and(
       eq(toolsTable.mailboxId, mailbox.id),
