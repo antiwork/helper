@@ -40,11 +40,38 @@ describe("apiTools", () => {
         ],
       });
 
-      const aiTools = buildAITools([tool]);
+      const aiTools = buildAITools([tool], null);
 
       expect(aiTools[tool.slug]).toBeDefined();
       expect(aiTools[tool.slug]?.description).toBe(`${tool.name} - ${tool.description}`);
       expect(aiTools[tool.slug]?.parameters).toBeDefined();
+    });
+
+    it("handles customerEmailParameter correctly", async () => {
+      const { mailbox } = await userFactory.createRootUser();
+      const { tool } = await toolsFactory.create({
+        mailboxId: mailbox.id,
+        customerEmailParameter: "customer_email",
+        parameters: [
+          { name: "customer_email", type: "string", required: true, in: "body" },
+          { name: "other_param", type: "string", required: false, in: "body" },
+        ],
+      });
+
+      const testEmail = "customer@example.com";
+      const aiTools = buildAITools([tool], testEmail);
+
+      expect(aiTools[tool.slug]?.customerEmailParameter).toBe("customer_email");
+
+      const schema = aiTools[tool.slug]?.parameters;
+      expect(schema).toBeDefined();
+
+      const parsedWithDefaults = schema!.parse({});
+      expect(parsedWithDefaults.customer_email).toBe(testEmail);
+
+      const parsedWithoutEmail = schema!.parse({ other_param: "test" });
+      expect(parsedWithoutEmail.customer_email).toBe(testEmail);
+      expect(parsedWithoutEmail.other_param).toBe("test");
     });
   });
 
