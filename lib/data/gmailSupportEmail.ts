@@ -23,31 +23,19 @@ export const createGmailSupportEmail = async (
   mailboxSlug: string,
   info: {
     email: string;
-  } & (
-    | {
-        accessToken: string;
-        refreshToken: string;
-        expiresAt: Date;
-      }
-    | {
-        userId: string;
-      }
-  ),
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: Date;
+  },
   tx: Transaction | typeof db = db,
 ): Promise<typeof gmailSupportEmails.$inferSelect> => {
   const gmailSupportEmail = await tx
     .insert(gmailSupportEmails)
     .values({
       email: info.email,
-      ...("accessToken" in info
-        ? {
-            accessToken: info.accessToken,
-            encryptedAccessToken: info.accessToken,
-            refreshToken: info.refreshToken,
-            encryptedRefreshToken: info.refreshToken,
-            expiresAt: info.expiresAt,
-          }
-        : { userId: info.userId }),
+      accessToken: info.accessToken,
+      refreshToken: info.refreshToken,
+      expiresAt: info.expiresAt,
     })
     .returning()
     .then(takeUniqueOrThrow);
