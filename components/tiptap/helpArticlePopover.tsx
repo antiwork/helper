@@ -1,8 +1,8 @@
+import { ExternalLink, Search, X } from "lucide-react";
 import React from "react";
 import { createPortal } from "react-dom";
-import { ExternalLink, Search, X } from "lucide-react";
-import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 import { Input } from "@/components/ui/input";
+import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 
 export type HelpArticle = {
   title: string;
@@ -55,9 +55,7 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
   }, [isMobile, isOpen]);
 
   const filterQuery = isMobile ? mobileQuery : query;
-  const filtered = articles.filter((a) =>
-    a.title.toLowerCase().includes(filterQuery.toLowerCase())
-  );
+  const filtered = articles.filter((a) => a.title.toLowerCase().includes(filterQuery.toLowerCase()));
 
   if (!isOpen || (!position && !isMobile)) return null;
 
@@ -65,7 +63,7 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
   let popoverTop = position?.top ?? 80;
   let popoverLeft = position?.left ?? 40;
   let maxHeight = 320;
-  if (!isMobile && typeof window !== 'undefined') {
+  if (!isMobile && typeof window !== "undefined") {
     const margin = 8;
     const availableBelow = window.innerHeight - popoverTop - margin;
     if (availableBelow < maxHeight) {
@@ -79,13 +77,13 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
       popoverLeft = window.innerWidth / 2 - 160;
     }
     popoverStyle = {
-      position: 'absolute',
+      position: "absolute",
       top: popoverTop,
       left: popoverLeft,
       zIndex: 9999,
       minWidth: 320,
       maxHeight,
-      overflowY: 'auto',
+      overflowY: "auto",
     };
   }
 
@@ -94,11 +92,9 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
       {filtered.map((a, i) => (
         <li
           key={a.url}
-          className={
-            `${itemClass} ${i === selectedIndex ? "bg-accent text-accent-foreground" : ""}`
-          }
+          className={`${itemClass} ${i === selectedIndex ? "bg-accent text-accent-foreground" : ""}`}
           onMouseEnter={() => setSelectedIndex(i)}
-          onMouseDown={e => {
+          onMouseDown={(e) => {
             e.preventDefault();
             onSelect(a);
           }}
@@ -113,8 +109,8 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
             rel="noopener noreferrer"
             className="ml-2 flex-shrink-0 text-muted-foreground hover:text-primary"
             tabIndex={-1}
-            onMouseDown={e => e.stopPropagation()}
-            onClick={e => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <ExternalLink size={16} />
           </a>
@@ -124,18 +120,14 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
   );
 
   const popover = isMobile ? (
-    <div
-      ref={ref}
-      className="fixed inset-0 w-full h-full bg-background z-[9999] flex flex-col"
-      style={{}}
-    >
+    <div ref={ref} className="fixed inset-0 w-full h-full bg-background z-[9999] flex flex-col" style={{}}>
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <Input
           ref={inputRef}
           type="text"
           placeholder="Search help center articles..."
           value={mobileQuery}
-          onChange={e => setMobileQuery(e.target.value)}
+          onChange={(e) => setMobileQuery(e.target.value)}
           className="h-10 flex-1"
         />
         <button
@@ -150,15 +142,14 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
       {filtered.length === 0 ? (
         <div className="text-sm p-4">No articles found</div>
       ) : (
-        renderList("flex-1 overflow-y-auto px-2 pb-4", "flex items-center justify-between cursor-pointer px-2 py-2 rounded hover:bg-accent")
+        renderList(
+          "flex-1 overflow-y-auto px-2 pb-4",
+          "flex items-center justify-between cursor-pointer px-2 py-2 rounded hover:bg-accent",
+        )
       )}
     </div>
   ) : (
-    <div
-      ref={ref}
-      style={popoverStyle}
-      className="rounded border border-border bg-background shadow-lg p-2 pt-3 pb-3"
-    >
+    <div ref={ref} style={popoverStyle} className="rounded border border-border bg-background shadow-lg p-2 pt-3 pb-3">
       <div className="flex items-center text-xs text-muted-foreground mb-2 px-2">
         <Search size={14} className="mr-2" />
         <span>Search help center articles</span>
@@ -173,4 +164,4 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
   return createPortal(popover, document.body);
 };
 
-export default HelpArticleMentionPopover; 
+export default HelpArticleMentionPopover;

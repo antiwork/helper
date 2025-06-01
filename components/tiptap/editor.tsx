@@ -17,8 +17,8 @@ import { Image, imageFileTypes } from "@/components/tiptap/image";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
-import Toolbar from "./toolbar";
 import HelpArticlePopover, { HelpArticle } from "./helpArticlePopover";
+import Toolbar from "./toolbar";
 
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
@@ -72,30 +72,30 @@ export type TipTapEditorRef = {
 
 // TODO: Remove mock data and replace with real help articles from API
 const mockHelpArticles: HelpArticle[] = [
-  { title: 'Why choose Gumroad?', url: 'https://gumroad.com/help/article/64-is-gumroad-for-me.html' },
-  { title: 'Account settings', url: 'https://gumroad.com/help/article/67-the-settings-menu.html' },
-  { title: 'Filling out payout settings', url: 'https://gumroad.com/help/article/260-your-payout-settings-page.html' },
-  { title: 'Build a website on Gumroad', url: 'https://gumroad.com/help/article/124-your-gumroad-profile-page.html' },
-  { title: 'Having multiple accounts', url: 'https://gumroad.com/help/article/252-multiple-accounts.html' },
-  { title: 'Protecting creator privacy', url: 'https://gumroad.com/help/article/300-protecting-creator-privacy.html' },
-  { title: 'How to get paid', url: 'https://gumroad.com/help/article/301-how-to-get-paid.html' },
-  { title: 'Refunds and returns', url: 'https://gumroad.com/help/article/302-refunds-and-returns.html' },
-  { title: 'Product delivery issues', url: 'https://gumroad.com/help/article/303-product-delivery-issues.html' },
-  { title: 'Tax information', url: 'https://gumroad.com/help/article/304-tax-information.html' },
-  { title: 'Subscription management', url: 'https://gumroad.com/help/article/305-subscription-management.html' },
-  { title: 'Analytics and reporting', url: 'https://gumroad.com/help/article/306-analytics-and-reporting.html' },
-  { title: 'Integrations', url: 'https://gumroad.com/help/article/307-integrations.html' },
-  { title: 'API access', url: 'https://gumroad.com/help/article/308-api-access.html' },
-  { title: 'Custom domains', url: 'https://gumroad.com/help/article/309-custom-domains.html' },
-  { title: 'Affiliate program', url: 'https://gumroad.com/help/article/310-affiliate-program.html' },
-  { title: 'Security best practices', url: 'https://gumroad.com/help/article/311-security-best-practices.html' },
-  { title: 'Mobile app', url: 'https://gumroad.com/help/article/312-mobile-app.html' },
-  { title: 'Notifications', url: 'https://gumroad.com/help/article/313-notifications.html' },
-  { title: 'User roles', url: 'https://gumroad.com/help/article/314-user-roles.html' },
-  { title: 'Advanced settings', url: 'https://gumroad.com/help/article/315-advanced-settings.html' },
-  { title: 'Troubleshooting', url: 'https://gumroad.com/help/article/316-troubleshooting.html' },
-  { title: 'Legal and compliance', url: 'https://gumroad.com/help/article/317-legal-and-compliance.html' },
-  { title: 'Open source', url: 'https://gumroad.com/help/article/318-open-source.html' },
+  { title: "Why choose Gumroad?", url: "https://gumroad.com/help/article/64-is-gumroad-for-me.html" },
+  { title: "Account settings", url: "https://gumroad.com/help/article/67-the-settings-menu.html" },
+  { title: "Filling out payout settings", url: "https://gumroad.com/help/article/260-your-payout-settings-page.html" },
+  { title: "Build a website on Gumroad", url: "https://gumroad.com/help/article/124-your-gumroad-profile-page.html" },
+  { title: "Having multiple accounts", url: "https://gumroad.com/help/article/252-multiple-accounts.html" },
+  { title: "Protecting creator privacy", url: "https://gumroad.com/help/article/300-protecting-creator-privacy.html" },
+  { title: "How to get paid", url: "https://gumroad.com/help/article/301-how-to-get-paid.html" },
+  { title: "Refunds and returns", url: "https://gumroad.com/help/article/302-refunds-and-returns.html" },
+  { title: "Product delivery issues", url: "https://gumroad.com/help/article/303-product-delivery-issues.html" },
+  { title: "Tax information", url: "https://gumroad.com/help/article/304-tax-information.html" },
+  { title: "Subscription management", url: "https://gumroad.com/help/article/305-subscription-management.html" },
+  { title: "Analytics and reporting", url: "https://gumroad.com/help/article/306-analytics-and-reporting.html" },
+  { title: "Integrations", url: "https://gumroad.com/help/article/307-integrations.html" },
+  { title: "API access", url: "https://gumroad.com/help/article/308-api-access.html" },
+  { title: "Custom domains", url: "https://gumroad.com/help/article/309-custom-domains.html" },
+  { title: "Affiliate program", url: "https://gumroad.com/help/article/310-affiliate-program.html" },
+  { title: "Security best practices", url: "https://gumroad.com/help/article/311-security-best-practices.html" },
+  { title: "Mobile app", url: "https://gumroad.com/help/article/312-mobile-app.html" },
+  { title: "Notifications", url: "https://gumroad.com/help/article/313-notifications.html" },
+  { title: "User roles", url: "https://gumroad.com/help/article/314-user-roles.html" },
+  { title: "Advanced settings", url: "https://gumroad.com/help/article/315-advanced-settings.html" },
+  { title: "Troubleshooting", url: "https://gumroad.com/help/article/316-troubleshooting.html" },
+  { title: "Legal and compliance", url: "https://gumroad.com/help/article/317-legal-and-compliance.html" },
+  { title: "Open source", url: "https://gumroad.com/help/article/318-open-source.html" },
 ];
 
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
@@ -312,7 +312,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             top: rect.bottom + window.scrollY,
             left: rect.left + window.scrollX,
           };
-        } else if (dom && dom.getBoundingClientRect) {
+        } else if (dom?.getBoundingClientRect) {
           // fallback: use the bounding rect of the parent node
           const rect = dom.getBoundingClientRect();
           return {
@@ -334,28 +334,28 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
       if (mentionState.isOpen) {
-        if (event.key === 'Escape') {
+        if (event.key === "Escape") {
           setMentionState({ isOpen: false, position: null, range: null });
           return;
         }
-        if (event.key === 'ArrowDown') {
+        if (event.key === "ArrowDown") {
           event.preventDefault();
           setSelectedIndex((i) => Math.min(i + 1, mockHelpArticles.length - 1));
           return;
         }
-        if (event.key === 'ArrowUp') {
+        if (event.key === "ArrowUp") {
           event.preventDefault();
           setSelectedIndex((i) => Math.max(i - 1, 0));
           return;
         }
-        if (event.key === 'Enter') {
+        if (event.key === "Enter") {
           event.preventDefault();
           if (filteredArticles[selectedIndex]) {
             handleSelectArticle(filteredArticles[selectedIndex]);
           }
           return;
         }
-        if (event.key === 'ArrowRight') {
+        if (event.key === "ArrowRight") {
           setMentionState({ isOpen: false, position: null, range: null });
           return;
         }
@@ -367,13 +367,8 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       if (!editor) return;
       const plugin = {
         props: {
-          handleTextInput(
-            view: any,
-            from: number,
-            to: number,
-            text: string
-          ) {
-            if (text === '@') {
+          handleTextInput(view: any, from: number, to: number, text: string) {
+            if (text === "@") {
               setTimeout(() => {
                 const pos = getCaretPosition();
                 setMentionState({
@@ -386,17 +381,17 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             return false;
           },
           handleKeyDown(view: any, event: KeyboardEvent) {
-            if (mentionState.isOpen && event.key === 'Backspace') {
+            if (mentionState.isOpen && event.key === "Backspace") {
               const state = view.state;
               if (mentionState.range) {
-                const docText = state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, '', '');
+                const docText = state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
                 const cursorPos = state.selection.from;
-                const query = state.doc.textBetween(mentionState.range.from + 1, cursorPos, '', '');
-                if (query === '') {
+                const query = state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
+                if (query === "") {
                   setMentionState({ isOpen: false, position: null, range: null });
                   return false;
                 }
-                if (docText !== '@') {
+                if (docText !== "@") {
                   setMentionState({ isOpen: false, position: null, range: null });
                   return false;
                 }
@@ -406,8 +401,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             return false;
           },
         },
-      };
-      // @ts-ignore: Not a real ProseMirror plugin, just for demo/mockup
+      } as const;
       editor.view.setProps({ ...editor.view.props, ...plugin.props });
       return () => {
         // No-op cleanup for mock plugin
@@ -416,38 +410,38 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
 
     React.useEffect(() => {
       if (!editor || !mentionState.isOpen || !mentionState.range) return;
-      const docText = editor.view.state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, '', '');
-      if (docText !== '@') {
+      const docText = editor.view.state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
+      if (docText !== "@") {
         setMentionState({ isOpen: false, position: null, range: null });
       }
     }, [editor, mentionState.isOpen, mentionState.range, editor?.view.state]);
 
     const getMentionQuery = () => {
-      if (!editor || !mentionState.isOpen || !mentionState.range) return '';
+      if (!editor || !mentionState.isOpen || !mentionState.range) return "";
       const cursorPos = editor.view.state.selection.from;
-      if (cursorPos < mentionState.range.from + 1) return '';
-      return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, '', '');
+      if (cursorPos < mentionState.range.from + 1) return "";
+      return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
     };
 
     const filteredArticles = mockHelpArticles.filter((a) =>
-      a.title.toLowerCase().includes(getMentionQuery().toLowerCase())
+      a.title.toLowerCase().includes(getMentionQuery().toLowerCase()),
     );
 
     const handleSelectArticle = (article: { title: string; url: string }) => {
       if (!editor || !mentionState.range) return;
       const cursorPos = editor.view.state.selection.from;
-      editor.chain().focus()
+      editor
+        .chain()
+        .focus()
         .deleteRange({ from: mentionState.range.from, to: cursorPos })
-        .insertContent(
-          `<a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a> `
-        )
+        .insertContent(`<a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a> `)
         .run();
       setMentionState({ isOpen: false, position: null, range: null });
     };
 
     React.useEffect(() => {
       setSelectedIndex(0);
-    }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map(a => a.url).join(",")]);
+    }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
 
     if (!editor) {
       return null;

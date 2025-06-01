@@ -1,7 +1,7 @@
+import { ExternalLink } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";
-import { ExternalLink } from "lucide-react";
 
 type LinkModalProps = {
   isLinkModalOpen: boolean;
@@ -47,11 +47,11 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
             href={isValid ? linkData.url : undefined}
             target="_blank"
             rel="noopener noreferrer"
-            className={`absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary ${!isValid ? 'pointer-events-none opacity-40' : ''}`}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary ${!isValid ? "pointer-events-none opacity-40" : ""}`}
             tabIndex={-1}
             aria-label="Open link in new tab"
-            onMouseDown={e => e.stopPropagation()}
-            onClick={e => !isValid && e.preventDefault()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => !isValid && e.preventDefault()}
           >
             <ExternalLink size={18} />
           </a>
