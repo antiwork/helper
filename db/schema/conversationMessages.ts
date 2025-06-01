@@ -62,8 +62,8 @@ export const conversationMessages = pgTable(
 
     // These columns were replaced by promptInfo; they haven't been dropped
     // in case we want to migrate the data into promptInfo at some point.
-    unused_docsContext: text(),
-    unused_pastRepliesContext: text(),
+    unused_docsContext: text("docs_context"),
+    unused_pastRepliesContext: text("past_replies_context"),
 
     isFlaggedAsBad: boolean().notNull(),
     promptInfo: jsonb().$type<{ details?: PromptInfo }>(),
