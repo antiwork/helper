@@ -177,4 +177,24 @@ export const websitesRouter = {
 
       return crawl;
     }),
+
+  pages: mailboxProcedure.query(async ({ ctx }) => {
+    const pages = await db
+      .select({
+        url: websitePages.url,
+        title: websitePages.pageTitle,
+      })
+      .from(websitePages)
+      .innerJoin(websites, eq(websites.id, websitePages.websiteId))
+      .where(
+        and(
+          eq(websites.mailboxId, ctx.mailbox.id),
+          isNull(websites.deletedAt),
+          isNull(websitePages.deletedAt)
+        )
+      )
+      .orderBy(asc(websitePages.pageTitle));
+
+    return pages;
+  }),
 } satisfies TRPCRouterRecord;

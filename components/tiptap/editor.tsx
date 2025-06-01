@@ -19,6 +19,8 @@ import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
 import HelpArticlePopover, { HelpArticle } from "./helpArticlePopover";
 import Toolbar from "./toolbar";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
+import { api } from "@/trpc/react";
 
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
@@ -70,33 +72,7 @@ export type TipTapEditorRef = {
   editor: Editor | null;
 };
 
-// TODO: Remove mock data and replace with real help articles from API
-const mockHelpArticles: HelpArticle[] = [
-  { title: "Why choose Gumroad?", url: "https://gumroad.com/help/article/64-is-gumroad-for-me.html" },
-  { title: "Account settings", url: "https://gumroad.com/help/article/67-the-settings-menu.html" },
-  { title: "Filling out payout settings", url: "https://gumroad.com/help/article/260-your-payout-settings-page.html" },
-  { title: "Build a website on Gumroad", url: "https://gumroad.com/help/article/124-your-gumroad-profile-page.html" },
-  { title: "Having multiple accounts", url: "https://gumroad.com/help/article/252-multiple-accounts.html" },
-  { title: "Protecting creator privacy", url: "https://gumroad.com/help/article/300-protecting-creator-privacy.html" },
-  { title: "How to get paid", url: "https://gumroad.com/help/article/301-how-to-get-paid.html" },
-  { title: "Refunds and returns", url: "https://gumroad.com/help/article/302-refunds-and-returns.html" },
-  { title: "Product delivery issues", url: "https://gumroad.com/help/article/303-product-delivery-issues.html" },
-  { title: "Tax information", url: "https://gumroad.com/help/article/304-tax-information.html" },
-  { title: "Subscription management", url: "https://gumroad.com/help/article/305-subscription-management.html" },
-  { title: "Analytics and reporting", url: "https://gumroad.com/help/article/306-analytics-and-reporting.html" },
-  { title: "Integrations", url: "https://gumroad.com/help/article/307-integrations.html" },
-  { title: "API access", url: "https://gumroad.com/help/article/308-api-access.html" },
-  { title: "Custom domains", url: "https://gumroad.com/help/article/309-custom-domains.html" },
-  { title: "Affiliate program", url: "https://gumroad.com/help/article/310-affiliate-program.html" },
-  { title: "Security best practices", url: "https://gumroad.com/help/article/311-security-best-practices.html" },
-  { title: "Mobile app", url: "https://gumroad.com/help/article/312-mobile-app.html" },
-  { title: "Notifications", url: "https://gumroad.com/help/article/313-notifications.html" },
-  { title: "User roles", url: "https://gumroad.com/help/article/314-user-roles.html" },
-  { title: "Advanced settings", url: "https://gumroad.com/help/article/315-advanced-settings.html" },
-  { title: "Troubleshooting", url: "https://gumroad.com/help/article/316-troubleshooting.html" },
-  { title: "Legal and compliance", url: "https://gumroad.com/help/article/317-legal-and-compliance.html" },
-  { title: "Open source", url: "https://gumroad.com/help/article/318-open-source.html" },
-];
+
 
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
   (
@@ -123,6 +99,8 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     },
     ref,
   ) => {
+    const { mailboxSlug } = useConversationContext();
+    const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery({ mailboxSlug });
     const { isAboveMd } = useBreakpoint("md");
     const [isMacOS, setIsMacOS] = React.useState(false);
     const [toolbarOpen, setToolbarOpen] = React.useState(() => {
@@ -340,7 +318,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
         }
         if (event.key === "ArrowDown") {
           event.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, mockHelpArticles.length - 1));
+          setSelectedIndex((i) => Math.min(i + 1, helpArticles.length - 1));
           return;
         }
         if (event.key === "ArrowUp") {
@@ -423,7 +401,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
     };
 
-    const filteredArticles = mockHelpArticles.filter((a) =>
+    const filteredArticles = helpArticles.filter((a) =>
       a.title.toLowerCase().includes(getMentionQuery().toLowerCase()),
     );
 
