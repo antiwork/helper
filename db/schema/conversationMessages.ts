@@ -40,10 +40,10 @@ export const conversationMessages = pgTable(
     emailFrom: text(),
     emailCc: jsonb().$type<string[]>(),
     emailBcc: jsonb().$type<string[]>(),
-    body: encryptedField(),
-    encryptedBody: nativeEncryptedField("encrypted_body"),
-    cleanedUpText: encryptedField(),
-    encryptedCleanedUpText: nativeEncryptedField("encrypted_cleaned_up_text"),
+    unused_body: encryptedField("body"),
+    body: nativeEncryptedField("encrypted_body"),
+    unused_cleanedUpText: encryptedField("cleaned_up_text"),
+    cleanedUpText: nativeEncryptedField("encrypted_cleaned_up_text"),
     role: text().notNull().$type<MessageRole>(),
     userId: text("clerk_user_id"),
     metadata: jsonb().$type<Metadata<MessageRole>>(),
@@ -62,8 +62,8 @@ export const conversationMessages = pgTable(
 
     // These columns were replaced by promptInfo; they haven't been dropped
     // in case we want to migrate the data into promptInfo at some point.
-    docsContext: text(),
-    pastRepliesContext: text(),
+    unused_docsContext: text(),
+    unused_pastRepliesContext: text(),
 
     isFlaggedAsBad: boolean().notNull(),
     promptInfo: jsonb().$type<{ details?: PromptInfo }>(),
