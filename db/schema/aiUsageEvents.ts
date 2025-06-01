@@ -23,6 +23,8 @@ export const aiUsageEvents = pgTable(
         | "agent_response"
         | "auto_assign_conversation"
         | "email_auto_ignore"
+        | "check_resolution"
+        | "merge_similar_conversations"
       >(),
     inputTokensCount: integer().notNull(),
     outputTokensCount: integer().notNull(),

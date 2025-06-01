@@ -29,7 +29,7 @@ const checkAIBasedResolution = async (conversationId: number, mailbox: Mailbox) 
         content: msg.content,
       })),
       mailbox,
-      queryType: "reasoning",
+      queryType: "check_resolution",
       model: GPT_4O_MINI_MODEL,
       system: RESOLUTION_CHECK_PROMPT,
       temperature: 0.1,

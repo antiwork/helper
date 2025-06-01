@@ -124,7 +124,7 @@ Should the current conversation be merged into any of the others? If so, which o
     const result = await runAIObjectQuery({
       messages: [{ role: "user", content: userMessage }],
       mailbox,
-      queryType: "reasoning",
+      queryType: "merge_similar_conversations",
       schema: z.object({
         shouldMerge: z.boolean(),
         mergeIntoId: z.number().nullable(),
