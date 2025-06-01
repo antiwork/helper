@@ -9,6 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
 import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react";
 import UAParser from "ua-parser-js";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
@@ -17,10 +18,9 @@ import { Image, imageFileTypes } from "@/components/tiptap/image";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
 import HelpArticlePopover, { HelpArticle } from "./helpArticlePopover";
 import Toolbar from "./toolbar";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
-import { api } from "@/trpc/react";
 
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
@@ -71,8 +71,6 @@ export type TipTapEditorRef = {
   scrollTo: (y: number) => void;
   editor: Editor | null;
 };
-
-
 
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
   (

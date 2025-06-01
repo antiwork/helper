@@ -186,13 +186,7 @@ export const websitesRouter = {
       })
       .from(websitePages)
       .innerJoin(websites, eq(websites.id, websitePages.websiteId))
-      .where(
-        and(
-          eq(websites.mailboxId, ctx.mailbox.id),
-          isNull(websites.deletedAt),
-          isNull(websitePages.deletedAt)
-        )
-      )
+      .where(and(eq(websites.mailboxId, ctx.mailbox.id), isNull(websites.deletedAt), isNull(websitePages.deletedAt)))
       .orderBy(asc(websitePages.pageTitle));
 
     return pages;
