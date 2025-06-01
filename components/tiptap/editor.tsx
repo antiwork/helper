@@ -18,10 +18,7 @@ import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
 import Toolbar from "./toolbar";
-import { createPortal } from "react-dom";
-import { useOnOutsideClick } from "@/components/useOnOutsideClick";
-import { ExternalLink, Search } from "lucide-react";
-import HelpArticleMentionPopover, { HelpArticle } from "./HelpArticleMentionPopover";
+import HelpArticlePopover, { HelpArticle } from "./helpArticlePopover";
 
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
@@ -73,6 +70,7 @@ export type TipTapEditorRef = {
   editor: Editor | null;
 };
 
+// TODO: Remove mock data and replace with real help articles from API
 const mockHelpArticles: HelpArticle[] = [
   { title: 'Why choose Gumroad?', url: 'https://gumroad.com/help/article/64-is-gumroad-for-me.html' },
   { title: 'Account settings', url: 'https://gumroad.com/help/article/67-the-settings-menu.html' },
@@ -242,6 +240,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       position: { top: number; left: number } | null;
       range: { from: number; to: number } | null;
     }>({ isOpen: false, position: null, range: null });
+    const [selectedIndex, setSelectedIndex] = React.useState(0);
 
     useImperativeHandle(ref, () => ({
       focus: () => editorRef.current?.commands.focus(),
@@ -339,8 +338,21 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
           setMentionState({ isOpen: false, position: null, range: null });
           return;
         }
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter') {
+        if (event.key === 'ArrowDown') {
           event.preventDefault();
+          setSelectedIndex((i) => Math.min(i + 1, mockHelpArticles.length - 1));
+          return;
+        }
+        if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          setSelectedIndex((i) => Math.max(i - 1, 0));
+          return;
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          if (filteredArticles[selectedIndex]) {
+            handleSelectArticle(filteredArticles[selectedIndex]);
+          }
           return;
         }
         if (event.key === 'ArrowRight') {
@@ -417,6 +429,10 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, '', '');
     };
 
+    const filteredArticles = mockHelpArticles.filter((a) =>
+      a.title.toLowerCase().includes(getMentionQuery().toLowerCase())
+    );
+
     const handleSelectArticle = (article: { title: string; url: string }) => {
       if (!editor || !mentionState.range) return;
       const cursorPos = editor.view.state.selection.from;
@@ -428,6 +444,10 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
         .run();
       setMentionState({ isOpen: false, position: null, range: null });
     };
+
+    React.useEffect(() => {
+      setSelectedIndex(0);
+    }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map(a => a.url).join(",")]);
 
     if (!editor) {
       return null;
@@ -458,11 +478,13 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             <div className="grow">
               <EditorContent editor={editor} />
             </div>
-            <HelpArticleMentionPopover
+            <HelpArticlePopover
               isOpen={mentionState.isOpen}
               position={mentionState.position}
               query={getMentionQuery()}
-              articles={mockHelpArticles}
+              articles={filteredArticles}
+              selectedIndex={selectedIndex}
+              setSelectedIndex={setSelectedIndex}
               onSelect={handleSelectArticle}
               onClose={() => setMentionState({ isOpen: false, position: null, range: null })}
             />
