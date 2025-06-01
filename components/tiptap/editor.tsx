@@ -13,13 +13,14 @@ import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slu
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
+import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import HelpArticlePopover, { HelpArticle } from "./helpArticlePopover";
+import HelpArticlePopover from "./helpArticlePopover";
 import Toolbar from "./toolbar";
 
 type TipTapEditorProps = {
@@ -72,6 +73,8 @@ export type TipTapEditorRef = {
   editor: Editor | null;
 };
 
+const initialMentionState = { isOpen: false, position: null, range: null, selectedIndex: 0 };
+
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
   (
     {
@@ -107,6 +110,13 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       }
       return isAboveMd;
     });
+    const [mentionState, setMentionState] = React.useState<{
+      isOpen: boolean;
+      position: { top: number; left: number } | null;
+      range: { from: number; to: number } | null;
+      selectedIndex: number;
+    }>(initialMentionState);
+    const mentionStateRef = useRefToLatest(mentionState);
 
     useEffect(() => {
       localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
@@ -130,6 +140,54 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       ],
       editorProps: {
         handleKeyDown: (view, event) => {
+          // Handle mention state keyboard navigation
+          if (mentionStateRef.current.isOpen) {
+            if (event.key === "Escape") {
+              setMentionState(initialMentionState);
+              return true;
+            }
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setMentionState((s) => ({ ...s, selectedIndex: Math.min(s.selectedIndex + 1, helpArticles.length - 1) }));
+              return true;
+            }
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setMentionState((s) => ({ ...s, selectedIndex: Math.max(s.selectedIndex - 1, 0) }));
+              return true;
+            }
+            if (event.key === "Enter") {
+              event.preventDefault();
+              const article = filteredArticles[mentionStateRef.current.selectedIndex];
+              if (article) handleSelectArticle(article);
+              return true;
+            }
+            if (event.key === "ArrowRight") {
+              setMentionState(initialMentionState);
+              return true;
+            }
+          }
+
+          // Handle Mod+Enter and Option+Enter
+          if (
+            (isMacOS && event.metaKey && event.key === "Enter") ||
+            (!isMacOS && event.ctrlKey && event.key === "Enter")
+          ) {
+            if (onModEnter) {
+              event.preventDefault();
+              onModEnter();
+              return true;
+            }
+          }
+
+          if (event.altKey && event.key === "Enter") {
+            if (onOptionEnter) {
+              event.preventDefault();
+              onOptionEnter();
+              return true;
+            }
+          }
+
           // Handle slash key to focus command bar
           if (event.key === "/") {
             const { $from } = view.state.selection;
@@ -139,6 +197,21 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               onSlashKey?.();
               return true;
             }
+          }
+
+          return false;
+        },
+        handleTextInput(view, from, _to, text) {
+          if (text === "@") {
+            setTimeout(() => {
+              const pos = getCaretPosition(view, editorContentContainerRef);
+              setMentionState({
+                isOpen: true,
+                position: pos,
+                range: { from, to: from + 1 },
+                selectedIndex: 0,
+              });
+            }, 0);
           }
           return false;
         },
@@ -170,36 +243,6 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       onUpdate: ({ editor }) => updateContent.current(editor),
     });
 
-    const handleModEnter = (event: React.KeyboardEvent) => {
-      if ((isMacOS && event.metaKey && event.key === "Enter") || (!isMacOS && event.ctrlKey && event.key === "Enter")) {
-        if (onModEnter) {
-          onModEnter();
-          return;
-        }
-      }
-
-      if (event.altKey && event.key === "Enter") {
-        if (onOptionEnter) {
-          onOptionEnter();
-        }
-      }
-    };
-
-    useEffect(() => {
-      setIsMacOS(new UAParser().getOS().name === "Mac OS");
-    }, []);
-
-    useEffect(() => {
-      if (editor && autoFocus) {
-        editor.commands.focus(autoFocus);
-      }
-    }, [editor, autoFocus]);
-
-    useEffect(() => {
-      if (editor && !editor.isEmpty) return;
-      if (editor) editor.commands.setContent(defaultContent.content || "");
-    }, [defaultContent, editor]);
-
     const editorRef = useRef(editor);
     useEffect(() => {
       editorRef.current = editor;
@@ -211,12 +254,6 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     }, [editor]);
 
     const editorContentContainerRef = useRef<HTMLDivElement | null>(null);
-    const [mentionState, setMentionState] = React.useState<{
-      isOpen: boolean;
-      position: { top: number; left: number } | null;
-      range: { from: number; to: number } | null;
-    }>({ isOpen: false, position: null, range: null });
-    const [selectedIndex, setSelectedIndex] = React.useState(0);
 
     useImperativeHandle(ref, () => ({
       focus: () => editorRef.current?.commands.focus(),
@@ -270,92 +307,25 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     });
     const attachments = unsavedFiles.filter((f) => !f.inline);
 
-    const getCaretPosition = () => {
-      if (!editor) return null;
-      const view = editor.view;
-      const { from } = view.state.selection;
-      const dom = view.domAtPos(from).node as HTMLElement;
-      if (!dom) return null;
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return null;
-      const range = selection.getRangeAt(0).cloneRange();
-      if (range.getClientRects) {
-        const rects = range.getClientRects();
-        if (rects.length > 0) {
-          const rect = rects[0];
-          if (!rect) return null;
-          return {
-            top: rect.bottom + window.scrollY,
-            left: rect.left + window.scrollX,
-          };
-        } else if (dom?.getBoundingClientRect) {
-          // fallback: use the bounding rect of the parent node
-          const rect = dom.getBoundingClientRect();
-          return {
-            top: rect.bottom + window.scrollY,
-            left: rect.left + window.scrollX,
-          };
-        }
-      }
-      // fallback: top left of the editor
-      const containerRect = editorContentContainerRef.current?.getBoundingClientRect();
-      if (containerRect) {
-        return {
-          top: containerRect.top + window.scrollY + 24,
-          left: containerRect.left + window.scrollX + 8,
-        };
-      }
-      return { top: 40, left: 40 };
-    };
+    React.useEffect(() => {
+      setIsMacOS(new UAParser().getOS().name === "Mac OS");
+    }, []);
 
-    const handleKeyDown = (event: React.KeyboardEvent) => {
-      if (mentionState.isOpen) {
-        if (event.key === "Escape") {
-          setMentionState({ isOpen: false, position: null, range: null });
-          return;
-        }
-        if (event.key === "ArrowDown") {
-          event.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, helpArticles.length - 1));
-          return;
-        }
-        if (event.key === "ArrowUp") {
-          event.preventDefault();
-          setSelectedIndex((i) => Math.max(i - 1, 0));
-          return;
-        }
-        if (event.key === "Enter") {
-          event.preventDefault();
-          if (filteredArticles[selectedIndex]) {
-            handleSelectArticle(filteredArticles[selectedIndex]);
-          }
-          return;
-        }
-        if (event.key === "ArrowRight") {
-          setMentionState({ isOpen: false, position: null, range: null });
-          return;
-        }
+    useEffect(() => {
+      if (editor && autoFocus) {
+        editor.commands.focus(autoFocus);
       }
-      handleModEnter(event);
-    };
+    }, [editor, autoFocus]);
+
+    useEffect(() => {
+      if (editor && !editor.isEmpty) return;
+      if (editor) editor.commands.setContent(defaultContent.content || "");
+    }, [defaultContent, editor]);
 
     React.useEffect(() => {
       if (!editor) return;
       const plugin = {
         props: {
-          handleTextInput(view: any, from: number, to: number, text: string) {
-            if (text === "@") {
-              setTimeout(() => {
-                const pos = getCaretPosition();
-                setMentionState({
-                  isOpen: true,
-                  position: pos,
-                  range: { from, to: from + 1 },
-                });
-              }, 0);
-            }
-            return false;
-          },
           handleKeyDown(view: any, event: KeyboardEvent) {
             if (mentionState.isOpen && event.key === "Backspace") {
               const state = view.state;
@@ -364,11 +334,11 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
                 const cursorPos = state.selection.from;
                 const query = state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
                 if (query === "") {
-                  setMentionState({ isOpen: false, position: null, range: null });
+                  setMentionState(initialMentionState);
                   return false;
                 }
                 if (docText !== "@") {
-                  setMentionState({ isOpen: false, position: null, range: null });
+                  setMentionState(initialMentionState);
                   return false;
                 }
                 return false;
@@ -388,7 +358,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       if (!editor || !mentionState.isOpen || !mentionState.range) return;
       const docText = editor.view.state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
       if (docText !== "@") {
-        setMentionState({ isOpen: false, position: null, range: null });
+        setMentionState(initialMentionState);
       }
     }, [editor, mentionState.isOpen, mentionState.range, editor?.view.state]);
 
@@ -412,11 +382,11 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
         .deleteRange({ from: mentionState.range.from, to: cursorPos })
         .insertContent(`<a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a> `)
         .run();
-      setMentionState({ isOpen: false, position: null, range: null });
+      setMentionState(initialMentionState);
     };
 
     React.useEffect(() => {
-      setSelectedIndex(0);
+      setMentionState((state) => ({ ...state, selectedIndex: 0 }));
     }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
 
     if (!editor) {
@@ -443,7 +413,6 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               uploadFiles.current(files);
             }}
             ref={editorContentContainerRef}
-            onKeyDown={handleKeyDown}
           >
             <div className="grow">
               <EditorContent editor={editor} />
@@ -453,10 +422,15 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               position={mentionState.position}
               query={getMentionQuery()}
               articles={filteredArticles}
-              selectedIndex={selectedIndex}
-              setSelectedIndex={setSelectedIndex}
+              selectedIndex={mentionState.selectedIndex}
+              setSelectedIndex={(index) =>
+                setMentionState((state) => ({
+                  ...state,
+                  selectedIndex: typeof index === "function" ? index(state.selectedIndex) : index,
+                }))
+              }
               onSelect={handleSelectArticle}
-              onClose={() => setMentionState({ isOpen: false, position: null, range: null })}
+              onClose={() => setMentionState(initialMentionState)}
             />
             {signature}
             {attachments.length > 0 ? (

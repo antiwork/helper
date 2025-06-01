@@ -2,6 +2,7 @@ import { ExternalLink, Search, X } from "lucide-react";
 import React from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
+import { useBreakpoint } from "@/components/useBreakpoint";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 
 export type HelpArticle = {
@@ -20,17 +21,6 @@ type HelpArticleMentionPopoverProps = {
   onClose: () => void;
 };
 
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = React.useState(false);
-  React.useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
-};
-
 const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
   isOpen,
   position,
@@ -43,7 +33,7 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
 }) => {
   const ref = React.useRef<HTMLDivElement | null>(null);
   useOnOutsideClick([ref], () => isOpen && onClose());
-  const isMobile = useIsMobile();
+  const { isBelowMd: isMobile } = useBreakpoint("md");
 
   const [mobileQuery, setMobileQuery] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement | null>(null);
