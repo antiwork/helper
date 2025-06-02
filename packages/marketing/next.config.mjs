@@ -5,7 +5,7 @@ let nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@helperai/react"],
   images: {
-    domains: ["helper.ai", "helperai.dev", "localhost"],
+    domains: ["helper.ai", "helperai.dev", "localhost", "vercel.com"],
   },
   webpack(config) {
     config.module.rules.push({

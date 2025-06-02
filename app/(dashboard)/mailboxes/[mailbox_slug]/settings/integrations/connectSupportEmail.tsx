@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import LoadingSpinner from "@/components/loadingSpinner";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -11,7 +13,7 @@ const ConnectSupportEmail = () => {
   const router = useRouter();
   const [error] = useQueryState("error");
   const { mutateAsync: deleteSupportEmailMutation } = api.gmailSupportEmail.delete.useMutation();
-  const { data: supportAccount, isLoading } = api.gmailSupportEmail.get.useQuery({
+  const { data: { supportAccount, enabled } = {}, isLoading } = api.gmailSupportEmail.get.useQuery({
     mailboxSlug: params.mailbox_slug as string,
   });
 
@@ -48,6 +50,13 @@ const ConnectSupportEmail = () => {
       )}
       {isLoading ? (
         <LoadingSpinner size="md" />
+      ) : !enabled ? (
+        <Alert className="text-sm">
+          Create a Google OAuth app to enable linking your Gmail account.{" "}
+          <Link className="underline" href="https://helper.ai/docs/development#optional-integrations" target="_blank">
+            Learn how!
+          </Link>
+        </Alert>
       ) : (
         <Button variant={supportAccount ? "destructive_outlined" : "subtle"} onClick={handleConnectOrDisconnect}>
           {supportAccount ? `Disconnect ${supportAccount.email}` : "Connect your Gmail"}

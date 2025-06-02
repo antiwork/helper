@@ -60,7 +60,7 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href="/docs" target="_blank" rel="noopener noreferrer" className="flex items-center group">
+                <Link href="/docs" className="flex items-center group">
                   <span className="inline-flex items-center justify-center w-9 h-9 transition-colors duration-200 group-hover:text-amber-400 group-focus:text-amber-400">
                     <BookOpen className="h-6 w-6" />
                   </span>
