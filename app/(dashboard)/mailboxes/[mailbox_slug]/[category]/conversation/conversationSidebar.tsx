@@ -102,7 +102,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
   const previousConversations = customerConversations?.conversations.filter(({ slug }) => slug !== conversation.slug);
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-dvh bg-background">
       <div className="flex flex-col gap-3 text-sm p-4 border-b border-border">
         <h3>Conversation</h3>
         <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
