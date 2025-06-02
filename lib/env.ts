@@ -81,13 +81,19 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY: z.string().min(1).optional(),
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
-    // Optionally allow automatic signups from specific domains (e.g. your company's email domain)
+    // Optional configuration
+
+    // Allow automatic signups from specific domains (e.g. your company's email domain)
     EMAIL_SIGNUP_DOMAINS: z
       .string()
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
 
-    DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
+    // Use a separate key for the search index. Defaults to ENCRYPT_COLUMN_SECRET if not set.
+    HASH_WORDS_SECRET: z.string().optional(),
+
+    // Log SQL queries to the console
+    DRIZZLE_LOGGING: z.string().optional(),
 
     // For running database seeds
     INITIAL_USER_EMAILS: z
