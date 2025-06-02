@@ -6,8 +6,8 @@ import { env } from "@/lib/env";
 // Ensures that `env` is not an unused variable. Importing `env` during build-time
 // ensures that the project never gets deployed unless all environment variables
 // have been properly configured.
-if (!env.GOOGLE_CLIENT_ID) {
-  throw new Error("GOOGLE_CLIENT_ID is not set");
+if (!env.NEXT_RUNTIME) {
+  throw new Error("NEXT_RUNTIME is not set");
 }
 
 let nextConfig: NextConfig = {

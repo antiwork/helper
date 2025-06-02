@@ -24,12 +24,8 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    // Set these for both local development and when deploying
+    // Set this for both local development and when deploying
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-    GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
-    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
-    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
 
     // Set this before deploying
     ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
@@ -37,9 +33,13 @@ export const env = createEnv({
       "1234567890abcdef1234567890abcdef",
     ),
 
-    // Set these before or after deploying to receive one-time passwords by email
+    // Set these before or after deploying for email sending and receiving
     RESEND_API_KEY: z.string().min(1).optional(),
     RESEND_FROM_ADDRESS: z.string().min(1).optional(),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1).optional(), // Google PubSub for Gmail sync
+    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1).optional(),
 
     // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth

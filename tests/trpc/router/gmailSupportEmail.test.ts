@@ -2,7 +2,7 @@ import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportE
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, inject, it, vi } from "vitest";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { gmailSupportEmails, mailboxes } from "@/db/schema";
@@ -25,6 +25,12 @@ vi.mock("googleapis", () => ({
     })),
   },
 }));
+vi.mock("@/lib/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    GOOGLE_CLIENT_ID: "test-client-id",
+  },
+}));
 
 describe("gmailSupportEmailRouter", () => {
   describe("get", () => {
@@ -37,9 +43,12 @@ describe("gmailSupportEmailRouter", () => {
       const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
 
       expect(result).toEqual({
-        id: gmailSupportEmail.id,
-        email: gmailSupportEmail.email,
-        createdAt: gmailSupportEmail.createdAt,
+        enabled: true,
+        supportAccount: {
+          id: gmailSupportEmail.id,
+          email: gmailSupportEmail.email,
+          createdAt: gmailSupportEmail.createdAt,
+        },
       });
     });
 
@@ -49,7 +58,7 @@ describe("gmailSupportEmailRouter", () => {
 
       const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
 
-      expect(result).toBeNull();
+      expect(result).toEqual({ enabled: true, supportAccount: null });
     });
   });
 
