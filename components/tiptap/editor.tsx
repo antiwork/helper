@@ -9,8 +9,8 @@ import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
 import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react";
 import UAParser from "ua-parser-js";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
 import { getCaretPosition } from "@/components/tiptap/editorUtils";
@@ -100,7 +100,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     },
     ref,
   ) => {
-    const { mailboxSlug } = useConversationContext();
+    const { mailboxSlug } = useConversationListContext();
     const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery({ mailboxSlug });
     const { isAboveMd } = useBreakpoint("md");
     const [isMacOS, setIsMacOS] = React.useState(false);
