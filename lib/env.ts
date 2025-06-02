@@ -31,8 +31,7 @@ export const env = createEnv({
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
 
-    // Set these before deploying
-    CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
+    // Set this before deploying
     ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
       z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
       "1234567890abcdef1234567890abcdef",
