@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { generateHelperAuth, HelperProvider, type HelperConfig } from "@helperai/react";
+import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
 import { getBaseUrl } from "@/components/constants";
 import { AppLayout } from "./appLayout";
 import { WidgetButtons } from "./widgetButtons";
@@ -19,7 +19,7 @@ export default async function WidgetTest({
 
   const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
 
-  const config: HelperConfig = {
+  const config: HelperWidgetConfig = {
     mailboxSlug: "gumroad",
     ...helperAuth,
     title: "Support & Help",
