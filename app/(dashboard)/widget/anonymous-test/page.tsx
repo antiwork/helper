@@ -1,11 +1,11 @@
-import { HelperProvider, type HelperConfig } from "@helperai/react";
+import { HelperProvider, type HelperWidgetConfig } from "@helperai/react";
 import { WidgetButtons } from "../test/widgetButtons";
 
 export const dynamic = "force-dynamic";
 
 export default function AnonymousWidgetTest() {
-  const config: HelperConfig = {
-    mailbox_slug: "flexile",
+  const config: HelperWidgetConfig = {
+    mailboxSlug: "flexile",
     title: "Anonymous Support & Help",
   };
 

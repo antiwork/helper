@@ -1,7 +1,7 @@
 import "@/app/globals.css";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { HelperConfig, HelperProvider } from "@helperai/react";
+import { HelperProvider, type HelperWidgetConfig } from "@helperai/react";
 import { SentryContext } from "@/components/sentryContext";
 import { env } from "@/lib/env";
 import { TRPCReactProvider } from "@/trpc/react";
@@ -23,10 +23,10 @@ export const viewport = { width: "device-width", initialScale: 1 };
 const HELPER_MAILBOX_SLUG = "helper";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const config: HelperConfig = {
+  const config: HelperWidgetConfig = {
     title: "Support",
-    icon_color: "#FEB61C",
-    mailbox_slug: HELPER_MAILBOX_SLUG,
+    iconColor: "#FEB61C",
+    mailboxSlug: HELPER_MAILBOX_SLUG,
   };
 
   return (

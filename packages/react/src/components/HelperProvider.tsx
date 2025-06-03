@@ -1,5 +1,5 @@
 import React from "react";
-import type { HelperConfig } from "../types";
+import type { HelperWidgetConfig } from "../types";
 import { ClientHelperProvider } from "./ClientHelperProvider";
 
 /**
@@ -9,9 +9,9 @@ import { ClientHelperProvider } from "./ClientHelperProvider";
  * @property {React.ReactNode} children - Child components to be wrapped by the provider
  * @property {string} [host] - Optional host URL for the Helper service
  */
-export type HelperProviderProps = HelperConfig & {
+export type HelperProviderProps = HelperWidgetConfig & {
   children: React.ReactNode;
-  host?: string;
+  host: string;
 };
 
 /**

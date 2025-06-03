@@ -39,7 +39,7 @@ export default function Page() {
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
-  const isGumroadTheme = config?.mailbox_slug === GUMROAD_MAILBOX_SLUG;
+  const isGumroadTheme = config?.mailboxSlug === GUMROAD_MAILBOX_SLUG;
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
   const [resumeGuide, setResumeGuide] = useState<GuideInstructions | null>(null);
 
@@ -205,7 +205,7 @@ export default function Page() {
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
                   isAnonymous={isAnonymous}
-                  guideEnabled={config.enable_guide ?? false}
+                  guideEnabled={config.enableGuide ?? false}
                   resumeGuide={resumeGuide}
                 />
               </div>
