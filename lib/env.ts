@@ -24,23 +24,22 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    // Set these for both local development and when deploying
+    // Set this for both local development and when deploying
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-    GOOGLE_CLIENT_ID: z.string().min(1), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
-    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1), // Google PubSub for Gmail sync
-    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1),
 
-    // Set these before deploying
-    CRYPTO_SECRET: defaultUnlessDeployed(z.string().min(1), "example_crypto_secret"),
+    // Set this before deploying
     ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
       z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
       "1234567890abcdef1234567890abcdef",
     ),
 
-    // Set these before or after deploying to receive one-time passwords by email
+    // Set these before or after deploying for email sending and receiving
     RESEND_API_KEY: z.string().min(1).optional(),
     RESEND_FROM_ADDRESS: z.string().min(1).optional(),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1).optional(), // Google PubSub for Gmail sync
+    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1).optional(),
 
     // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
@@ -82,13 +81,19 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY: z.string().min(1).optional(),
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
-    // Optionally allow automatic signups from specific domains (e.g. your company's email domain)
+    // Optional configuration
+
+    // Allow automatic signups from specific domains (e.g. your company's email domain)
     EMAIL_SIGNUP_DOMAINS: z
       .string()
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
 
-    DRIZZLE_LOGGING: z.string().optional(), // Log SQL queries to the console
+    // Use a separate key for the search index. Defaults to ENCRYPT_COLUMN_SECRET if not set.
+    HASH_WORDS_SECRET: z.string().optional(),
+
+    // Log SQL queries to the console
+    DRIZZLE_LOGGING: z.string().optional(),
 
     // For running database seeds
     INITIAL_USER_EMAILS: z

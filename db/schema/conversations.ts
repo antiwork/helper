@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
 import { mailboxes } from "@/db/schema/mailboxes";
-import { nativeEncryptedField } from "../lib/encryptedField";
+import { encryptedField } from "../lib/encryptedField";
 import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationEvents } from "./conversationEvents";
@@ -14,7 +14,7 @@ export const conversations = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     emailFrom: text(),
-    subject: nativeEncryptedField("encrypted_subject"),
+    subject: encryptedField("encrypted_subject"),
     status: text().$type<"open" | "closed" | "spam">(),
     mailboxId: bigint({ mode: "number" }).notNull(),
     emailFromName: text(),

@@ -3,19 +3,27 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { inngest } from "@/inngest/client";
 import { createGmailSupportEmail, deleteGmailSupportEmail, getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
+import { env } from "@/lib/env";
 import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
 import { mailboxProcedure } from "./mailbox";
 
 export const gmailSupportEmailRouter = {
   get: mailboxProcedure.query(async ({ ctx }) => {
+    if (!env.GOOGLE_CLIENT_ID) {
+      return { enabled: false };
+    }
+
     const gmailSupportEmail = await getGmailSupportEmail(ctx.mailbox);
-    return gmailSupportEmail
-      ? {
-          id: gmailSupportEmail.id,
-          email: gmailSupportEmail.email,
-          createdAt: gmailSupportEmail.createdAt,
-        }
-      : null;
+    return {
+      enabled: true,
+      supportAccount: gmailSupportEmail
+        ? {
+            id: gmailSupportEmail.id,
+            email: gmailSupportEmail.email,
+            createdAt: gmailSupportEmail.createdAt,
+          }
+        : null,
+    };
   }),
 
   create: mailboxProcedure

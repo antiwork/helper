@@ -250,17 +250,24 @@ export const serializeMessage = async (
 
 export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
-    inputFiles.map(async (file) =>
-      file.isInline
-        ? { isInline: true as const, key: file.key, presignedUrl: await getFileUrl(file) }
-        : {
-            ...file,
-            isInline: false as const,
-            sizeHuman: formatBytes(file.size, 2),
-            presignedUrl: await getFileUrl(file),
-            previewUrl: file.previewKey ? await getFileUrl(file, { preview: true }) : null,
-          },
-    ),
+    inputFiles.map(async (file) => {
+      if (file.isInline) {
+        return { isInline: true as const, key: file.key, presignedUrl: await getFileUrl(file) };
+      }
+
+      const [presignedUrl, previewUrl] = await Promise.all([
+        getFileUrl(file),
+        file.previewKey ? getFileUrl(file, { preview: true }) : null,
+      ]);
+
+      return {
+        ...file,
+        isInline: false as const,
+        sizeHuman: formatBytes(file.size, 2),
+        presignedUrl,
+        previewUrl,
+      };
+    }),
   );
 
 type OptionalMessageAttributes = "updatedAt" | "createdAt";
@@ -313,7 +320,6 @@ export const createReply = async (
       {
         conversationId,
         body: message,
-        encryptedBody: message,
         userId: user?.id,
         emailCc: cc ?? (await getNonSupportParticipants(conversation)),
         emailBcc: bcc,
@@ -414,13 +420,11 @@ export const createAiDraft = async (
     {
       conversationId,
       body: sanitizedBody,
-      encryptedBody: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo: promptInfo ? { details: promptInfo } : null,
       cleanedUpText: body,
-      encryptedCleanedUpText: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -434,10 +438,7 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx
-    .update(conversationMessages)
-    .set({ cleanedUpText, encryptedCleanedUpText: cleanedUpText })
-    .where(eq(conversationMessages.id, message.id));
+  await tx.update(conversationMessages).set({ cleanedUpText }).where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
@@ -517,9 +518,7 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
-    encryptedBody: userMessage,
     cleanedUpText: userMessage,
-    encryptedCleanedUpText: userMessage,
     metadata: {
       tool: {
         id: tool.id,

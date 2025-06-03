@@ -38,12 +38,12 @@ Based on the user's conversation and the provided metadata, suggest appropriate 
 - If you recommend "close", do not recommend "spam" and vice versa.
 `;
 
-export const buildAITools = (tools: Tool[]) => {
+export const buildAITools = (tools: Tool[], email: string | null) => {
   const aiTools = tools.reduce<Record<string, Omit<AITool, "execute"> & { customerEmailParameter: string | null }>>(
     (acc, tool) => {
       acc[tool.slug] = {
         description: `${tool.name} - ${tool.description}`,
-        parameters: buildParameterSchema(tool),
+        parameters: buildParameterSchema(tool, { useEmailParameter: true, email }),
         customerEmailParameter: tool.customerEmailParameter,
       };
       return acc;
@@ -164,7 +164,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
     prompt += `\nActions performed on similar conversations:\n${similarPrompt}`;
   }
 
-  const aiTools = buildAITools(mailboxTools);
+  const aiTools = buildAITools(mailboxTools, conversation.emailFrom);
 
   const { toolCalls } = await generateText({
     model: openai(GPT_4O_MINI_MODEL),
@@ -284,10 +284,17 @@ const buildRequestOptions = (tool: Tool, params: Record<string, any>, headers: H
   return requestOptions;
 };
 
-const buildParameterSchema = (tool: Tool) => {
+const buildParameterSchema = (
+  tool: Tool,
+  { useEmailParameter, email }: { useEmailParameter: boolean; email?: string | null },
+) => {
   return z.object(
     (tool.parameters || []).reduce<Record<string, z.ZodType>>((acc, param) => {
-      if (param.name === tool.customerEmailParameter) return acc;
+      if (useEmailParameter && param.name === tool.customerEmailParameter) {
+        const schema = z.string().describe(param.description || param.name);
+        acc[param.name] = email ? schema.default(email) : schema;
+        return acc;
+      }
       const zodType = (z[param.type as keyof typeof z] as any)().describe(param.description || param.name);
       acc[param.name] = param.required ? zodType : zodType.optional();
       return acc;
@@ -297,7 +304,7 @@ const buildParameterSchema = (tool: Tool) => {
 
 const validateParameters = (tool: Tool, params: Record<string, any>) => {
   try {
-    buildParameterSchema(tool).parse(params);
+    buildParameterSchema(tool, { useEmailParameter: false }).parse(params);
   } catch (error) {
     if (error instanceof z.ZodError) {
       const firstError = error.errors[0];

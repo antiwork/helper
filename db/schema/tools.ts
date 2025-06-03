@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 import { bigint, boolean, index, jsonb, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { nativeEncryptedField } from "../lib/encryptedField";
+import { encryptedField } from "../lib/encryptedField";
 import { withTimestamps } from "../lib/with-timestamps";
 import { mailboxes } from "./mailboxes";
 import { toolApis } from "./toolApis";
@@ -32,7 +32,7 @@ export const tools = pgTable(
     headers: jsonb().default("{}").$type<ToolHeaders>(),
     parameters: jsonb().default("[]").$type<ToolParameters>(),
     authenticationMethod: text().notNull().default("none").$type<ToolAuthenticationMethod>(),
-    authenticationToken: nativeEncryptedField(),
+    authenticationToken: encryptedField(),
     toolApiId: bigint({ mode: "number" }),
     enabled: boolean().notNull().default(true),
     availableInChat: boolean().notNull().default(false),

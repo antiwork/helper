@@ -1,6 +1,6 @@
 import { isNull, relations, sql } from "drizzle-orm";
 import { bigint, boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { encryptedField, nativeEncryptedField } from "@/db/lib/encryptedField";
+import { bytea, encryptedField } from "@/db/lib/encryptedField";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CustomerInfo } from "@/types/customerInfo";
 import { withTimestamps } from "../lib/with-timestamps";
@@ -40,10 +40,10 @@ export const conversationMessages = pgTable(
     emailFrom: text(),
     emailCc: jsonb().$type<string[]>(),
     emailBcc: jsonb().$type<string[]>(),
-    body: encryptedField(),
-    encryptedBody: nativeEncryptedField("encrypted_body"),
-    cleanedUpText: encryptedField(),
-    encryptedCleanedUpText: nativeEncryptedField("encrypted_cleaned_up_text"),
+    unused_body: bytea("body"),
+    body: encryptedField("encrypted_body"),
+    unused_cleanedUpText: bytea("cleaned_up_text"),
+    cleanedUpText: encryptedField("encrypted_cleaned_up_text"),
     role: text().notNull().$type<MessageRole>(),
     userId: text("clerk_user_id"),
     metadata: jsonb().$type<Metadata<MessageRole>>(),
@@ -62,8 +62,8 @@ export const conversationMessages = pgTable(
 
     // These columns were replaced by promptInfo; they haven't been dropped
     // in case we want to migrate the data into promptInfo at some point.
-    docsContext: text(),
-    pastRepliesContext: text(),
+    unused_docsContext: text("docs_context"),
+    unused_pastRepliesContext: text("past_replies_context"),
 
     isFlaggedAsBad: boolean().notNull(),
     promptInfo: jsonb().$type<{ details?: PromptInfo }>(),

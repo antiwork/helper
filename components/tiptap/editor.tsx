@@ -10,13 +10,17 @@ import partition from "lodash/partition";
 import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
+import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
+import HelpArticlePopover from "./helpArticlePopover";
 import Toolbar from "./toolbar";
 
 type TipTapEditorProps = {
@@ -69,6 +73,8 @@ export type TipTapEditorRef = {
   editor: Editor | null;
 };
 
+const initialMentionState = { isOpen: false, position: null, range: null, selectedIndex: 0 };
+
 const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
   (
     {
@@ -94,6 +100,8 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     },
     ref,
   ) => {
+    const { mailboxSlug } = useConversationListContext();
+    const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery({ mailboxSlug });
     const { isAboveMd } = useBreakpoint("md");
     const [isMacOS, setIsMacOS] = React.useState(false);
     const [toolbarOpen, setToolbarOpen] = React.useState(() => {
@@ -102,6 +110,13 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       }
       return isAboveMd;
     });
+    const [mentionState, setMentionState] = React.useState<{
+      isOpen: boolean;
+      position: { top: number; left: number } | null;
+      range: { from: number; to: number } | null;
+      selectedIndex: number;
+    }>(initialMentionState);
+    const mentionStateRef = useRefToLatest(mentionState);
 
     useEffect(() => {
       localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
@@ -125,6 +140,54 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       ],
       editorProps: {
         handleKeyDown: (view, event) => {
+          // Handle mention state keyboard navigation
+          if (mentionStateRef.current.isOpen) {
+            if (event.key === "Escape") {
+              setMentionState(initialMentionState);
+              return true;
+            }
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setMentionState((s) => ({ ...s, selectedIndex: Math.min(s.selectedIndex + 1, helpArticles.length - 1) }));
+              return true;
+            }
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setMentionState((s) => ({ ...s, selectedIndex: Math.max(s.selectedIndex - 1, 0) }));
+              return true;
+            }
+            if (event.key === "Enter") {
+              event.preventDefault();
+              const article = filteredArticles[mentionStateRef.current.selectedIndex];
+              if (article) handleSelectArticle(article);
+              return true;
+            }
+            if (event.key === "ArrowRight") {
+              setMentionState(initialMentionState);
+              return true;
+            }
+          }
+
+          // Handle Mod+Enter and Option+Enter
+          if (
+            (isMacOS && event.metaKey && event.key === "Enter") ||
+            (!isMacOS && event.ctrlKey && event.key === "Enter")
+          ) {
+            if (onModEnter) {
+              event.preventDefault();
+              onModEnter();
+              return true;
+            }
+          }
+
+          if (event.altKey && event.key === "Enter") {
+            if (onOptionEnter) {
+              event.preventDefault();
+              onOptionEnter();
+              return true;
+            }
+          }
+
           // Handle slash key to focus command bar
           if (event.key === "/") {
             const { $from } = view.state.selection;
@@ -134,6 +197,21 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
               onSlashKey?.();
               return true;
             }
+          }
+
+          return false;
+        },
+        handleTextInput(view, from, _to, text) {
+          if (text === "@") {
+            setTimeout(() => {
+              const pos = getCaretPosition(view, editorContentContainerRef);
+              setMentionState({
+                isOpen: true,
+                position: pos,
+                range: { from, to: from + 1 },
+                selectedIndex: 0,
+              });
+            }, 0);
           }
           return false;
         },
@@ -164,36 +242,6 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       content: defaultContent.content || "",
       onUpdate: ({ editor }) => updateContent.current(editor),
     });
-
-    const handleModEnter = (event: React.KeyboardEvent) => {
-      if ((isMacOS && event.metaKey && event.key === "Enter") || (!isMacOS && event.ctrlKey && event.key === "Enter")) {
-        if (onModEnter) {
-          onModEnter();
-          return;
-        }
-      }
-
-      if (event.altKey && event.key === "Enter") {
-        if (onOptionEnter) {
-          onOptionEnter();
-        }
-      }
-    };
-
-    useEffect(() => {
-      setIsMacOS(new UAParser().getOS().name === "Mac OS");
-    }, []);
-
-    useEffect(() => {
-      if (editor && autoFocus) {
-        editor.commands.focus(autoFocus);
-      }
-    }, [editor, autoFocus]);
-
-    useEffect(() => {
-      if (editor && !editor.isEmpty) return;
-      if (editor) editor.commands.setContent(defaultContent.content || "");
-    }, [defaultContent, editor]);
 
     const editorRef = useRef(editor);
     useEffect(() => {
@@ -259,6 +307,88 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     });
     const attachments = unsavedFiles.filter((f) => !f.inline);
 
+    React.useEffect(() => {
+      setIsMacOS(new UAParser().getOS().name === "Mac OS");
+    }, []);
+
+    useEffect(() => {
+      if (editor && autoFocus) {
+        editor.commands.focus(autoFocus);
+      }
+    }, [editor, autoFocus]);
+
+    useEffect(() => {
+      if (editor && !editor.isEmpty) return;
+      if (editor) editor.commands.setContent(defaultContent.content || "");
+    }, [defaultContent, editor]);
+
+    React.useEffect(() => {
+      if (!editor) return;
+      const plugin = {
+        props: {
+          handleKeyDown(view: any, event: KeyboardEvent) {
+            if (mentionState.isOpen && event.key === "Backspace") {
+              const state = view.state;
+              if (mentionState.range) {
+                const docText = state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
+                const cursorPos = state.selection.from;
+                const query = state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
+                if (query === "") {
+                  setMentionState(initialMentionState);
+                  return false;
+                }
+                if (docText !== "@") {
+                  setMentionState(initialMentionState);
+                  return false;
+                }
+                return false;
+              }
+            }
+            return false;
+          },
+        },
+      } as const;
+      editor.view.setProps({ ...editor.view.props, ...plugin.props });
+      return () => {
+        // No-op cleanup for mock plugin
+      };
+    }, [editor, mentionState.isOpen, mentionState.range]);
+
+    React.useEffect(() => {
+      if (!editor || !mentionState.isOpen || !mentionState.range) return;
+      const docText = editor.view.state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
+      if (docText !== "@") {
+        setMentionState(initialMentionState);
+      }
+    }, [editor, mentionState.isOpen, mentionState.range, editor?.view.state]);
+
+    const getMentionQuery = () => {
+      if (!editor || !mentionState.isOpen || !mentionState.range) return "";
+      const cursorPos = editor.view.state.selection.from;
+      if (cursorPos < mentionState.range.from + 1) return "";
+      return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
+    };
+
+    const filteredArticles = helpArticles.filter((a) =>
+      a.title.toLowerCase().includes(getMentionQuery().toLowerCase()),
+    );
+
+    const handleSelectArticle = (article: { title: string; url: string }) => {
+      if (!editor || !mentionState.range) return;
+      const cursorPos = editor.view.state.selection.from;
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: mentionState.range.from, to: cursorPos })
+        .insertContent(`<a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a> `)
+        .run();
+      setMentionState(initialMentionState);
+    };
+
+    React.useEffect(() => {
+      setMentionState((state) => ({ ...state, selectedIndex: 0 }));
+    }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
+
     if (!editor) {
       return null;
     }
@@ -273,7 +403,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
           aria-label={ariaLabel}
         >
           <div
-            className="flex-1 flex flex-col min-h-0 overflow-y-auto rounded-b p-3 text-sm text-foreground"
+            className="flex-1 flex flex-col min-h-0 overflow-y-auto rounded-b p-3 text-sm text-foreground relative"
             onClick={focusEditor}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(event) => {
@@ -285,8 +415,23 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             ref={editorContentContainerRef}
           >
             <div className="grow">
-              <EditorContent editor={editor} onKeyDown={handleModEnter} />
+              <EditorContent editor={editor} />
             </div>
+            <HelpArticlePopover
+              isOpen={mentionState.isOpen}
+              position={mentionState.position}
+              query={getMentionQuery()}
+              articles={filteredArticles}
+              selectedIndex={mentionState.selectedIndex}
+              setSelectedIndex={(index) =>
+                setMentionState((state) => ({
+                  ...state,
+                  selectedIndex: typeof index === "function" ? index(state.selectedIndex) : index,
+                }))
+              }
+              onSelect={handleSelectArticle}
+              onClose={() => setMentionState(initialMentionState)}
+            />
             {signature}
             {attachments.length > 0 ? (
               <div className="flex w-full flex-wrap gap-2 pt-4">
