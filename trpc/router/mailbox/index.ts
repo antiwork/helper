@@ -4,7 +4,6 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { inngest } from "@/inngest/client";
-import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
@@ -23,7 +22,7 @@ import { websitesRouter } from "./websites";
 export { mailboxProcedure };
 
 export const mailboxRouter = {
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: protectedProcedure.query(async () => {
     const allMailboxes = await db.query.mailboxes.findMany({
       where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
       columns: {
@@ -32,11 +31,6 @@ export const mailboxRouter = {
         slug: true,
       },
     });
-
-    if (allMailboxes.length === 0) {
-      const mailbox = await setupMailboxForNewUser(ctx.user);
-      allMailboxes.push(mailbox);
-    }
     return allMailboxes;
   }),
   openCount: mailboxProcedure.query(async ({ ctx }) => {
