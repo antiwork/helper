@@ -43,7 +43,7 @@ describe("Server Component Integration", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
       title: "Test Helper",
-      customer_metadata: {},
+      customerMetadata: {},
     };
 
     render(
@@ -64,7 +64,7 @@ describe("Server Component Integration", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
       title: "Test Helper",
-      customer_metadata: {},
+      customerMetadata: {},
     };
 
     render(
