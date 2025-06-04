@@ -11,6 +11,7 @@ import {
   ConversationListContextProvider,
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
+import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
 import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/mobileList";
 import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
@@ -86,20 +87,8 @@ const Inbox = () => {
       {currentConversationSlug ? (
         <Conversation key={currentConversationSlug} />
       ) : (
-        <div className="mx-auto hidden items-center lg:flex">
-          {isPending ? (
-            <LoadingSpinner size="lg" />
-          ) : conversationListData?.hasGmailSupportEmail ? (
-            <span className="text-muted-foreground">New conversations will show up here!</span>
-          ) : (
-            <div className="mx-auto flex flex-col items-center gap-4 text-center text-muted-foreground">
-              <h2 className="text-xl font-semibold text-foreground">Connect your Gmail account</h2>
-              <p>Connect your Gmail account to start managing your conversations in Helper</p>
-              <Link href={`/mailboxes/${mailboxSlug}/settings?tab=integrations`}>
-                <Button>Connect Gmail</Button>
-              </Link>
-            </div>
-          )}
+        <div className="flex-1 overflow-hidden">
+          <List variant="desktop" />
         </div>
       )}
     </div>

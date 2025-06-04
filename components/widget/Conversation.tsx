@@ -16,6 +16,8 @@ import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   token: string | null;
@@ -255,6 +257,17 @@ export default function Conversation({
 
   return (
     <>
+      <div className="flex items-center justify-between border-b border-border p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          onClick={() => setIsNewConversation(true)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
       <MessagesList
         data={data ?? null}
         messages={[...(conversationMessages ?? []), ...(messages as MessageWithReaction[])]}

@@ -1,8 +1,8 @@
 import { capitalize } from "lodash-es";
-import { Bot, DollarSign, Search, Send, User } from "lucide-react";
+import { Bot, DollarSign, Search, Send, User, Check, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQueryState } from "nuqs";
+import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState, useQueryStates } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem } from "@/app/types/global";
@@ -21,6 +21,20 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { useConversationListContext } from "./conversationListContext";
 import NewConversationModalContent from "./newConversationModal";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { highlightKeywords } from "../../search/highlightKeywords";
+import { AssigneeFilter } from "../../search/assigneeFilter";
+import { CustomerFilter } from "../../search/customerFilter";
+import { DateFilter } from "../../search/dateFilter";
+import { EventFilter } from "../../search/eventFilter";
+import { PromptFilter } from "../../search/promptFilter";
+import { ReactionFilter } from "../../search/reactionFilter";
+import { ResponderFilter } from "../../search/responderFilter";
+import { VipFilter } from "../../search/vipFilter";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/hooks/use-toast";
 
 type ListItem = ConversationListItem & { isNew?: boolean };
 
@@ -29,6 +43,8 @@ type ListItemProps = {
   isActive: boolean;
   onSelectConversation: (slug: string) => void;
   variant: "desktop" | "mobile";
+  isSelected: boolean;
+  onToggleSelect: () => void;
 };
 
 type StatusOption = "open" | "closed" | "spam";
@@ -50,17 +66,14 @@ const SearchBar = ({
   const params = useParams<{ mailbox_slug: string }>();
 
   return (
-    <div className={cn("border-b", variant === "desktop" ? "border-sidebar-border" : "border-border")}>
+    <div className={cn("border-b", variant === "desktop" ? "border-border" : "border-border")}>
       <div className="flex items-center justify-between gap-2 px-4 pb-1">
         <div className="flex items-center gap-2">
           {statusOptions.length > 1 ? (
             <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onStatusChange}>
               <SelectTrigger
                 variant="bare"
-                className={cn(
-                  "",
-                  variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
-                )}
+                className="text-foreground [&>svg]:text-foreground"
               >
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -73,7 +86,7 @@ const SearchBar = ({
               </SelectContent>
             </Select>
           ) : statusOptions[0] ? (
-            <div className={cn("text-sm", variant === "desktop" ? "text-white" : "text-foreground")}>
+            <div className="text-sm text-foreground">
               {statusOptions[0].label}
             </div>
           ) : null}
@@ -82,9 +95,7 @@ const SearchBar = ({
           <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onSortChange}>
             <SelectTrigger
               variant="bare"
-              className={cn(
-                variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
-              )}
+              className="text-foreground [&>svg]:text-foreground"
             >
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -104,12 +115,56 @@ const SearchBar = ({
 
 export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   const [conversationSlug] = useQueryState("id");
-  const { searchParams, input } = useConversationsListInput();
+  const { searchParams, setSearchParams, input } = useConversationsListInput();
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useConversationListContext();
   const category =
     useParams<{ category: "conversations" | "mine" | "assigned" | "unassigned" | undefined }>().category ||
     "conversations";
+
+  const [search, setSearch] = useState(searchParams.search || "");
+  const [filterValues, setFilterValues] = useState({
+    assignee: searchParams.assignee ?? [],
+    createdAfter: searchParams.createdAfter ?? null,
+    createdBefore: searchParams.createdBefore ?? null,
+    repliedBy: searchParams.repliedBy ?? [],
+    customer: searchParams.customer ?? [],
+    isVip: searchParams.isVip ?? undefined,
+    isPrompt: searchParams.isPrompt ?? undefined,
+    reactionType: searchParams.reactionType ?? undefined,
+    events: searchParams.events ?? [],
+  });
+  const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
+  const [allConversationsSelected, setAllConversationsSelected] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const utils = api.useUtils();
+  const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to update conversations",
+      });
+    },
+  });
+
+  const debouncedSetSearch = useDebouncedCallback((val: string) => {
+    setSearchParams({ search: val || null });
+    searchInputRef.current?.focus();
+  }, 300);
+
+  const debouncedSetFilters = useDebouncedCallback((newFilters: Partial<typeof filterValues>) => {
+    setSearchParams((prev) => ({ ...prev, ...newFilters }));
+  }, 300);
+
+  useEffect(() => {
+    debouncedSetSearch(search);
+  }, [search]);
+
+  const updateFilter = (updates: Partial<typeof filterValues>) => {
+    setFilterValues((prev) => ({ ...prev, ...updates }));
+    debouncedSetFilters(updates);
+  };
 
   const conversations = conversationListData?.conversations ?? [];
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
@@ -191,7 +246,6 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     [defaultSort, searchParams],
   );
 
-  const utils = api.useUtils();
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationListItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
@@ -263,46 +317,181 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     />
   );
 
-  if (!conversationListData)
-    return (
-      <>
-        {searchBar}
-        <LoadingSpinner size="md" className="m-auto" />
-      </>
-    );
+  const toggleAllConversations = () => {
+    if (allConversationsSelected || selectedConversations.length > 0) {
+      setAllConversationsSelected(false);
+      setSelectedConversations([]);
+    } else {
+      setAllConversationsSelected(true);
+      setSelectedConversations([]);
+    }
+  };
+
+  const toggleConversation = (id: number) => {
+    if (allConversationsSelected) {
+      setAllConversationsSelected(false);
+      setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
+    } else {
+      setSelectedConversations(
+        selectedConversations.includes(id)
+          ? selectedConversations.filter((selectedId) => selectedId !== id)
+          : [...selectedConversations, id],
+      );
+    }
+  };
+
+  const handleBulkUpdate = async (status: "closed" | "spam") => {
+    setIsBulkUpdating(true);
+    try {
+      const conversationFilter = allConversationsSelected
+        ? conversations.map((c) => c.id)
+        : selectedConversations;
+      bulkUpdate({ 
+        conversationFilter, 
+        status, 
+        mailboxSlug: input.mailboxSlug 
+      }, {
+        onSuccess: ({ updatedImmediately }) => {
+          setAllConversationsSelected(false);
+          setSelectedConversations([]);
+          void utils.mailbox.conversations.list.invalidate();
+          void utils.mailbox.conversations.count.invalidate();
+          if (!updatedImmediately) {
+            toast({ title: "Starting update, refresh to see status." });
+          }
+        }
+      });
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
 
   return (
-    <>
-      {searchBar}
-      <div className="relative h-full min-h-0 flex flex-col">
-        <div
-          className="flex-1 overflow-y-auto mt-2 md:border-b md:border-sidebar-border h-[calc(100%-50px)]"
-          ref={resultsContainerRef}
-        >
-          <div className="flex w-full flex-col">
-            {conversations.map((conversation, index) => (
-              <ListItem
-                key={index}
-                conversation={conversation}
-                isActive={conversation.slug === conversationSlug}
-                onSelectConversation={() => navigateToConversation(conversation.slug)}
-                variant={variant}
-              />
-            ))}
-            {hasNextPage && (
-              <div ref={loadMoreRef} className="h-8 flex items-center justify-center">
-                {isFetchingNextPage && <LoadingSpinner size="sm" />}
+    <div className="flex flex-col w-full">
+      <div className="px-4 pt-4 pb-2">
+        <Input
+          ref={searchInputRef}
+          placeholder="Search conversations"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full"
+          autoFocus
+        />
+      </div>
+      <SearchBar
+        statusOptions={statusOptions}
+        sortOptions={sortOptions}
+        onStatusChange={handleStatusFilterChange}
+        onSortChange={handleSortChange}
+        variant={variant}
+      />
+      <div className="px-4 py-2">
+        <div className="flex flex-wrap gap-2">
+          <DateFilter
+            initialStartDate={filterValues.createdAfter}
+            initialEndDate={filterValues.createdBefore}
+            onSelect={(startDate, endDate) => {
+              updateFilter({ createdAfter: startDate, createdBefore: endDate });
+            }}
+          />
+          <AssigneeFilter
+            selectedAssignees={filterValues.assignee}
+            onChange={(assignees) => updateFilter({ assignee: assignees })}
+          />
+          <ResponderFilter
+            selectedResponders={filterValues.repliedBy}
+            onChange={(responders) => updateFilter({ repliedBy: responders })}
+          />
+          <CustomerFilter
+            selectedCustomers={filterValues.customer}
+            onChange={(customers) => updateFilter({ customer: customers })}
+          />
+          <VipFilter
+            isVip={filterValues.isVip}
+            onChange={(isVip) => updateFilter({ isVip })}
+          />
+          <ReactionFilter
+            reactionType={filterValues.reactionType ?? null}
+            onChange={(reactionType) => updateFilter({ reactionType: reactionType ?? undefined })}
+          />
+          <EventFilter
+            selectedEvents={filterValues.events}
+            onChange={(events) => updateFilter({ events })}
+          />
+          <PromptFilter
+            isPrompt={filterValues.isPrompt}
+            onChange={(isPrompt) => updateFilter({ isPrompt })}
+          />
+        </div>
+      </div>
+      <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
+        {isPending ? (
+          <div className="flex h-full items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : (
+          <>
+            {conversations.length > 0 && (
+              <div className="flex items-center gap-4 mb-4 px-4 pt-4">
+                <div className="w-5 flex items-center">
+                  <Checkbox
+                    checked={allConversationsSelected || selectedConversations.length > 0}
+                    onCheckedChange={toggleAllConversations}
+                    id="select-all"
+                  />
+                </div>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
+                        {allConversationsSelected
+                          ? "All conversations selected"
+                          : selectedConversations.length > 0
+                            ? `${selectedConversations.length} selected`
+                            : "Select all"}
+                      </label>
+                    </TooltipTrigger>
+                  </Tooltip>
+                </TooltipProvider>
+                {(allConversationsSelected || selectedConversations.length > 0) && (
+                  <div className="flex items-center">
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("closed")}
+                      disabled={isBulkUpdating}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("spam")}
+                      disabled={isBulkUpdating}
+                    >
+                      Mark as spam
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        </div>
-        {conversations.length > 0 && (
-          <div className="absolute bottom-4 right-4 z-10 self-end">
-            <NewConversationModal />
-          </div>
+            {conversations.map((conversation) => (
+              <ListItem
+                key={conversation.slug}
+                conversation={conversation}
+                isActive={conversationSlug === conversation.slug}
+                onSelectConversation={navigateToConversation}
+                variant={variant}
+                isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
+                onToggleSelect={() => toggleConversation(conversation.id)}
+              />
+            ))}
+            <div ref={loadMoreRef} />
+            {isFetchingNextPage && <div className="flex justify-center py-4"><LoadingSpinner size="md" /></div>}
+          </>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
@@ -371,9 +560,11 @@ const NewConversationModal = () => {
   );
 };
 
-const ListItem = ({ conversation, isActive, onSelectConversation, variant }: ListItemProps) => {
+const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSelected, onToggleSelect }: ListItemProps) => {
   const listItemRef = useRef<HTMLAnchorElement>(null);
   const { mailboxSlug } = useConversationListContext();
+  const { searchParams } = useConversationsListInput();
+  const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -385,115 +576,110 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant }: Lis
     }
   }, [conversation, isActive]);
 
+  let highlightedSubject = conversation.subject;
+  let highlightedBody = conversation.matchedMessageText;
+  if (searchTerms.length > 0) {
+    highlightedSubject = highlightKeywords(conversation.subject, searchTerms);
+    if (conversation.matchedMessageText) {
+      highlightedBody = highlightKeywords(conversation.matchedMessageText, searchTerms);
+    }
+  }
+
   return (
     <div className="px-2 py-0.5">
-      <a
-        ref={listItemRef}
+      <div
         className={cn(
-          "flex w-full cursor-pointer flex-col gap-0.5 px-2 py-2 rounded-lg transition-colors",
-          variant === "desktop"
-            ? isActive
-              ? "bg-sidebar-accent"
-              : "hover:bg-sidebar-accent"
-            : isActive
-              ? "bg-accent"
-              : "hover:bg-accent/50",
+          "flex w-full cursor-pointer flex-col gap-2 py-4 px-4 rounded-lg transition-colors",
+          isActive
+            ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
+            : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
         )}
-        href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
-        onClick={(e) => {
-          if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-            e.preventDefault();
-            onSelectConversation(conversation.slug);
-          }
-        }}
-        style={{ overflowAnchor: "none" }}
       >
-        <div className="flex justify-between gap-2">
-          <div
-            className={cn(
-              "line-clamp-1 break-all text-sm",
-              isActive && "font-medium",
-              variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-            )}
+        <div className="flex items-start gap-4">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onToggleSelect}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1"
+          />
+          <a
+            ref={listItemRef}
+            className="flex-1 min-w-0"
+            href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
+            onClick={(e) => {
+              if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                e.preventDefault();
+                onSelectConversation(conversation.slug);
+              }
+            }}
+            style={{ overflowAnchor: "none" }}
           >
-            {conversation.emailFrom ?? "Anonymous"}
-          </div>
-          <div className="flex items-center justify-center space-x-1 text-right">
-            <div
-              className={cn(
-                "whitespace-nowrap text-xs",
-                isActive && "font-medium",
-                variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-              )}
-            >
-              {conversation.status === "closed" ? (
-                <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
-              ) : (
-                <HumanizedTime
-                  time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
-                  titlePrefix="Last email received on"
-                />
-              )}
-            </div>
-            {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <div className="min-w-0 flex-1">
-            <div
-              className={cn(
-                "line-clamp-1 text-xs",
-                isActive && "font-medium",
-                variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-              )}
-            >
-              {conversation.subject}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {(conversation.assignedToId || conversation.assignedToAI) && (
-              <AssignedToLabel
-                className={cn(
-                  "shrink-0 break-all flex items-center gap-1 text-xs",
-                  isActive && "font-medium",
-                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-muted-foreground">{conversation.emailFrom ?? "Anonymous"}</p>
+                <p className="text-base font-medium text-foreground mb-2" dangerouslySetInnerHTML={{ __html: highlightedSubject }} />
+                {searchTerms.length > 0 && highlightedBody && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: highlightedBody }} />
                 )}
-                assignedToId={conversation.assignedToId}
-                assignedToAI={conversation.assignedToAI}
-              />
-            )}
-            {conversation.platformCustomer?.isVip && (
-              <div
-                className={cn(
-                  "shrink-0 text-right",
-                  isActive && "font-medium",
-                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-                )}
-                title="VIP Customer"
-              >
-                <div className="flex items-center gap-1 text-xs">
-                  <Badge variant="bright">VIP</Badge>
+                <div className="flex items-center gap-2">
+                  {conversation.status === "open" ? (
+                    <Badge variant="success-light" className="gap-1.5 dark:bg-success dark:text-success-foreground">
+                      <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
+                      Open
+                    </Badge>
+                  ) : (
+                    conversation.status === "closed" && (
+                      <Badge variant="gray" className="gap-1.5">
+                        <Check className="h-3 w-3" />
+                        Closed
+                      </Badge>
+                    )
+                  )}
+                  {conversation.platformCustomer?.value &&
+                    (conversation.platformCustomer.isVip ? (
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="bright" className="gap-1">
+                              <Star className="h-3.5 w-3.5" />
+                              {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">VIP</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Badge variant="gray" className="gap-1">
+                        <DollarSign className="h-3 w-3" />
+                        {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                      </Badge>
+                    ))}
                 </div>
               </div>
-            )}
-            {conversation.platformCustomer?.value ? (
-              <div
-                className={cn(
-                  "shrink-0 text-right",
-                  isActive && "font-medium",
-                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
+              <div className="flex items-center gap-3 shrink-0">
+                {(conversation.assignedToId || conversation.assignedToAI) && (
+                  <AssignedToLabel
+                    className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
+                    assignedToId={conversation.assignedToId}
+                    assignedToAI={conversation.assignedToAI}
+                  />
                 )}
-                title={`Value: ${conversation.platformCustomer.value}`}
-              >
-                <div className="flex items-center gap-1 text-xs">
-                  <DollarSign className="h-3 w-3" />
-                  {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {conversation.status === "closed" ? (
+                    <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
+                  ) : (
+                    <HumanizedTime
+                      time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
+                      titlePrefix="Last email received on"
+                    />
+                  )}
                 </div>
+                {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
               </div>
-            ) : null}
-          </div>
+            </div>
+          </a>
         </div>
-      </a>
+      </div>
     </div>
   );
 };
