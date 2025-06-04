@@ -3,6 +3,8 @@ import { OnboardingForm } from "@/app/(auth)/login/onboardingForm";
 import { db } from "@/db/client";
 import { TRPCReactProvider } from "@/trpc/react";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const mailbox = await db.query.mailboxes.findFirst({
     columns: { id: true },
