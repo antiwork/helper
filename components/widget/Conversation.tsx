@@ -110,7 +110,7 @@ export default function Conversation({
   }, [selectedConversationSlug, isNewConversation, setConversationSlug]);
 
   const isLoading = status === "streaming" || status === "submitted";
-  const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
+  const lastAIMessage = messages?.findLast((msg) => msg.role === "assistant");
 
   const { data: conversation, isLoading: isLoadingConversation } = useQuery<{
     messages: MessageWithReaction[];
@@ -127,7 +127,10 @@ export default function Conversation({
         },
       });
       if (!response.ok) {
-        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.statusText}`));
+        const text = await response.text().catch(() => null);
+        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.status}`), {
+          extra: { conversationSlug, text },
+        });
         onLoadFailed();
         return null;
       }
