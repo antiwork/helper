@@ -51,9 +51,11 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
   if (conversation.isPrompt) {
     return "Not posted, prompt conversation";
   }
+  if (!conversation.emailFrom) {
+    return "Not posted, anonymous conversation";
+  }
 
-  const emailFrom = assertDefinedOrRaiseNonRetriableError(conversation.emailFrom);
-  const platformCustomer = await getPlatformCustomer(mailbox.id, emailFrom);
+  const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom);
 
   // Early return if not VIP or Slack config missing
   if (!platformCustomer?.isVip) return "Not posted, not a VIP customer";

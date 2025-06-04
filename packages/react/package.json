@@ -12,9 +12,7 @@
   "types": "./dist/cjs/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "build:declarations": "tsc --emitDeclarationOnly --declaration --declarationDir dist/types",
     "dev": "pnpm build --watch",
-    "dev:types": "tsc --watch --preserveWatchOutput --emitDeclarationOnly --declaration --declarationDir dist/types",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
