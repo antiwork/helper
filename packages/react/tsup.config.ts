@@ -43,7 +43,7 @@ const addDirectives = async (format: "esm" | "cjs") => {
           await writeFile(outFile, contents);
           console.log(`Added "${directive}" to ${outFile}`);
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === "ENOENT") {
           if (type === "js") {
             console.warn(`Could not process ${outFile}: File does not exist`);
