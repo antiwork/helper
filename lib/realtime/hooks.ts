@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 import { uniqBy } from "lodash-es";
 import { useEffect, useState } from "react";
@@ -20,6 +21,13 @@ export const useRealtimeEvent = <Data = any>(
 
   useEffect(() => {
     const listener = supabase.channel(channel).on("broadcast", { event }, (payload) => {
+      if (!payload.data) {
+        Sentry.captureMessage("No data in realtime event", {
+          level: "warning",
+          extra: { channel, event },
+        });
+        return;
+      }
       const data = SuperJSON.parse(payload.data);
       if (env.NODE_ENV === "development") {
         // eslint-disable-next-line no-console
