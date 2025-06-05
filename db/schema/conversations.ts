@@ -22,7 +22,6 @@ export const conversations = pgTable(
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
-    unused_assignedToId: integer("assigned_to_id"),
     assignedToId: text("assigned_to_clerk_id"),
     summary: jsonb().$type<string[]>(),
     embedding: vector({ dimensions: 1536 }),
@@ -50,7 +49,6 @@ export const conversations = pgTable(
     >(),
   },
   (table) => [
-    index("conversations_conversation_assigned_to_id_327a1b36").on(table.unused_assignedToId),
     index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),
     index("conversations_conversation_closed_at_16474e94").on(table.closedAt),
     index("conversations_conversation_created_at_1ec48787").on(table.createdAt),
@@ -63,11 +61,6 @@ export const conversations = pgTable(
     index("conversations_conversation_slug_9924e9b1_like").on(table.slug),
     index("embedding_vector_index").using("hnsw", table.embedding.asc().nullsLast().op("vector_cosine_ops")),
     unique("conversations_conversation_slug_key").on(table.slug),
-    index("conversations_mailbox_assigned_to_status_id_idx").on(
-      table.mailboxId,
-      table.status,
-      table.unused_assignedToId,
-    ),
     index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
   ],
