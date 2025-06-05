@@ -5,4 +5,3 @@ sdk-types: pnpm --filter=@helperai/sdk dev:types
 react: pnpm --filter=@helperai/react dev
 marketing: pnpm --filter=@helperai/marketing dev
 inngest: pnpm inngest-cli dev --no-discovery -u http://localhost:3010/api/inngest
-nginx: docker run --rm --name helperai-nginx -p 80:80 -p 443:443 --add-host host.docker.internal:host-gateway -v $(pwd)/scripts/docker/local-nginx/helperai_dev.conf:/etc/nginx/conf.d/default.conf -v $(pwd)/scripts/docker/local-nginx/certs:/etc/ssl/certs nginx:1.27.5
