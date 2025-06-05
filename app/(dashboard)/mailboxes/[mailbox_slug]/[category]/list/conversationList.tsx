@@ -1,5 +1,5 @@
 import { capitalize } from "lodash-es";
-import { Bot, DollarSign, Search, Send, User, Check, Star } from "lucide-react";
+import { Bot, DollarSign, Search, Send, User, Check, Star, Filter } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState, useQueryStates } from "nuqs";
@@ -67,7 +67,7 @@ const SearchBar = ({
 
   return (
     <div className={cn("border-b", variant === "desktop" ? "border-border" : "border-border")}>
-      <div className="flex items-center justify-between gap-2 px-4 pb-1">
+      <div className="flex items-center justify-between gap-2 pb-1">
         <div className="flex items-center gap-2">
           {statusOptions.length > 1 ? (
             <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onStatusChange}>
@@ -123,6 +123,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     "conversations";
 
   const [search, setSearch] = useState(searchParams.search || "");
+  const [showFilters, setShowFilters] = useState(false);
   const [filterValues, setFilterValues] = useState({
     assignee: searchParams.assignee ?? [],
     createdAfter: searchParams.createdAfter ?? null,
@@ -203,7 +204,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   const statusOptions = useMemo(() => {
     const statuses = status.flatMap((s) => ({
       value: s.status as StatusOption,
-      label: s.status === "open" ? `${s.count.toLocaleString()} ${capitalize(s.status)}` : capitalize(s.status),
+      label: capitalize(s.status),
       selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
     }));
 
@@ -211,8 +212,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
       if (!statuses.some((s) => s.value === searchParams.status)) {
         statuses.push({
           value: searchParams.status as StatusOption,
-          label:
-            searchParams.status === "open" ? `0 ${capitalize(searchParams.status)}` : capitalize(searchParams.status),
+          label: capitalize(searchParams.status),
           selected: true,
         });
       }
@@ -367,63 +367,116 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   };
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="px-4 pt-4 pb-2">
-        <Input
-          ref={searchInputRef}
-          placeholder="Search conversations"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full"
-          autoFocus
-        />
-      </div>
-      <SearchBar
-        statusOptions={statusOptions}
-        sortOptions={sortOptions}
-        onStatusChange={handleStatusFilterChange}
-        onSortChange={handleSortChange}
-        variant={variant}
-      />
-      <div className="px-4 py-2">
-        <div className="flex flex-wrap gap-2">
-          <DateFilter
-            initialStartDate={filterValues.createdAfter}
-            initialEndDate={filterValues.createdBefore}
-            onSelect={(startDate, endDate) => {
-              updateFilter({ createdAfter: startDate, createdBefore: endDate });
-            }}
-          />
-          <AssigneeFilter
-            selectedAssignees={filterValues.assignee}
-            onChange={(assignees) => updateFilter({ assignee: assignees })}
-          />
-          <ResponderFilter
-            selectedResponders={filterValues.repliedBy}
-            onChange={(responders) => updateFilter({ repliedBy: responders })}
-          />
-          <CustomerFilter
-            selectedCustomers={filterValues.customer}
-            onChange={(customers) => updateFilter({ customer: customers })}
-          />
-          <VipFilter
-            isVip={filterValues.isVip}
-            onChange={(isVip) => updateFilter({ isVip })}
-          />
-          <ReactionFilter
-            reactionType={filterValues.reactionType ?? null}
-            onChange={(reactionType) => updateFilter({ reactionType: reactionType ?? undefined })}
-          />
-          <EventFilter
-            selectedEvents={filterValues.events}
-            onChange={(events) => updateFilter({ events })}
-          />
-          <PromptFilter
-            isPrompt={filterValues.isPrompt}
-            onChange={(isPrompt) => updateFilter({ isPrompt })}
-          />
+    <div className="flex flex-col w-full h-full">
+      <div className="px-6 pt-4 pb-2 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            {statusOptions.length > 1 ? (
+              <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleStatusFilterChange}>
+                <SelectTrigger
+                  variant="bare"
+                  className="text-foreground [&>svg]:text-foreground"
+                >
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="">
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : statusOptions[0] ? (
+              <div className="text-sm text-foreground">
+                {statusOptions[0].label}
+              </div>
+            ) : null}
+          </div>
+          <div className="relative w-full flex justify-center">
+            <div className="relative w-full max-w-2xl">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search conversations"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-9 pr-14 rounded-full"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn(
+                  "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 transition bg-transparent hover:bg-amber-50 dark:hover:bg-white/10 flex items-center justify-center",
+                  showFilters && "bg-amber-50 dark:bg-white/10"
+                )}
+                aria-label="Toggle filters"
+              >
+                <Filter className="h-5 w-5 text-foreground" />
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
+              <SelectTrigger
+                variant="bare"
+                className="text-foreground [&>svg]:text-foreground"
+              >
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
+      {showFilters && (
+        <div className="px-4 py-2 border-b border-border shrink-0">
+          <div className="flex flex-wrap gap-2">
+            <DateFilter
+              initialStartDate={filterValues.createdAfter}
+              initialEndDate={filterValues.createdBefore}
+              onSelect={(startDate, endDate) => {
+                updateFilter({ createdAfter: startDate, createdBefore: endDate });
+              }}
+            />
+            <AssigneeFilter
+              selectedAssignees={filterValues.assignee}
+              onChange={(assignees) => updateFilter({ assignee: assignees })}
+            />
+            <ResponderFilter
+              selectedResponders={filterValues.repliedBy}
+              onChange={(responders) => updateFilter({ repliedBy: responders })}
+            />
+            <CustomerFilter
+              selectedCustomers={filterValues.customer}
+              onChange={(customers) => updateFilter({ customer: customers })}
+            />
+            <VipFilter
+              isVip={filterValues.isVip}
+              onChange={(isVip) => updateFilter({ isVip })}
+            />
+            <ReactionFilter
+              reactionType={filterValues.reactionType ?? null}
+              onChange={(reactionType) => updateFilter({ reactionType: reactionType ?? undefined })}
+            />
+            <EventFilter
+              selectedEvents={filterValues.events}
+              onChange={(events) => updateFilter({ events })}
+            />
+            <PromptFilter
+              isPrompt={filterValues.isPrompt}
+              onChange={(isPrompt) => updateFilter({ isPrompt })}
+            />
+          </div>
+        </div>
+      )}
       <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
         {isPending ? (
           <div className="flex h-full items-center justify-center">
@@ -432,7 +485,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         ) : (
           <>
             {conversations.length > 0 && (
-              <div className="flex items-center gap-4 mb-4 px-4 pt-4">
+              <div className="flex items-center gap-4 mb-4 px-6 pt-4">
                 <div className="w-5 flex items-center">
                   <Checkbox
                     checked={allConversationsSelected || selectedConversations.length > 0}
@@ -448,7 +501,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
                           ? "All conversations selected"
                           : selectedConversations.length > 0
                             ? `${selectedConversations.length} selected`
-                            : "Select all"}
+                            : `${conversations.length} conversations`}
                       </label>
                     </TooltipTrigger>
                   </Tooltip>
@@ -589,19 +642,21 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
     <div className="px-2 py-0.5">
       <div
         className={cn(
-          "flex w-full cursor-pointer flex-col gap-2 py-4 px-4 rounded-lg transition-colors",
+          "flex w-full cursor-pointer flex-col gap-2 py-4 rounded-lg transition-colors",
           isActive
             ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
             : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
         )}
       >
-        <div className="flex items-start gap-4">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onToggleSelect}
-            onClick={(e) => e.stopPropagation()}
-            className="mt-1"
-          />
+        <div className="flex items-start gap-4 px-4">
+          <div className="w-5 flex items-center">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onToggleSelect}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-1"
+            />
+          </div>
           <a
             ref={listItemRef}
             className="flex-1 min-w-0"
@@ -641,7 +696,6 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Badge variant="bright" className="gap-1">
-                              <Star className="h-3.5 w-3.5" />
                               {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                             </Badge>
                           </TooltipTrigger>
@@ -650,7 +704,6 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
                       </TooltipProvider>
                     ) : (
                       <Badge variant="gray" className="gap-1">
-                        <DollarSign className="h-3 w-3" />
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}

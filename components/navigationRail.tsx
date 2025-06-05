@@ -52,7 +52,7 @@ export function NavigationRail({ mailboxSlug }: { mailboxSlug: string }) {
   return (
     <TooltipProvider delayDuration={0}>
       <nav
-        className="h-svh w-14 flex flex-col items-center bg-sidebar border-r border-sidebar-border py-2 gap-2"
+        className="fixed top-0 left-0 h-svh w-14 flex flex-col items-center bg-sidebar border-r border-sidebar-border py-2 gap-2"
         style={{ minWidth: 56 }}
       >
         <div className="flex flex-col gap-2 flex-1 items-center">

@@ -19,13 +19,14 @@ export default async function InboxLayout({
 
     return (
       <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
-        <div className="flex flex-row min-h-svh w-full">
-          <div className="hidden md:block text-sidebar-foreground">
-            <NavigationRail mailboxSlug={mailboxSlug} />
-          </div>
-          <main className="flex-1 text-foreground bg-background w-full min-w-0">
+        <div className="flex flex-row h-svh w-full">
+          <div className="hidden md:block text-sidebar-foreground shrink-0 w-14" />
+          <main className="flex-1 text-foreground bg-background min-w-0">
             <InboxClientLayout theme={preferences?.theme}>{children}</InboxClientLayout>
           </main>
+        </div>
+        <div className="hidden md:block">
+          <NavigationRail mailboxSlug={mailboxSlug} />
         </div>
       </HelperProvider>
     );
