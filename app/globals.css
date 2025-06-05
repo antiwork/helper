@@ -118,7 +118,7 @@
 @layer base {
   :root,
   .light {
-    --sidebar-width: 20rem; /* Sidebar width */
+    --sidebar-width: 12rem; /* Sidebar width */
     --sidebar-width-mobile: 60%; /* Mobile sidebar width */
     --sidebar-background: hsl(0 69% 17%); /* Sidebar background color */
     --sidebar-foreground: hsl(0 0% 100%); /* Sidebar text color */
@@ -170,7 +170,7 @@
   }
 
   .dark {
-    --sidebar-width: 20rem; /* Sidebar width */
+    --sidebar-width: 16rem; /* Sidebar width */
     --sidebar-width-mobile: 90%; /* Mobile sidebar width */
     --sidebar-background: hsl(0 69% 10%); /* Updated to match #290B0A */
     --sidebar-foreground: hsl(0 0% 100%);

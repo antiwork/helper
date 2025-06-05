@@ -368,7 +368,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="px-6 pt-4 pb-2 shrink-0">
+      <div className="px-6 py-4 shrink-0 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 shrink-0">
             {statusOptions.length > 1 ? (
@@ -395,26 +395,28 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
           </div>
           <div className="relative w-full flex justify-center">
             <div className="relative w-full max-w-2xl">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
                 placeholder="Search conversations"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-14 rounded-full"
+                className="w-full rounded-full"
+                iconsPrefix={<Search className="h-5 w-5 text-foreground" />}
+                iconsSuffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={cn(
+                      "rounded-full p-2 transition bg-transparent hover:bg-amber-50 dark:hover:bg-white/10 flex items-center justify-center",
+                      showFilters && "bg-amber-50 dark:bg-white/10"
+                    )}
+                    aria-label="Toggle filters"
+                  >
+                    <Filter className="h-5 w-5 text-foreground" />
+                  </button>
+                }
                 autoFocus
               />
-              <button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                className={cn(
-                  "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 transition bg-transparent hover:bg-amber-50 dark:hover:bg-white/10 flex items-center justify-center",
-                  showFilters && "bg-amber-50 dark:bg-white/10"
-                )}
-                aria-label="Toggle filters"
-              >
-                <Filter className="h-5 w-5 text-foreground" />
-              </button>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
