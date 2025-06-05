@@ -13,13 +13,13 @@ export const searchSchema = z.object({
   category: z.enum(["conversations", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
   search: z.string().nullish().describe("Search term to look for in tickets"),
   status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),
-  assignee: z.array(z.string()).optional().describe("ID of team members currently assigned to the conversation"),
+  assignee: z.array(z.string().uuid()).optional().describe("ID of team members currently assigned to the conversation"),
   isAssigned: z.boolean().optional().describe("Filter tickets assigned to any team member or unassigned"),
   createdAfter: z.string().datetime().optional().describe("Filter tickets created after this date"),
   createdBefore: z.string().datetime().optional().describe("Filter tickets created before this date"),
   repliedAfter: z.string().datetime().optional().describe("Filter tickets where a human has replied after this date"),
   repliedBefore: z.string().datetime().optional().describe("Filter tickets where a human has replied before this date"),
-  repliedBy: z.array(z.string()).optional().describe("ID of team members who have replied to the conversation"),
+  repliedBy: z.array(z.string().uuid()).optional().describe("ID of team members who have replied to the conversation"),
   customer: z.array(z.string()).optional().describe("Email address of the customer who opened the ticket"),
   isVip: z.boolean().optional().describe("Filter by VIP customers"),
   minValueDollars: z.number().optional().describe("Filter by customers with a minimum value"),
@@ -40,7 +40,7 @@ export const searchSchema = z.object({
         .enum(["human", "slack_bot"])
         .optional()
         .describe("Filter tickets closed by a human or the Helper Slack agent"),
-      byUserId: z.array(z.string()).optional().describe("Filter tickets closed by specific team members"),
+      byUserId: z.array(z.string().uuid()).optional().describe("Filter tickets closed by specific team members"),
       before: z.string().datetime().optional().describe("Tickets closed before this date"),
       after: z.string().datetime().optional().describe("Tickets closed after this date"),
     })
@@ -53,7 +53,7 @@ export const searchSchema = z.object({
         .enum(["human", "slack_bot"])
         .optional()
         .describe("Filter tickets reopened by a human or the Helper Slack agent"),
-      byUserId: z.array(z.string()).optional().describe("Filter tickets reopened by specific team members"),
+      byUserId: z.array(z.string().uuid()).optional().describe("Filter tickets reopened by specific team members"),
       before: z.string().datetime().optional().describe("Tickets reopened before this date"),
       after: z.string().datetime().optional().describe("Tickets reopened after this date"),
     })
@@ -66,7 +66,10 @@ export const searchSchema = z.object({
         .enum(["human", "slack_bot"])
         .optional()
         .describe("Filter tickets marked as spam by a human or the Helper Slack agent"),
-      byUserId: z.array(z.string()).optional().describe("Filter tickets marked as spam by specific team members"),
+      byUserId: z
+        .array(z.string().uuid())
+        .optional()
+        .describe("Filter tickets marked as spam by specific team members"),
       before: z.string().datetime().optional().describe("Tickets marked as spam before this date"),
       after: z.string().datetime().optional().describe("Tickets marked as spam after this date"),
     })

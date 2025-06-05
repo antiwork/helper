@@ -1,4 +1,3 @@
-import { WebClient } from "@slack/web-api";
 import { CoreMessage, Tool, tool } from "ai";
 import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
@@ -42,7 +41,6 @@ export const generateAgentResponse = async (
     });
   }
 
-  const client = new WebClient(assertDefined(mailbox.slackBotToken));
   const searchToolSchema = searchSchema.omit({
     category: true,
   });
@@ -113,26 +111,7 @@ export const generateAgentResponse = async (
   };
 
   const tools: Record<string, Tool> = {
-    getCurrentSlackUser: tool({
-      description: "Get the current Slack user",
-      parameters: z.object({}),
-      execute: async () => {
-        showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
-        if (!slackUserId) return { error: "User not found" };
-        const { user } = await client.users.info({ user: slackUserId });
-        const dbUser = await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId);
-        if (user) {
-          return {
-            id: user.id,
-            dbUserId: dbUser?.id,
-            name: user.profile?.real_name,
-            email: user.profile?.email,
-          };
-        }
-        return { error: "User not found" };
-      },
-    }),
-    getMembers: tool({
+    getUsers: tool({
       description: "Get IDs, names and emails of all team members",
       parameters: z.object({}),
       execute: async () => {
@@ -141,11 +120,11 @@ export const generateAgentResponse = async (
         return members.map((member) => ({
           id: member.id,
           name: getFullName(member),
-          emails: member.email,
+          email: member.email,
         }));
       },
     }),
-    getMemberStats: tool({
+    getUserReplyCounts: tool({
       description: "Check how many replies members sent to tickets in a given time period",
       parameters: z.object({
         startDate: z.string().datetime(),
@@ -371,6 +350,11 @@ export const generateAgentResponse = async (
     });
   }
 
+  const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
+  const userPrompt = user
+    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
+    : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
+
   const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
@@ -378,6 +362,8 @@ export const generateAgentResponse = async (
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
 You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat or explicitly mention another mailbox by name to access others.
+
+${userPrompt}
 
 IMPORTANT GUIDELINES:
 - Always identify as "Helper" (never as "Helper AI" or any other variation)
