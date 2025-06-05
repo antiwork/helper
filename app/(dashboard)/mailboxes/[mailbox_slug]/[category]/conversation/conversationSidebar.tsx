@@ -55,7 +55,7 @@ const ConversationItem = ({
         href={`/mailboxes/${mailboxSlug}/conversations?id=${slug}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="mr-auto text-sm truncate"
+        className={cn("mr-auto text-sm truncate", status === "open" && "font-bold")}
         onClick={(e) => e.stopPropagation()}
       >
         {subject || "(no subject)"}
