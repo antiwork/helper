@@ -58,8 +58,6 @@ export const conversationMessages = pgTable(
     slackMessageTs: text(),
     isPerfect: boolean().notNull(),
 
-
-
     isFlaggedAsBad: boolean().notNull(),
     promptInfo: jsonb().$type<{ details?: PromptInfo }>(),
     reason: varchar({ length: 65535 }),
