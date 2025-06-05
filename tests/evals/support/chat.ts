@@ -99,7 +99,6 @@ export const parseMessagesWithMocks = (input: string) => {
     id: 1,
     name: mailboxName || "Gumroad",
     slug: mailboxName || "gumroad",
-    clerkOrganizationId: "test_org_id",
     gmailSupportEmailId: null,
     slackAlertChannel: null,
     slackBotToken: null,

@@ -38,7 +38,6 @@ const createInitialMailbox = async (tx: TransactionOrDb) => {
       slug: "mailbox",
       promptUpdatedAt: new Date(),
       widgetHMACSecret: `${WIDGET_HMAC_SECRET_PREFIX}${crypto.randomBytes(16).toString("hex")}`,
-      clerkOrganizationId: "default_org_id",
     })
     .returning()
     .then(takeUniqueOrThrow);
