@@ -32,6 +32,7 @@ export const userFactory = {
         widgetHMACSecret: faker.string.uuid(),
         createdAt: faker.date.past(),
         updatedAt: faker.date.recent(),
+        clerkOrganizationId: faker.string.uuid(),
         ...mailboxOverrides,
       })
       .returning()

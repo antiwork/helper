@@ -16,6 +16,7 @@ export const mailboxes = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
     slug: varchar({ length: 50 }).notNull(),
+    clerkOrganizationId: text("clerk_organization_id").notNull(),
     gmailSupportEmailId: bigint({ mode: "number" }),
     slackAlertChannel: text("slack_escalation_channel"),
     slackBotToken: text(),

@@ -20,6 +20,7 @@ describe("withTimestamps", () => {
         slug: "test-mailbox",
         promptUpdatedAt: time,
         widgetHMACSecret: "secret",
+        clerkOrganizationId: "test_org_id",
       })
       .returning()
       .then(takeUniqueOrThrow);
