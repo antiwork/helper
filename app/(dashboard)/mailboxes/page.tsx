@@ -16,7 +16,7 @@ const Page = async () => {
   if (mailboxes.find(({ slug }) => slug === user.user_metadata.lastMailboxSlug))
     return redirect(`/mailboxes/${user.user_metadata.lastMailboxSlug}/mine`);
   else if (mailboxes[0]) return redirect(`/mailboxes/${mailboxes[0].slug}/mine`);
-  throw new Error("No mailbox found");
+  return redirect("/login");
 };
 
 export default Page;

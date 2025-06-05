@@ -44,17 +44,6 @@ describe("mailboxRouter", () => {
         },
       ]);
     });
-
-    it("creates a mailbox if user has no mailboxes", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      await db.delete(mailboxes).where(eq(mailboxes.id, mailbox.id));
-      const caller = createCaller(createTestTRPCContext(user));
-
-      const result = await caller.mailbox.list();
-
-      expect(result.length).toEqual(1);
-      expect(result[0]!.id).not.toEqual(mailbox.id);
-    });
   });
 
   describe("update", () => {

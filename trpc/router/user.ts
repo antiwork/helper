@@ -5,6 +5,7 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
 import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
@@ -91,5 +92,59 @@ export const userRouter = {
       });
       if (error) throw error;
       return { success: true };
+    }),
+  onboard: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        displayName: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const existingMailbox = await db.query.mailboxes.findFirst({
+        columns: { id: true },
+      });
+
+      if (existingMailbox) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A mailbox already exists. Please use the login form instead.",
+        });
+      }
+
+      const supabase = createAdminClient();
+      const { data: userData, error: createUserError } = await supabase.auth.admin.createUser({
+        email: input.email,
+        user_metadata: {
+          display_name: input.displayName,
+        },
+        email_confirm: true,
+      });
+
+      if (createUserError) throw createUserError;
+      if (!userData.user) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create user",
+        });
+      }
+
+      await setupMailboxForNewUser(userData.user);
+
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "recovery",
+        email: userData.user.email ?? "",
+      });
+
+      if (linkError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate OTP",
+        });
+      }
+
+      return {
+        otp: linkData.properties.email_otp,
+      };
     }),
 } satisfies TRPCRouterRecord;
