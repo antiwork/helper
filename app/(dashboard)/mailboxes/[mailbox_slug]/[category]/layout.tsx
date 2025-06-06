@@ -1,5 +1,4 @@
 import React from "react";
-import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 async function ConversationsLayout({
@@ -13,7 +12,6 @@ async function ConversationsLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar mailboxSlug={mailbox_slug} />
       {children}
     </SidebarProvider>
   );

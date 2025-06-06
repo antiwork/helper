@@ -1,10 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { redirect } from "next/navigation";
 import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { NavigationRail } from "@/components/navigationRail";
+import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
 import { env } from "@/lib/env";
 import { HelperProvider } from "@/packages/react/dist/cjs";
 import { api } from "@/trpc/server";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
+import { MobileSidebarButton } from "./MobileSidebarButton";
 
 export default async function InboxLayout({
   children,
@@ -19,15 +22,17 @@ export default async function InboxLayout({
 
     return (
       <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
-        <div className="flex flex-row h-svh w-full">
-          <div className="hidden md:block text-sidebar-foreground shrink-0 w-14" />
-          <main className="flex-1 text-foreground bg-background min-w-0">
-            <InboxClientLayout theme={preferences?.theme}>{children}</InboxClientLayout>
-          </main>
-        </div>
-        <div className="hidden md:block">
-          <NavigationRail mailboxSlug={mailboxSlug} />
-        </div>
+        <SidebarProvider>
+          <InboxClientLayout>
+            <div className="flex h-svh w-full">
+              <AppSidebar mailboxSlug={mailboxSlug} />
+              <main className="flex-1 min-w-0">
+                <MobileSidebarButton />
+                {children}
+              </main>
+            </div>
+          </InboxClientLayout>
+        </SidebarProvider>
       </HelperProvider>
     );
   } catch (e) {

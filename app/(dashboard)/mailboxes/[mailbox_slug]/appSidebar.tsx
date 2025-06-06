@@ -1,11 +1,33 @@
 "use client";
 
-import { Inbox, User, Users, UserMinus } from "lucide-react";
+import { BarChart, CheckCircle, Inbox, Search, Settings, User, Users, UserMinus, Grab, List, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
+import { usePathname, useRouter } from "next/navigation";
+import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuBadge,
+  useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel,
+} from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
+import React from "react";
 
 declare global {
   interface Window {
@@ -15,73 +37,237 @@ declare global {
 
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { isMobile } = useSidebar();
+  const { data: mailboxes } = api.mailbox.list.useQuery();
+  const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
+  const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
 
-  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug });
+  const navItems = [
+    {
+      label: "Inbox",
+      icon: Inbox,
+      href: `/mailboxes/${mailboxSlug}/conversations`,
+      active: !pathname.includes("/search") && !pathname.includes("/dashboard") && !pathname.endsWith("/settings"),
+    },
+    {
+      label: "Search",
+      icon: Search,
+      href: `/mailboxes/${mailboxSlug}/search`,
+      active: pathname.includes("/search"),
+    },
+    {
+      label: "Dashboard",
+      icon: BarChart,
+      href: `/mailboxes/${mailboxSlug}/dashboard`,
+      active: pathname.includes("/dashboard"),
+    },
+    {
+      label: "Settings",
+      icon: Settings,
+      href: `/mailboxes/${mailboxSlug}/settings`,
+      active: pathname.endsWith("/settings"),
+    },
+  ];
+
+  const conversationItems = [
+    {
+      label: "Mine",
+      icon: User,
+      href: `/mailboxes/${mailboxSlug}/mine`,
+      active: pathname.includes("/mine"),
+      count: openCounts?.mine,
+    },
+    {
+      label: "Others",
+      icon: Users,
+      href: `/mailboxes/${mailboxSlug}/others`,
+      active: pathname.includes("/others"),
+      count: openCounts?.assigned,
+    },
+    {
+      label: "Up for grabs",
+      icon: Grab,
+      href: `/mailboxes/${mailboxSlug}/up-for-grabs`,
+      active: pathname.includes("/up-for-grabs"),
+      count: openCounts?.unassigned,
+    },
+    {
+      label: "All",
+      icon: List,
+      href: `/mailboxes/${mailboxSlug}/all`,
+      active: pathname.includes("/all"),
+      count: openCounts?.conversations,
+    },
+  ];
 
   return (
-    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border sticky top-0 h-svh">
-      <SidebarHeader />
-      <SidebarContent className="flex flex-col flex-1 overflow-hidden">
-        <div className="h-full flex flex-col gap-2 p-2">
-          <Link
-            href={`/mailboxes/${mailboxSlug}/mine`}
-            className={cn(
-              "flex h-10 items-center gap-2 px-2 rounded-lg transition-colors",
-              "text-sidebar-foreground hover:bg-sidebar-accent",
-              pathname.includes("/mine") && "bg-sidebar-accent",
-            )}
-          >
-            <User className="h-4 w-4" />
-            <span>Mine</span>
-            {openCount?.mine ? (
-              <span className="ml-auto">{openCount.mine}</span>
-            ) : null}
-          </Link>
-          <Link
-            href={`/mailboxes/${mailboxSlug}/assigned`}
-            className={cn(
-              "flex h-10 items-center gap-2 px-2 rounded-lg transition-colors",
-              "text-sidebar-foreground hover:bg-sidebar-accent",
-              pathname.includes("/assigned") && "bg-sidebar-accent",
-            )}
-          >
-            <Users className="h-4 w-4" />
-            <span>Others</span>
-            {openCount?.assigned ? (
-              <span className="ml-auto">{openCount.assigned}</span>
-            ) : null}
-          </Link>
-          <Link
-            href={`/mailboxes/${mailboxSlug}/unassigned`}
-            className={cn(
-              "flex h-10 items-center gap-2 px-2 rounded-lg transition-colors",
-              "text-sidebar-foreground hover:bg-sidebar-accent",
-              pathname.includes("/unassigned") && "bg-sidebar-accent",
-            )}
-          >
-            <UserMinus className="h-4 w-4" />
-            <span>Up for grabs</span>
-            {openCount?.unassigned ? (
-              <span className="ml-auto">{openCount.unassigned}</span>
-            ) : null}
-          </Link>
-          <Link
-            href={`/mailboxes/${mailboxSlug}/conversations`}
-            className={cn(
-              "flex h-10 items-center gap-2 px-2 rounded-lg transition-colors",
-              "text-sidebar-foreground hover:bg-sidebar-accent",
-              pathname.includes("/conversations") && !pathname.includes("/mine") && !pathname.includes("/assigned") && !pathname.includes("/unassigned") && "bg-sidebar-accent",
-            )}
-          >
-            <Inbox className="h-4 w-4" />
-            <span>All</span>
-          </Link>
+    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border sticky top-0 h-svh" collapsible="icon">
+      <SidebarHeader>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="sidebar"
+              size="sm"
+              className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+            >
+              <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
+              <span className="truncate text-base group-data-[collapsible=icon]:hidden">{currentMailbox?.name}</span>
+              <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
+            {mailboxes?.map((mailbox) => (
+              <DropdownMenuItem
+                key={mailbox.slug}
+                onClick={() => {
+                  const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
+                  router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Avatar src={undefined} fallback={mailbox.name} size="sm" />
+                <span className="truncate text-base">{mailbox.name}</span>
+                <span className="ml-auto">
+                  {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarHeader>
+
+      <SidebarContent className="flex flex-col h-full">
+        <div>
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/mine`}
+                  tooltip="Mine"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/mine`}>
+                    <User className="size-4" />
+                    <span>Mine</span>
+                  </Link>
+                </SidebarMenuButton>
+                {openCounts && openCounts.mine > 0 && (
+                  <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>
+                )}
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/others`}
+                  tooltip="Others"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/others`}>
+                    <Users className="size-4" />
+                    <span>Others</span>
+                  </Link>
+                </SidebarMenuButton>
+                {openCounts && openCounts.assigned > 0 && (
+                  <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>
+                )}
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/up-for-grabs`}
+                  tooltip="Up for grabs"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/up-for-grabs`}>
+                    <Grab className="size-4" />
+                    <span>Up for grabs</span>
+                  </Link>
+                </SidebarMenuButton>
+                {openCounts && openCounts.unassigned > 0 && (
+                  <SidebarMenuBadge>{openCounts.unassigned}</SidebarMenuBadge>
+                )}
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/all`}
+                  tooltip="All"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/all`}>
+                    <List className="size-4" />
+                    <span>All</span>
+                  </Link>
+                </SidebarMenuButton>
+                {openCounts && openCounts.conversations > 0 && (
+                  <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
+                )}
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </div>
+        <div className="mt-auto">
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}`}
+                  tooltip="Inbox"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}`}>
+                    <Inbox className="size-4" />
+                    <span>Inbox</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/search`}
+                  tooltip="Search"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/search`}>
+                    <Search className="size-4" />
+                    <span>Search</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}
+                  tooltip="Dashboard"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
+                    <BarChart className="size-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/settings`}
+                  tooltip="Settings"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/settings`}>
+                    <Settings className="size-4" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
         </div>
       </SidebarContent>
+
+      <SidebarFooter>
+        <AccountDropdown />
+      </SidebarFooter>
     </Sidebar>
   );
 }
+
+// Remove the SidebarTrigger component definition
 
 // Remove unused components
 // const ConversationListContent = ({ mailboxSlug }: { mailboxSlug: string }) => (

@@ -10,10 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/client";
+import { ChevronUp } from "lucide-react";
 
 const supabase = createClient();
 
@@ -29,40 +29,32 @@ export function AccountDropdown() {
   if (!user) return null;
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="sidebar"
-                size="sm"
-                iconOnly
-                className="w-10 h-10 flex items-center justify-center rounded-full transition-colors hover:bg-sidebar-accent/80"
-                aria-label="Account menu"
-              >
-                <Avatar fallback={getFullName(user)} size="sm" />
-              </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="right" align="center">
-            {getFullName(user)}
-          </TooltipContent>
-        </Tooltip>
-        <DropdownMenuContent side="right" align="end" className="w-(--radix-popper-anchor-width)">
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              window.open(`${getBaseUrl()}/docs`, "_blank", "noopener,noreferrer");
-            }}
-          >
-            <span>Documentation</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSignOut}>
-            <span>Sign out</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </TooltipProvider>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="sidebar"
+          size="sm"
+          className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          aria-label="Account menu"
+        >
+          <Avatar fallback={getFullName(user)} size="sm" />
+          <span className="truncate text-base group-data-[collapsible=icon]:hidden">{user.email}</span>
+          <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="end" className="w-(--radix-popper-anchor-width)">
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            window.open(`${getBaseUrl()}/docs`, "_blank", "noopener,noreferrer");
+          }}
+        >
+          <span>Documentation</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>
+          <span>Sign out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

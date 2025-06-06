@@ -162,6 +162,20 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     debouncedSetSearch(search);
   }, [search]);
 
+  useEffect(() => {
+    setFilterValues({
+      assignee: searchParams.assignee ?? [],
+      createdAfter: searchParams.createdAfter ?? null,
+      createdBefore: searchParams.createdBefore ?? null,
+      repliedBy: searchParams.repliedBy ?? [],
+      customer: searchParams.customer ?? [],
+      isVip: searchParams.isVip ?? undefined,
+      isPrompt: searchParams.isPrompt ?? undefined,
+      reactionType: searchParams.reactionType ?? undefined,
+      events: searchParams.events ?? [],
+    });
+  }, [searchParams]);
+
   const updateFilter = (updates: Partial<typeof filterValues>) => {
     setFilterValues((prev) => ({ ...prev, ...updates }));
     debouncedSetFilters(updates);
@@ -366,119 +380,137 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     }
   };
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filterValues.assignee.length > 0) count++;
+    if (filterValues.createdAfter || filterValues.createdBefore) count++;
+    if (filterValues.repliedBy.length > 0) count++;
+    if (filterValues.customer.length > 0) count++;
+    if (filterValues.isVip !== undefined) count++;
+    if (filterValues.isPrompt !== undefined) count++;
+    if (filterValues.reactionType !== undefined) count++;
+    if (filterValues.events.length > 0) count++;
+    return count;
+  }, [filterValues]);
+
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="px-6 py-4 shrink-0 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 shrink-0">
-            {statusOptions.length > 1 ? (
-              <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleStatusFilterChange}>
+      <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
+        <div className="flex flex-col gap-2 md:gap-4">
+          <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              {statusOptions.length > 1 ? (
+                <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleStatusFilterChange}>
+                  <SelectTrigger
+                    variant="bare"
+                    className="text-foreground [&>svg]:text-foreground text-sm md:text-base"
+                  >
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="">
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : statusOptions[0] ? (
+                <div className="text-xs md:text-sm text-foreground">
+                  {statusOptions[0].label}
+                </div>
+              ) : null}
+            </div>
+            <div className="relative w-full flex justify-center">
+              <div className="relative w-full max-w-2xl">
+                <div className="flex w-full gap-1">
+                  <Input
+                    ref={searchInputRef}
+                    placeholder="Search conversations"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="flex-1 rounded-md h-8 md:h-10 text-sm md:text-base"
+                    iconsPrefix={<Search className="h-4 w-4 md:h-5 md:w-5 text-foreground" />}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={cn(
+                      "flex items-center justify-center px-2 md:px-3 rounded-md border h-8 md:h-10 transition",
+                      showFilters
+                        ? "bg-bright text-bright-foreground"
+                        : "bg-background text-foreground hover:bg-amber-50 dark:hover:bg-white/10"
+                    )}
+                    aria-label="Toggle filters"
+                  >
+                    <Filter className="h-4 w-4 md:h-5 md:w-5" />
+                    {activeFilterCount > 0 && (
+                      <span className="text-[10px] md:text-xs ml-0.5 md:ml-1">({activeFilterCount})</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
                 <SelectTrigger
                   variant="bare"
-                  className="text-foreground [&>svg]:text-foreground"
+                  className="text-foreground [&>svg]:text-foreground text-sm md:text-base"
                 >
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value} className="">
+                  {sortOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            ) : statusOptions[0] ? (
-              <div className="text-sm text-foreground">
-                {statusOptions[0].label}
-              </div>
-            ) : null}
-          </div>
-          <div className="relative w-full flex justify-center">
-            <div className="relative w-full max-w-2xl">
-              <Input
-                ref={searchInputRef}
-                placeholder="Search conversations"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full rounded-full"
-                iconsPrefix={<Search className="h-5 w-5 text-foreground" />}
-                iconsSuffix={
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className={cn(
-                      "rounded-full p-2 transition bg-transparent hover:bg-amber-50 dark:hover:bg-white/10 flex items-center justify-center",
-                      showFilters && "bg-amber-50 dark:bg-white/10"
-                    )}
-                    aria-label="Toggle filters"
-                  >
-                    <Filter className="h-5 w-5 text-foreground" />
-                  </button>
-                }
-                autoFocus
-              />
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
-              <SelectTrigger
-                variant="bare"
-                className="text-foreground [&>svg]:text-foreground"
-              >
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {showFilters && (
+            <div className="flex flex-wrap gap-1 md:gap-2">
+              <DateFilter
+                initialStartDate={filterValues.createdAfter}
+                initialEndDate={filterValues.createdBefore}
+                onSelect={(startDate, endDate) => {
+                  updateFilter({ createdAfter: startDate, createdBefore: endDate });
+                }}
+              />
+              <AssigneeFilter
+                selectedAssignees={filterValues.assignee}
+                onChange={(assignees) => updateFilter({ assignee: assignees })}
+              />
+              <ResponderFilter
+                selectedResponders={filterValues.repliedBy}
+                onChange={(responders) => updateFilter({ repliedBy: responders })}
+              />
+              <CustomerFilter
+                selectedCustomers={filterValues.customer}
+                onChange={(customers) => updateFilter({ customer: customers })}
+              />
+              <VipFilter
+                isVip={filterValues.isVip}
+                onChange={(isVip) => updateFilter({ isVip })}
+              />
+              <ReactionFilter
+                reactionType={filterValues.reactionType ?? null}
+                onChange={(reactionType) => updateFilter({ reactionType: reactionType ?? undefined })}
+              />
+              <EventFilter
+                selectedEvents={filterValues.events}
+                onChange={(events) => updateFilter({ events })}
+              />
+              <PromptFilter
+                isPrompt={filterValues.isPrompt}
+                onChange={(isPrompt) => updateFilter({ isPrompt })}
+              />
+            </div>
+          )}
         </div>
       </div>
-      {showFilters && (
-        <div className="px-4 py-2 border-b border-border shrink-0">
-          <div className="flex flex-wrap gap-2">
-            <DateFilter
-              initialStartDate={filterValues.createdAfter}
-              initialEndDate={filterValues.createdBefore}
-              onSelect={(startDate, endDate) => {
-                updateFilter({ createdAfter: startDate, createdBefore: endDate });
-              }}
-            />
-            <AssigneeFilter
-              selectedAssignees={filterValues.assignee}
-              onChange={(assignees) => updateFilter({ assignee: assignees })}
-            />
-            <ResponderFilter
-              selectedResponders={filterValues.repliedBy}
-              onChange={(responders) => updateFilter({ repliedBy: responders })}
-            />
-            <CustomerFilter
-              selectedCustomers={filterValues.customer}
-              onChange={(customers) => updateFilter({ customer: customers })}
-            />
-            <VipFilter
-              isVip={filterValues.isVip}
-              onChange={(isVip) => updateFilter({ isVip })}
-            />
-            <ReactionFilter
-              reactionType={filterValues.reactionType ?? null}
-              onChange={(reactionType) => updateFilter({ reactionType: reactionType ?? undefined })}
-            />
-            <EventFilter
-              selectedEvents={filterValues.events}
-              onChange={(events) => updateFilter({ events })}
-            />
-            <PromptFilter
-              isPrompt={filterValues.isPrompt}
-              onChange={(isPrompt) => updateFilter({ isPrompt })}
-            />
-          </div>
-        </div>
-      )}
       <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
         {isPending ? (
           <div className="flex h-full items-center justify-center">
@@ -487,7 +519,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         ) : (
           <>
             {conversations.length > 0 && (
-              <div className="flex items-center gap-4 mb-4 px-6 pt-4">
+              <div className="flex items-center gap-4 mb-4 px-3 md:px-6 pt-4">
                 <div className="w-5 flex items-center">
                   <Checkbox
                     checked={allConversationsSelected || selectedConversations.length > 0}
@@ -641,16 +673,17 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
   }
 
   return (
-    <div className="px-2 py-0.5">
+    <div className={cn("px-2 py-0.5", variant === "mobile" && "px-1")}>
       <div
         className={cn(
-          "flex w-full cursor-pointer flex-col gap-2 py-4 rounded-lg transition-colors",
+          "flex w-full cursor-pointer flex-col gap-2 rounded-lg transition-colors",
+          variant === "mobile" ? "py-3" : "py-4",
           isActive
             ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
             : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
         )}
       >
-        <div className="flex items-start gap-4 px-4">
+        <div className={cn("flex items-start gap-4", variant === "mobile" ? "px-2" : "px-4")}>
           <div className="w-5 flex items-center">
             <Checkbox
               checked={isSelected}
@@ -671,22 +704,48 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
             }}
             style={{ overflowAnchor: "none" }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-muted-foreground">{conversation.emailFrom ?? "Anonymous"}</p>
-                <p className="text-base font-medium text-foreground mb-2" dangerouslySetInnerHTML={{ __html: highlightedSubject }} />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <p className={cn("text-muted-foreground truncate", variant === "mobile" ? "text-xs" : "text-sm")}>
+                  {conversation.emailFrom ?? "Anonymous"}
+                </p>
+                <div className="flex items-center gap-3 shrink-0">
+                  {(conversation.assignedToId || conversation.assignedToAI) && (
+                    <AssignedToLabel
+                      className={cn("flex items-center gap-1 text-gray-500 dark:text-gray-400", variant === "mobile" ? "text-[10px]" : "text-xs")}
+                      assignedToId={conversation.assignedToId}
+                      assignedToAI={conversation.assignedToAI}
+                    />
+                  )}
+                  <div className={cn("text-gray-500 dark:text-gray-400", variant === "mobile" ? "text-[10px]" : "text-xs")}>
+                    {conversation.status === "closed" ? (
+                      <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
+                    ) : (
+                      <HumanizedTime
+                        time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
+                        titlePrefix="Last email received on"
+                      />
+                    )}
+                  </div>
+                  {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className={cn("font-medium text-foreground", variant === "mobile" ? "text-sm" : "text-base")} 
+                   dangerouslySetInnerHTML={{ __html: highlightedSubject }} />
                 {searchTerms.length > 0 && highlightedBody && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: highlightedBody }} />
+                  <p className={cn("text-muted-foreground line-clamp-2 whitespace-pre-wrap", variant === "mobile" ? "text-xs" : "text-sm")} 
+                     dangerouslySetInnerHTML={{ __html: highlightedBody }} />
                 )}
                 <div className="flex items-center gap-2">
                   {conversation.status === "open" ? (
-                    <Badge variant="success-light" className="gap-1.5 dark:bg-success dark:text-success-foreground">
+                    <Badge variant="success-light" className={cn("gap-1.5 dark:bg-success dark:text-success-foreground", variant === "mobile" && "text-xs")}>
                       <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
                       Open
                     </Badge>
                   ) : (
                     conversation.status === "closed" && (
-                      <Badge variant="gray" className="gap-1.5">
+                      <Badge variant="gray" className={cn("gap-1.5", variant === "mobile" && "text-xs")}>
                         <Check className="h-3 w-3" />
                         Closed
                       </Badge>
@@ -697,7 +756,7 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Badge variant="bright" className="gap-1">
+                            <Badge variant="bright" className={cn("gap-1", variant === "mobile" && "text-xs")}>
                               {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                             </Badge>
                           </TooltipTrigger>
@@ -705,31 +764,11 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
                         </Tooltip>
                       </TooltipProvider>
                     ) : (
-                      <Badge variant="gray" className="gap-1">
+                      <Badge variant="gray" className={cn("gap-1", variant === "mobile" && "text-xs")}>
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}
                 </div>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                {(conversation.assignedToId || conversation.assignedToAI) && (
-                  <AssignedToLabel
-                    className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
-                    assignedToId={conversation.assignedToId}
-                    assignedToAI={conversation.assignedToAI}
-                  />
-                )}
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {conversation.status === "closed" ? (
-                    <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
-                  ) : (
-                    <HumanizedTime
-                      time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
-                      titlePrefix="Last email received on"
-                    />
-                  )}
-                </div>
-                {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
               </div>
             </div>
           </a>
