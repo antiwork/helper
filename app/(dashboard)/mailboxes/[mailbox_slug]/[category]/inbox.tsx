@@ -25,7 +25,7 @@ import { api } from "@/trpc/react";
 const CATEGORY_LABELS = {
   all: "All",
   mine: "Mine",
-  others: "Others",
+  assigned: "Assigned",
   "up-for-grabs": "Up for grabs",
 } as const;
 

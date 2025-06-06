@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, CheckCircle, Inbox, Search, Settings, User, Users, UserMinus, Grab, List, ChevronDown } from "lucide-react";
+import { BarChart, CheckCircle, Inbox, Settings, User, Users, UserMinus, Ticket, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
@@ -45,18 +45,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
 
   const navItems = [
     {
-      label: "Inbox",
-      icon: Inbox,
-      href: `/mailboxes/${mailboxSlug}/conversations`,
-      active: !pathname.includes("/search") && !pathname.includes("/dashboard") && !pathname.endsWith("/settings"),
-    },
-    {
-      label: "Search",
-      icon: Search,
-      href: `/mailboxes/${mailboxSlug}/search`,
-      active: pathname.includes("/search"),
-    },
-    {
       label: "Dashboard",
       icon: BarChart,
       href: `/mailboxes/${mailboxSlug}/dashboard`,
@@ -79,22 +67,22 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
       count: openCounts?.mine,
     },
     {
-      label: "Others",
+      label: "Assigned",
       icon: Users,
-      href: `/mailboxes/${mailboxSlug}/others`,
-      active: pathname.includes("/others"),
+      href: `/mailboxes/${mailboxSlug}/assigned`,
+      active: pathname.includes("/assigned"),
       count: openCounts?.assigned,
     },
     {
       label: "Up for grabs",
-      icon: Grab,
+      icon: Ticket,
       href: `/mailboxes/${mailboxSlug}/up-for-grabs`,
       active: pathname.includes("/up-for-grabs"),
       count: openCounts?.unassigned,
     },
     {
       label: "All",
-      icon: List,
+      icon: Inbox,
       href: `/mailboxes/${mailboxSlug}/all`,
       active: pathname.includes("/all"),
       count: openCounts?.conversations,
@@ -116,7 +104,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start" className="min-w-[180px]">
+          <DropdownMenuContent side="bottom" align="start" className="min-w-[180px]">
             {mailboxes?.map((mailbox) => (
               <DropdownMenuItem
                 key={mailbox.slug}
@@ -159,12 +147,12 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/others`}
-                  tooltip="Others"
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}
+                  tooltip="Assigned"
                 >
-                  <Link href={`/mailboxes/${mailboxSlug}/others`}>
+                  <Link href={`/mailboxes/${mailboxSlug}/assigned`}>
                     <Users className="size-4" />
-                    <span>Others</span>
+                    <span>Assigned</span>
                   </Link>
                 </SidebarMenuButton>
                 {openCounts && openCounts.assigned > 0 && (
@@ -178,7 +166,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   tooltip="Up for grabs"
                 >
                   <Link href={`/mailboxes/${mailboxSlug}/up-for-grabs`}>
-                    <Grab className="size-4" />
+                    <Ticket className="size-4" />
                     <span>Up for grabs</span>
                   </Link>
                 </SidebarMenuButton>
@@ -193,7 +181,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   tooltip="All"
                 >
                   <Link href={`/mailboxes/${mailboxSlug}/all`}>
-                    <List className="size-4" />
+                    <Inbox className="size-4" />
                     <span>All</span>
                   </Link>
                 </SidebarMenuButton>
@@ -207,30 +195,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
         <div className="mt-auto">
           <SidebarGroup>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}`}
-                  tooltip="Inbox"
-                >
-                  <Link href={`/mailboxes/${mailboxSlug}`}>
-                    <Inbox className="size-4" />
-                    <span>Inbox</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/search`}
-                  tooltip="Search"
-                >
-                  <Link href={`/mailboxes/${mailboxSlug}/search`}>
-                    <Search className="size-4" />
-                    <span>Search</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild

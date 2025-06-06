@@ -149,6 +149,19 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     },
   });
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filterValues.assignee.length > 0) count++;
+    if (filterValues.createdAfter || filterValues.createdBefore) count++;
+    if (filterValues.repliedBy.length > 0) count++;
+    if (filterValues.customer.length > 0) count++;
+    if (filterValues.isVip !== undefined) count++;
+    if (filterValues.isPrompt !== undefined) count++;
+    if (filterValues.reactionType !== undefined) count++;
+    if (filterValues.events.length > 0) count++;
+    return count;
+  }, [filterValues]);
+
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
     searchInputRef.current?.focus();
@@ -322,13 +335,57 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   });
 
   const searchBar = (
-    <SearchBar
-      statusOptions={statusOptions}
-      sortOptions={sortOptions}
-      onStatusChange={handleStatusFilterChange}
-      onSortChange={handleSortChange}
-      variant={variant}
-    />
+    <div className="flex items-center justify-between gap-2 py-1">
+      <div className="flex items-center gap-2">
+        {statusOptions.length > 1 ? (
+          <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleStatusFilterChange}>
+            <SelectTrigger
+              variant="bare"
+              className="text-foreground [&>svg]:text-foreground text-sm"
+            >
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : statusOptions[0] ? (
+          <div className="text-sm text-foreground">
+            {statusOptions[0].label}
+          </div>
+        ) : null}
+      </div>
+      <div className="flex-1 max-w-[400px] mx-4">
+        <Input
+          ref={searchInputRef}
+          placeholder="Search conversations"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="h-8 text-sm"
+          iconsPrefix={<Search className="h-4 w-4 text-foreground" />}
+          autoFocus
+        />
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => setShowFilters(!showFilters)}
+        className={cn(
+          "h-8 w-auto px-2",
+          showFilters && "bg-bright text-bright-foreground hover:bg-bright/90"
+        )}
+      >
+        <Filter className="h-4 w-4" />
+        {activeFilterCount > 0 && (
+          <span className="text-xs ml-1">({activeFilterCount})</span>
+        )}
+      </Button>
+    </div>
   );
 
   const toggleAllConversations = () => {
@@ -380,96 +437,11 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     }
   };
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filterValues.assignee.length > 0) count++;
-    if (filterValues.createdAfter || filterValues.createdBefore) count++;
-    if (filterValues.repliedBy.length > 0) count++;
-    if (filterValues.customer.length > 0) count++;
-    if (filterValues.isVip !== undefined) count++;
-    if (filterValues.isPrompt !== undefined) count++;
-    if (filterValues.reactionType !== undefined) count++;
-    if (filterValues.events.length > 0) count++;
-    return count;
-  }, [filterValues]);
-
   return (
     <div className="flex flex-col w-full h-full">
       <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
         <div className="flex flex-col gap-2 md:gap-4">
-          <div className="flex items-center gap-1 md:gap-2">
-            <div className="flex items-center gap-1 md:gap-2 shrink-0">
-              {statusOptions.length > 1 ? (
-                <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleStatusFilterChange}>
-                  <SelectTrigger
-                    variant="bare"
-                    className="text-foreground [&>svg]:text-foreground text-sm md:text-base"
-                  >
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="">
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : statusOptions[0] ? (
-                <div className="text-xs md:text-sm text-foreground">
-                  {statusOptions[0].label}
-                </div>
-              ) : null}
-            </div>
-            <div className="relative w-full flex justify-center">
-              <div className="relative w-full max-w-2xl">
-                <div className="flex w-full gap-1">
-                  <Input
-                    ref={searchInputRef}
-                    placeholder="Search conversations"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="flex-1 rounded-md h-8 md:h-10 text-sm md:text-base"
-                    iconsPrefix={<Search className="h-4 w-4 md:h-5 md:w-5 text-foreground" />}
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className={cn(
-                      "flex items-center justify-center px-2 md:px-3 rounded-md border h-8 md:h-10 transition",
-                      showFilters
-                        ? "bg-bright text-bright-foreground"
-                        : "bg-background text-foreground hover:bg-amber-50 dark:hover:bg-white/10"
-                    )}
-                    aria-label="Toggle filters"
-                  >
-                    <Filter className="h-4 w-4 md:h-5 md:w-5" />
-                    {activeFilterCount > 0 && (
-                      <span className="text-[10px] md:text-xs ml-0.5 md:ml-1">({activeFilterCount})</span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 md:gap-2 shrink-0">
-              <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
-                <SelectTrigger
-                  variant="bare"
-                  className="text-foreground [&>svg]:text-foreground text-sm md:text-base"
-                >
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {searchBar}
           {showFilters && (
             <div className="flex flex-wrap gap-1 md:gap-2">
               <DateFilter
@@ -513,53 +485,74 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
       </div>
       <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
         {isPending ? (
-          <div className="flex h-full items-center justify-center">
+          <div className="flex h-[calc(100vh-200px)] items-center justify-center">
             <LoadingSpinner size="lg" />
           </div>
         ) : (
           <>
             {conversations.length > 0 && (
-              <div className="flex items-center gap-4 mb-4 px-3 md:px-6 pt-4">
-                <div className="w-5 flex items-center">
-                  <Checkbox
-                    checked={allConversationsSelected || selectedConversations.length > 0}
-                    onCheckedChange={toggleAllConversations}
-                    id="select-all"
-                  />
-                </div>
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
-                        {allConversationsSelected
-                          ? "All conversations selected"
-                          : selectedConversations.length > 0
-                            ? `${selectedConversations.length} selected`
-                            : `${conversations.length} conversations`}
-                      </label>
-                    </TooltipTrigger>
-                  </Tooltip>
-                </TooltipProvider>
-                {(allConversationsSelected || selectedConversations.length > 0) && (
-                  <div className="flex items-center">
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("closed")}
-                      disabled={isBulkUpdating}
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("spam")}
-                      disabled={isBulkUpdating}
-                    >
-                      Mark as spam
-                    </Button>
+              <div className="flex items-center justify-between gap-4 mb-4 px-3 md:px-6 pt-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-5 flex items-center">
+                    <Checkbox
+                      checked={allConversationsSelected || selectedConversations.length > 0}
+                      onCheckedChange={toggleAllConversations}
+                      id="select-all"
+                    />
                   </div>
-                )}
+                  <div className="flex items-center gap-4">
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
+                            {allConversationsSelected
+                              ? "All conversations selected"
+                              : selectedConversations.length > 0
+                                ? `${selectedConversations.length} selected`
+                                : `${conversations.length} conversations`}
+                          </label>
+                        </TooltipTrigger>
+                      </Tooltip>
+                    </TooltipProvider>
+                    {(allConversationsSelected || selectedConversations.length > 0) && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="link"
+                          className="h-auto"
+                          onClick={() => handleBulkUpdate("closed")}
+                          disabled={isBulkUpdating}
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          variant="link"
+                          className="h-auto"
+                          onClick={() => handleBulkUpdate("spam")}
+                          disabled={isBulkUpdating}
+                        >
+                          Mark as spam
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
+                    <SelectTrigger
+                      variant="bare"
+                      className="text-foreground [&>svg]:text-foreground text-sm"
+                    >
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
             {conversations.map((conversation) => (
@@ -591,9 +584,9 @@ function useFilterHandlers() {
       setId(null);
 
       if (status === "open") {
-        setSearchParams({ status: null, sort: null });
+        setSearchParams({ status: null });
       } else {
-        setSearchParams({ status, sort: "newest" });
+        setSearchParams({ status });
       }
     },
     [searchParams, setId, setSearchParams],

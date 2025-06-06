@@ -8,13 +8,15 @@ import { useIsMobile } from "@/components/hooks/use-mobile";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "./ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 type PageHeaderProps = {
   title: string;
   children?: React.ReactNode;
+  variant?: "default" | "mahogany";
 };
 
-export function PageHeader({ title, children }: PageHeaderProps) {
+export function PageHeader({ title, children, variant = "default" }: PageHeaderProps) {
   const params = useParams<{ mailbox_slug: string }>();
   const pathname = usePathname();
   const mailboxSlug = params.mailbox_slug;
@@ -23,7 +25,10 @@ export function PageHeader({ title, children }: PageHeaderProps) {
   const { setOpenMobile } = useSidebar();
 
   return (
-    <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border px-4">
+    <div className={cn(
+      "flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4",
+      variant === "mahogany" ? "bg-sidebar text-sidebar-foreground border-sidebar" : "border-border"
+    )}>
       <div className="flex items-center gap-4">
         <h1 className="text-lg">{title}</h1>
       </div>

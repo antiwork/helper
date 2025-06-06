@@ -42,7 +42,7 @@ export function AccountDropdown() {
           <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="right" align="end" className="w-(--radix-popper-anchor-width)">
+      <DropdownMenuContent side="top" align="end" className="w-(--radix-popper-anchor-width)">
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();

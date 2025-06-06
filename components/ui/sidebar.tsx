@@ -92,11 +92,12 @@ const SidebarRail = React.forwardRef<
       title="Toggle Sidebar"
       className={cn(
         "group relative flex items-center justify-center bg-sidebar",
-        "absolute inset-y-0 z-50 w-2 transition-all ease-linear",
+        "absolute inset-y-0 z-50 w-1 transition-all ease-linear",
         "group-data-[side=left]:right-0 group-data-[side=right]:left-0",
         "group-data-[side=left]:cursor-w-resize group-data-[side=right]:cursor-e-resize",
         "group-data-[state=collapsed]:group-data-[side=left]:cursor-e-resize group-data-[state=collapsed]:group-data-[side=right]:cursor-w-resize",
-        "hover:border-r-4 hover:border-r-sidebar-border",
+        "border-r border-r-sidebar-border/50",
+        "hover:w-2 hover:border-r-4 hover:border-r-sidebar-border",
         className
       )}
       {...props}

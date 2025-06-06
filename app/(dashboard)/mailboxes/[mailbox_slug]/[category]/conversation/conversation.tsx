@@ -49,6 +49,7 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import ConversationSidebar from "./conversationSidebar";
 import { MessageActions } from "./messageActions";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
   messages: ((Message | Note | ConversationEvent) & { isNew?: boolean })[];
@@ -236,7 +237,7 @@ const ConversationHeader = ({
         size="sm"
         iconOnly
         onClick={minimize}
-        className="text-muted-foreground hover:text-foreground"
+        className="text-primary hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </Button>
@@ -562,9 +563,11 @@ const ConversationContent = () => {
 };
 
 const Conversation = () => (
-  <ConversationContextProvider>
-    <ConversationContent />
-  </ConversationContextProvider>
+  <SidebarProvider>
+    <ConversationContextProvider>
+      <ConversationContent />
+    </ConversationContextProvider>
+  </SidebarProvider>
 );
 
 export default Conversation;
