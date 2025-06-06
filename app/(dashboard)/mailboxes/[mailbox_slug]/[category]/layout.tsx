@@ -1,5 +1,4 @@
 import React from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 async function ConversationsLayout({
   params,
@@ -8,13 +7,7 @@ async function ConversationsLayout({
   params: Promise<{ mailbox_slug: string }>;
   children: React.ReactNode;
 }) {
-  const { mailbox_slug } = await params;
-
-  return (
-    <SidebarProvider>
-      {children}
-    </SidebarProvider>
-  );
+  return children;
 }
 
 export default ConversationsLayout;

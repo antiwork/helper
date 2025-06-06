@@ -5,9 +5,7 @@ import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSideba
 import { env } from "@/lib/env";
 import { HelperProvider } from "@/packages/react/dist/cjs";
 import { api } from "@/trpc/server";
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
-import { MobileSidebarButton } from "./MobileSidebarButton";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function InboxLayout({
   children,
@@ -27,7 +25,6 @@ export default async function InboxLayout({
             <div className="flex h-svh w-full">
               <AppSidebar mailboxSlug={mailboxSlug} />
               <main className="flex-1 min-w-0">
-                <MobileSidebarButton />
                 {children}
               </main>
             </div>

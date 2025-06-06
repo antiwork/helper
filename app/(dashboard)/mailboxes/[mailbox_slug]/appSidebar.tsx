@@ -102,7 +102,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   ];
 
   return (
-    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border sticky top-0 h-svh" collapsible="icon">
+    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed top-0 h-svh" collapsible="icon">
       <SidebarHeader>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

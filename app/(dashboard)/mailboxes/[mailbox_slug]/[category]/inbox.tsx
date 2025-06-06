@@ -12,16 +12,24 @@ import {
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
-import { MobileList } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/mobileList";
 import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
-import { CATEGORY_LABELS } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/categoryNav";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
+import { PageHeader } from "@/components/pageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
+
+const CATEGORY_LABELS = {
+  all: "All",
+  mine: "Mine",
+  others: "Others",
+  "up-for-grabs": "Up for grabs",
+} as const;
+
+type Category = keyof typeof CATEGORY_LABELS;
 
 const Conversation = dynamic(() => import("./conversation/conversation"), {
   loading: () => (
@@ -32,7 +40,7 @@ const Conversation = dynamic(() => import("./conversation/conversation"), {
 });
 
 const Inbox = () => {
-  const params = useParams<{ mailbox_slug: string; category: keyof typeof CATEGORY_LABELS }>();
+  const params = useParams<{ mailbox_slug: string; category: Category }>();
   const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const mailboxSlug = params.mailbox_slug;
   const { currentConversationSlug, conversationListData, isPending } = useConversationListContext();
@@ -68,7 +76,8 @@ const Inbox = () => {
       <div className="flex grow overflow-hidden">
         {pageTitle ? <title>{pageTitle}</title> : null}
         <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
-          <MobileList />
+          <PageHeader title={CATEGORY_LABELS[params.category]} />
+          <List variant="mobile" />
         </div>
 
         {currentConversationSlug && (
