@@ -15,6 +15,7 @@ import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { createReply, getLastAiGeneratedDraft, serializeResponseAiDraft } from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
+import { env } from "@/lib/env";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
 import { githubRouter } from "./github";
@@ -34,7 +35,11 @@ export const conversationsRouter = {
     return {
       conversations: results,
       defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
-      hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
+      onboardingState: {
+        hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
+        hasWidgetHost: !!ctx.mailbox.widgetHost,
+        hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
+      },
       assignedToIds: input.assignee ?? null,
       nextCursor,
     };
