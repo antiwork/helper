@@ -4,7 +4,7 @@ import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQu
 export const useConversationsListInput = () => {
   const params = useParams<{
     mailbox_slug: string;
-    category: "conversations" | "assigned" | "unassigned" | "mine";
+    category: "conversations" | "assigned" | "unassigned" | "mine" | "up-for-grabs";
   }>();
   const [searchParams, setSearchParams] = useQueryStates({
     status: parseAsStringEnum(["open", "closed", "spam"] as const),
@@ -25,7 +25,7 @@ export const useConversationsListInput = () => {
     mailboxSlug: params.mailbox_slug,
     status: searchParams.status ? [searchParams.status] : null,
     sort: searchParams.sort,
-    category: params.category,
+    category: params.category === "up-for-grabs" ? "unassigned" : params.category,
     search: searchParams.search ?? null,
     assignee: searchParams.assignee ?? undefined,
     createdAfter: searchParams.createdAfter ?? undefined,
