@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, CheckCircle, Circle } from "lucide-react";
+import { ArrowRight, Check, Circle } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -124,13 +124,13 @@ const Inbox = () => {
                   )}
                 </Link>
                 <Link
-                  href={`/mailboxes/${mailboxSlug}/settings?tab=in-app-chat`}
+                  href="https://helper.ai/docs/integrations#resend"
                   target="_blank"
                   className="border transition-colors hover:border-foreground rounded-lg p-4"
                 >
                   <div className="flex items-center gap-2">
                     {conversationListData?.onboardingState.hasResend ? (
-                      <CheckCircle className="w-5 h-5" />
+                      <Check className="w-5 h-5" />
                     ) : (
                       <Circle className="w-5 h-5" />
                     )}
@@ -145,12 +145,12 @@ const Inbox = () => {
                   )}
                 </Link>
                 <Link
-                  href={`/mailboxes/${mailboxSlug}/settings?tab=integrations`}
+                  href="https://helper.ai/docs/integrations#gmail"
                   className="border transition-colors hover:border-foreground rounded-lg p-4"
                 >
                   <div className="flex items-center gap-2">
                     {conversationListData?.onboardingState.hasGmailSupportEmail ? (
-                      <CheckCircle className="w-5 h-5" />
+                      <Check className="w-5 h-5" />
                     ) : (
                       <Circle className="w-5 h-5" />
                     )}
