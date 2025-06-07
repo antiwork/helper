@@ -1,11 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { redirect } from "next/navigation";
-import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
+import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { env } from "@/lib/env";
 import { HelperProvider } from "@/packages/react/dist/cjs";
 import { api } from "@/trpc/server";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default async function InboxLayout({
   children,
@@ -24,9 +24,7 @@ export default async function InboxLayout({
           <InboxClientLayout>
             <div className="flex h-svh w-full">
               <AppSidebar mailboxSlug={mailboxSlug} />
-              <main className="flex-1 min-w-0">
-                {children}
-              </main>
+              <main className="flex-1 min-w-0">{children}</main>
             </div>
           </InboxClientLayout>
         </SidebarProvider>

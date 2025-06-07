@@ -1,8 +1,9 @@
 "use client";
 
-import { BarChart, CheckCircle, Inbox, Settings, User, Users, UserMinus, Ticket, ChevronDown } from "lucide-react";
+import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, UserMinus, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import React from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,18 +17,17 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarMenuBadge,
-  useSidebar,
   SidebarGroup,
   SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import React from "react";
 
 declare global {
   interface Window {
@@ -90,7 +90,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   ];
 
   return (
-    <Sidebar className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed top-0 h-svh" collapsible="icon">
+    <Sidebar
+      className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed top-0 h-svh"
+      collapsible="icon"
+    >
       <SidebarHeader>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -130,19 +133,13 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/mine`}
-                  tooltip="Mine"
-                >
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`} tooltip="Mine">
                   <Link href={`/mailboxes/${mailboxSlug}/mine`}>
                     <User className="size-4" />
                     <span>Mine</span>
                   </Link>
                 </SidebarMenuButton>
-                {openCounts && openCounts.mine > 0 && (
-                  <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>
-                )}
+                {openCounts && openCounts.mine > 0 && <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -155,9 +152,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     <span>Assigned</span>
                   </Link>
                 </SidebarMenuButton>
-                {openCounts && openCounts.assigned > 0 && (
-                  <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>
-                )}
+                {openCounts && openCounts.assigned > 0 && <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -175,11 +170,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 )}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/all`}
-                  tooltip="All"
-                >
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`} tooltip="All">
                   <Link href={`/mailboxes/${mailboxSlug}/all`}>
                     <Inbox className="size-4" />
                     <span>All</span>
@@ -245,4 +236,3 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
 // const ConversationList = dynamic(() => Promise.resolve(ConversationListContent), {
 //   ssr: false,
 // });
-

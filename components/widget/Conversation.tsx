@@ -1,9 +1,11 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
+import { X } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ReadPageToolConfig } from "@helperai/sdk";
+import { Button } from "@/components/ui/button";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -16,8 +18,6 @@ import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type Props = {
   token: string | null;

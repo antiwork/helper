@@ -1,6 +1,6 @@
 import React from "react";
 
-async function ConversationsLayout({
+function ConversationsLayout({
   params,
   children,
 }: {

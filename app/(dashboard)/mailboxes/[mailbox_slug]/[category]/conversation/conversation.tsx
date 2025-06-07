@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
@@ -49,7 +50,6 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import ConversationSidebar from "./conversationSidebar";
 import { MessageActions } from "./messageActions";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
   messages: ((Message | Note | ConversationEvent) & { isNew?: boolean })[];
@@ -232,13 +232,7 @@ const ConversationHeader = ({
     <div
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
-      <Button
-        variant="ghost"
-        size="sm"
-        iconOnly
-        onClick={minimize}
-        className="text-primary hover:text-foreground"
-      >
+      <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
         <X className="h-4 w-4" />
       </Button>
       <div className="hidden sm:block">

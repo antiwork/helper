@@ -6,9 +6,9 @@ import { useParams, usePathname } from "next/navigation";
 import { AppSidebarOpen } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebarOpen";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "./ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 type PageHeaderProps = {
   title: string;
@@ -25,21 +25,18 @@ export function PageHeader({ title, children, variant = "default" }: PageHeaderP
   const { setOpenMobile } = useSidebar();
 
   return (
-    <div className={cn(
-      "flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4",
-      variant === "mahogany" ? "bg-sidebar text-sidebar-foreground border-sidebar" : "border-border"
-    )}>
+    <div
+      className={cn(
+        "flex h-14 shrink-0 items-center justify-between gap-4 border-b px-4",
+        variant === "mahogany" ? "bg-sidebar text-sidebar-foreground border-sidebar" : "border-border",
+      )}
+    >
       <div className="flex items-center gap-4">
         <h1 className="text-lg">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
         {isMobile && (
-          <button
-            className="md:hidden p-2"
-            onClick={() => setOpenMobile(true)}
-            aria-label="Open sidebar"
-            type="button"
-          >
+          <button className="md:hidden p-2" onClick={() => setOpenMobile(true)} aria-label="Open sidebar" type="button">
             <Menu className="w-6 h-6" />
           </button>
         )}

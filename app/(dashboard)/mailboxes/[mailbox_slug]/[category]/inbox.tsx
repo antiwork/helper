@@ -7,11 +7,11 @@ import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
+import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
 import {
   ConversationListContextProvider,
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
 import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
 import { FileUploadProvider } from "@/components/fileUploadContext";

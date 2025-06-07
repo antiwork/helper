@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getBaseUrl } from "@/components/constants";
 import { Avatar } from "@/components/ui/avatar";
@@ -13,7 +14,6 @@ import {
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronUp } from "lucide-react";
 
 const supabase = createClient();
 

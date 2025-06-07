@@ -1,40 +1,40 @@
 import { capitalize } from "lodash-es";
-import { Bot, DollarSign, Search, Send, User, Check, Star, Filter } from "lucide-react";
+import { Bot, Check, DollarSign, Filter, Search, Send, Star, User } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState, useQueryStates } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem } from "@/app/types/global";
+import { toast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { formatCurrency } from "@/components/utils/currency";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import { useConversationsListInput } from "../shared/queries";
-import { useConversationListContext } from "./conversationListContext";
-import NewConversationModalContent from "./newConversationModal";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Input } from "@/components/ui/input";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { highlightKeywords } from "../../search/highlightKeywords";
 import { AssigneeFilter } from "../../search/assigneeFilter";
 import { CustomerFilter } from "../../search/customerFilter";
 import { DateFilter } from "../../search/dateFilter";
 import { EventFilter } from "../../search/eventFilter";
+import { highlightKeywords } from "../../search/highlightKeywords";
 import { PromptFilter } from "../../search/promptFilter";
 import { ReactionFilter } from "../../search/reactionFilter";
 import { ResponderFilter } from "../../search/responderFilter";
 import { VipFilter } from "../../search/vipFilter";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/hooks/use-toast";
+import { useConversationsListInput } from "../shared/queries";
+import { useConversationListContext } from "./conversationListContext";
+import NewConversationModalContent from "./newConversationModal";
 
 type ListItem = ConversationListItem & { isNew?: boolean };
 
@@ -71,10 +71,7 @@ const SearchBar = ({
         <div className="flex items-center gap-2">
           {statusOptions.length > 1 ? (
             <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onStatusChange}>
-              <SelectTrigger
-                variant="bare"
-                className="text-foreground [&>svg]:text-foreground"
-              >
+              <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -86,17 +83,12 @@ const SearchBar = ({
               </SelectContent>
             </Select>
           ) : statusOptions[0] ? (
-            <div className="text-sm text-foreground">
-              {statusOptions[0].label}
-            </div>
+            <div className="text-sm text-foreground">{statusOptions[0].label}</div>
           ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onSortChange}>
-            <SelectTrigger
-              variant="bare"
-              className="text-foreground [&>svg]:text-foreground"
-            >
+            <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -338,11 +330,11 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     <div className="flex items-center justify-between gap-2 py-1">
       <div className="flex items-center gap-2">
         {statusOptions.length > 1 ? (
-          <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger
-              variant="bare"
-              className="text-foreground [&>svg]:text-foreground text-sm"
-            >
+          <Select
+            value={statusOptions.find(({ selected }) => selected)?.value || ""}
+            onValueChange={handleStatusFilterChange}
+          >
+            <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground text-sm">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -354,9 +346,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
             </SelectContent>
           </Select>
         ) : statusOptions[0] ? (
-          <div className="text-sm text-foreground">
-            {statusOptions[0].label}
-          </div>
+          <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
       </div>
       <div className="flex-1 max-w-[400px] mx-4">
@@ -364,7 +354,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
           ref={searchInputRef}
           placeholder="Search conversations"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="h-8 text-sm"
           iconsPrefix={<Search className="h-4 w-4 text-foreground" />}
           autoFocus
@@ -375,15 +365,10 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         variant="ghost"
         size="sm"
         onClick={() => setShowFilters(!showFilters)}
-        className={cn(
-          "h-8 w-auto px-2",
-          showFilters && "bg-bright text-bright-foreground hover:bg-bright/90"
-        )}
+        className={cn("h-8 w-auto px-2", showFilters && "bg-bright text-bright-foreground hover:bg-bright/90")}
       >
         <Filter className="h-4 w-4" />
-        {activeFilterCount > 0 && (
-          <span className="text-xs ml-1">({activeFilterCount})</span>
-        )}
+        {activeFilterCount > 0 && <span className="text-xs ml-1">({activeFilterCount})</span>}
       </Button>
     </div>
   );
@@ -411,27 +396,28 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     }
   };
 
-  const handleBulkUpdate = async (status: "closed" | "spam") => {
+  const handleBulkUpdate = (status: "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
-      const conversationFilter = allConversationsSelected
-        ? conversations.map((c) => c.id)
-        : selectedConversations;
-      bulkUpdate({ 
-        conversationFilter, 
-        status, 
-        mailboxSlug: input.mailboxSlug 
-      }, {
-        onSuccess: ({ updatedImmediately }) => {
-          setAllConversationsSelected(false);
-          setSelectedConversations([]);
-          void utils.mailbox.conversations.list.invalidate();
-          void utils.mailbox.conversations.count.invalidate();
-          if (!updatedImmediately) {
-            toast({ title: "Starting update, refresh to see status." });
-          }
-        }
-      });
+      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
+      bulkUpdate(
+        {
+          conversationFilter,
+          status,
+          mailboxSlug: input.mailboxSlug,
+        },
+        {
+          onSuccess: ({ updatedImmediately }) => {
+            setAllConversationsSelected(false);
+            setSelectedConversations([]);
+            void utils.mailbox.conversations.list.invalidate();
+            void utils.mailbox.conversations.count.invalidate();
+            if (!updatedImmediately) {
+              toast({ title: "Starting update, refresh to see status." });
+            }
+          },
+        },
+      );
     } finally {
       setIsBulkUpdating(false);
     }
@@ -463,22 +449,13 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
                 selectedCustomers={filterValues.customer}
                 onChange={(customers) => updateFilter({ customer: customers })}
               />
-              <VipFilter
-                isVip={filterValues.isVip}
-                onChange={(isVip) => updateFilter({ isVip })}
-              />
+              <VipFilter isVip={filterValues.isVip} onChange={(isVip) => updateFilter({ isVip })} />
               <ReactionFilter
                 reactionType={filterValues.reactionType ?? null}
                 onChange={(reactionType) => updateFilter({ reactionType })}
               />
-              <EventFilter
-                selectedEvents={filterValues.events}
-                onChange={(events) => updateFilter({ events })}
-              />
-              <PromptFilter
-                isPrompt={filterValues.isPrompt}
-                onChange={(isPrompt) => updateFilter({ isPrompt })}
-              />
+              <EventFilter selectedEvents={filterValues.events} onChange={(events) => updateFilter({ events })} />
+              <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => updateFilter({ isPrompt })} />
             </div>
           )}
         </div>
@@ -537,11 +514,11 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
-                    <SelectTrigger
-                      variant="bare"
-                      className="text-foreground [&>svg]:text-foreground text-sm"
-                    >
+                  <Select
+                    value={sortOptions.find(({ selected }) => selected)?.value || ""}
+                    onValueChange={handleSortChange}
+                  >
+                    <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground text-sm">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -567,7 +544,11 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
               />
             ))}
             <div ref={loadMoreRef} />
-            {isFetchingNextPage && <div className="flex justify-center py-4"><LoadingSpinner size="md" /></div>}
+            {isFetchingNextPage && (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner size="md" />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -640,7 +621,14 @@ const NewConversationModal = () => {
   );
 };
 
-const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSelected, onToggleSelect }: ListItemProps) => {
+const ListItem = ({
+  conversation,
+  isActive,
+  onSelectConversation,
+  variant,
+  isSelected,
+  onToggleSelect,
+}: ListItemProps) => {
   const listItemRef = useRef<HTMLAnchorElement>(null);
   const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
@@ -705,12 +693,17 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (
                     <AssignedToLabel
-                      className={cn("flex items-center gap-1 text-gray-500 dark:text-gray-400", variant === "mobile" ? "text-[10px]" : "text-xs")}
+                      className={cn(
+                        "flex items-center gap-1 text-gray-500 dark:text-gray-400",
+                        variant === "mobile" ? "text-[10px]" : "text-xs",
+                      )}
                       assignedToId={conversation.assignedToId}
                       assignedToAI={conversation.assignedToAI}
                     />
                   )}
-                  <div className={cn("text-gray-500 dark:text-gray-400", variant === "mobile" ? "text-[10px]" : "text-xs")}>
+                  <div
+                    className={cn("text-gray-500 dark:text-gray-400", variant === "mobile" ? "text-[10px]" : "text-xs")}
+                  >
                     {conversation.status === "closed" ? (
                       <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
                     ) : (
@@ -724,15 +717,28 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <p className={cn("font-medium text-foreground", variant === "mobile" ? "text-sm" : "text-base")} 
-                   dangerouslySetInnerHTML={{ __html: highlightedSubject }} />
+                <p
+                  className={cn("font-medium text-foreground", variant === "mobile" ? "text-sm" : "text-base")}
+                  dangerouslySetInnerHTML={{ __html: highlightedSubject }}
+                />
                 {searchTerms.length > 0 && highlightedBody && (
-                  <p className={cn("text-muted-foreground line-clamp-2 whitespace-pre-wrap", variant === "mobile" ? "text-xs" : "text-sm")} 
-                     dangerouslySetInnerHTML={{ __html: highlightedBody }} />
+                  <p
+                    className={cn(
+                      "text-muted-foreground line-clamp-2 whitespace-pre-wrap",
+                      variant === "mobile" ? "text-xs" : "text-sm",
+                    )}
+                    dangerouslySetInnerHTML={{ __html: highlightedBody }}
+                  />
                 )}
                 <div className="flex items-center gap-2">
                   {conversation.status === "open" ? (
-                    <Badge variant="success-light" className={cn("gap-1.5 dark:bg-success dark:text-success-foreground", variant === "mobile" && "text-xs")}>
+                    <Badge
+                      variant="success-light"
+                      className={cn(
+                        "gap-1.5 dark:bg-success dark:text-success-foreground",
+                        variant === "mobile" && "text-xs",
+                      )}
+                    >
                       <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
                       Open
                     </Badge>

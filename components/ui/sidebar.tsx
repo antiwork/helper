@@ -2,16 +2,16 @@
 
 import { Slot } from "@radix-ui/react-slot";
 import { cva, VariantProps } from "class-variance-authority";
+import { PanelLeft } from "lucide-react";
 import * as React from "react";
 import { useIsMobile } from "@/components/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { PanelLeft } from "lucide-react";
 
 type SidebarContext = {
   openMobile: boolean;
@@ -76,34 +76,33 @@ const SidebarProvider = React.forwardRef<HTMLDivElement, React.ComponentProps<"d
 );
 SidebarProvider.displayName = "SidebarProvider";
 
-const SidebarRail = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button">
->(({ className, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar();
+const SidebarRail = React.forwardRef<HTMLButtonElement, React.ComponentProps<"button">>(
+  ({ className, ...props }, ref) => {
+    const { toggleSidebar } = useSidebar();
 
-  return (
-    <button
-      ref={ref}
-      data-sidebar="rail"
-      aria-label="Toggle Sidebar"
-      tabIndex={-1}
-      onClick={toggleSidebar}
-      title="Toggle Sidebar"
-      className={cn(
-        "group relative flex items-center justify-center bg-sidebar",
-        "absolute inset-y-0 z-50 w-1 transition-all ease-linear",
-        "group-data-[side=left]:right-0 group-data-[side=right]:left-0",
-        "group-data-[side=left]:cursor-w-resize group-data-[side=right]:cursor-e-resize",
-        "group-data-[state=collapsed]:group-data-[side=left]:cursor-e-resize group-data-[state=collapsed]:group-data-[side=right]:cursor-w-resize",
-        "border-r border-r-sidebar-border/50",
-        "hover:w-2 hover:border-r-4 hover:border-r-sidebar-border",
-        className
-      )}
-      {...props}
-    />
-  );
-});
+    return (
+      <button
+        ref={ref}
+        data-sidebar="rail"
+        aria-label="Toggle Sidebar"
+        tabIndex={-1}
+        onClick={toggleSidebar}
+        title="Toggle Sidebar"
+        className={cn(
+          "group relative flex items-center justify-center bg-sidebar",
+          "absolute inset-y-0 z-50 w-1 transition-all ease-linear",
+          "group-data-[side=left]:right-0 group-data-[side=right]:left-0",
+          "group-data-[side=left]:cursor-w-resize group-data-[side=right]:cursor-e-resize",
+          "group-data-[state=collapsed]:group-data-[side=left]:cursor-e-resize group-data-[state=collapsed]:group-data-[side=right]:cursor-w-resize",
+          "border-r border-r-sidebar-border/50",
+          "hover:w-2 hover:border-r-4 hover:border-r-sidebar-border",
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
 SidebarRail.displayName = "SidebarRail";
 
 const Sidebar = React.forwardRef<
@@ -119,10 +118,7 @@ const Sidebar = React.forwardRef<
   if (collapsible === "none") {
     return (
       <div
-        className={cn(
-          "flex h-full w-[var(--sidebar-width)] flex-col bg-sidebar text-sidebar-foreground",
-          className
-        )}
+        className={cn("flex h-full w-[var(--sidebar-width)] flex-col bg-sidebar text-sidebar-foreground", className)}
         ref={ref}
         {...props}
       >
@@ -160,7 +156,7 @@ const Sidebar = React.forwardRef<
           "relative transition-[width] duration-200 ease-linear",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
-          open ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-icon)]"
+          open ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-icon)]",
         )}
       />
       <div
@@ -173,7 +169,7 @@ const Sidebar = React.forwardRef<
             ? "p-2"
             : "group-data-[side=left]:border-r group-data-[side=right]:border-l",
           open ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-icon)]",
-          className
+          className,
         )}
         {...props}
       >
@@ -212,11 +208,7 @@ const SidebarHeader = React.forwardRef<HTMLDivElement, React.ComponentProps<"div
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn(
-        "flex flex-col gap-2 p-2",
-        "group-data-[collapsible=icon]:p-1",
-        className
-      )}
+      className={cn("flex flex-col gap-2 p-2", "group-data-[collapsible=icon]:p-1", className)}
       {...props}
     />
   );
@@ -228,11 +220,7 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentProps<"div
     <div
       ref={ref}
       data-sidebar="footer"
-      className={cn(
-        "flex flex-col gap-2 p-2",
-        "group-data-[collapsible=icon]:p-1",
-        className
-      )}
+      className={cn("flex flex-col gap-2 p-2", "group-data-[collapsible=icon]:p-1", className)}
       {...props}
     />
   );
@@ -537,30 +525,29 @@ const SidebarMenuSubButton = React.forwardRef<
 });
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton";
 
-const SidebarTrigger = React.forwardRef<
-  React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar, open } = useSidebar();
+const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.ComponentProps<typeof Button>>(
+  ({ className, onClick, ...props }, ref) => {
+    const { toggleSidebar, open } = useSidebar();
 
-  return (
-    <Button
-      ref={ref}
-      data-sidebar="trigger"
-      variant="ghost"
-      size="sm"
-      className={cn("h-7 w-7", className)}
-      onClick={(event) => {
-        onClick?.(event);
-        toggleSidebar();
-      }}
-      {...props}
-    >
-      <PanelLeft className={cn("h-4 w-4 transition-transform duration-200", !open && "rotate-180")} />
-      <span className="sr-only">Toggle Sidebar</span>
-    </Button>
-  );
-});
+    return (
+      <Button
+        ref={ref}
+        data-sidebar="trigger"
+        variant="ghost"
+        size="sm"
+        className={cn("h-7 w-7", className)}
+        onClick={(event) => {
+          onClick?.(event);
+          toggleSidebar();
+        }}
+        {...props}
+      >
+        <PanelLeft className={cn("h-4 w-4 transition-transform duration-200", !open && "rotate-180")} />
+        <span className="sr-only">Toggle Sidebar</span>
+      </Button>
+    );
+  },
+);
 SidebarTrigger.displayName = "SidebarTrigger";
 
 export {
