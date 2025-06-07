@@ -32,9 +32,6 @@ export const userFactory = {
         widgetHMACSecret: faker.string.uuid(),
         createdAt: faker.date.past(),
         updatedAt: faker.date.recent(),
-        unused_onboardingMetadata: {
-          completed: true,
-        },
         ...mailboxOverrides,
       })
       .returning()

@@ -12,11 +12,8 @@ export const gmailSupportEmails = pgTable(
     email: varchar({ length: 254 }).notNull(),
     expiresAt: timestamp({ withTimezone: true, mode: "date" }),
     historyId: integer(),
-    unused_accessToken: bytea("access_token"),
     accessToken: encryptedField("encrypted_access_token"),
-    unused_refreshToken: bytea("refresh_token"),
     refreshToken: encryptedField("encrypted_refresh_token"),
-    unused_userId: text("clerk_user_id"),
   },
   (table) => [
     index("mailboxes_gmailsupportemail_created_at_321a00f1").on(table.createdAt),
