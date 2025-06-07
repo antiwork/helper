@@ -1,3 +1,3 @@
 {
-  "pages": ["index", "deployment", "development", "widget", "tools", "api"]
+  "pages": ["index", "deployment", "integrations", "development", "widget", "tools", "api"]
 }

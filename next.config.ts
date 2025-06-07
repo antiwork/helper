@@ -1,5 +1,4 @@
 import { withSentryConfig } from "@sentry/nextjs";
-import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 import { env } from "@/lib/env";
 
@@ -141,9 +140,6 @@ let nextConfig: NextConfig = {
     ];
   },
 };
-
-const withMDX = createMDX({ configPath: "./content/source.config.ts" });
-nextConfig = withMDX(nextConfig);
 
 export default process.env.VERCEL_ENV === "production"
   ? withSentryConfig(nextConfig, {
