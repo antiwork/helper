@@ -132,7 +132,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     customer: searchParams.customer ?? [],
     isVip: searchParams.isVip ?? undefined,
     isPrompt: searchParams.isPrompt ?? undefined,
-    reactionType: searchParams.reactionType ?? undefined,
+    reactionType: searchParams.reactionType ?? null,
     events: searchParams.events ?? [],
   });
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
@@ -157,7 +157,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (filterValues.customer.length > 0) count++;
     if (filterValues.isVip !== undefined) count++;
     if (filterValues.isPrompt !== undefined) count++;
-    if (filterValues.reactionType !== undefined) count++;
+    if (filterValues.reactionType !== null) count++;
     if (filterValues.events.length > 0) count++;
     return count;
   }, [filterValues]);
@@ -184,7 +184,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
       customer: searchParams.customer ?? [],
       isVip: searchParams.isVip ?? undefined,
       isPrompt: searchParams.isPrompt ?? undefined,
-      reactionType: searchParams.reactionType ?? undefined,
+      reactionType: searchParams.reactionType ?? null,
       events: searchParams.events ?? [],
     });
   }, [searchParams]);
@@ -469,7 +469,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
               />
               <ReactionFilter
                 reactionType={filterValues.reactionType ?? null}
-                onChange={(reactionType) => updateFilter({ reactionType: reactionType ?? undefined })}
+                onChange={(reactionType) => updateFilter({ reactionType })}
               />
               <EventFilter
                 selectedEvents={filterValues.events}
@@ -666,10 +666,10 @@ const ListItem = ({ conversation, isActive, onSelectConversation, variant, isSel
   }
 
   return (
-    <div className={cn("px-2 py-0.5", variant === "mobile" && "px-1")}>
+    <div className={cn("px-2", variant === "mobile" && "px-1")}>
       <div
         className={cn(
-          "flex w-full cursor-pointer flex-col gap-2 rounded-lg transition-colors",
+          "flex w-full cursor-pointer flex-col  transition-colors border-b border-border",
           variant === "mobile" ? "py-3" : "py-4",
           isActive
             ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
