@@ -1,22 +1,13 @@
 import React from "react";
-import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
-async function ConversationsLayout({
+function ConversationsLayout({
   params,
   children,
 }: {
   params: Promise<{ mailbox_slug: string }>;
   children: React.ReactNode;
 }) {
-  const { mailbox_slug } = await params;
-
-  return (
-    <SidebarProvider>
-      <AppSidebar mailboxSlug={mailbox_slug} />
-      {children}
-    </SidebarProvider>
-  );
+  return children;
 }
 
 export default ConversationsLayout;

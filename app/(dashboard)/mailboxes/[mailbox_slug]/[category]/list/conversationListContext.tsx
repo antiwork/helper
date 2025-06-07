@@ -47,12 +47,6 @@ export const ConversationListContextProvider = ({
   const conversations = useMemo(() => data?.pages.flatMap((page) => page.conversations) ?? [], [data]);
   const lastPage = useMemo(() => data?.pages[data?.pages.length - 1], [data]);
 
-  useEffect(() => {
-    if (!isPending && !currentConversationSlug && conversations[0] && isAboveLg) {
-      setId(conversations[0].slug);
-    }
-  }, [isPending, searchParams]);
-
   const moveToNextConversation = () => {
     if (!conversations.length) return setId(null);
 

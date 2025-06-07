@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
@@ -231,9 +232,9 @@ const ConversationHeader = ({
     <div
       className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
     >
-      <div id="conversation-close" className="sm:hidden">
-        <X aria-label="Minimize conversation" className="text-primary h-5 w-5 cursor-pointer" onClick={minimize} />
-      </div>
+      <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
+        <X className="h-4 w-4" />
+      </Button>
       <div className="hidden sm:block">
         {conversationInfo?.source === "email" ? <Mail className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
       </div>
@@ -556,9 +557,11 @@ const ConversationContent = () => {
 };
 
 const Conversation = () => (
-  <ConversationContextProvider>
-    <ConversationContent />
-  </ConversationContextProvider>
+  <SidebarProvider>
+    <ConversationContextProvider>
+      <ConversationContent />
+    </ConversationContextProvider>
+  </SidebarProvider>
 );
 
 export default Conversation;
