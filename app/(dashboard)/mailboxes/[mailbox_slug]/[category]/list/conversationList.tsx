@@ -23,6 +23,8 @@ import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
+import { useConversationsListInput } from "../shared/queries";
+import { useConversationListContext } from "./conversationListContext";
 import { AssigneeFilter } from "./filters/assigneeFilter";
 import { CustomerFilter } from "./filters/customerFilter";
 import { DateFilter } from "./filters/dateFilter";
@@ -32,8 +34,6 @@ import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
 import { VipFilter } from "./filters/vipFilter";
-import { useConversationsListInput } from "../shared/queries";
-import { useConversationListContext } from "./conversationListContext";
 import NewConversationModalContent from "./newConversationModal";
 
 type ListItem = ConversationListItem & { isNew?: boolean };
