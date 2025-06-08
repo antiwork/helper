@@ -149,7 +149,7 @@ export const ConversationListContextProvider = ({
       conversationListData: lastPage
         ? {
             conversations,
-            hasGmailSupportEmail: lastPage.hasGmailSupportEmail,
+            onboardingState: lastPage.onboardingState,
             defaultSort: lastPage.defaultSort,
             assignedToIds: lastPage.assignedToIds,
             nextCursor: lastPage.nextCursor,
