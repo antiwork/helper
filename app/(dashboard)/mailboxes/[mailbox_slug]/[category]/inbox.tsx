@@ -166,7 +166,7 @@ const Inbox = () => {
                 </Link>
               </div>
             </div>
-          ) : input.status?.[0] === "open" ? (
+          ) : !input.status?.length || input.status?.[0] === "open" ? (
             <div className="flex flex-col items-center">
               <InboxZero className="h-60 w-60 dark:text-bright" />
               <h2 className="font-semibold mb-2">No open tickets</h2>
