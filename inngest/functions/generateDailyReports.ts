@@ -60,6 +60,23 @@ export async function generateMailboxReport(mailboxId: number) {
 
   const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
 
+  const answeredTicketCount = await db
+    .select({ count: sql`count(DISTINCT ${conversations.id})` })
+    .from(conversationMessages)
+    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
+    .where(
+      and(
+        eq(conversations.mailboxId, mailbox.id),
+        eq(conversationMessages.role, "staff"),
+        gt(conversationMessages.createdAt, startTime),
+        lt(conversationMessages.createdAt, endTime),
+        isNull(conversations.mergedIntoId),
+      ),
+    )
+    .then((result) => Number(result[0]?.count || 0));
+
+  const answeredCountMessage = `• Tickets answered: ${answeredTicketCount.toLocaleString()}`;
+
   const openTicketsOverZeroCount = await db
     .select({ count: sql`count(*)` })
     .from(conversations)
@@ -82,6 +99,33 @@ export async function generateMailboxReport(mailboxId: number) {
 
   const openTicketsOverZeroMessage = openTicketsOverZeroCount
     ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}`
+    : null;
+
+  const answeredTicketsOverZeroCount = await db
+    .select({ count: sql`count(DISTINCT ${conversations.id})` })
+    .from(conversationMessages)
+    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
+    .leftJoin(
+      platformCustomers,
+      and(
+        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.emailFrom, platformCustomers.email),
+      ),
+    )
+    .where(
+      and(
+        eq(conversations.mailboxId, mailbox.id),
+        eq(conversationMessages.role, "staff"),
+        gt(conversationMessages.createdAt, startTime),
+        lt(conversationMessages.createdAt, endTime),
+        isNull(conversations.mergedIntoId),
+        gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0),
+      ),
+    )
+    .then((result) => Number(result[0]?.count || 0));
+
+  const answeredTicketsOverZeroMessage = answeredTicketsOverZeroCount
+    ? `• Tickets answered over $0: ${answeredTicketsOverZeroCount.toLocaleString()}`
     : null;
 
   const formatTime = (seconds: number) => {
@@ -145,7 +189,14 @@ export async function generateMailboxReport(mailboxId: number) {
     type: "section",
     text: {
       type: "mrkdwn",
-      text: [openCountMessage, openTicketsOverZeroMessage, avgReplyTimeMessage, vipAvgReplyTimeMessage]
+      text: [
+        openCountMessage,
+        answeredCountMessage,
+        openTicketsOverZeroMessage,
+        answeredTicketsOverZeroMessage,
+        avgReplyTimeMessage,
+        vipAvgReplyTimeMessage,
+      ]
         .filter(Boolean)
         .join("\n"),
     },
@@ -160,7 +211,9 @@ export async function generateMailboxReport(mailboxId: number) {
   return {
     success: true,
     openCountMessage,
+    answeredCountMessage,
     openTicketsOverZeroMessage,
+    answeredTicketsOverZeroMessage,
     avgReplyTimeMessage,
     vipAvgReplyTimeMessage,
   };
