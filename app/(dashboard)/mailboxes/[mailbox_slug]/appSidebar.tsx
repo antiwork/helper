@@ -82,7 +82,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`} tooltip="Mine">
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`}>
                   <Link href={`/mailboxes/${mailboxSlug}/mine`}>
                     <User className="size-4" />
                     <span>Mine</span>
@@ -91,11 +91,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 {openCounts && openCounts.mine > 0 && <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}
-                  tooltip="Assigned"
-                >
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}>
                   <Link href={`/mailboxes/${mailboxSlug}/assigned`}>
                     <Users className="size-4" />
                     <span>Assigned</span>
@@ -104,11 +100,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 {openCounts && openCounts.assigned > 0 && <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/up-for-grabs`}
-                  tooltip="Up for grabs"
-                >
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/up-for-grabs`}>
                   <Link href={`/mailboxes/${mailboxSlug}/up-for-grabs`}>
                     <Ticket className="size-4" />
                     <span>Up for grabs</span>
@@ -119,7 +111,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 )}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`} tooltip="All">
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`}>
                   <Link href={`/mailboxes/${mailboxSlug}/all`}>
                     <Inbox className="size-4" />
                     <span>All</span>
@@ -136,11 +128,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}
-                  tooltip="Dashboard"
-                >
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}>
                   <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
                     <BarChart className="size-4" />
                     <span>Dashboard</span>
@@ -148,11 +136,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/settings`}
-                  tooltip="Settings"
-                >
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/settings`}>
                   <Link href={`/mailboxes/${mailboxSlug}/settings`}>
                     <Settings className="size-4" />
                     <span>Settings</span>

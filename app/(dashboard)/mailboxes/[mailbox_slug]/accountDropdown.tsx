@@ -38,7 +38,7 @@ export function AccountDropdown() {
           aria-label="Account menu"
         >
           <Avatar fallback={getFullName(user)} size="sm" />
-          <span className="truncate text-base group-data-[collapsible=icon]:hidden">{user.email}</span>
+          <span className="truncate text-sm group-data-[collapsible=icon]:hidden">{user.email}</span>
           <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
         </Button>
       </DropdownMenuTrigger>

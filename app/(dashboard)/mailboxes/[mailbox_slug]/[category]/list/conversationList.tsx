@@ -329,7 +329,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
   });
 
   const searchBar = (
-    <div className="flex items-center justify-between gap-2 py-1">
+    <div className="flex items-center justify-between gap-6 py-1">
       <div className="flex items-center gap-2">
         {statusOptions.length > 1 ? (
           <Select
@@ -351,14 +351,14 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
       </div>
-      <div className="flex-1 max-w-[400px] mx-4">
+      <div className="flex-1 max-w-[400px]">
         <Input
           ref={searchInputRef}
           placeholder="Search conversations"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-8 text-sm"
-          iconsPrefix={<Search className="h-4 w-4 text-foreground" />}
+          className="h-10 rounded-full text-sm"
+          iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
           autoFocus
         />
       </div>
@@ -436,7 +436,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         <div className="flex flex-col gap-2 md:gap-4">
           {searchBar}
           {showFilters && (
-            <div className="flex flex-wrap gap-1 md:gap-2">
+            <div className="flex flex-wrap justify-center gap-1 md:gap-2">
               <DateFilter
                 initialStartDate={filterValues.createdAfter}
                 initialEndDate={filterValues.createdBefore}
@@ -467,172 +467,171 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
           )}
         </div>
       </div>
-      <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
-        {isPending ? (
-          <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-            <LoadingSpinner size="lg" />
+      {isPending ? (
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : isOnboarding ? (
+        <div className="mx-auto flex-1 flex flex-col items-center justify-center gap-6 text-muted-foreground">
+          <HandHello className="w-36 h-36 -mb-10" />
+          <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
+          <div className="grid gap-2">
+            <Link
+              href={`/mailboxes/${input.mailboxSlug}/settings?tab=in-app-chat`}
+              className="border transition-colors hover:border-foreground rounded-lg p-4"
+            >
+              <div className="flex items-center gap-2">
+                {conversationListData?.onboardingState.hasWidgetHost ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Circle className="w-5 h-5" />
+                )}
+                <p className={cn(conversationListData?.onboardingState.hasWidgetHost && "line-through")}>
+                  Add the chat widget to your website
+                </p>
+              </div>
+              {!conversationListData?.onboardingState.hasWidgetHost && (
+                <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
+                  Learn how <ArrowRight className="w-4 h-4" />
+                </div>
+              )}
+            </Link>
+            <Link
+              href="https://helper.ai/docs/integrations#resend"
+              target="_blank"
+              className="border transition-colors hover:border-foreground rounded-lg p-4"
+            >
+              <div className="flex items-center gap-2">
+                {conversationListData?.onboardingState.hasResend ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Circle className="w-5 h-5" />
+                )}
+                <p className={cn(conversationListData?.onboardingState.hasResend && "line-through")}>
+                  Set up Resend to send emails from Helper
+                </p>
+              </div>
+              {!conversationListData?.onboardingState.hasResend && (
+                <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
+                  Learn how <ArrowRight className="w-4 h-4" />
+                </div>
+              )}
+            </Link>
+            <Link
+              href="https://helper.ai/docs/integrations#gmail"
+              className="border transition-colors hover:border-foreground rounded-lg p-4"
+            >
+              <div className="flex items-center gap-2">
+                {conversationListData?.onboardingState.hasGmailSupportEmail ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Circle className="w-5 h-5" />
+                )}
+                <p className={cn(conversationListData?.onboardingState.hasGmailSupportEmail && "line-through")}>
+                  Connect Gmail to handle your incoming emails
+                </p>
+              </div>
+              {!conversationListData?.onboardingState.hasGmailSupportEmail && (
+                <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
+                  Learn how <ArrowRight className="w-4 h-4" />
+                </div>
+              )}
+            </Link>
           </div>
-        ) : isOnboarding ? (
-          <div className="mx-auto flex flex-col items-center gap-6 text-muted-foreground">
-            <HandHello className="w-36 h-36 -mb-10" />
-            <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
-            <div className="grid gap-2">
-              <Link
-                href={`/mailboxes/${input.mailboxSlug}/settings?tab=in-app-chat`}
-                className="border transition-colors hover:border-foreground rounded-lg p-4"
-              >
-                <div className="flex items-center gap-2">
-                  {conversationListData?.onboardingState.hasWidgetHost ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5" />
-                  )}
-                  <p className={cn(conversationListData?.onboardingState.hasWidgetHost && "line-through")}>
-                    Add the chat widget to your website
-                  </p>
+        </div>
+      ) : conversations.length === 0 && (!input.status?.length || input.status?.[0] === "open") ? (
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <InboxZero className="h-60 w-60 dark:text-bright" />
+          <h2 className="font-semibold mb-2">No open tickets</h2>
+          <p className="text-sm text-muted-foreground">You're all caught up!</p>
+        </div>
+      ) : (
+        <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
+          {conversations.length > 0 && (
+            <div className="flex items-center justify-between gap-4 mb-4 px-3 md:px-6 pt-4">
+              <div className="flex items-center gap-4">
+                <div className="w-5 flex items-center">
+                  <Checkbox
+                    checked={allConversationsSelected || selectedConversations.length > 0}
+                    onCheckedChange={toggleAllConversations}
+                    id="select-all"
+                  />
                 </div>
-                {!conversationListData?.onboardingState.hasWidgetHost && (
-                  <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                    Learn how <ArrowRight className="w-4 h-4" />
-                  </div>
-                )}
-              </Link>
-              <Link
-                href="https://helper.ai/docs/integrations#resend"
-                target="_blank"
-                className="border transition-colors hover:border-foreground rounded-lg p-4"
-              >
-                <div className="flex items-center gap-2">
-                  {conversationListData?.onboardingState.hasResend ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5" />
+                <div className="flex items-center gap-4">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
+                          {allConversationsSelected
+                            ? "All conversations selected"
+                            : selectedConversations.length > 0
+                              ? `${selectedConversations.length} selected`
+                              : `${conversations.length} conversations`}
+                        </label>
+                      </TooltipTrigger>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {(allConversationsSelected || selectedConversations.length > 0) && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="link"
+                        className="h-auto"
+                        onClick={() => handleBulkUpdate("closed")}
+                        disabled={isBulkUpdating}
+                      >
+                        Close
+                      </Button>
+                      <Button
+                        variant="link"
+                        className="h-auto"
+                        onClick={() => handleBulkUpdate("spam")}
+                        disabled={isBulkUpdating}
+                      >
+                        Mark as spam
+                      </Button>
+                    </div>
                   )}
-                  <p className={cn(conversationListData?.onboardingState.hasResend && "line-through")}>
-                    Set up Resend to send emails from Helper
-                  </p>
                 </div>
-                {!conversationListData?.onboardingState.hasResend && (
-                  <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                    Learn how <ArrowRight className="w-4 h-4" />
-                  </div>
-                )}
-              </Link>
-              <Link
-                href="https://helper.ai/docs/integrations#gmail"
-                className="border transition-colors hover:border-foreground rounded-lg p-4"
-              >
-                <div className="flex items-center gap-2">
-                  {conversationListData?.onboardingState.hasGmailSupportEmail ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5" />
-                  )}
-                  <p className={cn(conversationListData?.onboardingState.hasGmailSupportEmail && "line-through")}>
-                    Connect Gmail to handle your incoming emails
-                  </p>
-                </div>
-                {!conversationListData?.onboardingState.hasGmailSupportEmail && (
-                  <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                    Learn how <ArrowRight className="w-4 h-4" />
-                  </div>
-                )}
-              </Link>
+              </div>
+              <div className="flex items-center gap-4">
+                <Select
+                  value={sortOptions.find(({ selected }) => selected)?.value || ""}
+                  onValueChange={handleSortChange}
+                >
+                  <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground text-sm">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        ) : !input.status?.length || input.status?.[0] === "open" ? (
-          <div className="flex flex-col items-center">
-            <InboxZero className="h-60 w-60 dark:text-bright" />
-            <h2 className="font-semibold mb-2">No open tickets</h2>
-            <p className="text-sm text-muted-foreground">You're all caught up!</p>
-          </div>
-        ) : (
-          <>
-            {conversations.length > 0 && (
-              <div className="flex items-center justify-between gap-4 mb-4 px-3 md:px-6 pt-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-5 flex items-center">
-                    <Checkbox
-                      checked={allConversationsSelected || selectedConversations.length > 0}
-                      onCheckedChange={toggleAllConversations}
-                      id="select-all"
-                    />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
-                            {allConversationsSelected
-                              ? "All conversations selected"
-                              : selectedConversations.length > 0
-                                ? `${selectedConversations.length} selected`
-                                : `${conversations.length} conversations`}
-                          </label>
-                        </TooltipTrigger>
-                      </Tooltip>
-                    </TooltipProvider>
-                    {(allConversationsSelected || selectedConversations.length > 0) && (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="link"
-                          className="h-auto"
-                          onClick={() => handleBulkUpdate("closed")}
-                          disabled={isBulkUpdating}
-                        >
-                          Close
-                        </Button>
-                        <Button
-                          variant="link"
-                          className="h-auto"
-                          onClick={() => handleBulkUpdate("spam")}
-                          disabled={isBulkUpdating}
-                        >
-                          Mark as spam
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Select
-                    value={sortOptions.find(({ selected }) => selected)?.value || ""}
-                    onValueChange={handleSortChange}
-                  >
-                    <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground text-sm">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-            {conversations.map((conversation) => (
-              <ListItem
-                key={conversation.slug}
-                conversation={conversation}
-                isActive={conversationSlug === conversation.slug}
-                onSelectConversation={navigateToConversation}
-                variant={variant}
-                isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-                onToggleSelect={() => toggleConversation(conversation.id)}
-              />
-            ))}
-            <div ref={loadMoreRef} />
-            {isFetchingNextPage && (
-              <div className="flex justify-center py-4">
-                <LoadingSpinner size="md" />
-              </div>
-            )}
-          </>
-        )}
-      </div>
+          )}
+          {conversations.map((conversation) => (
+            <ListItem
+              key={conversation.slug}
+              conversation={conversation}
+              isActive={conversationSlug === conversation.slug}
+              onSelectConversation={navigateToConversation}
+              variant={variant}
+              isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
+              onToggleSelect={() => toggleConversation(conversation.id)}
+            />
+          ))}
+          <div ref={loadMoreRef} />
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="md" />
+            </div>
+          )}
+        </div>
+      )}
+      <NewConversationModal />
     </div>
   );
 };
@@ -683,7 +682,7 @@ const NewConversationModal = () => {
         <Button
           variant="default"
           iconOnly
-          className="rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
+          className="absolute bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
         >
           <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
         </Button>
@@ -775,16 +774,14 @@ const ListItem = ({
                   {(conversation.assignedToId || conversation.assignedToAI) && (
                     <AssignedToLabel
                       className={cn(
-                        "flex items-center gap-1 text-gray-500 dark:text-gray-400",
+                        "flex items-center gap-1 text-muted-foreground",
                         variant === "mobile" ? "text-[10px]" : "text-xs",
                       )}
                       assignedToId={conversation.assignedToId}
                       assignedToAI={conversation.assignedToAI}
                     />
                   )}
-                  <div
-                    className={cn("text-gray-500 dark:text-gray-400", variant === "mobile" ? "text-[10px]" : "text-xs")}
-                  >
+                  <div className={cn("text-muted-foreground", variant === "mobile" ? "text-[10px]" : "text-xs")}>
                     {conversation.status === "closed" ? (
                       <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
                     ) : (

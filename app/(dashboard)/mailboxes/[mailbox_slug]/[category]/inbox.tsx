@@ -88,7 +88,7 @@ const Inbox = () => {
   }
 
   return (
-    <div className={cn("relative flex grow overflow-hidden", isStandalone ? "pt-10" : "")}>
+    <div className={cn("relative h-full flex grow overflow-hidden", isStandalone ? "pt-10" : "")}>
       {pageTitle ? <title>{pageTitle}</title> : null}
       <TabBar />
       {currentConversationSlug ? (
