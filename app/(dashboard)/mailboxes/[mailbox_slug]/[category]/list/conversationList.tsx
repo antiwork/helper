@@ -1,10 +1,12 @@
 import { capitalize } from "lodash-es";
-import { Bot, Check, DollarSign, Filter, Search, Send, Star, User } from "lucide-react";
+import { ArrowRight, Bot, Check, Circle, Filter, Search, Send, User } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState, useQueryStates } from "nuqs";
+import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
+import { HandHello } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/handHello";
+import { InboxZero } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/inboxZero";
 import { ConversationListItem } from "@/app/types/global";
 import { toast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
@@ -423,6 +425,11 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     }
   };
 
+  const isOnboarding =
+    !conversationListData?.onboardingState.hasResend ||
+    !conversationListData?.onboardingState.hasWidgetHost ||
+    !conversationListData?.onboardingState.hasGmailSupportEmail;
+
   return (
     <div className="flex flex-col w-full h-full">
       <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
@@ -464,6 +471,80 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
         {isPending ? (
           <div className="flex h-[calc(100vh-200px)] items-center justify-center">
             <LoadingSpinner size="lg" />
+          </div>
+        ) : isOnboarding ? (
+          <div className="mx-auto flex flex-col items-center gap-6 text-muted-foreground">
+            <HandHello className="w-36 h-36 -mb-10" />
+            <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
+            <div className="grid gap-2">
+              <Link
+                href={`/mailboxes/${input.mailboxSlug}/settings?tab=in-app-chat`}
+                className="border transition-colors hover:border-foreground rounded-lg p-4"
+              >
+                <div className="flex items-center gap-2">
+                  {conversationListData?.onboardingState.hasWidgetHost ? (
+                    <Check className="w-5 h-5" />
+                  ) : (
+                    <Circle className="w-5 h-5" />
+                  )}
+                  <p className={cn(conversationListData?.onboardingState.hasWidgetHost && "line-through")}>
+                    Add the chat widget to your website
+                  </p>
+                </div>
+                {!conversationListData?.onboardingState.hasWidgetHost && (
+                  <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
+                    Learn how <ArrowRight className="w-4 h-4" />
+                  </div>
+                )}
+              </Link>
+              <Link
+                href="https://helper.ai/docs/integrations#resend"
+                target="_blank"
+                className="border transition-colors hover:border-foreground rounded-lg p-4"
+              >
+                <div className="flex items-center gap-2">
+                  {conversationListData?.onboardingState.hasResend ? (
+                    <Check className="w-5 h-5" />
+                  ) : (
+                    <Circle className="w-5 h-5" />
+                  )}
+                  <p className={cn(conversationListData?.onboardingState.hasResend && "line-through")}>
+                    Set up Resend to send emails from Helper
+                  </p>
+                </div>
+                {!conversationListData?.onboardingState.hasResend && (
+                  <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
+                    Learn how <ArrowRight className="w-4 h-4" />
+                  </div>
+                )}
+              </Link>
+              <Link
+                href="https://helper.ai/docs/integrations#gmail"
+                className="border transition-colors hover:border-foreground rounded-lg p-4"
+              >
+                <div className="flex items-center gap-2">
+                  {conversationListData?.onboardingState.hasGmailSupportEmail ? (
+                    <Check className="w-5 h-5" />
+                  ) : (
+                    <Circle className="w-5 h-5" />
+                  )}
+                  <p className={cn(conversationListData?.onboardingState.hasGmailSupportEmail && "line-through")}>
+                    Connect Gmail to handle your incoming emails
+                  </p>
+                </div>
+                {!conversationListData?.onboardingState.hasGmailSupportEmail && (
+                  <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
+                    Learn how <ArrowRight className="w-4 h-4" />
+                  </div>
+                )}
+              </Link>
+            </div>
+          </div>
+        ) : !input.status?.length || input.status?.[0] === "open" ? (
+          <div className="flex flex-col items-center">
+            <InboxZero className="h-60 w-60 dark:text-bright" />
+            <h2 className="font-semibold mb-2">No open tickets</h2>
+            <p className="text-sm text-muted-foreground">You're all caught up!</p>
           </div>
         ) : (
           <>

@@ -40,9 +40,7 @@ export const conversationMessages = pgTable(
     emailFrom: text(),
     emailCc: jsonb().$type<string[]>(),
     emailBcc: jsonb().$type<string[]>(),
-    unused_body: bytea("body"),
     body: encryptedField("encrypted_body"),
-    unused_cleanedUpText: bytea("cleaned_up_text"),
     cleanedUpText: encryptedField("encrypted_cleaned_up_text"),
     role: text().notNull().$type<MessageRole>(),
     userId: text("clerk_user_id"),
@@ -59,11 +57,6 @@ export const conversationMessages = pgTable(
     slackChannel: text(),
     slackMessageTs: text(),
     isPerfect: boolean().notNull(),
-
-    // These columns were replaced by promptInfo; they haven't been dropped
-    // in case we want to migrate the data into promptInfo at some point.
-    unused_docsContext: text("docs_context"),
-    unused_pastRepliesContext: text("past_replies_context"),
 
     isFlaggedAsBad: boolean().notNull(),
     promptInfo: jsonb().$type<{ details?: PromptInfo }>(),
