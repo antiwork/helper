@@ -1,6 +1,6 @@
 import { isNull, relations, sql } from "drizzle-orm";
 import { bigint, boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { bytea, encryptedField } from "@/db/lib/encryptedField";
+import { encryptedField } from "@/db/lib/encryptedField";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CustomerInfo } from "@/types/customerInfo";
 import { withTimestamps } from "../lib/with-timestamps";
@@ -85,6 +85,7 @@ export const conversationMessages = pgTable(
       .on(table.reactionType, table.reactionCreatedAt)
       .where(isNull(table.deletedAt))
       .concurrently(),
+    index("messages_role_created_at_idx").on(table.role, table.createdAt).concurrently(),
   ],
 ).enableRLS();
 

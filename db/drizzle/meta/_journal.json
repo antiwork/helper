@@ -645,6 +645,13 @@
       "when": 1749137548065,
       "tag": "0091_talented_proemial_gods",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1749460037223,
+      "tag": "0092_old_vulcan",
+      "breakpoints": true
     }
   ]
 }
