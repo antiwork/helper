@@ -1,12 +1,9 @@
 import { capitalize } from "lodash-es";
-import { ArrowRight, Bot, Check, Circle, Filter, Search, Send, User } from "lucide-react";
-import Link from "next/link";
+import { Bot, Check, Filter, Search, Send, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
-import { HandHello } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/handHello";
-import { InboxZero } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/inboxZero";
 import { ConversationListItem } from "@/app/types/global";
 import { toast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
@@ -26,16 +23,10 @@ import { generateSlug } from "@/lib/shared/slug";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
+import { ConversationFilters, useConversationFilters } from "./conversationFilters";
 import { useConversationListContext } from "./conversationListContext";
-import { AssigneeFilter } from "./filters/assigneeFilter";
-import { CustomerFilter } from "./filters/customerFilter";
-import { DateFilter } from "./filters/dateFilter";
-import { EventFilter } from "./filters/eventFilter";
+import { NoConversations } from "./emptyState";
 import { highlightKeywords } from "./filters/highlightKeywords";
-import { PromptFilter } from "./filters/promptFilter";
-import { ReactionFilter } from "./filters/reactionFilter";
-import { ResponderFilter } from "./filters/responderFilter";
-import { VipFilter } from "./filters/vipFilter";
 import NewConversationModalContent from "./newConversationModal";
 
 type ListItem = ConversationListItem & { isNew?: boolean };
@@ -118,17 +109,7 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
 
   const [search, setSearch] = useState(searchParams.search || "");
   const [showFilters, setShowFilters] = useState(false);
-  const [filterValues, setFilterValues] = useState({
-    assignee: searchParams.assignee ?? [],
-    createdAfter: searchParams.createdAfter ?? null,
-    createdBefore: searchParams.createdBefore ?? null,
-    repliedBy: searchParams.repliedBy ?? [],
-    customer: searchParams.customer ?? [],
-    isVip: searchParams.isVip ?? undefined,
-    isPrompt: searchParams.isPrompt ?? undefined,
-    reactionType: searchParams.reactionType ?? null,
-    events: searchParams.events ?? [],
-  });
+  const { filterValues, activeFilterCount, updateFilter } = useConversationFilters();
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -143,50 +124,14 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     },
   });
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filterValues.assignee.length > 0) count++;
-    if (filterValues.createdAfter || filterValues.createdBefore) count++;
-    if (filterValues.repliedBy.length > 0) count++;
-    if (filterValues.customer.length > 0) count++;
-    if (filterValues.isVip !== undefined) count++;
-    if (filterValues.isPrompt !== undefined) count++;
-    if (filterValues.reactionType !== null) count++;
-    if (filterValues.events.length > 0) count++;
-    return count;
-  }, [filterValues]);
-
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
     searchInputRef.current?.focus();
   }, 300);
 
-  const debouncedSetFilters = useDebouncedCallback((newFilters: Partial<typeof filterValues>) => {
-    setSearchParams((prev) => ({ ...prev, ...newFilters }));
-  }, 300);
-
   useEffect(() => {
     debouncedSetSearch(search);
   }, [search]);
-
-  useEffect(() => {
-    setFilterValues({
-      assignee: searchParams.assignee ?? [],
-      createdAfter: searchParams.createdAfter ?? null,
-      createdBefore: searchParams.createdBefore ?? null,
-      repliedBy: searchParams.repliedBy ?? [],
-      customer: searchParams.customer ?? [],
-      isVip: searchParams.isVip ?? undefined,
-      isPrompt: searchParams.isPrompt ?? undefined,
-      reactionType: searchParams.reactionType ?? null,
-      events: searchParams.events ?? [],
-    });
-  }, [searchParams]);
-
-  const updateFilter = (updates: Partial<typeof filterValues>) => {
-    setFilterValues((prev) => ({ ...prev, ...updates }));
-    debouncedSetFilters(updates);
-  };
 
   const conversations = conversationListData?.conversations ?? [];
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
@@ -425,126 +370,20 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     }
   };
 
-  const isOnboarding =
-    !conversationListData?.onboardingState.hasResend ||
-    !conversationListData?.onboardingState.hasWidgetHost ||
-    !conversationListData?.onboardingState.hasGmailSupportEmail;
-
   return (
     <div className="flex flex-col w-full h-full">
       <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
         <div className="flex flex-col gap-2 md:gap-4">
           {searchBar}
-          {showFilters && (
-            <div className="flex flex-wrap justify-center gap-1 md:gap-2">
-              <DateFilter
-                initialStartDate={filterValues.createdAfter}
-                initialEndDate={filterValues.createdBefore}
-                onSelect={(startDate, endDate) => {
-                  updateFilter({ createdAfter: startDate, createdBefore: endDate });
-                }}
-              />
-              <AssigneeFilter
-                selectedAssignees={filterValues.assignee}
-                onChange={(assignees) => updateFilter({ assignee: assignees })}
-              />
-              <ResponderFilter
-                selectedResponders={filterValues.repliedBy}
-                onChange={(responders) => updateFilter({ repliedBy: responders })}
-              />
-              <CustomerFilter
-                selectedCustomers={filterValues.customer}
-                onChange={(customers) => updateFilter({ customer: customers })}
-              />
-              <VipFilter isVip={filterValues.isVip} onChange={(isVip) => updateFilter({ isVip })} />
-              <ReactionFilter
-                reactionType={filterValues.reactionType ?? null}
-                onChange={(reactionType) => updateFilter({ reactionType })}
-              />
-              <EventFilter selectedEvents={filterValues.events} onChange={(events) => updateFilter({ events })} />
-              <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => updateFilter({ isPrompt })} />
-            </div>
-          )}
+          {showFilters && <ConversationFilters filterValues={filterValues} onUpdateFilter={updateFilter} />}
         </div>
       </div>
       {isPending ? (
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="lg" />
         </div>
-      ) : isOnboarding ? (
-        <div className="mx-auto flex-1 flex flex-col items-center justify-center gap-6 text-muted-foreground">
-          <HandHello className="w-36 h-36 -mb-10" />
-          <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
-          <div className="grid gap-2">
-            <Link
-              href={`/mailboxes/${input.mailboxSlug}/settings?tab=in-app-chat`}
-              className="border transition-colors hover:border-foreground rounded-lg p-4"
-            >
-              <div className="flex items-center gap-2">
-                {conversationListData?.onboardingState.hasWidgetHost ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <Circle className="w-5 h-5" />
-                )}
-                <p className={cn(conversationListData?.onboardingState.hasWidgetHost && "line-through")}>
-                  Add the chat widget to your website
-                </p>
-              </div>
-              {!conversationListData?.onboardingState.hasWidgetHost && (
-                <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                  Learn how <ArrowRight className="w-4 h-4" />
-                </div>
-              )}
-            </Link>
-            <Link
-              href="https://helper.ai/docs/integrations#resend"
-              target="_blank"
-              className="border transition-colors hover:border-foreground rounded-lg p-4"
-            >
-              <div className="flex items-center gap-2">
-                {conversationListData?.onboardingState.hasResend ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <Circle className="w-5 h-5" />
-                )}
-                <p className={cn(conversationListData?.onboardingState.hasResend && "line-through")}>
-                  Set up Resend to send emails from Helper
-                </p>
-              </div>
-              {!conversationListData?.onboardingState.hasResend && (
-                <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                  Learn how <ArrowRight className="w-4 h-4" />
-                </div>
-              )}
-            </Link>
-            <Link
-              href="https://helper.ai/docs/integrations#gmail"
-              className="border transition-colors hover:border-foreground rounded-lg p-4"
-            >
-              <div className="flex items-center gap-2">
-                {conversationListData?.onboardingState.hasGmailSupportEmail ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <Circle className="w-5 h-5" />
-                )}
-                <p className={cn(conversationListData?.onboardingState.hasGmailSupportEmail && "line-through")}>
-                  Connect Gmail to handle your incoming emails
-                </p>
-              </div>
-              {!conversationListData?.onboardingState.hasGmailSupportEmail && (
-                <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                  Learn how <ArrowRight className="w-4 h-4" />
-                </div>
-              )}
-            </Link>
-          </div>
-        </div>
-      ) : conversations.length === 0 && (!input.status?.length || input.status?.[0] === "open") ? (
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <InboxZero className="h-60 w-60 dark:text-bright" />
-          <h2 className="font-semibold mb-2">No open tickets</h2>
-          <p className="text-sm text-muted-foreground">You're all caught up!</p>
-        </div>
+      ) : conversations.length === 0 ? (
+        <NoConversations />
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
           {conversations.length > 0 && (
