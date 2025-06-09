@@ -1,9 +1,8 @@
 "use client";
 
-import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, UserMinus, Users } from "lucide-react";
+import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,15 +17,12 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
 declare global {
@@ -38,56 +34,9 @@ declare global {
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isMobile } = useSidebar();
   const { data: mailboxes } = api.mailbox.list.useQuery();
   const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
   const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
-
-  const navItems = [
-    {
-      label: "Dashboard",
-      icon: BarChart,
-      href: `/mailboxes/${mailboxSlug}/dashboard`,
-      active: pathname.includes("/dashboard"),
-    },
-    {
-      label: "Settings",
-      icon: Settings,
-      href: `/mailboxes/${mailboxSlug}/settings`,
-      active: pathname.endsWith("/settings"),
-    },
-  ];
-
-  const conversationItems = [
-    {
-      label: "Mine",
-      icon: User,
-      href: `/mailboxes/${mailboxSlug}/mine`,
-      active: pathname.includes("/mine"),
-      count: openCounts?.mine,
-    },
-    {
-      label: "Assigned",
-      icon: Users,
-      href: `/mailboxes/${mailboxSlug}/assigned`,
-      active: pathname.includes("/assigned"),
-      count: openCounts?.assigned,
-    },
-    {
-      label: "Up for grabs",
-      icon: Ticket,
-      href: `/mailboxes/${mailboxSlug}/up-for-grabs`,
-      active: pathname.includes("/up-for-grabs"),
-      count: openCounts?.unassigned,
-    },
-    {
-      label: "All",
-      icon: Inbox,
-      href: `/mailboxes/${mailboxSlug}/all`,
-      active: pathname.includes("/all"),
-      count: openCounts?.conversations,
-    },
-  ];
 
   return (
     <Sidebar

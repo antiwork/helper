@@ -21,7 +21,7 @@ export default async function InboxLayout({
     return (
       <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
         <SidebarProvider>
-          <InboxClientLayout>
+          <InboxClientLayout theme={preferences?.theme}>
             <div className="flex h-svh w-full">
               <AppSidebar mailboxSlug={mailboxSlug} />
               <main className="flex-1 min-w-0">{children}</main>
