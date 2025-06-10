@@ -304,7 +304,8 @@ export const generateAgentResponse = async (
       },
     }),
     searchWebsitePages: tool({
-      description: "Search website pages for information when other tools cannot answer the user's question. Use this as a fallback when the question is about topics not covered by ticket management tools.",
+      description:
+        "Search website pages for information when other tools cannot answer the user's question. Use this as a fallback when the question is about topics not covered by ticket management tools.",
       parameters: z.object({
         query: z.string().describe("The search query to find relevant website pages"),
       }),
@@ -318,11 +319,11 @@ export const generateAgentResponse = async (
           const formattedContent = websitePagesPrompt(websitePages);
           return {
             content: formattedContent,
-            pages: websitePages.map(page => ({
+            pages: websitePages.map((page) => ({
               url: page.url,
               title: page.pageTitle,
-              similarity: page.similarity
-            }))
+              similarity: page.similarity,
+            })),
           };
         } catch (error) {
           captureExceptionAndLog(error);
