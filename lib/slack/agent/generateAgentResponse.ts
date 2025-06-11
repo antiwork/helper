@@ -6,7 +6,6 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
-
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
