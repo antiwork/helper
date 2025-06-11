@@ -14,6 +14,7 @@ import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { createReply } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
+import { findEnabledKnowledgeBankEntries, findSimilarWebsitePages } from "@/lib/data/retrieval";
 import { getMemberStats } from "@/lib/data/stats";
 import { findUserViaSlack } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -301,6 +302,32 @@ export const generateAgentResponse = async (
         return await updateTickets({ status: "spam" }, input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, "mark as spam");
       },
     }),
+    searchKnowledgeBase: tool({
+      description:
+        "Search the knowledge base for information when other tools cannot answer the user's question. Use this as a fallback when the question is about topics not covered by ticket management tools.",
+      parameters: z.object({
+        query: z.string().describe("The search query to find relevant knowledge base articles"),
+      }),
+      execute: async ({ query }) => {
+        showStatus(`Searching knowledge base...`, { toolName: "searchKnowledgeBase", parameters: { query } });
+        try {
+          const [websitePages, knowledgeBank] = await Promise.all([
+            findSimilarWebsitePages(query, mailbox),
+            findEnabledKnowledgeBankEntries(mailbox),
+          ]);
+          if (websitePages.length === 0 && knowledgeBank.length === 0) {
+            return { message: "No relevant website pages found for this query" };
+          }
+          return {
+            websitePages,
+            knowledgeBank: knowledgeBank.map(({ content }) => content),
+          };
+        } catch (error) {
+          captureExceptionAndLog(error);
+          return { error: "Failed to search website pages" };
+        }
+      },
+    }),
   };
 
   if (confirmedReplyText) {
@@ -378,6 +405,10 @@ IMPORTANT GUIDELINES:
 - When listing tickets, display the standardSlackFormat field as is. You may add other information after that if relevant in context.
 - If you will need to reply to a ticket as part of your response and the sendReply tool is not available, use the confirmReplyText tool and *do not do anything else* at this stage.
 - *If you have the sendReply tool, call it!* Then include in your response that the reply has been sent.
+
+CITATIONS:
+- When using website content from the searchKnowledgeBase tool, assign each unique URL an incremental number (inside a pair of parentheses), including whitespaces around the parentheses, and add it as a hyperlink immediately after the text. Use the format \`[(n)](URL)\`.
+- Example: "This information comes from our documentation [(1)](https://example.com/docs)."
 
 If asked to do something inappropriate, harmful, or outside your capabilities, politely decline and suggest focusing on customer support questions instead.`,
     messages,
