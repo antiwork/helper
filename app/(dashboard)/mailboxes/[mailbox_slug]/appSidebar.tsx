@@ -100,8 +100,8 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 {openCounts && openCounts.assigned > 0 && <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/up-for-grabs`}>
-                  <Link href={`/mailboxes/${mailboxSlug}/up-for-grabs`}>
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/unassigned`}>
+                  <Link href={`/mailboxes/${mailboxSlug}/unassigned`}>
                     <Ticket className="size-4" />
                     <span>Up for grabs</span>
                   </Link>

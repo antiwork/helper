@@ -24,7 +24,7 @@ const CATEGORY_LABELS = {
   all: "All",
   mine: "Mine",
   assigned: "Assigned",
-  "up-for-grabs": "Up for grabs",
+  unassigned: "Up for grabs",
 } as const;
 
 type Category = keyof typeof CATEGORY_LABELS;

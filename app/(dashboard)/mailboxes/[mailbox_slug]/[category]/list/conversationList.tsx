@@ -1,5 +1,5 @@
-import { capitalize } from "lodash-es";
-import { Bot, Check, Filter, Search, Send, User } from "lucide-react";
+import { capitalize, escape } from "lodash-es";
+import { Bot, Filter, Search, Send, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -41,61 +41,6 @@ type ListItemProps = {
 
 type StatusOption = "open" | "closed" | "spam";
 type SortOption = "oldest" | "newest" | "highest_value";
-
-const SearchBar = ({
-  statusOptions,
-  sortOptions,
-  onStatusChange,
-  onSortChange,
-  variant,
-}: {
-  statusOptions: { value: StatusOption; label: string; selected: boolean }[];
-  sortOptions: { value: SortOption; label: string; selected: boolean }[];
-  onStatusChange: (status: StatusOption) => void;
-  onSortChange: (sort: SortOption) => void;
-  variant: "desktop" | "mobile";
-}) => {
-  const params = useParams<{ mailbox_slug: string }>();
-
-  return (
-    <div className={cn("border-b", variant === "desktop" ? "border-border" : "border-border")}>
-      <div className="flex items-center justify-between gap-2 pb-1">
-        <div className="flex items-center gap-2">
-          {statusOptions.length > 1 ? (
-            <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onStatusChange}>
-              <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value} className="">
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : statusOptions[0] ? (
-            <div className="text-sm text-foreground">{statusOptions[0].label}</div>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onSortChange}>
-            <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              {sortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export const List = () => {
   const [conversationSlug] = useQueryState("id");
@@ -149,27 +94,33 @@ export const List = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const currentRef = loadMoreRef.current;
-    if (!currentRef || !hasNextPage) return;
+  const toggleAllConversations = () => {
+    if (allConversationsSelected || selectedConversations.length > 0) {
+      setAllConversationsSelected(false);
+      setSelectedConversations([]);
+    } else {
+      setAllConversationsSelected(true);
+      setSelectedConversations([]);
+    }
+  };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: "500px", root: resultsContainerRef.current },
-    );
-
-    observer.observe(currentRef);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const toggleConversation = (id: number) => {
+    if (allConversationsSelected) {
+      setAllConversationsSelected(false);
+      setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
+    } else {
+      setSelectedConversations(
+        selectedConversations.includes(id)
+          ? selectedConversations.filter((selectedId) => selectedId !== id)
+          : [...selectedConversations, id],
+      );
+    }
+  };
 
   const statusOptions = useMemo(() => {
     const statuses = status.flatMap((s) => ({
       value: s.status as StatusOption,
-      label: capitalize(s.status),
+      label: s.count ? `${s.count} ${s.status}` : capitalize(s.status),
       selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
     }));
 
@@ -210,6 +161,127 @@ export const List = () => {
     ],
     [defaultSort, searchParams],
   );
+
+  const searchBar = (
+    <div className="flex items-center justify-between gap-6 py-1">
+      <div className="flex items-center gap-4">
+        {statusOptions.length > 1 ? (
+          <Select
+            value={statusOptions.find(({ selected }) => selected)?.value || ""}
+            onValueChange={handleStatusFilterChange}
+          >
+            <SelectTrigger className="w-auto text-foreground [&>svg]:text-foreground text-sm">
+              <SelectValue placeholder="Select status">
+                <span className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
+                    )}
+                  />
+                  {statusOptions.find(({ selected }) => selected)?.label}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : statusOptions[0] ? (
+          <div className="text-sm text-foreground">{statusOptions[0].label}</div>
+        ) : null}
+        {statusOptions.length > 0 && (
+          <button
+            onClick={toggleAllConversations}
+            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+          >
+            {allConversationsSelected ? "Select none" : "Select all"}
+          </button>
+        )}
+      </div>
+      <div className="flex-1 max-w-[400px] flex items-center gap-2">
+        <Input
+          ref={searchInputRef}
+          placeholder="Search conversations"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 h-10 rounded-full text-sm"
+          iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
+          autoFocus
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowFilters(!showFilters)}
+          className={cn("h-8 w-auto px-2", showFilters && "bg-bright text-bright-foreground hover:bg-bright/90")}
+        >
+          <Filter className="h-4 w-4" />
+          {activeFilterCount > 0 && <span className="text-xs ml-1">({activeFilterCount})</span>}
+        </Button>
+      </div>
+      <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
+        <SelectTrigger variant="bare" className="w-auto text-foreground [&>svg]:text-foreground text-sm">
+          <SelectValue placeholder="Sort by" />
+        </SelectTrigger>
+        <SelectContent>
+          {sortOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const handleBulkUpdate = (status: "closed" | "spam") => {
+    setIsBulkUpdating(true);
+    try {
+      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
+      bulkUpdate(
+        {
+          conversationFilter,
+          status,
+          mailboxSlug: input.mailboxSlug,
+        },
+        {
+          onSuccess: ({ updatedImmediately }) => {
+            setAllConversationsSelected(false);
+            setSelectedConversations([]);
+            void utils.mailbox.conversations.list.invalidate();
+            void utils.mailbox.conversations.count.invalidate();
+            if (!updatedImmediately) {
+              toast({ title: "Starting update, refresh to see status." });
+            }
+          },
+        },
+      );
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    const currentRef = loadMoreRef.current;
+    if (!currentRef || !hasNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "500px", root: resultsContainerRef.current },
+    );
+
+    observer.observe(currentRef);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationListItem;
@@ -272,108 +344,46 @@ export const List = () => {
     });
   });
 
-  const searchBar = (
-    <div className="flex items-center justify-between gap-6 py-1">
-      <div className="flex items-center gap-2">
-        {statusOptions.length > 1 ? (
-          <Select
-            value={statusOptions.find(({ selected }) => selected)?.value || ""}
-            onValueChange={handleStatusFilterChange}
-          >
-            <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground text-sm">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="">
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : statusOptions[0] ? (
-          <div className="text-sm text-foreground">{statusOptions[0].label}</div>
-        ) : null}
-      </div>
-      <div className="flex-1 max-w-[400px]">
-        <Input
-          ref={searchInputRef}
-          placeholder="Search conversations"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-10 rounded-full text-sm"
-          iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
-          autoFocus
-        />
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => setShowFilters(!showFilters)}
-        className={cn("h-8 w-auto px-2", showFilters && "bg-bright text-bright-foreground hover:bg-bright/90")}
-      >
-        <Filter className="h-4 w-4" />
-        {activeFilterCount > 0 && <span className="text-xs ml-1">({activeFilterCount})</span>}
-      </Button>
-    </div>
-  );
-
-  const toggleAllConversations = () => {
-    if (allConversationsSelected || selectedConversations.length > 0) {
-      setAllConversationsSelected(false);
-      setSelectedConversations([]);
-    } else {
-      setAllConversationsSelected(true);
-      setSelectedConversations([]);
-    }
-  };
-
-  const toggleConversation = (id: number) => {
-    if (allConversationsSelected) {
-      setAllConversationsSelected(false);
-      setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
-    } else {
-      setSelectedConversations(
-        selectedConversations.includes(id)
-          ? selectedConversations.filter((selectedId) => selectedId !== id)
-          : [...selectedConversations, id],
-      );
-    }
-  };
-
-  const handleBulkUpdate = (status: "closed" | "spam") => {
-    setIsBulkUpdating(true);
-    try {
-      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
-      bulkUpdate(
-        {
-          conversationFilter,
-          status,
-          mailboxSlug: input.mailboxSlug,
-        },
-        {
-          onSuccess: ({ updatedImmediately }) => {
-            setAllConversationsSelected(false);
-            setSelectedConversations([]);
-            void utils.mailbox.conversations.list.invalidate();
-            void utils.mailbox.conversations.count.invalidate();
-            if (!updatedImmediately) {
-              toast({ title: "Starting update, refresh to see status." });
-            }
-          },
-        },
-      );
-    } finally {
-      setIsBulkUpdating(false);
-    }
-  };
-
   return (
     <div className="flex flex-col w-full h-full">
       <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
         <div className="flex flex-col gap-2 md:gap-4">
           {searchBar}
+          {(allConversationsSelected || selectedConversations.length > 0) && (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
+                        {allConversationsSelected
+                          ? "All conversations selected"
+                          : `${selectedConversations.length} selected`}
+                      </label>
+                    </TooltipTrigger>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="link"
+                    className="h-auto"
+                    onClick={() => handleBulkUpdate("closed")}
+                    disabled={isBulkUpdating}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="link"
+                    className="h-auto"
+                    onClick={() => handleBulkUpdate("spam")}
+                    disabled={isBulkUpdating}
+                  >
+                    Mark as spam
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           {showFilters && <ConversationFilters filterValues={filterValues} onUpdateFilter={updateFilter} />}
         </div>
       </div>
@@ -385,71 +395,6 @@ export const List = () => {
         <NoConversations />
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
-          {conversations.length > 0 && (
-            <div className="flex items-center justify-between gap-4 mb-4 px-3 md:px-6 pt-4">
-              <div className="flex items-center gap-4">
-                <div className="w-5 flex items-center">
-                  <Checkbox
-                    checked={allConversationsSelected || selectedConversations.length > 0}
-                    onCheckedChange={toggleAllConversations}
-                    id="select-all"
-                  />
-                </div>
-                <div className="flex items-center gap-4">
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
-                          {allConversationsSelected
-                            ? "All conversations selected"
-                            : selectedConversations.length > 0
-                              ? `${selectedConversations.length} selected`
-                              : `${conversations.length} conversations`}
-                        </label>
-                      </TooltipTrigger>
-                    </Tooltip>
-                  </TooltipProvider>
-                  {(allConversationsSelected || selectedConversations.length > 0) && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="link"
-                        className="h-auto"
-                        onClick={() => handleBulkUpdate("closed")}
-                        disabled={isBulkUpdating}
-                      >
-                        Close
-                      </Button>
-                      <Button
-                        variant="link"
-                        className="h-auto"
-                        onClick={() => handleBulkUpdate("spam")}
-                        disabled={isBulkUpdating}
-                      >
-                        Mark as spam
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <Select
-                  value={sortOptions.find(({ selected }) => selected)?.value || ""}
-                  onValueChange={handleSortChange}
-                >
-                  <SelectTrigger variant="bare" className="text-foreground [&>svg]:text-foreground text-sm">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sortOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
           {conversations.map((conversation) => (
             <ListItem
               key={conversation.slug}
@@ -554,12 +499,12 @@ const ListItem = ({ conversation, isActive, onSelectConversation, isSelected, on
     }
   }, [conversation, isActive]);
 
-  let highlightedSubject = conversation.subject;
-  let highlightedBody = conversation.matchedMessageText;
+  let highlightedSubject = escape(conversation.subject);
+  let highlightedBody = escape(conversation.matchedMessageText ?? conversation.recentMessageText ?? "");
   if (searchTerms.length > 0) {
-    highlightedSubject = highlightKeywords(conversation.subject, searchTerms);
+    highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
     if (conversation.matchedMessageText) {
-      highlightedBody = highlightKeywords(conversation.matchedMessageText, searchTerms);
+      highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
   }
 
@@ -596,9 +541,30 @@ const ListItem = ({ conversation, isActive, onSelectConversation, isSelected, on
           >
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-muted-foreground truncate text-xs md:text-sm">
-                  {conversation.emailFrom ?? "Anonymous"}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-muted-foreground truncate text-xs md:text-sm">
+                    {conversation.emailFrom ?? "Anonymous"}
+                  </p>
+                  {conversation.platformCustomer?.value &&
+                    (conversation.platformCustomer.isVip ? (
+                      <TooltipProvider delayDuration={0}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="bright" className="gap-1 text-xs">
+                              {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="text-xs">
+                            VIP
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Badge variant="gray" className="gap-1 text-xs">
+                        {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                      </Badge>
+                    ))}
+                </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (
                     <AssignedToLabel
@@ -625,47 +591,12 @@ const ListItem = ({ conversation, isActive, onSelectConversation, isSelected, on
                   className="font-medium text-foreground text-sm md:text-base"
                   dangerouslySetInnerHTML={{ __html: highlightedSubject }}
                 />
-                {searchTerms.length > 0 && highlightedBody && (
+                {highlightedBody && (
                   <p
-                    className="text-muted-foreground line-clamp-2 whitespace-pre-wrap text-xs md:text-sm"
+                    className="text-muted-foreground truncate max-w-4xl text-xs md:text-sm"
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}
-                <div className="flex items-center gap-2">
-                  {conversation.status === "open" ? (
-                    <Badge
-                      variant="success-light"
-                      className="gap-1.5 dark:bg-success dark:text-success-foreground text-xs"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
-                      Open
-                    </Badge>
-                  ) : (
-                    conversation.status === "closed" && (
-                      <Badge variant="gray" className="gap-1.5 text-xs">
-                        <Check className="h-3 w-3" />
-                        Closed
-                      </Badge>
-                    )
-                  )}
-                  {conversation.platformCustomer?.value &&
-                    (conversation.platformCustomer.isVip ? (
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="bright" className="gap-1 text-xs">
-                              {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">VIP</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <Badge variant="gray" className="gap-1 text-xs">
-                        {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-                      </Badge>
-                    ))}
-                </div>
               </div>
             </div>
           </a>
