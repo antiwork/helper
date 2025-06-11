@@ -6,7 +6,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
-import { websitePagesPrompt } from "@/lib/ai/prompts";
+
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
@@ -316,15 +316,7 @@ export const generateAgentResponse = async (
           if (websitePages.length === 0) {
             return { message: "No relevant website pages found for this query" };
           }
-          const formattedContent = websitePagesPrompt(websitePages);
-          return {
-            content: formattedContent,
-            pages: websitePages.map((page) => ({
-              url: page.url,
-              title: page.pageTitle,
-              similarity: page.similarity,
-            })),
-          };
+          return websitePages;
         } catch (error) {
           captureExceptionAndLog(error);
           return { error: "Failed to search website pages" };
