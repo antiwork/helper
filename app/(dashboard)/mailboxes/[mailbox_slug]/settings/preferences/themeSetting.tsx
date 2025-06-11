@@ -120,13 +120,13 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    handleColorChange("background")({
-                      target: { value: "#2b0808" },
-                    } as React.ChangeEvent<HTMLInputElement>);
+                    const value = "#2b0808";
+                     setTheme(prev => ({ ...prev, background: value }));
+                     debouncedSetWindowTheme({ ...theme, background: value });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
-                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <RotateCcw className="w-4 h-4 text-foreground" />
                 </Button>
               </div>
             </div>
@@ -152,13 +152,13 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    handleColorChange("foreground")({
-                      target: { value: "#ffffff" },
-                    } as React.ChangeEvent<HTMLInputElement>);
+                    const value = "#ffffff";
+                    setTheme(prev => ({ ...prev, foreground: value }));
+                    debouncedSetWindowTheme({ ...theme, foreground: value });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
-                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <RotateCcw className="w-4 h-4 text-foreground" />
                 </Button>
               </div>
             </div>
@@ -184,13 +184,13 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    handleColorChange("primary")({
-                      target: { value: "#ffffff" },
-                    } as React.ChangeEvent<HTMLInputElement>);
+                    const value ='#ffffff'
+                    setTheme(prev => ({ ...prev, primary: value }));
+                    debouncedSetWindowTheme({ ...theme, primary: value });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
-                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <RotateCcw className="w-4 h-4 text-foreground" />
                 </Button>
               </div>
             </div>
@@ -216,13 +216,13 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    handleColorChange("accent")({
-                      target: { value: "#feb61b" },
-                    } as React.ChangeEvent<HTMLInputElement>);
+                    const value = '#feb61b'
+                    setTheme(prev => ({ ...prev, accent: value }));
+                    debouncedSetWindowTheme({ ...theme, accent: value });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
-                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <RotateCcw className="w-4 h-4 text-foreground" />
                 </Button>
               </div>
             </div>
@@ -248,13 +248,13 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    handleColorChange("sidebarBackground")({
-                      target: { value: "#2b0808" },
-                    } as React.ChangeEvent<HTMLInputElement>);
+                    const value = '#2b0808'
+                    setTheme(prev => ({ ...prev, sidebarBackground: value }));
+                    debouncedSetWindowTheme({ ...theme, sidebarBackground: value });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
-                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <RotateCcw className="w-4 h-4 text-foreground" />
                 </Button>
               </div>
             </div>
