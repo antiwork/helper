@@ -121,8 +121,11 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   size="sm"
                   onClick={() => {
                     const value = "#2b0808";
-                     setTheme(prev => ({ ...prev, background: value }));
-                     debouncedSetWindowTheme({ ...theme, background: value });
+                    setTheme(prev => {
+                      const next = { ...prev, background: value };
+                      debouncedSetWindowTheme(next);
+                      return next;
+                    });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
@@ -153,8 +156,11 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   size="sm"
                   onClick={() => {
                     const value = "#ffffff";
-                    setTheme(prev => ({ ...prev, foreground: value }));
-                    debouncedSetWindowTheme({ ...theme, foreground: value });
+                    setTheme(prev => {
+                      const next = { ...prev, foreground: value };
+                      debouncedSetWindowTheme(next);
+                      return next;
+                    });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
@@ -185,8 +191,11 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   size="sm"
                   onClick={() => {
                     const value ='#ffffff'
-                    setTheme(prev => ({ ...prev, primary: value }));
-                    debouncedSetWindowTheme({ ...theme, primary: value });
+                    setTheme(prev =>{
+                      const next = { ...prev, primary: value };
+                      debouncedSetWindowTheme(next);
+                      return next;
+                    });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
@@ -217,8 +226,11 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   size="sm"
                   onClick={() => {
                     const value = '#feb61b'
-                    setTheme(prev => ({ ...prev, accent: value }));
-                    debouncedSetWindowTheme({ ...theme, accent: value });
+                    setTheme(prev => {
+                      const next = { ...prev, accent: value };
+                      debouncedSetWindowTheme(next);
+                      return next;
+                    });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
@@ -249,8 +261,11 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                   size="sm"
                   onClick={() => {
                     const value = '#2b0808'
-                    setTheme(prev => ({ ...prev, sidebarBackground: value }));
-                    debouncedSetWindowTheme({ ...theme, sidebarBackground: value });
+                    setTheme(prev => {
+                      const next = { ...prev, sidebarBackground: value };
+                      debouncedSetWindowTheme(next);
+                      return next;
+                    });
                   }}
                   className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
                 >
