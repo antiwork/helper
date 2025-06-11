@@ -75,7 +75,7 @@ const Inbox = () => {
         {pageTitle ? <title>{pageTitle}</title> : null}
         <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
           <PageHeader title={CATEGORY_LABELS[params.category]} />
-          <List variant="mobile" />
+          <List />
         </div>
 
         {currentConversationSlug && (
@@ -95,7 +95,7 @@ const Inbox = () => {
         <Conversation key={currentConversationSlug} />
       ) : (
         <div className="flex-1 overflow-hidden">
-          <List variant="desktop" />
+          <List />
         </div>
       )}
     </div>

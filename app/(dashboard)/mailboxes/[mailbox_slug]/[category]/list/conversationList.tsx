@@ -35,7 +35,6 @@ type ListItemProps = {
   conversation: ListItem;
   isActive: boolean;
   onSelectConversation: (slug: string) => void;
-  variant: "desktop" | "mobile";
   isSelected: boolean;
   onToggleSelect: () => void;
 };
@@ -98,7 +97,7 @@ const SearchBar = ({
   );
 };
 
-export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
+export const List = () => {
   const [conversationSlug] = useQueryState("id");
   const { searchParams, setSearchParams, input } = useConversationsListInput();
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -457,7 +456,6 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
               conversation={conversation}
               isActive={conversationSlug === conversation.slug}
               onSelectConversation={navigateToConversation}
-              variant={variant}
               isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
               onToggleSelect={() => toggleConversation(conversation.id)}
             />
@@ -540,14 +538,7 @@ const NewConversationModal = () => {
   );
 };
 
-const ListItem = ({
-  conversation,
-  isActive,
-  onSelectConversation,
-  variant,
-  isSelected,
-  onToggleSelect,
-}: ListItemProps) => {
+const ListItem = ({ conversation, isActive, onSelectConversation, isSelected, onToggleSelect }: ListItemProps) => {
   const listItemRef = useRef<HTMLAnchorElement>(null);
   const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
@@ -573,17 +564,16 @@ const ListItem = ({
   }
 
   return (
-    <div className={cn("px-2", variant === "mobile" && "px-1")}>
+    <div className="px-1 md:px-2">
       <div
         className={cn(
-          "flex w-full cursor-pointer flex-col  transition-colors border-b border-border",
-          variant === "mobile" ? "py-3" : "py-4",
+          "flex w-full cursor-pointer flex-col  transition-colors border-b border-border py-3 md:py-4",
           isActive
             ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
             : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
         )}
       >
-        <div className={cn("flex items-start gap-4", variant === "mobile" ? "px-2" : "px-4")}>
+        <div className="flex items-start gap-4 px-2 md:px-4">
           <div className="w-5 flex items-center">
             <Checkbox
               checked={isSelected}
@@ -606,21 +596,18 @@ const ListItem = ({
           >
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-4">
-                <p className={cn("text-muted-foreground truncate", variant === "mobile" ? "text-xs" : "text-sm")}>
+                <p className="text-muted-foreground truncate text-xs md:text-sm">
                   {conversation.emailFrom ?? "Anonymous"}
                 </p>
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (
                     <AssignedToLabel
-                      className={cn(
-                        "flex items-center gap-1 text-muted-foreground",
-                        variant === "mobile" ? "text-[10px]" : "text-xs",
-                      )}
+                      className="flex items-center gap-1 text-muted-foreground text-[10px] md:text-xs"
                       assignedToId={conversation.assignedToId}
                       assignedToAI={conversation.assignedToAI}
                     />
                   )}
-                  <div className={cn("text-muted-foreground", variant === "mobile" ? "text-[10px]" : "text-xs")}>
+                  <div className="text-muted-foreground text-[10px] md:text-xs">
                     {conversation.status === "closed" ? (
                       <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
                     ) : (
@@ -635,15 +622,12 @@ const ListItem = ({
               </div>
               <div className="flex flex-col gap-2">
                 <p
-                  className={cn("font-medium text-foreground", variant === "mobile" ? "text-sm" : "text-base")}
+                  className="font-medium text-foreground text-sm md:text-base"
                   dangerouslySetInnerHTML={{ __html: highlightedSubject }}
                 />
                 {searchTerms.length > 0 && highlightedBody && (
                   <p
-                    className={cn(
-                      "text-muted-foreground line-clamp-2 whitespace-pre-wrap",
-                      variant === "mobile" ? "text-xs" : "text-sm",
-                    )}
+                    className="text-muted-foreground line-clamp-2 whitespace-pre-wrap text-xs md:text-sm"
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}
@@ -651,17 +635,14 @@ const ListItem = ({
                   {conversation.status === "open" ? (
                     <Badge
                       variant="success-light"
-                      className={cn(
-                        "gap-1.5 dark:bg-success dark:text-success-foreground",
-                        variant === "mobile" && "text-xs",
-                      )}
+                      className="gap-1.5 dark:bg-success dark:text-success-foreground text-xs"
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-success dark:bg-white" />
                       Open
                     </Badge>
                   ) : (
                     conversation.status === "closed" && (
-                      <Badge variant="gray" className={cn("gap-1.5", variant === "mobile" && "text-xs")}>
+                      <Badge variant="gray" className="gap-1.5 text-xs">
                         <Check className="h-3 w-3" />
                         Closed
                       </Badge>
@@ -672,7 +653,7 @@ const ListItem = ({
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Badge variant="bright" className={cn("gap-1", variant === "mobile" && "text-xs")}>
+                            <Badge variant="bright" className="gap-1 text-xs">
                               {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                             </Badge>
                           </TooltipTrigger>
@@ -680,7 +661,7 @@ const ListItem = ({
                         </Tooltip>
                       </TooltipProvider>
                     ) : (
-                      <Badge variant="gray" className={cn("gap-1", variant === "mobile" && "text-xs")}>
+                      <Badge variant="gray" className="gap-1 text-xs">
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}
