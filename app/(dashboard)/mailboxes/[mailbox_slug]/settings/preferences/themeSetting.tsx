@@ -6,11 +6,13 @@ import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/client
 import { toast } from "@/components/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import { RotateCcw } from "lucide-react";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
 export type ThemeUpdates = {
@@ -107,12 +109,26 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                 onChange={handleColorChange("background")}
                 className="h-10 w-20 p-1"
               />
-              <Input
-                type="text"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="w-[200px]"
-              />
+              <div className="relative w-[200px]">
+                <Input
+                  type="text"
+                  value={theme.background}
+                  onChange={handleColorChange("background")}
+                  className="h-10 w-full pr-10 pl-2 py-1 border"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleColorChange("background")({
+                      target: { value: "#2b0808" },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
+                >
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -125,12 +141,26 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                 onChange={handleColorChange("foreground")}
                 className="h-10 w-20 p-1"
               />
-              <Input
-                type="text"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="w-[200px]"
-              />
+              <div className="relative w-[200px]">
+                <Input
+                  type="text"
+                  value={theme.foreground}
+                  onChange={handleColorChange("foreground")}
+                  className="h-10 w-full pr-10 pl-2 py-1 border"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleColorChange("foreground")({
+                      target: { value: "#ffffff" },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
+                >
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -143,7 +173,26 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                 onChange={handleColorChange("primary")}
                 className="h-10 w-20 p-1"
               />
-              <Input type="text" value={theme.primary} onChange={handleColorChange("primary")} className="w-[200px]" />
+              <div className="relative w-[200px]">
+                <Input
+                  type="text"
+                  value={theme.primary} 
+                  onChange={handleColorChange("primary")} 
+                  className="w-[200px]" 
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleColorChange("primary")({
+                      target: { value: "#ffffff" },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
+                >
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -156,7 +205,26 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                 onChange={handleColorChange("accent")}
                 className="h-10 w-20 p-1"
               />
-              <Input type="text" value={theme.accent} onChange={handleColorChange("accent")} className="w-[200px]" />
+              <div className="relative w-[200px]">
+                <Input 
+                  type="text"
+                  value={theme.accent} 
+                  onChange={handleColorChange("accent")} 
+                  className="w-[200px]"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleColorChange("accent")({
+                      target: { value: "#feb61b" },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
+                >
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -169,12 +237,26 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
                 onChange={handleColorChange("sidebarBackground")}
                 className="h-10 w-20 p-1"
               />
-              <Input
-                type="text"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="w-[200px]"
-              />
+              <div className="relative w-[200px]">
+                <Input
+                  type="text"
+                  value={theme.sidebarBackground}
+                  onChange={handleColorChange("sidebarBackground")}
+                  className="w-[200px]"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleColorChange("sidebarBackground")({
+                      target: { value: "#2b0808" },
+                    } as React.ChangeEvent<HTMLInputElement>);
+                  }}
+                  className="absolute top-1/2 right-0 -translate-y-1/2 rounded hover:bg-transparent"
+                >
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
