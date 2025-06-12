@@ -1,11 +1,11 @@
 import FileSaver from "file-saver";
 import {
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   Download,
   Info,
   Link as LinkIcon,
-  Mail,
-  MessageSquare,
   PanelRightClose,
   PanelRightOpen,
   X,
@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
@@ -225,19 +226,34 @@ const ConversationHeader = ({
   setSidebarVisible: (visible: boolean) => void;
 }) => {
   const { mailboxSlug, data: conversationInfo } = useConversationContext();
-  const { minimize } = useConversationListContext();
+  const { minimize, moveToNextConversation, moveToPreviousConversation, currentIndex, currentTotal, hasNextPage } =
+    useConversationListContext();
 
   return (
     <div
-      className={cn("min-w-0 flex items-center gap-2 border-b border-border p-2 pl-4", !conversationInfo && "hidden")}
+      className={cn(
+        "min-w-0 flex items-center gap-1 border-b border-border p-2 pl-4 md:p-3",
+        !conversationInfo && "hidden",
+      )}
     >
-      <div id="conversation-close" className="sm:hidden">
-        <X aria-label="Minimize conversation" className="text-primary h-5 w-5 cursor-pointer" onClick={minimize} />
+      <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
+        <X className="h-4 w-4" />
+      </Button>
+      <Button variant="subtle" size="sm" iconOnly onClick={moveToPreviousConversation}>
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <Button variant="subtle" size="sm" iconOnly onClick={moveToNextConversation}>
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+      <div className="ml-4">
+        <div className="text-xs text-muted-foreground">
+          {currentIndex + 1} of {currentTotal}
+          {hasNextPage ? "+" : ""}
+        </div>
+        <div className="truncate text-sm sm:text-base font-medium">
+          {conversationMetadata.subject ?? "(no subject)"}
+        </div>
       </div>
-      <div className="hidden sm:block">
-        {conversationInfo?.source === "email" ? <Mail className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-      </div>
-      <div className="truncate text-sm sm:text-base">{conversationMetadata.subject ?? "(no subject)"}</div>
       <CopyLinkButton />
       <div className="flex-1" />
       {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
@@ -556,9 +572,11 @@ const ConversationContent = () => {
 };
 
 const Conversation = () => (
-  <ConversationContextProvider>
-    <ConversationContent />
-  </ConversationContextProvider>
+  <SidebarProvider>
+    <ConversationContextProvider>
+      <ConversationContent />
+    </ConversationContextProvider>
+  </SidebarProvider>
 );
 
 export default Conversation;

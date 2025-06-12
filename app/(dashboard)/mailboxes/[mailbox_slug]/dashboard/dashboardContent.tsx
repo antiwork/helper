@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/peopleTable";
 import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/reactionsChart";
+import { useIsMobile } from "@/components/hooks/use-mobile";
+import { PageHeader } from "@/components/pageHeader";
 import { Panel } from "@/components/panel";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
@@ -21,10 +23,12 @@ const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false })
 export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<Date>();
+  const isMobile = useIsMobile();
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto min-h-0">
+        {isMobile && <PageHeader title="Dashboard" variant="mahogany" />}
         <DashboardAlerts mailboxSlug={mailboxSlug} />
 
         <div className="p-4 flex flex-col gap-4 bg-sidebar">

@@ -1,132 +1,103 @@
-import { capitalize } from "lodash-es";
-import { Bot, DollarSign, Search, Send, User } from "lucide-react";
-import Link from "next/link";
+import { Send } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import scrollIntoView from "scroll-into-view-if-needed";
-import { ConversationListItem } from "@/app/types/global";
-import HumanizedTime from "@/components/humanizedTime";
+import { useEffect, useRef, useState } from "react";
+import { ConversationListItem as ConversationItem } from "@/app/types/global";
+import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency } from "@/components/utils/currency";
+import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
-import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
+import { ConversationFilters, useConversationFilters } from "./conversationFilters";
 import { useConversationListContext } from "./conversationListContext";
+import { ConversationListItem } from "./conversationListItem";
+import { ConversationSearchBar } from "./conversationSearchBar";
+import { NoConversations } from "./emptyState";
 import NewConversationModalContent from "./newConversationModal";
 
-type ListItem = ConversationListItem & { isNew?: boolean };
+type ListItem = ConversationItem & { isNew?: boolean };
 
-type ListItemProps = {
-  conversation: ListItem;
-  isActive: boolean;
-  onSelectConversation: (slug: string) => void;
-  variant: "desktop" | "mobile";
-};
-
-type StatusOption = "open" | "closed" | "spam";
-type SortOption = "oldest" | "newest" | "highest_value";
-
-const SearchBar = ({
-  statusOptions,
-  sortOptions,
-  onStatusChange,
-  onSortChange,
-  variant,
-}: {
-  statusOptions: { value: StatusOption; label: string; selected: boolean }[];
-  sortOptions: { value: SortOption; label: string; selected: boolean }[];
-  onStatusChange: (status: StatusOption) => void;
-  onSortChange: (sort: SortOption) => void;
-  variant: "desktop" | "mobile";
-}) => {
-  const params = useParams<{ mailbox_slug: string }>();
-
-  return (
-    <div className={cn("border-b", variant === "desktop" ? "border-sidebar-border" : "border-border")}>
-      <div className="flex items-center justify-between gap-2 px-4 pb-1">
-        <div className="flex items-center gap-2">
-          {statusOptions.length > 1 ? (
-            <Select value={statusOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onStatusChange}>
-              <SelectTrigger
-                variant="bare"
-                className={cn(
-                  "",
-                  variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
-                )}
-              >
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value} className="">
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : statusOptions[0] ? (
-            <div className={cn("text-sm", variant === "desktop" ? "text-white" : "text-foreground")}>
-              {statusOptions[0].label}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={onSortChange}>
-            <SelectTrigger
-              variant="bare"
-              className={cn(
-                variant === "desktop" ? "text-white [&>svg]:text-white" : "text-foreground [&>svg]:text-foreground",
-              )}
-            >
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              {sortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
+export const List = () => {
   const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useConversationListContext();
-  const category =
-    useParams<{ category: "conversations" | "mine" | "assigned" | "unassigned" | undefined }>().category ||
-    "conversations";
+
+  const [showFilters, setShowFilters] = useState(false);
+  const { filterValues, activeFilterCount, updateFilter } = useConversationFilters();
+  const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
+  const [allConversationsSelected, setAllConversationsSelected] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const utils = api.useUtils();
+  const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to update conversations",
+      });
+    },
+  });
 
   const conversations = conversationListData?.conversations ?? [];
-  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
-
-  const status = openCount
-    ? [
-        { status: "open", count: openCount[category] },
-        { status: "closed", count: 0 },
-        { status: "spam", count: 0 },
-      ]
-    : [];
   const defaultSort = conversationListData?.defaultSort;
-
-  const { handleStatusFilterChange, handleSortChange } = useFilterHandlers();
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
+
+  const toggleAllConversations = () => {
+    if (allConversationsSelected || selectedConversations.length > 0) {
+      setAllConversationsSelected(false);
+      setSelectedConversations([]);
+    } else {
+      setAllConversationsSelected(true);
+      setSelectedConversations([]);
+    }
+  };
+
+  const toggleConversation = (id: number) => {
+    if (allConversationsSelected) {
+      setAllConversationsSelected(false);
+      setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
+    } else {
+      setSelectedConversations(
+        selectedConversations.includes(id)
+          ? selectedConversations.filter((selectedId) => selectedId !== id)
+          : [...selectedConversations, id],
+      );
+    }
+  };
+
+  const handleBulkUpdate = (status: "closed" | "spam") => {
+    setIsBulkUpdating(true);
+    try {
+      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
+      bulkUpdate(
+        {
+          conversationFilter,
+          status,
+          mailboxSlug: input.mailboxSlug,
+        },
+        {
+          onSuccess: ({ updatedImmediately }) => {
+            setAllConversationsSelected(false);
+            setSelectedConversations([]);
+            void utils.mailbox.conversations.list.invalidate();
+            void utils.mailbox.conversations.count.invalidate();
+            if (!updatedImmediately) {
+              toast({ title: "Starting update, refresh to see status." });
+            }
+          },
+        },
+      );
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
 
   useEffect(() => {
     const currentRef = loadMoreRef.current;
@@ -145,55 +116,8 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const statusOptions = useMemo(() => {
-    const statuses = status.flatMap((s) => ({
-      value: s.status as StatusOption,
-      label: s.status === "open" ? `${s.count.toLocaleString()} ${capitalize(s.status)}` : capitalize(s.status),
-      selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
-    }));
-
-    if (searchParams.status) {
-      if (!statuses.some((s) => s.value === searchParams.status)) {
-        statuses.push({
-          value: searchParams.status as StatusOption,
-          label:
-            searchParams.status === "open" ? `0 ${capitalize(searchParams.status)}` : capitalize(searchParams.status),
-          selected: true,
-        });
-      }
-    }
-
-    return statuses;
-  }, [status, searchParams]);
-
-  const sortOptions = useMemo(
-    () => [
-      ...(defaultSort === "highest_value"
-        ? [
-            {
-              value: `highest_value` as const,
-              label: `Highest Value`,
-              selected: searchParams.sort ? searchParams.sort == "highest_value" : true,
-            },
-          ]
-        : []),
-      {
-        value: `oldest` as const,
-        label: `Oldest`,
-        selected: searchParams.sort ? searchParams.sort === "oldest" : defaultSort === "oldest",
-      },
-      {
-        value: `newest` as const,
-        label: `Newest`,
-        selected: searchParams.sort == "newest",
-      },
-    ],
-    [defaultSort, searchParams],
-  );
-
-  const utils = api.useUtils();
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
-    const newConversation = message.data as ConversationListItem;
+    const newConversation = message.data as ConversationItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
     const sort = searchParams.sort ?? defaultSort;
     if (!sort) return;
@@ -253,86 +177,86 @@ export const List = ({ variant }: { variant: "desktop" | "mobile" }) => {
     });
   });
 
-  const searchBar = (
-    <SearchBar
-      statusOptions={statusOptions}
-      sortOptions={sortOptions}
-      onStatusChange={handleStatusFilterChange}
-      onSortChange={handleSortChange}
-      variant={variant}
-    />
-  );
-
-  if (!conversationListData)
-    return (
-      <>
-        {searchBar}
-        <LoadingSpinner size="md" className="m-auto" />
-      </>
-    );
-
   return (
-    <>
-      {searchBar}
-      <div className="relative h-full min-h-0 flex flex-col">
-        <div
-          className="flex-1 overflow-y-auto mt-2 md:border-b md:border-sidebar-border h-[calc(100%-50px)]"
-          ref={resultsContainerRef}
-        >
-          <div className="flex w-full flex-col">
-            {conversations.map((conversation, index) => (
-              <ListItem
-                key={index}
-                conversation={conversation}
-                isActive={conversation.slug === conversationSlug}
-                onSelectConversation={() => navigateToConversation(conversation.slug)}
-                variant={variant}
-              />
-            ))}
-            {hasNextPage && (
-              <div ref={loadMoreRef} className="h-8 flex items-center justify-center">
-                {isFetchingNextPage && <LoadingSpinner size="sm" />}
+    <div className="flex flex-col w-full h-full">
+      <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
+        <div className="flex flex-col gap-2 md:gap-4">
+          <ConversationSearchBar
+            toggleAllConversations={toggleAllConversations}
+            allConversationsSelected={allConversationsSelected}
+            activeFilterCount={activeFilterCount}
+            defaultSort={defaultSort}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+          />
+          {(allConversationsSelected || selectedConversations.length > 0) && (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <label htmlFor="select-all" className="text-sm text-muted-foreground flex items-center">
+                        {allConversationsSelected
+                          ? "All conversations selected"
+                          : `${selectedConversations.length} selected`}
+                      </label>
+                    </TooltipTrigger>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="link"
+                    className="h-auto"
+                    onClick={() => handleBulkUpdate("closed")}
+                    disabled={isBulkUpdating}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="link"
+                    className="h-auto"
+                    onClick={() => handleBulkUpdate("spam")}
+                    disabled={isBulkUpdating}
+                  >
+                    Mark as spam
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          {showFilters && <ConversationFilters filterValues={filterValues} onUpdateFilter={updateFilter} />}
         </div>
-        {conversations.length > 0 && (
-          <div className="absolute bottom-4 right-4 z-10 self-end">
-            <NewConversationModal />
-          </div>
-        )}
       </div>
-    </>
+      {isPending ? (
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      ) : conversations.length === 0 ? (
+        <NoConversations />
+      ) : (
+        <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
+          {conversations.map((conversation) => (
+            <ConversationListItem
+              key={conversation.slug}
+              conversation={conversation}
+              isActive={conversationSlug === conversation.slug}
+              onSelectConversation={navigateToConversation}
+              isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
+              onToggleSelect={() => toggleConversation(conversation.id)}
+            />
+          ))}
+          <div ref={loadMoreRef} />
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="md" />
+            </div>
+          )}
+        </div>
+      )}
+      <NewConversationModal />
+    </div>
   );
 };
-
-function useFilterHandlers() {
-  const { searchParams, setSearchParams } = useConversationsListInput();
-  const [, setId] = useQueryState("id");
-
-  const handleStatusFilterChange = useCallback(
-    (status: StatusOption) => {
-      setId(null);
-
-      if (status === "open") {
-        setSearchParams({ status: null, sort: null });
-      } else {
-        setSearchParams({ status, sort: "newest" });
-      }
-    },
-    [searchParams, setId, setSearchParams],
-  );
-
-  const handleSortChange = useCallback(
-    (sort: SortOption) => {
-      setSearchParams({ sort });
-      setId(null);
-    },
-    [setId, setSearchParams],
-  );
-
-  return { handleStatusFilterChange, handleSortChange };
-}
 
 const NewConversationModal = () => {
   const params = useParams<{ mailbox_slug: string }>();
@@ -352,7 +276,7 @@ const NewConversationModal = () => {
         <Button
           variant="default"
           iconOnly
-          className="rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
+          className="absolute bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
         >
           <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
         </Button>
@@ -369,164 +293,4 @@ const NewConversationModal = () => {
       </DialogContent>
     </Dialog>
   );
-};
-
-const ListItem = ({ conversation, isActive, onSelectConversation, variant }: ListItemProps) => {
-  const listItemRef = useRef<HTMLAnchorElement>(null);
-  const { mailboxSlug } = useConversationListContext();
-
-  useEffect(() => {
-    if (isActive && listItemRef.current) {
-      scrollIntoView(listItemRef.current, {
-        block: "nearest",
-        scrollMode: "if-needed",
-        behavior: "smooth",
-      });
-    }
-  }, [conversation, isActive]);
-
-  return (
-    <div className="px-2 py-0.5">
-      <a
-        ref={listItemRef}
-        className={cn(
-          "flex w-full cursor-pointer flex-col gap-0.5 px-2 py-2 rounded-lg transition-colors",
-          variant === "desktop"
-            ? isActive
-              ? "bg-sidebar-accent"
-              : "hover:bg-sidebar-accent"
-            : isActive
-              ? "bg-accent"
-              : "hover:bg-accent/50",
-        )}
-        href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
-        onClick={(e) => {
-          if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-            e.preventDefault();
-            onSelectConversation(conversation.slug);
-          }
-        }}
-        style={{ overflowAnchor: "none" }}
-      >
-        <div className="flex justify-between gap-2">
-          <div
-            className={cn(
-              "line-clamp-1 break-all text-sm",
-              isActive && "font-medium",
-              variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-            )}
-          >
-            {conversation.emailFrom ?? "Anonymous"}
-          </div>
-          <div className="flex items-center justify-center space-x-1 text-right">
-            <div
-              className={cn(
-                "whitespace-nowrap text-xs",
-                isActive && "font-medium",
-                variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-              )}
-            >
-              {conversation.status === "closed" ? (
-                <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
-              ) : (
-                <HumanizedTime
-                  time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
-                  titlePrefix="Last email received on"
-                />
-              )}
-            </div>
-            {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <div className="min-w-0 flex-1">
-            <div
-              className={cn(
-                "line-clamp-1 text-xs",
-                isActive && "font-medium",
-                variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-              )}
-            >
-              {conversation.subject}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {(conversation.assignedToId || conversation.assignedToAI) && (
-              <AssignedToLabel
-                className={cn(
-                  "shrink-0 break-all flex items-center gap-1 text-xs",
-                  isActive && "font-medium",
-                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-                )}
-                assignedToId={conversation.assignedToId}
-                assignedToAI={conversation.assignedToAI}
-              />
-            )}
-            {conversation.platformCustomer?.isVip && (
-              <div
-                className={cn(
-                  "shrink-0 text-right",
-                  isActive && "font-medium",
-                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-                )}
-                title="VIP Customer"
-              >
-                <div className="flex items-center gap-1 text-xs">
-                  <Badge variant="bright">VIP</Badge>
-                </div>
-              </div>
-            )}
-            {conversation.platformCustomer?.value ? (
-              <div
-                className={cn(
-                  "shrink-0 text-right",
-                  isActive && "font-medium",
-                  variant === "desktop" ? "text-sidebar-foreground" : "text-foreground",
-                )}
-                title={`Value: ${conversation.platformCustomer.value}`}
-              >
-                <div className="flex items-center gap-1 text-xs">
-                  <DollarSign className="h-3 w-3" />
-                  {formatCurrency(parseFloat(conversation.platformCustomer.value))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </a>
-    </div>
-  );
-};
-
-export const AssignedToLabel = ({
-  assignedToId,
-  assignedToAI,
-  className,
-}: {
-  assignedToId: string | null;
-  assignedToAI?: boolean;
-  className?: string;
-}) => {
-  const { data: members } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-
-  if (assignedToAI) {
-    return (
-      <div className={className} title="Assigned to Helper agent">
-        <Bot className="h-3 w-3" />
-      </div>
-    );
-  }
-
-  const displayName = members?.find((m) => m.id === assignedToId)?.displayName?.split(" ")[0];
-
-  return displayName ? (
-    <div className={className} title={`Assigned to ${displayName}`}>
-      <User className="h-3 w-3" />
-      {displayName}
-    </div>
-  ) : null;
 };

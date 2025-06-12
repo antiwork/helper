@@ -1,8 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { createContext, useContext, useEffect, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { ConversationListItem } from "@/app/types/global";
-import { useBreakpoint } from "@/components/useBreakpoint";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { assertDefined } from "@/components/utils/assert";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
@@ -17,10 +16,13 @@ export type ConversationListContextType = {
   isPending: boolean;
   isFetchingNextPage: boolean;
   hasNextPage: boolean;
+  currentIndex: number;
+  currentTotal: number;
   fetchNextPage: () => void;
   currentConversationSlug: string | null;
   minimize: () => void;
   moveToNextConversation: () => void;
+  moveToPreviousConversation: () => void;
   removeConversation: () => void;
   removeConversationKeepActive: () => void;
   navigateToConversation: (conversationSlug: string) => void;
@@ -35,29 +37,29 @@ export const ConversationListContextProvider = ({
   currentConversationSlug: string | null;
   children: React.ReactNode;
 }) => {
-  const { input, searchParams } = useConversationsListInput();
+  const { input } = useConversationsListInput();
   const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
     api.mailbox.conversations.list.useInfiniteQuery(input, {
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? null,
       refetchOnWindowFocus: false,
     });
-  const { isAboveLg } = useBreakpoint("lg");
   const [, setId] = useQueryState("id", { history: "push" });
 
   const conversations = useMemo(() => data?.pages.flatMap((page) => page.conversations) ?? [], [data]);
   const lastPage = useMemo(() => data?.pages[data?.pages.length - 1], [data]);
-
-  useEffect(() => {
-    if (!isPending && !currentConversationSlug && conversations[0] && isAboveLg) {
-      setId(conversations[0].slug);
-    }
-  }, [isPending, searchParams]);
+  const currentTotal = useMemo(
+    () => data?.pages.reduce((acc, page) => acc + page.conversations.length, 0) ?? 0,
+    [data],
+  );
+  const currentIndex = useMemo(
+    () => conversations.findIndex((c) => c.slug === currentConversationSlug),
+    [conversations, currentConversationSlug],
+  );
 
   const moveToNextConversation = () => {
     if (!conversations.length) return setId(null);
 
     let nextConversation;
-    const currentIndex = conversations.findIndex((c) => c.slug === currentConversationSlug);
     if (currentIndex === -1) {
       nextConversation = conversations[0];
     } else {
@@ -65,6 +67,19 @@ export const ConversationListContextProvider = ({
         currentIndex === conversations.length - 1 ? conversations[currentIndex - 1] : conversations[currentIndex + 1];
     }
     setId(nextConversation?.slug ?? null);
+  };
+
+  const moveToPreviousConversation = () => {
+    if (!conversations.length) return setId(null);
+
+    let previousConversation;
+    if (currentIndex === -1) {
+      previousConversation = conversations[0];
+    } else {
+      previousConversation =
+        currentIndex === 0 ? conversations[conversations.length - 1] : conversations[currentIndex - 1];
+    }
+    setId(previousConversation?.slug ?? null);
   };
 
   const router = useRouter();
@@ -158,10 +173,13 @@ export const ConversationListContextProvider = ({
       isPending,
       isFetchingNextPage,
       hasNextPage,
+      currentTotal,
+      currentIndex,
       fetchNextPage,
       currentConversationSlug,
       minimize: () => setId(null),
       moveToNextConversation,
+      moveToPreviousConversation,
       removeConversation,
       removeConversationKeepActive,
       navigateToConversation: setId,

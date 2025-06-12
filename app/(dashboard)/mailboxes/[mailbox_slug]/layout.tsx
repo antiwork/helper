@@ -1,7 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { redirect } from "next/navigation";
+import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
 import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { NavigationRail } from "@/components/navigationRail";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { env } from "@/lib/env";
 import { HelperProvider } from "@/packages/react/dist/cjs";
 import { api } from "@/trpc/server";
@@ -19,14 +20,14 @@ export default async function InboxLayout({
 
     return (
       <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
-        <div className="flex flex-row min-h-svh w-full">
-          <div className="hidden md:block text-sidebar-foreground">
-            <NavigationRail mailboxSlug={mailboxSlug} />
-          </div>
-          <main className="flex-1 text-foreground bg-background w-full min-w-0">
-            <InboxClientLayout theme={preferences?.theme}>{children}</InboxClientLayout>
-          </main>
-        </div>
+        <SidebarProvider>
+          <InboxClientLayout theme={preferences?.theme}>
+            <div className="flex h-svh w-full">
+              <AppSidebar mailboxSlug={mailboxSlug} />
+              <main className="flex-1 min-w-0">{children}</main>
+            </div>
+          </InboxClientLayout>
+        </SidebarProvider>
       </HelperProvider>
     );
   } catch (e) {

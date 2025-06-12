@@ -19,6 +19,7 @@ import {
 import { memoize } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db/client";
+import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -145,7 +146,11 @@ export const searchConversations = async (
 
   const list = memoize(() =>
     db
-      .select()
+      .select({
+        conversations_conversation: conversations,
+        mailboxes_platformcustomer: platformCustomers,
+        recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
+      })
       .from(conversations)
       .leftJoin(
         platformCustomers,
@@ -154,16 +159,32 @@ export const searchConversations = async (
           eq(conversations.emailFrom, platformCustomers.email),
         ),
       )
+      .leftJoin(
+        sql`LATERAL (
+          SELECT ${conversationMessages.cleanedUpText} as cleaned_up_text
+          FROM ${conversationMessages}
+          WHERE ${and(
+            eq(conversationMessages.conversationId, conversations.id),
+            inArray(conversationMessages.role, ["user", "staff"]),
+          )}
+          ORDER BY ${desc(conversationMessages.createdAt)}
+          LIMIT 1
+        ) as recent_message`,
+        sql`true`,
+      )
       .where(and(...Object.values(where)))
       .orderBy(...orderBy)
       .limit(filters.limit + 1) // Get one extra to determine if there's a next page
       .offset(filters.cursor ? parseInt(filters.cursor) : 0)
       .then((results) => ({
-        results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
-          ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-          matchedMessageText:
-            matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-        })),
+        results: results
+          .slice(0, filters.limit)
+          .map(({ conversations_conversation, mailboxes_platformcustomer, recent_message_cleanedUpText }) => ({
+            ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+            matchedMessageText:
+              matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+            recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
+          })),
         nextCursor:
           results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
       })),
