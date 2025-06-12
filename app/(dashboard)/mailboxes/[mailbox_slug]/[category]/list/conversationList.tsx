@@ -1,5 +1,5 @@
 import { capitalize, escape } from "lodash-es";
-import { Bot, Filter, Search, Send, User } from "lucide-react";
+import { ArrowDownUp, Bot, Filter, Search, Send, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -163,7 +163,7 @@ export const List = () => {
   );
 
   const searchBar = (
-    <div className="flex items-center justify-between gap-6 py-1">
+    <div className="flex items-center justify-between gap-2 md:gap-6 py-1">
       <div className="flex items-center gap-4">
         {statusOptions.length > 1 ? (
           <Select
@@ -225,8 +225,22 @@ export const List = () => {
         </Button>
       </div>
       <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
-        <SelectTrigger variant="bare" className="w-auto text-foreground [&>svg]:text-foreground text-sm">
-          <SelectValue placeholder="Sort by" />
+        <SelectTrigger
+          variant="bare"
+          className="w-auto text-foreground [&>svg]:text-foreground text-sm"
+          hideArrow="mobileOnly"
+        >
+          <SelectValue
+            placeholder={
+              <>
+                <ArrowDownUp className="h-4 w-4 md:hidden" />
+                <span className="hidden md:block">Sort by</span>
+              </>
+            }
+          >
+            <ArrowDownUp className="h-4 w-4 md:hidden" />
+            <span className="hidden md:block">{sortOptions.find(({ selected }) => selected)?.label}</span>
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {sortOptions.map((option) => (

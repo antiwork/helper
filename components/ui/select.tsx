@@ -28,13 +28,16 @@ const selectTriggerVariants = cva(
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & VariantProps<typeof selectTriggerVariants>
->(({ className, children, variant, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> &
+    VariantProps<typeof selectTriggerVariants> & { hideArrow?: true | "mobileOnly" }
+>(({ className, children, variant, hideArrow, ...props }, ref) => (
   <SelectPrimitive.Trigger ref={ref} className={cn(selectTriggerVariants({ variant, className }))} {...props}>
     {children}
-    <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-foreground" />
-    </SelectPrimitive.Icon>
+    {hideArrow !== true && (
+      <SelectPrimitive.Icon asChild>
+        <ChevronDown className={cn("h-4 w-4 text-foreground", hideArrow === "mobileOnly" && "hidden md:block")} />
+      </SelectPrimitive.Icon>
+    )}
   </SelectPrimitive.Trigger>
 ));
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
