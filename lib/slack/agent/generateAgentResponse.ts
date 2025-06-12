@@ -126,7 +126,8 @@ export const generateAgentResponse = async (
       },
     }),
     getUserReplyCounts: tool({
-      description: "Check how many replies members sent to tickets in a given time period",
+      description:
+        "Check how many replies members sent to tickets in a given time period. This is NOT the same as closed tickets: use the countTickets tool to get the number of closed tickets.",
       parameters: z.object({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
