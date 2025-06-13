@@ -19,6 +19,7 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { PageHeader } from "@/components/pageHeader";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
+import { useConversationNavigationHotkeys } from "@/components/useConversationNavigationHotkeys";
 
 const CATEGORY_LABELS = {
   all: "All",
@@ -41,7 +42,9 @@ const Inbox = () => {
   const params = useParams<{ mailbox_slug: string; category: Category }>();
   const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const mailboxSlug = params.mailbox_slug;
-  const { currentConversationSlug, conversationListData, isPending } = useConversationListContext();
+  const { currentConversationSlug, conversationListData, isPending, moveToNextConversation, moveToPreviousConversation } = useConversationListContext();
+  
+  useConversationNavigationHotkeys(moveToNextConversation, moveToPreviousConversation);
   const utils = api.useUtils();
   const isMobile = useIsMobile();
   const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
