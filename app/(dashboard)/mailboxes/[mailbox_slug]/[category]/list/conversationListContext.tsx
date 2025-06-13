@@ -63,8 +63,7 @@ export const ConversationListContextProvider = ({
     if (currentIndex === -1) {
       nextConversation = conversations[0];
     } else {
-      nextConversation =
-        currentIndex === conversations.length - 1 ? conversations[currentIndex - 1] : conversations[currentIndex + 1];
+      nextConversation = currentIndex === conversations.length - 1 ? conversations[0] : conversations[currentIndex + 1];
     }
     setId(nextConversation?.slug ?? null);
   };

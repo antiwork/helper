@@ -52,6 +52,7 @@ const Inbox = () => {
 
   useKeyboardShortcut("j", moveToNextConversation);
   useKeyboardShortcut("k", moveToPreviousConversation);
+
   const utils = api.useUtils();
   const isMobile = useIsMobile();
   const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
