@@ -289,6 +289,7 @@ class HelperWidget {
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
+    this.connectExistingContactFormElements();
     this.setupMutationObserver();
 
     let resizeTimeout: NodeJS.Timeout;
@@ -462,6 +463,10 @@ class HelperWidget {
     document.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
   }
 
+  private connectExistingContactFormElements(): void {
+    document.querySelectorAll("[data-helper-contact-form]").forEach(this.connectContactFormElement.bind(this));
+  }
+
   private connectPromptElement(element: Element): void {
     element.addEventListener("click", (event: Event) => this.handlePromptClick(event as MouseEvent));
   }
@@ -484,6 +489,10 @@ class HelperWidget {
 
   private connectToggleElement(element: Element): void {
     element.addEventListener("click", (event: Event) => this.handleToggleClick(event as MouseEvent));
+  }
+
+  private connectContactFormElement(element: Element): void {
+    this.renderContactForm(element as HTMLElement);
   }
 
   private handleToggleClick(event: MouseEvent): void {
@@ -509,8 +518,12 @@ class HelperWidget {
               if (node.hasAttribute("data-helper-toggle")) {
                 this.connectToggleElement(node);
               }
+              if (node.hasAttribute("data-helper-contact-form")) {
+                this.connectContactFormElement(node);
+              }
               node.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
               node.querySelectorAll("[data-helper-toggle]").forEach(this.connectToggleElement.bind(this));
+              node.querySelectorAll("[data-helper-contact-form]").forEach(this.connectContactFormElement.bind(this));
             }
           });
         }
@@ -678,6 +691,89 @@ class HelperWidget {
   private updateAllToggleElements(): void {
     document.querySelectorAll("[data-helper-toggle]").forEach((element) => {
       this.updateToggleState(element as HTMLElement);
+    });
+  }
+
+  private async renderContactForm(element: HTMLElement): Promise<void> {
+    if (element.hasAttribute("data-helper-contact-form-rendered")) {
+      return;
+    }
+
+    element.setAttribute("data-helper-contact-form-rendered", "true");
+    element.innerHTML = `
+      <div class="helper-contact-form">
+        <div class="helper-contact-form-header">
+          <h3>Contact us</h3>
+          <p>Send us a message and we'll get back to you.</p>
+        </div>
+        <form class="helper-contact-form-form">
+          <div class="helper-contact-form-field">
+            <label for="helper-contact-email">Email address</label>
+            <input type="email" id="helper-contact-email" name="email" required placeholder="your@email.com">
+          </div>
+          <div class="helper-contact-form-field">
+            <label for="helper-contact-message">Message</label>
+            <textarea id="helper-contact-message" name="message" required placeholder="How can we help you?" rows="4"></textarea>
+          </div>
+          <button type="submit" class="helper-contact-form-submit">Send message</button>
+        </form>
+        <div class="helper-contact-form-success" style="display: none;">
+          <div class="helper-contact-form-success-icon">✓</div>
+          <h4>Message sent!</h4>
+          <p>Thanks for reaching out. We'll get back to you soon.</p>
+        </div>
+        <div class="helper-contact-form-error" style="display: none;">
+          <p>Sorry, there was an error sending your message. Please try again.</p>
+        </div>
+      </div>
+    `;
+
+    const form = element.querySelector(".helper-contact-form-form") as HTMLFormElement;
+    const successDiv = element.querySelector(".helper-contact-form-success") as HTMLElement;
+    const errorDiv = element.querySelector(".helper-contact-form-error") as HTMLElement;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const email = formData.get("email") as string;
+      const message = formData.get("message") as string;
+
+      if (!email || !message) {
+        return;
+      }
+
+      const submitButton = form.querySelector(".helper-contact-form-submit") as HTMLButtonElement;
+      const originalText = submitButton.textContent;
+      submitButton.textContent = "Sending...";
+      submitButton.disabled = true;
+
+      try {
+        const response = await fetch(`${scriptOrigin}/api/chat/contact`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            message,
+            token: this.sessionToken,
+          }),
+        });
+
+        if (response.ok) {
+          form.style.display = "none";
+          successDiv.style.display = "block";
+          errorDiv.style.display = "none";
+        } else {
+          throw new Error("Failed to send message");
+        }
+      } catch (error) {
+        errorDiv.style.display = "block";
+        successDiv.style.display = "none";
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+      }
     });
   }
 
