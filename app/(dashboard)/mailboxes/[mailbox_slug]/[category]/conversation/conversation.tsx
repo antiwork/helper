@@ -234,13 +234,13 @@ const ConversationHeader = ({
   return (
     <div
       className={cn(
-        "relative flex items-center border-b border-border h-12 px-2 md:px-4",
+        "flex items-center border-b border-border h-12 px-2 md:px-4 gap-x-2",
         !conversationInfo && "hidden",
       )}
       style={{ minHeight: 48 }}
     >
-      {/* Far left: Close */}
-      <div className="flex items-center min-w-0">
+      {/* Left: Close, chevrons, count */}
+      <div className="flex items-center min-w-0 flex-shrink-0 z-10 lg:w-44">
         <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
           <X className="h-4 w-4" />
         </Button>
@@ -257,14 +257,14 @@ const ConversationHeader = ({
           </Button>
         </div>
       </div>
-      {/* Centered title */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center pointer-events-none">
-        <div className="truncate text-base font-semibold text-foreground max-w-[70vw] md:max-w-[40vw] pointer-events-auto">
+      {/* Center: Title */}
+      <div className="flex-1 min-w-0 flex justify-center">
+        <div className="truncate text-base font-semibold text-foreground text-center max-w-full">
           {conversationMetadata.subject ?? "(no subject)"}
         </div>
       </div>
-      {/* Far right: viewers, copy link, panel close */}
-      <div className="flex items-center gap-2 ml-auto">
+      {/* Right: viewers, copy link, panel close */}
+      <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">
         <CopyLinkButton />
         {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
         <Button
