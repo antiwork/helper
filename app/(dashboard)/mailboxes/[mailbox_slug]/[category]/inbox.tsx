@@ -17,7 +17,7 @@ import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { PageHeader } from "@/components/pageHeader";
-import { useConversationNavigationHotkeys } from "@/components/useConversationNavigationHotkeys";
+import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -50,7 +50,8 @@ const Inbox = () => {
     moveToPreviousConversation,
   } = useConversationListContext();
 
-  useConversationNavigationHotkeys(moveToNextConversation, moveToPreviousConversation);
+  useKeyboardShortcut("j", moveToNextConversation);
+  useKeyboardShortcut("k", moveToPreviousConversation);
   const utils = api.useUtils();
   const isMobile = useIsMobile();
   const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
