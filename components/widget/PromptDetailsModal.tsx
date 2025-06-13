@@ -2,7 +2,7 @@ import type { Message } from "ai";
 import { ChevronDown, ChevronRight, Info, X } from "lucide-react";
 import { useState } from "react";
 import { JsonView } from "@/components/jsonView";
-import MessageMarkdown from "@/components/widget/MessageMarkdown";
+import MessageMarkdown from "@/components/messageMarkdown";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 
 type Props = {

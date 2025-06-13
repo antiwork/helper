@@ -122,7 +122,7 @@ const remarkAutolink = () => {
 };
 
 interface MessageMarkdownProps {
-  children: string;
+  children: string | null;
   className?: string;
   components?: any;
 }

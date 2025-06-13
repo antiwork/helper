@@ -1,8 +1,8 @@
 import { formatDuration } from "date-fns";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import MessageMarkdown from "@/components/messageMarkdown";
 import type { MessageWithReaction } from "@/components/widget/Message";
-import MessageMarkdown from "@/components/widget/MessageMarkdown";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type Reasoning = {
