@@ -3,6 +3,8 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Info,
   Link as LinkIcon,
@@ -232,49 +234,54 @@ const ConversationHeader = ({
   return (
     <div
       className={cn(
-        "min-w-0 flex items-center gap-1 border-b border-border p-2 pl-4 md:p-3",
+        "flex items-center border-b border-border h-12 px-2 md:px-4 gap-x-2",
         !conversationInfo && "hidden",
       )}
+      style={{ minHeight: 48 }}
     >
-      <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
-        <X className="h-4 w-4" />
-      </Button>
-      <Button variant="subtle" size="sm" iconOnly onClick={moveToPreviousConversation}>
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-      <Button variant="subtle" size="sm" iconOnly onClick={moveToNextConversation}>
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-      <div className="ml-4">
-        <div className="text-xs text-muted-foreground">
-          {currentIndex + 1} of {currentTotal}
-          {hasNextPage ? "+" : ""}
+      <div className="flex items-center min-w-0 flex-shrink-0 z-10 lg:w-44">
+        <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
+          <X className="h-4 w-4" />
+        </Button>
+        <div className="flex items-center ml-2">
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToPreviousConversation}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1">
+            {currentIndex + 1} of {currentTotal}
+            {hasNextPage ? "+" : ""}
+          </span>
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="truncate text-sm sm:text-base font-medium">
+      </div>
+      <div className="flex-1 min-w-0 flex justify-center">
+        <div className="truncate text-base font-semibold text-foreground text-center max-w-full">
           {conversationMetadata.subject ?? "(no subject)"}
         </div>
       </div>
-      <CopyLinkButton />
-      <div className="flex-1" />
-      {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
-      <Button
-        variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
-        size="sm"
-        className="ml-4"
-        iconOnly
-        onClick={() => setSidebarVisible(!sidebarVisible)}
-      >
-        {isAboveSm ? (
-          sidebarVisible ? (
-            <PanelRightClose className="h-4 w-4" />
+      <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">
+        <CopyLinkButton />
+        {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
+        <Button
+          variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
+          size="sm"
+          iconOnly
+          onClick={() => setSidebarVisible(!sidebarVisible)}
+        >
+          {isAboveSm ? (
+            sidebarVisible ? (
+              <PanelRightClose className="h-4 w-4" />
+            ) : (
+              <PanelRightOpen className="h-4 w-4" />
+            )
           ) : (
-            <PanelRightOpen className="h-4 w-4" />
-          )
-        ) : (
-          <Info className="h-5 w-5" />
-        )}
-        <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
-      </Button>
+            <Info className="h-4 w-4" />
+          )}
+          <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
+        </Button>
+      </div>
     </div>
   );
 };
