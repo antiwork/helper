@@ -1,6 +1,6 @@
-import ReactMarkdown from "react-markdown";
 import "@/components/linkCta.css";
 import DOMPurify from "isomorphic-dompurify";
+import MessageMarkdown from "@/components/messageMarkdown";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { cn } from "@/lib/utils";
 
@@ -41,20 +41,7 @@ export const renderMessageBody = ({
 }) => {
   if (isMarkdown) {
     return {
-      mainContent: (
-        <ReactMarkdown
-          className={cn(className, "prose")}
-          components={{
-            a: ({ children, ...props }: any) => (
-              <a target="_blank" rel="noopener noreferrer" {...props}>
-                {children}
-              </a>
-            ),
-          }}
-        >
-          {body}
-        </ReactMarkdown>
-      ),
+      mainContent: <MessageMarkdown className={cn(className, "prose")}>{body}</MessageMarkdown>,
       quotedContext: null,
     };
   }
