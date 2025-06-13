@@ -239,7 +239,6 @@ const ConversationHeader = ({
       )}
       style={{ minHeight: 48 }}
     >
-      {/* Left: Close, chevrons, count */}
       <div className="flex items-center min-w-0 flex-shrink-0 z-10 lg:w-44">
         <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
           <X className="h-4 w-4" />
@@ -257,13 +256,11 @@ const ConversationHeader = ({
           </Button>
         </div>
       </div>
-      {/* Center: Title */}
       <div className="flex-1 min-w-0 flex justify-center">
         <div className="truncate text-base font-semibold text-foreground text-center max-w-full">
           {conversationMetadata.subject ?? "(no subject)"}
         </div>
       </div>
-      {/* Right: viewers, copy link, panel close */}
       <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">
         <CopyLinkButton />
         {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
