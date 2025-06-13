@@ -193,6 +193,7 @@
     "@types/react-dom": "19.1.2",
     "@types/ua-parser-js": "^0.7.39",
     "@types/ws": "^8.5.13",
+    "@vercel/sdk": "^1.8.2",
     "@vitest/coverage-v8": "^2.1.1",
     "autoevals": "^0.0.117",
     "classnames": "^2.5.1",
