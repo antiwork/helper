@@ -314,7 +314,7 @@ export const generateAIResponse = async ({
   readPageTool = null,
   onFinish,
   dataStream,
-  model = openai(GPT_O3_MODEL),
+  model = openai(GPT_O3_MODEL, { structuredOutputs: false }),
   addReasoning = false,
   reasoningModel = REASONING_MODEL,
   evaluation = false,
