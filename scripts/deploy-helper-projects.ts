@@ -2,11 +2,21 @@
 /* eslint-disable no-restricted-properties */
 import { Vercel } from "@vercel/sdk";
 
+if (!process.env.VERCEL_TOKEN) {
+  console.error("❌ VERCEL_TOKEN environment variable is required");
+  process.exit(1);
+}
+
 const vercel = new Vercel({
   bearerToken: process.env.VERCEL_TOKEN,
 });
 
 const TEAM_ID = process.env.VERCEL_TEAM_ID;
+
+if (!TEAM_ID) {
+  console.error("❌ VERCEL_TEAM_ID environment variable is required");
+  process.exit(1);
+}
 
 async function getAllHelperProjects() {
   try {
@@ -65,16 +75,6 @@ async function deployProject(projectName: string, projectId: string) {
 
 async function deployAllHelperProjects() {
   console.log("🚀 Starting deployment of Helper projects...\n");
-
-  if (!process.env.VERCEL_TOKEN) {
-    console.error("❌ VERCEL_TOKEN environment variable is required");
-    process.exit(1);
-  }
-
-  if (!TEAM_ID) {
-    console.error("❌ VERCEL_TEAM_ID environment variable is required");
-    process.exit(1);
-  }
 
   const helperProjects = await getAllHelperProjects();
 
