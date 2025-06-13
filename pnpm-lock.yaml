@@ -467,6 +467,9 @@ importers:
       '@types/ws':
         specifier: ^8.5.13
         version: 8.18.1
+      '@vercel/sdk':
+        specifier: ^1.8.2
+        version: 1.8.2(zod@3.24.3)
       '@vitest/coverage-v8':
         specifier: ^2.1.1
         version: 2.1.9(vitest@2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.15.3)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.39.0))
@@ -5975,6 +5978,16 @@ packages:
 
   '@vercel/ruby@2.2.0':
     resolution: {integrity: sha512-FJF9gKVNHAljGOgV6zS5ou2N7ZgjOqMMtcPA5lsJEUI5/AZzVDWCmtcowTP80wEtHuupkd7d7M399FA082kXYQ==}
+
+  '@vercel/sdk@1.8.2':
+    resolution: {integrity: sha512-bMVj3QR7AH950jTaRMNcvrg04dBBjWRouCzlYl684JVnEwbjprF000HHQ4Oh3eYXwmFsUOrklEdx9CB7KNED9g==}
+    hasBin: true
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '>=1.5.0 <1.10.0'
+      zod: '>= 3'
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
 
   '@vercel/static-build@2.7.7':
     resolution: {integrity: sha512-/WM1P/6suLgwiLlrUfjg47xSfgzNruHri/ECJ+xe73h35gwqi0ZQlb0Fl74VoRm7P6+8/rNz/3FLBTqJDziHcA==}
@@ -18799,6 +18812,10 @@ snapshots:
       - supports-color
 
   '@vercel/ruby@2.2.0': {}
+
+  '@vercel/sdk@1.8.2(zod@3.24.3)':
+    dependencies:
+      zod: 3.24.3
 
   '@vercel/static-build@2.7.7':
     dependencies:
