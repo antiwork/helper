@@ -17,9 +17,9 @@ import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { PageHeader } from "@/components/pageHeader";
+import { useConversationNavigationHotkeys } from "@/components/useConversationNavigationHotkeys";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import { useConversationNavigationHotkeys } from "@/components/useConversationNavigationHotkeys";
 
 const CATEGORY_LABELS = {
   all: "All",
@@ -42,8 +42,14 @@ const Inbox = () => {
   const params = useParams<{ mailbox_slug: string; category: Category }>();
   const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
   const mailboxSlug = params.mailbox_slug;
-  const { currentConversationSlug, conversationListData, isPending, moveToNextConversation, moveToPreviousConversation } = useConversationListContext();
-  
+  const {
+    currentConversationSlug,
+    conversationListData,
+    isPending,
+    moveToNextConversation,
+    moveToPreviousConversation,
+  } = useConversationListContext();
+
   useConversationNavigationHotkeys(moveToNextConversation, moveToPreviousConversation);
   const utils = api.useUtils();
   const isMobile = useIsMobile();
