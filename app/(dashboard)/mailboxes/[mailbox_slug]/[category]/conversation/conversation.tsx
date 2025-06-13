@@ -9,6 +9,8 @@ import {
   PanelRightClose,
   PanelRightOpen,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -232,49 +234,57 @@ const ConversationHeader = ({
   return (
     <div
       className={cn(
-        "min-w-0 flex items-center gap-1 border-b border-border p-2 pl-4 md:p-3",
+        "relative flex items-center border-b border-border h-12 px-2 md:px-4",
         !conversationInfo && "hidden",
       )}
+      style={{ minHeight: 48 }}
     >
-      <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
-        <X className="h-4 w-4" />
-      </Button>
-      <Button variant="subtle" size="sm" iconOnly onClick={moveToPreviousConversation}>
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-      <Button variant="subtle" size="sm" iconOnly onClick={moveToNextConversation}>
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-      <div className="ml-4">
-        <div className="text-xs text-muted-foreground">
-          {currentIndex + 1} of {currentTotal}
-          {hasNextPage ? "+" : ""}
+      {/* Far left: Close */}
+      <div className="flex items-center min-w-0">
+        <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
+          <X className="h-4 w-4" />
+        </Button>
+        <div className="flex items-center ml-2">
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToPreviousConversation}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1">
+            {currentIndex + 1} of {currentTotal}
+            {hasNextPage ? "+" : ""}
+          </span>
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="truncate text-sm sm:text-base font-medium">
+      </div>
+      {/* Centered title */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center pointer-events-none">
+        <div className="truncate text-base font-semibold text-foreground max-w-[70vw] md:max-w-[40vw] pointer-events-auto">
           {conversationMetadata.subject ?? "(no subject)"}
         </div>
       </div>
-      <CopyLinkButton />
-      <div className="flex-1" />
-      {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
-      <Button
-        variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
-        size="sm"
-        className="ml-4"
-        iconOnly
-        onClick={() => setSidebarVisible(!sidebarVisible)}
-      >
-        {isAboveSm ? (
-          sidebarVisible ? (
-            <PanelRightClose className="h-4 w-4" />
+      {/* Far right: viewers, copy link, panel close */}
+      <div className="flex items-center gap-2 ml-auto">
+        <CopyLinkButton />
+        {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
+        <Button
+          variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
+          size="sm"
+          iconOnly
+          onClick={() => setSidebarVisible(!sidebarVisible)}
+        >
+          {isAboveSm ? (
+            sidebarVisible ? (
+              <PanelRightClose className="h-4 w-4" />
+            ) : (
+              <PanelRightOpen className="h-4 w-4" />
+            )
           ) : (
-            <PanelRightOpen className="h-4 w-4" />
-          )
-        ) : (
-          <Info className="h-5 w-5" />
-        )}
-        <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
-      </Button>
+            <Info className="h-4 w-4" />
+          )}
+          <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
+        </Button>
+      </div>
     </div>
   );
 };
