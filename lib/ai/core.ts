@@ -11,12 +11,14 @@ export const GPT_4O_MODEL = "gpt-4o";
 export const GPT_4_1_MODEL = "gpt-4.1";
 export const GPT_4O_MINI_MODEL = "gpt-4o-mini";
 export const GPT_4_1_MINI_MODEL = "gpt-4.1-mini";
+export const GPT_O3_MODEL = "o3";
 
 export type AvailableModel =
   | typeof GPT_4O_MINI_MODEL
   | typeof GPT_4O_MODEL
   | typeof GPT_4_1_MINI_MODEL
-  | typeof GPT_4_1_MODEL;
+  | typeof GPT_4_1_MODEL
+  | typeof GPT_O3_MODEL;
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
 export const COMPLETION_MODEL = GPT_4_1_MODEL;

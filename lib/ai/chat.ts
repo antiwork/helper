@@ -25,7 +25,7 @@ import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
 import { inngest } from "@/inngest/client";
-import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
+import { GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, GPT_O3_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
@@ -314,7 +314,7 @@ export const generateAIResponse = async ({
   readPageTool = null,
   onFinish,
   dataStream,
-  model = openai(COMPLETION_MODEL),
+  model = openai(GPT_O3_MODEL),
   addReasoning = false,
   reasoningModel = REASONING_MODEL,
   evaluation = false,

@@ -12,6 +12,7 @@ const MODEL_TOKEN_COST = {
   "gpt-4o": { input: 0.0000025, cachedInput: 0.00000125, output: 0.00001 },
   "gpt-4.1": { input: 0.000002, cachedInput: 0.0000005, output: 0.000008 },
   "gpt-4.1-mini": { input: 0.0000004, cachedInput: 0.0000001, output: 0.0000016 },
+  o3: { input: 0.000002, cachedInput: 0.0000005, output: 0.000008 },
   "fireworks/deepseek-r1": { input: 0.000003, cachedInput: 0.000003, output: 0.000008 },
 };
 
