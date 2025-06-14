@@ -8,7 +8,7 @@ module.exports = (env) => {
   const baseConfig = {
     mode: isProduction ? "production" : "development",
     resolve: {
-      extensions: [".ts", ".js"],
+      extensions: [".tsx", ".ts", ".js"],
       alias: {
         "@": __dirname,
       },
@@ -16,12 +16,12 @@ module.exports = (env) => {
     module: {
       rules: [
         {
-          test: /\.ts$/,
+          test: /\.(ts|tsx)$/,
           exclude: /node_modules/,
           use: {
             loader: "babel-loader",
             options: {
-              presets: ["@babel/preset-env", "@babel/preset-typescript"],
+              presets: ["@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript"],
             },
           },
         },

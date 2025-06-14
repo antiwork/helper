@@ -36,14 +36,17 @@ export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
 export const MAX_RELATED_CONVERSATIONS_COUNT = 3;
 
-export const createConversation = async (conversation: NewConversation): Promise<typeof conversations.$inferSelect> => {
+export const createConversation = async (
+  conversation: NewConversation,
+  tx: Transaction | typeof db = db,
+): Promise<typeof conversations.$inferSelect> => {
   try {
     const conversationValues = {
       ...conversation,
       conversationProvider: "chat" as const,
     };
 
-    const [newConversation] = await db.insert(conversations).values(conversationValues).returning();
+    const [newConversation] = await tx.insert(conversations).values(conversationValues).returning();
     if (!newConversation) throw new Error("Failed to create conversation");
 
     return newConversation;
