@@ -78,7 +78,7 @@ export const MessageActions = () => {
 
   const storageKey = `draft/${conversation?.slug}`;
   const [storedMessage, setStoredMessage] = useExpiringLocalStorage<string>(storageKey, {
-    shouldStore: (value) => !isEmptyContent(value),
+    shouldStore: (value) => !!conversation?.slug && !isEmptyContent(value),
   });
 
   const initialMessage = conversation?.draft?.body ?? "";
