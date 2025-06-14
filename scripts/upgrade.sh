@@ -2,7 +2,7 @@
 
 set -e
 
-UPSTREAM_REPO="https://github.com/antiwork/helper.git"
+UPSTREAM_REPO="${UPSTREAM_REPO:-https://github.com/antiwork/helper.git}"
 TEMP_DIR=$(mktemp -d)
 UPGRADE_COMMIT_PREFIX="chore: upgrade from antiwork/helper"
 
@@ -39,7 +39,7 @@ if [ -n "$LAST_UPGRADE_COMMIT" ]; then
     UPSTREAM_COMMIT=$(git show -s --format="%B" "$LAST_UPGRADE_COMMIT" | grep -o "upstream: [a-f0-9]\{40\}" | cut -d' ' -f2 || echo "")
     if [ -z "$UPSTREAM_COMMIT" ]; then
         echo "⚠️  Warning: Could not find upstream commit hash in last upgrade message. Using commit date instead."
-        SINCE_DATE="--since=\"$LAST_UPGRADE_DATE\""
+        SINCE_DATE="$LAST_UPGRADE_DATE"
     else
         echo "📍 Last upstream commit: $UPSTREAM_COMMIT"
         SINCE_COMMIT="$UPSTREAM_COMMIT"
@@ -49,7 +49,7 @@ else
     INIT_COMMIT=$(git log --oneline --reverse | head -n 1 | cut -d' ' -f1)
     INIT_DATE=$(git show -s --format="%ci" "$INIT_COMMIT")
     echo "📅 Initial commit: $INIT_COMMIT ($INIT_DATE)"
-    SINCE_DATE="--since=\"$INIT_DATE\""
+    SINCE_DATE="$INIT_DATE"
 fi
 
 echo "📥 Cloning upstream repository..."
@@ -74,13 +74,13 @@ if [ -n "$SINCE_COMMIT" ]; then
     git format-patch "$SINCE_COMMIT..HEAD" --stdout > "$TEMP_DIR/upgrade.patch"
 else
     # Use date range if we only have the date
-    COMMIT_COUNT=$(git rev-list --count $SINCE_DATE HEAD)
+    COMMIT_COUNT=$(git rev-list --count --since="$SINCE_DATE" HEAD)
     if [ "$COMMIT_COUNT" -eq 0 ]; then
         echo "✅ Repository is already up to date!"
         exit 0
     fi
     echo "📊 Found $COMMIT_COUNT commits since last upgrade"
-    git format-patch $SINCE_DATE --stdout > "$TEMP_DIR/upgrade.patch"
+    git format-patch --since="$SINCE_DATE" --stdout > "$TEMP_DIR/upgrade.patch"
 fi
 
 # Go back to the original repository
