@@ -31,8 +31,8 @@ You can customize the widget by adding a `helperWidgetConfig` object above the w
 <script>
   window.helperWidgetConfig = {
     title: "My Helper Widget",
-    icon_color: "#ff0000",
-    show_toggle_button: true,
+    iconColor: "#ff0000",
+    showToggleButton: true,
   };
 </script>
 <!-- The script you added earlier -->
@@ -41,17 +41,17 @@ You can customize the widget by adding a `helperWidgetConfig` object above the w
 
 The `helperWidgetConfig` object accepts the following options:
 
-| Option               | Type    | Required | Description                                      |
-| -------------------- | ------- | -------- | ------------------------------------------------ |
-| `title`              | string  | No       | Custom title for the chat widget                 |
-| `icon_color`         | string  | No       | A custom color for the widget icon               |
-| `show_toggle_button` | boolean | No       | Override the "Chat Icon Visibility" setting      |
-| `email`              | string  | Yes\*    | Email address of the authenticated customer      |
-| `email_hash`         | string  | Yes\*    | HMAC hash generated on the server                |
-| `timestamp`          | number  | Yes\*    | Timestamp used in HMAC generation                |
-| `metadata.value`     | number  | No       | Revenue value of the customer                    |
-| `metadata.name`      | string  | No       | Name of the customer                             |
-| `metadata.links`     | object  | No       | Key-value pairs of links related to the customer |
+| Option             | Type    | Required | Description                                      |
+| ------------------ | ------- | -------- | ------------------------------------------------ |
+| `title`            | string  | No       | Custom title for the chat widget                 |
+| `iconColor`        | string  | No       | A custom color for the widget icon               |
+| `showToggleButton` | boolean | No       | Override the "Chat Icon Visibility" setting      |
+| `email`            | string  | Yes\*    | Email address of the authenticated customer      |
+| `emailHash`        | string  | Yes\*    | HMAC hash generated on the server                |
+| `timestamp`        | number  | Yes\*    | Timestamp used in HMAC generation                |
+| `metadata.value`   | number  | No       | Revenue value of the customer                    |
+| `metadata.name`    | string  | No       | Name of the customer                             |
+| `metadata.links`   | object  | No       | Key-value pairs of links related to the customer |
 
 \* Required only if you want to authenticate users
 
@@ -99,7 +99,7 @@ Add the generated HMAC hash, customer email, and timestamp to your widget config
   window.helperWidgetConfig = {
     // ... any existing config ...
     email: "customer@example.com",
-    email_hash: "GENERATED_HMAC",
+    emailHash: "GENERATED_HMAC",
     timestamp: GENERATED_TIMESTAMP_IN_MILLISECONDS,
   };
 </script>
