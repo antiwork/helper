@@ -1,14 +1,15 @@
-import { SlackEvent } from "@slack/web-api";
+import { SlackEvent, WebClient } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
+import { conversations, mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
 import { verifySlackRequest } from "@/lib/slack/client";
+import { handleSlackUnfurl } from "@/lib/slack/linkUnfurl";
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -34,9 +35,10 @@ export const POST = async (request: Request) => {
   }
 
   const event = data.event as SlackEvent | undefined;
-
   if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
+  if (event && !("team_id" in event) && "team_id" in data) {
+    (event as any).team_id = data.team_id;
+  }
   if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
     // Not messages we need to handle
     return new Response("Success!", { status: 200 });
@@ -56,6 +58,15 @@ export const POST = async (request: Request) => {
 
   if (event.type === "assistant_thread_started") {
     waitUntil(handleSlackErrors(handleAssistantThreadMessage(event, mailboxInfo)));
+    return new Response("Success!", { status: 200 });
+  }
+  if (event.type === "link_shared") {
+    const mailboxInfo = await handleSlackErrors(findMailboxForEvent(event));
+    const mailbox = mailboxInfo?.currentMailbox ?? mailboxInfo?.mailboxes?.[0];
+    if (!mailbox?.slackBotToken) {
+      return new Response("No mailbox token", { status: 403 });
+    }
+    await handleSlackUnfurl(event, mailbox.slackBotToken);
     return new Response("Success!", { status: 200 });
   }
 
