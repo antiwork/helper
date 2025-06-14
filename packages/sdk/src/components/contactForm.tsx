@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface ContactFormProps {
   onSubmit: (email: string, message: string) => Promise<void>;
 }
 
 export function ContactForm({ onSubmit }: ContactFormProps) {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !message) {
       return;
     }
@@ -34,7 +34,7 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
   if (isSuccess) {
     return (
       <div className="helper-contact-form">
-        <div className="helper-contact-form-success" style={{ display: 'block' }}>
+        <div className="helper-contact-form-success" style={{ display: "block" }}>
           <div className="helper-contact-form-success-icon">✓</div>
           <h4>Message sent!</h4>
           <p>Thanks for reaching out. We'll get back to you soon.</p>
@@ -74,16 +74,12 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
             onChange={(e) => setMessage(e.target.value)}
           />
         </div>
-        <button
-          type="submit"
-          className="helper-contact-form-submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Sending...' : 'Send message'}
+        <button type="submit" className="helper-contact-form-submit" disabled={isSubmitting}>
+          {isSubmitting ? "Sending..." : "Send message"}
         </button>
       </form>
       {isError && (
-        <div className="helper-contact-form-error" style={{ display: 'block' }}>
+        <div className="helper-contact-form-error" style={{ display: "block" }}>
           <p>Sorry, there was an error sending your message. Please try again.</p>
         </div>
       )}

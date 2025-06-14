@@ -1,7 +1,7 @@
 // This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
 
-import React from "react";
 import { Context } from "modern-screenshot";
+import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import { scriptOrigin } from "./scriptOrigin";
@@ -701,14 +701,14 @@ class HelperWidget {
     }
 
     element.setAttribute("data-helper-contact-form-rendered", "true");
-    
+
     const [{ createRoot }, { ContactForm }] = await Promise.all([
-      import('react-dom/client'),
-      import('./components/contactForm')
+      import("react-dom/client"),
+      import("./components/contactForm"),
     ]);
-    
+
     const root = createRoot(element);
-    
+
     const handleSubmit = async (email: string, message: string) => {
       const response = await fetch(`${scriptOrigin}/api/chat/contact`, {
         method: "POST",
@@ -726,7 +726,7 @@ class HelperWidget {
         throw new Error("Failed to send message");
       }
     };
-    
+
     root.render(React.createElement(ContactForm, { onSubmit: handleSubmit }));
   }
 
