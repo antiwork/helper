@@ -45,7 +45,7 @@ describe("generateConversationSummary", () => {
     ];
     vi.mocked(runAIObjectQuery).mockResolvedValue({ summary: mockSummary });
 
-    const result = await generateConversationSummary(conversation.id);
+    const result = await generateConversationSummary(conversation);
 
     expect(result).toBe(true);
 
@@ -94,7 +94,7 @@ describe("generateConversationSummary", () => {
       cleanedUpText: "Test message",
     });
 
-    const result = await generateConversationSummary(conversation.id);
+    const result = await generateConversationSummary(conversation);
 
     expect(result).toBe(false);
 
@@ -104,5 +104,83 @@ describe("generateConversationSummary", () => {
     expect(updatedConversation?.summary).toBeNull();
 
     expect(runAIObjectQuery).not.toHaveBeenCalled();
+  });
+
+  it("includes messages from merged conversations in the prompt", async () => {
+    const { mailbox } = await userFactory.createRootUser();
+    const { conversation: mainConversation } = await conversationFactory.create(mailbox.id);
+    const { conversation: mergedConversation } = await conversationFactory.create(mailbox.id);
+
+    await conversationMessagesFactory.create(mainConversation.id, {
+      role: "user",
+      cleanedUpText: "I need help with my account setup.",
+    });
+    await conversationMessagesFactory.create(mainConversation.id, {
+      role: "staff",
+      cleanedUpText: "I can help you with that. What specific issue are you facing?",
+    });
+    await conversationMessagesFactory.create(mainConversation.id, {
+      role: "user",
+      cleanedUpText: "I can't login to my dashboard.",
+    });
+
+    await conversationMessagesFactory.create(mergedConversation.id, {
+      role: "user",
+      cleanedUpText: "Also, I forgot my password.",
+    });
+    await conversationMessagesFactory.create(mergedConversation.id, {
+      role: "staff",
+      cleanedUpText: "I'll help you reset your password.",
+    });
+
+    await db
+      .update(conversations)
+      .set({ mergedIntoId: mainConversation.id })
+      .where(eq(conversations.id, mergedConversation.id));
+
+    const mockSummary = [
+      "Customer needed help with account setup and login issues.",
+      "Customer also requested password reset assistance.",
+      "Staff provided support for both login and password issues.",
+    ];
+    vi.mocked(runAIObjectQuery).mockResolvedValue({ summary: mockSummary });
+
+    const result = await generateConversationSummary(mainConversation);
+
+    expect(result).toBe(true);
+
+    const expectedMessages = [
+      {
+        role: "user",
+        content: [
+          "From: user",
+          "Content: I need help with my account setup.",
+          "",
+          "From: assistant",
+          "Content: I can help you with that. What specific issue are you facing?",
+          "",
+          "From: user",
+          "Content: I can't login to my dashboard.",
+          "",
+          "From: user",
+          "Content: Also, I forgot my password.",
+          "",
+          "From: assistant",
+          "Content: I'll help you reset your password.",
+        ].join("\n"),
+      },
+    ];
+
+    expect(runAIObjectQuery).toHaveBeenCalledWith({
+      mailbox,
+      queryType: "conversation_summary",
+      functionId: "generate-conversation-summary",
+      system: expect.stringMatching(/summarize all the messages/),
+      messages: expectedMessages,
+      schema: expect.any(Object),
+      shortenPromptBy: {
+        truncateMessages: true,
+      },
+    });
   });
 });

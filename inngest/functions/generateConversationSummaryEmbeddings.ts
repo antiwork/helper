@@ -1,6 +1,6 @@
 import { inngest } from "@/inngest/client";
 import { generateConversationSummary } from "@/lib/ai/generateConversationSummary";
-import { getConversationById } from "@/lib/data/conversation";
+import { getOriginalConversation } from "@/lib/data/conversation";
 import { getConversationMessageById } from "@/lib/data/conversationMessage";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
@@ -15,10 +15,10 @@ export default inngest.createFunction(
 
     const conversationMessage = assertDefinedOrRaiseNonRetriableError(await getConversationMessageById(messageId));
     const conversation = assertDefinedOrRaiseNonRetriableError(
-      await getConversationById(conversationMessage.conversationId),
+      await getOriginalConversation(conversationMessage.conversationId),
     );
 
-    const wasGenerated = await generateConversationSummary(conversationMessage.conversationId);
+    const wasGenerated = await generateConversationSummary(conversation);
     if (wasGenerated) {
       await step.sendEvent("generate-embeddings", {
         name: "conversations/embedding.create",

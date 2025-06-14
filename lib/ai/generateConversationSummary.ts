@@ -2,11 +2,12 @@ import { CoreMessage } from "ai";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, ToolMetadata } from "@/db/schema";
+import { conversationMessages, conversations, mailboxes, ToolMetadata } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { runAIObjectQuery } from "@/lib/ai";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
 import { cleanUpTextForAI } from "@/lib/ai/core";
+import { findOriginalAndMergedMessages } from "@/lib/data/conversationMessage";
 
 const constructMessagesForConversationSummary = (
   emails: Pick<typeof conversationMessages.$inferSelect, "role" | "cleanedUpText" | "metadata">[],
@@ -28,27 +29,25 @@ const summarySchema = z.object({
   summary: z.array(z.string()),
 });
 
-export const generateConversationSummary = async (conversationId: number, { force }: { force?: boolean } = {}) => {
-  const conversation = assertDefinedOrRaiseNonRetriableError(
-    await db.query.conversations.findFirst({
-      where: eq(conversations.id, conversationId),
-      with: { mailbox: true },
-    }),
+export const generateConversationSummary = async (
+  conversation: typeof conversations.$inferSelect,
+  { force }: { force?: boolean } = {},
+) => {
+  const mailbox = assertDefinedOrRaiseNonRetriableError(
+    await db.query.mailboxes.findFirst({ where: eq(mailboxes.id, conversation.mailboxId) }),
   );
 
-  const emails = await db.query.conversationMessages.findMany({
-    where: and(
-      eq(conversationMessages.conversationId, conversation.id),
-      isNull(conversationMessages.deletedAt),
-      eq(conversationMessages.status, "sent"),
-    ),
-    orderBy: asc(conversationMessages.createdAt),
-    columns: {
-      role: true,
-      cleanedUpText: true,
-      metadata: true,
-    },
-  });
+  const emails = await findOriginalAndMergedMessages(conversation.id, (condition) =>
+    db.query.conversationMessages.findMany({
+      where: and(condition, isNull(conversationMessages.deletedAt), eq(conversationMessages.status, "sent")),
+      orderBy: asc(conversationMessages.createdAt),
+      columns: {
+        role: true,
+        cleanedUpText: true,
+        metadata: true,
+      },
+    }),
+  );
 
   if (emails.length <= 2 && !force) return false;
 
@@ -65,7 +64,7 @@ export const generateConversationSummary = async (conversationId: number, { forc
   const messages = constructMessagesForConversationSummary(emails);
 
   const { summary } = await runAIObjectQuery({
-    mailbox: conversation.mailbox,
+    mailbox,
     queryType: "conversation_summary",
     functionId: "generate-conversation-summary",
     system: prompt,
