@@ -194,13 +194,14 @@ import { HelperProvider, generateHelperAuth } from '@helperai/react';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth(); // Your auth solution
-  if (!session?.user?.email) return children;
 
-  const helperAuth = await generateHelperAuth({
-    email: session.user.email,
-    hmacSecret: "YOUR_HMAC_SECRET",
-    mailboxSlug: "${mailbox.slug}",
-  });
+  const helperAuth = session.user.email
+    ? await generateHelperAuth({
+        email: session.user.email,
+        hmacSecret: "YOUR_HMAC_SECRET",
+        mailboxSlug: "${mailbox.slug}",
+      })
+    : {};
 
   return (
     <html>
@@ -535,18 +536,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth(); // Your auth solution
-  if (!session?.user?.email) return children;
 
-  const helperAuth = await generateHelperAuth({
-    email: session.user.email,
-    metadata: {
-      value: "CUSTOMER_VALUE", // Optional: Revenue value
-      name: "CUSTOMER_NAME",   // Optional: Customer name
-      links: {
-        "Profile": "https://example.com/profile"
-      }
-    }
-  });
+  const helperAuth = session.user.email
+    ? await generateHelperAuth({
+        email: session.user.email,
+        hmacSecret: "YOUR_HMAC_SECRET",
+        mailboxSlug: "${mailbox.slug}",
+      })
+    : {};
   
   return (
     <html>

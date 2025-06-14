@@ -133,16 +133,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth(); // Your auth solution
   if (!session?.user?.email) return children;
 
-  const helperAuth = await generateHelperAuth({
-    email: session.user.email,
-    metadata: {
-      value: "CUSTOMER_VALUE", // Optional: Revenue value
-      name: "CUSTOMER_NAME", // Optional: Customer name
-      links: {
-        Profile: "https://example.com/profile",
-      },
-    },
-  });
+  const helperAuth = session.user.email
+    ? await generateHelperAuth({
+        email: session.user.email,
+        hmacSecret: "YOUR_HMAC_SECRET",
+        mailboxSlug: "YOUR_MAILBOX_SLUG",
+      })
+    : {};
 
   return (
     <html>
