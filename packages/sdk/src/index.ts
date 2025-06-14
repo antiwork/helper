@@ -700,37 +700,142 @@ class HelperWidget {
     }
 
     element.setAttribute("data-helper-contact-form-rendered", "true");
-    element.innerHTML = `
-      <div class="helper-contact-form">
-        <div class="helper-contact-form-header">
-          <h3>Contact us</h3>
-          <p>Send us a message and we'll get back to you.</p>
-        </div>
-        <form class="helper-contact-form-form">
-          <div class="helper-contact-form-field">
-            <label for="helper-contact-email">Email address</label>
-            <input type="email" id="helper-contact-email" name="email" required placeholder="your@email.com">
-          </div>
-          <div class="helper-contact-form-field">
-            <label for="helper-contact-message">Message</label>
-            <textarea id="helper-contact-message" name="message" required placeholder="How can we help you?" rows="4"></textarea>
-          </div>
-          <button type="submit" class="helper-contact-form-submit">Send message</button>
-        </form>
-        <div class="helper-contact-form-success" style="display: none;">
-          <div class="helper-contact-form-success-icon">✓</div>
-          <h4>Message sent!</h4>
-          <p>Thanks for reaching out. We'll get back to you soon.</p>
-        </div>
-        <div class="helper-contact-form-error" style="display: none;">
-          <p>Sorry, there was an error sending your message. Please try again.</p>
-        </div>
-      </div>
-    `;
+    
+    const contactFormComponent = this.createContactFormComponent();
+    element.appendChild(contactFormComponent);
+    
+    this.setupContactFormEventListeners(contactFormComponent);
+  }
 
-    const form = element.querySelector(".helper-contact-form-form") as HTMLFormElement;
-    const successDiv = element.querySelector(".helper-contact-form-success") as HTMLElement;
-    const errorDiv = element.querySelector(".helper-contact-form-error") as HTMLElement;
+  private createContactFormComponent(): HTMLElement {
+    const container = document.createElement("div");
+    container.className = "helper-contact-form";
+    
+    container.appendChild(this.createContactFormHeader());
+    container.appendChild(this.createContactFormBody());
+    container.appendChild(this.createContactFormMessages());
+    
+    return container;
+  }
+
+  private createContactFormHeader(): HTMLElement {
+    const header = document.createElement("div");
+    header.className = "helper-contact-form-header";
+    
+    const title = document.createElement("h3");
+    title.textContent = "Contact us";
+    
+    const subtitle = document.createElement("p");
+    subtitle.textContent = "Send us a message and we'll get back to you.";
+    
+    header.appendChild(title);
+    header.appendChild(subtitle);
+    
+    return header;
+  }
+
+  private createContactFormBody(): HTMLElement {
+    const form = document.createElement("form");
+    form.className = "helper-contact-form-form";
+    
+    form.appendChild(this.createEmailField());
+    form.appendChild(this.createMessageField());
+    form.appendChild(this.createSubmitButton());
+    
+    return form;
+  }
+
+  private createEmailField(): HTMLElement {
+    const field = document.createElement("div");
+    field.className = "helper-contact-form-field";
+    
+    const label = document.createElement("label");
+    label.setAttribute("for", "helper-contact-email");
+    label.textContent = "Email address";
+    
+    const input = document.createElement("input");
+    input.type = "email";
+    input.id = "helper-contact-email";
+    input.name = "email";
+    input.required = true;
+    input.placeholder = "your@email.com";
+    
+    field.appendChild(label);
+    field.appendChild(input);
+    
+    return field;
+  }
+
+  private createMessageField(): HTMLElement {
+    const field = document.createElement("div");
+    field.className = "helper-contact-form-field";
+    
+    const label = document.createElement("label");
+    label.setAttribute("for", "helper-contact-message");
+    label.textContent = "Message";
+    
+    const textarea = document.createElement("textarea");
+    textarea.id = "helper-contact-message";
+    textarea.name = "message";
+    textarea.required = true;
+    textarea.placeholder = "How can we help you?";
+    textarea.rows = 4;
+    
+    field.appendChild(label);
+    field.appendChild(textarea);
+    
+    return field;
+  }
+
+  private createSubmitButton(): HTMLElement {
+    const button = document.createElement("button");
+    button.type = "submit";
+    button.className = "helper-contact-form-submit";
+    button.textContent = "Send message";
+    
+    return button;
+  }
+
+  private createContactFormMessages(): HTMLElement {
+    const container = document.createElement("div");
+    
+    const successDiv = document.createElement("div");
+    successDiv.className = "helper-contact-form-success";
+    successDiv.style.display = "none";
+    
+    const successIcon = document.createElement("div");
+    successIcon.className = "helper-contact-form-success-icon";
+    successIcon.textContent = "✓";
+    
+    const successTitle = document.createElement("h4");
+    successTitle.textContent = "Message sent!";
+    
+    const successText = document.createElement("p");
+    successText.textContent = "Thanks for reaching out. We'll get back to you soon.";
+    
+    successDiv.appendChild(successIcon);
+    successDiv.appendChild(successTitle);
+    successDiv.appendChild(successText);
+    
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "helper-contact-form-error";
+    errorDiv.style.display = "none";
+    
+    const errorText = document.createElement("p");
+    errorText.textContent = "Sorry, there was an error sending your message. Please try again.";
+    
+    errorDiv.appendChild(errorText);
+    
+    container.appendChild(successDiv);
+    container.appendChild(errorDiv);
+    
+    return container;
+  }
+
+  private setupContactFormEventListeners(container: HTMLElement): void {
+    const form = container.querySelector(".helper-contact-form-form") as HTMLFormElement;
+    const successDiv = container.querySelector(".helper-contact-form-success") as HTMLElement;
+    const errorDiv = container.querySelector(".helper-contact-form-error") as HTMLElement;
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();

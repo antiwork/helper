@@ -3,6 +3,8 @@ import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/
 import { inngest } from "@/inngest/client";
 import { createConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { db } from "@/db/client";
 
 export const maxDuration = 60;
 
@@ -31,37 +33,41 @@ export async function POST(request: Request) {
   const { mailbox } = authResult;
 
   try {
-    const newConversation = await createConversation({
-      emailFrom: email,
-      mailboxId: mailbox.id,
-      subject: "Contact Form Submission",
-      status: "open",
-      source: "form",
-      assignedToAI: true,
-      isPrompt: false,
-      isVisitor: false,
-    });
+    const result = await db.transaction(async (tx) => {
+      const newConversation = await createConversation({
+        emailFrom: email,
+        mailboxId: mailbox.id,
+        subject: "Contact Form Submission",
+        status: "open",
+        source: "form",
+        assignedToAI: true,
+        isPrompt: false,
+        isVisitor: false,
+      }, tx);
 
-    const userMessage = await createConversationMessage({
-      conversationId: newConversation.id,
-      emailFrom: email,
-      body: message,
-      role: "user",
-      status: "sent",
-      isPerfect: false,
-      isFlaggedAsBad: false,
+      const userMessage = await createConversationMessage({
+        conversationId: newConversation.id,
+        emailFrom: email,
+        body: message,
+        role: "user",
+        status: "sent",
+        isPerfect: false,
+        isFlaggedAsBad: false,
+      }, tx);
+
+      return { newConversation, userMessage };
     });
 
     waitUntil(
       inngest.send({
         name: "conversations/auto-response.create",
-        data: { messageId: userMessage.id },
+        data: { messageId: result.userMessage.id },
       }),
     );
 
-    return corsResponse({ success: true, conversationSlug: newConversation.slug });
+    return corsResponse({ success: true, conversationSlug: result.newConversation.slug });
   } catch (error) {
-    console.error("Failed to create contact form conversation:", error);
+    captureExceptionAndLog(error);
     return corsResponse({ error: "Failed to send message" }, { status: 500 });
   }
 }
