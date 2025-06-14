@@ -53,6 +53,14 @@ export const createConversation = async (conversation: NewConversation): Promise
   }
 };
 
+export const getOriginalConversation = async (conversationId: number): Promise<typeof conversations.$inferSelect> => {
+  const conversation = assertDefined(
+    await db.query.conversations.findFirst({ where: eq(conversations.id, conversationId) }),
+  );
+  if (conversation.mergedIntoId) return getOriginalConversation(conversation.mergedIntoId);
+  return conversation;
+};
+
 // If the conversation is merged into another conversation, update the original conversation instead.
 // This is mainly useful in automated actions, especially when setting the conversation status to "open",
 // since only the original conversation will be shown to staff in the inbox.

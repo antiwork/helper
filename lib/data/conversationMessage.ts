@@ -40,6 +40,22 @@ export const serializeResponseAiDraft = (
   };
 };
 
+export const findOriginalAndMergedMessages = async <T>(
+  conversationId: number,
+  query: (condition: SQL) => Promise<T[]>,
+) => {
+  const [originalMessages, mergedMessages] = await Promise.all([
+    query(eq(conversationMessages.conversationId, conversationId)),
+    query(
+      inArray(
+        conversationMessages.conversationId,
+        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
+      ),
+    ),
+  ]);
+  return [...originalMessages, ...mergedMessages];
+};
+
 export const getMessagesOnly = async (conversationId: number) => {
   const messages = await db.query.conversationMessages.findMany({
     where: and(
@@ -90,14 +106,8 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       },
     });
 
-  const [messages, mergedMessages, noteRecords, eventRecords, members] = await Promise.all([
-    findMessages(eq(conversationMessages.conversationId, conversationId)),
-    findMessages(
-      inArray(
-        conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
-      ),
-    ),
+  const [messages, noteRecords, eventRecords, members] = await Promise.all([
+    findOriginalAndMergedMessages(conversationId, findMessages),
     db.query.notes.findMany({
       where: eq(notes.conversationId, conversationId),
       columns: {
@@ -130,12 +140,10 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     db.query.authUsers.findMany(),
   ]);
 
-  const allMessages = [...messages, ...mergedMessages];
-
   const membersById = Object.fromEntries(members.map((user) => [user.id, user]));
 
   const messageInfos = await Promise.all(
-    allMessages.map((message) =>
+    messages.map((message) =>
       serializeMessage(message, conversationId, mailbox, (message.userId && membersById[message.userId]) || null),
     ),
   );
