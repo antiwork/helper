@@ -1,10 +1,10 @@
 import { waitUntil } from "@vercel/functions";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { db } from "@/db/client";
 import { inngest } from "@/inngest/client";
 import { createConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { db } from "@/db/client";
 
 export const maxDuration = 60;
 
@@ -34,26 +34,32 @@ export async function POST(request: Request) {
 
   try {
     const result = await db.transaction(async (tx) => {
-      const newConversation = await createConversation({
-        emailFrom: email,
-        mailboxId: mailbox.id,
-        subject: "Contact Form Submission",
-        status: "open",
-        source: "form",
-        assignedToAI: true,
-        isPrompt: false,
-        isVisitor: false,
-      }, tx);
+      const newConversation = await createConversation(
+        {
+          emailFrom: email,
+          mailboxId: mailbox.id,
+          subject: "Contact Form Submission",
+          status: "open",
+          source: "form",
+          assignedToAI: true,
+          isPrompt: false,
+          isVisitor: false,
+        },
+        tx,
+      );
 
-      const userMessage = await createConversationMessage({
-        conversationId: newConversation.id,
-        emailFrom: email,
-        body: message,
-        role: "user",
-        status: "sent",
-        isPerfect: false,
-        isFlaggedAsBad: false,
-      }, tx);
+      const userMessage = await createConversationMessage(
+        {
+          conversationId: newConversation.id,
+          emailFrom: email,
+          body: message,
+          role: "user",
+          status: "sent",
+          isPerfect: false,
+          isFlaggedAsBad: false,
+        },
+        tx,
+      );
 
       return { newConversation, userMessage };
     });
