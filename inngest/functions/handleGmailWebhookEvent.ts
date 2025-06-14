@@ -68,7 +68,9 @@ const assignBasedOnCc = async (
   emailCc: string,
   gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
 ) => {
-  const ccAddresses = extractAddresses(emailCc).filter((address) => address !== gmailSupportEmail.email);
+  const ccAddresses = extractAddresses(emailCc).filter(
+    (address) => address.toLowerCase() !== gmailSupportEmail.email.toLowerCase(),
+  );
 
   for (const ccAddress of ccAddresses) {
     const ccStaffUser = await db.query.authUsers.findFirst({
