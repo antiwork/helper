@@ -36,7 +36,10 @@ export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
 export const MAX_RELATED_CONVERSATIONS_COUNT = 3;
 
-export const createConversation = async (conversation: NewConversation, tx: Transaction | typeof db = db): Promise<typeof conversations.$inferSelect> => {
+export const createConversation = async (
+  conversation: NewConversation,
+  tx: Transaction | typeof db = db,
+): Promise<typeof conversations.$inferSelect> => {
   try {
     const conversationValues = {
       ...conversation,
