@@ -121,7 +121,7 @@ If I want to authenticate my users, add code to generate an HMAC hash on the ser
 ${NODE_HMAC_SAMPLE_CODE}
 \`\`\`
 
-Store the HMAC secret separately, for example in an environment variable or secret. The secret to store is: ${mailbox.widgetHMACSecret}
+Store the HMAC secret separately, for example in an environment variable or secret. It MUST NOT be exposed to the client side or committed to version control. The secret to store is: ${mailbox.widgetHMACSecret}
 
 Then, add the generated hash, customer email, and timestamp to the widget config. Add the script tag *immediately above* the widget script tag if it doesn't exist, or reuse the existing script tag if it does.
 
@@ -215,7 +215,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 }
 \`\`\`
 
-Store the HMAC secret separately, for example in an environment variable or secret. The secret to store is: ${mailbox.widgetHMACSecret}
+Store the HMAC secret separately, for example in an environment variable or secret. It MUST NOT be exposed to the client side or committed to version control. The secret to store is: ${mailbox.widgetHMACSecret}
 
 If my backend technology is not Node.js, generate the HMAC hash manually by adapting this Node.js example:
 
