@@ -63,8 +63,12 @@ const isThankYouOrAutoResponse = async (
   }
 };
 
-const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailCc: string) => {
-  const ccAddresses = extractAddresses(emailCc);
+const assignBasedOnCc = async (
+  conversationId: number,
+  emailCc: string,
+  gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
+) => {
+  const ccAddresses = extractAddresses(emailCc).filter((address) => address !== gmailSupportEmail.email);
 
   for (const ccAddress of ccAddresses) {
     const ccStaffUser = await db.query.authUsers.findFirst({
@@ -82,7 +86,7 @@ const assignBasedOnCc = async (mailboxId: number, conversationId: number, emailC
 };
 
 export const createMessageAndProcessAttachments = async (
-  mailboxId: number,
+  gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
   parsedEmail: ParsedMail,
   parsedEmailFrom: ParsedMailbox,
   processedHtml: string,
@@ -134,7 +138,7 @@ export const createMessageAndProcessAttachments = async (
     });
 
     if (!conversationRecord?.assignedToId) {
-      await assignBasedOnCc(mailboxId, conversation.id, emailCc);
+      await assignBasedOnCc(conversation.id, emailCc, gmailSupportEmail);
     }
   }
 
@@ -344,7 +348,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       }
 
       const newEmail = await createMessageAndProcessAttachments(
-        mailbox.id,
+        gmailSupportEmail,
         parsedEmail,
         parsedEmailFrom,
         processedHtml,
