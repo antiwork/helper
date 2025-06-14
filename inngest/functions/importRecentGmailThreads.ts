@@ -160,7 +160,7 @@ export const processGmailThreadWithClient = async (
       where: eq(authUsers.email, parsedEmailFrom.address),
     });
     await createMessageAndProcessAttachments(
-      mailbox.id,
+      gmailSupportEmail,
       parsedEmail,
       parsedEmailFrom,
       processedHtml,
