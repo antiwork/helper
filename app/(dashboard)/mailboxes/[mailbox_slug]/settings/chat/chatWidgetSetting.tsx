@@ -169,7 +169,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 Then, ask if I want to do either of the following:
 
 - Customize the widget title or icon color
-- Add contextual help buttons
 - Authenticate my users
 
 DO NOT do any of the following until I have confirmed that I want to do them.
@@ -250,7 +249,7 @@ ${NODE_HMAC_SAMPLE_CODE}
           <TabsContent value="vanilla" className="space-y-4">
             <h3 className="flex items-center justify-between text-lg font-semibold">
               Get started
-              <TooltipProvider>
+              <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger>
                     <Button
@@ -392,7 +391,7 @@ ${widgetSampleCode}
           <TabsContent value="react" className="space-y-4">
             <h3 className="flex items-center justify-between text-lg font-semibold">
               Get started
-              <TooltipProvider>
+              <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger>
                     <Button
