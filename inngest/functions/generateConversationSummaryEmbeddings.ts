@@ -18,15 +18,15 @@ export default inngest.createFunction(
       await getConversationById(conversationMessage.conversationId),
     );
 
-    if (!conversation.isPrompt) {
-      await generateConversationSummary(conversationMessage.conversationId);
-
+    const wasGenerated = await generateConversationSummary(conversationMessage.conversationId);
+    if (wasGenerated) {
       await step.sendEvent("generate-embeddings", {
         name: "conversations/embedding.create",
         data: { conversationSlug: conversation.slug },
       });
+      return { message: `Message ${messageId}: Summary and embeddings created` };
     }
 
-    return { message: `Message ${messageId}: Summary and embeddings created` };
+    return { message: `Message ${messageId}: Summary not generated` };
   },
 );

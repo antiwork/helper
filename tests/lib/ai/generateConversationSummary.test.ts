@@ -47,7 +47,7 @@ describe("generateConversationSummary", () => {
 
     const result = await generateConversationSummary(conversation.id);
 
-    expect(result).toBe("Summary generated");
+    expect(result).toBe(true);
 
     const updatedConversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversation.id),
@@ -96,7 +96,7 @@ describe("generateConversationSummary", () => {
 
     const result = await generateConversationSummary(conversation.id);
 
-    expect(result).toBe("No summary needed");
+    expect(result).toBe(false);
 
     const updatedConversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversation.id),

@@ -50,7 +50,7 @@ export const generateConversationSummary = async (conversationId: number, { forc
     },
   });
 
-  if (emails.length <= 2 && !force) return "No summary needed";
+  if (emails.length <= 2 && !force) return false;
 
   const prompt = [
     'The goal is to summarize all the messages in the conversation in bullet points and output in JSON format with key "summary" and value should be list of points.',
@@ -78,5 +78,5 @@ export const generateConversationSummary = async (conversationId: number, { forc
 
   await db.update(conversations).set({ summary }).where(eq(conversations.id, conversation.id));
 
-  return "Summary generated";
+  return true;
 };
