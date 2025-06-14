@@ -1,15 +1,17 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { getBaseUrl, getDocsUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { mailboxes } from "@/db/schema";
@@ -40,6 +42,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     mailbox.preferences?.autoRespondEmailToChat ?? "off",
   );
   const [widgetHost, setWidgetHost] = useState(mailbox.widgetHost ?? "");
+  const [isCopied, setIsCopied] = useState(false);
   const { showChatWidget, setShowChatWidget } = useShowChatWidget();
 
   useEffect(() => {
@@ -83,6 +86,144 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
 
   const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", `data-mailbox="${mailbox.slug}"`);
 
+  const plainJSPrompt = `
+Integrate the helper.ai widget into my app.
+
+First, add the following code snippet in my HTML layout before the closing </body> tag:
+
+\`\`\`
+${widgetSampleCode}
+\`\`\`
+
+Then, ask if I want to do either of the following:
+
+- Customize the widget title or icon color
+- Authenticate my users
+
+DO NOT do any of the following until I have confirmed that I want to do them.
+
+If I want to customize the widget, add the following code snippet *immediately above* the widget script tag:
+
+\`\`\`
+<script>
+  window.helperWidgetConfig = {
+    title: "<widget title>",
+    iconColor: "<hex color>",
+  }
+</script>
+\`\`\`
+
+Omit the other property if I don't want to customize it.
+
+If I want to authenticate my users, add code to generate an HMAC hash on the server side. Adapt this Node.js code as appropriate for my backend technology:
+
+\`\`\`
+${NODE_HMAC_SAMPLE_CODE}
+\`\`\`
+
+Store the HMAC secret separately, for example in an environment variable or secret. The secret to store is: ${mailbox.widgetHMACSecret}
+
+Then, add the generated hash, customer email, and timestamp to the widget config. Add the script tag *immediately above* the widget script tag if it doesn't exist, or reuse the existing script tag if it does.
+
+Make sure to inject the placeholder values based on what was generated on the server side.
+
+\`\`\`
+<script>
+  window.helperWidgetConfig = {
+    email: "<customer email>",
+    emailHash: "<generated HMAC hash>",
+    timestamp: "<generated timestamp>",
+  }
+</script>
+\`\`\`
+  `.trim();
+
+  const reactPrompt = `
+Integrate the Helper widget into my React/Next.js app.
+
+First, install the React package (use yarn, pnpm, etc instead if the current project uses it):
+
+\`\`\`
+npm install @helperai/react
+\`\`\`
+
+Then, add the HelperProvider at the root of my app:
+
+\`\`\`
+// app/layout.tsx or similar
+import { HelperProvider } from '@helperai/react';
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <HelperProvider host="${getBaseUrl()}" mailboxSlug="${mailbox.slug}">
+          {children}
+        </HelperProvider>
+      </body>
+    </html>
+  );
+}
+\`\`\`
+
+Then, ask if I want to do either of the following:
+
+- Customize the widget title or icon color
+- Add contextual help buttons
+- Authenticate my users
+
+DO NOT do any of the following until I have confirmed that I want to do them.
+
+If I want to customize the widget, add props to the HelperProvider:
+
+\`\`\`
+<HelperProvider
+  host="${getBaseUrl()}"
+  mailboxSlug="${mailbox.slug}"
+  title="<widget title>"
+  iconColor="<hex color>"
+>
+  {children}
+</HelperProvider>
+\`\`\`
+
+If I want to authenticate my users add a call to generateHelperAuth and pass the result to the HelperProvider. This is a Next.js example using server components. Adapt it as appropriate for my backend technology:
+
+\`\`\`
+// app/layout.tsx or similar
+import { HelperProvider, generateHelperAuth } from '@helperai/react';
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth(); // Your auth solution
+  if (!session?.user?.email) return children;
+
+  const helperAuth = await generateHelperAuth({
+    email: session.user.email,
+    hmacSecret: "YOUR_HMAC_SECRET",
+    mailboxSlug: "${mailbox.slug}",
+  });
+
+  return (
+    <html>
+      <body>
+        <HelperProvider host="${getBaseUrl()}" {...helperAuth}>
+          {children}
+        </HelperProvider>
+      </body>
+    </html>
+  );
+}
+\`\`\`
+
+Store the HMAC secret separately, for example in an environment variable or secret. The secret to store is: ${mailbox.widgetHMACSecret}
+
+If my backend technology is not Node.js, generate the HMAC hash manually by adapting this Node.js example:
+
+\`\`\`
+${NODE_HMAC_SAMPLE_CODE}
+\`\`\`
+  `.trim();
+
   return (
     <div>
       <SectionWrapper
@@ -107,7 +248,27 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
           </TabsList>
 
           <TabsContent value="vanilla" className="space-y-4">
-            <h3 className="text-lg font-semibold">Get started</h3>
+            <h3 className="flex items-center justify-between text-lg font-semibold">
+              Get started
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      variant="subtle"
+                      onClick={() => {
+                        navigator.clipboard.writeText(plainJSPrompt);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                      }}
+                    >
+                      <Sparkles className="size-4 text-bright mr-2" />
+                      {isCopied ? "Copied!" : "Copy AI agent prompt"}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Paste into Cursor, Copilot or other AI coding agents</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </h3>
             <p className="text-sm">Copy and paste this code into your website:</p>
             <CodeBlock code={widgetSampleCode} language="html" />
             <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
@@ -137,10 +298,10 @@ ${widgetSampleCode}
                       <code>title</code> - The title of the widget.
                     </li>
                     <li>
-                      <code>icon_color</code> - A custom color for the widget icon.
+                      <code>iconColor</code> - A custom color for the widget icon.
                     </li>
                     <li>
-                      <code>show_toggle_button</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
+                      <code>showToggleButton</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
                       <code>true</code> to show the button or <code>false</code> to hide the button.
                     </li>
                   </ul>
@@ -191,7 +352,7 @@ ${widgetSampleCode}
   window.helperWidgetConfig = {
     // ... any existing config ...
     email: 'customer@example.com',
-    email_hash: 'GENERATED_HMAC',
+    emailHash: 'GENERATED_HMAC',
     timestamp: GENERATED_TIMESTAMP_IN_MILLISECONDS
   }
 </script>
@@ -229,7 +390,27 @@ ${widgetSampleCode}
           </TabsContent>
 
           <TabsContent value="react" className="space-y-4">
-            <h3 className="text-lg font-semibold">Get started</h3>
+            <h3 className="flex items-center justify-between text-lg font-semibold">
+              Get started
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      variant="subtle"
+                      onClick={() => {
+                        navigator.clipboard.writeText(reactPrompt);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                      }}
+                    >
+                      <Sparkles className="size-4 text-bright mr-2" />
+                      {isCopied ? "Copied!" : "Copy AI agent prompt"}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Paste into Cursor, Copilot or other AI coding agents</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </h3>
             <p className="text-sm">Install the React package:</p>
             <CodeBlock code="npm install @helperai/react" language="bash" />
 
@@ -279,10 +460,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                       <code>title</code> - The title of the widget.
                     </li>
                     <li>
-                      <code>icon_color</code> - A custom color for the widget icon.
+                      <code>iconColor</code> - A custom color for the widget icon.
                     </li>
                     <li>
-                      <code>show_toggle_button</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
+                      <code>showToggleButton</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
                       <code>true</code> to show the button or <code>false</code> to hide the button.
                     </li>
                   </ul>
@@ -343,7 +524,7 @@ HELPER_MAILBOX_SLUG=${mailbox.slug}`}
                     />
                     <p className="text-sm">
                       Then call <code>generateHelperAuth</code> in your root layout and pass the result to the{" "}
-                      <code>HelperProvider</code>:
+                      <code>HelperProvider</code>. Refer to the HTML/JavaScript guide if your backend is not in Node.js.
                     </p>
                     <CodeBlock
                       code={`// app/layout.tsx or similar
