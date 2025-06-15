@@ -3,7 +3,7 @@
 import { ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { getBaseUrl, getDocsUrl } from "@/components/constants";
+import { getBaseUrl, getMarketingSiteUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -231,7 +231,7 @@ ${NODE_HMAC_SAMPLE_CODE}
         title="Widget Installation"
         description={
           <a
-            href={`${getDocsUrl()}/docs/widget/01-overview`}
+            href={`${getMarketingSiteUrl()}/docs/widget/01-overview`}
             target="_blank"
             rel="noopener noreferrer"
             className="hover:underline flex items-center gap-1"
