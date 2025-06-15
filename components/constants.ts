@@ -14,7 +14,7 @@ export const getBaseUrl = () => {
   return env.AUTH_URL;
 };
 
-export const getDocsUrl = () => {
+export const getMarketingSiteUrl = () => {
   if (getBaseUrl() === "https://helperai.dev") {
     return "http://localhost:3011";
   }

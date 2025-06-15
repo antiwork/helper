@@ -2,7 +2,7 @@
 
 import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getBaseUrl } from "@/components/constants";
+import { getMarketingSiteUrl } from "@/components/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +46,7 @@ export function AccountDropdown() {
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();
-            window.open(`${getBaseUrl()}/docs`, "_blank", "noopener,noreferrer");
+            window.open(`${getMarketingSiteUrl()}/docs`, "_blank", "noopener,noreferrer");
           }}
         >
           <span>Documentation</span>
