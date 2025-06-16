@@ -2,7 +2,6 @@ import FirecrawlApp from "@mendable/firecrawl-js";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { websiteCrawls, websites } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { env } from "@/lib/env";
 import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 
@@ -10,7 +9,7 @@ const CONCURRENCY_LIMIT = 3;
 const PAGE_LIMIT = 150;
 const firecrawl = env.FIRECRAWL_API_KEY ? new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY }) : null;
 
-export const crawlWebsite = async (websiteId: number, crawlId: number): Promise<void> => {
+export const crawlWebsite = async ({ websiteId, crawlId }: { websiteId: number; crawlId: number }): Promise<void> => {
   if (!firecrawl) {
     throw new Error("FIRECRAWL_API_KEY is not set");
   }
@@ -57,17 +56,3 @@ export const crawlWebsite = async (websiteId: number, crawlId: number): Promise<
     throw error;
   }
 };
-
-export default inngest.createFunction(
-  { id: "crawl-website", concurrency: CONCURRENCY_LIMIT, retries: 3 },
-  { event: "websites/crawl.create" },
-  async ({ event, step }) => {
-    const { websiteId, crawlId } = event.data;
-
-    await step.run("crawl-website", async (): Promise<void> => {
-      await crawlWebsite(websiteId, crawlId);
-    });
-
-    return { success: true };
-  },
-);

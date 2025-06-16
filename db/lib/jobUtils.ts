@@ -3,9 +3,35 @@ import { db } from "@/db/client";
 import { env } from "@/lib/env";
 
 export const setupCron = async (job: string, schedule: string) => {
+  // eslint-disable-next-line no-console
+  console.log(`Scheduling cron job: ${job} with schedule: ${schedule}`);
   await db.execute(sql`
     select cron.schedule(${job}, ${schedule}, 'select call_job_endpoint(${JSON.stringify({ job })})');
   `);
+};
+
+export const unscheduleCron = async (job: string) => {
+  await db.execute(sql`
+    select cron.unschedule(${job});
+  `);
+};
+
+export const cleanupOldCronJobs = async (currentJobs: string[]) => {
+  const jobsInClause = sql.join(
+    currentJobs.map((job) => sql`${job}`),
+    sql`, `,
+  );
+  const result = await db.execute(sql`
+    select jobname from cron.job where jobname not in (${jobsInClause}) and jobname != 'process-jobs';
+  `);
+
+  const jobsToDelete = result.rows as { jobname: string }[];
+
+  for (const job of jobsToDelete) {
+    // eslint-disable-next-line no-console
+    console.log(`Unscheduling cron job: ${job.jobname}`);
+    await unscheduleCron(job.jobname);
+  }
 };
 
 export const setupJobFunctions = async () => {

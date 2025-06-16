@@ -3,7 +3,7 @@ import { subHours } from "date-fns";
 import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/inngest/utils";
 import { postSlackMessage } from "@/lib/slack/client";
 
 export const REPORT_HOUR = 11;
@@ -18,20 +18,11 @@ export async function generateDailyReports() {
   if (!mailboxesList.length) return;
 
   for (const mailbox of mailboxesList) {
-    await inngest.send({
-      name: "reports/daily",
-      data: { mailboxId: mailbox.id },
-    });
+    await triggerEvent("reports/daily", { mailboxId: mailbox.id });
   }
 }
 
-export default inngest.createFunction(
-  { id: "generate-daily-reports" },
-  { cron: `TZ=${TIME_ZONE} 0 ${REPORT_HOUR} * * 0,2-6` },
-  generateDailyReports,
-);
-
-export async function generateMailboxReport(mailboxId: number) {
+export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: number }) {
   const mailbox = await db.query.mailboxes.findFirst({
     where: eq(mailboxes.id, mailboxId),
   });
@@ -218,11 +209,3 @@ export async function generateMailboxReport(mailboxId: number) {
     vipAvgReplyTimeMessage,
   };
 }
-
-export const generateMailboxDailyReport = inngest.createFunction(
-  { id: "generate-daily-report-mailbox" },
-  { event: "reports/daily" },
-  ({ event }) => {
-    return generateMailboxReport(event.data.mailboxId);
-  },
-);

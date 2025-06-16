@@ -2,12 +2,10 @@ import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import { loadPreviousMessages } from "@/lib/ai/chat";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { Mailbox } from "@/lib/data/mailbox";
-import { env } from "@/lib/env";
 
 const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was addressed.
 
@@ -65,7 +63,13 @@ const skipCheck = async (conversationId: number, messageId: number) => {
   if (humanResponse) return `Has human response: ${humanResponse.id}`;
 };
 
-export const checkConversationResolution = async (conversationId: number, messageId: number) => {
+export const checkConversationResolution = async ({
+  conversationId,
+  messageId,
+}: {
+  conversationId: number;
+  messageId: number;
+}) => {
   const skipReason = await skipCheck(conversationId, messageId);
   if (skipReason) return { skipped: true, reason: skipReason };
 
@@ -111,23 +115,3 @@ export const checkConversationResolution = async (conversationId: number, messag
 
   return { isResolved, reason };
 };
-
-export default inngest.createFunction(
-  { id: "check-conversation-resolution" },
-  { event: "conversations/check-resolution" },
-  async ({ event, step }) => {
-    const { conversationId, messageId } = event.data;
-
-    if (env.NODE_ENV === "development") {
-      await step.sleepUntil("wait-5-minutes", new Date(Date.now() + 5 * 60 * 1000));
-    } else {
-      await step.sleepUntil("wait-24-hours", new Date(Date.now() + 24 * 60 * 60 * 1000));
-    }
-
-    const result = await step.run("check-resolution", async () => {
-      return await checkConversationResolution(conversationId, messageId);
-    });
-
-    return result;
-  },
-);

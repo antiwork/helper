@@ -1,7 +1,6 @@
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -20,7 +19,7 @@ const markFailed = async (emailId: number, conversationId: number, error: string
   return error;
 };
 
-export const postEmailToGmail = async (emailId: number) => {
+export const postEmailToGmail = async ({ messageId: emailId }: { messageId: number }) => {
   const email = await db.query.conversationMessages.findFirst({
     where: and(
       eq(conversationMessages.id, emailId),
@@ -103,17 +102,3 @@ export const postEmailToGmail = async (emailId: number) => {
     return await markFailed(emailId, email.conversationId, `Unexpected error: ${e}`);
   }
 };
-
-export default inngest.createFunction(
-  {
-    id: "post-email-to-gmail",
-  },
-  { event: "conversations/email.enqueued" },
-  async ({ event, step }) => {
-    const {
-      data: { messageId },
-    } = event;
-
-    await step.run("handle", async () => await postEmailToGmail(messageId));
-  },
-);

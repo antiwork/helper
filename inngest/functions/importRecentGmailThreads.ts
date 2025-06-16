@@ -6,7 +6,6 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails, mailboxes } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -20,32 +19,15 @@ import {
   isNewThread,
 } from "./handleGmailWebhookEvent";
 
-export default inngest.createFunction(
-  {
-    id: "import-recent-gmail-threads",
-    retries: 1,
-  },
-  { event: "gmail/import-recent-threads" },
-  async ({ event, step }) => {
-    const {
-      data: { gmailSupportEmailId },
-    } = event;
+export const importRecentGmailThreads = async ({ gmailSupportEmailId }: { gmailSupportEmailId: number }) => {
+  const threads = await getNewGmailThreads(gmailSupportEmailId);
 
-    const threads = await step.run("import", async () => {
-      return await getNewGmailThreads(gmailSupportEmailId);
-    });
+  const results = await Promise.all(
+    threads.map((thread) => processGmailThread(gmailSupportEmailId, assertDefinedOrRaiseNonRetriableError(thread.id))),
+  );
 
-    const results = await Promise.all(
-      threads.map((thread) => {
-        return step.run("process-thread", async () => {
-          return await processGmailThread(gmailSupportEmailId, assertDefinedOrRaiseNonRetriableError(thread.id));
-        });
-      }),
-    );
-
-    return results;
-  },
-);
+  return results;
+};
 
 export const excludeExistingGmailThreads = async (
   gmailSupportEmailId: number,

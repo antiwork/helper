@@ -4,8 +4,8 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
-import { REPORT_HOUR, TIME_ZONE } from "@/inngest/functions/generateDailyReports";
+import { TIME_ZONE } from "@/inngest/functions/generateDailyReports";
+import { triggerEvent } from "@/inngest/utils";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
 import { UserRoles } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
@@ -23,45 +23,32 @@ export async function generateWeeklyReports() {
   if (!mailboxesList.length) return;
 
   for (const mailbox of mailboxesList) {
-    await inngest.send({
-      name: "reports/weekly",
-      data: { mailboxId: mailbox.id },
-    });
+    await triggerEvent("reports/weekly", { mailboxId: mailbox.id });
   }
 }
 
-export default inngest.createFunction(
-  { id: "generate-weekly-reports" },
-  { cron: `TZ=${TIME_ZONE} 0 ${REPORT_HOUR} * * 1` },
-  generateWeeklyReports,
-);
+export const generateMailboxWeeklyReport = async ({ mailboxId }: { mailboxId: number }) => {
+  const mailbox = await db.query.mailboxes.findFirst({
+    where: eq(mailboxes.id, mailboxId),
+  });
+  if (!mailbox) {
+    return;
+  }
 
-export const generateMailboxWeeklyReport = inngest.createFunction(
-  { id: "generate-weekly-report-mailbox" },
-  { event: "reports/weekly" },
-  async ({ event, step }) => {
-    const mailbox = await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, event.data.mailboxId),
-    });
-    if (!mailbox) {
-      return;
-    }
+  // drizzle doesn't appear to do any type narrowing, even though we've filtered for non-null values
+  // @see https://github.com/drizzle-team/drizzle-orm/issues/2956
+  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
+    return;
+  }
 
-    // drizzle doesn't appear to do any type narrowing, even though we've filtered for non-null values
-    // @see https://github.com/drizzle-team/drizzle-orm/issues/2956
-    if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-      return;
-    }
+  const result = await generateMailboxReport({
+    mailbox,
+    slackBotToken: mailbox.slackBotToken,
+    slackAlertChannel: mailbox.slackAlertChannel,
+  });
 
-    const result = await generateMailboxReport({
-      mailbox,
-      slackBotToken: mailbox.slackBotToken,
-      slackAlertChannel: mailbox.slackAlertChannel,
-    });
-
-    return result;
-  },
-);
+  return result;
+};
 
 export async function generateMailboxReport({
   mailbox,

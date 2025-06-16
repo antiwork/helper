@@ -1,9 +1,8 @@
 import { and, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationEvents, conversations, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { conversations, mailboxes } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError, triggerEvent } from "../utils";
 
 type AutoCloseReport = {
   totalProcessed: number;
@@ -25,7 +24,7 @@ type MailboxAutoCloseReport = {
   status: string;
 };
 
-async function closeInactiveConversations(): Promise<AutoCloseReport> {
+export async function closeInactiveConversations(): Promise<AutoCloseReport> {
   const report: AutoCloseReport = {
     totalProcessed: 0,
     mailboxReports: [],
@@ -45,17 +44,18 @@ async function closeInactiveConversations(): Promise<AutoCloseReport> {
     return report;
   }
   for (const mailbox of enabledMailboxes) {
-    await inngest.send({
-      name: "conversations/auto-close.process-mailbox",
-      data: { mailboxId: mailbox.id },
-    });
+    await triggerEvent("conversations/auto-close.process-mailbox", { mailboxId: mailbox.id });
   }
 
   report.status = `Scheduled auto-close check for ${enabledMailboxes.length} mailboxes`;
   return report;
 }
 
-async function closeInactiveConversationsForMailbox(mailboxId: number): Promise<MailboxAutoCloseReport> {
+export async function closeInactiveConversationsForMailbox({
+  mailboxId,
+}: {
+  mailboxId: number;
+}): Promise<MailboxAutoCloseReport> {
   const mailbox = assertDefinedOrRaiseNonRetriableError(
     await db.query.mailboxes.findFirst({
       where: and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true)),
@@ -117,30 +117,3 @@ async function closeInactiveConversationsForMailbox(mailboxId: number): Promise<
   mailboxReport.status = `Successfully closed ${conversationsToClose.length} conversations`;
   return mailboxReport;
 }
-
-const scheduledAutoClose = inngest.createFunction(
-  { id: "scheduled-auto-close-inactive-conversations" },
-  { cron: "0 * * * *" },
-  async () => {
-    return await closeInactiveConversations();
-  },
-);
-
-const apiTriggeredAutoClose = inngest.createFunction(
-  { id: "api-triggered-auto-close" },
-  { event: "conversations/auto-close.check" },
-  async () => {
-    return await closeInactiveConversations();
-  },
-);
-
-const processMailboxAutoClose = inngest.createFunction(
-  { id: "process-mailbox-auto-close" },
-  { event: "conversations/auto-close.process-mailbox" },
-  async ({ event }) => {
-    const mailboxId = event.data.mailboxId;
-    return await closeInactiveConversationsForMailbox(mailboxId);
-  },
-);
-
-export default [scheduledAutoClose, apiTriggeredAutoClose, processMailboxAutoClose];

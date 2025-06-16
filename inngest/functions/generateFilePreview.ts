@@ -5,13 +5,12 @@ import { eq } from "drizzle-orm";
 import sharp from "sharp";
 import { db } from "@/db/client";
 import { files } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { downloadFile, generateKey, uploadFile } from "@/lib/data/files";
 
 const PREVIEW_SIZE = { width: 500, height: 500 };
 const PREVIEW_FORMAT = "png";
 
-export const generateFilePreview = async (fileId: number) => {
+export const generateFilePreview = async ({ fileId }: { fileId: number }) => {
   const file = await db.query.files.findFirst({
     where: eq(files.id, fileId),
   });
@@ -39,20 +38,10 @@ export const generateFilePreview = async (fileId: number) => {
       });
       await db.update(files).set({ previewKey: finalKey }).where(eq(files.id, fileId));
     }
+
+    return { message: `Preview for file ${fileId} generated successfully` };
   } finally {
     // Clean up temporary files
     await fs.rm(tempDir, { recursive: true, force: true });
   }
 };
-
-export default inngest.createFunction(
-  { id: "generate-file-preview" },
-  { event: "files/preview.generate" },
-  async ({ event, step }) => {
-    const { fileId } = event.data;
-
-    await step.run("generate", () => generateFilePreview(fileId));
-
-    return { message: `Preview for file ${fileId} generated successfully` };
-  },
-);

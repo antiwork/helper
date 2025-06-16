@@ -2,7 +2,6 @@ import { subDays } from "date-fns";
 import { and, inArray, isNull, lte } from "drizzle-orm";
 import { db } from "@/db/client";
 import { files } from "@/db/schema/files";
-import { inngest } from "@/inngest/client";
 import { deleteFiles } from "@/lib/data/files";
 
 export const cleanupDanglingFiles = async () => {
@@ -31,9 +30,3 @@ export const cleanupDanglingFiles = async () => {
 
   return { deletedCount: deleted.length };
 };
-
-export default inngest.createFunction(
-  { id: "cleanup-dangling-files" },
-  { cron: "0 * * * *" }, // Every hour
-  ({ step }) => step.run("delete", () => cleanupDanglingFiles()),
-);

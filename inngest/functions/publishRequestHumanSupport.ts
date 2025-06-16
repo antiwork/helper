@@ -1,47 +1,44 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationEvents, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { createHumanSupportRequestEventPayload } from "@/lib/data/dashboardEvent";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
-export default inngest.createFunction(
-  { id: "publish-request-human-support" },
-  { event: "conversations/human-support-requested" },
-  async ({ event: { data }, step }) => {
-    const { mailboxSlug, conversationId } = data;
+export const publishRequestHumanSupport = async ({
+  mailboxSlug,
+  conversationId,
+}: {
+  mailboxSlug: string;
+  conversationId: number;
+}) => {
+  const mailbox = assertDefinedOrRaiseNonRetriableError(
+    await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.slug, mailboxSlug),
+    }),
+  );
 
-    await step.run("publish", async () => {
-      const mailbox = assertDefinedOrRaiseNonRetriableError(
-        await db.query.mailboxes.findFirst({
-          where: eq(mailboxes.slug, mailboxSlug),
-        }),
-      );
-
-      const event = assertDefinedOrRaiseNonRetriableError(
-        await db.query.conversationEvents.findFirst({
-          where: eq(conversationEvents.conversationId, conversationId),
+  const event = assertDefinedOrRaiseNonRetriableError(
+    await db.query.conversationEvents.findFirst({
+      where: eq(conversationEvents.conversationId, conversationId),
+      with: {
+        conversation: {
+          columns: { id: true, slug: true, emailFrom: true, subject: true },
           with: {
-            conversation: {
-              columns: { id: true, slug: true, emailFrom: true, subject: true },
-              with: {
-                platformCustomer: { columns: { value: true } },
-              },
-            },
+            platformCustomer: { columns: { value: true } },
           },
-          orderBy: desc(conversationEvents.createdAt),
-        }),
-      );
+        },
+      },
+      orderBy: desc(conversationEvents.createdAt),
+    }),
+  );
 
-      await publishToRealtime({
-        channel: dashboardChannelId(mailboxSlug),
-        event: "event",
-        data: createHumanSupportRequestEventPayload(event, mailbox),
-      });
-    });
+  await publishToRealtime({
+    channel: dashboardChannelId(mailboxSlug),
+    event: "event",
+    data: createHumanSupportRequestEventPayload(event, mailbox),
+  });
 
-    return { success: true };
-  },
-);
+  return { success: true };
+};

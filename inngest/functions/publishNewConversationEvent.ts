@@ -1,47 +1,13 @@
 import { eq } from "drizzle-orm";
-import { NonRetriableError } from "inngest";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
 import { serializeMessage } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
 import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
-export default inngest.createFunction(
-  {
-    id: "publish-new-conversation-event",
-    batchEvents: {
-      maxSize: 30,
-      timeout: "60s",
-    },
-    retries: 0,
-  },
-  { event: "conversations/message.created" },
-  async ({ events, step }) => {
-    // Process messages serially to ensure consistency on the frontend.
-    const messageIds = events.map((event) => event.data.messageId).toSorted((a, b) => a - b);
-
-    await step.run("publish", async () => {
-      const failedIds: number[] = [];
-      for (const messageId of messageIds) {
-        try {
-          await publish(messageId);
-        } catch (error) {
-          captureExceptionAndLogIfDevelopment(error);
-          failedIds.push(messageId);
-        }
-      }
-      if (failedIds.length > 0) {
-        throw new NonRetriableError(`Failed to publish messages: ${failedIds.join(", ")}`);
-      }
-    });
-  },
-);
-
-const publish = async (messageId: number) => {
+export const publishNewConversationEvent = async ({ messageId }: { messageId: number }) => {
   const message = await db.query.conversationMessages.findFirst({
     where: eq(conversationMessages.id, messageId),
     with: {

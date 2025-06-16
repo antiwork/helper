@@ -4,7 +4,6 @@ import { getBaseUrl } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, faqs, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { runAIObjectQuery } from "@/lib/ai";
 import { findEnabledKnowledgeBankEntries } from "@/lib/data/retrieval";
@@ -18,7 +17,13 @@ const suggestionResponseSchema = z.object({
   faqIdToReplace: z.number().optional(),
 });
 
-export const suggestKnowledgeBankChanges = async (messageId: number, reason: string | null) => {
+export const suggestKnowledgeBankChanges = async ({
+  messageId,
+  reason,
+}: {
+  messageId: number;
+  reason: string | null;
+}) => {
   const message = assertDefinedOrRaiseNonRetriableError(
     await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, messageId),
@@ -182,13 +187,3 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
     .set({ slackChannel: mailbox.slackAlertChannel, slackMessageTs: messageTs })
     .where(eq(faqs.id, faq.id));
 };
-
-export default inngest.createFunction(
-  { id: "suggest-knowledge-bank-changes", concurrency: 10, retries: 1 },
-  { event: "messages/flagged.bad" },
-  async ({ event, step }) => {
-    const { messageId, reason } = event.data;
-
-    return await step.run("suggest-knowledge-bank-changes", () => suggestKnowledgeBankChanges(messageId, reason));
-  },
-);

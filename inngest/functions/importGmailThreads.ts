@@ -3,7 +3,6 @@ import { eq } from "drizzle-orm";
 import { chunk } from "lodash-es";
 import { db } from "@/db/client";
 import { gmailSupportEmails } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { getGmailService, listGmailThreads } from "@/lib/gmail/client";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -15,32 +14,23 @@ import { excludeExistingGmailThreads, processGmailThreadWithClient } from "./imp
 const MAX_WEEKS = 52;
 const GMAIL_THREAD_CONCURRENCY_LIMIT = 20;
 
-export default inngest.createFunction(
-  {
-    id: "import-gmail-threads",
-    // If a step fails, it's likely due to an issue on our end (instead of a temporary network/database issue)
-    // so we should short-circuit and look to fix the issue
-    retries: 0,
-    concurrency: 1,
-  },
-  { event: "gmail/import-gmail-threads" },
-  async ({ event, step }) => {
-    const {
-      data: { gmailSupportEmailId, fromInclusive, toInclusive },
-    } = event;
-    const fromInclusiveDate = new Date(fromInclusive);
-    const toInclusiveDate = new Date(toInclusive);
-    const weekStartDates = generateStartDates(fromInclusiveDate, toInclusiveDate);
+export const importGmailThreads = async ({
+  gmailSupportEmailId,
+  fromInclusive,
+  toInclusive,
+}: {
+  gmailSupportEmailId: number;
+  fromInclusive: string;
+  toInclusive: string;
+}) => {
+  const fromInclusiveDate = new Date(fromInclusive);
+  const toInclusiveDate = new Date(toInclusive);
+  const weekStartDates = generateStartDates(fromInclusiveDate, toInclusiveDate);
 
-    const steps = weekStartDates.map((date) => {
-      return step.run(`import-${date.toISOString()}`, async () => {
-        return await processGmailThreads(gmailSupportEmailId, date, toInclusiveDate);
-      });
-    });
+  const steps = weekStartDates.map((date) => processGmailThreads(gmailSupportEmailId, date, toInclusiveDate));
 
-    await Promise.all(steps);
-  },
-);
+  return await Promise.all(steps);
+};
 
 export const processGmailThreads = async (gmailSupportEmailId: number, weekStartDate: Date, toInclusiveDate: Date) => {
   const gmailSupportEmail = await db.query.gmailSupportEmails

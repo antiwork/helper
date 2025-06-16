@@ -1,52 +1,14 @@
-import { addSeconds } from "date-fns";
-import { and, eq, inArray, isNull } from "drizzle-orm/expressions";
-import { NonRetriableError, RetryAfterError } from "inngest";
+import { eq } from "drizzle-orm/expressions";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
-import { inngest } from "@/inngest/client";
+import { NonRetriableError } from "@/inngest/utils";
 import { getConversationById } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getConversationMessageById } from "@/lib/data/conversationMessage";
 import { extractHashedWordsFromEmail } from "@/lib/emailSearchService/extractHashedWordsFromEmail";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 const MAX_LENGTH = 5000;
 
-export default inngest.createFunction(
-  {
-    id: "index-conversation-message",
-    batchEvents: {
-      maxSize: 30,
-      timeout: "60s",
-    },
-    retries: 1,
-  },
-  { event: "conversations/message.created" },
-  async ({ events, step }) => {
-    const messageIds = events.map((event) => event.data.messageId);
-
-    await step.run("index-messages", async (): Promise<void> => {
-      const messagesToIndex = await db.query.conversationMessages.findMany({
-        where: and(inArray(conversationMessages.id, messageIds), isNull(conversationMessages.searchIndex)),
-        columns: {
-          id: true,
-        },
-      });
-      const results = await Promise.allSettled(messagesToIndex.map(({ id }) => indexMessage(id)));
-      const failedIds: number[] = [];
-      results.forEach((result, index) => {
-        if (result.status === "rejected" && messagesToIndex[index]?.id) {
-          captureExceptionAndLogIfDevelopment(result.reason);
-          failedIds.push(messagesToIndex[index].id);
-        }
-      });
-      if (failedIds.length > 0) {
-        throw new RetryAfterError(`Failed to index messages: ${failedIds.join(", ")}`, addSeconds(new Date(), 60));
-      }
-    });
-  },
-);
-
-export const indexMessage = async (messageId: number) => {
+export const indexConversationMessage = async ({ messageId }: { messageId: number }) => {
   const message = await getConversationMessageById(messageId);
   if (!message) {
     throw new NonRetriableError("Message not found");

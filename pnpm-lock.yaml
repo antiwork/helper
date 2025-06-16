@@ -28,9 +28,6 @@ importers:
       '@helperai/sdk':
         specifier: workspace:*
         version: link:packages/sdk
-      '@inngest/middleware-sentry':
-        specifier: ^0.1.1
-        version: 0.1.2(@sentry/core@9.15.0)(@sentry/types@9.15.0)(inngest@3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))
       '@lifeomic/attempt':
         specifier: ^3.1.0
         version: 3.1.0
@@ -238,9 +235,6 @@ importers:
       html-to-text:
         specifier: ^9.0.5
         version: 9.0.5
-      inngest:
-        specifier: ^3.24.0
-        version: 3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -407,9 +401,6 @@ importers:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.3.1
         version: 4.4.1(prettier@3.5.3)
-      '@inngest/test':
-        specifier: ^0.1.6
-        version: 0.1.6(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
       '@next/eslint-plugin-next':
         specifier: ^15.3.1
         version: 15.3.1
@@ -1479,9 +1470,6 @@ packages:
 
   '@braintrust/core@0.0.76':
     resolution: {integrity: sha512-kCefHWOqxVtLhNS9DPW9itG99M1ivfRfkPAF8RIJMa1Wi13e6Yq7iNvOK//gdZr+ekj24VlyupaPn1B47NA+ng==}
-
-  '@bufbuild/protobuf@2.2.5':
-    resolution: {integrity: sha512-/g5EzJifw5GF8aren8wZ/G5oMuPoGeS6MQD3ca8ddcvdXR5UELUfdTZITCGNhNXynY/AYl3Z4plmxdj/tRl/hQ==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -2833,19 +2821,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inngest/ai@0.1.4':
-    resolution: {integrity: sha512-pAiiKPC1K2VKPtdWlItmGGAt1EvAoDY2LK+WMGYXYRAPwmoa7gDf+BF0YyPT/u0eqiNLnBXrhl+UFK4iNj/DDg==}
-
-  '@inngest/middleware-sentry@0.1.2':
-    resolution: {integrity: sha512-HwqxVFWBvg6Ld7evSKlBDEMJvolhgb/MaTq9lMmoD8oCO1aJBei0MfXNCJGZAtz5v/AFkhYYAiTvXehcFumanA==}
-    peerDependencies:
-      '@sentry/core': '>=8.0.0'
-      '@sentry/types': '>=8.0.0'
-      inngest: '>=3.0.0'
-
-  '@inngest/test@0.1.6':
-    resolution: {integrity: sha512-SDNjOlg0d1iz/8ZBi9dtd7sfOHFb8gqWXPGh0F+Lp8JtcVF+hzJBJn5ZOvdqdFzfNqsijVA3YwKCW9xFcC9ahg==}
-
   '@inquirer/checkbox@2.5.0':
     resolution: {integrity: sha512-sMgdETOfi2dUHT8r7TT1BTKOwNvdDGFDXYWtQ2J69SvlYNntk9I/gJe7r5yvMwwsuKnYbuRs3pNhx4tgNck5aA==}
     engines: {node: '>=18'}
@@ -2921,9 +2896,6 @@ packages:
   '@jest/schemas@29.6.3':
     resolution: {integrity: sha512-mo5j5X+jIZmJQveBKeS/clAueipV7KgiX1vMgCxam1RNYiqE1w62n0/tJJnHtjW8ZHcQco5gY85jA3mi0L+nSA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
-  '@jpwilliams/waitgroup@2.1.1':
-    resolution: {integrity: sha512-0CxRhNfkvFCTLZBKGvKxY2FYtYW1yWhO2McLqBL0X5UWvYjIf9suH8anKW/DNutl369A75Ewyoh2iJMwBZ2tRg==}
 
   '@jridgewell/gen-mapping@0.3.8':
     resolution: {integrity: sha512-imAbBGkb+ebQyxKgzv5Hu2nmROxoDOXHh80evxdoXNOrvAnVx7zimzc1Oo5h9RlfV4vPXaE2iM5pOFbvOCClWA==}
@@ -4769,10 +4741,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       react: ^16.14.0 || 17.x || 18.x || 19.x
-
-  '@sentry/types@9.15.0':
-    resolution: {integrity: sha512-txQhb39vySyfiOo5w132lGylip0hyFZU5q4hgdILm2DbDVtvQN+MrXS1ocjlw9VyxhkT6Q/6W/q0pwkMRv6rIg==}
-    engines: {node: '>=18'}
 
   '@sentry/vercel-edge@9.15.0':
     resolution: {integrity: sha512-Rfc6pDbHMg5DMIgyZHVIO4IeHgxcH3myPBy9HP1hMLtcEqKL/YS8dK3oQrZoUsNP9chjXkrp4bBeKT/phX3pMg==}
@@ -6718,9 +6686,6 @@ packages:
   caniuse-lite@1.0.30001716:
     resolution: {integrity: sha512-49/c1+x3Kwz7ZIWt+4DvK3aMJy9oYXXG6/97JKsnjdCk/6n9vVyWL8NAwVt95Lwt9eigI10Hl782kDfZUUlRXw==}
 
-  canonicalize@1.0.8:
-    resolution: {integrity: sha512-0CNTVCLZggSh7bc5VkX5WWPWO+cyZbNd07IHIsSXLia/eAq+r836hgk+8BKoEh7949Mda87VUOitx5OddVj64A==}
-
   canvas-confetti@1.9.3:
     resolution: {integrity: sha512-rFfTURMvmVEX1gyXFgn5QMn81bYk70qa0HLzcIOSVEyl57n6o9ItHeBtUSWdvKAPY0xlvBHno4/v3QPrT83q9g==}
 
@@ -7080,9 +7045,6 @@ packages:
 
   crelt@1.0.6:
     resolution: {integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==}
-
-  cross-fetch@4.1.0:
-    resolution: {integrity: sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==}
 
   cross-spawn@6.0.6:
     resolution: {integrity: sha512-VqCUuhcd1iB+dsv8gxPttb5iZh/D0iubSP21g36KXdEuf6I5JiioesUVjpCdHV9MZRUfVFlvwtIUyPfxo5trtw==}
@@ -8646,9 +8608,6 @@ packages:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
     engines: {node: '>= 0.4'}
 
-  hash.js@1.1.7:
-    resolution: {integrity: sha512-taOaskGt4z4SOANNseOviYDvjEJinIkRgmp7LbKP2YTTmVxWBl87s/uzK9r+44BclBSp2X7K1hqeNfz9JbBeXA==}
-
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
@@ -8842,42 +8801,6 @@ packages:
   inngest-cli@1.5.10:
     resolution: {integrity: sha512-9xxoouNgRs+rOJF1mJusCzVnOfx47CvDbL5XQJfpDr2IiRZZeOQul8jC/HDBFvivI8MbxO6fQ2CYNvdV/vw8nw==}
     hasBin: true
-
-  inngest@3.35.1:
-    resolution: {integrity: sha512-6JODVMuNRITLspMjkpGBOYhBTGxZAiA/oQCOlzh4AbOiKOCdbDFP6FQJSA6cWAXOM5HA5WQMj2SWLiKs5fE46g==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@sveltejs/kit': '>=1.27.3'
-      '@vercel/node': '>=2.15.9'
-      aws-lambda: '>=1.0.7'
-      express: '>=4.19.2'
-      fastify: '>=4.21.0'
-      h3: '>=1.8.1'
-      hono: '>=4.2.7'
-      koa: '>=2.14.2'
-      next: '>=12.0.0'
-      typescript: '>=4.7.2'
-    peerDependenciesMeta:
-      '@sveltejs/kit':
-        optional: true
-      '@vercel/node':
-        optional: true
-      aws-lambda:
-        optional: true
-      express:
-        optional: true
-      fastify:
-        optional: true
-      h3:
-        optional: true
-      hono:
-        optional: true
-      koa:
-        optional: true
-      next:
-        optional: true
-      typescript:
-        optional: true
 
   input-otp@1.4.2:
     resolution: {integrity: sha512-l3jWwYNvrEa6NTCt7BECfCm48GvwuZzkoeG3gBL2w4CHeOXW3eKFmf9UNYkNfYc3mxMrthMnxjIE07MT0zLBQA==}
@@ -9892,9 +9815,6 @@ packages:
   mini-svg-data-uri@1.4.4:
     resolution: {integrity: sha512-r9deDe9p5FJUPZAk3A59wGH7Ii9YrjjWw0jmw/liSbHl2CHiyXj6FcDXDu2K3TjVAXqiJdaw3xxwlZZr9E6nHg==}
     hasBin: true
-
-  minimalistic-assert@1.0.1:
-    resolution: {integrity: sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==}
 
   minimatch@10.0.1:
     resolution: {integrity: sha512-ethXTt3SGGR+95gudmqJ1eNhRO7eGEGIgYA9vnPatK4/etz2MEVDno5GMCibdMTuBMyElzIlgxMna3K94XDIDQ==}
@@ -11525,10 +11445,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  serialize-error-cjs@0.1.4:
-    resolution: {integrity: sha512-6a6dNqipzbCPlTFgztfNP2oG+IGcflMe/01zSzGrQcxGMKbIjOemBBD85pH92klWaJavAUWxAh9Z0aU28zxW6A==}
-    deprecated: Rolling release, please update to 0.2.0
-
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
 
@@ -12025,12 +11941,6 @@ packages:
     resolution: {integrity: sha512-WMuOgiua1xb5R56lE0eH6ivpVmg/lq2OHm4+LtT/xtEtPQ+sz6N3bBM6WZ5FvO1lO4IKIOb43qnhoc4qxP5OeA==}
     engines: {node: '>=6.0.0'}
 
-  temporal-polyfill@0.2.5:
-    resolution: {integrity: sha512-ye47xp8Cb0nDguAhrrDS1JT1SzwEV9e26sSsrWzVu+yPZ7LzceEcH0i2gci9jWfOfSCCgM3Qv5nOYShVUUFUXA==}
-
-  temporal-spec@0.2.4:
-    resolution: {integrity: sha512-lDMFv4nKQrSjlkHKAlHVqKrBG4DyFfa9F74cmBZ3Iy3ed8yvWnlWSIdi4IKfSqwmazAohBNwiN64qGx4y5Q3IQ==}
-
   term-img@4.1.0:
     resolution: {integrity: sha512-DFpBhaF5j+2f7kheKFc1ajsAUUDGOaNPpKPtiIMxlbfud6mvfFZuWGnTRpaujUa5J7yl6cIw/h6nyr4mSsENPg==}
     engines: {node: '>=8'}
@@ -12390,10 +12300,6 @@ packages:
   uint8array-extras@1.4.0:
     resolution: {integrity: sha512-ZPtzy0hu4cZjv3z5NW9gfKnNLjoz4y6uv4HlelAjDK7sY/xOkKZv9xK/WQpcsBB3jEybChz9DPC2U/+cusjJVQ==}
     engines: {node: '>=18'}
-
-  ulid@2.4.0:
-    resolution: {integrity: sha512-fIRiVTJNcSRmXKPZtGzFQv9WRrZ3M9eoptl/teFJvjOzmpU+/K/JH6HZ8deBfb5vMEpicJcLn7JmvdknlMq7Zg==}
-    hasBin: true
 
   unbox-primitive@1.1.0:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
@@ -12994,9 +12900,6 @@ packages:
     resolution: {integrity: sha512-/AuWwMP+YqiPbsJx5D6TfgRTc4kTLjsh5SOcd4bLsfUg2RcEXrFMJl1DGgdHy2aCfsIA/cr/1JM0xcB2GZji8g==}
     peerDependencies:
       zod: ^3.24.1
-
-  zod@3.22.5:
-    resolution: {integrity: sha512-HqnGsCdVZ2xc0qWPLdO25WnseXThh0kEYKIdV5F/hTHO75hNZFp8thxSeHhiPrHZKrFTo1SOgkAj9po5bexZlw==}
 
   zod@3.24.3:
     resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
@@ -14084,8 +13987,6 @@ snapshots:
       uuid: 9.0.1
       zod: 3.24.3
 
-  '@bufbuild/protobuf@2.2.5': {}
-
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
@@ -15035,36 +14936,6 @@ snapshots:
   '@img/sharp-win32-x64@0.34.1':
     optional: true
 
-  '@inngest/ai@0.1.4':
-    dependencies:
-      '@types/node': 22.15.3
-      typescript: 5.8.3
-
-  '@inngest/middleware-sentry@0.1.2(@sentry/core@9.15.0)(@sentry/types@9.15.0)(inngest@3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3))':
-    dependencies:
-      '@sentry/core': 9.15.0
-      '@sentry/types': 9.15.0
-      inngest: 3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
-
-  '@inngest/test@0.1.6(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)':
-    dependencies:
-      inngest: 3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3)
-      tinyspy: 3.0.2
-      ulid: 2.4.0
-    transitivePeerDependencies:
-      - '@sveltejs/kit'
-      - '@vercel/node'
-      - aws-lambda
-      - encoding
-      - express
-      - fastify
-      - h3
-      - hono
-      - koa
-      - next
-      - supports-color
-      - typescript
-
   '@inquirer/checkbox@2.5.0':
     dependencies:
       '@inquirer/core': 9.2.1
@@ -15183,8 +15054,6 @@ snapshots:
   '@jest/schemas@29.6.3':
     dependencies:
       '@sinclair/typebox': 0.27.8
-
-  '@jpwilliams/waitgroup@2.1.1': {}
 
   '@jridgewell/gen-mapping@0.3.8':
     dependencies:
@@ -17300,10 +17169,6 @@ snapshots:
       '@sentry/core': 9.15.0
       hoist-non-react-statics: 3.3.2
       react: 19.1.0
-
-  '@sentry/types@9.15.0':
-    dependencies:
-      '@sentry/core': 9.15.0
 
   '@sentry/vercel-edge@9.15.0':
     dependencies:
@@ -19617,8 +19482,6 @@ snapshots:
 
   caniuse-lite@1.0.30001716: {}
 
-  canonicalize@1.0.8: {}
-
   canvas-confetti@1.9.3: {}
 
   cardinal@2.1.1:
@@ -19996,12 +19859,6 @@ snapshots:
   create-require@1.1.1: {}
 
   crelt@1.0.6: {}
-
-  cross-fetch@4.1.0:
-    dependencies:
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
 
   cross-spawn@6.0.6:
     dependencies:
@@ -21863,11 +21720,6 @@ snapshots:
     dependencies:
       has-symbols: 1.1.0
 
-  hash.js@1.1.7:
-    dependencies:
-      inherits: 2.0.4
-      minimalistic-assert: 1.0.1
-
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
@@ -22232,32 +22084,6 @@ snapshots:
       debug: 4.4.0(supports-color@8.1.1)
       node-fetch: 2.7.0
       tar: 6.2.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  inngest@3.35.1(@vercel/node@5.1.15(rollup@4.35.0))(fastify@5.3.2)(next@15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.3):
-    dependencies:
-      '@bufbuild/protobuf': 2.2.5
-      '@inngest/ai': 0.1.4
-      '@jpwilliams/waitgroup': 2.1.1
-      '@types/debug': 4.1.12
-      canonicalize: 1.0.8
-      chalk: 4.1.2
-      cross-fetch: 4.1.0
-      debug: 4.4.0(supports-color@8.1.1)
-      hash.js: 1.1.7
-      json-stringify-safe: 5.0.1
-      ms: 2.1.3
-      serialize-error-cjs: 0.1.4
-      strip-ansi: 5.2.0
-      temporal-polyfill: 0.2.5
-      zod: 3.22.5
-    optionalDependencies:
-      '@vercel/node': 5.1.15(rollup@4.35.0)
-      fastify: 5.3.2
-      next: 15.3.1(patch_hash=bd936ee437b57dd3bf1143449a7d659c6967f49640e01e183ac24c9809b52f42)(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      typescript: 5.8.3
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -23526,8 +23352,6 @@ snapshots:
   min-indent@1.0.1: {}
 
   mini-svg-data-uri@1.4.4: {}
-
-  minimalistic-assert@1.0.1: {}
 
   minimatch@10.0.1:
     dependencies:
@@ -25336,8 +25160,6 @@ snapshots:
 
   semver@7.7.1: {}
 
-  serialize-error-cjs@0.1.4: {}
-
   serialize-javascript@6.0.2:
     dependencies:
       randombytes: 2.1.0
@@ -25969,12 +25791,6 @@ snapshots:
     dependencies:
       rimraf: 2.6.3
 
-  temporal-polyfill@0.2.5:
-    dependencies:
-      temporal-spec: 0.2.4
-
-  temporal-spec@0.2.4: {}
-
   term-img@4.1.0:
     dependencies:
       ansi-escapes: 4.3.2
@@ -26369,8 +26185,6 @@ snapshots:
   uid-promise@1.0.0: {}
 
   uint8array-extras@1.4.0: {}
-
-  ulid@2.4.0: {}
 
   unbox-primitive@1.1.0:
     dependencies:
@@ -27069,8 +26883,6 @@ snapshots:
   zod-to-json-schema@3.24.5(zod@3.24.3):
     dependencies:
       zod: 3.24.3
-
-  zod@3.22.5: {}
 
   zod@3.24.3: {}
 

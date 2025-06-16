@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { postVipMessageToSlack, updateVipMessageInSlack } from "@/lib/slack/vipNotifications";
@@ -109,15 +108,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
   return "Posted";
 }
 
-export default inngest.createFunction(
-  { id: "notify-vip-message" },
-  { event: "conversations/message.created" },
-  async ({ event, step }) => {
-    const { messageId } = event.data;
-    const message = await step.run("handle", async () => {
-      const message = assertDefinedOrRaiseNonRetriableError(await fetchConversationMessage(messageId));
-      return handleVipSlackMessage(message);
-    });
-    return { message };
-  },
-);
+export const notifyVipMessage = async ({ messageId }: { messageId: number }) => {
+  const message = assertDefinedOrRaiseNonRetriableError(await fetchConversationMessage(messageId));
+  return await handleVipSlackMessage(message);
+};

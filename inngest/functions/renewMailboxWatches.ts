@@ -2,7 +2,6 @@ import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { gmailSupportEmails, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
 
 export const renewMailboxWatches = async () => {
@@ -22,9 +21,3 @@ export const renewMailboxWatches = async () => {
     }
   }
 };
-
-export default inngest.createFunction(
-  { id: "renew-mailbox-watches" },
-  { cron: "0 0 * * *" }, // Every day at midnight
-  ({ step }) => step.run("process", () => renewMailboxWatches()),
-);

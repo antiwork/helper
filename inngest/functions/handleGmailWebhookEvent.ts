@@ -4,7 +4,6 @@ import { ParsedMailbox } from "email-addresses";
 import { GaxiosResponse } from "gaxios";
 import { OAuth2Client } from "google-auth-library";
 import { htmlToText } from "html-to-text";
-import { NonRetriableError } from "inngest";
 import { JSDOM } from "jsdom";
 import { AddressObject, Attachment, ParsedMail, simpleParser } from "mailparser";
 import { z } from "zod";
@@ -13,7 +12,6 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
 import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
@@ -25,7 +23,7 @@ import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError, NonRetriableError, triggerEvent } from "../utils";
 import { generateFilePreview } from "./generateFilePreview";
 
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
@@ -152,25 +150,6 @@ export const createMessageAndProcessAttachments = async (
   return newEmail;
 };
 
-export default inngest.createFunction(
-  {
-    id: "handle-gmail-webhook-event",
-    // Retries are disabled for cost reasons and because the logic currently isn't idempotent
-    // (this function will execute once per Gmail webhook event, so adding an extra step or retry
-    // can significantly increase costs. When necessary, we can optimize this function with either
-    // an Inngest debounce + timeout or by batching webhook events).
-    retries: 0,
-  },
-  { event: "gmail/webhook.received" },
-  async ({ event, step }) => {
-    const {
-      data: { body, headers },
-    } = event;
-
-    return await step.run("handle", async () => await handleGmailWebhookEvent(body, headers));
-  },
-);
-
 export const assertSuccessResponseOrThrow = <T>(response: GaxiosResponse<T>): GaxiosResponse<T> => {
   if (response.status < 200 || response.status >= 300) throw new Error(`Request failed: ${response.statusText}`);
   return response;
@@ -182,7 +161,7 @@ export const getParsedEmailInfo = (parsedEmail: ParsedMail) => {
   return { parsedEmail, parsedEmailFrom, parsedEmailBody };
 };
 
-export const handleGmailWebhookEvent = async (body: any, headers: any) => {
+export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
   // Next.js API route handlers will lowercase header keys (e.g. "Authorization" -> "authorization"), but not Inngest.
   // For consistency across all potential invocations of this function, we can lowercase everything here.
   const normalizedHeaders = Object.fromEntries(
@@ -370,10 +349,7 @@ export const handleGmailWebhookEvent = async (body: any, headers: any) => {
       }
 
       if (!shouldIgnore) {
-        await inngest.send({
-          name: "conversations/auto-response.create",
-          data: { messageId: newEmail.id },
-        });
+        await triggerEvent("conversations/auto-response.create", { messageId: newEmail.id });
       }
 
       results.push({
@@ -473,7 +449,7 @@ const processGmailAttachments = async (conversationSlug: string, messageId: numb
           .then(takeUniqueOrThrow);
 
         await uploadFile(key, attachment.content, { mimetype: contentType });
-        await generateFilePreview(fileId);
+        await generateFilePreview({ fileId });
       } catch (error) {
         captureExceptionAndThrowIfDevelopment(error);
       }

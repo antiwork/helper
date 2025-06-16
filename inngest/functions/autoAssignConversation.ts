@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
-import { inngest } from "@/inngest/client";
 import { runAIObjectQuery } from "@/lib/ai";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
@@ -156,60 +155,54 @@ const getNextTeamMember = async (
   };
 };
 
-export default inngest.createFunction(
-  { id: "auto-assign-conversation" },
-  { event: "conversations/human-support-requested" },
-  async ({ event }) => {
-    const { conversationId } = event.data;
-
-    const conversation = assertDefinedOrRaiseNonRetriableError(
-      await db.query.conversations.findFirst({
-        where: eq(conversations.id, conversationId),
-        with: {
-          messages: {
-            columns: {
-              id: true,
-              role: true,
-              cleanedUpText: true,
-            },
+export const autoAssignConversation = async ({ conversationId }: { conversationId: number }) => {
+  const conversation = assertDefinedOrRaiseNonRetriableError(
+    await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversationId),
+      with: {
+        messages: {
+          columns: {
+            id: true,
+            role: true,
+            cleanedUpText: true,
           },
         },
-      }),
-    );
+      },
+    }),
+  );
 
-    if (conversation.assignedToId) return { message: "Skipped: already assigned" };
-    if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
+  if (conversation.assignedToId) return { message: "Skipped: already assigned" };
+  if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
 
-    const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
-    const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
+  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
 
-    const activeTeamMembers = teamMembers.filter(
-      (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,
-    );
+  const activeTeamMembers = teamMembers.filter(
+    (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,
+  );
 
-    if (activeTeamMembers.length === 0) {
-      return { message: "Skipped: no active team members available for assignment" };
-    }
+  if (activeTeamMembers.length === 0) {
+    return { message: "Skipped: no active team members available for assignment" };
+  }
 
-    const { member: nextTeamMember, aiResult } = await getNextTeamMember(activeTeamMembers, conversation, mailbox);
+  const { member: nextTeamMember, aiResult } = await getNextTeamMember(activeTeamMembers, conversation, mailbox);
 
-    if (!nextTeamMember) {
-      return {
-        message: "Skipped: could not find suitable team member for assignment",
-        details: "No core members and no matching keywords for non-core members",
-      };
-    }
-
-    await updateConversation(conversation.id, {
-      set: { assignedToId: nextTeamMember.id },
-      message: aiResult ? aiResult.reasoning : "Core member assigned by round robin",
-    });
-
+  if (!nextTeamMember) {
     return {
-      message: `Assigned conversation ${conversation.id} to ${nextTeamMember.displayName} (${nextTeamMember.id})`,
-      assigneeRole: nextTeamMember.role,
-      assigneeId: nextTeamMember.id,
-      aiResult,
+      message: "Skipped: could not find suitable team member for assignment",
+      details: "No core members and no matching keywords for non-core members",
     };
-  },
-);
+  }
+
+  await updateConversation(conversation.id, {
+    set: { assignedToId: nextTeamMember.id },
+    message: aiResult ? aiResult.reasoning : "Core member assigned by round robin",
+  });
+
+  return {
+    message: `Assigned conversation ${conversation.id} to ${nextTeamMember.displayName} (${nextTeamMember.id})`,
+    assigneeRole: nextTeamMember.role,
+    assigneeId: nextTeamMember.id,
+    aiResult,
+  };
+};

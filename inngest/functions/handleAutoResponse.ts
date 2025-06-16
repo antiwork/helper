@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { checkTokenCountAndSummarizeIfNeeded, generateDraftResponse, respondWithAI } from "@/lib/ai/chat";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
@@ -11,7 +10,7 @@ import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata } from "@/lib/data/retrieval";
 
-export const handleAutoResponse = async (messageId: number) => {
+export const handleAutoResponse = async ({ messageId }: { messageId: number }) => {
   const message = await db.query.conversationMessages
     .findFirst({
       where: eq(conversationMessages.id, messageId),
@@ -108,13 +107,3 @@ export const handleAutoResponse = async (messageId: number) => {
 
   return { message: "Auto response sent", messageId };
 };
-
-export default inngest.createFunction(
-  { id: "handle-auto-response" },
-  { event: "conversations/auto-response.create" },
-  async ({ event, step }) => {
-    const { messageId } = event.data;
-
-    return await step.run("handle", async () => await handleAutoResponse(messageId));
-  },
-);

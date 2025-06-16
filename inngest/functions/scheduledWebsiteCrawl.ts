@@ -1,7 +1,7 @@
 import { isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { websiteCrawls, websites } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/inngest/utils";
 
 export const scheduledWebsiteCrawl = async (): Promise<void> => {
   const websitesToCrawl = await db.query.websites.findMany({
@@ -23,24 +23,9 @@ export const scheduledWebsiteCrawl = async (): Promise<void> => {
       throw new Error("Failed to create crawl record");
     }
 
-    await inngest.send({
-      name: "websites/crawl.create",
-      data: {
-        websiteId: website.id,
-        crawlId: crawl[0].id,
-      },
+    await triggerEvent("websites/crawl.create", {
+      websiteId: website.id,
+      crawlId: crawl[0].id,
     });
   }
 };
-
-export default inngest.createFunction(
-  { id: "scheduled-website-crawl" },
-  { cron: "0 0 * * 0" }, // Run at midnight every Sunday
-  async ({ step }) => {
-    await step.run("trigger-website-crawls", async (): Promise<void> => {
-      await scheduledWebsiteCrawl();
-    });
-
-    return { success: true };
-  },
-);
