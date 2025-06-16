@@ -652,6 +652,20 @@
       "when": 1749460037223,
       "tag": "0092_old_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1750075738918,
+      "tag": "0093_jobs_extensions",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1750075842541,
+      "tag": "0094_jobs_queue",
+      "breakpoints": true
     }
   ]
 }
