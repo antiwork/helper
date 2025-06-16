@@ -1,9 +1,9 @@
-import { SlackEvent, WebClient } from "@slack/web-api";
+import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
-import { conversations, mailboxes } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
@@ -18,6 +18,7 @@ export const POST = async (request: Request) => {
   }
 
   const data = JSON.parse(body);
+  console.log(data);
 
   if (data.type === "url_verification") {
     return NextResponse.json({ challenge: data.challenge });

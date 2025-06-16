@@ -1,9 +1,9 @@
-import { SlackEvent, WebClient } from "@slack/web-api";
-import { eq } from "drizzle-orm";
+import { KnownBlock, LinkUnfurls, SlackEvent, WebClient } from "@slack/web-api";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { formatCurrency } from "@/components/utils/currency";
 import { db } from "@/db/client";
-import { conversations } from "@/db/schema";
+import { conversationMessages, conversations, platformCustomers } from "@/db/schema";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { createMessageBlocks } from "@/lib/slack/vipNotifications";
 
 export type LinkSharedEvent = SlackEvent & {
   type: "link_shared";
@@ -19,7 +19,7 @@ export async function handleSlackUnfurl(event: LinkSharedEvent, slackBotToken: s
   const links = event.links ?? [];
   const slack = new WebClient(slackBotToken);
   const regex = /[?&]id=([a-zA-Z0-9_-]+)/u;
-  const unfurls: Record<string, any> = {};
+  const unfurls: LinkUnfurls = {};
 
   for (const link of links) {
     const match = regex.exec(link.url);
@@ -52,23 +52,81 @@ export async function handleSlackUnfurl(event: LinkSharedEvent, slackBotToken: s
 
     try {
       if (convo) {
-        const attachments = createMessageBlocks({
-          conversation: convo,
-          messages: [
-            {
-              type: "original",
-              body: convo.subject ?? `Conversation with ${convo.emailFromName ?? convo.emailFrom}`,
+        const [originalMessage, latestMessage, platformCustomer] = await Promise.all([
+          db.query.conversationMessages.findFirst({
+            where: and(
+              eq(conversationMessages.conversationId, convo.id),
+              inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
+            ),
+            orderBy: [asc(conversationMessages.createdAt)],
+          }),
+          db.query.conversationMessages.findFirst({
+            where: and(
+              eq(conversationMessages.conversationId, convo.id),
+              inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
+            ),
+            orderBy: [desc(conversationMessages.createdAt)],
+          }),
+          convo.emailFrom
+            ? db.query.platformCustomers.findFirst({
+                where: and(
+                  eq(platformCustomers.email, convo.emailFrom),
+                  eq(platformCustomers.mailboxId, convo.mailboxId),
+                ),
+              })
+            : null,
+        ]);
+
+        const lines = [
+          `*<${link.url}|${convo.subject ?? "(No subject)"}>*`,
+          `Conversation from ${platformCustomer?.name ? `${platformCustomer.name} (${platformCustomer.email})` : (convo.emailFrom ?? "Anonymous")}`,
+          "",
+          "*Original message:*",
+          "",
+          `${originalMessage?.cleanedUpText}`,
+          "",
+          "*Latest message:*",
+          "",
+          `${latestMessage?.cleanedUpText}`,
+        ];
+
+        const attachments: KnownBlock[] = [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: lines.join("\n"),
             },
-          ],
-          customerLinks: [],
-          closed: convo.status === "closed",
-        });
+          },
+          {
+            type: "context",
+            elements: [
+              {
+                type: "plain_text",
+                text: `Created: ${convo.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+                emoji: true,
+              },
+              {
+                type: "plain_text",
+                text: `Last reply: ${latestMessage?.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+                emoji: true,
+              },
+              ...(platformCustomer?.value
+                ? [
+                    {
+                      type: "plain_text" as const,
+                      text: `Value: ${formatCurrency(parseFloat(platformCustomer.value))}`,
+                      emoji: true,
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ];
 
         unfurls[link.url] = {
-          title: convo.subject ?? `Conversation with ${convo.emailFromName ?? convo.emailFrom}`,
-          title_link: link.url,
-          text: `New conversation from *${convo.emailFromName ?? "Unknown"}*`,
-          attachments,
+          blocks: attachments,
+          fallback: `Conversation from ${convo.emailFrom ?? "Anonymous"}`,
         };
       } else {
         unfurls[link.url] = {
