@@ -1,7 +1,6 @@
 "use client";
 
 import { Highlight } from "prism-react-renderer";
-import React from "react";
 import CodeCopyButton from "./codeCopyButton";
 
 const theme = {
@@ -35,7 +34,7 @@ const theme = {
 
 const CodeBlock = ({ code, language }: { code: string; language: string }) => {
   return (
-    <div className="relative rounded-lg border border-border bg-white p-4 text-xs dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="relative rounded-lg border border-border bg-background p-4 text-xs">
       <Highlight code={code} language={language} theme={theme}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre className={`${className} code`} style={{ ...style }}>
