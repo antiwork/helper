@@ -715,7 +715,7 @@ class HelperWidget {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.sessionToken}`,
+          Authorization: `Bearer ${this.sessionToken}`,
         },
         body: JSON.stringify({
           email,
