@@ -885,7 +885,7 @@ class HelperWidget {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.sessionToken}`,
+          "Authorization": `Bearer ${this.sessionToken}`,
         },
         body: JSON.stringify({ status }),
       });
