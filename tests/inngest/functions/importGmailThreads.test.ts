@@ -2,20 +2,20 @@ import { conversationMessagesFactory } from "@tests/support/factories/conversati
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { addDays } from "date-fns";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { generateStartDates, processGmailThreads } from "@/inngest/functions/importGmailThreads";
-import { processGmailThreadWithClient } from "@/inngest/functions/importRecentGmailThreads";
+import { generateStartDates, processGmailThreads } from "@/jobs/importGmailThreads";
+import { processGmailThreadWithClient } from "@/jobs/importRecentGmailThreads";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { getGmailService, listGmailThreads } from "@/lib/gmail/client";
+import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/gmail/client");
-vi.mock("@/inngest/functions/importRecentGmailThreads", async (importOriginal) => {
-  const originalModule = await importOriginal<typeof import("@/inngest/functions/importRecentGmailThreads")>();
+vi.mock("@/jobs/importRecentGmailThreads", async (importOriginal) => {
+  const originalModule = await importOriginal<typeof import("@/jobs/importRecentGmailThreads")>();
   return {
     ...originalModule,
     processGmailThreadWithClient: vi.fn(),
@@ -23,7 +23,7 @@ vi.mock("@/inngest/functions/importRecentGmailThreads", async (importOriginal) =
 });
 vi.mock("@/lib/ai/conversationEmbedding");
 
-mockInngest();
+mockJobs();
 
 describe("generateStartDates", () => {
   it("generates correct start dates for a given range", () => {

@@ -6,9 +6,9 @@ import { gmailSupportEmails } from "@/db/schema";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { getGmailService, listGmailThreads } from "@/lib/gmail/client";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 import { assertSuccessResponseOrThrow } from "./handleGmailWebhookEvent";
 import { excludeExistingGmailThreads, processGmailThreadWithClient } from "./importRecentGmailThreads";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 // Hard limit to avoid accidentally importing too many emails
 const MAX_WEEKS = 52;

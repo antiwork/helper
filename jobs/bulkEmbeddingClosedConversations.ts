@@ -1,7 +1,7 @@
 import { and, eq, gt, gte, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
-import { triggerEvent } from "@/inngest/utils";
+import { triggerEvent } from "@/jobs/utils";
 
 const BATCH_SIZE = 50;
 const CLOSED_STATUS = "closed";

@@ -6,8 +6,8 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { jobRuns } from "@/db/schema";
-import { cronJobs, eventJobs } from "@/inngest/functions";
-import { EventData, EventName } from "@/inngest/utils";
+import { cronJobs, eventJobs } from "@/jobs";
+import { EventData, EventName } from "@/jobs/utils";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 

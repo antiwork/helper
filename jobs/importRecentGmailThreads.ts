@@ -9,7 +9,6 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
 import {
   assertSuccessResponseOrThrow,
   createMessageAndProcessAttachments,
@@ -18,6 +17,7 @@ import {
   getParsedEmailInfo,
   isNewThread,
 } from "./handleGmailWebhookEvent";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 export const importRecentGmailThreads = async ({ gmailSupportEmailId }: { gmailSupportEmailId: number }) => {
   const threads = await getNewGmailThreads(gmailSupportEmailId);

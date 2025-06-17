@@ -3,7 +3,7 @@ import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HelperProvider } from "../../components/HelperProvider";
 import { generateHelperAuth } from "../../server/helper-auth";
-import { cleanupTestEnv, mockHelperWidget, setupTestEnv } from "../utils";
+import { cleanupTestEnv, mockHelperWidget, setupTestEnv } from "./utils";
 
 // Mock client component
 const ClientComponent = () => {

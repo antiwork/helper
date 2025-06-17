@@ -4,7 +4,7 @@ import { conversationMessages, conversations } from "@/db/schema";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 const markSent = async (emailId: number) => {
   await db.update(conversationMessages).set({ status: "sent" }).where(eq(conversationMessages.id, emailId));

@@ -23,7 +23,6 @@ import {
 import { createDbClient } from "@/db/client";
 import { explainAnalyze } from "@/db/lib/debug";
 import * as schemas from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
 
@@ -32,7 +31,6 @@ const db = createDbClient(env.POSTGRES_URL_NON_POOLING, { max: 1 });
 Object.entries({
   env,
   db,
-  inngest,
   explainAnalyze,
   sql,
   ...schemas,

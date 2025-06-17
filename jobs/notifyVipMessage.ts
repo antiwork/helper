@@ -5,7 +5,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { postVipMessageToSlack, updateVipMessageInSlack } from "@/lib/slack/vipNotifications";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelect & {
   conversation: typeof conversations.$inferSelect & {

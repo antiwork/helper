@@ -5,7 +5,7 @@ import { userFactory } from "@tests/support/factories/users";
 import { subDays } from "date-fns";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
-import { cleanupDanglingFiles } from "@/inngest/functions/cleanupDanglingFiles";
+import { cleanupDanglingFiles } from "@/jobs/cleanupDanglingFiles";
 import { deleteFiles } from "@/lib/data/files";
 
 vi.mock("@/lib/data/files", () => ({

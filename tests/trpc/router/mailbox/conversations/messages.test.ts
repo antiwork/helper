@@ -1,15 +1,15 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { and, eq, isNull } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
+import { mockJobs } from "@/tests/support/jobsUtils";
 import { createCaller } from "@/trpc";
 
-const inngestMock = mockInngest();
+const jobsMock = mockJobs();
 
 vi.mock("@/lib/data/conversationMessage", () => ({
   createReply: vi.fn().mockResolvedValue(123),
@@ -41,9 +41,9 @@ describe("messagesRouter", () => {
 
       expect(updatedMessage?.isFlaggedAsBad).toBe(true);
       expect(updatedMessage?.reason).toBe("Incorrect information");
-      expect(inngestMock.send).toHaveBeenCalledWith({
-        name: "messages/flagged.bad",
-        data: { messageId: aiMessage.id, reason: "Incorrect information" },
+      expect(jobsMock.triggerEvent).toHaveBeenCalledWith("messages/flagged.bad", {
+        messageId: aiMessage.id,
+        reason: "Incorrect information",
       });
     });
 

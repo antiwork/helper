@@ -1,5 +1,5 @@
 import { cleanupOldCronJobs, setupCron, setupJobFunctions } from "@/db/lib/jobUtils";
-import { cronJobs } from "@/inngest/functions";
+import { cronJobs } from "@/jobs";
 
 await setupJobFunctions();
 

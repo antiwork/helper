@@ -1,9 +1,8 @@
-import { InngestTestEngine } from "@inngest/test";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { userFactory } from "@tests/support/factories/users";
 import { subDays, subHours } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import checkAssignedTicketResponseTimes from "@/inngest/functions/checkAssignedTicketResponseTimes";
+import { checkAssignedTicketResponseTimes } from "@/jobs/checkAssignedTicketResponseTimes";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 vi.mock("@/lib/slack/client", () => ({
@@ -16,7 +15,6 @@ vi.mock("@/lib/data/user", () => ({
 }));
 
 describe("checkAssignedTicketResponseTimes", () => {
-  const t = new InngestTestEngine({ function: checkAssignedTicketResponseTimes });
   const now = new Date("2024-01-15T10:00:00Z");
 
   beforeEach(() => {
@@ -42,7 +40,7 @@ describe("checkAssignedTicketResponseTimes", () => {
 
     vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
 
-    await t.execute();
+    await checkAssignedTicketResponseTimes();
 
     expect(postSlackMessage).toHaveBeenCalledWith(
       "valid-token",
@@ -80,7 +78,7 @@ describe("checkAssignedTicketResponseTimes", () => {
 
     vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
 
-    await t.execute();
+    await checkAssignedTicketResponseTimes();
 
     expect(postSlackMessage).not.toHaveBeenCalled();
   });
@@ -105,7 +103,7 @@ describe("checkAssignedTicketResponseTimes", () => {
 
     vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
 
-    await t.execute();
+    await checkAssignedTicketResponseTimes();
 
     expect(postSlackMessage).not.toHaveBeenCalled();
   });

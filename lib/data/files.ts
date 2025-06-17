@@ -3,7 +3,7 @@ import { chunk } from "lodash-es";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
 import { files } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 
@@ -100,12 +100,7 @@ export const finishFileUpload = async (
   });
 
   if (fileIdsForPreview.length > 0) {
-    await inngest.send(
-      fileIdsForPreview.map((fileId) => ({
-        name: "files/preview.generate",
-        data: { fileId },
-      })),
-    );
+    await Promise.all(fileIdsForPreview.map((fileId) => triggerEvent("files/preview.generate", { fileId })));
   }
 };
 
@@ -150,10 +145,7 @@ export const createAndUploadFile = async ({
     .then(takeUniqueOrThrow);
 
   if (!isInline) {
-    await inngest.send({
-      name: "files/preview.generate",
-      data: { fileId: file.id },
-    });
+    await triggerEvent("files/preview.generate", { fileId: file.id });
   }
 
   return file;

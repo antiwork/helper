@@ -3,7 +3,7 @@ import { fileFactory } from "@tests/support/factories/files";
 import sharp from "sharp";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
-import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
+import { generateFilePreview } from "@/jobs/generateFilePreview";
 import { downloadFile, uploadFile } from "@/lib/data/files";
 
 // Mock external dependencies
@@ -35,7 +35,7 @@ describe("generateFilePreview", () => {
       toFile: vi.fn().mockResolvedValue(undefined),
     } as unknown as sharp.Sharp);
 
-    await generateFilePreview(file.id);
+    await generateFilePreview({ fileId: file.id });
 
     const updatedFile = await db.query.files.findFirst({
       where: (files, { eq }) => eq(files.id, file.id),
@@ -55,7 +55,7 @@ describe("generateFilePreview", () => {
       previewKey: "existing-preview.png",
     });
 
-    await generateFilePreview(file.id);
+    await generateFilePreview({ fileId: file.id });
 
     expect(downloadFile).not.toHaveBeenCalled();
     expect(sharp).not.toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe("generateFilePreview", () => {
       toFile: vi.fn().mockRejectedValue(new Error("Preview generation failed")),
     } as unknown as sharp.Sharp);
 
-    await expect(generateFilePreview(file.id)).rejects.toThrow("Preview generation failed");
+    await expect(generateFilePreview({ fileId: file.id })).rejects.toThrow("Preview generation failed");
 
     expect(fs.rm).toHaveBeenCalledWith("/tmp/preview-123456", { recursive: true, force: true });
     expect(uploadFile).not.toHaveBeenCalled();

@@ -8,17 +8,11 @@ import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
-import { inngest } from "@/inngest/client";
+import { mockTriggerEvent } from "@/tests/support/jobsUtils";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue("https://slack.com/mock-permalink"),
-}));
-
-vi.mock("@/inngest/client", () => ({
-  inngest: {
-    send: vi.fn(),
-  },
 }));
 
 vi.mock("@/lib/data/conversationMessage", () => ({
@@ -28,6 +22,8 @@ vi.mock("@/lib/data/conversationMessage", () => ({
 vi.mock("@/lib/data/organization", () => ({
   getOrganizationMembers: vi.fn(),
 }));
+
+vi.mock("@/jobs/utils");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -164,9 +160,8 @@ describe("conversationsRouter", () => {
         assignedToId: user.id,
       });
 
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "conversations/embedding.create",
-        data: { conversationSlug: conversation.slug },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/embedding.create", {
+        conversationSlug: conversation.slug,
       });
     });
 
@@ -192,7 +187,7 @@ describe("conversationsRouter", () => {
       });
       expect(updatedConversation!.closedAt).toBeNull();
 
-      expect(inngest.send).not.toHaveBeenCalled();
+      expect(mockTriggerEvent).not.toHaveBeenCalled();
     });
   });
 

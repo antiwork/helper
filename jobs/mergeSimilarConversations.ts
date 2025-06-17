@@ -5,7 +5,7 @@ import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
 import { getMailboxById } from "@/lib/data/mailbox";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 export const mergeSimilarConversations = async ({ messageId }: { messageId: number }) => {
   const conversation = assertDefinedOrRaiseNonRetriableError(

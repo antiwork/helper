@@ -1,7 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationEvents, mailboxes } from "@/db/schema";
-import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
+import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { createHumanSupportRequestEventPayload } from "@/lib/data/dashboardEvent";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";

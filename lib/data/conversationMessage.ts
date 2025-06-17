@@ -12,7 +12,7 @@ import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
@@ -405,7 +405,15 @@ export const createConversationMessage = async (
   }
 
   if (eventsToSend.length > 0) {
-    await inngest.send(eventsToSend);
+    await Promise.all(
+      eventsToSend.map((event) =>
+        triggerEvent(
+          event.name,
+          event.data,
+          event.ts ? { sleepSeconds: Math.floor((event.ts - Date.now()) / 1000) } : {},
+        ),
+      ),
+    );
   }
 
   return message;

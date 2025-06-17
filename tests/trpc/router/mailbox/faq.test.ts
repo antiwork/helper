@@ -6,10 +6,10 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { mockTriggerEvent } from "@/tests/support/jobsUtils";
 import { createCaller } from "@/trpc";
 
-vi.mock("@/inngest/client");
+vi.mock("@/jobs/utils");
 
 describe("faqsRouter", () => {
   describe("list", () => {
@@ -47,9 +47,8 @@ describe("faqsRouter", () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "faqs/embedding.create",
-        data: { faqId: faqRow!.id },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("faqs/embedding.create", {
+        faqId: faqRow!.id,
       });
     });
   });
@@ -74,9 +73,8 @@ describe("faqsRouter", () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "faqs/embedding.create",
-        data: { faqId: faqRow!.id },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("faqs/embedding.create", {
+        faqId: faqRow!.id,
       });
     });
   });

@@ -7,7 +7,7 @@ import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
 import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 const CACHE_ROUND_ROBIN_KEY_PREFIX = "auto-assign-message-queue";
 

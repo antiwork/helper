@@ -3,7 +3,7 @@ import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes, platformCustomers } from "@/db/schema";
-import { formatDuration } from "@/inngest/functions/checkAssignedTicketResponseTimes";
+import { formatDuration } from "@/jobs/checkAssignedTicketResponseTimes";
 import { postSlackMessage } from "@/lib/slack/client";
 
 export const checkVipResponseTimes = async () => {

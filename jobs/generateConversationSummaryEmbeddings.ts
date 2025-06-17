@@ -1,7 +1,7 @@
 import { generateConversationSummary } from "@/lib/ai/generateConversationSummary";
 import { getOriginalConversation } from "@/lib/data/conversation";
 import { getConversationMessageById } from "@/lib/data/conversationMessage";
-import { assertDefinedOrRaiseNonRetriableError, triggerEvent } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError, triggerEvent } from "./utils";
 
 export const generateConversationSummaryEmbeddings = async ({ messageId }: { messageId: number }) => {
   const conversationMessage = assertDefinedOrRaiseNonRetriableError(await getConversationMessageById(messageId));

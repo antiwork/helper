@@ -1,7 +1,7 @@
 import { isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { websiteCrawls, websites } from "@/db/schema";
-import { triggerEvent } from "@/inngest/utils";
+import { triggerEvent } from "@/jobs/utils";
 
 export const scheduledWebsiteCrawl = async (): Promise<void> => {
   const websitesToCrawl = await db.query.websites.findMany({

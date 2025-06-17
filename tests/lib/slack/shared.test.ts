@@ -26,7 +26,7 @@ vi.mock("@/lib/data/note", () => ({
   addNote: vi.fn(),
 }));
 
-vi.mock("@/inngest/client", () => ({
+vi.mock("@/jobs/client", () => ({
   inngest: {
     send: vi.fn(),
   },

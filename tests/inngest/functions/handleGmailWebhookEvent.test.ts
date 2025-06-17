@@ -7,17 +7,17 @@ import { raw as MULTIPLE_TO_EMAILS_RAW } from "@tests/support/fixtures/gmail/mul
 import { raw as NEW_CONVERSATION_RAW } from "@tests/support/fixtures/gmail/newConversationWithAttachments";
 import { raw as WEIRD_ATTACHMENT_RAW } from "@tests/support/fixtures/gmail/weirdAttachment";
 import { raw as WEIRD_EMAIL_FROM_RAW } from "@tests/support/fixtures/gmail/weirdEmailFrom";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { count, eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import { generateFilePreview } from "@/inngest/functions/generateFilePreview";
-import { handleGmailWebhookEvent } from "@/inngest/functions/handleGmailWebhookEvent";
+import { generateFilePreview } from "@/jobs/generateFilePreview";
+import { handleGmailWebhookEvent } from "@/jobs/handleGmailWebhookEvent";
 import { uploadFile } from "@/lib/data/files";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
+import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("google-auth-library");
@@ -25,7 +25,7 @@ vi.mock("@sentry/nextjs", () => ({
   setContext: vi.fn(),
   captureException: vi.fn(),
 }));
-vi.mock("@/inngest/functions/generateFilePreview");
+vi.mock("@/jobs/generateFilePreview");
 vi.mock("@/lib/data/files", async (importOriginal) => {
   const mod = await importOriginal<typeof import("@/lib/data/files")>();
   return {
@@ -34,7 +34,7 @@ vi.mock("@/lib/data/files", async (importOriginal) => {
   };
 });
 
-mockInngest();
+mockJobs();
 
 const GMAIL_SUPPORT_EMAIL_ADDRESS = "test@example.com";
 const DATA_HISTORY_ID = 2000;
@@ -136,7 +136,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const updatedGmailSupportEmail = await db.query.gmailSupportEmails.findFirst({
         where: (g, { eq }) => eq(g.id, gmailSupportEmail.id),
@@ -149,11 +149,13 @@ describe("handleGmailWebhookEvent", () => {
 
       vi.mocked(OAuth2Client.prototype.verifyIdToken).mockRejectedValue(new Error("Authorization failed"));
 
-      await expect(handleGmailWebhookEvent(MOCK_BODY, mockHeaders())).rejects.toThrow("Invalid token");
+      await expect(handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() })).rejects.toThrow(
+        "Invalid token",
+      );
     });
 
     it("short-circuits if the gmailSupportEmail is not found", async () => {
-      await expect(handleGmailWebhookEvent(MOCK_BODY, mockHeaders())).resolves.not.toThrow();
+      await expect(handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() })).resolves.not.toThrow();
 
       expect(getMessagesFromHistoryId).not.toHaveBeenCalled();
       expect(getMessageById).not.toHaveBeenCalled();
@@ -180,7 +182,7 @@ describe("handleGmailWebhookEvent", () => {
         },
       ]);
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       expect(getMessageById).not.toHaveBeenCalled();
     });
@@ -203,7 +205,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -227,7 +229,7 @@ describe("handleGmailWebhookEvent", () => {
           "base64url",
         ),
       });
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
       });
@@ -254,7 +256,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -265,7 +267,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("short-circuits if the Gmail support email record is not found", async () => {
-      const result = await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      const result = await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       expect(result).toBe(`Valid gmail support email record not found for ${GMAIL_SUPPORT_EMAIL_ADDRESS}`);
       expect(getMessagesFromHistoryId).not.toHaveBeenCalled();
@@ -294,7 +296,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -348,7 +350,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -410,7 +412,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       expect(
         await db.query.conversations.findFirst({
@@ -465,7 +467,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -491,7 +493,7 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage(HELPER_MAILBOX_IS_CCED_ONTO_THREAD_RAW);
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -540,7 +542,7 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage(MULTIPLE_TO_EMAILS_RAW);
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -588,7 +590,7 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage(NEW_CONVERSATION_RAW);
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -597,7 +599,7 @@ describe("handleGmailWebhookEvent", () => {
         emailFrom: "s.rauf124@gmail.com",
         emailFromName: "Shan Rauf",
         subject:
-          "A completely new conversation: It’s 綺麗!! And it also happens to have a very long subject line because I want to test and make sure that things work even if the subject line is insanely long!!",
+          "A completely new conversation: It's 綺麗!! And it also happens to have a very long subject line because I want to test and make sure that things work even if the subject line is insanely long!!",
         status: "open",
         conversationProvider: "gmail",
       });
@@ -649,7 +651,7 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage(WEIRD_ATTACHMENT_RAW);
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -711,7 +713,7 @@ describe("handleGmailWebhookEvent", () => {
       ]);
       mockMessage(WEIRD_EMAIL_FROM_RAW);
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -773,7 +775,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -809,7 +811,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const updatedConversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.id, conversation.id),
@@ -842,7 +844,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
@@ -869,7 +871,7 @@ describe("handleGmailWebhookEvent", () => {
         ).toString("base64url"),
       });
 
-      await handleGmailWebhookEvent(MOCK_BODY, mockHeaders());
+      await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
         where: (c, { eq }) => eq(c.mailboxId, mailbox.id),

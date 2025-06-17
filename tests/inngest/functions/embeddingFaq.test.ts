@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
-import { embeddingFaq } from "@/inngest/functions/embeddingFaq";
+import { embeddingFaq } from "@/jobs/embeddingFaq";
 import { generateEmbedding } from "@/lib/ai";
 
 vi.mock("@/lib/ai", () => ({
@@ -26,7 +26,7 @@ describe("embeddingFaq", () => {
     const mockEmbedding = Array.from({ length: 1536 }, () => 0.1);
     vi.mocked(generateEmbedding).mockResolvedValue(mockEmbedding);
 
-    await embeddingFaq(faq.id);
+    await embeddingFaq({ faqId: faq.id });
 
     expect(generateEmbedding).toHaveBeenCalledWith("Test Body", "embedding-faq", {
       skipCache: true,
@@ -40,7 +40,7 @@ describe("embeddingFaq", () => {
   });
 
   it("throws an error if the FAQ is not found", async () => {
-    await expect(embeddingFaq(999)).rejects.toThrow("Value is undefined");
+    await expect(embeddingFaq({ faqId: 999 })).rejects.toThrow("Value is undefined");
   });
 
   it("handles errors during embedding generation", async () => {
@@ -49,7 +49,7 @@ describe("embeddingFaq", () => {
 
     vi.mocked(generateEmbedding).mockRejectedValue(new Error("Embedding generation failed"));
 
-    await expect(embeddingFaq(faq.id)).rejects.toThrow("Embedding generation failed");
+    await expect(embeddingFaq({ faqId: faq.id })).rejects.toThrow("Embedding generation failed");
 
     const updatedFaq = await db.query.faqs.findFirst({
       where: eq(faqs.id, faq.id),

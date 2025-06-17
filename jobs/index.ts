@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineEvent } from "@/inngest/utils";
+import { defineEvent } from "@/jobs/utils";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { autoAssignConversation } from "./autoAssignConversation";
 import { closeInactiveConversations, closeInactiveConversationsForMailbox } from "./autoCloseInactiveConversations";

@@ -4,7 +4,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
-import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
+import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { websiteCrawls, websites } from "@/db/schema";
 import { env } from "@/lib/env";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 const CONCURRENCY_LIMIT = 3;
 const PAGE_LIMIT = 150;

@@ -6,7 +6,7 @@ import { updateConversation } from "@/lib/data/conversation";
 import { searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { getMailboxById } from "@/lib/data/mailbox";
-import { assertDefinedOrRaiseNonRetriableError } from "../utils";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 export const bulkUpdateConversations = async ({
   conversationFilter,

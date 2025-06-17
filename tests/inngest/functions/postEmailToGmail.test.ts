@@ -9,7 +9,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes } from "@/db/schema";
-import { postEmailToGmail } from "@/inngest/functions/postEmailToGmail";
+import { postEmailToGmail } from "@/jobs/postEmailToGmail";
 import { getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import * as sentryUtils from "@/lib/shared/sentry";
@@ -114,7 +114,7 @@ describe("postEmailToGmail", () => {
         },
       } as any);
 
-      expect(await postEmailToGmail(message.id)).toBeNull();
+      expect(await postEmailToGmail({ messageId: message.id })).toBeNull();
       expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
       expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -167,7 +167,7 @@ describe("postEmailToGmail", () => {
         body: "Content",
       });
 
-      expect(await postEmailToGmail(message.id)).toBeNull();
+      expect(await postEmailToGmail({ messageId: message.id })).toBeNull();
       expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
       expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -202,7 +202,7 @@ describe("postEmailToGmail", () => {
         deletedAt: new Date(),
       });
 
-      expect(await postEmailToGmail(message.id)).toBeNull();
+      expect(await postEmailToGmail({ messageId: message.id })).toBeNull();
       expect(await db.query.conversations.findFirst({ where: eq(conversations.id, conversation.id) })).toMatchObject({
         status: "closed",
       });
@@ -225,7 +225,7 @@ describe("postEmailToGmail", () => {
       const { message } = await conversationMessagesFactory.createEnqueued(updatedConversation.id, {
         body: "Content",
       });
-      expect(await postEmailToGmail(message.id)).toEqual("The conversation emailFrom is missing.");
+      expect(await postEmailToGmail({ messageId: message.id })).toEqual("The conversation emailFrom is missing.");
       await assertMarkFailed(message.id);
     });
 
@@ -236,7 +236,9 @@ describe("postEmailToGmail", () => {
       const { message } = await conversationMessagesFactory.createEnqueued(conversation.id, {
         body: "Content",
       });
-      expect(await postEmailToGmail(message.id)).toEqual("The mailbox does not have a connected Gmail account.");
+      expect(await postEmailToGmail({ messageId: message.id })).toEqual(
+        "The mailbox does not have a connected Gmail account.",
+      );
       await assertMarkFailed(message.id);
     });
 
@@ -250,7 +252,7 @@ describe("postEmailToGmail", () => {
       vi.mocked(sendGmailEmail).mockRejectedValueOnce(new Error("RIP"));
       vi.mocked(sentryUtils.captureExceptionAndThrowIfDevelopment).mockImplementation(() => {});
 
-      expect(await postEmailToGmail(message.id)).toEqual("Unexpected error: Error: RIP");
+      expect(await postEmailToGmail({ messageId: message.id })).toEqual("Unexpected error: Error: RIP");
       await assertMarkFailed(message.id);
     });
   });

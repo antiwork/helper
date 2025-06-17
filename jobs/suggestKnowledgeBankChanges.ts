@@ -4,7 +4,7 @@ import { getBaseUrl } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, faqs, mailboxes } from "@/db/schema";
-import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
+import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { runAIObjectQuery } from "@/lib/ai";
 import { findEnabledKnowledgeBankEntries } from "@/lib/data/retrieval";
 import { postSlackMessage } from "@/lib/slack/client";

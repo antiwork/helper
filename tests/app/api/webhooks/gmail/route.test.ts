@@ -1,9 +1,9 @@
-import { mockInngest } from "@tests/support/inngestUtils";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/webhooks/gmail/route";
+import { mockJobs } from "@/tests/support/jobsUtils";
 
-const inngestMock = mockInngest();
+const jobsMock = mockJobs();
 
 describe("POST /api/webhooks/gmail", () => {
   beforeEach(() => {
@@ -40,13 +40,10 @@ describe("POST /api/webhooks/gmail", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(204);
-    expect(inngestMock.send).toHaveBeenCalledWith({
-      name: "gmail/webhook.received",
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("gmail/webhook.received", {
+      body,
+      headers,
       id: messageId,
-      data: {
-        body,
-        headers,
-      },
     });
   });
 });

@@ -3,7 +3,7 @@ import { and, count, eq, isNotNull, isNull, sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
@@ -152,11 +152,8 @@ export const mailboxRouter = {
       });
     }
 
-    await inngest.send({
-      name: "conversations/auto-close.check",
-      data: {
-        mailboxId: ctx.mailbox.id,
-      },
+    await triggerEvent("conversations/auto-close.check", {
+      mailboxId: ctx.mailbox.id,
     });
 
     return {

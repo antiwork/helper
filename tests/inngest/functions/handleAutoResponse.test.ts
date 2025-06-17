@@ -1,15 +1,15 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { handleAutoResponse } from "@/inngest/functions/handleAutoResponse";
+import { handleAutoResponse } from "@/jobs/handleAutoResponse";
 import * as aiChat from "@/lib/ai/chat";
 import * as platformCustomer from "@/lib/data/platformCustomer";
 import * as retrieval from "@/lib/data/retrieval";
+import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/ai/chat");
 vi.mock("@/lib/data/retrieval");
@@ -19,7 +19,7 @@ vi.mock("@sentry/nextjs", () => ({
   captureException: vi.fn(),
 }));
 
-mockInngest();
+mockJobs();
 
 describe("handleAutoResponse", () => {
   beforeEach(() => {
@@ -46,7 +46,7 @@ describe("handleAutoResponse", () => {
     const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: true });
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
 
-    const result = await handleAutoResponse(message.id);
+    const result = await handleAutoResponse({ messageId: message.id });
 
     expect(aiChat.generateDraftResponse).toHaveBeenCalledWith(
       conversation.id,
@@ -63,7 +63,7 @@ describe("handleAutoResponse", () => {
       body: "Test email body",
     });
 
-    const result = await handleAutoResponse(message.id);
+    const result = await handleAutoResponse({ messageId: message.id });
 
     expect(aiChat.respondWithAI).toHaveBeenCalled();
     expect(result).toEqual({ message: "Auto response sent", messageId: message.id });
@@ -85,7 +85,7 @@ describe("handleAutoResponse", () => {
       body: "Test email body",
     });
 
-    await handleAutoResponse(message.id);
+    await handleAutoResponse({ messageId: message.id });
 
     expect(retrieval.fetchMetadata).toHaveBeenCalledWith("customer@example.com", mailbox.slug);
     const updatedMessage = await db.query.conversationMessages.findFirst({
@@ -104,7 +104,7 @@ describe("handleAutoResponse", () => {
     const { conversation } = await conversationFactory.create(mailbox.id, { status: "spam" });
     const { message } = await conversationMessagesFactory.create(conversation.id);
 
-    const result = await handleAutoResponse(message.id);
+    const result = await handleAutoResponse({ messageId: message.id });
     expect(result).toEqual({ message: "Skipped - conversation is spam" });
     expect(aiChat.generateDraftResponse).not.toHaveBeenCalled();
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe("handleAutoResponse", () => {
     const { conversation } = await conversationFactory.create(mailbox.id);
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "staff" });
 
-    const result = await handleAutoResponse(message.id);
+    const result = await handleAutoResponse({ messageId: message.id });
     expect(result).toEqual({ message: "Skipped - message is from staff" });
     expect(aiChat.generateDraftResponse).not.toHaveBeenCalled();
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe("handleAutoResponse", () => {
     const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: false });
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
 
-    const result = await handleAutoResponse(message.id);
+    const result = await handleAutoResponse({ messageId: message.id });
     expect(result).toEqual({ message: "Skipped - not assigned to AI" });
     expect(aiChat.generateDraftResponse).not.toHaveBeenCalled();
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
@@ -141,7 +141,7 @@ describe("handleAutoResponse", () => {
       cleanedUpText: " ",
     });
 
-    const result = await handleAutoResponse(message.id);
+    const result = await handleAutoResponse({ messageId: message.id });
     expect(result).toEqual({ message: "Skipped - email text is empty" });
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
   });

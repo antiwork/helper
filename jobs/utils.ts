@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { eventJobs } from "@/inngest/functions";
+import { eventJobs } from "@/jobs";
 
 export type EventName = keyof typeof eventJobs;
 export type EventData<T extends EventName> = z.infer<(typeof eventJobs)[T]["data"]>;

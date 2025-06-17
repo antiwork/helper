@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { renewMailboxWatches } from "@/inngest/functions/renewMailboxWatches";
+import { renewMailboxWatches } from "@/jobs/renewMailboxWatches";
 import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
 
 vi.mock("@/lib/gmail/client", () => ({

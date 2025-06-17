@@ -5,7 +5,6 @@ import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { addSeconds } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -24,11 +23,12 @@ import {
 } from "@/lib/data/conversationMessage";
 import { getFileUrl } from "@/lib/data/files";
 import { getSlackPermalink } from "@/lib/slack/client";
+import { mockJobs, mockTriggerEvent } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
 }));
-vi.mock("@/inngest/client", () => ({
+vi.mock("@/jobs/client", () => ({
   inngest: {
     send: vi.fn(),
   },
@@ -312,7 +312,7 @@ describe("ensureCleanedUpText", () => {
   });
 });
 
-const inngest = mockInngest();
+mockJobs();
 
 describe("createReply", () => {
   it("creates a reply and closes the conversation", async () => {
@@ -333,17 +333,15 @@ describe("createReply", () => {
     const updatedConversation = await getConversationById(conversation.id);
     expect(updatedConversation?.status).toBe("closed");
 
-    expect(inngest.send).toHaveBeenCalledWith([
-      {
-        name: "conversations/message.created",
-        data: { messageId, conversationId: conversation.id },
-      },
-      {
-        name: "conversations/email.enqueued",
-        data: { messageId },
-        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-      },
-    ]);
+    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/message.created", {
+      messageId,
+      conversationId: conversation.id,
+    });
+
+    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/email.enqueued", {
+      messageId,
+      ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+    });
   });
 
   it("creates a reply without closing the conversation", async () => {
@@ -539,18 +537,12 @@ describe("createConversationMessage", () => {
     expect(message).toBeTruthy();
     expect(message.body).toBe("Test message");
 
-    expect(inngest.send).toHaveBeenCalledWith([
-      {
-        name: "conversations/message.created",
-        data: { messageId: message.id, conversationId: message.conversationId },
-      },
-    ]);
+    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/message.created", {
+      messageId: message.id,
+      conversationId: message.conversationId,
+    });
 
-    expect(inngest.send).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "conversations/email.enqueued",
-      }),
-    );
+    expect(mockTriggerEvent).not.toHaveBeenCalledWith("conversations/email.enqueued", expect.anything());
   });
 
   it("enqueues a queueing message", async () => {
@@ -570,17 +562,15 @@ describe("createConversationMessage", () => {
       status: "queueing",
     });
 
-    expect(inngest.send).toHaveBeenCalledWith([
-      {
-        name: "conversations/message.created",
-        data: { messageId: message.id, conversationId: message.conversationId },
-      },
-      {
-        name: "conversations/email.enqueued",
-        data: { messageId: message.id },
-        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-      },
-    ]);
+    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/message.created", {
+      messageId: message.id,
+      conversationId: message.conversationId,
+    });
+
+    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/email.enqueued", {
+      messageId: message.id,
+      ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+    });
   });
 });
 

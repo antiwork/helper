@@ -23,8 +23,8 @@ import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { assertDefinedOrRaiseNonRetriableError, NonRetriableError, triggerEvent } from "../utils";
 import { generateFilePreview } from "./generateFilePreview";
+import { assertDefinedOrRaiseNonRetriableError, NonRetriableError, triggerEvent } from "./utils";
 
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
 

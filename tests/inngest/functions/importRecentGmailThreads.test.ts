@@ -2,19 +2,19 @@ import { conversationMessagesFactory } from "@tests/support/factories/conversati
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { getNewGmailThreads, processGmailThread } from "@/inngest/functions/importRecentGmailThreads";
+import { getNewGmailThreads, processGmailThread } from "@/jobs/importRecentGmailThreads";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread } from "@/lib/gmail/client";
+import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("@sentry/nextjs");
 
-mockInngest();
+mockJobs();
 
 const GMAIL_SUPPORT_EMAIL_ADDRESS = "test@example.com";
 const GMAIL_THREAD_ID = "thread123";

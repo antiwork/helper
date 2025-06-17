@@ -7,7 +7,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
@@ -124,20 +124,14 @@ export const updateConversation = async (
       orderBy: desc(conversationMessages.createdAt),
     });
     if (message?.role === "user") {
-      await inngest.send({
-        name: "conversations/auto-response.create",
-        data: { messageId: message.id },
-      });
+      await triggerEvent("conversations/auto-response.create", { messageId: message.id });
     }
   }
 
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
     await updateVipMessageOnClose(updatedConversation.id, byUserId);
 
-    await inngest.send({
-      name: "conversations/embedding.create",
-      data: { conversationSlug: updatedConversation.slug },
-    });
+    await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug });
   }
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {

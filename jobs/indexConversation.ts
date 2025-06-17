@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm/expressions";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
-import { NonRetriableError } from "@/inngest/utils";
+import { NonRetriableError } from "@/jobs/utils";
 import { getConversationById } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getConversationMessageById } from "@/lib/data/conversationMessage";
 import { extractHashedWordsFromEmail } from "@/lib/emailSearchService/extractHashedWordsFromEmail";

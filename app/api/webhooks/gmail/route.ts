@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -39,13 +39,12 @@ export async function POST(req: NextRequest) {
     // webhook events. When making modifications to the transform function, make sure to update the
     // transform function in the Inngest dashboard (in a way that's backwards compatible with the existing
     // Inngest functions in production that are listening to the Gmail webhook event).
-    await inngest.send(
-      transform(
-        await req.json(),
-        Object.fromEntries(req.headers.entries()),
-        Object.fromEntries(new URL(req.url).searchParams.entries()),
-      ),
+    const event = transform(
+      await req.json(),
+      Object.fromEntries(req.headers.entries()),
+      Object.fromEntries(new URL(req.url).searchParams.entries()),
     );
+    await triggerEvent(event.name, event.data);
 
     return new NextResponse(null, { status: 204 });
   } catch (e) {

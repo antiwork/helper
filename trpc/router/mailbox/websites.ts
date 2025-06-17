@@ -4,7 +4,7 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { websiteCrawls, websitePages, websites } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { assertDefined } from "../../../components/utils/assert";
 import { mailboxProcedure } from "./procedure";
 
@@ -94,12 +94,9 @@ export const websitesRouter = {
         .returning()
         .then(takeUniqueOrThrow);
 
-      await inngest.send({
-        name: "websites/crawl.create",
-        data: {
-          websiteId: website.id,
-          crawlId: crawl.id,
-        },
+      await triggerEvent("websites/crawl.create", {
+        websiteId: website.id,
+        crawlId: crawl.id,
       });
 
       return website;
@@ -167,12 +164,9 @@ export const websitesRouter = {
         .returning()
         .then(takeUniqueOrThrow);
 
-      await inngest.send({
-        name: "websites/crawl.create",
-        data: {
-          websiteId: website.id,
-          crawlId: crawl.id,
-        },
+      await triggerEvent("websites/crawl.create", {
+        websiteId: website.id,
+        crawlId: crawl.id,
       });
 
       return crawl;

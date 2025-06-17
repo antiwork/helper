@@ -4,7 +4,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/utils";
 import { Mailbox } from "@/lib/data/mailbox";
 import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findMailboxForEvent";
 
@@ -72,13 +72,8 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
 
-  await inngest.send({
-    name: "slack/agent.message",
-    data: {
-      slackUserId: event.user ?? null,
-      statusMessageTs: await postThinkingMessage(client, event.channel, event.thread_ts ?? event.ts),
-      agentThreadId: agentThread.id,
-    },
+  await triggerEvent("conversations/auto-response.create", {
+    messageId: message.id,
   });
 }
 

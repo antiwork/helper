@@ -3,7 +3,7 @@ import { subHours } from "date-fns";
 import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
-import { triggerEvent } from "@/inngest/utils";
+import { triggerEvent } from "@/jobs/utils";
 import { postSlackMessage } from "@/lib/slack/client";
 
 export const REPORT_HOUR = 11;

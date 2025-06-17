@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversations, tools } from "@/db/schema";
-import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
+import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { getConversationById } from "@/lib/data/conversation";
 import { getMailboxById } from "@/lib/data/mailbox";
 import { generateSuggestedActions } from "@/lib/tools/apiTool";

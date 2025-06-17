@@ -1,9 +1,9 @@
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generateMailboxReport, generateWeeklyReports } from "@/inngest/functions/generateWeeklyReports";
+import { generateMailboxReport, generateWeeklyReports } from "@/jobs/generateWeeklyReports";
 import { getMemberStats } from "@/lib/data/stats";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
+import { mockJobs } from "@/tests/support/jobsUtils";
 
 // Mock dependencies
 vi.mock("@/lib/data/stats", () => ({
@@ -23,7 +23,7 @@ vi.mock("@/lib/data/user", () => ({
   },
 }));
 
-const inngestMock = mockInngest();
+const jobsMock = mockJobs();
 
 describe("generateWeeklyReports", () => {
   beforeEach(() => {
@@ -47,12 +47,9 @@ describe("generateWeeklyReports", () => {
 
     await generateWeeklyReports();
 
-    expect(inngestMock.send).toHaveBeenCalledTimes(1);
-    expect(inngestMock.send).toHaveBeenCalledWith({
-      name: "reports/weekly",
-      data: {
-        mailboxId: mailboxWithSlack.id,
-      },
+    expect(jobsMock.triggerEvent).toHaveBeenCalledTimes(1);
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {
+      mailboxId: mailboxWithSlack.id,
     });
   });
 });
