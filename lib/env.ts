@@ -71,6 +71,7 @@ export const env = createEnv({
     JINA_API_TOKEN: z.string().min(1).optional(),
     // API key from https://www.firecrawl.dev to import help docs from a website
     FIRECRAWL_API_KEY: z.string().min(1).optional(),
+    GUMROAD_DEV_TOKEN: z.string().min(1).optional(),
     // Proxy assets when rendering email content
     PROXY_URL: z.string().url().optional(),
     PROXY_SECRET_KEY: z.string().min(1).optional(),

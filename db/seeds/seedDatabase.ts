@@ -61,7 +61,8 @@ export const seedDatabase = async () => {
     const users = await Promise.all(
       env.INITIAL_USER_EMAILS.map(async (email) =>
         assertDefined(
-          (await supabase.auth.admin.createUser({ email, password: crypto.randomUUID(), email_confirm: true })).data.user,
+          (await supabase.auth.admin.createUser({ email, password: crypto.randomUUID(), email_confirm: true })).data
+            .user,
         ),
       ),
     );
@@ -238,7 +239,7 @@ const generateSeedsFromFixtures = async (mailboxId: number) => {
 };
 
 const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect) => {
-  const gumroadDevToken = process.env.GUMROAD_DEV_TOKEN || "dev-token-placeholder";
+  const gumroadDevToken = env.GUMROAD_DEV_TOKEN || "dev-token-placeholder";
 
   await toolsFactory.create({
     mailboxId: mailbox.id,
