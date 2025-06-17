@@ -1,5 +1,5 @@
 .bg-widget {
-  background-color: #f4f4f0;
+  background-color: var(--widget-bg);
 }
 
 .ball-1 {

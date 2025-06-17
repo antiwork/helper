@@ -52,7 +52,7 @@ export default function NotFound() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#3D0C11" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--error-page-bg)" }}>
       <header className="sticky top-0 z-50">
         <nav className="flex flex-col md:flex-row items-center md:justify-between p-4 mx-4 space-y-4 md:space-y-0">
           <div className="relative w-[100px] h-[32px] mx-auto md:mx-0">

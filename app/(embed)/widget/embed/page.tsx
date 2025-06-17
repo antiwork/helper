@@ -147,11 +147,11 @@ export default function Page() {
       <style>
         {buildThemeCss(
           theme ?? {
-            background: "#ffffff",
-            foreground: "#000000",
-            primary: "#000000",
-            accent: "#000000",
-            sidebarBackground: "#ffffff",
+            background: "var(--background)",
+            foreground: "var(--foreground)",
+            primary: "var(--primary)",
+            accent: "var(--accent)",
+            sidebarBackground: "var(--sidebar-background)",
           },
         )}
       </style>

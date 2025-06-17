@@ -167,6 +167,8 @@
     --chart-closed-manual: hsl(45 99% 55%);
     --chart-closed-ai: hsl(73 58% 56%);
     --chart-negative: hsl(17 88% 40%); /* Same as light mode destructive */
+    --error-page-bg: hsl(0 69% 17%); /* Dark red background for error pages */
+    --widget-bg: hsl(42 100% 95%); /* Widget background color */
   }
 
   .dark {
@@ -217,6 +219,8 @@
     --syntax-string: #ce9178;
     --syntax-number: #9cdcfe;
     --chart-open: hsl(17 90% 49%); /* Slightly lighter in dark mode for better visibility */
+    --error-page-bg: hsl(0 69% 17%); /* Same in dark mode */
+    --widget-bg: hsl(0 0% 100% / 10%); /* Darker widget background for dark mode */
   }
 }
 
