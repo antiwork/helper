@@ -43,6 +43,12 @@ export const env = createEnv({
 
     // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
+    POSTGRES_URL: defaultUnlessDeployed(z.string().url(), "postgresql://postgres:postgres@127.0.0.1:54322/postgres"),
+    POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
+      z.string().url(),
+      "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+    ),
+    DATABASE_URL: z.string().url().optional(),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
     SUPABASE_SERVICE_ROLE_KEY: defaultUnlessDeployed(
       z.string().min(1),
@@ -85,7 +91,12 @@ export const env = createEnv({
     // Use a separate key for the search index. Defaults to ENCRYPT_COLUMN_SECRET if not set.
     HASH_WORDS_SECRET: z.string().optional(),
 
+    DRIZZLE_LOGGING: z.string().optional(),
 
+    INITIAL_USER_EMAILS: z
+      .string()
+      .default("support@gumroad.com")
+      .transform((v) => v.split(",")),
   },
 
   /**

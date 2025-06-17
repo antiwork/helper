@@ -1,0 +1,57 @@
+{
+  "1": {
+    "10": {
+      "messages": [
+        {
+          "id": 78,
+          "role": "user",
+          "body": "<div>Hello,<br><div>I'm having trouble accessing my Premium subscription features after my recent payment. The dashboard shows my account as 'Basic' even though I upgraded to Premium yesterday. Can you help me verify my subscription status?<br><br>Thanks,<br>Robert</div></div>",
+          "emailTo": null,
+          "emailFrom": "robert.wilson@example.com",
+          "emailCc": [],
+          "emailBcc": null,
+          "metadata": {
+            "name": "Robert Wilson",
+            "value": 10000,
+            "links": {}
+          },
+          "status": null,
+          "conversationId": 10
+        },
+        {
+          "id": 123,
+          "role": "staff",
+          "body": "Hi Robert,<br><br>Thanks for reaching out about your Premium subscription. I can see that your payment was processed successfully, but there seems to be a slight delay in the system updating your account status. I've manually triggered a refresh of your subscription status, and you should now have access to all Premium features.<br><br>Could you please try logging out and back in, then confirm if you can access the Premium features?<br><br>Let me know if you need any further assistance!<br><br>Best regards,<br>Emma",
+          "emailTo": null,
+          "emailFrom": null,
+          "emailCc": [],
+          "emailBcc": [],
+          "metadata": null,
+          "status": "sent",
+          "conversationId": 10
+        },
+        {
+          "id": 137,
+          "role": "user",
+          "body": "Hi Emma,<br><br>I've logged out and back in as suggested, but I'm still seeing the Basic features. When I go to the Account Settings page, it shows 'Premium (Pending)'. Is there something else I need to do to activate my subscription?<br><br>Best,<br>Robert",
+          "emailTo": null,
+          "emailFrom": "robert.wilson@example.com",
+          "emailCc": [],
+          "emailBcc": null,
+          "metadata": null,
+          "status": null,
+          "conversationId": 10
+        }
+      ],
+      "conversation": {
+        "source": "chat",
+        "subject": "Re: Premium Subscription Access Issue",
+        "emailFrom": "robert.wilson@example.com",
+        "status": "open",
+        "emailFromName": null,
+
+        "isClosed": false
+      }
+    }
+  }
+}

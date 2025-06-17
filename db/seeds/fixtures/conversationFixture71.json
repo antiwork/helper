@@ -1,0 +1,29 @@
+{
+  "2": {
+    "71": {
+      "messages": [
+        {
+          "id": 302,
+          "role": "user",
+          "body": "Hi, I'm getting an error when trying to export my data to CSV. The export button is grayed out and shows a tooltip saying 'Not available for your plan'. I'm on the Business plan which should include this feature according to your pricing page.",
+          "emailTo": "Flexile Support <support@flexile.com>",
+          "emailFrom": "michael.data@example.com",
+          "emailCc": null,
+          "emailBcc": null,
+          "metadata": null,
+          "status": null,
+          "conversationId": 71
+        }
+      ],
+      "conversation": {
+        "source": "email",
+        "subject": "CSV Export Feature Not Working",
+        "emailFrom": "michael.data@example.com",
+        "status": "open",
+        "emailFromName": null,
+        "conversationProvider": "gmail",
+        "isClosed": false
+      }
+    }
+  }
+}

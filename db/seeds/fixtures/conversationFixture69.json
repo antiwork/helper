@@ -1,0 +1,29 @@
+{
+  "2": {
+    "69": {
+      "messages": [
+        {
+          "id": 300,
+          "role": "user",
+          "body": "Hi, I'm trying to integrate your API with my application but I'm getting a 403 error. I've double-checked my API key and it seems correct. Could you help me figure out what's wrong?",
+          "emailTo": "Flexile Support <support@flexile.com>",
+          "emailFrom": "alex.developer@example.com",
+          "emailCc": null,
+          "emailBcc": null,
+          "metadata": null,
+          "status": null,
+          "conversationId": 69
+        }
+      ],
+      "conversation": {
+        "source": "email",
+        "subject": "API Integration Issue - 403 Error",
+        "emailFrom": "alex.developer@example.com",
+        "status": "open",
+        "emailFromName": null,
+        "conversationProvider": "gmail",
+        "isClosed": false
+      }
+    }
+  }
+}

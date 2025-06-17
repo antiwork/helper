@@ -1,0 +1,29 @@
+{
+  "2": {
+    "70": {
+      "messages": [
+        {
+          "id": 301,
+          "role": "user",
+          "body": "Hello, I recently upgraded to the Pro plan but I don't see the advanced analytics features mentioned in the pricing page. Could you help me locate these features or check if my account has been properly upgraded?",
+          "emailTo": "Flexile Support <support@flexile.com>",
+          "emailFrom": "sarah.business@example.com",
+          "emailCc": null,
+          "emailBcc": null,
+          "metadata": null,
+          "status": null,
+          "conversationId": 70
+        }
+      ],
+      "conversation": {
+        "source": "email",
+        "subject": "Pro Plan Features Not Showing",
+        "emailFrom": "sarah.business@example.com",
+        "status": "open",
+        "emailFromName": null,
+        "conversationProvider": "gmail",
+        "isClosed": false
+      }
+    }
+  }
+}
