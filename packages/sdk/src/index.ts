@@ -63,6 +63,7 @@ class HelperWidget {
   private readonly ANONYMOUS_SESSION_TOKEN_KEY = "helper_widget_anonymous_session_token";
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
+  private renderedContactForms: Set<HTMLElement> = new Set();
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
@@ -696,11 +697,11 @@ class HelperWidget {
   }
 
   private async renderContactForm(element: HTMLElement): Promise<void> {
-    if (element.hasAttribute("data-helper-contact-form-rendered")) {
+    if (this.renderedContactForms.has(element)) {
       return;
     }
 
-    element.setAttribute("data-helper-contact-form-rendered", "true");
+    this.renderedContactForms.add(element);
 
     const [{ createRoot }, { ContactForm }] = await Promise.all([
       import("react-dom/client"),
@@ -714,11 +715,11 @@ class HelperWidget {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${this.sessionToken}`,
         },
         body: JSON.stringify({
           email,
           message,
-          token: this.sessionToken,
         }),
       });
 

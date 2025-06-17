@@ -1,29 +1,30 @@
 import { waitUntil } from "@vercel/functions";
+import { z } from "zod";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { inngest } from "@/inngest/client";
-import { createConversation } from "@/lib/data/conversation";
+import { createConversation, generateConversationSubject } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
-export const maxDuration = 60;
-
-interface ContactRequestBody {
-  email: string;
-  message: string;
-  token: string;
-}
+const requestSchema = z.object({
+  email: z.string().email(),
+  message: z.string().min(1),
+});
 
 export function OPTIONS() {
   return corsOptions();
 }
 
 export async function POST(request: Request) {
-  const { email, message }: ContactRequestBody = await request.json();
+  const body = await request.json();
+  const result = requestSchema.safeParse(body);
 
-  if (!email || !message) {
-    return corsResponse({ error: "Email and message are required" }, { status: 400 });
+  if (!result.success) {
+    return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
+
+  const { email, message } = result.data;
 
   const authResult = await authenticateWidget(request);
   if (!authResult.success) {
@@ -63,6 +64,10 @@ export async function POST(request: Request) {
 
       return { newConversation, userMessage };
     });
+
+    waitUntil(
+      generateConversationSubject(result.newConversation.id, [{ role: "user", content: message, id: "temp" }], mailbox),
+    );
 
     waitUntil(
       inngest.send({
