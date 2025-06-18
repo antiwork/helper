@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 

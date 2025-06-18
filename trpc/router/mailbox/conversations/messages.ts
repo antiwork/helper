@@ -4,7 +4,7 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
 import { findSimilarConversations } from "@/lib/data/retrieval";

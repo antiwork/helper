@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { TIME_ZONE } from "@/jobs/generateDailyReports";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
 import { UserRoles } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";

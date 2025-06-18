@@ -4,7 +4,7 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { websiteCrawls, websitePages, websites } from "@/db/schema";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { assertDefined } from "../../../components/utils/assert";
 import { mailboxProcedure } from "./procedure";
 

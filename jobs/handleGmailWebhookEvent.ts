@@ -24,7 +24,8 @@ import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { generateFilePreview } from "./generateFilePreview";
-import { assertDefinedOrRaiseNonRetriableError, NonRetriableError, triggerEvent } from "./utils";
+import { triggerEvent } from "./trigger";
+import { assertDefinedOrRaiseNonRetriableError, NonRetriableError } from "./utils";
 
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
 

@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { faqs, mailboxes } from "@/db/schema";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { findUserViaSlack } from "@/lib/data/user";

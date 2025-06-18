@@ -2,7 +2,8 @@ import { and, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
-import { assertDefinedOrRaiseNonRetriableError, triggerEvent } from "./utils";
+import { triggerEvent } from "./trigger";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 type AutoCloseReport = {
   totalProcessed: number;

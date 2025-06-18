@@ -12,7 +12,7 @@ import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";

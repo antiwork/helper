@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 
 export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMessages.$inferSelect, payload: any) => {
   const agentThread = assertDefined(

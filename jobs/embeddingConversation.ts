@@ -1,4 +1,5 @@
-import { NonRetriableError, triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
+import { NonRetriableError } from "@/jobs/utils";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { getConversationBySlug } from "@/lib/data/conversation";
 

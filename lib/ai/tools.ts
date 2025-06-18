@@ -2,7 +2,7 @@ import { waitUntil } from "@vercel/functions";
 import { CoreMessage, tool, type Tool } from "ai";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
-import { triggerEvent } from "@/jobs/utils";
+import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { Mailbox } from "@/lib/data/mailbox";
