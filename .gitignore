@@ -44,6 +44,7 @@ dist/
 
 public/sdk.js
 public/sdk-*.js
+public/sdk*.js.LICENSE.txt
 
 db/seeds/localSeeds.ts
 
