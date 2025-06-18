@@ -3,7 +3,7 @@ import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
-import { conversations, mailboxes } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
@@ -61,19 +61,14 @@ export const POST = async (request: Request) => {
     return new Response("Success!", { status: 200 });
   }
   if (event.type === "link_shared") {
-    const mailboxInfo = await handleSlackErrors(findMailboxForEvent(event));
-    const mailbox = mailboxInfo?.currentMailbox ?? mailboxInfo?.mailboxes?.[0];
-    if (!mailbox?.slackBotToken) {
-      return new Response("No mailbox token", { status: 403 });
-    }
-    await handleSlackUnfurl(event, mailbox.slackBotToken);
+    waitUntil(handleSlackErrors(handleSlackUnfurl(event)));
     return new Response("Success!", { status: 200 });
   }
 
   return new Response("Not handled", { status: 200 });
 };
 
-const handleSlackErrors = async <T>(operation: Promise<T>) => {
+export const handleSlackErrors = async <T>(operation: Promise<T>) => {
   try {
     return await operation;
   } catch (error) {
