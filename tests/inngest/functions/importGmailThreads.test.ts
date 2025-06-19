@@ -2,6 +2,7 @@ import { conversationMessagesFactory } from "@tests/support/factories/conversati
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { addDays } from "date-fns";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,7 +12,6 @@ import { generateStartDates, processGmailThreads } from "@/jobs/importGmailThrea
 import { processGmailThreadWithClient } from "@/jobs/importRecentGmailThreads";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { getGmailService, listGmailThreads } from "@/lib/gmail/client";
-import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("@/jobs/importRecentGmailThreads", async (importOriginal) => {

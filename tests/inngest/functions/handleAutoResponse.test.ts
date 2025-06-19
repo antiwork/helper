@@ -1,6 +1,7 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
@@ -9,7 +10,6 @@ import { handleAutoResponse } from "@/jobs/handleAutoResponse";
 import * as aiChat from "@/lib/ai/chat";
 import * as platformCustomer from "@/lib/data/platformCustomer";
 import * as retrieval from "@/lib/data/retrieval";
-import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/ai/chat");
 vi.mock("@/lib/data/retrieval");

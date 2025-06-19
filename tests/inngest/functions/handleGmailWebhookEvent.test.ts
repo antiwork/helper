@@ -7,6 +7,7 @@ import { raw as MULTIPLE_TO_EMAILS_RAW } from "@tests/support/fixtures/gmail/mul
 import { raw as NEW_CONVERSATION_RAW } from "@tests/support/fixtures/gmail/newConversationWithAttachments";
 import { raw as WEIRD_ATTACHMENT_RAW } from "@tests/support/fixtures/gmail/weirdAttachment";
 import { raw as WEIRD_EMAIL_FROM_RAW } from "@tests/support/fixtures/gmail/weirdEmailFrom";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { count, eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,7 +18,6 @@ import { handleGmailWebhookEvent } from "@/jobs/handleGmailWebhookEvent";
 import { uploadFile } from "@/lib/data/files";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
-import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/gmail/client");
 vi.mock("google-auth-library");

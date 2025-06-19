@@ -1,9 +1,9 @@
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMailboxReport, generateWeeklyReports } from "@/jobs/generateWeeklyReports";
 import { getMemberStats } from "@/lib/data/stats";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
-import { mockJobs } from "@/tests/support/jobsUtils";
 
 // Mock dependencies
 vi.mock("@/lib/data/stats", () => ({

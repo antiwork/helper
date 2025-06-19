@@ -1,12 +1,12 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { and, eq, isNull } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import { mockJobs } from "@/tests/support/jobsUtils";
 import { createCaller } from "@/trpc";
 
 const jobsMock = mockJobs();

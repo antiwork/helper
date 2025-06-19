@@ -1,6 +1,7 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
@@ -19,7 +20,6 @@ import {
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
-import { mockJobs } from "@/tests/support/jobsUtils";
 
 vi.mock("@/components/constants", () => ({
   getBaseUrl: () => "https://example.com",

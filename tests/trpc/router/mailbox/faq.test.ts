@@ -1,15 +1,13 @@
 import { faqsFactory } from "@tests/support/factories/faqs";
 import { userFactory } from "@tests/support/factories/users";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
-import { mockTriggerEvent } from "@/tests/support/jobsUtils";
 import { createCaller } from "@/trpc";
-
-vi.mock("@/jobs/utils");
 
 describe("faqsRouter", () => {
   describe("list", () => {

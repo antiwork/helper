@@ -5,10 +5,10 @@ import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { mailboxMetadataApiFactory } from "@tests/support/factories/mailboxesMetadataApi";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { userFactory } from "@tests/support/factories/users";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
-import { mockTriggerEvent } from "@/tests/support/jobsUtils";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/slack/client", () => ({
@@ -22,8 +22,6 @@ vi.mock("@/lib/data/conversationMessage", () => ({
 vi.mock("@/lib/data/organization", () => ({
   getOrganizationMembers: vi.fn(),
 }));
-
-vi.mock("@/jobs/utils");
 
 beforeEach(() => {
   vi.clearAllMocks();

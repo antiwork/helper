@@ -2,14 +2,12 @@ import { conversationMessagesFactory } from "@tests/support/factories/conversati
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
 import { userFactory } from "@tests/support/factories/users";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { finishFileUpload } from "@/lib/data/files";
-import { mockTriggerEvent } from "@/tests/support/jobsUtils";
 
-const inngest = mockTriggerEvent();
-
-vi.mock("@/jobs/utils");
+mockTriggerEvent();
 
 describe("fileUploader", () => {
   beforeEach(() => {

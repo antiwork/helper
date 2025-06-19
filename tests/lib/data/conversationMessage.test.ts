@@ -5,6 +5,7 @@ import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs, mockTriggerEvent } from "@tests/support/jobsUtils";
 import { addSeconds } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -23,7 +24,6 @@ import {
 } from "@/lib/data/conversationMessage";
 import { getFileUrl } from "@/lib/data/files";
 import { getSlackPermalink } from "@/lib/slack/client";
-import { mockJobs, mockTriggerEvent } from "@/tests/support/jobsUtils";
 
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),

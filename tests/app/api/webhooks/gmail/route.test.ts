@@ -1,7 +1,7 @@
+import { mockJobs } from "@tests/support/jobsUtils";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/webhooks/gmail/route";
-import { mockJobs } from "@/tests/support/jobsUtils";
 
 const jobsMock = mockJobs();
 
