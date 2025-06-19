@@ -72,8 +72,10 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
 
-  await triggerEvent("conversations/auto-response.create", {
-    messageId: message.id,
+  await triggerEvent("slack/agent.message", {
+    slackUserId: event.user ?? null,
+    statusMessageTs: await postThinkingMessage(client, event.channel, event.thread_ts ?? event.ts),
+    agentThreadId: agentThread.id,
   });
 }
 

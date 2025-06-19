@@ -13,6 +13,12 @@ import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const verifyHmac = (body: string, providedHmac: string, timestamp: string): boolean => {
+  if (!timestamp) return false;
+
+  // Prevent replay attacks by checking timestamp is recent (within 5 minutes)
+  const timestampSeconds = parseInt(timestamp, 10);
+  if (isNaN(timestampSeconds) || Math.abs(Date.now() / 1000 - timestampSeconds) > 5 * 60) return false;
+
   try {
     const expectedHmac = createHmac("sha256", env.ENCRYPT_COLUMN_SECRET).update(`${timestamp}.${body}`).digest("hex");
     return timingSafeEqual(Buffer.from(providedHmac, "hex"), Buffer.from(expectedHmac, "hex"));
@@ -30,9 +36,15 @@ const retrySeconds: Record<number, number> = {
 
 const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<any>) => {
   try {
+    // eslint-disable-next-line no-console
+    console.log(`Running job ${jobRun.id} (${jobRun.job})`);
     const result = await handler;
     await db.update(jobRuns).set({ status: "success", result }).where(eq(jobRuns.id, jobRun.id));
+    // eslint-disable-next-line no-console
+    console.log(`Job ${jobRun.id} (${jobRun.job}) completed`);
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(`Job ${jobRun.id} (${jobRun.job}) failed`);
     captureExceptionAndLog(error);
     await db.transaction(async (tx) => {
       if (retrySeconds[jobRun.attempts] && !(error instanceof NonRetriableError)) {
@@ -93,7 +105,7 @@ export const POST = async (request: NextRequest) => {
       waitUntil(handleJob(jobRun, handler()));
     }
 
-    return new Response("OK");
+    return new Response(`OK: Job run ${jobRun.id}`);
   } catch (error) {
     captureExceptionAndLog(error);
     return new Response("Internal Server Error", { status: 500 });
