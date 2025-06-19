@@ -1,6 +1,7 @@
 // This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
 
 import { Context } from "modern-screenshot";
+import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import { scriptOrigin } from "./scriptOrigin";
@@ -62,6 +63,7 @@ class HelperWidget {
   private readonly ANONYMOUS_SESSION_TOKEN_KEY = "helper_widget_anonymous_session_token";
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
+  private renderedContactForms: Set<HTMLElement> = new Set();
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
@@ -289,6 +291,7 @@ class HelperWidget {
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
+    this.connectExistingContactFormElements();
     this.setupMutationObserver();
 
     let resizeTimeout: NodeJS.Timeout;
@@ -462,6 +465,10 @@ class HelperWidget {
     document.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
   }
 
+  private connectExistingContactFormElements(): void {
+    document.querySelectorAll("[data-helper-contact-form]").forEach(this.connectContactFormElement.bind(this));
+  }
+
   private connectPromptElement(element: Element): void {
     element.addEventListener("click", (event: Event) => this.handlePromptClick(event as MouseEvent));
   }
@@ -484,6 +491,10 @@ class HelperWidget {
 
   private connectToggleElement(element: Element): void {
     element.addEventListener("click", (event: Event) => this.handleToggleClick(event as MouseEvent));
+  }
+
+  private connectContactFormElement(element: Element): void {
+    this.renderContactForm(element as HTMLElement);
   }
 
   private handleToggleClick(event: MouseEvent): void {
@@ -509,8 +520,12 @@ class HelperWidget {
               if (node.hasAttribute("data-helper-toggle")) {
                 this.connectToggleElement(node);
               }
+              if (node.hasAttribute("data-helper-contact-form")) {
+                this.connectContactFormElement(node);
+              }
               node.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
               node.querySelectorAll("[data-helper-toggle]").forEach(this.connectToggleElement.bind(this));
+              node.querySelectorAll("[data-helper-contact-form]").forEach(this.connectContactFormElement.bind(this));
             }
           });
         }
@@ -679,6 +694,41 @@ class HelperWidget {
     document.querySelectorAll("[data-helper-toggle]").forEach((element) => {
       this.updateToggleState(element as HTMLElement);
     });
+  }
+
+  private async renderContactForm(element: HTMLElement): Promise<void> {
+    if (this.renderedContactForms.has(element)) {
+      return;
+    }
+
+    this.renderedContactForms.add(element);
+
+    const [{ createRoot }, { ContactForm }] = await Promise.all([
+      import("react-dom/client"),
+      import("./components/contactForm"),
+    ]);
+
+    const root = createRoot(element);
+
+    const handleSubmit = async (email: string, message: string) => {
+      const response = await fetch(`${scriptOrigin}/api/chat/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.sessionToken}`,
+        },
+        body: JSON.stringify({
+          email,
+          message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+    };
+
+    root.render(React.createElement(ContactForm, { onSubmit: handleSubmit }));
   }
 
   private destroyInternal(): void {

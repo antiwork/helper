@@ -700,12 +700,21 @@ importers:
       modern-screenshot:
         specifier: ^4.5.5
         version: 4.6.0
+      react:
+        specifier: 19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: 19.1.0
+        version: 19.1.0(react@19.1.0)
       scroll-into-view-if-needed:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
       '@babel/preset-env':
         specifier: ^7.25.4
+        version: 7.27.1(@babel/core@7.27.1)
+      '@babel/preset-react':
+        specifier: ^7.27.1
         version: 7.27.1(@babel/core@7.27.1)
       '@babel/preset-typescript':
         specifier: ^7.24.7

@@ -1,4 +1,3 @@
-import { Options } from "@sentry/core";
 import { env } from "@/lib/env";
 
 export const commonConfig = {
@@ -10,4 +9,4 @@ export const commonConfig = {
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
-} satisfies Options;
+};
