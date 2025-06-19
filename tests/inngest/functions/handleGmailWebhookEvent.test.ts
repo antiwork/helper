@@ -632,7 +632,7 @@ describe("handleGmailWebhookEvent", () => {
       expect(uploadFile).toHaveBeenCalledTimes(3);
 
       attachedFiles.forEach((file) => {
-        expect(generateFilePreview).toHaveBeenCalledWith(file.id);
+        expect(generateFilePreview).toHaveBeenCalledWith({ fileId: file.id });
         expect(uploadFile).toHaveBeenCalledWith(file.key, expect.anything(), { mimetype: file.mimetype });
       });
     });
