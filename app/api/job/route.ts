@@ -36,7 +36,7 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
     await db.transaction(async (tx) => {
       if (retrySeconds[jobRun.attempts]) {
         const payload = { job: jobRun.job, data: jobRun.data, event: jobRun.event, jobRunId: jobRun.id };
-        await tx.execute(sql`pgmq_public.send('jobs', ${payload}, ${retrySeconds[jobRun.attempts]})`);
+        await tx.execute(sql`SELECT pgmq.send('jobs', ${payload}::jsonb, ${retrySeconds[jobRun.attempts]})`);
       }
       await tx
         .update(jobRuns)

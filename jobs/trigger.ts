@@ -12,5 +12,7 @@ export const triggerEvent = <T extends EventName>(
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
   const payloads = Object.keys(eventJobs[event].jobs).map((job) => ({ event, job, data }));
-  return db.execute(sql`pgmq_public.send_batch('jobs', ${payloads}, ${sleepSeconds})`);
+  return db.execute(
+    sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
+  );
 };
