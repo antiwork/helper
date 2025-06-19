@@ -70,7 +70,7 @@ describe("conversationsRouter", () => {
         }),
       ).toMatchObject({
         conversations: [{ slug: assignedConversation.slug }],
-        defaultSort: "oldest",
+        defaultSort: "newest",
         assignedToIds: [user.id],
       });
     });
