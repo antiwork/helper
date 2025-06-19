@@ -6,7 +6,7 @@ export const setupCron = async (job: string, schedule: string) => {
   // eslint-disable-next-line no-console
   console.log(`Scheduling cron job: ${job} with schedule: ${schedule}`);
   await db.execute(sql`
-    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint(${JSON.stringify({ job })})`});
+    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint('${JSON.stringify({ job })}'::jsonb)`});
   `);
 };
 
