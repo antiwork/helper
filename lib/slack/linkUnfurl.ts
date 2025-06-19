@@ -33,17 +33,6 @@ export async function handleSlackUnfurl(event: LinkSharedEvent) {
           where: eq(conversations.slug, slug),
           with: { mailbox: true },
         });
-
-        if (!convo) {
-          try {
-            convo = await db.query.conversations.findFirst({
-              where: eq(conversations.id, Number(slug)),
-              with: { mailbox: true },
-            });
-          } catch (idParseError) {
-            captureExceptionAndLog?.(idParseError);
-          }
-        }
       }
     } catch (dbError) {
       captureExceptionAndLog?.(dbError);
