@@ -209,7 +209,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "evalite": "^0.8.2",
     "heroku": "^10.6.1",
-    "inngest-cli": "^1.5.10",
     "openapi-types": "^12.1.3",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
@@ -225,7 +224,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "inngest-cli",
       "protobufjs",
       "sharp",
       "ssh2",

@@ -8,6 +8,7 @@ import { db } from "@/db/client";
 import { jobRuns } from "@/db/schema";
 import { cronJobs, eventJobs } from "@/jobs";
 import { EventData, EventName } from "@/jobs/trigger";
+import { NonRetriableError } from "@/jobs/utils";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -34,7 +35,7 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
   } catch (error) {
     captureExceptionAndLog(error);
     await db.transaction(async (tx) => {
-      if (retrySeconds[jobRun.attempts]) {
+      if (retrySeconds[jobRun.attempts] && !(error instanceof NonRetriableError)) {
         const payload = { job: jobRun.job, data: jobRun.data, event: jobRun.event, jobRunId: jobRun.id };
         await tx.execute(sql`SELECT pgmq.send('jobs', ${payload}::jsonb, ${retrySeconds[jobRun.attempts]})`);
       }
@@ -77,8 +78,7 @@ export const POST = async (request: NextRequest) => {
           .then(takeUniqueOrThrow);
 
     if (data.event) {
-      const jobs = eventJobs[data.event].jobs;
-      const handler = jobs[data.job as keyof typeof jobs] as (data: EventData<EventName>) => Promise<any>;
+      const handler = eventJobs[data.job as keyof typeof eventJobs] as (data: EventData<EventName>) => Promise<any>;
       if (!handler) {
         await db.update(jobRuns).set({ status: "error", error: "Job not found" }).where(eq(jobRuns.id, jobRun.id));
         return new Response("Not found", { status: 404 });

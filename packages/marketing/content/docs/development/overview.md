@@ -28,7 +28,7 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **`components`:** Reusable UI components, hooks, and utility functions.
 - **`content`:** Markdown content for the help center.
 - **`db`:** Database migrations and schema definitions.
-- **`inngest/functions`:** Background functions powered by Inngest, responsible for tasks like email processing, AI response generation, and data updates.
+- **`jobs`:** Background functions powered by Supabase Cron and Queues, responsible for tasks like email processing, AI response generation, and data updates.
 - **`lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
 - **`lib/ai`:** AI-related functionality including chat completion, response generation, embeddings, and tools. Contains core AI logic for:
   - Chat message generation and streaming
@@ -57,10 +57,9 @@ The codebase is Next.js app which also contains individual SDK packages.
 
 - **Next.js:** The primary framework for the web application, providing server-side rendering, API routes, and a robust component model.
 - **tRPC:** Used for building the API, offering type safety and efficient communication between the frontend and backend.
-- **Tailwind CSS and Nativewind:** Used for styling and UI components, ensuring consistency across web and mobile applications.
+- **Tailwind CSS:** Used for styling and UI components, ensuring consistency across web and mobile applications.
 - **Drizzle ORM:** Database access library, enabling type-safe queries and database interactions.
-- **Supabase:** For the database and user authentication.
-- **Inngest:** Serverless functions platform that powers background jobs and data processing.
+- **Supabase:** For the database, user authentication, file storage, and background jobs.
 - **Vercel AI SDK:** Used for building AI-powered features with streaming support, function calling, and type-safe AI responses.
 - **Vitest:** For running unit and integration tests.
 - **Sentry:** Error tracking and performance monitoring.
@@ -86,14 +85,14 @@ The database layer is built using Drizzle ORM, providing type-safe database inte
 
 This schema structure enables type-safe database queries throughout the application, with Drizzle providing compile-time checking of SQL queries and automatic type inference for query results. The schema definitions serve as the single source of truth for the database structure and are used to generate migrations and maintain database consistency.
 
-## Background Jobs with Inngest
+## Background Jobs with Supabase
 
-Helper uses Inngest for managing background jobs and event-driven processes. The background functions are organized following these patterns:
+Helper uses Supabase Cron and Queues for managing background jobs and event-driven processes. The background functions are organized following these patterns:
 
 ### Event Schema and Organization
 
-- **Location:** Background functions are defined in `inngest/functions/`
-- **Event Schema:** Events are strongly typed using Zod schemas in `client.ts`
+- **Location:** Background functions are defined in `jobs/`
+- **Event Schema:** Events are strongly typed using Zod schemas in `events.ts`
 - **Function Types:** Two main types of functions:
   - Event-driven (e.g., `conversations/message.created`, `files/preview.generate`)
   - Scheduled/Cron jobs (e.g., cleanup tasks, periodic updates)
@@ -101,9 +100,6 @@ Helper uses Inngest for managing background jobs and event-driven processes. The
 ### Function Patterns
 
 - **Plain Functions:** Core logic is exported as plain functions for easier testing
-- **Batching:** Functions can batch process events using `batchEvents` configuration
-- **Concurrency Control:** Functions can limit concurrent executions using the `concurrency` option
-- **Step-based Processing:** Complex operations are broken down into named steps for better observability
 - **Error Handling:** Functions use `NonRetriableError` for permanent failures and `RetryAfterError` for temporary issues
 - **Type Safety:** Event payloads are strongly typed using Zod schemas
 

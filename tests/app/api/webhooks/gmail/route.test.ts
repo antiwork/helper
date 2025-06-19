@@ -10,7 +10,7 @@ describe("POST /api/webhooks/gmail", () => {
     vi.resetAllMocks();
   });
 
-  it("publishes an Inngest event for Gmail webhook requests", async () => {
+  it("triggers a job for Gmail webhook requests", async () => {
     const messageId = "12623166611550058";
     const body = {
       message: {

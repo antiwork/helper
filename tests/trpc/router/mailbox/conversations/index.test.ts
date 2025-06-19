@@ -163,7 +163,7 @@ describe("conversationsRouter", () => {
       });
     });
 
-    it("updates status without setting closedAt or calling inngest when not closed", async () => {
+    it("updates status without setting closedAt or calling triggerEvent when not closed", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
 

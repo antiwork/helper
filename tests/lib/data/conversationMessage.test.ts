@@ -27,11 +27,6 @@ import { getSlackPermalink } from "@/lib/slack/client";
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
 }));
-vi.mock("@/jobs/client", () => ({
-  inngest: {
-    send: vi.fn(),
-  },
-}));
 vi.mock("@/lib/data/files", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/data/files")>();
   return {

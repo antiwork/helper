@@ -12,7 +12,6 @@ description: Customize and contribute to Helper
 The app uses Docker to run the following services locally:
 
 - Supabase
-- Inngest
 - Nginx (allowing you to use the `https://helperai.dev` domain)
 
 `pnpm dev` will automatically start and stop these services, or you can use `pnpm services:start` and `pnpm services:stop` to start and stop them manually.
@@ -49,12 +48,12 @@ Note that `pnpm dev` will automatically run migrations, but won't generate them.
 npm test
 
 # Run a specific test file
-pnpm test tests/inngest/functions/postEmailToGmail.test.ts
+pnpm test tests/jobs/postEmailToGmail.test.ts
 ```
 
 ## Background Tasks
 
-This project uses [Inngest](https://www.inngest.com/) for background tasks. You can view the dashboard / development server at [http://localhost:8288/](http://localhost:8288/).
+This project uses Supabase Cron and Queues for background tasks.
 
 ## SSL certificates
 
