@@ -34,7 +34,7 @@ export const conversationsRouter = {
 
     return {
       conversations: results,
-      defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
+      defaultSort: metadataEnabled ? ("highest_value" as const) : ("newest" as const),
       onboardingState: {
         hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
         hasWidgetHost: !!ctx.mailbox.widgetHost,
