@@ -6,7 +6,6 @@ import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
 import { mockJobs, mockTriggerEvent } from "@tests/support/jobsUtils";
-import { addSeconds } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
@@ -333,15 +332,17 @@ describe("createReply", () => {
     const updatedConversation = await getConversationById(conversation.id);
     expect(updatedConversation?.status).toBe("closed");
 
-    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/message.created", {
-      messageId,
-      conversationId: conversation.id,
-    });
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/message.created",
+      { messageId, conversationId: conversation.id },
+      {},
+    );
 
-    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/email.enqueued", {
-      messageId,
-      ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-    });
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/email.enqueued",
+      { messageId },
+      { sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS },
+    );
   });
 
   it("creates a reply without closing the conversation", async () => {
@@ -537,12 +538,17 @@ describe("createConversationMessage", () => {
     expect(message).toBeTruthy();
     expect(message.body).toBe("Test message");
 
-    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/message.created", {
-      messageId: message.id,
-      conversationId: message.conversationId,
-    });
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/message.created",
+      { messageId: message.id, conversationId: message.conversationId },
+      {},
+    );
 
-    expect(mockTriggerEvent).not.toHaveBeenCalledWith("conversations/email.enqueued", expect.anything());
+    expect(mockTriggerEvent).not.toHaveBeenCalledWith(
+      "conversations/email.enqueued",
+      expect.anything(),
+      expect.anything(),
+    );
   });
 
   it("enqueues a queueing message", async () => {
@@ -562,15 +568,17 @@ describe("createConversationMessage", () => {
       status: "queueing",
     });
 
-    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/message.created", {
-      messageId: message.id,
-      conversationId: message.conversationId,
-    });
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/message.created",
+      { messageId: message.id, conversationId: message.conversationId },
+      {},
+    );
 
-    expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/email.enqueued", {
-      messageId: message.id,
-      ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-    });
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/email.enqueued",
+      { messageId: message.id },
+      { sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS },
+    );
   });
 });
 

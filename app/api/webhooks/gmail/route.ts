@@ -11,9 +11,9 @@ function transform(evt: Record<string, any>, headers = {}, queryParams = {}) {
   const body = evt;
 
   return {
-    id: body.message.messageId,
     name: "gmail/webhook.received" as const,
     data: {
+      id: body.message.messageId,
       body,
       headers,
     },

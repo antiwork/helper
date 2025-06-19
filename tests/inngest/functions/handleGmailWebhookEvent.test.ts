@@ -599,7 +599,7 @@ describe("handleGmailWebhookEvent", () => {
         emailFrom: "s.rauf124@gmail.com",
         emailFromName: "Shan Rauf",
         subject:
-          "A completely new conversation: It's 綺麗!! And it also happens to have a very long subject line because I want to test and make sure that things work even if the subject line is insanely long!!",
+          "A completely new conversation: It’s 綺麗!! And it also happens to have a very long subject line because I want to test and make sure that things work even if the subject line is insanely long!!",
         status: "open",
         conversationProvider: "gmail",
       });
@@ -694,7 +694,7 @@ describe("handleGmailWebhookEvent", () => {
       expect(uploadFile).toHaveBeenCalledTimes(1);
 
       attachedFiles.forEach((file) => {
-        expect(generateFilePreview).toHaveBeenCalledWith(file.id);
+        expect(generateFilePreview).toHaveBeenCalledWith({ fileId: file.id });
         expect(uploadFile).toHaveBeenCalledWith(file.key, expect.anything(), { mimetype: file.mimetype });
       });
     });

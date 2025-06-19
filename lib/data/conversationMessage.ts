@@ -1,4 +1,3 @@
-import { addSeconds } from "date-fns";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
@@ -400,18 +399,14 @@ export const createConversationMessage = async (
     eventsToSend.push({
       name: "conversations/email.enqueued" as const,
       data: { messageId: message.id },
-      ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS,
     });
   }
 
   if (eventsToSend.length > 0) {
     await Promise.all(
       eventsToSend.map((event) =>
-        triggerEvent(
-          event.name,
-          event.data,
-          event.ts ? { sleepSeconds: Math.floor((event.ts - Date.now()) / 1000) } : {},
-        ),
+        triggerEvent(event.name, event.data, event.sleepSeconds ? { sleepSeconds: event.sleepSeconds } : {}),
       ),
     );
   }
