@@ -13,6 +13,8 @@ const MODEL_TOKEN_COST = {
   "gpt-4.1": { input: 0.000002, cachedInput: 0.0000005, output: 0.000008 },
   "gpt-4.1-mini": { input: 0.0000004, cachedInput: 0.0000001, output: 0.0000016 },
   "fireworks/deepseek-r1": { input: 0.000003, cachedInput: 0.000003, output: 0.000008 },
+  "google/gemini-1.5-flash": { input: 0.000001, cachedInput: 0.000001, output: 0.000002 },
+  "google/text-embedding-004": { input: 0.00002, cachedInput: 0.00002, output: 0.000004 },
 };
 
 const getPlaceholderMailbox = async () => {

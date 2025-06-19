@@ -1,8 +1,10 @@
-import { openai } from "@ai-sdk/openai";
+// import { openai } from "@ai-sdk/openai";
 import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
 import { z } from "zod";
 import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { registry } from "@/lib/ai/provider";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
+import { env } from "@/lib/env";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../../components/utils/assert";
 
@@ -212,7 +214,8 @@ export async function POST(request: Request) {
     }),
   };
 
-  const model = openai("gpt-4.1", { parallelToolCalls: false });
+  // const model = openai("gpt-4.1", { parallelToolCalls: false });
+  const model = registry.languageModel(env.AI_PROVIDER);
 
   return createDataStreamResponse({
     execute: (dataStream) => {

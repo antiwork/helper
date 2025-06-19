@@ -5,13 +5,15 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, ToolMetadata } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
-import openai from "@/lib/ai/openai";
+// import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
 import { cleanUpTextForAI, GPT_4O_MINI_MODEL, isWithinTokenLimit } from "../ai/core";
+import { registry } from "../ai/provider";
 import type { Conversation } from "../data/conversation";
 import type { Mailbox } from "../data/mailbox";
+import { env } from "../env";
 
 export class ToolApiError extends Error {
   constructor(
@@ -167,7 +169,8 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   const aiTools = buildAITools(mailboxTools, conversation.emailFrom);
 
   const { toolCalls } = await generateText({
-    model: openai(GPT_4O_MINI_MODEL),
+    // model: openai(GPT_4O_MINI_MODEL),
+    model: registry.languageModel(env.AI_PROVIDER),
     tools: {
       close: {
         description: "Close the conversation",

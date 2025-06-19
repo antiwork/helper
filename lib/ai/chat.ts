@@ -43,7 +43,9 @@ import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
+import { env } from "../env";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { registry } from "./provider";
 
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
@@ -70,7 +72,8 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   }
 
   const { text: summary } = await generateText({
-    model: openai(GPT_4_1_MINI_MODEL),
+    // model: openai(GPT_4_1_MINI_MODEL),
+    model: registry.languageModel(env.AI_PROVIDER),
     system: SUMMARY_PROMPT,
     prompt: text,
     maxTokens: SUMMARY_MAX_TOKENS,
@@ -314,7 +317,8 @@ export const generateAIResponse = async ({
   readPageTool = null,
   onFinish,
   dataStream,
-  model = openai(COMPLETION_MODEL),
+  // model = openai(COMPLETION_MODEL),
+  model = registry.languageModel(env.AI_PROVIDER),
   addReasoning = false,
   reasoningModel = REASONING_MODEL,
   evaluation = false,
@@ -400,9 +404,10 @@ export const generateAIResponse = async ({
       });
     }
   }
-
+  const providerKey = (env.AI_PROVIDER ?? "openai").split(":")[0] || "openai";
   return streamText({
-    model,
+    // model,
+    model: registry.languageModel(env.AI_PROVIDER ?? "openai"),
     messages: finalMessages,
     maxSteps: 4,
     tools,
@@ -410,7 +415,7 @@ export const generateAIResponse = async ({
     seed: evaluation ? 100 : undefined,
     experimental_transform: hideToolResults(),
     experimental_providerMetadata: {
-      openai: {
+      [providerKey]: {
         store: true,
         metadata: {
           conversationId: conversationId.toString(),

@@ -26,6 +26,12 @@ export const env = createEnv({
   server: {
     // Set this for both local development and when deploying
     OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
+    AI_PROVIDER: z
+      .custom<`${string}:${string}`>((val) => typeof val === "string" && val.includes(":"), {
+        message: "AI_PROVIDER must be in format 'provider:model'",
+      })
+      .default("openai:gpt-4o") as unknown as z.ZodType<`${string}:${string}`>,
+    AI_API_KEY: z.string().min(1),
 
     // Set this before deploying
     ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(

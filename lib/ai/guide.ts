@@ -4,6 +4,8 @@ import { z } from "zod";
 import { Mailbox } from "@/lib/data/mailbox";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { env } from "../env";
+import { registry } from "./provider";
 
 const PLAN_PROMPT = `You are a planning agent that helps break down tasks into smaller steps and reason about the current state. Your role is to:
 
@@ -53,7 +55,8 @@ export async function generateGuidePlan(title: string, instructions: string, mai
 
   try {
     const result = await generateObject({
-      model: openai("gpt-4.1"),
+      // model: openai("gpt-4.1"),
+      model: registry.languageModel(env.AI_PROVIDER),
       system: PLAN_PROMPT,
       prompt,
       schema: PlanResultSchema,

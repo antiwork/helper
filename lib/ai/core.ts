@@ -6,6 +6,8 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import openai from "@/lib/ai/openai";
 import { cacheFor } from "@/lib/cache";
+import { env } from "../env";
+import { registry } from "./provider";
 
 export const GPT_4O_MODEL = "gpt-4o";
 export const GPT_4_1_MODEL = "gpt-4.1";
@@ -40,7 +42,8 @@ export const generateEmbedding = async (
   }
 
   const { embedding } = await embed({
-    model: openai.embedding(EMBEDDING_MODEL),
+    // model: openai.embedding(EMBEDDING_MODEL),
+    model: registry.textEmbeddingModel("google:text-embedding-004"), //should also come from a central source
     value: input,
     experimental_telemetry: {
       isEnabled: true,
@@ -77,7 +80,8 @@ export const generateCompletion = ({
 } & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateText({
-      model: openai(model),
+      // model: openai(model),
+      model: registry.languageModel(env.AI_PROVIDER),
       temperature,
       ...options,
       ...prompt,
@@ -108,7 +112,8 @@ export const generateStructuredObject = <T>({
 } & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(options.shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateObject<T>({
-      model: openai(model),
+      // model: openai(model),
+      model: registry.languageModel(env.AI_PROVIDER),
       temperature,
       ...options,
       ...prompt,
