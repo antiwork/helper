@@ -680,6 +680,13 @@
       "when": 1750332478198,
       "tag": "0096_cron_extension",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1750342768926,
+      "tag": "0097_http_extension",
+      "breakpoints": true
     }
   ]
 }

@@ -12,9 +12,9 @@ import { NonRetriableError } from "@/jobs/utils";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
-const verifyHmac = (body: string, providedHmac: string): boolean => {
+const verifyHmac = (body: string, providedHmac: string, timestamp: string): boolean => {
   try {
-    const expectedHmac = createHmac("sha256", env.ENCRYPT_COLUMN_SECRET).update(body).digest("hex");
+    const expectedHmac = createHmac("sha256", env.ENCRYPT_COLUMN_SECRET).update(`${timestamp}.${body}`).digest("hex");
     return timingSafeEqual(Buffer.from(providedHmac, "hex"), Buffer.from(expectedHmac, "hex"));
   } catch {
     return false;
@@ -61,7 +61,7 @@ export const POST = async (request: NextRequest) => {
     const providedHmac = authHeader.slice(7);
     const body = await request.text();
 
-    if (!verifyHmac(body, providedHmac)) {
+    if (!verifyHmac(body, providedHmac, request.headers.get("x-timestamp") ?? "")) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -73,7 +73,7 @@ export const POST = async (request: NextRequest) => {
       ? assertDefined(await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, data.jobRunId) }))
       : await db
           .insert(jobRuns)
-          .values({ job: data.job, event: data.event, data: data.data ?? null })
+          .values({ job: data.job, event: data.event, data: data.data ?? {} })
           .returning()
           .then(takeUniqueOrThrow);
 
@@ -95,6 +95,7 @@ export const POST = async (request: NextRequest) => {
 
     return new Response("OK");
   } catch (error) {
+    captureExceptionAndLog(error);
     return new Response("Internal Server Error", { status: 500 });
   }
 };

@@ -6,7 +6,7 @@ export const setupCron = async (job: string, schedule: string) => {
   // eslint-disable-next-line no-console
   console.log(`Scheduling cron job: ${job} with schedule: ${schedule}`);
   await db.execute(sql`
-    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint('${JSON.stringify({ job })}'::jsonb)`});
+    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint('${JSON.stringify({ job })}')`});
   `);
 };
 
@@ -56,14 +56,28 @@ export const setupJobFunctions = async () => {
     sql.raw(`
       create or replace function call_job_endpoint(job_body text) returns text as $$
       declare
-        endpoint_url text := '${env.AUTH_URL}/api/job';
+        endpoint_url text := '${env.NODE_ENV === "development" ? "http://host.docker.internal:3010" : env.AUTH_URL}/api/job';
+        hmac_secret text;
+        timestamp_str text;
+        hmac_payload text;
         response text;
       begin
-        select content into response from net.http_post(
-          url:=endpoint_url,
-          body:=job_body,
-          headers:=json_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || hmac(job_body, '${env.ENCRYPT_COLUMN_SECRET}', 'sha256'))
-        );
+        select decrypted_secret into hmac_secret from vault.decrypted_secrets where name = 'jobs-hmac-secret';
+        
+        timestamp_str := extract(epoch from now())::text;
+        hmac_payload := timestamp_str || '.' || job_body;
+        
+        select content into response from http((
+          'POST',
+          endpoint_url,
+          array[
+            http_header('Content-Type', 'application/json'), 
+            http_header('Authorization', 'Bearer ' || encode(hmac(hmac_payload, hmac_secret, 'sha256'), 'hex')),
+            http_header('X-Timestamp', timestamp_str)
+          ],
+          'application/json',
+          job_body
+        )::http_request);
         
         return response;
       end;
