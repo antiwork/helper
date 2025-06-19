@@ -6,7 +6,7 @@ export const setupCron = async (job: string, schedule: string) => {
   // eslint-disable-next-line no-console
   console.log(`Scheduling cron job: ${job} with schedule: ${schedule}`);
   await db.execute(sql`
-    select cron.schedule(${job}, ${schedule}, 'select call_job_endpoint(${JSON.stringify({ job })})');
+    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint(${JSON.stringify({ job })})`});
   `);
 };
 
@@ -35,37 +35,41 @@ export const cleanupOldCronJobs = async (currentJobs: string[]) => {
 };
 
 export const setupJobFunctions = async () => {
-  await db.execute(sql`
-    do $$
-    declare
-      secret_id uuid;
-    begin
-      select id into secret_id from vault.secrets where name = 'jobs-hmac-secret';
-      
-      if secret_id is not null then
-        perform vault.update_secret(secret_id, ${env.ENCRYPT_COLUMN_SECRET}, 'jobs-hmac-secret');
-      else
-        perform vault.create_secret(${env.ENCRYPT_COLUMN_SECRET}, 'jobs-hmac-secret');
-      end if;
-    end $$;
-  `);
+  await db.execute(
+    sql.raw(`
+      do $$
+      declare
+        secret_id uuid;
+      begin
+        select id into secret_id from vault.secrets where name = 'jobs-hmac-secret';
+        
+        if secret_id is not null then
+          perform vault.update_secret(secret_id, '${env.ENCRYPT_COLUMN_SECRET}', 'jobs-hmac-secret');
+        else
+          perform vault.create_secret('${env.ENCRYPT_COLUMN_SECRET}', 'jobs-hmac-secret');
+        end if;
+      end $$;
+    `),
+  );
 
-  await db.execute(sql`
-    create or replace function call_job_endpoint(job_body text) returns text as $$
-    declare
-      endpoint_url text := ${env.AUTH_URL} || '/api/job';
-      response text;
-    begin
-      select content into response from net.http_post(
-        url:=endpoint_url,
-        body:=job_body,
-        headers:=json_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || hmac(job_body, ${env.ENCRYPT_COLUMN_SECRET}, 'sha256'))
-      );
-      
-      return response;
-    end;
-    $$ language plpgsql;
-  `);
+  await db.execute(
+    sql.raw(`
+      create or replace function call_job_endpoint(job_body text) returns text as $$
+      declare
+        endpoint_url text := '${env.AUTH_URL}/api/job';
+        response text;
+      begin
+        select content into response from net.http_post(
+          url:=endpoint_url,
+          body:=job_body,
+          headers:=json_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || hmac(job_body, '${env.ENCRYPT_COLUMN_SECRET}', 'sha256'))
+        );
+        
+        return response;
+      end;
+      $$ language plpgsql;
+    `),
+  );
 
   await db.execute(sql`
     create or replace function process_jobs() returns text as $$
@@ -75,7 +79,7 @@ export const setupJobFunctions = async () => {
       response text;
     begin
       loop
-        select * into message_record from pgmq.pop('job_queue', 30);
+        select * into message_record from pgmq.pop('jobs');
         
         if message_record is null then
           exit;

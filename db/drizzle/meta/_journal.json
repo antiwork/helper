@@ -673,6 +673,13 @@
       "when": 1750188106211,
       "tag": "0095_daffy_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1750332478198,
+      "tag": "0096_cron_extension",
+      "breakpoints": true
     }
   ]
 }
