@@ -43,7 +43,6 @@ describe("POST /api/webhooks/gmail", () => {
     expect(jobsMock.triggerEvent).toHaveBeenCalledWith("gmail/webhook.received", {
       body,
       headers,
-      id: messageId,
     });
   });
 });
