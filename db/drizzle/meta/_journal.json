@@ -652,6 +652,41 @@
       "when": 1749460037223,
       "tag": "0092_old_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1750075738918,
+      "tag": "0093_jobs_extensions",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1750075842541,
+      "tag": "0094_jobs_queue",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1750188106211,
+      "tag": "0095_daffy_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1750332478198,
+      "tag": "0096_cron_extension",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1750342768926,
+      "tag": "0097_http_extension",
+      "breakpoints": true
     }
   ]
 }

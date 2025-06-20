@@ -1,12 +1,12 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversations, gmailSupportEmails } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import {
   createConversation,
@@ -34,12 +34,6 @@ vi.mock("@/lib/emailSearchService/searchEmailsByKeywords", () => ({
   searchEmailsByKeywords: vi.fn(),
 }));
 
-vi.mock("@/inngest/client", () => ({
-  inngest: {
-    send: vi.fn(),
-  },
-}));
-
 vi.mock("@/lib/ai", async () => {
   const actual = await vi.importActual("@/lib/ai");
   return {
@@ -51,6 +45,8 @@ vi.mock("@/lib/ai", async () => {
 vi.mock("@/lib/realtime/publish", () => ({
   publishToRealtime: vi.fn(),
 }));
+
+const jobsMock = mockJobs();
 
 describe("createConversation", () => {
   it("creates a new conversation", async () => {
@@ -161,9 +157,8 @@ describe("updateConversation", () => {
 
     await updateConversation(conversation.id, { set: { status: "closed" } });
 
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: "conversations/embedding.create",
-      data: { conversationSlug: conversation.slug },
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("conversations/embedding.create", {
+      conversationSlug: conversation.slug,
     });
   });
 
@@ -173,7 +168,7 @@ describe("updateConversation", () => {
 
     await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
-    expect(inngest.send).not.toHaveBeenCalled();
+    expect(jobsMock.triggerEvent).not.toHaveBeenCalled();
   });
 });
 

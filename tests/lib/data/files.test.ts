@@ -2,12 +2,12 @@ import { conversationMessagesFactory } from "@tests/support/factories/conversati
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { finishFileUpload } from "@/lib/data/files";
 
-const inngest = mockInngest();
+mockTriggerEvent();
 
 describe("fileUploader", () => {
   beforeEach(() => {
@@ -42,19 +42,16 @@ describe("fileUploader", () => {
         }),
       ).toMatchObject({ messageId: null });
 
-      expect(inngest.send).toHaveBeenCalledTimes(1);
-      expect(inngest.send).toHaveBeenCalledWith([
-        {
-          name: "files/preview.generate",
-          data: { fileId: file2.id },
-        },
-      ]);
+      expect(mockTriggerEvent).toHaveBeenCalledTimes(1);
+      expect(mockTriggerEvent).toHaveBeenCalledWith("files/preview.generate", {
+        fileId: file2.id,
+      });
     });
 
     it("should do nothing if no file slugs are provided", async () => {
       await finishFileUpload({ fileSlugs: [], messageId: 123 });
 
-      expect(inngest.send).not.toHaveBeenCalled();
+      expect(mockTriggerEvent).not.toHaveBeenCalled();
     });
   });
 });

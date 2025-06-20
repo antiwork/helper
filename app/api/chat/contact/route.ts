@@ -2,7 +2,7 @@ import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { createConversation, generateConversationSubject } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -69,12 +69,7 @@ export async function POST(request: Request) {
       generateConversationSubject(result.newConversation.id, [{ role: "user", content: message, id: "temp" }], mailbox),
     );
 
-    waitUntil(
-      inngest.send({
-        name: "conversations/auto-response.create",
-        data: { messageId: result.userMessage.id },
-      }),
-    );
+    waitUntil(triggerEvent("conversations/auto-response.create", { messageId: result.userMessage.id }));
 
     return corsResponse({ success: true, conversationSlug: result.newConversation.slug });
   } catch (error) {

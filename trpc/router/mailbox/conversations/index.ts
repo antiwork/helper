@@ -6,7 +6,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
@@ -184,14 +184,11 @@ export const conversationsRouter = {
         return { updatedImmediately: true };
       }
 
-      await inngest.send({
-        name: "conversations/bulk-update",
-        data: {
-          mailboxId: ctx.mailbox.id,
-          userId: ctx.user.id,
-          conversationFilter: input.conversationFilter,
-          status: input.status,
-        },
+      await triggerEvent("conversations/bulk-update", {
+        mailboxId: ctx.mailbox.id,
+        userId: ctx.user.id,
+        conversationFilter: input.conversationFilter,
+        status: input.status,
       });
       return { updatedImmediately: false };
     }),

@@ -24,7 +24,7 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
@@ -42,6 +42,7 @@ import { createAndUploadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
+import { env } from "@/lib/env";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -666,13 +667,14 @@ export const respondWithAI = async ({
             traceId,
             reasoning,
           );
-          await inngest.send({
-            name: "conversations/check-resolution",
-            data: {
+          await triggerEvent(
+            "conversations/check-resolution",
+            {
               conversationId: conversation.id,
               messageId: assistantMessage.id,
             },
-          });
+            { sleepSeconds: env.NODE_ENV === "development" ? 5 * 60 : 24 * 60 * 60 },
+          );
 
           // Extract sources from markdown links like [(1)](url)
           const markdownSources = Array.from(text.matchAll(/\[\((\d+)\)\]\((https?:\/\/[^\s)]+)\)/g)).map((match) => {

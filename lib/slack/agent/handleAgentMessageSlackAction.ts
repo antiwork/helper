@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { postThinkingMessage } from "@/lib/slack/agent/handleMessages";
 
 export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMessages.$inferSelect, payload: any) => {
@@ -26,14 +26,11 @@ export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMe
       text: "_Cancelled. Let me know if you need anything else._",
     });
   } else {
-    await inngest.send({
-      name: "slack/agent.message",
-      data: {
-        slackUserId: payload.user.id,
-        confirmedReplyText: payload.state.values.proposed_message.proposed_message.value,
-        agentThreadId: agentMessage.agentThreadId,
-        statusMessageTs: await postThinkingMessage(client, agentThread.slackChannel, agentThread.threadTs),
-      },
+    await triggerEvent("slack/agent.message", {
+      slackUserId: payload.user.id,
+      confirmedReplyText: payload.state.values.proposed_message.proposed_message.value,
+      agentThreadId: agentMessage.agentThreadId,
+      statusMessageTs: await postThinkingMessage(client, agentThread.slackChannel, agentThread.threadTs),
     });
   }
   await client.chat.delete({

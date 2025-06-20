@@ -3,7 +3,7 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, ToolMetadata } from "@/db/schema";
-import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
+import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { runAIObjectQuery } from "@/lib/ai";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
 import { cleanUpTextForAI } from "@/lib/ai/core";

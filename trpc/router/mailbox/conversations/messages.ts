@@ -4,7 +4,7 @@ import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
 import { findSimilarConversations } from "@/lib/data/retrieval";
@@ -85,6 +85,9 @@ export const messagesRouter = {
         close: shouldClose,
         responseToId,
       });
+      await triggerEvent("conversations/auto-response.create", {
+        messageId: id,
+      });
       return { id };
     }),
   flagAsBad: conversationProcedure
@@ -120,9 +123,9 @@ export const messagesRouter = {
         });
       }
 
-      await inngest.send({
-        name: "messages/flagged.bad",
-        data: { messageId: id, reason: reason || null },
+      await triggerEvent("messages/flagged.bad", {
+        messageId: id,
+        reason: reason || null,
       });
     }),
   reactionCount: mailboxProcedure
