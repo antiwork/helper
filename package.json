@@ -80,8 +80,9 @@
     "@supabase/supabase-js": "^2.49.4",
     "@t3-oss/env-nextjs": "^0.11.0",
 
+    "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4.1.8",
-
+    "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-query": "^5.66.0",
     "@tiptap/core": "^2.4.0",
 
@@ -159,8 +160,8 @@
     "superjson": "2.2.1",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^4.1.8",
-
-
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.2.5",
     "ua-parser-js": "^1.0.37",
     "undici": "^7.9.0",
     "use-stick-to-bottom": "^1.0.40",
@@ -198,26 +199,27 @@
     "classnames": "^2.5.1",
 
 
+    "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.2",
     "drizzle-kit": "^0.30.1",
     "eslint": "^9.25.1",
-
+    "eslint-config-next": "15.3.1",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-
-
+    "evalite": "^0.8.2",
+    "heroku": "^10.6.1",
     "openapi-types": "^12.1.3",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8",
-
+    "react-email": "^3.0.4",
     "supabase": "^2.22.12",
     "tsx": "^4.19.4",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.31.0",
-
+    "vercel": "^41.7.0",
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.1.1"
   },
