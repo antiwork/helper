@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
+import { formatDisplayName } from "@/components/utils/displayName";
 import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -79,6 +80,7 @@ export const AssignPopoverButton = ({
               "flex items-center gap-1 hover:underline",
               !currentAssignee && !assignedToAI && "text-muted-foreground",
             )}
+            title={currentAssignee ? currentAssignee.displayName : undefined}
           >
             {assignedToAI ? (
               <>
@@ -88,7 +90,7 @@ export const AssignPopoverButton = ({
             ) : (
               <>
                 <User className="h-4 w-4" />
-                {currentAssignee ? currentAssignee.displayName : "Unassigned"}
+                {currentAssignee ? formatDisplayName(currentAssignee.displayName).short : "Unassigned"}
               </>
             )}
           </button>

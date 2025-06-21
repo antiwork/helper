@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSession } from "@/components/useSession";
+import { formatDisplayName } from "@/components/utils/displayName";
 import { api } from "@/trpc/react";
 
 export type AssigneeOption =
@@ -93,11 +94,18 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }
   };
 
+  const selectedDisplayName = selectedMember?.displayName || "Anyone";
+  const formattedSelectedName = formatDisplayName(selectedDisplayName);
+
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Button variant="outlined_subtle" className="whitespace-nowrap justify-between">
-          {selectedMember?.displayName || "Anyone"}
+        <Button
+          variant="outlined_subtle"
+          className="whitespace-nowrap justify-between"
+          title={formattedSelectedName.full}
+        >
+          {formattedSelectedName.short}
           <ChevronDown className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -107,24 +115,28 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
           <div className="max-h-[300px] overflow-y-auto">
             <CommandEmpty>No assignees found</CommandEmpty>
             <CommandGroup>
-              {allItems.map((item, index) => (
-                <CommandItem
-                  key={item.id ?? "anyone"}
-                  onSelect={() => selectOption(item.id === null ? null : item.id === "ai" ? { ai: true } : item)}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                  data-highlighted={highlightedIndex === index}
-                  className={highlightedIndex === index ? "bg-accent text-accent-foreground" : ""}
-                >
-                  <Check className={`mr-2 h-4 w-4 ${selectedMember?.id === item.id ? "opacity-100" : "opacity-0"}`} />
-                  <span className="flex items-center gap-1">
-                    {item.id === "ai" ? <Bot className="h-4 w-4" /> : null}
-                    <span className="flex-1 min-w-0 truncate">
-                      {item.displayName}
-                      {item.id === user?.id && " (You)"}
+              {allItems.map((item, index) => {
+                const formattedName = formatDisplayName(item.displayName);
+                return (
+                  <CommandItem
+                    key={item.id ?? "anyone"}
+                    onSelect={() => selectOption(item.id === null ? null : item.id === "ai" ? { ai: true } : item)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    data-highlighted={highlightedIndex === index}
+                    className={highlightedIndex === index ? "bg-accent text-accent-foreground" : ""}
+                    title={formattedName.full}
+                  >
+                    <Check className={`mr-2 h-4 w-4 ${selectedMember?.id === item.id ? "opacity-100" : "opacity-0"}`} />
+                    <span className="flex items-center gap-1">
+                      {item.id === "ai" ? <Bot className="h-4 w-4" /> : null}
+                      <span className="flex-1 min-w-0 truncate">
+                        {formattedName.short}
+                        {item.id === user?.id && " (You)"}
+                      </span>
                     </span>
-                  </span>
-                </CommandItem>
-              ))}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </div>
         </Command>
