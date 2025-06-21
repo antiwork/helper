@@ -6,7 +6,7 @@ import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { Mailbox } from "@/lib/data/mailbox";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
+import { getMetadataApi } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
@@ -15,7 +15,7 @@ import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
 const fetchUserInformation = async (email: string, mailboxSlug: string, reason: string) => {
   try {
-    const metadata = await fetchMetadata(email, mailboxSlug);
+    const metadata = await fetchMetadata(email);
     return metadata?.prompt;
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
@@ -30,9 +30,9 @@ const searchKnowledgeBase = async (query: string, mailbox: Mailbox) => {
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string, mailboxId: number, mailboxSlug: string) => {
+const updateCustomerMetadata = async (email: string, mailboxId: number) => {
   try {
-    const customerMetadata = (await fetchMetadata(email, mailboxSlug))?.metadata ?? null;
+    const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
@@ -72,7 +72,7 @@ const requestHumanSupport = async (
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email, conversation.mailboxId, mailbox.slug));
+    waitUntil(updateCustomerMetadata(email, conversation.mailboxId));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
@@ -105,7 +105,7 @@ export const buildTools = async (
   includeMailboxTools = true,
   reasoningMiddlewarePrompt?: string,
 ): Promise<Record<string, Tool>> => {
-  const metadataApi = await getMetadataApiByMailbox(mailbox);
+  const metadataApi = await getMetadataApi();
 
   const reasoningMiddleware = async (
     result: Promise<string | undefined> | string | undefined,

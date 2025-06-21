@@ -70,7 +70,6 @@ export const generateConversationSummary = async (
   const messages = constructMessagesForConversationSummary(emails);
 
   const { summary } = await runAIObjectQuery({
-    mailbox,
     queryType: "conversation_summary",
     functionId: "generate-conversation-summary",
     system: prompt,

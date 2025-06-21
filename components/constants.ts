@@ -1,6 +1,5 @@
 import { env } from "@/lib/env";
 
-export const HELPER_SUPPORT_MAILBOX_ID = 4;
 export const HELPER_SUPPORT_EMAIL_FROM = "help@helper.ai";
 
 export const EMAIL_UNDO_COUNTDOWN_SECONDS = 15;

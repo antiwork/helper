@@ -45,7 +45,6 @@ const isThankYouOrAutoResponse = async (
           "2. Contains wording like 'We'll respond to you as soon as we can.'. Always respond with 'yes' if similar wording to this is present even if there are other instructions present.",
           "Respond with 'no' followed by a reason if the email contains questions or requires a response.",
         ].join("\n"),
-        mailbox,
         temperature: 0,
         messages: [{ role: "user", content: emailContent }],
         queryType: "email_auto_ignore",

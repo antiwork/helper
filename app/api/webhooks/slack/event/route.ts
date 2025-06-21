@@ -1,4 +1,4 @@
-import { SlackEvent, WebClient } from "@slack/web-api";
+import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -29,7 +29,7 @@ export const POST = async (request: Request) => {
         where: eq(mailboxes.slackTeamId, data.team_id) && eq(mailboxes.slackBotUserId, userId),
       });
 
-      if (mailbox) await disconnectSlack(mailbox.id);
+      if (mailbox) await disconnectSlack();
     }
     return new Response(null, { status: 200 });
   }

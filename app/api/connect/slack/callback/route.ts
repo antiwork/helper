@@ -4,14 +4,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { getMailboxBySlug } from "@/lib/data/mailbox";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getSlackAccessToken } from "@/lib/slack/client";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const state = JSON.parse(request.nextUrl.searchParams.get("state") || "{}");
   const code = request.nextUrl.searchParams.get("code");
-  const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${state.mailbox_slug}/settings`);
+  const redirectUrl = new URL(`${getBaseUrl()}/settings`);
 
   if (!code) {
     return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=error`);
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const mailbox = await getMailboxBySlug(state.mailbox_slug);
+    const mailbox = await getMailbox();
     if (!mailbox) {
       return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=error`);
     }

@@ -50,7 +50,6 @@ describe("runAIQuery", () => {
 
     await runAIQuery({
       messages,
-      mailbox,
       queryType: "response_generator",
       maxTokens: 500,
     });
@@ -77,7 +76,6 @@ describe("runAIQuery", () => {
 
     await runAIQuery({
       messages,
-      mailbox,
       queryType: "response_generator",
       model: "gpt-4o",
       system: "Custom system prompt",
@@ -141,13 +139,11 @@ describe("runAIQuery", () => {
 
     await runAIQuery({
       messages: [{ role: "user", content: "Test" }],
-      mailbox,
       queryType,
       model,
     });
 
     expect(trackAIUsageEvent).toHaveBeenCalledWith({
-      mailbox,
       queryType,
       model,
       usage: {
@@ -169,7 +165,6 @@ describe("runAIQuery", () => {
 
     const result = await runAIQuery({
       messages,
-      mailbox,
       queryType: "response_generator",
       maxTokens: 500,
     });
@@ -229,7 +224,6 @@ describe("runAIObjectQuery", () => {
 
     const result = await runAIObjectQuery({
       messages: [{ role: "user", content: "Test" }],
-      mailbox,
       queryType,
       model,
       schema: z.object({ name: z.string(), age: z.number() }),
@@ -238,7 +232,6 @@ describe("runAIObjectQuery", () => {
     expect(result).toEqual({ name: "John Doe", age: 30 });
 
     expect(trackAIUsageEvent).toHaveBeenCalledWith({
-      mailbox,
       queryType,
       model,
       usage: {

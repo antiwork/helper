@@ -13,7 +13,7 @@ describe("slackRouter", () => {
       const { user, mailbox } = await userFactory.createRootUser();
 
       const caller = createCaller(createTestTRPCContext(user));
-      await expect(caller.mailbox.slack.channels({ mailboxSlug: mailbox.slug })).rejects.toThrow(
+      await expect(caller.mailbox.slack.channels()).rejects.toThrow(
         new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Slack is not connected to this mailbox",
@@ -36,7 +36,7 @@ describe("slackRouter", () => {
       vi.mocked(slackClient.listSlackChannels).mockResolvedValue(mockChannels);
 
       const caller = createCaller(createTestTRPCContext(user));
-      const result = await caller.mailbox.slack.channels({ mailboxSlug: mailbox.slug });
+      const result = await caller.mailbox.slack.channels();
 
       expect(slackClient.listSlackChannels).toHaveBeenCalledWith("xoxb-123");
       expect(result).toEqual([

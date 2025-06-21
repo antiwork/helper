@@ -1,4 +1,3 @@
-import { mailboxes } from "@/db/schema";
 import { runAIQuery } from "./ai";
 import { GPT_4O_MINI_MODEL } from "./ai/core";
 
@@ -30,11 +29,7 @@ const examples: [email: string, keywords: string][] = [
   ],
 ];
 
-export const emailKeywordsExtractor = async (params: {
-  mailbox: typeof mailboxes.$inferSelect;
-  subject: string;
-  body: string;
-}): Promise<string[]> => {
+export const emailKeywordsExtractor = async (params: { subject: string; body: string }): Promise<string[]> => {
   const content = (
     await runAIQuery({
       system: [
@@ -42,7 +37,6 @@ export const emailKeywordsExtractor = async (params: {
         "Examples:",
         examples.map(([email, keywords]) => `${email}\n${keywords}`).join("\n\n"),
       ].join("\n\n"),
-      mailbox: params.mailbox,
       temperature: 0,
       messages: [{ role: "user", content: `${params.subject}\n\n${params.body}` }],
       queryType: "email_keywords_extractor",

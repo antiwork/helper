@@ -11,7 +11,7 @@ export const mailboxesMetadataApi = pgTable(
     url: text().notNull(),
     hmacSecret: text().notNull(),
     isEnabled: boolean().notNull(),
-    mailboxId: bigint({ mode: "number" }).notNull(),
+    mailboxId: bigint({ mode: "number" }),
     deletedAt: timestamp({ withTimezone: true }),
   },
   (table) => [

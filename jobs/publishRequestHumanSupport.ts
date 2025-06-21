@@ -35,7 +35,7 @@ export const publishRequestHumanSupport = async ({
   );
 
   await publishToRealtime({
-    channel: dashboardChannelId(mailboxSlug),
+    channel: dashboardChannelId(),
     event: "event",
     data: createHumanSupportRequestEventPayload(event, mailbox),
   });

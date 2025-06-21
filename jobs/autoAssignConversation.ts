@@ -5,11 +5,10 @@ import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
-import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
-const CACHE_ROUND_ROBIN_KEY_PREFIX = "auto-assign-message-queue";
+const CACHE_ROUND_ROBIN_KEY = "auto-assign-message-queue";
 
 const getCoreTeamMembers = (teamMembers: UserWithMailboxAccessData[]): UserWithMailboxAccessData[] => {
   return teamMembers.filter((member) => member.role === UserRoles.CORE);
@@ -18,7 +17,6 @@ const getCoreTeamMembers = (teamMembers: UserWithMailboxAccessData[]): UserWithM
 const getNonCoreTeamMembersWithMatchingKeywords = async (
   teamMembers: UserWithMailboxAccessData[],
   conversationContent: string,
-  mailbox: Mailbox,
 ) => {
   if (!conversationContent) return { members: [] };
 
@@ -34,7 +32,6 @@ const getNonCoreTeamMembersWithMatchingKeywords = async (
   }, {});
 
   const result = await runAIObjectQuery({
-    mailbox,
     queryType: "auto_assign_conversation",
     schema: z.object({
       matches: z.record(z.string(), z.boolean()),
@@ -92,11 +89,10 @@ Focus on understanding the customer's underlying needs rather than just surface-
 
 const getNextCoreTeamMemberInRotation = async (
   coreTeamMembers: UserWithMailboxAccessData[],
-  mailboxId: number,
 ): Promise<UserWithMailboxAccessData | null> => {
   if (coreTeamMembers.length === 0) return null;
 
-  const cache = cacheFor<number>(`${CACHE_ROUND_ROBIN_KEY_PREFIX}:${mailboxId}`);
+  const cache = cacheFor<number>(CACHE_ROUND_ROBIN_KEY);
 
   const lastAssignedIndex = (await cache.get()) ?? 0;
   const nextIndex = (lastAssignedIndex + 1) % coreTeamMembers.length;
@@ -131,16 +127,11 @@ const getConversationContent = (conversationData: {
   return contentParts.join(" ");
 };
 
-const getNextTeamMember = async (
-  teamMembers: UserWithMailboxAccessData[],
-  conversation: Conversation,
-  mailbox: Mailbox,
-) => {
+const getNextTeamMember = async (teamMembers: UserWithMailboxAccessData[], conversation: Conversation) => {
   const conversationContent = getConversationContent(conversation);
   const { members: matchingNonCoreMembers, aiResult } = await getNonCoreTeamMembersWithMatchingKeywords(
     teamMembers,
     conversationContent,
-    mailbox,
   );
 
   if (matchingNonCoreMembers.length > 0) {
@@ -151,7 +142,7 @@ const getNextTeamMember = async (
 
   const coreMembers = getCoreTeamMembers(teamMembers);
   return {
-    member: await getNextCoreTeamMemberInRotation(coreMembers, mailbox.id),
+    member: await getNextCoreTeamMemberInRotation(coreMembers),
   };
 };
 
@@ -174,8 +165,7 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
   if (conversation.assignedToId) return { message: "Skipped: already assigned" };
   if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
 
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
-  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
+  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess());
 
   const activeTeamMembers = teamMembers.filter(
     (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,
@@ -185,7 +175,7 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
     return { message: "Skipped: no active team members available for assignment" };
   }
 
-  const { member: nextTeamMember, aiResult } = await getNextTeamMember(activeTeamMembers, conversation, mailbox);
+  const { member: nextTeamMember, aiResult } = await getNextTeamMember(activeTeamMembers, conversation);
 
   if (!nextTeamMember) {
     return {

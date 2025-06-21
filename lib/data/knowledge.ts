@@ -26,7 +26,7 @@ export const approveSuggestedEdit = async (
       await tx.delete(faqs).where(eq(faqs.id, knowledge.suggestedReplacementForId));
     }
 
-    await resetMailboxPromptUpdatedAt(tx, knowledge.mailboxId);
+    await resetMailboxPromptUpdatedAt(tx);
 
     await triggerEvent("faqs/embedding.create", { faqId: knowledge.id });
   });
@@ -50,7 +50,7 @@ export const rejectSuggestedEdit = async (
 ) => {
   await db.transaction(async (tx) => {
     await tx.delete(faqs).where(eq(faqs.id, knowledge.id));
-    await resetMailboxPromptUpdatedAt(tx, knowledge.mailboxId);
+    await resetMailboxPromptUpdatedAt(tx);
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
@@ -161,7 +161,7 @@ const suggestionResolvedBlocks = (
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View knowledge bank>`,
+        text: `<${getBaseUrl()}/settings?tab=knowledge|View knowledge bank>`,
       },
     },
   ];

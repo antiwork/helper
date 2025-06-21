@@ -26,7 +26,6 @@ const checkAIBasedResolution = async (conversationId: number, mailbox: Mailbox) 
         role: msg.role === "user" ? "user" : "assistant",
         content: msg.content,
       })),
-      mailbox,
       queryType: "check_resolution",
       model: GPT_4O_MINI_MODEL,
       system: RESOLUTION_CHECK_PROMPT,

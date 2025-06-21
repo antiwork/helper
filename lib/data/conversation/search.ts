@@ -23,7 +23,7 @@ import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
+import { getMetadataApi } from "@/lib/data/mailboxMetadataApi";
 import {
   CLOSED_BY_AGENT_MESSAGE,
   MARKED_AS_SPAM_BY_AGENT_MESSAGE,
@@ -139,7 +139,7 @@ export const searchConversations = async (
       ? conversations.closedAt
       : conversations.lastUserEmailCreatedAt;
   const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
-  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox(mailbox));
+  const metadataEnabled = !filters.search && !!(await getMetadataApi());
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
@@ -183,7 +183,7 @@ export const searchConversations = async (
             ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
             matchedMessageText:
               matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-            recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
+            recentMessageText: decryptFieldValue(recent_message_cleanedUpText),
           })),
         nextCursor:
           results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,

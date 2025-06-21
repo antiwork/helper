@@ -381,7 +381,6 @@ export const generateAIResponse = async ({
 
     if (!evaluation) {
       await trackAIUsageEvent({
-        mailbox,
         model: "fireworks/deepseek-r1",
         queryType: "reasoning",
         usage: {
@@ -440,7 +439,6 @@ export const generateAIResponse = async ({
       };
       if (!evaluation) {
         await trackAIUsageEvent({
-          mailbox,
           model: GPT_4_1_MODEL,
           queryType: "chat_completion",
           usage: openAIUsage,

@@ -52,7 +52,6 @@ test("getMailboxInfo", async () => {
   expect(params.get("scope")?.length).toBeGreaterThan(0);
   expect(params.get("redirect_uri")).toBe(`${getBaseUrl()}/api/connect/slack/callback`);
   expect(params.get("client_id")).toBe(env.SLACK_CLIENT_ID);
-  expect(JSON.parse(params.get("state") || "{}")).toEqual({ mailbox_slug: mailbox.slug });
 });
 
 describe("disconnectSlack", () => {
@@ -66,7 +65,7 @@ describe("disconnectSlack", () => {
       },
     });
 
-    await disconnectSlack(mailbox.id);
+    await disconnectSlack();
 
     expect(uninstallSlackApp).toHaveBeenCalledWith("xoxb-12345");
 
@@ -96,7 +95,7 @@ describe("disconnectSlack", () => {
       new Error("Failed to uninstall Slack app: App not installed in workspace"),
     );
 
-    await disconnectSlack(mailbox.id);
+    await disconnectSlack();
 
     expect(uninstallSlackApp).toHaveBeenCalledWith("xoxb-12345");
 
@@ -122,7 +121,7 @@ describe("disconnectSlack", () => {
       },
     });
 
-    await disconnectSlack(mailbox.id);
+    await disconnectSlack();
 
     expect(uninstallSlackApp).not.toHaveBeenCalled();
   });

@@ -105,7 +105,7 @@ describe("updateConversation", () => {
 
     expect(result).not.toBeNull();
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationChannelId(mailbox.slug, conversation.slug),
+      channel: conversationChannelId(conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
         slug: conversation.slug,
@@ -127,7 +127,7 @@ describe("updateConversation", () => {
 
     expect(result).not.toBeNull();
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationChannelId(mailbox.slug, conversation.slug),
+      channel: conversationChannelId(conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
         id: conversation.id,
@@ -135,7 +135,7 @@ describe("updateConversation", () => {
       }),
     });
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationsListChannelId(mailbox.slug),
+      channel: conversationsListChannelId(),
       event: "conversation.statusChanged",
       data: {
         id: conversation.id,

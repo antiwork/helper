@@ -22,7 +22,7 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
   const published = [];
   if (message && message?.role !== "ai_assistant") {
     await publishToRealtime({
-      channel: conversationChannelId(message.conversation.mailbox.slug, message.conversation.slug),
+      channel: conversationChannelId(message.conversation.slug),
       event: "conversation.message",
       data: await serializeMessage(
         message,
@@ -39,7 +39,7 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
   }
   if (message?.role === "user" && message.conversation.status === "open") {
     await publishToRealtime({
-      channel: conversationsListChannelId(message.conversation.mailbox.slug),
+      channel: conversationsListChannelId(),
       event: "conversation.new",
       data: message.conversation,
     });
@@ -47,7 +47,7 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
   }
   if (message) {
     await publishToRealtime({
-      channel: dashboardChannelId(message.conversation.mailbox.slug),
+      channel: dashboardChannelId(),
       event: "event",
       data: createMessageEventPayload(message, message.conversation.mailbox),
     });

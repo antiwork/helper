@@ -7,7 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversationMessages, MessageRole } from "@/db/schema/conversationMessages";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
+import { getMetadataApi } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata } from "@/lib/data/retrieval";
 import { buildAITools, callToolApi, generateSuggestedActions, ToolApiError } from "@/lib/tools/apiTool";
 
@@ -323,7 +323,7 @@ describe("apiTools", () => {
         body: "Test message",
       });
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
+      vi.mocked(getMetadataApi).mockResolvedValueOnce(null);
       const { tool } = await toolsFactory.create({
         mailboxId: mailbox.id,
         slug: "test-tool",
@@ -353,7 +353,7 @@ describe("apiTools", () => {
         prompt: "Test prompt",
       };
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce({
+      vi.mocked(getMetadataApi).mockResolvedValueOnce({
         id: 1,
         mailboxId: 1,
         url: "test",
@@ -404,7 +404,7 @@ describe("apiTools", () => {
         });
       }
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
+      vi.mocked(getMetadataApi).mockResolvedValueOnce(null);
       vi.mocked(generateText).mockResolvedValueOnce({
         toolCalls: [{ toolName: "test-tool", args: {} }],
       } as any);

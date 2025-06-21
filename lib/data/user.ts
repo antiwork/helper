@@ -40,13 +40,12 @@ export type UserWithMailboxAccessData = {
   keywords: MailboxAccess["keywords"];
 };
 
-export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
+export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
   const users = await db.query.authUsers.findMany();
 
   return users.map((user) => {
     const metadata = user.user_metadata || {};
-    const mailboxAccess = (metadata.mailboxAccess as Record<string, any>) || {};
-    const access = mailboxAccess[mailboxId];
+    const access = (metadata.mailboxAccess as Record<string, any>) || {};
 
     return {
       id: user.id,

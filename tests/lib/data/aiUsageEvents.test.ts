@@ -17,7 +17,7 @@ describe("trackAIUsageEvent", () => {
       cachedTokens: 0,
     };
 
-    await trackAIUsageEvent({ mailbox, model, queryType, usage });
+    await trackAIUsageEvent({ model, queryType, usage });
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
@@ -43,7 +43,6 @@ describe("trackAIUsageEvent", () => {
     };
 
     await trackAIUsageEvent({
-      mailbox,
       model,
       queryType,
       usage,
@@ -119,7 +118,6 @@ describe("trackAIUsageEvent", () => {
       };
 
       await trackAIUsageEvent({
-        mailbox,
         model: testCase.model,
         queryType: "response_generator",
         usage,
@@ -129,7 +127,6 @@ describe("trackAIUsageEvent", () => {
         where: eq(aiUsageEvents.modelName, testCase.model),
       });
       expect(usageEvent).toMatchObject({
-        mailboxId: mailbox.id,
         modelName: testCase.model,
         queryType: "response_generator",
         inputTokensCount: testCase.inputTokens,
