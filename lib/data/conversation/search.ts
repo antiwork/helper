@@ -183,7 +183,7 @@ export const searchConversations = async (
             ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
             matchedMessageText:
               matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-            recentMessageText: decryptFieldValue(recent_message_cleanedUpText),
+            recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
           })),
         nextCursor:
           results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,

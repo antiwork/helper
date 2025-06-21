@@ -1,7 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
-import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { mailboxMetadataApiFactory } from "@tests/support/factories/mailboxesMetadataApi";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { userFactory } from "@tests/support/factories/users";
@@ -38,10 +37,11 @@ const defaultParams = {
 describe("conversationsRouter", () => {
   describe("list", () => {
     it("returns conversations", async () => {
-      const { user } = await userFactory.createRootUser();
-      const { mailbox } = await mailboxFactory.create({
-        slackBotToken: "slackBotToken",
-        slackAlertChannel: "slackAlertChannel",
+      const { user, mailbox } = await userFactory.createRootUser({
+        mailboxOverrides: {
+          slackBotToken: "slackBotToken",
+          slackAlertChannel: "slackAlertChannel",
+        },
       });
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { conversation: assignedConversation } = await conversationFactory.create(mailbox.id, {
@@ -69,8 +69,7 @@ describe("conversationsRouter", () => {
     });
 
     it("sorts by platformCustomers.value with nulls last", async () => {
-      const { user } = await userFactory.createRootUser();
-      const { mailbox } = await mailboxFactory.create();
+      const { user, mailbox } = await userFactory.createRootUser();
       await mailboxMetadataApiFactory.create(mailbox.id);
 
       await conversationFactory.create(mailbox.id, {
@@ -106,8 +105,7 @@ describe("conversationsRouter", () => {
 
   describe("count", () => {
     it("returns the total number of conversations", async () => {
-      const { user } = await userFactory.createRootUser();
-      const { mailbox } = await mailboxFactory.create();
+      const { user, mailbox } = await userFactory.createRootUser();
       await conversationFactory.create(mailbox.id);
       await conversationFactory.create(mailbox.id);
 

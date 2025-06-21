@@ -28,7 +28,6 @@ describe("emailKeywordsExtractor", () => {
 
     expect(aiModule.runAIQuery).toHaveBeenCalledWith({
       functionId: "email-keywords-extractor",
-      mailbox,
       queryType: "email_keywords_extractor",
       messages: [
         {

@@ -64,14 +64,11 @@ describe("runAIQuery", () => {
       system: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
-      metadata: {
-        mailboxSlug: mailbox.slug,
-      },
     });
   });
 
   it("uses custom parameters when provided", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
 
     await runAIQuery({
@@ -93,14 +90,11 @@ describe("runAIQuery", () => {
       maxSteps: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
-      metadata: {
-        mailboxSlug: mailbox.slug,
-      },
     });
   });
 
   it("tracks AI usage event after successful completion", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const queryType = "response_generator";
     const model = "gpt-4o";
 
@@ -156,7 +150,7 @@ describe("runAIQuery", () => {
   });
 
   it("retries on failure", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
 
     vi.spyOn(core, "generateCompletion")
@@ -191,7 +185,7 @@ describe("runAIObjectQuery", () => {
   });
 
   it("calls generateStructuredObject with correct parameters and returns the object", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const queryType = "conversation_summary";
     const model = "gpt-4o";
 

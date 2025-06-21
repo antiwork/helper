@@ -68,7 +68,7 @@ describe("POST /api/webhooks/slack/event", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(200);
-    expect(disconnectSlack).toHaveBeenCalledWith(mailbox.id);
+    expect(disconnectSlack).toHaveBeenCalled();
   });
 
   it("returns 400 for invalid requests", async () => {

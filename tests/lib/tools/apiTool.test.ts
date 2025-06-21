@@ -17,7 +17,7 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("@/lib/data/mailboxMetadataApi", () => ({
-  getMetadataApiByMailbox: vi.fn(),
+  getMetadataApi: vi.fn(),
 }));
 
 vi.mock("@/lib/data/retrieval", () => ({
