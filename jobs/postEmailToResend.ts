@@ -55,7 +55,7 @@ export const postEmailToResend = async ({ messageId: emailId }: { messageId: num
     }
 
     const resend = new Resend(env.RESEND_API_KEY);
-    
+
     const subject = email.conversation.subject ? `Re: ${email.conversation.subject}` : "Reply from Helper";
 
     const { error } = await resend.emails.send({
@@ -79,4 +79,3 @@ export const postEmailToResend = async ({ messageId: emailId }: { messageId: num
     return await markFailed(emailId, email.conversationId, `Unexpected error: ${e}`);
   }
 };
-

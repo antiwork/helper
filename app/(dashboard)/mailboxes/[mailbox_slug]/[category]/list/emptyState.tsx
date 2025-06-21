@@ -56,19 +56,19 @@ export const NoConversations = () => {
             )}
           </Link>
           {onboardingState?.hasResend && !onboardingState?.hasGmailSupportEmail && (
-          <Link
-            href="https://helper.ai/docs/integrations#gmail"
-            className="border transition-colors hover:border-foreground rounded-lg p-4"
-          >
-            <div className="flex items-center gap-2">
+            <Link
+              href="https://helper.ai/docs/integrations#gmail"
+              className="border transition-colors hover:border-foreground rounded-lg p-4"
+            >
+              <div className="flex items-center gap-2">
                 <Circle className="w-5 h-5" />
                 <p>Connect Gmail for full email integration (optional)</p>
-            </div>
+              </div>
               <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
                 Learn how <ArrowRight className="w-4 h-4" />
               </div>
             </Link>
-            )}
+          )}
         </div>
       </div>
     );

@@ -5,8 +5,8 @@ import { env } from "@/lib/env";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 import { postEmailToResend } from "./postEmailToResend";
+import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 const markSent = async (emailId: number) => {
   await db.update(conversationMessages).set({ status: "sent" }).where(eq(conversationMessages.id, emailId));
@@ -58,7 +58,7 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
     }
     if (!email.conversation.mailbox.gmailSupportEmail) {
       if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
-        return await postEmailToResend(emailId);
+        return await postEmailToResend({ messageId: emailId });
       }
       return await markFailed(emailId, email.conversationId, "No email sending method configured (Gmail or Resend).");
     }

@@ -183,7 +183,6 @@ describe("postEmailToResend", () => {
       expect(await postEmailToResend({ messageId: message.id })).toEqual("Resend is not configured.");
       await assertMarkFailed(message.id);
 
-      // Restore original values
       // @ts-expect-error - Restoring mocked env
       env.RESEND_API_KEY = originalApiKey;
       // @ts-expect-error - Restoring mocked env
