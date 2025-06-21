@@ -46,12 +46,6 @@ export const sendScreenshot = () => {
   });
 };
 
-export const minimizeWidget = () => {
-  sendMessageToParent({
-    action: MINIMIZE_ACTION,
-  });
-};
-
 export const toggleWidgetHeight = () => {
   sendMessageToParent({
     action: TOGGLE_HEIGHT_ACTION,
