@@ -1,13 +1,11 @@
 "use client";
 
-import { mapValues } from "lodash-es";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { toast } from "@/components/hooks/use-toast";
+import { useManualSave } from "@/components/hooks/useManualSave";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { useOnChange } from "@/components/useOnChange";
+import { SaveableForm } from "@/components/ui/saveableForm";
 import { normalizeHex } from "@/lib/themes";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -26,160 +24,204 @@ export type ThemeUpdates = {
 const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const { setTheme: setWindowTheme } = useInboxTheme();
 
-  const [isEnabled, setIsEnabled] = useState(!!mailbox.preferences?.theme);
-  const [theme, setTheme] = useState(
-    mailbox.preferences?.theme ?? {
-      background: "#ffffff",
-      foreground: "#000000",
-      primary: "#000000",
-      accent: "#000000",
-      sidebarBackground: "#ffffff",
+  const utils = api.useUtils();
+  const { mutate: update } = api.mailbox.update.useMutation();
+
+  const { currentData, isDirty, isLoading, updateData, handleSave, handleCancel, handleReset } = useManualSave(
+    {
+      isEnabled: !!mailbox.preferences?.theme,
+      theme: mailbox.preferences?.theme ?? {
+        background: "#ffffff",
+        foreground: "#000000",
+        primary: "#000000",
+        accent: "#000000",
+        sidebarBackground: "#ffffff",
+      },
+    },
+    {
+      onSave: async (data: { isEnabled: boolean; theme: ThemeUpdates["theme"] }) => {
+        if (!data.isEnabled && !mailbox.preferences?.theme) return;
+
+        await new Promise<void>((resolve, reject) => {
+          update(
+            {
+              mailboxSlug: mailbox.slug,
+              preferences: {
+                theme:
+                  data.isEnabled && data.theme
+                    ? {
+                        background: `#${normalizeHex(data.theme.background)}`,
+                        foreground: `#${normalizeHex(data.theme.foreground)}`,
+                        primary: `#${normalizeHex(data.theme.primary)}`,
+                        accent: `#${normalizeHex(data.theme.accent)}`,
+                        sidebarBackground: `#${normalizeHex(data.theme.sidebarBackground)}`,
+                      }
+                    : null,
+              },
+            },
+            {
+              onSuccess: () => {
+                utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+                resolve();
+              },
+              onError: reject,
+            },
+          );
+        });
+      },
+      successMessage: "Theme settings updated successfully",
+      errorMessage: "Failed to update theme settings",
     },
   );
 
-  const utils = api.useUtils();
-  const { mutate: update } = api.mailbox.update.useMutation({
-    onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error updating theme",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const save = useDebouncedCallback(() => {
-    if (!isEnabled && !mailbox.preferences?.theme) return;
-    update({
-      mailboxSlug: mailbox.slug,
-      preferences: { theme: isEnabled ? mapValues(theme, (value) => `#${normalizeHex(value)}`) : null },
+  useEffect(() => {
+    handleReset({
+      isEnabled: !!mailbox.preferences?.theme,
+      theme: mailbox.preferences?.theme ?? {
+        background: "#ffffff",
+        foreground: "#000000",
+        primary: "#000000",
+        accent: "#000000",
+        sidebarBackground: "#ffffff",
+      },
     });
-  }, 2000);
-
-  useOnChange(() => {
-    save();
-  }, [isEnabled, theme]);
+  }, [mailbox.preferences?.theme, handleReset]);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (!isEnabled) {
-      setTheme({
-        background: getComputedStyle(root).getPropertyValue("--background").trim() || "#ffffff",
-        foreground: getComputedStyle(root).getPropertyValue("--foreground").trim() || "#000000",
-        primary: getComputedStyle(root).getPropertyValue("--primary").trim() || "#000000",
-        accent: getComputedStyle(root).getPropertyValue("--bright").trim() || "#000000",
-        sidebarBackground: getComputedStyle(root).getPropertyValue("--sidebar-background").trim() || "#ffffff",
+    if (!currentData.isEnabled) {
+      updateData({
+        theme: {
+          background: getComputedStyle(root).getPropertyValue("--background").trim() || "#ffffff",
+          foreground: getComputedStyle(root).getPropertyValue("--foreground").trim() || "#000000",
+          primary: getComputedStyle(root).getPropertyValue("--primary").trim() || "#000000",
+          accent: getComputedStyle(root).getPropertyValue("--bright").trim() || "#000000",
+          sidebarBackground: getComputedStyle(root).getPropertyValue("--sidebar-background").trim() || "#ffffff",
+        },
       });
     }
-  }, []);
+  }, [currentData.isEnabled, updateData]);
 
-  const debouncedSetWindowTheme = useDebouncedCallback(setWindowTheme, 200);
-
-  const handleColorChange =
+  const handleColorChange = useCallback(
     (color: keyof NonNullable<ThemeUpdates["theme"]>) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setTheme({ ...theme, [color]: e.target.value });
+      const newTheme = { ...currentData.theme, [color]: e.target.value };
+      updateData({ theme: newTheme });
+
       const normalized = /#([0-9a-f]{3})$/i.test(e.target.value) ? `#${normalizeHex(e.target.value)}` : e.target.value;
-      if (/#([0-9a-f]{6})$/i.test(normalized)) debouncedSetWindowTheme({ ...theme, [color]: normalized });
-    };
+      if (/#([0-9a-f]{6})$/i.test(normalized)) {
+        setWindowTheme({ ...newTheme, [color]: normalized });
+      }
+    },
+    [currentData.theme, updateData, setWindowTheme],
+  );
 
   const handleSwitchChange = (checked: boolean) => {
-    setIsEnabled(checked);
+    updateData({ isEnabled: checked });
   };
 
   return (
-    <SwitchSectionWrapper
-      title="Custom Theme"
-      description="Choose the appearance of your mailbox with custom colors"
-      initialSwitchChecked={isEnabled}
-      onSwitchChange={handleSwitchChange}
-    >
-      {isEnabled && (
-        <div className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <Label>Background Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="w-[200px]"
-              />
+    <SaveableForm isDirty={isDirty} isLoading={isLoading} onSave={handleSave} onCancel={handleCancel}>
+      <SwitchSectionWrapper
+        title="Custom Theme"
+        description="Choose the appearance of your mailbox with custom colors"
+        initialSwitchChecked={currentData.isEnabled}
+        onSwitchChange={handleSwitchChange}
+      >
+        {currentData.isEnabled && (
+          <div className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <Label>Background Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={currentData.theme.background}
+                  onChange={handleColorChange("background")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={currentData.theme.background}
+                  onChange={handleColorChange("background")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Foreground Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="w-[200px]"
-              />
+            <div className="flex flex-col space-y-2">
+              <Label>Foreground Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={currentData.theme.foreground}
+                  onChange={handleColorChange("foreground")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={currentData.theme.foreground}
+                  onChange={handleColorChange("foreground")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Primary Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.primary}
-                onChange={handleColorChange("primary")}
-                className="h-10 w-20 p-1"
-              />
-              <Input type="text" value={theme.primary} onChange={handleColorChange("primary")} className="w-[200px]" />
+            <div className="flex flex-col space-y-2">
+              <Label>Primary Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={currentData.theme.primary}
+                  onChange={handleColorChange("primary")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={currentData.theme.primary}
+                  onChange={handleColorChange("primary")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Accent Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.accent}
-                onChange={handleColorChange("accent")}
-                className="h-10 w-20 p-1"
-              />
-              <Input type="text" value={theme.accent} onChange={handleColorChange("accent")} className="w-[200px]" />
+            <div className="flex flex-col space-y-2">
+              <Label>Accent Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={currentData.theme.accent}
+                  onChange={handleColorChange("accent")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={currentData.theme.accent}
+                  onChange={handleColorChange("accent")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Sidebar Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="w-[200px]"
-              />
+            <div className="flex flex-col space-y-2">
+              <Label>Sidebar Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={currentData.theme.sidebarBackground}
+                  onChange={handleColorChange("sidebarBackground")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={currentData.theme.sidebarBackground}
+                  onChange={handleColorChange("sidebarBackground")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </SwitchSectionWrapper>
+        )}
+      </SwitchSectionWrapper>
+    </SaveableForm>
   );
 };
 
