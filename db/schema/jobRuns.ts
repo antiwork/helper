@@ -6,6 +6,7 @@ export const jobRuns = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
+    queueMessageId: bigint({ mode: "number" }),
     job: text().notNull(),
     event: text(),
     data: jsonb().notNull(),
