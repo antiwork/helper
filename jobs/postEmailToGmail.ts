@@ -1,10 +1,12 @@
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
+import { env } from "@/lib/env";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
+import { postEmailToResend } from "./postEmailToResend";
 
 const markSent = async (emailId: number) => {
   await db.update(conversationMessages).set({ status: "sent" }).where(eq(conversationMessages.id, emailId));
@@ -55,7 +57,10 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
       return await markFailed(emailId, email.conversationId, "The conversation emailFrom is missing.");
     }
     if (!email.conversation.mailbox.gmailSupportEmail) {
-      return await markFailed(emailId, email.conversationId, "The mailbox does not have a connected Gmail account.");
+      if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
+        return await postEmailToResend(emailId);
+      }
+      return await markFailed(emailId, email.conversationId, "No email sending method configured (Gmail or Resend).");
     }
 
     const pastThreadEmail = await db.query.conversationMessages.findFirst({
