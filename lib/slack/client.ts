@@ -266,3 +266,18 @@ export const getSlackUsersByEmail = async (token: string) => {
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
 };
+
+export const handleSlackErrors = async <T>(operation: Promise<T>) => {
+  try {
+    return await operation;
+  } catch (error) {
+    if (error instanceof Error && "data" in error) {
+      captureExceptionAndLog(error, {
+        extra: {
+          slackResponse: error.data,
+        },
+      });
+    }
+    captureExceptionAndLog(error);
+  }
+};

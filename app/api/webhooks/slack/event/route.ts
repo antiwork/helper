@@ -1,14 +1,13 @@
-import { SlackEvent, WebClient } from "@slack/web-api";
+import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
-import { verifySlackRequest } from "@/lib/slack/client";
+import { handleSlackErrors, verifySlackRequest } from "@/lib/slack/client";
 import { handleSlackUnfurl } from "@/lib/slack/linkUnfurl";
 
 export const POST = async (request: Request) => {
@@ -66,19 +65,4 @@ export const POST = async (request: Request) => {
   }
 
   return new Response("Not handled", { status: 200 });
-};
-
-export const handleSlackErrors = async <T>(operation: Promise<T>) => {
-  try {
-    return await operation;
-  } catch (error) {
-    if (error instanceof Error && "data" in error) {
-      captureExceptionAndLog(error, {
-        extra: {
-          slackResponse: error.data,
-        },
-      });
-    }
-    captureExceptionAndLog(error);
-  }
 };

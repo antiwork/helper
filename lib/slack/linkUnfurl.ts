@@ -1,10 +1,10 @@
 import { KnownBlock, LinkSharedEvent, LinkUnfurls, WebClient } from "@slack/web-api";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
-import { handleSlackErrors } from "@/app/api/webhooks/slack/event/route";
 import { formatCurrency } from "@/components/utils/currency";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, platformCustomers } from "@/db/schema";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { handleSlackErrors } from "@/lib/slack/client";
 import { findMailboxForEvent } from "./agent/findMailboxForEvent";
 
 export async function handleSlackUnfurl(event: LinkSharedEvent) {
