@@ -2,12 +2,7 @@ import "server-only";
 import { count, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, type Transaction } from "@/db/client";
-import {
-  guideSessionEvents,
-  guideSessionEventTypeEnum,
-  guideSessions,
-  platformCustomers,
-} from "@/db/schema";
+import { guideSessionEvents, guideSessionEventTypeEnum, guideSessions, platformCustomers } from "@/db/schema";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export type GuideSession = typeof guideSessions.$inferSelect;
