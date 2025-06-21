@@ -83,7 +83,6 @@ export const generateReadPageTool = async (
     ],
     schema: toolConfigSchema,
     functionId: "generate-read-page-tool",
-    mailbox,
     queryType: "read_page_tool",
     temperature: 0.2,
     maxTokens: 200,

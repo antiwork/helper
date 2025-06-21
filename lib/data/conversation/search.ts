@@ -23,7 +23,7 @@ import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
+import { getMetadataApi } from "@/lib/data/mailboxMetadataApi";
 import {
   CLOSED_BY_AGENT_MESSAGE,
   MARKED_AS_SPAM_BY_AGENT_MESSAGE,
@@ -139,7 +139,7 @@ export const searchConversations = async (
       ? conversations.closedAt
       : conversations.lastUserEmailCreatedAt;
   const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
-  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox(mailbox));
+  const metadataEnabled = !filters.search && !!(await getMetadataApi());
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }

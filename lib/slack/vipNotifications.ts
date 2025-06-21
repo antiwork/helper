@@ -87,10 +87,7 @@ const createMessageBlocks = ({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: [
-          `<${getBaseUrl()}/mailboxes/${conversation.mailbox.slug}/conversations?id=${conversation.slug}|View in Helper>`,
-          ...customerLinks,
-        ].join(" · "),
+        text: [`<${getBaseUrl()}/conversations?id=${conversation.slug}|View in Helper>`, ...customerLinks].join(" · "),
       },
     },
     getActionButtons(),

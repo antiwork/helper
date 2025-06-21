@@ -29,9 +29,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
 
   await ensureCleanedUpText(message);
 
-  const customerMetadata = message.emailFrom
-    ? await fetchMetadata(message.emailFrom, message.conversation.mailbox.slug)
-    : null;
+  const customerMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom) : null;
   if (customerMetadata) {
     await db
       .update(conversationMessages)

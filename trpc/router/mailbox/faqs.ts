@@ -40,7 +40,7 @@ export const faqsRouter = {
           .returning()
           .then(takeUniqueOrThrow);
 
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+        await resetMailboxPromptUpdatedAt(tx);
 
         await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
@@ -71,7 +71,7 @@ export const faqsRouter = {
           });
         }
 
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+        await resetMailboxPromptUpdatedAt(tx);
 
         await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
@@ -90,7 +90,7 @@ export const faqsRouter = {
       }
 
       await tx.delete(faqs).where(eq(faqs.id, faq.id));
-      await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+      await resetMailboxPromptUpdatedAt(tx);
     });
   }),
   accept: mailboxProcedure
@@ -118,7 +118,6 @@ export const faqsRouter = {
     .input(
       z.object({
         id: z.number(),
-        mailboxSlug: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

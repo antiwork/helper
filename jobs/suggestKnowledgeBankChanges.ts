@@ -92,7 +92,6 @@ export const suggestKnowledgeBankChanges = async ({
   const suggestion = await runAIObjectQuery({
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
-    mailbox,
     queryType: "suggest_knowledge_bank_changes",
     schema: suggestionResponseSchema,
   });
@@ -174,7 +173,7 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `<${getBaseUrl()}/mailboxes/${mailbox.slug}/settings?tab=knowledge|View knowledge bank>`,
+          text: `<${getBaseUrl()}/settings?tab=knowledge|View knowledge bank>`,
         },
       },
       getSuggestedEditButtons(faq.id),

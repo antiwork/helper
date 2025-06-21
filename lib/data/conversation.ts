@@ -17,7 +17,7 @@ import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
 import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
-import { getMailboxById } from "./mailbox";
+import { getMailbox } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
@@ -139,10 +139,10 @@ export const updateConversation = async (
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
-        const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
+        const mailbox = assertDefined(await getMailbox());
         const events = [
           publishToRealtime({
-            channel: conversationChannelId(mailbox.slug, updatedConversation.slug),
+            channel: conversationChannelId(updatedConversation.slug),
             event: "conversation.updated",
             data: serializeConversation(mailbox, updatedConversation),
           }),
@@ -154,7 +154,7 @@ export const updateConversation = async (
         ) {
           events.push(
             publishToRealtime({
-              channel: conversationsListChannelId(mailbox.slug),
+              channel: conversationsListChannelId(),
               event: "conversation.statusChanged",
               data: {
                 id: updatedConversation.id,
@@ -332,7 +332,6 @@ export const getRelatedConversations = async (
   if (!subject && !body) return [];
 
   const keywords = await emailKeywordsExtractor({
-    mailbox: conversationWithMailbox.mailbox,
     subject,
     body,
   });
@@ -379,7 +378,6 @@ export const generateConversationSubject = async (
       : (
           await runAIQuery({
             messages: messages.filter((m) => m.role === "user").map((m) => ({ role: "user", content: m.content })),
-            mailbox,
             queryType: "response_generator",
             system:
               "Generate a brief, clear subject line (max 50 chars) that summarizes the main point of these messages. Respond with only the subject line, no other text.",

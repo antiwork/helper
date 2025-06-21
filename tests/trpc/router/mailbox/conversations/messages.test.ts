@@ -25,7 +25,6 @@ describe("messagesRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.messages.flagAsBad({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
         id: aiMessage.id,
         reason: "Incorrect information",
@@ -55,7 +54,6 @@ describe("messagesRouter", () => {
 
       await expect(
         caller.mailbox.conversations.messages.flagAsBad({
-          mailboxSlug: mailbox.slug,
           conversationSlug: conversation.slug,
           id: 999999, // Non-existent message ID
           reason: "This message doesn't exist",
@@ -72,7 +70,6 @@ describe("messagesRouter", () => {
 
       await expect(
         caller.mailbox.conversations.messages.flagAsBad({
-          mailboxSlug: mailbox.slug,
           conversationSlug: conversation.slug,
           id: userMessage.id,
           reason: "This is a user message",

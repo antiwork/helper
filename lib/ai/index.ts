@@ -2,7 +2,6 @@ import { retry } from "@lifeomic/attempt";
 import { CoreMessage, GenerateTextResult, Tool } from "ai";
 import { z } from "zod";
 import { aiUsageEvents } from "@/db/schema/aiUsageEvents";
-import { mailboxes } from "@/db/schema/mailboxes";
 import { trackAIUsageEvent } from "@/lib/data/aiUsageEvents";
 import {
   AvailableModel,
@@ -17,7 +16,6 @@ export { generateCompletion, generateEmbedding, generateStructuredObject };
 
 type CommonAIQueryOptions = {
   messages: CoreMessage[];
-  mailbox: typeof mailboxes.$inferSelect;
   queryType: (typeof aiUsageEvents.$inferSelect)["queryType"];
   model?: AvailableModel;
   system?: string;
@@ -29,7 +27,6 @@ type CommonAIQueryOptions = {
 
 export const runAIQuery = async ({
   messages,
-  mailbox,
   queryType,
   model = COMPLETION_MODEL,
   system,
@@ -52,16 +49,12 @@ export const runAIQuery = async ({
         tools,
         functionId,
         shortenPromptBy,
-        metadata: {
-          mailboxSlug: mailbox.slug,
-        },
       }),
-    { mailbox, queryType, model },
+    { queryType, model },
   );
 
 export const runAIObjectQuery = async <T>({
   messages,
-  mailbox,
   queryType,
   schema,
   model = COMPLETION_MODEL,
@@ -85,7 +78,7 @@ export const runAIObjectQuery = async <T>({
         functionId,
         shortenPromptBy,
       }),
-    { mailbox, queryType, model },
+    { queryType, model },
   );
   return response.object;
 };

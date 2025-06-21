@@ -7,7 +7,6 @@ import { trackAIUsageEvent } from "@/lib/data/aiUsageEvents";
 
 describe("trackAIUsageEvent", () => {
   it("tracks AI usage event with provided mailbox", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const model = "gpt-4o";
     const queryType = "response_generator";
     const usage = {
@@ -17,11 +16,10 @@ describe("trackAIUsageEvent", () => {
       cachedTokens: 0,
     };
 
-    await trackAIUsageEvent({ mailbox, model, queryType, usage });
+    await trackAIUsageEvent({ model, queryType, usage });
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: mailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: 100,
@@ -32,7 +30,6 @@ describe("trackAIUsageEvent", () => {
   });
 
   it("tracks AI usage event with cached tokens", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const model = "gpt-4o";
     const queryType = "response_generator";
     const usage = {
@@ -43,7 +40,6 @@ describe("trackAIUsageEvent", () => {
     };
 
     await trackAIUsageEvent({
-      mailbox,
       model,
       queryType,
       usage,
@@ -51,7 +47,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: mailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: usage.promptTokens,
@@ -61,38 +56,8 @@ describe("trackAIUsageEvent", () => {
     });
   });
 
-  it("uses placeholder mailbox when mailbox is not provided", async () => {
-    const { mailbox: placeholderMailbox } = await userFactory.createRootUser();
-
-    const model = "gpt-4o-mini";
-    const queryType = "response_generator";
-    const usage = {
-      promptTokens: 200,
-      completionTokens: 100,
-      totalTokens: 300,
-      cachedTokens: 100,
-    };
-
-    await trackAIUsageEvent({
-      model,
-      queryType,
-      usage,
-    });
-
-    const usageEvent = await db.query.aiUsageEvents.findFirst();
-    expect(usageEvent).toMatchObject({
-      mailboxId: placeholderMailbox.id,
-      modelName: model,
-      queryType,
-      inputTokensCount: usage.promptTokens,
-      outputTokensCount: usage.completionTokens,
-      cachedTokensCount: usage.cachedTokens,
-      cost: "0.0000825",
-    });
-  });
-
   it("calculates cost correctly for different models", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const testCases = [
       {
         model: "gpt-4o-mini" as const,
@@ -119,7 +84,6 @@ describe("trackAIUsageEvent", () => {
       };
 
       await trackAIUsageEvent({
-        mailbox,
         model: testCase.model,
         queryType: "response_generator",
         usage,
@@ -129,7 +93,6 @@ describe("trackAIUsageEvent", () => {
         where: eq(aiUsageEvents.modelName, testCase.model),
       });
       expect(usageEvent).toMatchObject({
-        mailboxId: mailbox.id,
         modelName: testCase.model,
         queryType: "response_generator",
         inputTokensCount: testCase.inputTokens,

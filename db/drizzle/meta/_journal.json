@@ -687,6 +687,13 @@
       "when": 1750342768926,
       "tag": "0097_http_extension",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1750505398859,
+      "tag": "0098_silent_silk_fever",
+      "breakpoints": true
     }
   ]
 }

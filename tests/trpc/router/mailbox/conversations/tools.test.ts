@@ -46,7 +46,6 @@ describe("toolsRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
       const result = await caller.mailbox.conversations.tools.list({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
       });
 
@@ -79,7 +78,6 @@ describe("toolsRouter", () => {
       const params = { test: "params" };
 
       const result = await caller.mailbox.conversations.tools.run({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
         tool: "test-tool",
         params,
@@ -103,7 +101,6 @@ describe("toolsRouter", () => {
       const caller = createCaller(createTestTRPCContext(user));
       await expect(
         caller.mailbox.conversations.tools.run({
-          mailboxSlug: mailbox.slug,
           conversationSlug: conversation.slug,
           tool: "non-existent-tool",
           params: {},
@@ -124,7 +121,6 @@ describe("toolsRouter", () => {
       const caller = createCaller(createTestTRPCContext(user));
       await expect(
         caller.mailbox.conversations.tools.run({
-          mailboxSlug: mailbox.slug,
           conversationSlug: conversation.slug,
           tool: "failing-tool",
           params: {},

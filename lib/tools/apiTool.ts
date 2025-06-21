@@ -7,7 +7,7 @@ import { conversationEvents, conversationMessages, conversations, ToolMetadata }
 import type { Tool } from "@/db/schema/tools";
 import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
+import { getMetadataApi } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
 import { cleanUpTextForAI, GPT_4O_MINI_MODEL, isWithinTokenLimit } from "../ai/core";
 import type { Conversation } from "../data/conversation";
@@ -132,9 +132,9 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   });
 
   let metadataPrompt = "";
-  const metadataApi = await getMetadataApiByMailbox(mailbox);
+  const metadataApi = await getMetadataApi();
   if (conversation.emailFrom && metadataApi) {
-    const metadata = await fetchMetadata(conversation.emailFrom, mailbox.slug);
+    const metadata = await fetchMetadata(conversation.emailFrom);
     metadataPrompt = metadata ? `Metadata: ${JSON.stringify(metadata, null, 2)}` : "";
   }
 

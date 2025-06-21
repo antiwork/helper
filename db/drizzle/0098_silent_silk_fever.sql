@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_metadataapi" ALTER COLUMN "mailbox_id" DROP NOT NULL;

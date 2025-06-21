@@ -17,7 +17,7 @@ export const githubRouter = {
     return repositories;
   }),
   disconnect: mailboxProcedure.mutation(async ({ ctx }) => {
-    await disconnectGitHub(ctx.mailbox.id);
+    await disconnectGitHub();
   }),
   updateRepo: mailboxProcedure
     .input(
@@ -56,6 +56,6 @@ export const githubRouter = {
         });
       }
 
-      await updateGitHubRepo(ctx.mailbox.id, input.repoOwner, input.repoName);
+      await updateGitHubRepo(input.repoOwner, input.repoName);
     }),
 };

@@ -44,11 +44,9 @@ const generateUnsavedFileInfo = (file: File, inline: boolean): UnsavedFileInfo =
 });
 
 export const FileUploadProvider = ({
-  mailboxSlug,
   conversationSlug,
   children,
 }: {
-  mailboxSlug: string;
   // `conversationSlug` is required for file uploads, but it's marked as optional
   // so that other usages of the editor can be wrapped in this component,
   // which allows FileUploadContext be non-nullable.

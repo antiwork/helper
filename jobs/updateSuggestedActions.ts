@@ -4,12 +4,12 @@ import { db } from "@/db/client";
 import { conversations, tools } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { getConversationById } from "@/lib/data/conversation";
-import { getMailboxById } from "@/lib/data/mailbox";
+import { getMailbox } from "@/lib/data/mailbox";
 import { generateSuggestedActions } from "@/lib/tools/apiTool";
 
 export const updateSuggestedActions = async ({ conversationId }: { conversationId: number }) => {
   const conversation = assertDefinedOrRaiseNonRetriableError(await getConversationById(conversationId));
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
   const mailboxTools = await db.query.tools.findMany({
     where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),

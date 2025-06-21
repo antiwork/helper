@@ -20,7 +20,6 @@ describe("emailKeywordsExtractor", () => {
     vi.mocked(aiModule.runAIQuery).mockResolvedValue({ text: "global affiliate gumroad" } as any);
 
     const keywords = await emailKeywordsExtractor({
-      mailbox,
       subject: "Recent purchase failed",
       body: "How do I become a global affiliate on Gumroad?",
     });
@@ -29,7 +28,6 @@ describe("emailKeywordsExtractor", () => {
 
     expect(aiModule.runAIQuery).toHaveBeenCalledWith({
       functionId: "email-keywords-extractor",
-      mailbox,
       queryType: "email_keywords_extractor",
       messages: [
         {

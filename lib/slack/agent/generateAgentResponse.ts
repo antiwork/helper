@@ -384,7 +384,6 @@ export const generateAgentResponse = async (
     : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
 
   const result = await runAIQuery({
-    mailbox,
     queryType: "agent_response",
     model: "gpt-4o",
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
@@ -444,7 +443,7 @@ const formatConversation = (
   platformCustomer?: PlatformCustomer | null,
 ) => {
   return {
-    standardSlackFormat: `*<${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
+    standardSlackFormat: `*<${getBaseUrl()}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
     id: conversation.id,
     slug: conversation.slug,
     subject: conversation.subject,
@@ -454,6 +453,6 @@ const formatConversation = (
     assignedToUserId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
     isVip: platformCustomer?.isVip || false,
-    url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,
+    url: `${getBaseUrl()}/conversations?id=${conversation.slug}`,
   };
 };

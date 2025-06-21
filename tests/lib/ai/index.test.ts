@@ -50,7 +50,6 @@ describe("runAIQuery", () => {
 
     await runAIQuery({
       messages,
-      mailbox,
       queryType: "response_generator",
       maxTokens: 500,
     });
@@ -65,19 +64,15 @@ describe("runAIQuery", () => {
       system: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
-      metadata: {
-        mailboxSlug: mailbox.slug,
-      },
     });
   });
 
   it("uses custom parameters when provided", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
 
     await runAIQuery({
       messages,
-      mailbox,
       queryType: "response_generator",
       model: "gpt-4o",
       system: "Custom system prompt",
@@ -95,14 +90,11 @@ describe("runAIQuery", () => {
       maxSteps: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
-      metadata: {
-        mailboxSlug: mailbox.slug,
-      },
     });
   });
 
   it("tracks AI usage event after successful completion", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const queryType = "response_generator";
     const model = "gpt-4o";
 
@@ -141,13 +133,11 @@ describe("runAIQuery", () => {
 
     await runAIQuery({
       messages: [{ role: "user", content: "Test" }],
-      mailbox,
       queryType,
       model,
     });
 
     expect(trackAIUsageEvent).toHaveBeenCalledWith({
-      mailbox,
       queryType,
       model,
       usage: {
@@ -160,7 +150,7 @@ describe("runAIQuery", () => {
   });
 
   it("retries on failure", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
 
     vi.spyOn(core, "generateCompletion")
@@ -169,7 +159,6 @@ describe("runAIQuery", () => {
 
     const result = await runAIQuery({
       messages,
-      mailbox,
       queryType: "response_generator",
       maxTokens: 500,
     });
@@ -196,7 +185,7 @@ describe("runAIObjectQuery", () => {
   });
 
   it("calls generateStructuredObject with correct parameters and returns the object", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const queryType = "conversation_summary";
     const model = "gpt-4o";
 
@@ -229,7 +218,6 @@ describe("runAIObjectQuery", () => {
 
     const result = await runAIObjectQuery({
       messages: [{ role: "user", content: "Test" }],
-      mailbox,
       queryType,
       model,
       schema: z.object({ name: z.string(), age: z.number() }),
@@ -238,7 +226,6 @@ describe("runAIObjectQuery", () => {
     expect(result).toEqual({ name: "John Doe", age: 30 });
 
     expect(trackAIUsageEvent).toHaveBeenCalledWith({
-      mailbox,
       queryType,
       model,
       usage: {

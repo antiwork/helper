@@ -133,7 +133,7 @@ const publishEvent = async (messageId: number) => {
   );
 
   await publishToRealtime({
-    channel: dashboardChannelId(message.conversation.mailbox.slug),
+    channel: dashboardChannelId(),
     event: "event",
     data: createReactionEventPayload(message, message.conversation.mailbox),
   });
