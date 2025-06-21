@@ -384,7 +384,7 @@ const addressesToString = (value: AddressObject | AddressObject[]) => {
   return Array.isArray(value) ? value.map((to) => to.text).join(", ") : value.text;
 };
 
-export const GmailWebhookBodySchema = z.object({
+const GmailWebhookBodySchema = z.object({
   message: z.object({
     data: z.string(),
     // The ID assigned by Google when the message is published. Guaranteed to be unique within the pub/sub topic.
@@ -395,7 +395,7 @@ export const GmailWebhookBodySchema = z.object({
   subscription: z.string(),
 });
 
-export const GmailWebhookHeadersSchema = z.object({
+const GmailWebhookHeadersSchema = z.object({
   authorization: z.string().min(1),
 });
 

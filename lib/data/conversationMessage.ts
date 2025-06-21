@@ -255,7 +255,7 @@ export const serializeMessage = async (
   };
 };
 
-export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
+const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
     inputFiles.map(async (file) => {
       if (file.isInline) {
@@ -484,7 +484,7 @@ export async function getTextWithConversationSubject(
   return `${subject ? `${subject}\n\n` : ""}${cleanedUpText}`;
 }
 
-export const getPastMessages = async (
+const getPastMessages = async (
   message: typeof conversationMessages.$inferSelect,
 ): Promise<(typeof conversationMessages.$inferSelect)[]> => {
   const pastMessages = await db.query.conversationMessages.findMany({

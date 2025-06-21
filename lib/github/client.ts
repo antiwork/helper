@@ -13,7 +13,7 @@ const privateKeyPkcs8 = memoize(() => {
 
 export const getGitHubInstallUrl = () => `https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new`;
 
-export const getOctokit = (installationId: string) => {
+const getOctokit = (installationId: string) => {
   if (!env.GITHUB_APP_ID) throw new Error("GITHUB_APP_ID is not set");
   const app = new App({ appId: env.GITHUB_APP_ID, privateKey: privateKeyPkcs8() });
   return app.getInstallationOctokit(Number(installationId));

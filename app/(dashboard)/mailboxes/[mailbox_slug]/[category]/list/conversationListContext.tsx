@@ -10,7 +10,7 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 
-export type ConversationListContextType = {
+type ConversationListContextType = {
   mailboxSlug: string;
   conversationListData: RouterOutputs["mailbox"]["conversations"]["list"] | null;
   isPending: boolean;

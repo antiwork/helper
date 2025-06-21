@@ -8,7 +8,7 @@ type AnimatedTypingProps = {
   onComplete?: () => void;
 };
 
-export function AnimatedTyping({ text, speed = 50, onComplete }: AnimatedTypingProps) {
+function AnimatedTyping({ text, speed = 50, onComplete }: AnimatedTypingProps) {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);

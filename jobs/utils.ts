@@ -27,6 +27,6 @@ type EventJobEntry<TData extends z.ZodObject<any>, TJobs extends Record<string, 
   jobs: ValidatedJobs<TData, TJobs>;
 };
 
-export const defineEvent = <TData extends z.ZodObject<any>, TJobs extends Record<string, any>>(
+const defineEvent = <TData extends z.ZodObject<any>, TJobs extends Record<string, any>>(
   entry: EventJobEntry<TData, TJobs>,
 ): EventJobEntry<TData, TJobs> => entry;

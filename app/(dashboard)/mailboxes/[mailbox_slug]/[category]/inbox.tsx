@@ -113,7 +113,7 @@ const Inbox = () => {
   );
 };
 
-export const InboxProvider = ({ children }: { children: ReactNode }) => {
+const InboxProvider = ({ children }: { children: ReactNode }) => {
   const mailboxSlug = useParams<{ mailbox_slug: string }>().mailbox_slug;
   const [conversationSlug] = useQueryState("id");
 
@@ -126,7 +126,7 @@ export const InboxProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const Wrapper = () => (
+const Wrapper = () => (
   <InboxProvider>
     <Inbox />
   </InboxProvider>

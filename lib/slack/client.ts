@@ -30,7 +30,7 @@ export const getSlackUser = async (token: string, user_id: string) => {
   return response.user ?? null;
 };
 
-export const getSlackTeam = async (token: string) => {
+const getSlackTeam = async (token: string) => {
   const client = new WebClient(token);
   const response = await client.team.info();
   return response.team ?? null;
@@ -224,7 +224,7 @@ export const getSlackAccessToken = async (code: string) => {
   };
 };
 
-export const postSlackDM = async (
+const postSlackDM = async (
   token: string,
   userId: string,
   options: Omit<ChatPostMessageArguments, "channel"> & Pick<ChannelAndAttachments, "attachments">,
@@ -242,7 +242,7 @@ export const postSlackDM = async (
   } as ChatPostMessageArguments);
 };
 
-export const listSlackUsers = async (token: string) => {
+const listSlackUsers = async (token: string) => {
   const response = await fetch("https://slack.com/api/users.list", {
     headers: {
       Authorization: `Bearer ${token}`,

@@ -12,12 +12,12 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-export type GitHubUpdates = {
+type GitHubUpdates = {
   repoOwner?: string | null;
   repoName?: string | null;
 };
 
-export const GitHubRepositories = ({
+const GitHubRepositories = ({
   id,
   selectedRepoFullName,
   mailbox,

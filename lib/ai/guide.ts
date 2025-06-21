@@ -35,7 +35,7 @@ const PlanResultSchema = z.object({
   title: z.string().describe("Title of the guide session"),
 });
 
-export type PlanResult = z.infer<typeof PlanResultSchema>;
+type PlanResult = z.infer<typeof PlanResultSchema>;
 
 export async function generateGuidePlan(title: string, instructions: string, mailbox: Mailbox): Promise<PlanResult> {
   const prompt = `# USER REQUEST:

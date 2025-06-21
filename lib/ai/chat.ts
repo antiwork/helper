@@ -49,7 +49,7 @@ import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopm
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
   "Summarize the following text while preserving all key information and context. Keep the summary under 8000 tokens.";
-export const REASONING_MODEL = fireworks("accounts/fireworks/models/deepseek-r1");
+const REASONING_MODEL = fireworks("accounts/fireworks/models/deepseek-r1");
 
 function hideToolResults<TOOLS extends Record<string, Tool>>(): (options: {
   tools: TOOLS;
@@ -80,7 +80,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
+const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
@@ -134,7 +134,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     });
 };
 
-export const buildPromptMessages = async (
+const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
@@ -307,7 +307,7 @@ const generateReasoning = async ({
   }
 };
 
-export const generateAIResponse = async ({
+const generateAIResponse = async ({
   messages,
   mailbox,
   conversationId,
@@ -494,7 +494,7 @@ export const createUserMessage = async (
   return message;
 };
 
-export const createAssistantMessage = (
+const createAssistantMessage = (
   conversationId: number,
   userMessageId: number,
   text: string,
@@ -521,13 +521,13 @@ export const createAssistantMessage = (
   });
 };
 
-export const lastAssistantMessage = (conversationId: number) =>
+const lastAssistantMessage = (conversationId: number) =>
   db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "ai_assistant")),
     orderBy: desc(conversationMessages.createdAt),
   });
 
-export const lastUserMessage = (conversationId: number) =>
+const lastUserMessage = (conversationId: number) =>
   db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
     orderBy: desc(conversationMessages.createdAt),

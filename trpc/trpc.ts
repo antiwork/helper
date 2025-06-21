@@ -53,8 +53,6 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 
 export const createCallerFactory = t.createCallerFactory;
 export const createTRPCRouter = t.router;
-export { t as trpcContext };
-
 /**
  * Adds an artificial delay in development to help catch unwanted waterfalls
  * (by simulating network latency as if it were a production environment).

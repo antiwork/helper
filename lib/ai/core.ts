@@ -7,7 +7,7 @@ import { assertDefined } from "@/components/utils/assert";
 import openai from "@/lib/ai/openai";
 import { cacheFor } from "@/lib/cache";
 
-export const GPT_4O_MODEL = "gpt-4o";
+const GPT_4O_MODEL = "gpt-4o";
 export const GPT_4_1_MODEL = "gpt-4.1";
 export const GPT_4O_MINI_MODEL = "gpt-4o-mini";
 export const GPT_4_1_MINI_MODEL = "gpt-4.1-mini";

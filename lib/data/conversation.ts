@@ -34,7 +34,7 @@ export type Conversation = typeof conversations.$inferSelect;
 
 export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
-export const MAX_RELATED_CONVERSATIONS_COUNT = 3;
+const MAX_RELATED_CONVERSATIONS_COUNT = 3;
 
 export const createConversation = async (
   conversation: NewConversation,
@@ -301,9 +301,7 @@ export const getNonSupportParticipants = async (conversation: Conversation): Pro
   return Array.from(participants);
 };
 
-export const getLastUserMessage = async (
-  conversationId: number,
-): Promise<typeof conversationMessages.$inferSelect | null> => {
+const getLastUserMessage = async (conversationId: number): Promise<typeof conversationMessages.$inferSelect | null> => {
   const lastUserMessage = await db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
     orderBy: [desc(conversationMessages.createdAt)],

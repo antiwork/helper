@@ -2,9 +2,9 @@
 
 import { Check, Loader2 } from "lucide-react";
 
-export type StepStatus = "completed" | "loading" | "pending";
+type StepStatus = "completed" | "loading" | "pending";
 
-export interface Step {
+interface Step {
   id: string;
   description: string;
   completed: boolean;

@@ -95,5 +95,3 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
     </div>
   );
 };
-
-export default EventItem;

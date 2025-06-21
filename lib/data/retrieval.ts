@@ -118,7 +118,7 @@ export const findSimilarWebsitePages = async (
   return pagesWithSimilarity;
 };
 
-export type PromptRetrievalData = {
+type PromptRetrievalData = {
   knowledgeBank: string | null;
   metadata: string | null;
   websitePagesPrompt: string | null;

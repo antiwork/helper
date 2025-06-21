@@ -22,7 +22,7 @@ const popoverAriaAttributes = (open: boolean): React.AriaAttributes => ({
   "aria-expanded": open,
 });
 
-export const Popover = ({
+const Popover = ({
   trigger,
   children,
   open: openProp,

@@ -23,7 +23,7 @@ export class ToolApiError extends Error {
   }
 }
 
-export type ToolAvailableResult = {
+type ToolAvailableResult = {
   name: string;
   slug: string;
   description: string;

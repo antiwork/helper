@@ -153,7 +153,7 @@ export const ConversationListItem = ({
   );
 };
 
-export const AssignedToLabel = ({
+const AssignedToLabel = ({
   assignedToId,
   assignedToAI,
   className,

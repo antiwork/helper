@@ -111,7 +111,7 @@ const createMessageBlocks = ({
   ];
 };
 
-export const handleVipMessageAction = async (conversation: typeof conversations.$inferSelect, payload: any) => {
+const handleVipMessageAction = async (conversation: typeof conversations.$inferSelect, payload: any) => {
   await handleMessageSlackAction(
     {
       conversationId: conversation.id,
