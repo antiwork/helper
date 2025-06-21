@@ -30,6 +30,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 <TableHead>Name</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
+                <TableHead className="w-[150px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
