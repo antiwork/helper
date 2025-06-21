@@ -358,7 +358,7 @@ const SidebarMenuButton = React.forwardRef<
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(({ asChild = false, isActive = false, variant = "default", size = "default", tooltip, className, ...props }, ref) => {
   const Comp = asChild ? Slot : "button";
-  const { isMobile } = useSidebar();
+  const { isMobile, open } = useSidebar();
 
   const button = (
     <Comp
@@ -375,16 +375,12 @@ const SidebarMenuButton = React.forwardRef<
     return button;
   }
 
-  if (typeof tooltip === "string") {
-    tooltip = {
-      children: tooltip,
-    };
-  }
+  const tooltipProps = typeof tooltip === "string" ? { children: tooltip } : tooltip;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side="right" align="center" hidden={isMobile} {...tooltip} />
+      <TooltipContent side="right" align="center" hidden={isMobile || open} {...tooltipProps} />
     </Tooltip>
   );
 });
