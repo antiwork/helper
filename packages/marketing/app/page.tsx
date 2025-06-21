@@ -612,7 +612,7 @@ export default function Home() {
                 </span>
               </Link>
               <Link
-                href={`${docsBaseUrl}/docs/api-reference/create-conversation`}
+                href={`${docsBaseUrl}/docs/api/api-reference/create-conversation`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
