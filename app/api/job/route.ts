@@ -37,7 +37,7 @@ const retrySeconds: Record<number, number> = {
 const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<any>) => {
   try {
     // eslint-disable-next-line no-console
-    console.log(`Running job ${jobRun.id} (${jobRun.job})`);
+    console.log(`Running job ${jobRun.id} (${jobRun.job} ${JSON.stringify(jobRun.data)})`);
     const result = await handler;
     await db.update(jobRuns).set({ status: "success", result }).where(eq(jobRuns.id, jobRun.id));
     // eslint-disable-next-line no-console
@@ -80,12 +80,18 @@ export const POST = async (request: NextRequest) => {
     const data = JSON.parse(body) as
       | { event: EventName; job: string; jobRunId?: number; data: EventData<EventName> }
       | { job: string; jobRunId?: number; event?: undefined; data?: undefined };
+    const queueMessageId = request.headers.get("X-Queue-Message-Id");
 
     const jobRun = data.jobRunId
       ? assertDefined(await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, data.jobRunId) }))
       : await db
           .insert(jobRuns)
-          .values({ job: data.job, event: data.event, data: data.data ?? {} })
+          .values({
+            job: data.job,
+            event: data.event,
+            data: data.data ?? {},
+            queueMessageId: queueMessageId ? parseInt(queueMessageId) : undefined,
+          })
           .returning()
           .then(takeUniqueOrThrow);
 
@@ -105,6 +111,8 @@ export const POST = async (request: NextRequest) => {
       waitUntil(handleJob(jobRun, handler()));
     }
 
+    // eslint-disable-next-line no-console
+    console.log(`Created job run ${jobRun.id}`);
     return new Response(`OK: Job run ${jobRun.id}`);
   } catch (error) {
     captureExceptionAndLog(error);
