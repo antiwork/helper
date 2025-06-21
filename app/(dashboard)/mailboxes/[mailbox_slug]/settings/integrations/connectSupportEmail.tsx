@@ -16,6 +16,12 @@ const ConnectSupportEmail = () => {
   const { data: { supportAccount, enabled } = {}, isLoading } = api.gmailSupportEmail.get.useQuery({
     mailboxSlug: params.mailbox_slug as string,
   });
+  const { data: onboardingState } = api.mailbox.conversations.list.useQuery(
+    { mailboxSlug: params.mailbox_slug as string },
+    { select: (data) => data.onboardingState },
+  );
+
+  const hasEmailSending = onboardingState?.hasResend || supportAccount;
 
   const handleConnectOrDisconnect = async () => {
     if (supportAccount) {
@@ -37,6 +43,12 @@ const ConnectSupportEmail = () => {
       title="Support Email"
       description="Connect your support email to receive and send emails from your support email address."
     >
+      {hasEmailSending && !supportAccount && onboardingState?.hasResend && (
+        <Alert className="mb-4 text-sm bg-blue-50 border-blue-200">
+          <strong>Email sending is active via Resend.</strong> Connect Gmail for full email integration including
+          monitoring incoming replies.
+        </Alert>
+      )}
       {error && (
         <div className="mb-4 rounded-lg bg-destructive-100 px-4 py-3 text-destructive-900" role="alert">
           <h3>Failed to connect your gmail account, please try again.</h3>
