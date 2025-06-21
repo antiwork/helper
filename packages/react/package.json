@@ -25,10 +25,8 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
-    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^22.15.3",
     "@types/react": "^19.0.0",
-    "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^1.0.4",
     "jsdom": "^23.2.0",
     "react": "^19.1.0",
@@ -50,9 +48,7 @@
   ],
   "author": "Helper (https://helper.ai)",
   "license": "MIT",
-  "dependencies": {
-    "crypto-js": "^4.2.0"
-  },
+  "dependencies": {},
   "homepage": "https://helper.ai",
   "publishConfig": {
     "access": "public"

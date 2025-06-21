@@ -94,7 +94,7 @@ const isVisible = (element: HTMLElement) => {
   return true;
 };
 
-export class GuideManager {
+class GuideManager {
   private helperHandElement: HTMLDivElement | null = null;
   private lastDomTracking: any = null;
   private events: eventWithTime[] = [];

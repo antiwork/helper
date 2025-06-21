@@ -3,7 +3,7 @@
 import { Check, RefreshCw, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
-import Popover from "@/components/popover";
+import { Popover } from "@/components/popover";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";

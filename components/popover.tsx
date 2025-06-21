@@ -164,5 +164,3 @@ const useDropdownPosition = (ref: React.RefObject<HTMLElement | null>) => {
     maxWidth: `${maxWidth - 32}px`,
   };
 };
-
-export default Popover;
