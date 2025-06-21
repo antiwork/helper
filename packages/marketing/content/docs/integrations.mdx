@@ -24,7 +24,7 @@ Enables sending support emails from your Gmail or Google Workspace account.
 3. Navigate to "APIs & Services" > "Credentials".
 4. Click "Create Credentials" and select "OAuth client ID".
 5. Choose "Web application" as the application type.
-6. Add `https://helperai.dev/api/connect/google/callback` to the "Authorized redirect URIs".
+6. Add `https://<your-helper-domain>/api/connect/google/callback` to the "Authorized redirect URIs".
 7. Click "Create". You will be shown the Client ID and Client Secret.
 8. Add these values as environment variables: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 9. Navigate to "APIs & Services" > "Library".
@@ -199,7 +199,7 @@ export default {
       });
 
       const newHeaders = new Headers(response.headers);
-      const allowedOrigins = ["https://helper.ai", "https://helperai.dev"];
+      const allowedOrigins = ["https://<your-helper-domain>"];
       const origin = request.headers.get("Origin");
 
       if (allowedOrigins.includes(origin)) {

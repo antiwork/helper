@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-
-    await inngest.send({
-      id: body.message.messageId,
-      name: "gmail/webhook.received",
-      data: {
-        body,
-        headers: Object.fromEntries(req.headers.entries()),
-      },
+    const json = await req.json();
+    await triggerEvent("gmail/webhook.received", {
+      body: json,
+      headers: Object.fromEntries(req.headers.entries()),
     });
 
     return new NextResponse(null, { status: 204 });

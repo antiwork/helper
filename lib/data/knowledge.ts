@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { faqs, mailboxes } from "@/db/schema";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { findUserViaSlack } from "@/lib/data/user";
@@ -28,10 +28,7 @@ export const approveSuggestedEdit = async (
 
     await resetMailboxPromptUpdatedAt(tx, knowledge.mailboxId);
 
-    inngest.send({
-      name: "faqs/embedding.create",
-      data: { faqId: knowledge.id },
-    });
+    await triggerEvent("faqs/embedding.create", { faqId: knowledge.id });
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {

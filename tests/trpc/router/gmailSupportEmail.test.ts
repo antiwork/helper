@@ -1,15 +1,15 @@
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
 import { userFactory } from "@tests/support/factories/users";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
 import { describe, expect, inject, it, vi } from "vitest";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { gmailSupportEmails, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { createCaller } from "@/trpc";
 
-vi.mock("@/inngest/client");
+vi.mock("@/jobs/client");
 vi.mock("googleapis", () => ({
   google: {
     auth: {
@@ -91,11 +91,8 @@ describe("gmailSupportEmailRouter", () => {
 
       expect(createdEmail).toMatchObject(input);
 
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "gmail/import-recent-threads",
-        data: {
-          gmailSupportEmailId: createdEmail.id,
-        },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("gmail/import-recent-threads", {
+        gmailSupportEmailId: createdEmail.id,
       });
     });
   });

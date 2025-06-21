@@ -603,9 +603,27 @@ export default async function RootLayout({
       </SwitchSectionWrapper>
 
       <SectionWrapper
+        title="Chat widget host URL"
+        description="The URL where your chat widget is installed. If set, customers will be able to continue email conversations in the chat widget."
+      >
+        <div className="flex flex-col space-y-2">
+          <Label htmlFor="widgetHost">Host URL</Label>
+          <Input
+            id="widgetHost"
+            type="url"
+            value={widgetHost}
+            onChange={(e) => setWidgetHost(e.target.value)}
+            placeholder="https://example.com"
+            className="max-w-[350px]"
+          />
+        </div>
+      </SectionWrapper>
+
+      <SectionWrapper
         title="Respond to email inquiries with chat"
         description="Automatically respond to emails as if the customer was using the chat widget."
-        action={
+      >
+        <div className="space-y-4">
           <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="off">Off</TabsTrigger>
@@ -613,25 +631,7 @@ export default async function RootLayout({
               <TabsTrigger value="reply">Reply</TabsTrigger>
             </TabsList>
           </Tabs>
-        }
-      >
-        {autoRespond === "reply" && (
-          <div className="flex flex-col space-y-2">
-            <Label htmlFor="widgetHost">Chat widget host URL</Label>
-            <Input
-              id="widgetHost"
-              type="url"
-              value={widgetHost}
-              onChange={(e) => setWidgetHost(e.target.value)}
-              placeholder="https://example.com"
-              className="max-w-[350px]"
-            />
-            <p className="text-sm text-muted-foreground">
-              The URL where your chat widget is installed. If set, the customer will be able to continue the
-              conversation in the chat widget.
-            </p>
-          </div>
-        )}
+        </div>
       </SectionWrapper>
 
       {showChatWidget && (

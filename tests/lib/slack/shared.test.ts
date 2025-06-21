@@ -26,12 +26,6 @@ vi.mock("@/lib/data/note", () => ({
   addNote: vi.fn(),
 }));
 
-vi.mock("@/inngest/client", () => ({
-  inngest: {
-    send: vi.fn(),
-  },
-}));
-
 describe("handleSlackAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();

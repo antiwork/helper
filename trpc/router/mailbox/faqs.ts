@@ -4,7 +4,7 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { approveSuggestedEdit, rejectSuggestedEdit } from "@/lib/data/knowledge";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { mailboxProcedure } from "./procedure";
@@ -42,10 +42,7 @@ export const faqsRouter = {
 
         await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
 
-        inngest.send({
-          name: "faqs/embedding.create",
-          data: { faqId: faq.id },
-        });
+        await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
         return faq;
       });
@@ -76,10 +73,7 @@ export const faqsRouter = {
 
         await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
 
-        inngest.send({
-          name: "faqs/embedding.create",
-          data: { faqId: faq.id },
-        });
+        await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
         return faq;
       });

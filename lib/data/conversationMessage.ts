@@ -1,4 +1,3 @@
-import { addSeconds } from "date-fns";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
@@ -12,7 +11,7 @@ import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
@@ -400,12 +399,16 @@ export const createConversationMessage = async (
     eventsToSend.push({
       name: "conversations/email.enqueued" as const,
       data: { messageId: message.id },
-      ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS,
     });
   }
 
   if (eventsToSend.length > 0) {
-    await inngest.send(eventsToSend);
+    await Promise.all(
+      eventsToSend.map((event) =>
+        triggerEvent(event.name, event.data, event.sleepSeconds ? { sleepSeconds: event.sleepSeconds } : {}),
+      ),
+    );
   }
 
   return message;

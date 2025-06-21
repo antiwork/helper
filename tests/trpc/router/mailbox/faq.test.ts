@@ -1,15 +1,13 @@
 import { faqsFactory } from "@tests/support/factories/faqs";
 import { userFactory } from "@tests/support/factories/users";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { createCaller } from "@/trpc";
-
-vi.mock("@/inngest/client");
 
 describe("faqsRouter", () => {
   describe("list", () => {
@@ -47,9 +45,8 @@ describe("faqsRouter", () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "faqs/embedding.create",
-        data: { faqId: faqRow!.id },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("faqs/embedding.create", {
+        faqId: faqRow!.id,
       });
     });
   });
@@ -74,9 +71,8 @@ describe("faqsRouter", () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "faqs/embedding.create",
-        data: { faqId: faqRow!.id },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("faqs/embedding.create", {
+        faqId: faqRow!.id,
       });
     });
   });

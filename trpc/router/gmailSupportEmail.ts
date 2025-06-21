@@ -1,7 +1,7 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { createGmailSupportEmail, deleteGmailSupportEmail, getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { env } from "@/lib/env";
 import { getGmailService, subscribeToMailbox } from "@/lib/gmail/client";
@@ -42,11 +42,8 @@ export const gmailSupportEmailRouter = {
         await subscribeToMailbox(gmailService);
         return { gmailSupportEmail };
       });
-      await inngest.send({
-        name: "gmail/import-recent-threads",
-        data: {
-          gmailSupportEmailId: gmailSupportEmail.id,
-        },
+      await triggerEvent("gmail/import-recent-threads", {
+        gmailSupportEmailId: gmailSupportEmail.id,
       });
     }),
   delete: mailboxProcedure.mutation(async ({ ctx }) => {

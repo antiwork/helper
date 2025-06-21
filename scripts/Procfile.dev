@@ -4,4 +4,3 @@ sdk: pnpm --filter=@helperai/sdk dev
 sdk-types: pnpm --filter=@helperai/sdk dev:types
 react: pnpm --filter=@helperai/react dev
 marketing: pnpm --filter=@helperai/marketing dev
-inngest: pnpm inngest-cli dev --no-discovery -u http://localhost:3010/api/inngest

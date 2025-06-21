@@ -15,7 +15,7 @@ import { htmlToText } from "html-to-text";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { indexMessage } from "@/inngest/functions/indexConversation";
+import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
 import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
@@ -123,7 +123,7 @@ export const seedDatabase = async () => {
       console.log(`Indexing ${nonDraftMessages.length} messages for conversation ${conversation.id}`);
       await Promise.all(
         nonDraftMessages.map(async (message) => {
-          await indexMessage(message.id);
+          await indexConversationMessage({ messageId: message.id });
           console.log(`Indexed message ${message.id}`);
         }),
       );
