@@ -1,6 +1,9 @@
 "use client";
 
+import { Search } from "lucide-react";
+import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -13,6 +16,16 @@ type TeamSettingProps = {
 
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredTeamMembers = teamMembers.filter((member) => {
+    const searchString = searchTerm.toLowerCase();
+    return (
+      member.email?.toLowerCase().includes(searchString) ||
+      member.displayName?.toLowerCase().includes(searchString) ||
+      member.keywords.some((keyword) => keyword.toLowerCase().includes(searchString))
+    );
+  });
 
   return (
     <SectionWrapper
@@ -22,6 +35,19 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     >
       <div className="w-full space-y-6">
         <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
+
+        {teamMembers.length > 0 && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search team members by name, email, or keywords..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -35,20 +61,24 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     <div className="flex justify-center">
                       <LoadingSpinner size="md" />
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : teamMembers.length === 0 ? (
+              ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                    No team members in your organization yet. Use the form above to invite new members.
+                  <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                    {searchTerm
+                      ? `No team members found matching "${searchTerm}"`
+                      : "No team members in your organization yet. Use the form above to invite new members."}
                   </TableCell>
                 </TableRow>
               ) : (
-                teamMembers.map((member) => <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} />)
+                filteredTeamMembers.map((member) => (
+                  <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} />
+                ))
               )}
             </TableBody>
           </Table>

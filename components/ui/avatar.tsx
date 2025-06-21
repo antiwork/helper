@@ -2,9 +2,6 @@
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const BaseAvatar = React.forwardRef<
@@ -52,11 +49,26 @@ export const Avatar = ({ src, fallback, size = "md" }: CustomAvatarProps) => {
     lg: "h-12 w-12 text-sm font-bold",
   };
 
+  const getInitials = (name: string): string => {
+    if (!name) return "?";
+
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) {
+      return words[0]?.slice(0, 2).toUpperCase() || "?";
+    }
+
+    return words
+      .slice(0, 2)
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <BaseAvatar className={sizeClasses[size]}>
       <AvatarImage src={src} />
       <AvatarFallback className="text-bright-foreground bg-bright border border-primary-foreground">
-        {fallback.slice(0, 1).toUpperCase()}
+        {getInitials(fallback)}
       </AvatarFallback>
     </BaseAvatar>
   );

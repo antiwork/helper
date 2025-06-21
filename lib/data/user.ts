@@ -50,7 +50,7 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
 
     return {
       id: user.id,
-      displayName: user.user_metadata?.display_name ?? null,
+      displayName: user.user_metadata?.display_name || getFullName(user),
       email: user.email ?? undefined,
       role: access?.role || "afk",
       keywords: access?.keywords || [],
