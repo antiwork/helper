@@ -2,7 +2,7 @@
 
 import LogoIconAmber from "./logoIconAmber.svg";
 
-export function SlackNotification() {
+function SlackNotification() {
   return (
     <div className="bg-[#412020] rounded-xl p-6 shadow-lg h-full flex flex-col">
       <div className="flex items-center mb-4">
