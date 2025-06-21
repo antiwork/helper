@@ -111,17 +111,6 @@ const createMessageBlocks = ({
   ];
 };
 
-export const handleVipMessageAction = async (conversation: typeof conversations.$inferSelect, payload: any) => {
-  await handleMessageSlackAction(
-    {
-      conversationId: conversation.id,
-      slackChannel: payload.channel.id,
-      slackMessageTs: payload.message.ts,
-    },
-    payload,
-  );
-};
-
 export const postVipMessageToSlack = async ({
   conversation,
   message,

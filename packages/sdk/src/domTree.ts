@@ -147,28 +147,6 @@ export function flattenDomTree(root: DOMElementNode): DOMNode[] {
 }
 
 /**
- * Finds a node in the DOM tree by xpath
- * @param root The root node
- * @param xpath The xpath to find
- * @returns The found node or null
- */
-export function findNodeByXpath(root: DOMElementNode, xpath: string): DOMElementNode | null {
-  if (root.xpath === xpath) return root;
-
-  for (const child of root.children) {
-    if ("xpath" in child) {
-      const elementChild = child;
-      if (elementChild.xpath === xpath) return elementChild;
-
-      const found = findNodeByXpath(elementChild, xpath);
-      if (found) return found;
-    }
-  }
-
-  return null;
-}
-
-/**
  * Checks if a text node has a parent with a highlight index
  */
 function hasParentWithHighlightIndex(node: DOMTextNode): boolean {
