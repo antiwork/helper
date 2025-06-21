@@ -168,7 +168,7 @@ export default function Conversation({
       }
       return null;
     },
-    enabled: !!conversationSlug && !!token && !isNewConversation && !isAnonymous,
+    enabled: !!conversationSlug && !!token && !isNewConversation,
   });
 
   const conversationMessages = conversation?.messages.filter((message) =>
