@@ -1,0 +1,49 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "app/**/*.{ts,tsx}",
+        "lib/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}",
+        "trpc/**/*.{ts,tsx}",
+        "middleware.ts",
+        "instrumentation.ts",
+        "instrumentation-client.ts"
+      ],
+      "project": [
+        "**/*.{ts,tsx}",
+        "!docker/**",
+        "!node_modules/**",
+        "!.next/**",
+        "!dist/**",
+        "!coverage/**"
+      ]
+    },
+    "packages/sdk": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/react": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/marketing": {
+      "entry": ["app/**/*.{ts,tsx}"],
+      "project": ["**/*.{ts,tsx}", "!node_modules/**", "!.next/**"]
+    }
+  },
+  "ignore": [
+    "docker/**",
+    "node_modules/**",
+    ".next/**",
+    "dist/**",
+    "coverage/**",
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "tests/**"
+  ],
+  "ignoreDependencies": [
+    "@types/*"
+  ]
+}
