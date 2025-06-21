@@ -107,7 +107,7 @@ export default function Conversation({
       setMessages((messages) => [
         ...messages,
         {
-          id: "error",
+          id: `error_${conversationSlug}_${Date.now()}`,
           role: "system",
           content: "Sorry, there was an error processing your request. Please try again.",
         },
