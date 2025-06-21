@@ -146,7 +146,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
           <div className="grid gap-1">
             <Label htmlFor={repoUID}>Repository</Label>
             <GitHubRepositories id={repoUID} selectedRepoFullName={selectedRepoFullName} mailbox={mailbox} />
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               Select a single repository where issues will be created. Only one repository can be linked per mailbox.
               {selectedRepoFullName && (
                 <>

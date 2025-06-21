@@ -71,7 +71,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
               <Label htmlFor="vipThreshold" className="text-base font-medium">
                 Customer Value Threshold
               </Label>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Customers with a value above this threshold will be marked as VIP
               </p>
               <Input
@@ -90,7 +90,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
               <Label htmlFor="responseHours" className="text-base font-medium">
                 Response Time Target
               </Label>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Set a target response time for VIP customers. You'll be alerted if responses exceed this timeframe.
               </p>
               <div className="mt-2 flex items-center gap-2 w-36">
@@ -114,7 +114,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
               <Label htmlFor="vipChannel" className="text-base font-medium">
                 Slack Notifications
               </Label>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Choose a Slack channel to receive notifications about VIP customer messages
               </p>
               <div className="mt-4">
