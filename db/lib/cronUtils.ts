@@ -6,7 +6,7 @@ export const setupCron = async (job: string, schedule: string) => {
   // eslint-disable-next-line no-console
   console.log(`Scheduling cron job: ${job} with schedule: ${schedule}`);
   await db.execute(sql`
-    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint('${JSON.stringify({ job })}')`});
+    select cron.schedule(${job}, ${schedule}, ${`select call_job_endpoint('${JSON.stringify({ job })}', '')`});
   `);
 };
 
@@ -54,7 +54,7 @@ export const setupJobFunctions = async () => {
 
   await db.execute(
     sql.raw(`
-      create or replace function call_job_endpoint(job_body text) returns text as $$
+      create or replace function call_job_endpoint(job_body text, queue_message_id text) returns text as $$
       declare
         endpoint_url text := '${env.NODE_ENV === "development" ? "http://host.docker.internal:3010" : env.AUTH_URL}/api/job';
         hmac_secret text;
@@ -73,7 +73,8 @@ export const setupJobFunctions = async () => {
           array[
             http_header('Content-Type', 'application/json'), 
             http_header('Authorization', 'Bearer ' || encode(hmac(hmac_payload, hmac_secret, 'sha256'), 'hex')),
-            http_header('X-Timestamp', timestamp_str)
+            http_header('X-Timestamp', timestamp_str),
+            http_header('X-Queue-Message-Id', queue_message_id)
           ],
           'application/json',
           job_body
@@ -101,7 +102,7 @@ export const setupJobFunctions = async () => {
         
         job_count := job_count + 1;
         
-        response := call_job_endpoint(message_record.message::text);
+        response := call_job_endpoint(message_record.message::text, message_record.msg_id::text);
   
         raise notice 'Processed job %, response: %', message_record.msg_id, response;
       end loop;
