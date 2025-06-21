@@ -1,4 +1,5 @@
 import { Bot, User } from "lucide-react";
+import { formatDisplayName } from "@/components/utils/displayName";
 import type { CommandGroup } from "./types";
 
 type AssigneesPageProps = {
@@ -39,17 +40,20 @@ export const useAssigneesPage = ({
           }
         },
       },
-      ...(orgMembers?.map((member) => ({
-        id: member.id,
-        label: `${member.displayName}${member.id === currentUserId ? " (You)" : ""}`,
-        icon: User,
-        onSelect: () => {
-          if (onAssignTicket) {
-            onAssignTicket(member);
-            onOpenChange(false);
-          }
-        },
-      })) || []),
+      ...(orgMembers?.map((member) => {
+        const formattedName = formatDisplayName(member.displayName);
+        return {
+          id: member.id,
+          label: `${formattedName.short}${member.id === currentUserId ? " (You)" : ""}`,
+          icon: User,
+          onSelect: () => {
+            if (onAssignTicket) {
+              onAssignTicket(member);
+              onOpenChange(false);
+            }
+          },
+        };
+      }) || []),
     ],
   },
 ];
