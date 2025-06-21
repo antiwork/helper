@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import crypto from "crypto";
 import fs, { existsSync } from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -139,7 +140,7 @@ export const seedDatabase = async () => {
     }
 
     // Optionally create this file to do any additional seeding, e.g. setting up integrations with local credentials
-    if (existsSync(path.join(import.meta.dirname, "localSeeds.ts"))) {
+    if (existsSync(path.join(dirname(fileURLToPath(import.meta.url)), "localSeeds.ts"))) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - localSeeds.ts is optional
       await import("./localSeeds").then((module: any) => module.default());
@@ -210,7 +211,10 @@ const generateSeedsFromFixtures = async (mailboxId: number) => {
           createdAt: subDays(lastUserEmailCreatedAt, fixture.messages.length - 1),
         });
 
-        for (const [idx, message] of fixture.messages.toSorted((a, b) => a.id - b.id).entries()) {
+        for (const [idx, message] of fixture.messages
+          .slice()
+          .sort((a, b) => a.id - b.id)
+          .entries()) {
           const createdAt = subDays(lastUserEmailCreatedAt, fixture.messages.length - idx);
           await conversationMessagesFactory.create(conversation.id, {
             role: message.role,
