@@ -162,7 +162,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
               mailbox={mailbox}
               onChange={(slackAlertChannel) => update({ mailboxSlug: mailbox.slug, slackAlertChannel })}
             />
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground">
               Daily reports and notifications will be sent to this channel.
             </p>
           </div>

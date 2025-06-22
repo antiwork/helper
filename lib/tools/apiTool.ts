@@ -23,13 +23,6 @@ export class ToolApiError extends Error {
   }
 }
 
-export type ToolAvailableResult = {
-  name: string;
-  slug: string;
-  description: string;
-  parameters: Record<string, any>;
-};
-
 const LIST_AVAILABLE_TOOLS_SYSTEM_PROMPT = `
 Based on the user's conversation and the provided metadata, suggest appropriate functions and their parameters, even if the conversation looks like it's already resolved.
 

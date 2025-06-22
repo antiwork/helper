@@ -2,13 +2,7 @@ import "server-only";
 import { count, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, type Transaction } from "@/db/client";
-import {
-  guideSessionEvents,
-  guideSessionEventTypeEnum,
-  guideSessionReplays,
-  guideSessions,
-  platformCustomers,
-} from "@/db/schema";
+import { guideSessionEvents, guideSessionEventTypeEnum, guideSessions, platformCustomers } from "@/db/schema";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export type GuideSession = typeof guideSessions.$inferSelect;
@@ -149,22 +143,6 @@ export const getGuideSessionsForMailbox = async (
   } catch (error) {
     captureExceptionAndLog(error);
     throw new Error("Failed to fetch guide sessions");
-  }
-};
-
-export const getGuideSessionReplays = async (
-  sessionId: number,
-): Promise<(typeof guideSessionReplays.$inferSelect)[]> => {
-  try {
-    const replays = await db.query.guideSessionReplays.findMany({
-      where: (gsr, { eq }) => eq(gsr.guideSessionId, sessionId),
-      orderBy: (gsr, { asc }) => [asc(gsr.timestamp)],
-    });
-
-    return replays;
-  } catch (error) {
-    captureExceptionAndLog(error);
-    throw new Error("Failed to fetch guide session replays");
   }
 };
 

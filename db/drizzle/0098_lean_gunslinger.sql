@@ -1,0 +1,1 @@
+ALTER TABLE "job_runs" ADD COLUMN "queue_message_id" bigint;
