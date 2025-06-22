@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
-import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 const ConnectSupportEmail = () => {
   const params = useParams();
@@ -43,26 +43,21 @@ const ConnectSupportEmail = () => {
             Learn how!
           </Link>
         </Alert>
-      ) : (
-        supportAccount ? ( <ConfirmationDialog
+      ) : supportAccount ? (
+        <ConfirmationDialog
           message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account."
-          onConfirm={async ()=>{
+          onConfirm={async () => {
             await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
             router.refresh();
           }}
+          confirmLabel="Yes, disconnect"
         >
-          <Button variant="destructive_outlined">
-            {`Disconnect ${supportAccount.email}`}
-          </Button>
+          <Button variant="destructive_outlined">{`Disconnect ${supportAccount.email}`}</Button>
         </ConfirmationDialog>
-        ) : (
-          <Button
-            variant="subtle"
-            onClick={()=> location.href = `/api/connect/google?mailbox=${params.mailbox_slug}` }
-          >
-            Connect your Gmail
-          </Button>
-        )
+      ) : (
+        <Button variant="subtle" onClick={() => (location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`)}>
+          Connect your Gmail
+        </Button>
       )}
     </SectionWrapper>
   );

@@ -3,6 +3,7 @@ import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { FAQ } from "@/app/types/global";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import type { NewRow as NewRowType } from "../useSettings";
-import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 type KnowledgeEditFormProps = {
   content: string;
@@ -206,12 +206,9 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
           <ConfirmationDialog
             message="Are you sure you want to delete this knowledge?"
             onConfirm={onDelete}
+            confirmLabel="Yes, delete"
           >
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-            >
+            <Button variant="ghost" size="sm" iconOnly>
               <Trash className="h-4 w-4" />
               <span className="sr-only">Delete</span>
             </Button>

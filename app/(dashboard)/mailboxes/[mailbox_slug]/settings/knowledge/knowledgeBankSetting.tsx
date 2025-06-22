@@ -74,7 +74,7 @@ const KnowledgeBankSetting = () => {
   };
 
   const handleDeleteFaq = async (id: number) => {
-      await deleteMutation.mutateAsync({ mailboxSlug: params.mailbox_slug, id });
+    await deleteMutation.mutateAsync({ mailboxSlug: params.mailbox_slug, id });
   };
 
   return (
