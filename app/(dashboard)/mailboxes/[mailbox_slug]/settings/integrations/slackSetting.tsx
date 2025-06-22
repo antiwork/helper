@@ -12,6 +12,7 @@ import useShowToastForSlackConnectStatus from "@/components/useShowToastForSlack
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 export const SlackChannels = ({
   id,
@@ -186,16 +187,18 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
           </div>
 
           <div className="mt-4">
-            <Button
-              variant="destructive_outlined"
-              onClick={() => {
-                if (confirm("Are you sure you want to disconnect Slack?")) {
-                  onDisconnectSlack();
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to disconnect Slack?"
+              onConfirm={()=>{
+                onDisconnectSlack();
               }}
             >
-              Disconnect from Slack
-            </Button>
+              <Button
+                variant="destructive_outlined"
+              >
+                Disconnect from Slack
+              </Button>
+            </ConfirmationDialog>
           </div>
         </>
       ) : (

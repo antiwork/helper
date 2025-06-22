@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 type MetadataEndpointSettingProps = {
   metadataEndpoint: MetadataEndpoint | null;
@@ -80,7 +81,6 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
   };
 
   const removeEndpoint = async () => {
-    if (confirm("Are you sure you want to remove this Metadata Endpoint?")) {
       setIsLoading(true);
       try {
         const result = await deleteEndpointMutation({ mailboxSlug });
@@ -105,7 +105,6 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       } finally {
         setIsLoading(false);
       }
-    }
   };
 
   const sendTestRequest = async () => {
@@ -252,16 +251,17 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
               />
             </div>
             <div>
-              <Button
-                variant="destructive_outlined"
-                disabled={isLoading}
-                onClick={(e) => {
-                  e.preventDefault();
-                  removeEndpoint();
-                }}
+              <ConfirmationDialog
+                message="Are you sure you want to remove this Metadata Endpoint?"
+                onConfirm={removeEndpoint}
               >
-                Remove endpoint
-              </Button>
+                <Button
+                  variant="destructive_outlined"
+                  disabled={isLoading}
+                >
+                  Remove endpoint
+                </Button>
+              </ConfirmationDialog>
             </div>
           </>
         ) : (

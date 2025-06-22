@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 const isValidUrl = (url: string) => {
   try {
@@ -93,12 +94,10 @@ const WebsiteCrawlSetting = () => {
   };
 
   const handleDeleteWebsite = async (websiteId: number) => {
-    if (confirm("Are you sure you want to delete this website? All scanned pages will be deleted.")) {
       await deleteWebsiteMutation.mutateAsync({
         mailboxSlug: params.mailbox_slug,
         websiteId,
       });
-    }
   };
 
   const handleTriggerCrawl = async (websiteId: number) => {
@@ -213,15 +212,21 @@ const WebsiteCrawlSetting = () => {
                       />
                       {triggerCrawlMutation.isPending ? "Updating..." : "Update"}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteWebsite(website.id)}
-                      disabled={deleteWebsiteMutation.isPending}
+                    <ConfirmationDialog
+                      message="Are you sure you want to delete this website? All scanned pages will be deleted."
+                      onConfirm={()=>{
+                        handleDeleteWebsite(website.id)
+                      }}
                     >
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={deleteWebsiteMutation.isPending}
+                      >
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </ConfirmationDialog>
                   </div>
                 </div>
               );

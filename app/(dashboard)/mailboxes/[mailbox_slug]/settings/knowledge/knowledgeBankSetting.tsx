@@ -74,9 +74,7 @@ const KnowledgeBankSetting = () => {
   };
 
   const handleDeleteFaq = async (id: number) => {
-    if (confirm("Are you sure you want to delete this knowledge?")) {
       await deleteMutation.mutateAsync({ mailboxSlug: params.mailbox_slug, id });
-    }
   };
 
   return (

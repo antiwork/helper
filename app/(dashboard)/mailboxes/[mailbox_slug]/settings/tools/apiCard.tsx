@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import ToolListItem from "./toolListItem";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 const ApiCard = ({
   api: apiData,
@@ -129,19 +130,21 @@ const ApiCard = ({
                 {isRefreshed ? "Refreshed" : "Refresh"}
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              onClick={() => {
-                if (confirm("Are you sure you want to delete this API?")) {
-                  deleteApi({ mailboxSlug, apiId: apiData.id });
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to delete this API?"
+              onConfirm={()=>{
+                deleteApi({ mailboxSlug, apiId: apiData.id });
               }}
-              disabled={isDeleting}
             >
-              <Trash className="h-4 w-4" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                iconOnly
+                disabled={isDeleting}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </ConfirmationDialog>
           </div>
         </div>
       </CardHeader>

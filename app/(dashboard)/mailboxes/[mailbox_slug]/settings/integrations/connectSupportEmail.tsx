@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 const ConnectSupportEmail = () => {
   const params = useParams();
@@ -16,21 +17,6 @@ const ConnectSupportEmail = () => {
   const { data: { supportAccount, enabled } = {}, isLoading } = api.gmailSupportEmail.get.useQuery({
     mailboxSlug: params.mailbox_slug as string,
   });
-
-  const handleConnectOrDisconnect = async () => {
-    if (supportAccount) {
-      if (
-        confirm(
-          "Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account.",
-        )
-      ) {
-        await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
-        router.refresh();
-      }
-    } else {
-      location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`;
-    }
-  };
 
   return (
     <SectionWrapper
@@ -58,9 +44,20 @@ const ConnectSupportEmail = () => {
           </Link>
         </Alert>
       ) : (
-        <Button variant={supportAccount ? "destructive_outlined" : "subtle"} onClick={handleConnectOrDisconnect}>
-          {supportAccount ? `Disconnect ${supportAccount.email}` : "Connect your Gmail"}
-        </Button>
+        <ConfirmationDialog
+          message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account."
+          onConfirm={async ()=>{
+            await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
+            router.refresh();
+          }}
+          onCancel={()=>{
+            location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`;
+          }}
+        >
+          <Button variant={supportAccount ? "destructive_outlined" : "subtle"}>
+            {supportAccount ? `Disconnect ${supportAccount.email}` : "Connect your Gmail"}
+          </Button>
+        </ConfirmationDialog>
       )}
     </SectionWrapper>
   );

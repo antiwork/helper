@@ -11,6 +11,7 @@ import { useRunOnce } from "@/components/useRunOnce";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 export type GitHubUpdates = {
   repoOwner?: string | null;
@@ -171,20 +172,18 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
             )}
           </div>
           <div className="mt-4">
-            <Button
-              variant="destructive_outlined"
-              onClick={() => {
-                if (
-                  confirm(
-                    "Are you sure you want to disconnect GitHub? This will remove the repository link and disable GitHub issue creation.",
-                  )
-                ) {
-                  onDisconnectGitHub();
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to disconnect GitHub? This will remove the repository link and disable GitHub issue creation."
+              onConfirm={()=>{
+                onDisconnectGitHub();
               }}
             >
-              Disconnect from GitHub
-            </Button>
+              <Button
+                variant="destructive_outlined"
+              >
+                Disconnect from GitHub
+              </Button>
+            </ConfirmationDialog>
           </div>
         </>
       ) : (

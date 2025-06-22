@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import type { NewRow as NewRowType } from "../useSettings";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 type KnowledgeEditFormProps = {
   content: string;
@@ -202,18 +203,19 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
               </Badge>
             )}
           </button>
-          <Button
-            variant="ghost"
-            size="sm"
-            iconOnly
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete();
-            }}
+          <ConfirmationDialog
+            message="Are you sure you want to delete this knowledge?"
+            onConfirm={onDelete}
           >
-            <Trash className="h-4 w-4" />
-            <span className="sr-only">Delete</span>
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+            >
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </ConfirmationDialog>
         </div>
       )}
     </div>

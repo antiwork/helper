@@ -27,6 +27,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
+import { ConfirmationDialog } from "@/components/ui/confirmation";
 
 function getPreviewUrl(file: AttachedFile): string {
   return file.previewUrl
@@ -202,17 +203,19 @@ const MessageItem = ({
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        if (confirm("Are you sure you want to separate this conversation?")) {
-                          splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
-                        }
+                    <ConfirmationDialog
+                      message="Are you sure you want to separate this conversation?"
+                      onConfirm={()=>{
+                        splitMergedMutation.mutate({ messageId: message.id, mailboxSlug })
                       }}
                     >
-                      <Download className="h-4 w-4" />
-                      <span className="text-xs">Merged</span>
-                    </button>
+                      <button
+                        className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span className="text-xs">Merged</span>
+                      </button>
+                    </ConfirmationDialog>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Automatically merged based on similarity. Click to split.</p>
