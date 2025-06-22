@@ -87,7 +87,6 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
           return;
         }
         setNewUrl("");
-        setShowSecret(false);
         router.refresh();
         toast({
           title: "Metadata endpoint removed!",

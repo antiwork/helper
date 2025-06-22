@@ -38,16 +38,26 @@ export function MemberFilter({
     member.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  const singleMemberName = selectedMembers.length === 1
+    ? members?.find((m) => m.id === selectedMembers[0])?.displayName
+    : undefined;
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant={selectedMembers.length ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          <Icon className="h-4 w-4 mr-2" />
-          {selectedMembers.length === 1
-            ? singleSelectionDisplay(members?.find((m) => m.id === selectedMembers[0])?.displayName || "")
-            : selectedMembers.length
-              ? multiSelectionDisplay(selectedMembers.length)
-              : placeholder}
+        <Button 
+          variant={selectedMembers.length ? "bright" : "outlined_subtle"} 
+          className="whitespace-nowrap"
+          title={singleMemberName}
+        >
+          <Icon className="h-4 w-4 mr-2 flex-shrink-0" />
+          <span className="truncate">
+            {selectedMembers.length === 1
+              ? singleSelectionDisplay(singleMemberName || "")
+              : selectedMembers.length
+                ? multiSelectionDisplay(selectedMembers.length)
+                : placeholder}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[250px] p-0" align="start">
