@@ -4,7 +4,10 @@ export const parseEmailList = (
   emailsString: string,
   onEncounterInvalidAction?: (invalidEmail: string) => void,
 ): string[] | null => {
-  const emailInputs = emailsString.split(",").filter(Boolean);
+  const emailInputs = emailsString
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
   const validEmails: string[] = [];
 
   for (const email of emailInputs) {
