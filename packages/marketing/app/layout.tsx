@@ -11,6 +11,15 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Helper - AI customer service",
   description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+  openGraph: {
+    title: "Helper - AI customer service",
+    description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+    type: "website",
+  },
+  twitter: {
+    title: "Helper - AI Customer Service Platform",
+    description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+  },
   icons: {
     icon: "/favicon.ico",
   },
