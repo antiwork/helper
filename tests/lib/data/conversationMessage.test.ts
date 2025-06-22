@@ -592,3 +592,149 @@ describe("getConversationMessageById", () => {
     });
   });
 });
+
+describe("getMessages Edge Cases & Null Handling", () => {
+  describe("Staff Messages with Null UserId", () => {
+    it("should handle staff messages with null userId correctly", async () => {
+      const { mailbox } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create(mailbox.id);
+
+      // Create staff message with null userId (system-generated message)
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "staff",
+        userId: null,
+        body: "System generated message",
+      });
+
+      const result = await getMessages(conversation.id, mailbox);
+      assert(result[0]?.type === "message");
+
+      expect(result[0].from).toBe(null); // Staff messages return null for from
+      expect(result[0].userId).toBe(null); // userId should be null
+      expect(result[0].role).toBe("staff");
+    });
+  });
+
+  describe("Notes with Null UserId", () => {
+    it("should handle notes with null userId correctly", async () => {
+      const { mailbox } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create(mailbox.id);
+
+      // Create note with null userId
+      const { note } = await noteFactory.create(conversation.id, {
+        userId: null,
+        body: "System note",
+      });
+
+      const result = await getMessages(conversation.id, mailbox);
+      assert(result[0]?.type === "note");
+
+      expect(result[0].id).toBe(note.id);
+      expect(result[0].userId).toBe(null); // Backend returns userId, not resolved name
+      expect(result[0].body).toBe("System note");
+    });
+  });
+
+  describe("Events with Null User IDs", () => {
+    it("should handle events with null byUserId correctly", async () => {
+      const { mailbox } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create(mailbox.id);
+
+      // Create event with null byUserId (system event)
+      const { event } = await conversationEventsFactory.create(conversation.id, {
+        byUserId: null,
+        type: "update",
+        reason: "System update",
+      });
+
+      const result = await getMessages(conversation.id, mailbox);
+      assert(result[0]?.type === "event");
+
+      expect(result[0].id).toBe(event.id);
+      expect(result[0].byUserId).toBe(null); // Backend returns raw userId, not resolved name
+      expect(result[0].reason).toBe("System update");
+    });
+
+    it("should handle events with null assignedToId in changes correctly", async () => {
+      const { user, mailbox } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create(mailbox.id);
+
+      // Create event with null assignedToId (unassignment)
+      const { event } = await conversationEventsFactory.create(conversation.id, {
+        byUserId: user.id,
+        type: "update",
+        changes: { assignedToId: null, assignedToAI: false },
+        reason: "Unassigned",
+      });
+
+      const result = await getMessages(conversation.id, mailbox);
+      assert(result[0]?.type === "event");
+
+      expect(result[0].changes.assignedToId).toBe(null); // Raw ID, not resolved name
+      expect(result[0].changes.assignedToAI).toBe(false);
+      expect(result[0].byUserId).toBe(user.id);
+    });
+  });
+
+  describe("Mixed Conversation Scenarios", () => {
+    it("should handle conversation with mixed user presence correctly", async () => {
+      const { user: user1, mailbox } = await userFactory.createRootUser();
+      const { user: user2 } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create(mailbox.id);
+
+      // Create messages with different user scenarios
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "user",
+        emailFrom: "customer@test.com",
+        userId: null, // Customer message
+      });
+
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "staff",
+        userId: user1.id, // Staff with userId
+      });
+
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "staff",
+        userId: null, // System staff message
+      });
+
+      // Create note and event
+      const { note } = await noteFactory.create(conversation.id, {
+        userId: user2.id,
+      });
+
+      const { event } = await conversationEventsFactory.create(conversation.id, {
+        byUserId: user1.id,
+        changes: { assignedToId: user2.id },
+      });
+
+      const result = await getMessages(conversation.id, mailbox);
+      expect(result).toHaveLength(5);
+
+      // Customer message
+      assert(result[0]?.type === "message");
+      expect(result[0].from).toBe("customer@test.com");
+      expect(result[0].userId).toBe(null);
+
+      // Staff message with userId
+      assert(result[1]?.type === "message");
+      expect(result[1].from).toBe(null); // Staff messages return null
+      expect(result[1].userId).toBe(user1.id);
+
+      // System staff message
+      assert(result[2]?.type === "message");
+      expect(result[2].from).toBe(null);
+      expect(result[2].userId).toBe(null);
+
+      // Note with userId
+      assert(result[3]?.type === "note");
+      expect(result[3].userId).toBe(user2.id); // Raw userId, not resolved name
+
+      // Event with user IDs
+      assert(result[4]?.type === "event");
+      expect(result[4].byUserId).toBe(user1.id); // Raw userId, not resolved name
+      expect(result[4].changes.assignedToId).toBe(user2.id); // Raw ID, not resolved name
+    });
+  });
+});
