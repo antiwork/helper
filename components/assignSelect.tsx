@@ -93,12 +93,14 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }
   };
 
+  const selectedDisplayName = selectedMember?.displayName || "Anyone";
+
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Button variant="outlined_subtle" className="whitespace-nowrap justify-between">
-          {selectedMember?.displayName || "Anyone"}
-          <ChevronDown className="h-4 w-4" />
+        <Button variant="outlined_subtle" className="whitespace-nowrap justify-between" title={selectedDisplayName}>
+          <span className="truncate">{selectedDisplayName}</span>
+          <ChevronDown className="h-4 w-4 ml-2 flex-shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start" onKeyDown={handleKeyDown}>
@@ -114,10 +116,11 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                   onMouseEnter={() => setHighlightedIndex(index)}
                   data-highlighted={highlightedIndex === index}
                   className={highlightedIndex === index ? "bg-accent text-accent-foreground" : ""}
+                  title={item.displayName + (item.id === user?.id ? " (You)" : "")}
                 >
                   <Check className={`mr-2 h-4 w-4 ${selectedMember?.id === item.id ? "opacity-100" : "opacity-0"}`} />
-                  <span className="flex items-center gap-1">
-                    {item.id === "ai" ? <Bot className="h-4 w-4" /> : null}
+                  <span className="flex items-center gap-1 min-w-0">
+                    {item.id === "ai" ? <Bot className="h-4 w-4 flex-shrink-0" /> : null}
                     <span className="flex-1 min-w-0 truncate">
                       {item.displayName}
                       {item.id === user?.id && " (You)"}
