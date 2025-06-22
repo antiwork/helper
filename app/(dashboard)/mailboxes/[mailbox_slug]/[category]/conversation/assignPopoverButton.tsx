@@ -76,7 +76,7 @@ export const AssignPopoverButton = ({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              "flex items-center gap-1 hover:underline max-w-[150px]",
+              "flex items-center gap-1 hover:underline",
               !currentAssignee && !assignedToAI && "text-muted-foreground",
             )}
             title={currentAssignee ? currentAssignee.displayName : assignedToAI ? "Helper agent" : "Unassigned"}
