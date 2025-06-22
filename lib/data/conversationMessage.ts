@@ -236,7 +236,7 @@ export const serializeMessage = async (
     emailTo: message.emailTo,
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
-    from: message.role === "staff" && user ? getFullName(user) : message.emailFrom,
+    from: message.role === "staff" ? null : message.emailFrom, // Frontend resolves staff names using userId
     userId: message.userId,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,

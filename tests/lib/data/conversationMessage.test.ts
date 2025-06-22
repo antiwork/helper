@@ -159,7 +159,8 @@ describe("getMessages", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].from).toBe("customer@example.com");
-    expect(result[1].userId).toBe(user.id);
+    expect(result[1].from).toBe(null); // Staff messages: frontend resolves from userId
+    expect(result[1].userId).toBe(user.id); // Backend returns userId, frontend resolves display name
   });
 
   it("includes files for messages", async () => {
