@@ -15,10 +15,28 @@ export const metadata: Metadata = {
     title: "Helper - AI customer service",
     description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "Helper - AI customer service",
+      },
+    ],
   },
   twitter: {
     title: "Helper - AI Customer Service Platform",
     description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "Helper - AI customer service",
+      },
+    ],
   },
   icons: {
     icon: "/favicon.ico",
