@@ -7,6 +7,11 @@ import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/acco
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -23,7 +28,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  BookOpen,
+  UserPlus,
+  MonitorSmartphone,
+  Settings as SettingsIcon,
+  ChevronRight,
+} from "lucide-react";
 import { api } from "@/trpc/react";
+import SettingsSidebarCollapsible from "./settingsSidebar";
+import { useState } from "react";
 
 declare global {
   interface Window {
@@ -31,8 +45,18 @@ declare global {
   }
 }
 
+const settingsItems = [
+  { label: "Knowledge", id: "knowledge", icon: BookOpen },
+  { label: "Team", id: "team", icon: Users },
+  { label: "Customers", id: "customers", icon: UserPlus },
+  { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
+  { label: "Integrations", id: "integrations", icon: Settings }, // Use a valid icon here
+  { label: "Preferences", id: "preferences", icon: SettingsIcon },
+] as const;
+
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(true);
   const router = useRouter();
   const { data: mailboxes } = api.mailbox.list.useQuery();
   const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
@@ -135,14 +159,56 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/settings`}>
+              {/* <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/settings`}
+                  tooltip="Settings"
+                >
                   <Link href={`/mailboxes/${mailboxSlug}/settings`}>
                     <Settings className="size-4" />
-                    <span>Settings</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
+              <SidebarGroup>
+                <SidebarMenu>
+                  <Collapsible open={open} onOpenChange={setOpen}>
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton>
+                          <SettingsIcon className="size-4" />
+                          <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                          {open ? (
+                            <ChevronDown className="ml-auto h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="ml-auto h-4 w-4" />
+                          )}
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                    </SidebarMenuItem>
+          
+                    <CollapsibleContent asChild>
+                      <div className="ml-4 mt-1 space-y-1">
+                        {settingsItems.map((item) => (
+                          <SidebarMenuItem key={item.id}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={pathname === `/mailboxes/gumroad/settings/${item.id}`}
+                              className="pl-2"
+                            >
+                              <Link href={`/mailboxes/gumroad/settings/${item.id}`}>
+                                {<item.icon className="size-4" />}
+                                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </SidebarMenu>
+              </SidebarGroup>
             </SidebarMenu>
           </SidebarGroup>
         </div>

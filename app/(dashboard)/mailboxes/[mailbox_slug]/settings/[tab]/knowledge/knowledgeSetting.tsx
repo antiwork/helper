@@ -7,7 +7,7 @@ const KnowledgeSetting = ({ websitesEnabled }: { websitesEnabled: boolean }) => 
   return (
     <>
       <div className="space-y-6">
-        {websitesEnabled && <WebsiteCrawlSetting />}
+        {true && <WebsiteCrawlSetting />}
         <KnowledgeBankSetting />
       </div>
     </>
