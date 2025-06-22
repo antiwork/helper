@@ -16,6 +16,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
+import { isValidEmailAddress, parseEmailList } from "@/components/utils/email";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
@@ -180,8 +181,29 @@ export const MessageActions = () => {
     setSending(true);
 
     try {
-      const cc_emails = draftedEmail.cc.replace(/\s/g, "").split(",");
-      const bcc_emails = draftedEmail.bcc.replace(/\s/g, "").split(",");
+      const cc_emails = parseEmailList(draftedEmail.cc);
+      const bcc_emails = parseEmailList(draftedEmail.bcc);
+
+      for (const email of cc_emails) {
+        if (!isValidEmailAddress(email)) {
+          setSending(false);
+          return toast({
+            variant: "destructive",
+            title: `Invalid CC email address: ${email}`,
+          });
+        }
+      }
+
+      for (const email of bcc_emails) {
+        if (!isValidEmailAddress(email)) {
+          setSending(false);
+          return toast({
+            variant: "destructive",
+            title: `Invalid BCC email address: ${email}`,
+          });
+        }
+      }
+
       const conversationSlug = conversation.slug;
 
       const lastUserMessage = conversation.messages
