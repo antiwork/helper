@@ -80,9 +80,7 @@ const ApiCard = ({
           <div className="flex gap-2">
             {!apiData.baseUrl ? (
               <Popover open={isSchemaPopoverOpen} onOpenChange={setIsSchemaPopoverOpen}>
-                <PopoverTrigger asChild>
-                  {refreshButton({})}
-                </PopoverTrigger>
+                <PopoverTrigger asChild>{refreshButton({})}</PopoverTrigger>
                 <PopoverContent className="min-w-[400px]">
                   <div className="space-y-4">
                     <div>
