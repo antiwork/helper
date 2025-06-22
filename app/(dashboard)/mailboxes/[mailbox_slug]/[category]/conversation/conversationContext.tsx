@@ -7,7 +7,7 @@ import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { RouterInputs, RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
-export type ConversationContextType = {
+type ConversationContextType = {
   conversationSlug: string;
   mailboxSlug: string;
   data: RouterOutputs["mailbox"]["conversations"]["get"] | null;

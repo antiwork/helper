@@ -3,7 +3,7 @@ export type CustomerInfo = {
   metadata: CustomerMetadata;
 };
 
-export type CustomerMetadata = {
+type CustomerMetadata = {
   name?: string | null;
   value?: number | null;
   links?: Record<string, string> | null;

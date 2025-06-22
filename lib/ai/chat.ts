@@ -80,7 +80,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
+const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
@@ -134,7 +134,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     });
 };
 
-export const buildPromptMessages = async (
+const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
@@ -494,7 +494,7 @@ export const createUserMessage = async (
   return message;
 };
 
-export const createAssistantMessage = (
+const createAssistantMessage = (
   conversationId: number,
   userMessageId: number,
   text: string,

@@ -1,14 +1,14 @@
 /**
  * DOM node types
  */
-export interface DOMTextNode {
+interface DOMTextNode {
   type: "TEXT_NODE";
   text: string;
   isVisible: boolean;
   parent?: DOMElementNode;
 }
 
-export interface DOMElementNode {
+interface DOMElementNode {
   tagName: string;
   attributes: Record<string, string>;
   xpath: string;
@@ -22,9 +22,9 @@ export interface DOMElementNode {
   parent?: DOMElementNode;
 }
 
-export type DOMNode = DOMElementNode | DOMTextNode;
+type DOMNode = DOMElementNode | DOMTextNode;
 
-export type SelectorMap = Record<number, DOMElementNode>;
+type SelectorMap = Record<number, DOMElementNode>;
 
 export interface DomTrackingData {
   rootId: string;
@@ -129,7 +129,7 @@ function parseNode(nodeData: any): DOMNode | null {
  * @param root The root node
  * @returns Array of all nodes in the tree
  */
-export function flattenDomTree(root: DOMElementNode): DOMNode[] {
+function flattenDomTree(root: DOMElementNode): DOMNode[] {
   const nodes: DOMNode[] = [root];
 
   function traverse(node: DOMNode) {
