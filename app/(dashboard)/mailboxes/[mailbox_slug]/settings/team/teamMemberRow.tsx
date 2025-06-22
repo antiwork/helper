@@ -128,12 +128,12 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     if (member.displayName?.trim()) {
       return member.displayName;
     }
-    
+
     if (member.email) {
-      const emailUsername = member.email.split('@')[0];
+      const emailUsername = member.email.split("@")[0];
       return emailUsername || member.email;
     }
-    
+
     return "?";
   };
 
