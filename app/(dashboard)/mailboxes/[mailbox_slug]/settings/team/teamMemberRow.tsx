@@ -124,13 +124,24 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     debouncedUpdateDisplayName(value);
   };
 
-  const displayName = displayNameInput || member.email || "Unknown User";
+  const getAvatarFallback = (member: TeamMember): string => {
+    if (member.displayName?.trim()) {
+      return member.displayName;
+    }
+    
+    if (member.email) {
+      const emailUsername = member.email.split('@')[0];
+      return emailUsername || member.email;
+    }
+    
+    return "?";
+  };
 
   return (
     <TableRow>
       <TableCell>
         <div className="flex items-center gap-3">
-          <Avatar fallback={displayName} size="sm" />
+          <Avatar fallback={getAvatarFallback(member)} size="sm" />
           <span className="truncate">{member.email || "No email"}</span>
         </div>
       </TableCell>
