@@ -21,7 +21,7 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import { parseEmailList } from "../../../../../../components/utils/email";
+import { parseEmailList } from "@/components/utils/email";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
