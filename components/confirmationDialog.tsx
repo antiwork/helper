@@ -37,11 +37,11 @@ export function ConfirmationDialog({ message, onConfirm, children, confirmLabel 
         <DialogFooter>
           <Button
             variant="ghost"
-            onClick={()=>{
-              setOpen(false)
+            onClick={() => {
+              setOpen(false);
             }}
           >
-              No
+            No
           </Button>
           <Button
             variant="destructive"
@@ -50,7 +50,7 @@ export function ConfirmationDialog({ message, onConfirm, children, confirmLabel 
               handleConfirm();
             }}
           >
-            {confirmLabel ? `${confirmLabel}` : "Yes"}
+            {confirmLabel ? confirmLabel : "Yes"}
           </Button>
         </DialogFooter>
       </DialogContent>
