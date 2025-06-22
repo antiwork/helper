@@ -1,6 +1,6 @@
 import { Check, Loader2, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { SavingState } from "@/components/hooks/useSavingIndicator";
+import { cn } from "@/lib/utils";
 
 interface SavingIndicatorProps {
   state: SavingState;
@@ -19,7 +19,7 @@ export function SavingIndicator({ state, className }: SavingIndicatorProps) {
           "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300": state === "saved",
           "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300": state === "error",
         },
-        className
+        className,
       )}
     >
       {state === "saving" && (
@@ -42,4 +42,4 @@ export function SavingIndicator({ state, className }: SavingIndicatorProps) {
       )}
     </div>
   );
-} 
+}

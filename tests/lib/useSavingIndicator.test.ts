@@ -1,7 +1,11 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 
-// Create a minimal test for the saving indicator state logic
-describe("useSavingIndicator state logic", () => {
+describe("useSavingIndicator", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -11,52 +15,120 @@ describe("useSavingIndicator state logic", () => {
     vi.useRealTimers();
   });
 
-  it("should have proper state transitions", () => {
-    // Test the state machine logic directly
-    const states = ["idle", "saving", "saved", "error"] as const;
+  it("should initialize with idle state", () => {
+    const { result } = renderHook(() => useSavingIndicator());
 
-    expect(states).toContain("idle");
-    expect(states).toContain("saving");
-    expect(states).toContain("saved");
-    expect(states).toContain("error");
+    expect(result.current.state).toBe("idle");
+    expect(result.current.isIdle).toBe(true);
+    expect(result.current.isSaving).toBe(false);
+    expect(result.current.isSaved).toBe(false);
+    expect(result.current.isError).toBe(false);
   });
 
-  it("should handle timer-based state transitions", () => {
-    let currentState = "saved";
+  it("should transition to saving state", () => {
+    const { result } = renderHook(() => useSavingIndicator());
 
-    // Simulate the setTimeout behavior for saved state
-    setTimeout(() => {
-      currentState = "idle";
-    }, 2000);
+    act(() => {
+      result.current.setSaving();
+    });
 
-    expect(currentState).toBe("saved");
-
-    vi.advanceTimersByTime(2000);
-
-    expect(currentState).toBe("idle");
+    expect(result.current.state).toBe("saving");
+    expect(result.current.isSaving).toBe(true);
   });
 
-  it("should handle error state timeout", () => {
-    let currentState = "error";
+  it("should transition to saved state and auto-reset after 2 seconds", () => {
+    const { result } = renderHook(() => useSavingIndicator());
 
-    // Simulate the setTimeout behavior for error state
-    setTimeout(() => {
-      currentState = "idle";
-    }, 3000);
+    act(() => {
+      result.current.setSaved();
+    });
 
-    expect(currentState).toBe("error");
+    expect(result.current.state).toBe("saved");
+    expect(result.current.isSaved).toBe(true);
 
-    vi.advanceTimersByTime(3000);
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
 
-    expect(currentState).toBe("idle");
+    expect(result.current.state).toBe("idle");
+    expect(result.current.isIdle).toBe(true);
   });
 
-  it("should validate state values", () => {
-    const validStates = ["idle", "saving", "saved", "error"];
+  it("should transition to error state and auto-reset after 3 seconds", () => {
+    const { result } = renderHook(() => useSavingIndicator());
 
-    validStates.forEach((state) => {
-      expect(typeof state).toBe("string");
-      expect(state.length).toBeGreaterThan(0);
+    act(() => {
+      result.current.setError();
+    });
+
+    expect(result.current.state).toBe("error");
+    expect(result.current.isError).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(result.current.state).toBe("idle");
+    expect(result.current.isIdle).toBe(true);
+  });
+
+  it("should reset state manually", () => {
+    const { result } = renderHook(() => useSavingIndicator());
+
+    act(() => {
+      result.current.setSaved();
+    });
+
+    expect(result.current.state).toBe("saved");
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.state).toBe("idle");
+  });
+
+  it("should clear previous timeout when setting new state", () => {
+    const { result } = renderHook(() => useSavingIndicator());
+
+    act(() => {
+      result.current.setSaved();
+    });
+
+    expect(result.current.state).toBe("saved");
+
+    act(() => {
+      result.current.setError();
+    });
+
+    expect(result.current.state).toBe("error");
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(result.current.state).toBe("error");
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(result.current.state).toBe("idle");
+  });
+
+  it("should cleanup timeout on unmount", () => {
+    const { result, unmount } = renderHook(() => useSavingIndicator());
+
+    act(() => {
+      result.current.setSaved();
+    });
+
+    expect(result.current.state).toBe("saved");
+
+    unmount();
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
     });
   });
 });
