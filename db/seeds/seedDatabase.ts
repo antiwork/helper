@@ -66,20 +66,8 @@ export const seedDatabase = async () => {
     );
 
     await createSettingsPageRecords(mailbox);
-
-    const { mailbox: mailbox2 } = await mailboxFactory.create({
-      name: "Flexile",
-      slug: "flexile",
-    });
-
-    const { mailbox: mailbox3 } = await mailboxFactory.create({
-      name: "Helper",
-      slug: "helper",
-    });
-
     await generateSeedsFromFixtures(mailbox.id);
-    await generateSeedsFromFixtures(mailbox2.id);
-    await generateSeedsFromFixtures(mailbox3.id);
+
     const conversationRecords = await db.select().from(conversations);
     for (const conversation of conversationRecords) {
       if (conversation.emailFrom) {
