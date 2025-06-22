@@ -4,14 +4,13 @@ import { mapValues } from "lodash-es";
 import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { toast } from "@/components/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SwitchSectionWrapper } from "../sectionWrapper";
+import { ColorInput } from "./colorInput";
 
 type ThemeUpdates = {
   theme?: {
@@ -98,85 +97,31 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     >
       {isEnabled && (
         <div className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <Label>Background Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="w-[200px]"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <Label>Foreground Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="w-[200px]"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <Label>Primary Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.primary}
-                onChange={handleColorChange("primary")}
-                className="h-10 w-20 p-1"
-              />
-              <Input type="text" value={theme.primary} onChange={handleColorChange("primary")} className="w-[200px]" />
-            </div>
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <Label>Accent Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.accent}
-                onChange={handleColorChange("accent")}
-                className="h-10 w-20 p-1"
-              />
-              <Input type="text" value={theme.accent} onChange={handleColorChange("accent")} className="w-[200px]" />
-            </div>
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <Label>Sidebar Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="w-[200px]"
-              />
-            </div>
-          </div>
+          <ColorInput
+            label="Background Color"
+            value={theme.background}
+            onChange={handleColorChange("background")}
+          />
+          <ColorInput
+            label="Foreground Color"
+            value={theme.foreground}
+            onChange={handleColorChange("foreground")}
+          />
+          <ColorInput
+            label="Primary Color"
+            value={theme.primary}
+            onChange={handleColorChange("primary")}
+          />
+          <ColorInput
+            label="Accent Color"
+            value={theme.accent}
+            onChange={handleColorChange("accent")}
+          />
+          <ColorInput
+            label="Sidebar Color"
+            value={theme.sidebarBackground}
+            onChange={handleColorChange("sidebarBackground")}
+          />
         </div>
       )}
     </SwitchSectionWrapper>
