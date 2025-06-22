@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { getBaseUrl, getMarketingSiteUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
+import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SavingIndicator } from "@/components/ui/savingIndicator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -43,6 +45,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   );
   const [widgetHost, setWidgetHost] = useState(mailbox.widgetHost ?? "");
   const [isCopied, setIsCopied] = useState(false);
+  const savingIndicator = useSavingIndicator();
   const { showChatWidget, setShowChatWidget } = useShowChatWidget();
 
   useEffect(() => {
@@ -54,8 +57,10 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      savingIndicator.setSaved();
     },
     onError: (error) => {
+      savingIndicator.setError();
       toast({
         title: "Error updating chat widget settings",
         description: error.message,
@@ -64,6 +69,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   });
 
   const save = useDebouncedCallback(() => {
+    savingIndicator.setSaving();
     update({
       mailboxSlug: mailbox.slug,
       widgetDisplayMode: mode,
@@ -73,7 +79,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
       },
       widgetHost: widgetHost || null,
     });
-  }, 2000);
+  }, 500);
 
   useOnChange(() => {
     save();
@@ -225,7 +231,10 @@ ${NODE_HMAC_SAMPLE_CODE}
   `.trim();
 
   return (
-    <div>
+    <div className="relative">
+      <div className="absolute top-2 right-4 z-10">
+        <SavingIndicator state={savingIndicator.state} />
+      </div>
       <SectionWrapper
         className="max-w-3xl space-y-4"
         title="Widget Installation"

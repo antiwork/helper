@@ -4,8 +4,10 @@ import { mapValues } from "lodash-es";
 import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { toast } from "@/components/hooks/use-toast";
+import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SavingIndicator } from "@/components/ui/savingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
@@ -25,6 +27,7 @@ export type ThemeUpdates = {
 
 const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const { setTheme: setWindowTheme } = useInboxTheme();
+  const savingIndicator = useSavingIndicator();
 
   const [isEnabled, setIsEnabled] = useState(!!mailbox.preferences?.theme);
   const [theme, setTheme] = useState(
@@ -41,8 +44,10 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      savingIndicator.setSaved();
     },
     onError: (error) => {
+      savingIndicator.setError();
       toast({
         title: "Error updating theme",
         description: error.message,
@@ -53,11 +58,12 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
 
   const save = useDebouncedCallback(() => {
     if (!isEnabled && !mailbox.preferences?.theme) return;
+    savingIndicator.setSaving();
     update({
       mailboxSlug: mailbox.slug,
       preferences: { theme: isEnabled ? mapValues(theme, (value) => `#${normalizeHex(value)}`) : null },
     });
-  }, 2000);
+  }, 500);
 
   useOnChange(() => {
     save();
@@ -90,12 +96,16 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   };
 
   return (
-    <SwitchSectionWrapper
-      title="Custom Theme"
-      description="Choose the appearance of your mailbox with custom colors"
-      initialSwitchChecked={isEnabled}
-      onSwitchChange={handleSwitchChange}
-    >
+    <div className="relative">
+      <div className="absolute top-2 right-4 z-10">
+        <SavingIndicator state={savingIndicator.state} />
+      </div>
+      <SwitchSectionWrapper
+        title="Custom Theme"
+        description="Choose the appearance of your mailbox with custom colors"
+        initialSwitchChecked={isEnabled}
+        onSwitchChange={handleSwitchChange}
+      >
       {isEnabled && (
         <div className="space-y-4">
           <div className="flex flex-col space-y-2">
@@ -180,6 +190,7 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
         </div>
       )}
     </SwitchSectionWrapper>
+    </div>
   );
 };
 
