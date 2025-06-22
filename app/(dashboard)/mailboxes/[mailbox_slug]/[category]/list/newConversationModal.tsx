@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { isValidEmailAddress } from "@/components/utils/email";
+import { isValidEmailAddress, parseEmailList } from "@/components/utils/email";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterInputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -274,19 +274,6 @@ const CcAndBccInfo = ({
     </div>
   );
 };
-
-/**
- * @example
- * // "1@test.com, 2@test.com" -> ["1@test.com", "2@test.com"]
- * const emails = parseEmailList("1@test.com, 2@test.com");
- */
-const parseEmailList = (list: string) =>
-  list
-    .trim()
-    .replace(/\s/g, "")
-    .split(",")
-    .filter(Boolean)
-    .map((emailAdress) => emailAdress.trim());
 
 const Wrapper = ({ mailboxSlug, conversationSlug, onSubmit }: Props) => (
   <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug}>
