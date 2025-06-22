@@ -101,6 +101,18 @@ export default function Conversation({
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    onError: (error) => {
+      captureExceptionAndLog(error);
+
+      setMessages((messages) => [
+        ...messages,
+        {
+          id: `error_${Date.now()}`,
+          role: "system",
+          content: "Sorry, there was an error processing your request. Please try again.",
+        },
+      ]);
+    },
   });
 
   useEffect(() => {
