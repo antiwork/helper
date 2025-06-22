@@ -16,12 +16,12 @@ import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
-import { isValidEmailAddress, parseEmailList } from "@/components/utils/email";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import { parseEmailList } from "../../../../../../components/utils/email";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
@@ -181,28 +181,23 @@ export const MessageActions = () => {
     setSending(true);
 
     try {
-      const cc_emails = parseEmailList(draftedEmail.cc);
-      const bcc_emails = parseEmailList(draftedEmail.bcc);
+      const cc = parseEmailList(draftedEmail.cc, (invalidEmail) => {
+        setSending(false);
+        toast({
+          variant: "destructive",
+          title: `Invalid CC email address: ${invalidEmail}`,
+        });
+      });
+      if (cc === null) return;
 
-      for (const email of cc_emails) {
-        if (!isValidEmailAddress(email)) {
-          setSending(false);
-          return toast({
-            variant: "destructive",
-            title: `Invalid CC email address: ${email}`,
-          });
-        }
-      }
-
-      for (const email of bcc_emails) {
-        if (!isValidEmailAddress(email)) {
-          setSending(false);
-          return toast({
-            variant: "destructive",
-            title: `Invalid BCC email address: ${email}`,
-          });
-        }
-      }
+      const bcc = parseEmailList(draftedEmail.bcc, (invalidEmail) => {
+        setSending(false);
+        toast({
+          variant: "destructive",
+          title: `Invalid BCC email address: ${invalidEmail}`,
+        });
+      });
+      if (bcc === null) return;
 
       const conversationSlug = conversation.slug;
 
@@ -215,8 +210,8 @@ export const MessageActions = () => {
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
-        cc: cc_emails,
-        bcc: bcc_emails,
+        cc,
+        bcc,
         shouldAutoAssign: assign,
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,

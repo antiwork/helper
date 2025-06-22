@@ -1,14 +1,19 @@
-export const isValidEmailAddress = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email);
+import { parseEmailAddress } from "@/lib/emails";
 
-/**
- * @example
- * // "1@test.com, 2@test.com" -> ["1@test.com", "2@test.com"]
- * const emails = parseEmailList("1@test.com, 2@test.com");
- */
-export const parseEmailList = (list: string) =>
-  list
-    .trim()
-    .replace(/\s/g, "")
-    .split(",")
-    .filter(Boolean)
-    .map((email) => email.trim());
+export const parseEmailList = (
+  emailsString: string,
+  onEncounterInvalidAction?: (invalidEmail: string) => void,
+): string[] | null => {
+  const emailInputs = emailsString.split(",").filter(Boolean);
+  const validEmails: string[] = [];
+
+  for (const email of emailInputs) {
+    const parsedEmail = parseEmailAddress(email);
+    if (!parsedEmail) {
+      onEncounterInvalidAction?.(email);
+      return null;
+    }
+    validEmails.push(parsedEmail.address);
+  }
+  return validEmails;
+};
