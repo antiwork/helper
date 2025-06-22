@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 
 export type SavingState = "idle" | "saving" | "saved" | "error";
 
+// Auto-hide timing constants
+const AUTO_HIDE_SUCCESS = 2000; // 2 seconds
+const AUTO_HIDE_ERROR = 3000; // 3 seconds
+
 export function useSavingIndicator() {
   const [state, setState] = useState<SavingState>("idle");
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -19,7 +23,7 @@ export function useSavingIndicator() {
       clearTimeout(timeoutRef.current);
     }
     setState("saved");
-    timeoutRef.current = setTimeout(() => setState("idle"), 2000);
+    timeoutRef.current = setTimeout(() => setState("idle"), AUTO_HIDE_SUCCESS);
   };
 
   const setError = () => {
@@ -27,7 +31,7 @@ export function useSavingIndicator() {
       clearTimeout(timeoutRef.current);
     }
     setState("error");
-    timeoutRef.current = setTimeout(() => setState("idle"), 3000);
+    timeoutRef.current = setTimeout(() => setState("idle"), AUTO_HIDE_ERROR);
   };
 
   const reset = () => {
