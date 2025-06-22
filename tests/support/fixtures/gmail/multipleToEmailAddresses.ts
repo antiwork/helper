@@ -8,7 +8,7 @@ export const raw = {
   historyId: "53698",
   internalDate: "1723336648000",
 };
-export const full = {
+const full = {
   id: "1913ede967e93ab7",
   threadId: "1913ede967e93ab7",
   labelIds: ["CATEGORY_PERSONAL", "INBOX"],

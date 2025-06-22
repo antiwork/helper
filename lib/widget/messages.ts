@@ -53,7 +53,7 @@ export const toggleWidgetHeight = () => {
 };
 
 // Promise-based message sending to parent window
-export function sendRequestToParent<T>(action: string, content?: any): Promise<T> {
+function sendRequestToParent<T>(action: string, content?: any): Promise<T> {
   return new Promise((resolve, reject) => {
     const requestId = `req_${Math.random().toString(36).substring(2, 9)}`;
 

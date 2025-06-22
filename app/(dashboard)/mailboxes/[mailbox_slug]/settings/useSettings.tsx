@@ -4,7 +4,7 @@ export type NewRow = {
   key: string;
 };
 
-export function useSettings<T extends object>(onChange: (pendingUpdates: T[]) => void, pendingUpdates?: T[]) {
+function useSettings<T extends object>(onChange: (pendingUpdates: T[]) => void, pendingUpdates?: T[]) {
   const [changeset, setChangeset] = useState<Record<string, T>>({});
   const [newRows, setNewRows] = useState<NewRow[]>([]);
   const prevPendingUpdates = useRef<T[]>([]);

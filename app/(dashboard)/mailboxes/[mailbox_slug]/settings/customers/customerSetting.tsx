@@ -13,7 +13,7 @@ import { api } from "@/trpc/react";
 import { SlackChannels } from "../integrations/slackSetting";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
-export type CustomerUpdates = {
+type CustomerUpdates = {
   vipThreshold?: string | null;
   vipChannelId?: string | null;
   vipExpectedResponseHours?: number | null;

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CustomTimeRangePicker } from "./customTimeRangePicker";
 import { type TimeRange } from "./dashboardContent";
 
-export const timeRangeOptions: { value: TimeRange; label: string }[] = [
+const timeRangeOptions: { value: TimeRange; label: string }[] = [
   { value: "24h", label: "Last 24 hours" },
   { value: "7d", label: "Last 7 days" },
   { value: "30d", label: "Last 30 days" },
