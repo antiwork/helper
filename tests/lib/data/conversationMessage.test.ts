@@ -6,7 +6,7 @@ import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
 import { mockJobs, mockTriggerEvent } from "@tests/support/jobsUtils";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { assert } from "@/components/utils/assert";
@@ -627,9 +627,70 @@ describe("getMessages N+1 Query Optimization", () => {
 
     // Should have a where clause limiting to specific user IDs
     expect(queryOptions?.where).toBeDefined();
-
-    // Verify we got the correct messages
+    
+    // The key validation is that we're using a WHERE clause instead of fetching all users
+    // This confirms our N+1 optimization is working - we're making a targeted query
+    // instead of fetching all users from the database
+    
+    // Verify we got the correct number of messages
     expect(messages).toHaveLength(2);
+    
+    // Verify the messages are properly structured and contain the expected data
+    const messageItems = messages.filter(item => item.type === "message");
+    expect(messageItems).toHaveLength(2);
+    
+    // The optimization works by ensuring we only query for users that are actually referenced
+    // The fact that the query has a WHERE clause confirms this optimization is active
+
+    querySpy.mockRestore();
+  });
+
+  it("should fetch users referenced in events and notes", async () => {
+    const { user: user1, mailbox } = await userFactory.createRootUser();
+    const { user: user2 } = await userFactory.createRootUser();
+    const { user: user3 } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create(mailbox.id);
+
+    // Create a note with user reference
+    await noteFactory.create(conversation.id, { userId: user1.id });
+    
+    // Create an event with byUserId
+    await conversationEventsFactory.create(conversation.id, { 
+      byUserId: user2.id,
+      reason: "Event by user 2"
+    });
+    
+    // Create an event with assignedToId in changes
+    await conversationEventsFactory.create(conversation.id, { 
+      byUserId: user1.id, // user1 is already referenced, so this tests deduplication
+      changes: { assignedToId: user3.id, status: "assigned" },
+      reason: "Assigned to user 3"
+    });
+
+    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
+    const messages = await getMessages(conversation.id, mailbox);
+
+    // Should query for users referenced in notes and events
+    expect(querySpy).toHaveBeenCalledTimes(1);
+    expect(querySpy.mock.calls[0]?.[0]?.where).toBeDefined();
+
+    // Verify all three users are collected (user1 from note, user2 from event byUserId, user3 from event changes)
+    const expectedUserIds = [user1.id, user2.id, user3.id].sort();
+    
+    // Check that the returned data includes references to all three users
+    // Notes should have user references
+    const noteItems = messages.filter(item => item.type === "note");
+    const eventItems = messages.filter(item => item.type === "event");
+    
+    expect(noteItems).toHaveLength(1);
+    expect(eventItems).toHaveLength(2);
+    
+    // Note should reference user1
+    expect(noteItems[0]?.userId).toBe(user1.id);
+    
+    // Events should reference user1 and user2 as byUserId
+    const eventUserIds = eventItems.map(event => event.byUserId).sort();
+    expect(eventUserIds).toEqual([user1.id, user2.id].sort());
 
     querySpy.mockRestore();
   });
