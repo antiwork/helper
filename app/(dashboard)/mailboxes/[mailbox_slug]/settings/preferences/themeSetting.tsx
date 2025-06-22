@@ -13,7 +13,7 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
-export type ThemeUpdates = {
+type ThemeUpdates = {
   theme?: {
     background: string;
     foreground: string;
