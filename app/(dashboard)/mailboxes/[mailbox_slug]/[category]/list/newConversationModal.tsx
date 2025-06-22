@@ -100,8 +100,8 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     if (sendDisabled) return;
     stopRecording();
 
-    const to_email_address = parseEmailAddress(newConversationInfo.to_email_address.trim())?.address;
-    if (!to_email_address)
+    const toEmailAddress = parseEmailAddress(newConversationInfo.to_email_address.trim())?.address;
+    if (!toEmailAddress)
       return toast({
         variant: "destructive",
         title: 'Please enter a valid "To" email address',
@@ -125,7 +125,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
 
     const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
       conversation_slug: conversationSlug,
-      to_email_address,
+      to_email_address: toEmailAddress,
       subject: newConversationInfo.subject.trim(),
       message: newConversationInfo.message.trim(),
       cc,
