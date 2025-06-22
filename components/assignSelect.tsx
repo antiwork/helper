@@ -98,14 +98,12 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Button 
-          variant="outlined_subtle" 
+        <Button
+          variant="outlined_subtle"
           className="whitespace-nowrap justify-between max-w-[200px]"
           title={selectedDisplayName}
         >
-          <span className="truncate">
-            {selectedDisplayName}
-          </span>
+          <span className="truncate">{selectedDisplayName}</span>
           <ChevronDown className="h-4 w-4 ml-2 flex-shrink-0" />
         </Button>
       </PopoverTrigger>

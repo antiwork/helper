@@ -27,12 +27,14 @@ export function AssigneeFilter({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant={selectedAssignees.length ? "bright" : "outlined_subtle"} 
+        <Button
+          variant={selectedAssignees.length ? "bright" : "outlined_subtle"}
           className="whitespace-nowrap max-w-[200px]"
-          title={selectedAssignees.length === 1 
-            ? members?.find((m) => m.id === selectedAssignees[0])?.displayName
-            : undefined}
+          title={
+            selectedAssignees.length === 1
+              ? members?.find((m) => m.id === selectedAssignees[0])?.displayName
+              : undefined
+          }
         >
           <User className="h-4 w-4 mr-2 flex-shrink-0" />
           <span className="truncate">

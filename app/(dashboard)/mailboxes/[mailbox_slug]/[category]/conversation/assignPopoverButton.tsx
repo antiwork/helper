@@ -89,9 +89,7 @@ export const AssignPopoverButton = ({
             ) : (
               <>
                 <User className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">
-                  {currentAssignee ? currentAssignee.displayName : "Unassigned"}
-                </span>
+                <span className="truncate">{currentAssignee ? currentAssignee.displayName : "Unassigned"}</span>
               </>
             )}
           </button>
