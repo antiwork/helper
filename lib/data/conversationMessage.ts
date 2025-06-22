@@ -155,7 +155,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
   // Collect user IDs from events
   eventRecords.forEach((event) => {
     if (event.byUserId) userIds.add(event.byUserId);
-    if (event.changes.assignedToId) userIds.add(event.changes.assignedToId);
+    if (event.changes?.assignedToId) userIds.add(event.changes.assignedToId);
   });
 
   // Fetch only the users we actually need
@@ -193,10 +193,10 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       changes: {
         ...event.changes,
         assignedToUser:
-          event.changes.assignedToId && membersById[event.changes.assignedToId]
+          event.changes?.assignedToId && membersById[event.changes.assignedToId]
             ? getFullName(membersById[event.changes.assignedToId]!)
-            : event.changes.assignedToId,
-        assignedToAI: event.changes.assignedToAI,
+            : event.changes?.assignedToId,
+        assignedToAI: event.changes?.assignedToAI,
       },
       byUser: event.byUserId && membersById[event.byUserId] ? getFullName(membersById[event.byUserId]!) : null,
       eventType: event.type,
