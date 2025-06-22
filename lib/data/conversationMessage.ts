@@ -484,28 +484,6 @@ export async function getTextWithConversationSubject(
   return `${subject ? `${subject}\n\n` : ""}${cleanedUpText}`;
 }
 
-export const getPastMessages = async (
-  message: typeof conversationMessages.$inferSelect,
-): Promise<(typeof conversationMessages.$inferSelect)[]> => {
-  const pastMessages = await db.query.conversationMessages.findMany({
-    where: and(
-      eq(conversationMessages.conversationId, message.conversationId),
-      ne(conversationMessages.id, message.id),
-      notInArray(conversationMessages.status, DRAFT_STATUSES),
-      isNotNull(conversationMessages.body),
-      isNotNull(conversationMessages.cleanedUpText),
-    ),
-    orderBy: [asc(conversationMessages.createdAt)],
-  });
-
-  for (const pastMessage of pastMessages) {
-    if (pastMessage.cleanedUpText === null) {
-      pastMessage.cleanedUpText = await ensureCleanedUpText(pastMessage);
-    }
-  }
-  return pastMessages;
-};
-
 export const createToolEvent = async ({
   conversationId,
   tool,

@@ -30,12 +30,6 @@ export const getSlackUser = async (token: string, user_id: string) => {
   return response.user ?? null;
 };
 
-export const getSlackTeam = async (token: string) => {
-  const client = new WebClient(token);
-  const response = await client.team.info();
-  return response.team ?? null;
-};
-
 export const verifySlackRequest = (body: string, headers: Headers) => {
   const slackSignature = headers.get("x-slack-signature");
   const timestamp = headers.get("x-slack-request-timestamp");
@@ -222,24 +216,6 @@ export const getSlackAccessToken = async (code: string) => {
     botUserId: response.bot_user_id,
     accessToken: response.access_token,
   };
-};
-
-export const postSlackDM = async (
-  token: string,
-  userId: string,
-  options: Omit<ChatPostMessageArguments, "channel"> & Pick<ChannelAndAttachments, "attachments">,
-) => {
-  const client = new WebClient(token);
-
-  const conversationResponse = await client.conversations.open({ users: userId });
-  if (!conversationResponse.ok || !conversationResponse.channel?.id) {
-    throw new Error(`Failed to open DM channel: ${conversationResponse.error}`);
-  }
-
-  return await postSlackMessage(token, {
-    ...options,
-    channel: conversationResponse.channel.id,
-  } as ChatPostMessageArguments);
 };
 
 export const listSlackUsers = async (token: string) => {

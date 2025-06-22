@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
+import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -123,15 +124,33 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     debouncedUpdateDisplayName(value);
   };
 
+  const getAvatarFallback = (member: TeamMember): string => {
+    if (member.displayName?.trim()) {
+      return member.displayName;
+    }
+
+    if (member.email) {
+      const emailUsername = member.email.split("@")[0];
+      return emailUsername || member.email;
+    }
+
+    return "?";
+  };
+
   return (
     <TableRow>
-      <TableCell>{member.email || ""}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <Avatar fallback={getAvatarFallback(member)} size="sm" />
+          <span className="truncate">{member.email || "No email"}</span>
+        </div>
+      </TableCell>
       <TableCell>
         <Input
           value={displayNameInput}
           onChange={(e) => handleDisplayNameChange(e.target.value)}
           placeholder="Enter display name"
-          className="w-full max-w-sm"
+          className="w-full max-w-sm bg-background border border-border"
         />
       </TableCell>
       <TableCell>

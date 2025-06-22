@@ -16,12 +16,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     return Response.json({ error: authResult.error }, { status: 401 });
   }
 
-  if (!authResult.session.email) {
-    return Response.json({ error: "Email is required" }, { status: 401 });
+  let baseCondition;
+  if (authResult.session.isAnonymous && authResult.session.anonymousSessionId) {
+    baseCondition = eq(conversations.anonymousSessionId, authResult.session.anonymousSessionId);
+  } else if (authResult.session.email) {
+    baseCondition = eq(conversations.emailFrom, authResult.session.email);
+  } else {
+    return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
 
   const conversation = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.emailFrom, authResult.session.email)),
+    where: and(eq(conversations.slug, slug), baseCondition),
     with: {
       messages: {
         where: inArray(conversationMessages.role, ["user", "ai_assistant", "staff"]),
