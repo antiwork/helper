@@ -15,7 +15,7 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
   const [name, setName] = useState(mailbox.name);
   const savingIndicator = useSavingIndicator();
   const utils = api.useUtils();
-  
+
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
@@ -33,7 +33,7 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
   const save = useDebouncedCallback(() => {
     savingIndicator.setSaving();
     update({ mailboxSlug: mailbox.slug, name });
-  }, 500); // Reduced from 2000ms to 500ms
+  }, 500);
 
   useOnChange(() => {
     save();
@@ -43,7 +43,7 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
     <SectionWrapper title="Mailbox name" description="Change the name of your mailbox">
       <div className="max-w-sm relative">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter mailbox name" />
-        <div className="absolute -top-1 -right-1">
+        <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
           <SavingIndicator state={savingIndicator.state} />
         </div>
       </div>

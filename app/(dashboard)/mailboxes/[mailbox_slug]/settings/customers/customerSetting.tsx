@@ -58,7 +58,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
         vipExpectedResponseHours: null,
       });
     }
-  }, 500); // Reduced from 2000ms to 500ms
+  }, 500);
 
   useOnChange(() => {
     save();
@@ -66,7 +66,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
 
   return (
     <div className="relative">
-      <div className="absolute top-0 right-0 z-10">
+      <div className="absolute top-2 right-4 z-10">
         <SavingIndicator state={savingIndicator.state} />
       </div>
       <SwitchSectionWrapper

@@ -13,7 +13,7 @@ export function SavingIndicator({ state, className }: SavingIndicatorProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all duration-200",
+        "flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium transition-all duration-200",
         {
           "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300": state === "saving",
           "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300": state === "saved",
@@ -24,19 +24,19 @@ export function SavingIndicator({ state, className }: SavingIndicatorProps) {
     >
       {state === "saving" && (
         <>
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <Loader2 className="h-2.5 w-2.5 animate-spin" />
           <span>Saving...</span>
         </>
       )}
       {state === "saved" && (
         <>
-          <Check className="h-3 w-3" />
+          <Check className="h-2.5 w-2.5" />
           <span>Saved</span>
         </>
       )}
       {state === "error" && (
         <>
-          <X className="h-3 w-3" />
+          <X className="h-2.5 w-2.5" />
           <span>Error</span>
         </>
       )}
