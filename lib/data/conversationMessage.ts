@@ -1,16 +1,22 @@
-import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, ne, not, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, DRAFT_STATUSES, files, mailboxes } from "@/db/schema";
-import { conversationEvents } from "@/db/schema/conversationEvents";
+import {
+  conversationEvents,
+  conversationMessages,
+  DRAFT_STATUSES,
+  files,
+  mailboxes,
+  MessageMetadata,
+  notes,
+  Tool,
+} from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
-import { notes } from "@/db/schema/notes";
-import type { Tool } from "@/db/schema/tools";
-import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import type { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
@@ -138,39 +144,9 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     }),
   ]);
 
-  // OPTIMIZATION: Only fetch users that are actually referenced in messages/notes/events
-  // instead of fetching ALL users from the database
-  const userIds = new Set<string>();
-
-  // Collect user IDs from messages
-  messages.forEach((message) => {
-    if (message.userId) userIds.add(message.userId);
-  });
-
-  // Collect user IDs from notes
-  noteRecords.forEach((note) => {
-    if (note.userId) userIds.add(note.userId);
-  });
-
-  // Collect user IDs from events
-  eventRecords.forEach((event) => {
-    if (event.byUserId) userIds.add(event.byUserId);
-    if (event.changes?.assignedToId) userIds.add(event.changes.assignedToId);
-  });
-
-  // Fetch only the users we actually need
-  const members =
-    userIds.size > 0
-      ? await db.query.authUsers.findMany({
-          where: inArray(authUsers.id, Array.from(userIds)),
-        })
-      : [];
-
-  const membersById = Object.fromEntries(members.map((user) => [user.id, user]));
-
   const messageInfos = await Promise.all(
     messages.map((message) =>
-      serializeMessage(message, conversationId, mailbox, (message.userId && membersById[message.userId]) || null),
+      serializeMessage(message, conversationId, mailbox, null),
     ),
   );
 
@@ -178,7 +154,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.userId && membersById[note.userId] ? getFullName(membersById[note.userId]!) : null,
+      userId: note.userId,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -192,13 +168,10 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       ...event,
       changes: {
         ...event.changes,
-        assignedToUser:
-          event.changes?.assignedToId && membersById[event.changes.assignedToId]
-            ? getFullName(membersById[event.changes.assignedToId]!)
-            : event.changes?.assignedToId,
+        assignedToId: event.changes?.assignedToId,
         assignedToAI: event.changes?.assignedToAI,
       },
-      byUser: event.byUserId && membersById[event.byUserId] ? getFullName(membersById[event.byUserId]!) : null,
+      byUserId: event.byUserId,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -266,6 +239,7 @@ export const serializeMessage = async (
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
     from: message.role === "staff" && user ? getFullName(user) : message.emailFrom,
+    userId: message.userId,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:

@@ -124,7 +124,7 @@ describe("getMessages", () => {
 
     assert(result[1]?.type === "message");
     expect(result[1].id).toBe(message2.id);
-    expect(result[1].from).toBe(user.user_metadata?.display_name);
+    expect(result[1].userId).toBe(user.id); // Now we return userId for frontend resolution
 
     assert(result[2]?.type === "note");
     expect(result[2].id).toBe(note.id);
@@ -159,7 +159,7 @@ describe("getMessages", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].from).toBe("customer@example.com");
-    expect(result[1].from).toBe(user.user_metadata?.display_name);
+    expect(result[1].userId).toBe(user.id); // Backend returns userId, frontend resolves display name
   });
 
   it("includes files for messages", async () => {
@@ -589,153 +589,5 @@ describe("getConversationMessageById", () => {
       id: message.id,
       body: message.body,
     });
-  });
-});
-
-describe("getMessages N+1 Query Optimization", () => {
-  it("should only fetch users that are referenced in the conversation (N+1 optimization)", async () => {
-    const { user: user1, mailbox } = await userFactory.createRootUser();
-    const { user: user2 } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    // Create messages from 2 users
-    await conversationMessagesFactory.create(conversation.id, {
-      userId: user1.id,
-      role: "staff",
-      body: "Message from user 1",
-    });
-
-    await conversationMessagesFactory.create(conversation.id, {
-      userId: user2.id,
-      role: "staff",
-      body: "Message from user 2",
-    });
-
-    // Spy on database queries to count them
-    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
-
-    // Execute the function
-    const messages = await getMessages(conversation.id, mailbox);
-
-    // Verify the query was called with a WHERE clause (targeting specific users)
-    // instead of fetching all users
-    expect(querySpy).toHaveBeenCalledTimes(1);
-
-    const queryCall = querySpy.mock.calls[0];
-    const queryOptions = queryCall?.[0];
-
-    // Should have a where clause limiting to specific user IDs
-    expect(queryOptions?.where).toBeDefined();
-
-    // The key validation is that we're using a WHERE clause instead of fetching all users
-    // This confirms our N+1 optimization is working - we're making a targeted query
-    // instead of fetching all users from the database
-
-    // Verify we got the correct number of messages
-    expect(messages).toHaveLength(2);
-
-    // Verify the messages are properly structured and contain the expected data
-    const messageItems = messages.filter((item) => item.type === "message");
-    expect(messageItems).toHaveLength(2);
-
-    // The optimization works by ensuring we only query for users that are actually referenced
-    // The fact that the query has a WHERE clause confirms this optimization is active
-
-    querySpy.mockRestore();
-  });
-
-  it("should fetch users referenced in events and notes", async () => {
-    const { user: user1, mailbox } = await userFactory.createRootUser();
-    const { user: user2 } = await userFactory.createRootUser();
-    const { user: user3 } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    // Create a note with user reference
-    await noteFactory.create(conversation.id, { userId: user1.id });
-
-    // Create an event with byUserId
-    await conversationEventsFactory.create(conversation.id, {
-      byUserId: user2.id,
-      reason: "Event by user 2",
-    });
-
-    // Create an event with assignedToId in changes
-    await conversationEventsFactory.create(conversation.id, {
-      byUserId: user1.id, // user1 is already referenced, so this tests deduplication
-      changes: { assignedToId: user3.id, status: "open" },
-      reason: "Assigned to user 3",
-    });
-
-    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
-    const messages = await getMessages(conversation.id, mailbox);
-
-    // Should query for users referenced in notes and events
-    expect(querySpy).toHaveBeenCalledTimes(1);
-    expect(querySpy.mock.calls[0]?.[0]?.where).toBeDefined();
-
-    // Verify all three users are collected (user1 from note, user2 from event byUserId, user3 from event changes)
-    const expectedUserIds = [user1.id, user2.id, user3.id].sort();
-
-    // Check that the returned data includes references to all three users
-    // Notes should have user references
-    const noteItems = messages.filter((item) => item.type === "note");
-    const eventItems = messages.filter((item) => item.type === "event");
-
-    expect(noteItems).toHaveLength(1);
-    expect(eventItems).toHaveLength(2);
-
-    // Note should reference user1
-    expect(noteItems[0]?.userId).toBe(user1.id);
-
-    // Events should reference user1 and user2 as byUserId
-    // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
-    const eventUserIds = eventItems.map((event) => event.byUserId).sort();
-    expect(eventUserIds).toEqual([user1.id, user2.id].sort());
-
-    querySpy.mockRestore();
-  });
-
-  it("should handle empty conversation efficiently", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
-
-    const messages = await getMessages(conversation.id, mailbox);
-
-    // Should not fetch any users when there are no messages
-    expect(querySpy).not.toHaveBeenCalled();
-    expect(messages).toHaveLength(0);
-
-    querySpy.mockRestore();
-  });
-
-  it("should handle events without assignedToId in changes gracefully", async () => {
-    const { user: user1, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
-    // Create an event with changes that don't include assignedToId
-    // This tests the optional chaining for event.changes?.assignedToId
-    await conversationEventsFactory.create(conversation.id, {
-      byUserId: user1.id,
-      changes: { status: "open" }, // No assignedToId property - tests optional chaining
-      reason: "Event without assignedToId",
-    });
-
-    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
-
-    // This should not throw an error due to accessing undefined assignedToId
-    const messages = await getMessages(conversation.id, mailbox);
-
-    // Should still query for the byUserId even though changes.assignedToId is undefined
-    expect(querySpy).toHaveBeenCalledTimes(1);
-    expect(querySpy.mock.calls[0]?.[0]?.where).toBeDefined();
-
-    // Should have one event
-    const eventItems = messages.filter((item) => item.type === "event");
-    expect(eventItems).toHaveLength(1);
-    expect(eventItems[0]?.byUserId).toBe(user1.id);
-
-    querySpy.mockRestore();
   });
 });
