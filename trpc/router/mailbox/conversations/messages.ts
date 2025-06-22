@@ -64,8 +64,8 @@ export const messagesRouter = {
       z.object({
         message: z.string(),
         fileSlugs: z.array(z.string()),
-        cc: z.array(z.string().email().or(z.literal(""))).transform((arr) => arr.filter(Boolean)),
-        bcc: z.array(z.string().email().or(z.literal(""))).transform((arr) => arr.filter(Boolean)),
+        cc: z.array(z.string().email()),
+        bcc: z.array(z.string().email()),
         shouldAutoAssign: z.boolean().optional().default(true),
         shouldClose: z.boolean().optional().default(true),
         responseToId: z.number().nullable(),
