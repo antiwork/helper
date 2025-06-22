@@ -29,7 +29,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     },
     onError: (error) => {
       toast({
-        title: "Failed to send invitation",
+        title: "Failed to remove member",
         description: error.message,
         variant: "destructive",
       });
