@@ -1,7 +1,7 @@
-import { type TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { addUser } from "@/lib/data/user";
+import { addUser, removeUser } from "@/lib/data/user";
 import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {
@@ -23,4 +23,13 @@ export const organizationRouter = {
     .mutation(async ({ ctx, input }) => {
       await addUser(ctx.user.id, input.email, input.displayName);
     }),
+  removeMember: protectedProcedure
+    .input(
+      z.object({
+        id: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input })=> {
+      await removeUser(input.id)
+    })
 } satisfies TRPCRouterRecord;

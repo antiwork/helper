@@ -9,6 +9,8 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
+import { Button } from "@/components/ui/button";
+import { Trash } from "lucide-react";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
@@ -27,9 +29,10 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
+  onDelete: (id: string, name: string)=> void;
 };
 
-const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, onDelete }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
@@ -172,6 +175,20 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
           placeholder="Enter keywords separated by commas"
           className={role === "nonCore" ? "" : "invisible"}
         />
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          onClick={(e) => {
+            e.preventDefault();
+            onDelete(member.id, member.displayName);
+          }}
+        >
+          <Trash className="h-4 w-4" />
+          <span className="sr-only">Delete</span>
+        </Button>
       </TableCell>
     </TableRow>
   );

@@ -9,6 +9,7 @@ import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
+import { toast } from "@/components/hooks/use-toast";
 
 type TeamSettingProps = {
   mailboxSlug: string;
@@ -16,6 +17,24 @@ type TeamSettingProps = {
 
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+  const utils = api.useUtils();
+  const { mutate: removeMemberMutation, isPending: isRemoving } = api.organization.removeMember.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Team member removed",
+        variant: "success",
+      });
+
+      utils.mailbox.members.list.invalidate({ mailboxSlug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to send invitation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTeamMembers = teamMembers.filter((member) => {
@@ -26,6 +45,12 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       member.keywords.some((keyword) => keyword.toLowerCase().includes(searchString))
     );
   });
+
+  const removeMember = (id: string, name: string) => {
+    if(confirm(`Are you sure you want to remove ${name} from your team?`)){
+      removeMemberMutation({ id });
+    }
+  }
 
   return (
     <SectionWrapper
@@ -74,7 +99,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => (
-                  <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} />
+                  <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} onDelete={removeMember} />
                 ))
               )}
             </TableBody>

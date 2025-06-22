@@ -6,18 +6,6 @@ import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
 
-export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
-  const supabase = createAdminClient();
-  const { error } = await supabase.auth.admin.createUser({
-    email: emailAddress,
-    user_metadata: {
-      inviter_user_id: inviterUserId,
-      display_name: displayName,
-    },
-  });
-  if (error) throw error;
-};
-
 export const UserRoles = {
   CORE: "core",
   NON_CORE: "nonCore",
@@ -39,6 +27,27 @@ export type UserWithMailboxAccessData = {
   role: UserRole;
   keywords: MailboxAccess["keywords"];
 };
+
+export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
+  const supabase = createAdminClient();
+  const { error } = await supabase.auth.admin.createUser({
+    email: emailAddress,
+    user_metadata: {
+      inviter_user_id: inviterUserId,
+      display_name: displayName,
+    },
+  });
+  if (error) throw error;
+};
+
+export const removeUser = async (Id: string) => {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase.auth.admin.deleteUser(Id);
+
+  if (error) throw error;
+};
+
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
   const users = await db.query.authUsers.findMany();
