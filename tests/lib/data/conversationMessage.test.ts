@@ -124,7 +124,7 @@ describe("getMessages", () => {
 
     assert(result[1]?.type === "message");
     expect(result[1].id).toBe(message2.id);
-    expect(result[1].userId).toBe(user.id); // Now we return userId for frontend resolution
+    expect(result[1].userId).toBe(user.id);
 
     assert(result[2]?.type === "note");
     expect(result[2].id).toBe(note.id);
@@ -159,7 +159,7 @@ describe("getMessages", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].from).toBe("customer@example.com");
-    expect(result[1].userId).toBe(user.id); // Backend returns userId, frontend resolves display name
+    expect(result[1].userId).toBe(user.id);
   });
 
   it("includes files for messages", async () => {

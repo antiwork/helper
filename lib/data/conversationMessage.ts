@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull, isNull, ne, not, notInArray, or, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, not, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
@@ -145,9 +145,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
   ]);
 
   const messageInfos = await Promise.all(
-    messages.map((message) =>
-      serializeMessage(message, conversationId, mailbox, null),
-    ),
+    messages.map((message) => serializeMessage(message, conversationId, mailbox, null)),
   );
 
   const noteInfos = await Promise.all(
