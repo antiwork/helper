@@ -26,10 +26,10 @@ export const organizationRouter = {
   removeMember: protectedProcedure
     .input(
       z.object({
-        id: z.string()
-      })
+        id: z.string(),
+      }),
     )
-    .mutation(async ({ ctx, input })=> {
-      await removeUser(input.id)
-    })
+    .mutation(async ({ ctx, input }) => {
+      await removeUser(input.id);
+    }),
 } satisfies TRPCRouterRecord;

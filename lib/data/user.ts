@@ -40,14 +40,13 @@ export const addUser = async (inviterUserId: string, emailAddress: string, displ
   if (error) throw error;
 };
 
-export const removeUser = async (Id: string) => {
+export const removeUser = async (id: string) => {
   const supabase = createAdminClient();
 
-  const { error } = await supabase.auth.admin.deleteUser(Id);
+  const { error } = await supabase.auth.admin.deleteUser(id);
 
   if (error) throw error;
 };
-
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
   const users = await db.query.authUsers.findMany();

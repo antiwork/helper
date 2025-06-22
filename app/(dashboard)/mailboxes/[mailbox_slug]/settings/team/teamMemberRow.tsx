@@ -1,16 +1,16 @@
 "use client";
 
+import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
-import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
@@ -29,7 +29,7 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
-  onDelete: (id: string, name: string)=> void;
+  onDelete: (id: string, name: string) => void;
 };
 
 const TeamMemberRow = ({ member, mailboxSlug, onDelete }: TeamMemberRowProps) => {

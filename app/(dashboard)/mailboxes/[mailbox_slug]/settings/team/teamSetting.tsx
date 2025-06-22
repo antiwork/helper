@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +10,6 @@ import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
-import { toast } from "@/components/hooks/use-toast";
 
 type TeamSettingProps = {
   mailboxSlug: string;
@@ -47,10 +47,10 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   });
 
   const removeMember = (id: string, name: string) => {
-    if(confirm(`Are you sure you want to remove ${name} from your team?`)){
+    if (confirm(`Are you sure you want to remove ${name} from your team?`)) {
       removeMemberMutation({ id });
     }
-  }
+  };
 
   return (
     <SectionWrapper
