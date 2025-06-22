@@ -10,7 +10,7 @@ import { conversationEvents } from "@/db/schema/conversationEvents";
 import { conversations } from "@/db/schema/conversations";
 import { notes } from "@/db/schema/notes";
 import type { Tool } from "@/db/schema/tools";
-import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
@@ -105,7 +105,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       },
     });
 
-  const [messages, noteRecords, eventRecords, members] = await Promise.all([
+  const [messages, noteRecords, eventRecords] = await Promise.all([
     findOriginalAndMergedMessages(conversationId, findMessages),
     db.query.notes.findMany({
       where: eq(notes.conversationId, conversationId),
@@ -136,8 +136,35 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         reason: true,
       },
     }),
-    db.query.authUsers.findMany(),
   ]);
+
+  // OPTIMIZATION: Only fetch users that are actually referenced in messages/notes/events
+  // instead of fetching ALL users from the database
+  const userIds = new Set<string>();
+
+  // Collect user IDs from messages
+  messages.forEach((message) => {
+    if (message.userId) userIds.add(message.userId);
+  });
+
+  // Collect user IDs from notes
+  noteRecords.forEach((note) => {
+    if (note.userId) userIds.add(note.userId);
+  });
+
+  // Collect user IDs from events
+  eventRecords.forEach((event) => {
+    if (event.byUserId) userIds.add(event.byUserId);
+    if (event.changes.assignedToId) userIds.add(event.changes.assignedToId);
+  });
+
+  // Fetch only the users we actually need
+  const members =
+    userIds.size > 0
+      ? await db.query.authUsers.findMany({
+          where: inArray(authUsers.id, Array.from(userIds)),
+        })
+      : [];
 
   const membersById = Object.fromEntries(members.map((user) => [user.id, user]));
 

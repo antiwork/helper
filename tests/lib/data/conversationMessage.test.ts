@@ -12,6 +12,7 @@ import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { assert } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, files } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { getConversationById } from "@/lib/data/conversation";
 import {
   createConversationMessage,
@@ -589,5 +590,62 @@ describe("getConversationMessageById", () => {
       id: message.id,
       body: message.body,
     });
+  });
+});
+
+describe("getMessages N+1 Query Optimization", () => {
+  it("should only fetch users that are referenced in the conversation (N+1 optimization)", async () => {
+    const { user: user1, mailbox } = await userFactory.createRootUser();
+    const { user: user2 } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create(mailbox.id);
+
+    // Create messages from 2 users
+    await conversationMessagesFactory.create(conversation.id, {
+      userId: user1.id,
+      role: "staff",
+      body: "Message from user 1",
+    });
+
+    await conversationMessagesFactory.create(conversation.id, {
+      userId: user2.id,
+      role: "staff",
+      body: "Message from user 2",
+    });
+
+    // Spy on database queries to count them
+    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
+
+    // Execute the function
+    const messages = await getMessages(conversation.id, mailbox);
+
+    // Verify the query was called with a WHERE clause (targeting specific users)
+    // instead of fetching all users
+    expect(querySpy).toHaveBeenCalledTimes(1);
+
+    const queryCall = querySpy.mock.calls[0];
+    const queryOptions = queryCall?.[0];
+
+    // Should have a where clause limiting to specific user IDs
+    expect(queryOptions?.where).toBeDefined();
+
+    // Verify we got the correct messages
+    expect(messages).toHaveLength(2);
+
+    querySpy.mockRestore();
+  });
+
+  it("should handle empty conversation efficiently", async () => {
+    const { mailbox } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create(mailbox.id);
+
+    const querySpy = vi.spyOn(db.query.authUsers, "findMany");
+
+    const messages = await getMessages(conversation.id, mailbox);
+
+    // Should not fetch any users when there are no messages
+    expect(querySpy).not.toHaveBeenCalled();
+    expect(messages).toHaveLength(0);
+
+    querySpy.mockRestore();
   });
 });
