@@ -29,7 +29,7 @@ export function AssigneeFilter({
       <PopoverTrigger asChild>
         <Button
           variant={selectedAssignees.length ? "bright" : "outlined_subtle"}
-          className="whitespace-nowrap max-w-[200px]"
+          className="whitespace-nowrap"
           title={
             selectedAssignees.length === 1
               ? members?.find((m) => m.id === selectedAssignees[0])?.displayName
