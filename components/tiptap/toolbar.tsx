@@ -308,7 +308,7 @@ const Toolbar = ({
       <div
         className={cn(
           isAboveMd
-            ? "flex flex-wrap gap-1 absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
+            ? `flex flex-wrap gap-1 absolute z-10 ${open ? "bottom-11" : "bottom-16"} mb-2 right-3 rounded-t border rounded-sm bg-background p-1`
             : "flex flex-1 min-w-0 gap-1",
           open && isAboveMd && "left-3",
           !open && !isAboveMd && "hidden",
