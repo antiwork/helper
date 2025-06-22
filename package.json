@@ -39,8 +39,7 @@
     "nginx:start": "docker run -d --rm --name helperai-nginx -p 80:80 -p 443:443 --add-host host.docker.internal:host-gateway -v $(pwd)/scripts/docker/local-nginx/helperai_dev.conf:/etc/nginx/conf.d/default.conf -v $(pwd)/scripts/docker/local-nginx/certs:/etc/ssl/certs nginx:1.27.5",
     "generate-ssl-certificates": "bash scripts/generate-ssl-certificates.sh",
     "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1",
-    "with-dev-env": "dotenv -e ./.env.development.local -e ./.env.local --",
-    "knip": "pnpm dlx knip"
+    "with-dev-env": "dotenv -e ./.env.development.local -e ./.env.local --"
   },
   "dependencies": {
     "@ai-sdk/fireworks": "^0.1.10",
