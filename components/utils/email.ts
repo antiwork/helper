@@ -11,4 +11,4 @@ export const parseEmailList = (list: string) =>
     .replace(/\s/g, "")
     .split(",")
     .filter(Boolean)
-    .map((emailAdress) => emailAdress.trim());
+    .map((email) => email.trim());
