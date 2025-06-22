@@ -33,9 +33,7 @@ export function SecretInput({ value, ariaLabel = "Secret", disabled = true, clas
                   className="flex items-center gap-1"
                   onClick={(e) => {
                     e.preventDefault();
-                    setTimeout(() => {
-                      setShowSecret(!showSecret);
-                    }, 100);
+                    setShowSecret(!showSecret);
                   }}
                 >
                   {showSecret ? (
