@@ -3,6 +3,7 @@ import {
   CornerRightUp as ArrowUturnUpIcon,
   MessageSquare as ChatBubbleLeftIcon,
   Mail as EnvelopeIcon,
+  MessageSquareText as MacroIcon,
   PenSquare as PencilSquareIcon,
   Play as PlayIcon,
   ShieldAlert as ShieldExclamationIcon,
@@ -24,6 +25,7 @@ type MainPageProps = {
   setSelectedItemId: (id: string | null) => void;
   onToggleCc: () => void;
   setSelectedTool: (tool: Tool) => void;
+  onInsertReply: (content: string) => void;
 };
 
 export const useMainPage = ({
@@ -32,6 +34,7 @@ export const useMainPage = ({
   setSelectedItemId,
   onToggleCc,
   setSelectedTool,
+  onInsertReply,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
   const utils = api.useUtils();
@@ -71,6 +74,14 @@ export const useMainPage = ({
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
 
+  const { data: macros } = api.mailbox.macros.list.useQuery(
+    { mailboxSlug, onlyActive: true },
+    { staleTime: 300_000, refetchOnMount: false, refetchOnWindowFocus: false },
+  );
+
+  const { mutate: incrementMacroUsage } = api.mailbox.macros.incrementUsage.useMutation();
+  const { mutateAsync: processContent } = api.mailbox.macros.processContent.useMutation();
+
   const { data: mailbox } = api.mailbox.get.useQuery(
     { mailboxSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!mailboxSlug },
@@ -84,6 +95,24 @@ export const useMainPage = ({
     setPage("notes");
     setSelectedItemId(null);
   });
+
+  const handleMacroSelect = async (macro: { slug: string; content: string }) => {
+    try {
+      const result = await processContent({
+        mailboxSlug,
+        content: macro.content,
+        conversationSlug: conversation?.slug,
+      });
+      onInsertReply(result.processedContent);
+      incrementMacroUsage({ mailboxSlug, slug: macro.slug });
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error processing macro",
+      });
+    }
+  };
 
   const mainCommandGroups = useMemo(
     () => [
@@ -190,6 +219,21 @@ export const useMainPage = ({
           },
         ],
       },
+      ...(macros && macros.length > 0
+        ? [
+            {
+              heading: "Macros",
+              items: macros.slice(0, 10).map((macro) => ({
+                id: macro.slug,
+                label: macro.name,
+                description: macro.description || undefined,
+                icon: MacroIcon,
+                shortcut: macro.shortcut || undefined,
+                onSelect: () => handleMacroSelect(macro),
+              })),
+            },
+          ]
+        : []),
       ...(tools && tools.all.length > 0
         ? [
             {
@@ -204,7 +248,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, macros, handleMacroSelect],
   );
 
   return mainCommandGroups;

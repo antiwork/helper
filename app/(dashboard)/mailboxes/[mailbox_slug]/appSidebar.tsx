@@ -1,6 +1,16 @@
 "use client";
 
-import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, Users } from "lucide-react";
+import {
+  BarChart,
+  CheckCircle,
+  ChevronDown,
+  Inbox,
+  MessageSquareText,
+  Settings,
+  Ticket,
+  User,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
@@ -128,6 +138,19 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 {openCounts && openCounts.conversations > 0 && (
                   <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
                 )}
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/macros`} tooltip="Macros">
+                  <Link href={`/mailboxes/${mailboxSlug}/macros`}>
+                    <MessageSquareText className="size-4" />
+                    <span className="group-data-[collapsible=icon]:hidden">Macros</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>

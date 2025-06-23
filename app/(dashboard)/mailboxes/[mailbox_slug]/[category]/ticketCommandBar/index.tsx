@@ -65,6 +65,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedItemId,
     onToggleCc,
     setSelectedTool,
+    onInsertReply,
   });
 
   const previousRepliesGroups = usePreviousRepliesPage({
