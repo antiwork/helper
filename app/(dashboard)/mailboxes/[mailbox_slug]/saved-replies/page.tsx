@@ -33,14 +33,28 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/trpc/react";
 
+type SavedReply = {
+  id: string;
+  slug: string;
+  name: string;
+  content: string;
+  description?: string;
+  shortcut?: string;
+  usageCount: number;
+  createdAt: string;
+  updatedAt: string;
+  createdByDisplayName?: string;
+  mailboxName: string;
+};
+
 export default function SavedRepliesPage() {
   const params = useParams();
   const mailboxSlug = params.mailbox_slug as string;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingSavedReply, setEditingSavedReply] = useState<any>(null);
-  const [previewSavedReply, setPreviewSavedReply] = useState<any>(null);
+  const [editingSavedReply, setEditingSavedReply] = useState<SavedReply | null>(null);
+  const [previewSavedReply, setPreviewSavedReply] = useState<SavedReply | null>(null);
 
   const { data: savedReplies, refetch } = api.mailbox.savedReplies.list.useQuery({
     mailboxSlug,
@@ -209,7 +223,7 @@ export default function SavedRepliesPage() {
               <DialogDescription>Update your saved reply template.</DialogDescription>
             </DialogHeader>
             <SavedReplyForm
-              macro={editingSavedReply}
+              savedReply={editingSavedReply}
               mailboxSlug={mailboxSlug}
               onSuccess={handleEditSuccess}
               onCancel={() => setEditingSavedReply(null)}
@@ -220,7 +234,7 @@ export default function SavedRepliesPage() {
 
       {previewSavedReply && (
         <SavedReplyPreview
-          macro={previewSavedReply}
+          savedReply={previewSavedReply}
           mailboxSlug={mailboxSlug}
           open={!!previewSavedReply}
           onOpenChange={() => setPreviewSavedReply(null)}

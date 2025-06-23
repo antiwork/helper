@@ -12,10 +12,10 @@ CREATE TABLE "saved_replies" (
 	"shortcut" varchar(20),
 	"usage_count" integer DEFAULT 0 NOT NULL
 );
---> statement-breakpoint
-ALTER TABLE "saved_replies" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE INDEX "saved_replies_mailbox_id_idx" ON "saved_replies" USING btree ("mailbox_id");--> statement-breakpoint
-CREATE INDEX "saved_replies_created_by_user_idx" ON "saved_replies" USING btree ("created_by_user_id");--> statement-breakpoint
-CREATE INDEX "saved_replies_slug_idx" ON "saved_replies" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "saved_replies_shortcut_idx" ON "saved_replies" USING btree ("shortcut");--> statement-breakpoint
+
+ALTER TABLE "saved_replies" ENABLE ROW LEVEL SECURITY;
+CREATE INDEX "saved_replies_mailbox_id_idx" ON "saved_replies" USING btree ("mailbox_id");
+CREATE INDEX "saved_replies_created_by_user_idx" ON "saved_replies" USING btree ("created_by_user_id");
+CREATE INDEX "saved_replies_slug_idx" ON "saved_replies" USING btree ("slug");
+CREATE INDEX "saved_replies_shortcut_idx" ON "saved_replies" USING btree ("shortcut");
 CREATE UNIQUE INDEX "saved_replies_mailbox_shortcut_unique" ON "saved_replies" USING btree ("mailbox_id","shortcut") WHERE shortcut IS NOT NULL;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/non-nullable-type-assertion-style */
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import DOMPurify from "dompurify";
 import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
@@ -85,7 +86,7 @@ export const savedRepliesRouter = {
       const userDisplayNames =
         userIds.length > 0
           ? await db.query.authUsers.findMany({
-              where: inArray(authUsers.id, userIds),
+              where: inArray(authUsers.id, userIds as string[]),
               columns: { id: true, email: true },
             })
           : [];

@@ -28,20 +28,20 @@ type SavedReply = {
 };
 
 interface SavedReplyFormProps {
-  macro?: SavedReply;
+  savedReply?: SavedReply;
   mailboxSlug: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function SavedReplyForm({ macro, mailboxSlug, onSuccess, onCancel }: SavedReplyFormProps) {
+export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }: SavedReplyFormProps) {
   const form = useForm<SavedReplyFormData>({
     resolver: zodResolver(savedReplyFormSchema),
     defaultValues: {
-      name: macro?.name || "",
-      content: macro?.content || "",
-      description: macro?.description || "",
-      shortcut: macro?.shortcut || "",
+      name: savedReply?.name || "",
+      content: savedReply?.content || "",
+      description: savedReply?.description || "",
+      shortcut: savedReply?.shortcut || "",
     },
   });
 
@@ -78,8 +78,8 @@ export function SavedReplyForm({ macro, mailboxSlug, onSuccess, onCancel }: Save
       ...data,
     };
 
-    if (macro) {
-      updateSavedReply.mutate({ slug: macro.slug, ...finalData });
+    if (savedReply) {
+      updateSavedReply.mutate({ slug: savedReply.slug, ...finalData });
     } else {
       createSavedReply.mutate(finalData);
     }
@@ -159,7 +159,7 @@ export function SavedReplyForm({ macro, mailboxSlug, onSuccess, onCancel }: Save
           <Button type="submit" disabled={createSavedReply.isPending || updateSavedReply.isPending}>
             {createSavedReply.isPending || updateSavedReply.isPending
               ? "Saving..."
-              : macro
+              : savedReply
                 ? "Update Saved Reply"
                 : "Create Saved Reply"}
           </Button>

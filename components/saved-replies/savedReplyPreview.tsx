@@ -23,13 +23,13 @@ interface SavedReply {
 }
 
 interface SavedReplyPreviewProps {
-  macro: SavedReply;
+  savedReply: SavedReply;
   mailboxSlug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function SavedReplyPreview({ macro, mailboxSlug, open, onOpenChange }: SavedReplyPreviewProps) {
+export function SavedReplyPreview({ savedReply, mailboxSlug, open, onOpenChange }: SavedReplyPreviewProps) {
   const handleCopy = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
@@ -39,35 +39,35 @@ export function SavedReplyPreview({ macro, mailboxSlug, open, onOpenChange }: Sa
     }
   };
 
-  if (!macro) return null;
+  if (!savedReply) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>{macro.name}</span>
-            <Button variant="outlined" size="sm" onClick={() => handleCopy(macro.content)}>
+            <span>{savedReply.name}</span>
+            <Button variant="outlined" size="sm" onClick={() => handleCopy(savedReply.content)}>
               <Copy className="h-4 w-4 mr-2" />
               Copy
             </Button>
           </DialogTitle>
-          {macro.description && <DialogDescription>{macro.description}</DialogDescription>}
+          {savedReply.description && <DialogDescription>{savedReply.description}</DialogDescription>}
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              {macro.shortcut && (
+              {savedReply.shortcut && (
                 <Badge variant="gray" className="font-mono">
-                  {macro.shortcut}
+                  {savedReply.shortcut}
                 </Badge>
               )}
             </div>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{new Date(macro.createdAt).toLocaleDateString()}</span>
+                <span>{new Date(savedReply.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -81,15 +81,15 @@ export function SavedReplyPreview({ macro, mailboxSlug, open, onOpenChange }: Sa
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-64 w-full border rounded-md p-4">
-                <div className="whitespace-pre-wrap text-sm">{macro.content}</div>
+                <div className="whitespace-pre-wrap text-sm">{savedReply.content}</div>
               </ScrollArea>
             </CardContent>
           </Card>
 
           <div className="flex items-center justify-between pt-4">
             <div className="text-sm text-muted-foreground">
-              Created by {macro.createdByDisplayName || "Admin"} • Last updated{" "}
-              {new Date(macro.updatedAt).toLocaleDateString()}
+              Created by {savedReply.createdByDisplayName || "Admin"} • Last updated{" "}
+              {new Date(savedReply.updatedAt).toLocaleDateString()}
             </div>
             <Button onClick={() => onOpenChange(false)}>Close</Button>
           </div>
