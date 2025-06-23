@@ -74,12 +74,12 @@ export const useMainPage = ({
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
 
-  const { data: macros } = api.mailbox.macros.list.useQuery(
+  const { data: savedReplies } = api.mailbox.savedReplies.list.useQuery(
     { mailboxSlug, onlyActive: true },
     { staleTime: 300_000, refetchOnMount: false, refetchOnWindowFocus: false },
   );
 
-  const { mutate: incrementMacroUsage } = api.mailbox.macros.incrementUsage.useMutation();
+  const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
 
   const { data: mailbox } = api.mailbox.get.useQuery(
     { mailboxSlug },
@@ -95,10 +95,18 @@ export const useMainPage = ({
     setSelectedItemId(null);
   });
 
-  const handleMacroSelect = (macro: { slug: string; content: string }) => {
-    onInsertReply(macro.content);
-    incrementMacroUsage({ mailboxSlug, slug: macro.slug });
-    onOpenChange(false);
+  const handleSavedReplySelect = (savedReply: { slug: string; content: string }) => {
+    try {
+      onInsertReply(savedReply.content);
+      incrementSavedReplyUsage({ mailboxSlug, slug: savedReply.slug });
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error using saved reply",
+        description: "Failed to insert saved reply content. Please try again.",
+      });
+    }
   };
 
   const mainCommandGroups = useMemo(
@@ -206,17 +214,17 @@ export const useMainPage = ({
           },
         ],
       },
-      ...(macros && macros.length > 0
+      ...(savedReplies && savedReplies.length > 0
         ? [
             {
-              heading: "Macros",
-              items: macros.slice(0, 10).map((macro) => ({
-                id: macro.slug,
-                label: macro.name,
-                description: macro.description || undefined,
+              heading: "Saved Replies",
+              items: savedReplies.slice(0, 10).map((savedReply) => ({
+                id: savedReply.slug,
+                label: savedReply.name,
+                description: savedReply.description || undefined,
                 icon: MacroIcon,
-                shortcut: macro.shortcut || undefined,
-                onSelect: () => handleMacroSelect(macro),
+                shortcut: savedReply.shortcut || undefined,
+                onSelect: () => handleSavedReplySelect(savedReply),
               })),
             },
           ]
@@ -235,7 +243,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, macros, handleMacroSelect],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, savedReplies, handleSavedReplySelect],
   );
 
   return mainCommandGroups;

@@ -145,10 +145,14 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/macros`} tooltip="Macros">
-                  <Link href={`/mailboxes/${mailboxSlug}/macros`}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/saved-replies`}
+                  tooltip="Saved Replies"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/saved-replies`}>
                     <MessageSquareText className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Macros</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Saved Replies</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

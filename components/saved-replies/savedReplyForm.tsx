@@ -7,85 +7,82 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
-const macroFormSchema = z.object({
+const savedReplyFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
   content: z.string().min(1, "Content is required").max(5000, "Content must be less than 5000 characters"),
   description: z.string().max(500, "Description must be less than 500 characters").optional(),
   shortcut: z.string().max(20, "Shortcut must be less than 20 characters").optional(),
-  isGlobal: z.boolean().default(false),
 });
 
-type MacroFormData = z.infer<typeof macroFormSchema>;
+type SavedReplyFormData = z.infer<typeof savedReplyFormSchema>;
 
-type Macro = {
+type SavedReply = {
   slug: string;
   name: string;
   content: string;
   description?: string;
   shortcut?: string;
-  isGlobal: boolean;
 };
 
-interface MacroFormProps {
-  macro?: Macro;
+interface SavedReplyFormProps {
+  macro?: SavedReply;
   mailboxSlug: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function MacroForm({ macro, mailboxSlug, onSuccess, onCancel }: MacroFormProps) {
-  const form = useForm<MacroFormData>({
-    resolver: zodResolver(macroFormSchema),
+export function SavedReplyForm({ macro, mailboxSlug, onSuccess, onCancel }: SavedReplyFormProps) {
+  const form = useForm<SavedReplyFormData>({
+    resolver: zodResolver(savedReplyFormSchema),
     defaultValues: {
       name: macro?.name || "",
       content: macro?.content || "",
       description: macro?.description || "",
       shortcut: macro?.shortcut || "",
-      isGlobal: macro?.isGlobal || false,
     },
   });
 
-  const createMacro = api.mailbox.macros.create.useMutation({
+  const createSavedReply = api.mailbox.savedReplies.create.useMutation({
     onSuccess: () => {
       onSuccess();
       form.reset();
     },
     onError: (error) => {
       toast({
-        title: "Failed to create macro",
+        title: "Failed to create saved reply",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const updateMacro = api.mailbox.macros.update.useMutation({
+  const updateSavedReply = api.mailbox.savedReplies.update.useMutation({
     onSuccess: () => {
       onSuccess();
     },
     onError: (error) => {
       toast({
-        title: "Failed to update macro",
+        title: "Failed to update saved reply",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: MacroFormData) => {
+  const onSubmit = (data: SavedReplyFormData) => {
     const finalData = {
       mailboxSlug,
       ...data,
     };
 
     if (macro) {
-      updateMacro.mutate({ slug: macro.slug, ...finalData });
+      updateSavedReply.mutate({ slug: macro.slug, ...finalData });
     } else {
-      createMacro.mutate(finalData);
+      createSavedReply.mutate(finalData);
     }
   };
 
@@ -116,7 +113,7 @@ export function MacroForm({ macro, mailboxSlug, onSuccess, onCancel }: MacroForm
                 <FormControl>
                   <Input placeholder="e.g., welcome, kb" {...field} />
                 </FormControl>
-                <FormDescription>Quick shortcut to find this macro</FormDescription>
+                <FormDescription>Quick shortcut to find this saved reply</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -130,7 +127,7 @@ export function MacroForm({ macro, mailboxSlug, onSuccess, onCancel }: MacroForm
             <FormItem>
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Brief description of when to use this macro" {...field} />
+                <Input placeholder="Brief description of when to use this saved reply" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -144,26 +141,10 @@ export function MacroForm({ macro, mailboxSlug, onSuccess, onCancel }: MacroForm
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter your macro content here..." className="min-h-32 resize-none" {...field} />
+                <Textarea placeholder="Enter your saved reply content here..." className="min-h-32 resize-none" {...field} />
               </FormControl>
               <FormDescription>{form.watch("content")?.length || 0}/5000 characters</FormDescription>
               <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="isGlobal"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Global Macro</FormLabel>
-                <FormDescription>Make this macro available to all team members</FormDescription>
-              </div>
-              <FormControl>
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
             </FormItem>
           )}
         />
@@ -172,8 +153,8 @@ export function MacroForm({ macro, mailboxSlug, onSuccess, onCancel }: MacroForm
           <Button type="button" variant="outlined" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={createMacro.isPending || updateMacro.isPending}>
-            {createMacro.isPending || updateMacro.isPending ? "Saving..." : macro ? "Update Macro" : "Create Macro"}
+          <Button type="submit" disabled={createSavedReply.isPending || updateSavedReply.isPending}>
+            {createSavedReply.isPending || updateSavedReply.isPending ? "Saving..." : macro ? "Update Saved Reply" : "Create Saved Reply"}
           </Button>
         </div>
       </form>

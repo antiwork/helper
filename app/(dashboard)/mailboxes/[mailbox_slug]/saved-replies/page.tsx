@@ -4,8 +4,8 @@ import { Copy, Edit3, Plus, Search, Trash2, TrendingUp } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
-import { MacroForm } from "@/components/macros/macroForm";
-import { MacroPreview } from "@/components/macros/macroPreview";
+import { SavedReplyForm } from "@/components/saved-replies/savedReplyForm";
+import { SavedReplyPreview } from "@/components/saved-replies/savedReplyPreview";
 import { PageHeader } from "@/components/pageHeader";
 import {
   AlertDialog,
@@ -33,68 +33,68 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/trpc/react";
 
-export default function MacrosPage() {
+export default function SavedRepliesPage() {
   const params = useParams();
   const mailboxSlug = params.mailbox_slug as string;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingMacro, setEditingMacro] = useState<any>(null);
-  const [previewMacro, setPreviewMacro] = useState<any>(null);
+  const [editingSavedReply, setEditingSavedReply] = useState<any>(null);
+  const [previewSavedReply, setPreviewSavedReply] = useState<any>(null);
 
-  const { data: macros, refetch } = api.mailbox.macros.list.useQuery({
+  const { data: savedReplies, refetch } = api.mailbox.savedReplies.list.useQuery({
     mailboxSlug,
     search: searchTerm || undefined,
   });
 
-  const { mutate: deleteMacro } = api.mailbox.macros.delete.useMutation({
+  const { mutate: deleteSavedReply } = api.mailbox.savedReplies.delete.useMutation({
     onSuccess: () => {
-      toast({ title: "Macro deleted successfully", variant: "success" });
+      toast({ title: "Saved reply deleted successfully", variant: "success" });
       refetch();
     },
     onError: (error) => {
-      toast({ title: "Failed to delete macro", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to delete saved reply", description: error.message, variant: "destructive" });
     },
   });
 
   const handleCreateSuccess = () => {
     setShowCreateDialog(false);
     refetch();
-    toast({ title: "Macro created successfully", variant: "success" });
+    toast({ title: "Saved reply created successfully", variant: "success" });
   };
 
   const handleEditSuccess = () => {
-    setEditingMacro(null);
+    setEditingSavedReply(null);
     refetch();
-    toast({ title: "Macro updated successfully", variant: "success" });
+    toast({ title: "Saved reply updated successfully", variant: "success" });
   };
 
-  const handleCopyMacro = async (content: string) => {
+  const handleCopySavedReply = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
-      toast({ title: "Macro copied to clipboard", variant: "success" });
+      toast({ title: "Saved reply copied to clipboard", variant: "success" });
     } catch (error) {
-      toast({ title: "Failed to copy macro", variant: "destructive" });
+      toast({ title: "Failed to copy saved reply", variant: "destructive" });
     }
   };
 
-  const filteredMacros = macros || [];
+  const filteredSavedReplies = savedReplies || [];
 
   return (
     <div className="flex-1 space-y-6 p-6 pt-0">
-      <PageHeader title="Macros" />
+      <PageHeader title="Saved Replies" />
 
-      <Tabs defaultValue="macros" className="space-y-6">
+      <Tabs defaultValue="saved-replies" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="macros">All Macros ({macros?.length || 0})</TabsTrigger>
+          <TabsTrigger value="saved-replies">All Saved Replies ({savedReplies?.length || 0})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="macros" className="space-y-6">
+        <TabsContent value="saved-replies" className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search macros..."
+                placeholder="Search saved replies..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-64"
@@ -105,17 +105,17 @@ export default function MacrosPage() {
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Macro
+                  Create Saved Reply
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Create New Macro</DialogTitle>
+                  <DialogTitle>Create New Saved Reply</DialogTitle>
                   <DialogDescription>
                     Create a reusable text template that can be quickly inserted into conversations.
                   </DialogDescription>
                 </DialogHeader>
-                <MacroForm
+                <SavedReplyForm
                   mailboxSlug={mailboxSlug}
                   onSuccess={handleCreateSuccess}
                   onCancel={() => setShowCreateDialog(false)}
@@ -125,24 +125,24 @@ export default function MacrosPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMacros.map((macro) => (
-              <Card key={macro.slug} className="hover:shadow-md transition-shadow">
+            {filteredSavedReplies.map((savedReply) => (
+              <Card key={savedReply.slug} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <CardTitle className="text-lg line-clamp-1">{macro.name}</CardTitle>
-                      {macro.description && (
-                        <CardDescription className="line-clamp-2">{macro.description}</CardDescription>
+                      <CardTitle className="text-lg line-clamp-1">{savedReply.name}</CardTitle>
+                      {savedReply.description && (
+                        <CardDescription className="line-clamp-2">{savedReply.description}</CardDescription>
                       )}
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="sm" onClick={() => setPreviewMacro(macro)}>
+                      <Button variant="ghost" size="sm" onClick={() => setPreviewSavedReply(savedReply)}>
                         <Search className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setEditingMacro(macro)}>
+                      <Button variant="ghost" size="sm" onClick={() => setEditingSavedReply(savedReply)}>
                         <Edit3 className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleCopyMacro(macro.content)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleCopySavedReply(savedReply.content)}>
                         <Copy className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
@@ -153,14 +153,14 @@ export default function MacrosPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Macro</AlertDialogTitle>
+                            <AlertDialogTitle>Delete Saved Reply</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete "{macro.name}"? This action cannot be undone.
+                              Are you sure you want to delete "{savedReply.name}"? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMacro({ mailboxSlug, slug: macro.slug })}>
+                            <AlertDialogAction onClick={() => deleteSavedReply({ mailboxSlug, slug: savedReply.slug })}>
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -172,33 +172,28 @@ export default function MacrosPage() {
                 <CardContent className="pt-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      {macro.isGlobal && (
-                        <Badge variant="gray" className="text-xs">
-                          Global
-                        </Badge>
-                      )}
-                      {macro.shortcut && (
+                      {savedReply.shortcut && (
                         <Badge variant="gray" className="text-xs font-mono">
-                          {macro.shortcut}
+                          {savedReply.shortcut}
                         </Badge>
                       )}
                     </div>
                   </div>
-                  <div className="mt-3 text-sm text-muted-foreground line-clamp-3">{macro.content}</div>
+                  <div className="mt-3 text-sm text-muted-foreground line-clamp-3">{savedReply.content}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          {filteredMacros.length === 0 && (
+          {filteredSavedReplies.length === 0 && (
             <div className="text-center py-12">
               <div className="text-muted-foreground mb-4">
-                {searchTerm ? "No macros found matching your search" : "No macros created yet"}
+                {searchTerm ? "No saved replies found matching your search" : "No saved replies created yet"}
               </div>
               {!searchTerm && (
                 <Button onClick={() => setShowCreateDialog(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Macro
+                  Create Your First Saved Reply
                 </Button>
               )}
             </div>
@@ -206,29 +201,29 @@ export default function MacrosPage() {
         </TabsContent>
       </Tabs>
 
-      {editingMacro && (
-        <Dialog open={!!editingMacro} onOpenChange={() => setEditingMacro(null)}>
+      {editingSavedReply && (
+        <Dialog open={!!editingSavedReply} onOpenChange={() => setEditingSavedReply(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Macro</DialogTitle>
-              <DialogDescription>Update your macro template.</DialogDescription>
+              <DialogTitle>Edit Saved Reply</DialogTitle>
+              <DialogDescription>Update your saved reply template.</DialogDescription>
             </DialogHeader>
-            <MacroForm
-              macro={editingMacro}
+            <SavedReplyForm
+              macro={editingSavedReply}
               mailboxSlug={mailboxSlug}
               onSuccess={handleEditSuccess}
-              onCancel={() => setEditingMacro(null)}
+              onCancel={() => setEditingSavedReply(null)}
             />
           </DialogContent>
         </Dialog>
       )}
 
-      {previewMacro && (
-        <MacroPreview
-          macro={previewMacro}
+      {previewSavedReply && (
+        <SavedReplyPreview
+          macro={previewSavedReply}
           mailboxSlug={mailboxSlug}
-          open={!!previewMacro}
-          onOpenChange={() => setPreviewMacro(null)}
+          open={!!previewSavedReply}
+          onOpenChange={() => setPreviewSavedReply(null)}
         />
       )}
     </div>

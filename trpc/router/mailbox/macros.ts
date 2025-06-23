@@ -1,5 +1,7 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
+import DOMPurify from "dompurify";
 import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { JSDOM } from "jsdom";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
@@ -7,29 +9,51 @@ import { macros } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { mailboxProcedure } from "./procedure";
 
-const createMacroSchema = z.object({
-  name: z.string().min(1).max(100),
-  content: z.string().min(1).max(5000),
-  description: z.string().max(500).optional(),
-  shortcut: z.string().max(20).optional(),
-  isGlobal: z.boolean().default(false),
+const window = new JSDOM("").window;
+const purify = DOMPurify(window);
+
+const sanitizeContent = (content: string): string => {
+  return purify.sanitize(content, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+    KEEP_CONTENT: true,
+  });
+};
+
+const createSavedReplySchema = z.object({
+  name: z.string().min(1).max(100).trim(),
+  content: z.string().min(1).max(5000).trim(),
+  description: z.string().max(500).trim().optional().or(z.literal("")),
+  shortcut: z
+    .string()
+    .regex(/^[a-z0-9-]+$/, "Shortcut must contain only lowercase letters, numbers, and hyphens")
+    .max(20)
+    .optional()
+    .or(z.literal("")),
 });
 
-const updateMacroSchema = z.object({
-  slug: z.string(),
-  name: z.string().min(1).max(100).optional(),
-  content: z.string().min(1).max(5000).optional(),
-  description: z.string().max(500).optional(),
-  shortcut: z.string().max(20).optional(),
+const updateSavedReplySchema = z.object({
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/, "Invalid slug format"),
+  name: z.string().min(1).max(100).trim().optional(),
+  content: z.string().min(1).max(5000).trim().optional(),
+  description: z.string().max(500).trim().optional().or(z.literal("")),
+  shortcut: z
+    .string()
+    .regex(/^[a-z0-9-]+$/, "Shortcut must contain only lowercase letters, numbers, and hyphens")
+    .max(20)
+    .optional()
+    .or(z.literal("")),
   isActive: z.boolean().optional(),
 });
 
-export const macrosRouter = {
+export const savedRepliesRouter = {
   list: mailboxProcedure
     .input(
       z.object({
-        includePersonal: z.boolean().default(true),
-        includeGlobal: z.boolean().default(true),
         onlyActive: z.boolean().default(true),
         search: z.string().optional(),
       }),
@@ -52,26 +76,9 @@ export const macrosRouter = {
         conditions.push(or(...searchConditions) as SQL);
       }
 
-      const accessConditions: SQL[] = [];
-      if (input.includeGlobal) {
-        accessConditions.push(eq(macros.isGlobal, true) as SQL);
-      }
-      if (input.includePersonal) {
-        accessConditions.push(and(eq(macros.isGlobal, false), eq(macros.createdByUserId, ctx.user.id)) as SQL);
-      }
-
-      if (accessConditions.length > 0) {
-        conditions.push(or(...accessConditions) as SQL);
-      }
-
       const result = await db.query.macros.findMany({
         where: and(...conditions),
         orderBy: [desc(macros.usageCount), desc(macros.updatedAt)],
-        with: {
-          mailbox: {
-            columns: { name: true },
-          },
-        },
       });
 
       const userIds = [...new Set(result.map((m) => m.createdByUserId).filter(Boolean))];
@@ -85,188 +92,189 @@ export const macrosRouter = {
 
       const userMap = new Map(userDisplayNames.map((u) => [u.id, u.email]));
 
-      return result.map((macro) => ({
-        ...macro,
-        createdByDisplayName: macro.createdByUserId ? userMap.get(macro.createdByUserId) || "Unknown" : "Admin",
-        mailboxName: macro.mailbox.name,
+      return result.map((savedReply) => ({
+        ...savedReply,
+        createdByDisplayName: savedReply.createdByUserId
+          ? userMap.get(savedReply.createdByUserId) || "Unknown"
+          : "Admin",
+        mailboxName: ctx.mailbox.name,
       }));
     }),
 
-  get: mailboxProcedure.input(z.object({ slug: z.string() })).query(async ({ ctx, input }) => {
-    const macro = await db.query.macros.findFirst({
-      where: and(
-        eq(macros.slug, input.slug),
-        eq(macros.mailboxId, ctx.mailbox.id),
-        or(eq(macros.isGlobal, true), eq(macros.createdByUserId, ctx.user.id)),
-      ),
-    });
-
-    if (!macro) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Macro not found",
-      });
-    }
-
-    return macro;
-  }),
-
-  create: mailboxProcedure.input(createMacroSchema).mutation(async ({ ctx, input }) => {
-    if (input.isGlobal) {
-      const userRole = ctx.user.user_metadata?.mailboxAccess?.[ctx.mailbox.id]?.role;
-      if (userRole !== "core") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only core team members can create global macros",
-        });
-      }
-    }
-
-    if (input.shortcut) {
-      const existingShortcut = await db.query.macros.findFirst({
-        where: and(
-          eq(macros.mailboxId, ctx.mailbox.id),
-          eq(macros.shortcut, input.shortcut),
-          eq(macros.isActive, true),
-        ),
-      });
-
-      if (existingShortcut) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "A macro with this shortcut already exists",
-        });
-      }
-    }
-
-    const macro = await db
-      .insert(macros)
-      .values({
-        ...input,
-        mailboxId: ctx.mailbox.id,
-        createdByUserId: input.isGlobal ? null : ctx.user.id,
-      })
-      .returning()
-      .then(takeUniqueOrThrow);
-
-    return macro;
-  }),
-
-  update: mailboxProcedure.input(updateMacroSchema).mutation(async ({ ctx, input }) => {
-    const existingMacro = await db.query.macros.findFirst({
+  get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ ctx, input }) => {
+    const savedReply = await db.query.macros.findFirst({
       where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)),
     });
 
-    if (!existingMacro) {
+    if (!savedReply) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "Macro not found",
+        message: "Saved reply not found",
       });
     }
 
-    const canEdit = existingMacro.isGlobal
-      ? ctx.user.user_metadata?.mailboxAccess?.[ctx.mailbox.id]?.role === "core"
-      : existingMacro.createdByUserId === ctx.user.id;
+    return savedReply;
+  }),
+
+  create: mailboxProcedure.input(createSavedReplySchema).mutation(async ({ ctx, input }) => {
+    // Use transaction to prevent race condition in shortcut validation
+    return await db.transaction(async (tx) => {
+      if (input.shortcut) {
+        const existingShortcut = await tx.query.macros.findFirst({
+          where: and(
+            eq(macros.mailboxId, ctx.mailbox.id),
+            eq(macros.shortcut, input.shortcut),
+            eq(macros.isActive, true),
+          ),
+        });
+
+        if (existingShortcut) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A saved reply with this shortcut already exists",
+          });
+        }
+      }
+
+      const savedReply = await tx
+        .insert(macros)
+        .values({
+          ...input,
+          content: sanitizeContent(input.content),
+          description: input.description ? sanitizeContent(input.description) : input.description,
+          mailboxId: ctx.mailbox.id,
+          createdByUserId: ctx.user.id,
+        })
+        .returning()
+        .then(takeUniqueOrThrow);
+
+      return savedReply;
+    });
+  }),
+
+  update: mailboxProcedure.input(updateSavedReplySchema).mutation(async ({ ctx, input }) => {
+    const existingSavedReply = await db.query.macros.findFirst({
+      where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)),
+    });
+
+    if (!existingSavedReply) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Saved reply not found",
+      });
+    }
+
+    // Check if user can edit (creator or admin)
+    const mailboxAccess = ctx.user.user_metadata?.mailboxAccess;
+    const userRole = mailboxAccess?.[ctx.mailbox.id]?.role;
+    const canEdit = existingSavedReply.createdByUserId === ctx.user.id || userRole === "core";
 
     if (!canEdit) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: "You don't have permission to edit this macro",
+        message: "You don't have permission to edit this saved reply",
       });
     }
 
-    if (input.shortcut && input.shortcut !== existingMacro.shortcut) {
-      const existingShortcut = await db.query.macros.findFirst({
-        where: and(
-          eq(macros.mailboxId, ctx.mailbox.id),
-          eq(macros.shortcut, input.shortcut),
-          eq(macros.isActive, true),
-        ),
-      });
-
-      if (existingShortcut) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "A macro with this shortcut already exists",
+    // Use transaction to prevent race condition in shortcut validation
+    return await db.transaction(async (tx) => {
+      if (input.shortcut && input.shortcut !== existingSavedReply.shortcut) {
+        const existingShortcut = await tx.query.macros.findFirst({
+          where: and(
+            eq(macros.mailboxId, ctx.mailbox.id),
+            eq(macros.shortcut, input.shortcut),
+            eq(macros.isActive, true),
+          ),
         });
+
+        if (existingShortcut) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A saved reply with this shortcut already exists",
+          });
+        }
       }
-    }
 
-    const { slug, ...updateData } = input;
+      const { slug, ...updateData } = input;
 
-    const updatedMacro = await db
-      .update(macros)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(macros.slug, input.slug))
-      .returning()
-      .then(takeUniqueOrThrow);
+      // Sanitize content fields if they're being updated
+      const sanitizedUpdateData = {
+        ...updateData,
+        ...(updateData.content && { content: sanitizeContent(updateData.content) }),
+        ...(updateData.description !== undefined &&
+          updateData.description !== "" && {
+            description: sanitizeContent(updateData.description),
+          }),
+        updatedAt: new Date(),
+      };
 
-    return updatedMacro;
+      const updatedSavedReply = await tx
+        .update(macros)
+        .set(sanitizedUpdateData)
+        .where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)))
+        .returning()
+        .then(takeUniqueOrThrow);
+
+      return updatedSavedReply;
+    });
   }),
 
-  delete: mailboxProcedure.input(z.object({ slug: z.string() })).mutation(async ({ ctx, input }) => {
-    const existingMacro = await db.query.macros.findFirst({
+  delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
+    const existingSavedReply = await db.query.macros.findFirst({
       where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)),
     });
 
-    if (!existingMacro) {
+    if (!existingSavedReply) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "Macro not found",
+        message: "Saved reply not found",
       });
     }
 
-    const canDelete = existingMacro.isGlobal
-      ? ctx.user.user_metadata?.mailboxAccess?.[ctx.mailbox.id]?.role === "core"
-      : existingMacro.createdByUserId === ctx.user.id;
+    // Check if user can delete (creator or admin)
+    const mailboxAccess = ctx.user.user_metadata?.mailboxAccess;
+    const userRole = mailboxAccess?.[ctx.mailbox.id]?.role;
+    const canDelete = existingSavedReply.createdByUserId === ctx.user.id || userRole === "core";
 
     if (!canDelete) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: "You don't have permission to delete this macro",
+        message: "You don't have permission to delete this saved reply",
       });
     }
 
-    await db.delete(macros).where(eq(macros.slug, input.slug));
+    // Add mailboxId validation to prevent cross-mailbox deletion
+    await db.delete(macros).where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)));
 
     return { success: true };
   }),
 
-  incrementUsage: mailboxProcedure.input(z.object({ slug: z.string() })).mutation(async ({ ctx, input }) => {
-    await db
-      .update(macros)
-      .set({
-        usageCount: sql`${macros.usageCount} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)));
+  incrementUsage: mailboxProcedure
+    .input(z.object({ slug: z.string().min(1).max(50) }))
+    .mutation(async ({ ctx, input }) => {
+      // Verify saved reply exists and is active before incrementing
+      const savedReply = await db.query.macros.findFirst({
+        where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true)),
+      });
 
-    return { success: true };
-  }),
+      if (!savedReply) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Saved reply not found or access denied",
+        });
+      }
 
-  analytics: mailboxProcedure.query(async ({ ctx }) => {
-    const [mostUsed, recentlyCreated, totalMacrosResult] = await Promise.all([
-      db.query.macros.findMany({
-        where: and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true)),
-        orderBy: [desc(macros.usageCount)],
-        limit: 10,
-      }),
-      db.query.macros.findMany({
-        where: and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true)),
-        orderBy: [desc(macros.createdAt)],
-        limit: 5,
-      }),
-      db
-        .select({ count: sql<number>`count(*)` })
-        .from(macros)
-        .where(and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true))),
-    ]);
+      await db
+        .update(macros)
+        .set({
+          usageCount: sql`${macros.usageCount} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)));
 
-    return {
-      mostUsed,
-      recentlyCreated,
-      totalMacros: totalMacrosResult[0]?.count || 0,
-      totalUsage: mostUsed.reduce((sum, macro) => sum + macro.usageCount, 0),
-    };
-  }),
+      return { success: true };
+    }),
 } satisfies TRPCRouterRecord;
+
+// Keep backwards compatibility during migration
+export const macrosRouter = savedRepliesRouter;

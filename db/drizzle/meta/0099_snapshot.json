@@ -1,5 +1,5 @@
 {
-  "id": "0c63feb8-4128-4663-9f31-4b34f413ae53",
+  "id": "7951b40a-fea5-42b8-b181-ffa9c894f58a",
   "prevId": "ebcc2c4b-268d-48fa-8f5a-45e081f30b95",
   "version": "7",
   "dialect": "postgresql",
@@ -3735,8 +3735,8 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
-    "public.macros_macro": {
-      "name": "macros_macro",
+    "public.saved_replies": {
+      "name": "saved_replies",
       "schema": "",
       "columns": {
         "created_at": {
@@ -3758,7 +3758,7 @@
           "notNull": true,
           "identity": {
             "type": "byDefault",
-            "name": "macros_macro_id_seq",
+            "name": "saved_replies_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -3804,13 +3804,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "is_global": {
-          "name": "is_global",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "is_active": {
           "name": "is_active",
           "type": "boolean",
@@ -3833,8 +3826,8 @@
         }
       },
       "indexes": {
-        "macros_macro_mailbox_id_idx": {
-          "name": "macros_macro_mailbox_id_idx",
+        "saved_replies_mailbox_id_idx": {
+          "name": "saved_replies_mailbox_id_idx",
           "columns": [
             {
               "expression": "mailbox_id",
@@ -3848,8 +3841,8 @@
           "method": "btree",
           "with": {}
         },
-        "macros_macro_created_by_user_idx": {
-          "name": "macros_macro_created_by_user_idx",
+        "saved_replies_created_by_user_idx": {
+          "name": "saved_replies_created_by_user_idx",
           "columns": [
             {
               "expression": "created_by_user_id",
@@ -3863,8 +3856,8 @@
           "method": "btree",
           "with": {}
         },
-        "macros_macro_slug_idx": {
-          "name": "macros_macro_slug_idx",
+        "saved_replies_slug_idx": {
+          "name": "saved_replies_slug_idx",
           "columns": [
             {
               "expression": "slug",
@@ -3878,23 +3871,8 @@
           "method": "btree",
           "with": {}
         },
-        "macros_macro_is_global_idx": {
-          "name": "macros_macro_is_global_idx",
-          "columns": [
-            {
-              "expression": "is_global",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "macros_macro_shortcut_idx": {
-          "name": "macros_macro_shortcut_idx",
+        "saved_replies_shortcut_idx": {
+          "name": "saved_replies_shortcut_idx",
           "columns": [
             {
               "expression": "shortcut",
@@ -3908,8 +3886,8 @@
           "method": "btree",
           "with": {}
         },
-        "macros_macro_mailbox_shortcut_unique": {
-          "name": "macros_macro_mailbox_shortcut_unique",
+        "saved_replies_mailbox_shortcut_unique": {
+          "name": "saved_replies_mailbox_shortcut_unique",
           "columns": [
             {
               "expression": "mailbox_id",

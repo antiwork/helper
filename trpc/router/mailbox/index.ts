@@ -12,7 +12,7 @@ import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
-import { macrosRouter } from "./macros";
+import { savedRepliesRouter } from "./macros";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
@@ -145,7 +145,9 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
-  macros: macrosRouter,
+  savedReplies: savedRepliesRouter,
+  // Keep backwards compatibility
+  macros: savedRepliesRouter,
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
       throw new TRPCError({
