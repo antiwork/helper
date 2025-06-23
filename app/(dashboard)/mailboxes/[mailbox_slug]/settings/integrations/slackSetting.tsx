@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import SlackSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/slack.svg";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,16 +187,15 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
           </div>
 
           <div className="mt-4">
-            <Button
-              variant="destructive_outlined"
-              onClick={() => {
-                if (confirm("Are you sure you want to disconnect Slack?")) {
-                  onDisconnectSlack();
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to disconnect Slack?"
+              onConfirm={() => {
+                onDisconnectSlack();
               }}
+              confirmLabel="Yes, disconnect"
             >
-              Disconnect from Slack
-            </Button>
+              <Button variant="destructive_outlined">Disconnect from Slack</Button>
+            </ConfirmationDialog>
           </div>
         </>
       ) : (
