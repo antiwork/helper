@@ -7,13 +7,13 @@ import {
   ChevronDown,
   ChevronRight,
   Inbox,
+  Link as LinkIcon,
   MonitorSmartphone,
   Settings,
   Ticket,
   User,
   UserPlus,
   Users,
-  Link as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
