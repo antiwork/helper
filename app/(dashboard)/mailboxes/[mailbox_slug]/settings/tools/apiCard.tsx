@@ -2,6 +2,7 @@
 
 import { Check, RefreshCw, Trash } from "lucide-react";
 import { useState } from "react";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,19 +127,17 @@ const ApiCard = ({
                 {isRefreshed ? "Refreshed" : "Refresh"}
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              onClick={() => {
-                if (confirm("Are you sure you want to delete this API?")) {
-                  deleteApi({ mailboxSlug, apiId: apiData.id });
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to delete this API?"
+              onConfirm={() => {
+                deleteApi({ mailboxSlug, apiId: apiData.id });
               }}
-              disabled={isDeleting}
+              confirmLabel="Yes, delete"
             >
-              <Trash className="h-4 w-4" />
-            </Button>
+              <Button variant="ghost" size="sm" iconOnly disabled={isDeleting}>
+                <Trash className="h-4 w-4" />
+              </Button>
+            </ConfirmationDialog>
           </div>
         </div>
       </CardHeader>
