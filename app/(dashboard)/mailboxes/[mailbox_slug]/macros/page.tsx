@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Edit3, Filter, Plus, Search, Trash2, TrendingUp } from "lucide-react";
+import { Copy, Edit3, Plus, Search, Trash2, TrendingUp } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
@@ -30,7 +30,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/trpc/react";
 
@@ -39,7 +38,6 @@ export default function MacrosPage() {
   const mailboxSlug = params.mailbox_slug as string;
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingMacro, setEditingMacro] = useState<any>(null);
   const [previewMacro, setPreviewMacro] = useState<any>(null);
@@ -47,10 +45,7 @@ export default function MacrosPage() {
   const { data: macros, refetch } = api.mailbox.macros.list.useQuery({
     mailboxSlug,
     search: searchTerm || undefined,
-    category: selectedCategory === "all" ? undefined : selectedCategory,
   });
-
-  const { data: categories } = api.mailbox.macros.categories.useQuery({ mailboxSlug });
   const { data: analytics } = api.mailbox.macros.analytics.useQuery({ mailboxSlug });
 
   const { mutate: deleteMacro } = api.mailbox.macros.delete.useMutation({
@@ -98,30 +93,14 @@ export default function MacrosPage() {
 
         <TabsContent value="macros" className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search macros..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories?.filter((category): category is string => Boolean(category)).map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search macros..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-64"
+              />
             </div>
 
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -195,11 +174,6 @@ export default function MacrosPage() {
                 <CardContent className="pt-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      {macro.category && (
-                        <Badge variant="gray" className="text-xs">
-                          {macro.category}
-                        </Badge>
-                      )}
                       {macro.isGlobal && (
                         <Badge variant="gray" className="text-xs">
                           Global
@@ -225,11 +199,9 @@ export default function MacrosPage() {
           {filteredMacros.length === 0 && (
             <div className="text-center py-12">
               <div className="text-muted-foreground mb-4">
-                {searchTerm || selectedCategory !== "all"
-                  ? "No macros found matching your filters"
-                  : "No macros created yet"}
+                {searchTerm ? "No macros found matching your search" : "No macros created yet"}
               </div>
-              {!searchTerm && selectedCategory === "all" && (
+              {!searchTerm && (
                 <Button onClick={() => setShowCreateDialog(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Your First Macro
@@ -240,7 +212,7 @@ export default function MacrosPage() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total Macros</CardTitle>
@@ -259,14 +231,6 @@ export default function MacrosPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Categories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{categories?.length || 0}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Recently Created</CardTitle>
               </CardHeader>
               <CardContent>
@@ -276,42 +240,21 @@ export default function MacrosPage() {
           </div>
 
           {analytics && (
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Most Used Macros</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analytics.mostUsed?.slice(0, 5).map((macro) => (
-                      <div key={macro.slug} className="flex items-center justify-between">
-                        <div className="font-medium truncate">{macro.name}</div>
-                        <Badge variant="gray">{macro.usageCount}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Category Usage</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {analytics.categoryStats?.map((stat) => (
-                      <div key={stat.category} className="flex items-center justify-between">
-                        <div className="font-medium">{stat.category}</div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="gray">{stat.count} macros</Badge>
-                          <Badge variant="gray">{stat.totalUsage} uses</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Most Used Macros</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {analytics.mostUsed?.slice(0, 10).map((macro) => (
+                    <div key={macro.slug} className="flex items-center justify-between">
+                      <div className="font-medium truncate">{macro.name}</div>
+                      <Badge variant="gray">{macro.usageCount} uses</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
       </Tabs>

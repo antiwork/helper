@@ -11,7 +11,6 @@ CREATE TABLE "macros_macro" (
 	"is_global" boolean DEFAULT false NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"shortcut" varchar(20),
-	"category" varchar(50),
 	"usage_count" integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
@@ -19,7 +18,6 @@ ALTER TABLE "macros_macro" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE INDEX "macros_macro_mailbox_id_idx" ON "macros_macro" USING btree ("mailbox_id");--> statement-breakpoint
 CREATE INDEX "macros_macro_created_by_user_idx" ON "macros_macro" USING btree ("created_by_user_id");--> statement-breakpoint
 CREATE INDEX "macros_macro_slug_idx" ON "macros_macro" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "macros_macro_category_idx" ON "macros_macro" USING btree ("category");--> statement-breakpoint
 CREATE INDEX "macros_macro_is_global_idx" ON "macros_macro" USING btree ("is_global");--> statement-breakpoint
 CREATE INDEX "macros_macro_shortcut_idx" ON "macros_macro" USING btree ("shortcut");--> statement-breakpoint
 CREATE UNIQUE INDEX "macros_macro_mailbox_shortcut_unique" ON "macros_macro" USING btree ("mailbox_id","shortcut") WHERE shortcut IS NOT NULL;

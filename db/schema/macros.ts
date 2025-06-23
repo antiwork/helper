@@ -18,17 +18,17 @@ export const macros = pgTable(
     isGlobal: boolean().notNull().default(false),
     isActive: boolean().notNull().default(true),
     shortcut: varchar({ length: 20 }),
-    category: varchar({ length: 50 }),
     usageCount: integer().notNull().default(0),
   },
   (table) => [
     index("macros_macro_mailbox_id_idx").on(table.mailboxId),
     index("macros_macro_created_by_user_idx").on(table.createdByUserId),
     index("macros_macro_slug_idx").on(table.slug),
-    index("macros_macro_category_idx").on(table.category),
     index("macros_macro_is_global_idx").on(table.isGlobal),
     index("macros_macro_shortcut_idx").on(table.shortcut),
-    uniqueIndex("macros_macro_mailbox_shortcut_unique").on(table.mailboxId, table.shortcut).where(sql`shortcut IS NOT NULL`),
+    uniqueIndex("macros_macro_mailbox_shortcut_unique")
+      .on(table.mailboxId, table.shortcut)
+      .where(sql`shortcut IS NOT NULL`),
   ],
 ).enableRLS();
 

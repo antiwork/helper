@@ -80,7 +80,6 @@ export const useMainPage = ({
   );
 
   const { mutate: incrementMacroUsage } = api.mailbox.macros.incrementUsage.useMutation();
-  const { mutateAsync: processContent } = api.mailbox.macros.processContent.useMutation();
 
   const { data: mailbox } = api.mailbox.get.useQuery(
     { mailboxSlug },
@@ -96,22 +95,10 @@ export const useMainPage = ({
     setSelectedItemId(null);
   });
 
-  const handleMacroSelect = async (macro: { slug: string; content: string }) => {
-    try {
-      const result = await processContent({
-        mailboxSlug,
-        content: macro.content,
-        conversationSlug: conversation?.slug,
-      });
-      onInsertReply(result.processedContent);
-      incrementMacroUsage({ mailboxSlug, slug: macro.slug });
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error processing macro",
-      });
-    }
+  const handleMacroSelect = (macro: { slug: string; content: string }) => {
+    onInsertReply(macro.content);
+    incrementMacroUsage({ mailboxSlug, slug: macro.slug });
+    onOpenChange(false);
   };
 
   const mainCommandGroups = useMemo(

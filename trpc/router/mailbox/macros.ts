@@ -1,9 +1,9 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { and, desc, eq, ilike, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversations, macros } from "@/db/schema";
+import { macros } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { mailboxProcedure } from "./procedure";
 
@@ -12,7 +12,6 @@ const createMacroSchema = z.object({
   content: z.string().min(1).max(5000),
   description: z.string().max(500).optional(),
   shortcut: z.string().max(20).optional(),
-  category: z.string().max(50).optional(),
   isGlobal: z.boolean().default(false),
 });
 
@@ -22,34 +21,13 @@ const updateMacroSchema = z.object({
   content: z.string().min(1).max(5000).optional(),
   description: z.string().max(500).optional(),
   shortcut: z.string().max(20).optional(),
-  category: z.string().max(50).optional(),
   isActive: z.boolean().optional(),
 });
-
-const MACRO_VARIABLES = {
-  "{{customer_name}}": "Customer name",
-  "{{customer_email}}": "Customer email address",
-  "{{agent_name}}": "Your name",
-  "{{agent_first_name}}": "Your first name",
-  "{{conversation_subject}}": "Conversation subject",
-  "{{mailbox_name}}": "Mailbox name",
-  "{{today}}": "Today's date",
-  "{{company_name}}": "Your company name",
-};
-
-const replaceMacroVariables = (content: string, variables: Record<string, string>) => {
-  let processedContent = content;
-  Object.entries(variables).forEach(([variable, value]) => {
-    processedContent = processedContent.replace(new RegExp(variable.replace(/[{}]/g, "\\$&"), "g"), value);
-  });
-  return processedContent;
-};
 
 export const macrosRouter = {
   list: mailboxProcedure
     .input(
       z.object({
-        category: z.string().optional(),
         includePersonal: z.boolean().default(true),
         includeGlobal: z.boolean().default(true),
         onlyActive: z.boolean().default(true),
@@ -63,10 +41,6 @@ export const macrosRouter = {
         conditions.push(eq(macros.isActive, true));
       }
 
-      if (input.category) {
-        conditions.push(eq(macros.category, input.category));
-      }
-
       if (input.search) {
         const searchConditions = [
           ilike(macros.name, `%${input.search}%`),
@@ -74,7 +48,7 @@ export const macrosRouter = {
           ilike(macros.description, `%${input.search}%`),
           ilike(macros.shortcut, `%${input.search}%`),
         ] as SQL[];
-        
+
         conditions.push(or(...searchConditions) as SQL);
       }
 
@@ -100,13 +74,14 @@ export const macrosRouter = {
         },
       });
 
-      const userIds = [...new Set(result.map(m => m.createdByUserId).filter(Boolean))];
-      const userDisplayNames = userIds.length > 0 
-        ? await db.query.authUsers.findMany({
-            where: sql`${authUsers.id} = ANY(${userIds})`,
-            columns: { id: true, email: true },
-          })
-        : [];
+      const userIds = [...new Set(result.map((m) => m.createdByUserId).filter(Boolean))];
+      const userDisplayNames =
+        userIds.length > 0
+          ? await db.query.authUsers.findMany({
+              where: inArray(authUsers.id, userIds),
+              columns: { id: true, email: true },
+            })
+          : [];
 
       const userMap = new Map(userDisplayNames.map((u) => [u.id, u.email]));
 
@@ -269,51 +244,8 @@ export const macrosRouter = {
     return { success: true };
   }),
 
-  processContent: mailboxProcedure
-    .input(
-      z.object({
-        content: z.string(),
-        conversationSlug: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const variables: Record<string, string> = {
-        "{{agent_name}}": ctx.user.email || "Agent",
-        "{{agent_first_name}}": ctx.user.email?.split("@")[0] || "Agent",
-        "{{mailbox_name}}": ctx.mailbox.name,
-        "{{today}}": new Date().toLocaleDateString(),
-        "{{company_name}}": ctx.mailbox.name,
-      };
-
-      if (input.conversationSlug) {
-        const conversation = await db.query.conversations.findFirst({
-          where: eq(conversations.slug, input.conversationSlug),
-        });
-
-        if (conversation) {
-          variables["{{customer_name}}"] = conversation.emailFromName || conversation.emailFrom || "there";
-          variables["{{customer_email}}"] = conversation.emailFrom || "";
-          variables["{{conversation_subject}}"] = conversation.subject || "";
-        }
-      }
-
-      return {
-        processedContent: replaceMacroVariables(input.content, variables),
-        availableVariables: MACRO_VARIABLES,
-      };
-    }),
-
-  categories: mailboxProcedure.query(async ({ ctx }) => {
-    const categories = await db
-      .selectDistinct({ category: macros.category })
-      .from(macros)
-      .where(and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true), isNotNull(macros.category)));
-
-    return categories.map((c) => c.category).filter(Boolean);
-  }),
-
   analytics: mailboxProcedure.query(async ({ ctx }) => {
-    const [mostUsed, recentlyCreated, categoryStats, totalMacrosResult] = await Promise.all([
+    const [mostUsed, recentlyCreated, totalMacrosResult] = await Promise.all([
       db.query.macros.findMany({
         where: and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true)),
         orderBy: [desc(macros.usageCount)],
@@ -325,15 +257,6 @@ export const macrosRouter = {
         limit: 5,
       }),
       db
-        .select({
-          category: macros.category,
-          count: sql<number>`count(*)`,
-          totalUsage: sql<number>`sum(${macros.usageCount})`,
-        })
-        .from(macros)
-        .where(and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true), isNotNull(macros.category)))
-        .groupBy(macros.category),
-      db
         .select({ count: sql<number>`count(*)` })
         .from(macros)
         .where(and(eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true))),
@@ -342,7 +265,6 @@ export const macrosRouter = {
     return {
       mostUsed,
       recentlyCreated,
-      categoryStats,
       totalMacros: totalMacrosResult[0]?.count || 0,
       totalUsage: mostUsed.reduce((sum, macro) => sum + macro.usageCount, 0),
     };

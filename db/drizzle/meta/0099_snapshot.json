@@ -1,5 +1,5 @@
 {
-  "id": "3450cf3a-c508-4bb1-a4bf-bf4f08f2855c",
+  "id": "0c63feb8-4128-4663-9f31-4b34f413ae53",
   "prevId": "ebcc2c4b-268d-48fa-8f5a-45e081f30b95",
   "version": "7",
   "dialect": "postgresql",
@@ -3824,12 +3824,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "category": {
-          "name": "category",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "usage_count": {
           "name": "usage_count",
           "type": "integer",
@@ -3874,21 +3868,6 @@
           "columns": [
             {
               "expression": "slug",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "macros_macro_category_idx": {
-          "name": "macros_macro_category_idx",
-          "columns": [
-            {
-              "expression": "category",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3946,10 +3925,10 @@
             }
           ],
           "isUnique": true,
+          "where": "shortcut IS NOT NULL",
           "concurrently": false,
           "method": "btree",
-          "with": {},
-          "where": "shortcut IS NOT NULL"
+          "with": {}
         }
       },
       "foreignKeys": {},
