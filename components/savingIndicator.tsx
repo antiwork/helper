@@ -15,9 +15,9 @@ export function SavingIndicator({ state, className }: SavingIndicatorProps) {
       className={cn(
         "flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium transition-all duration-200",
         {
-          "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300": state === "saving",
-          "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300": state === "saved",
-          "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300": state === "error",
+          "bg-muted text-muted-foreground": state === "saving",
+          "bg-muted text-muted-foreground": state === "saved",
+          "bg-destructive/10 text-destructive border border-destructive/20": state === "error",
         },
         className,
       )}

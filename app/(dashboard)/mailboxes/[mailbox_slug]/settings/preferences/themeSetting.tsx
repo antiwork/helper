@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
@@ -94,26 +95,31 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   };
 
   return (
-    <SwitchSectionWrapper
-      title="Custom Theme"
-      description="Choose the appearance of your mailbox with custom colors"
-      initialSwitchChecked={isEnabled}
-      onSwitchChange={handleSwitchChange}
-    >
-      {isEnabled && (
-        <div className="space-y-4">
-          <ColorInput label="Background Color" value={theme.background} onChange={handleColorChange("background")} />
-          <ColorInput label="Foreground Color" value={theme.foreground} onChange={handleColorChange("foreground")} />
-          <ColorInput label="Primary Color" value={theme.primary} onChange={handleColorChange("primary")} />
-          <ColorInput label="Accent Color" value={theme.accent} onChange={handleColorChange("accent")} />
-          <ColorInput
-            label="Sidebar Color"
-            value={theme.sidebarBackground}
-            onChange={handleColorChange("sidebarBackground")}
-          />
-        </div>
-      )}
-    </SwitchSectionWrapper>
+    <div className="relative">
+      <div className="absolute top-2 right-4 z-10">
+        <SavingIndicator state={savingIndicator.state} />
+      </div>
+      <SwitchSectionWrapper
+        title="Custom Theme"
+        description="Choose the appearance of your mailbox with custom colors"
+        initialSwitchChecked={isEnabled}
+        onSwitchChange={handleSwitchChange}
+      >
+        {isEnabled && (
+          <div className="space-y-4">
+            <ColorInput label="Background Color" value={theme.background} onChange={handleColorChange("background")} />
+            <ColorInput label="Foreground Color" value={theme.foreground} onChange={handleColorChange("foreground")} />
+            <ColorInput label="Primary Color" value={theme.primary} onChange={handleColorChange("primary")} />
+            <ColorInput label="Accent Color" value={theme.accent} onChange={handleColorChange("accent")} />
+            <ColorInput
+              label="Sidebar Color"
+              value={theme.sidebarBackground}
+              onChange={handleColorChange("sidebarBackground")}
+            />
+          </div>
+        )}
+      </SwitchSectionWrapper>
+    </div>
   );
 };
 

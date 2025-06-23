@@ -111,14 +111,13 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
 
   const { mutate: updateKeywords } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
-      // Update both role and keywords since this mutation sends both parameters
+      // Only update keywords field to avoid race conditions
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((m) =>
           m.id === member.id
             ? {
                 ...m,
-                role: data.role,
                 keywords: data.keywords,
               }
             : m,
@@ -133,8 +132,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
         description: error.message,
         variant: "destructive",
       });
-      // Reset both role and keywords since this mutation sends both parameters
-      setRole(member.role);
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
     },
@@ -146,7 +143,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     updateKeywords({
       mailboxSlug,
       userId: member.id,
-      role,
       keywords: newKeywords,
     });
   }, 500);
@@ -163,7 +159,9 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
 
-    const newKeywords = newRole !== "nonCore" ? [] : localKeywords;
+    // Clear keywords when changing FROM nonCore to another role
+    // Keep keywords when changing TO nonCore
+    const newKeywords = newRole === "nonCore" ? localKeywords : [];
 
     if (newRole !== "nonCore") {
       setKeywordsInput("");
