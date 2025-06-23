@@ -76,7 +76,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     },
   });
 
-  const { mutate: removeTeamMember, isPending: isRemoving } = api.organization.removeMember.useMutation({
+  const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
     onSuccess: () => {
       toast({
         title: "Team member removed",
@@ -197,7 +197,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
       <TableCell>
         <ConfirmationDialog
           message={`Are you sure you want to remove ${member.displayName} from your team?`}
-          onConfirm={() => removeTeamMember({ id: member.id })}
+          onConfirm={() => removeTeamMember({ id: member.id, mailboxSlug })}
         >
           <Button variant="ghost" size="sm" iconOnly>
             <Trash className="h-4 w-4" />

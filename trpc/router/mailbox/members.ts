@@ -2,7 +2,7 @@ import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { z } from "zod";
 import { getMemberStats } from "@/lib/data/stats";
-import { getUsersWithMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
+import { getUsersWithMailboxAccess, removeUser, updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 
@@ -58,6 +58,37 @@ export const membersRouter = {
       return [];
     }
   }),
+
+  delete: mailboxProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.user_metadata.mailboxAccess[ctx.mailbox.id].role !== "core") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You do not have permission to remove team members.",
+        });
+      }
+
+      if (ctx.user.id === input.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove yourself.",
+        });
+      }
+
+      try {
+        await removeUser(input.id);
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to remove user.",
+        });
+      }
+    }),
 
   stats: mailboxProcedure
     .input(
