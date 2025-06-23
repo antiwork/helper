@@ -33,6 +33,11 @@
     "test": "pnpm run-on-packages test && pnpm test:unit",
     "test:unit": "pnpm run with-dev-env vitest",
     "test:watch": "pnpm test:unit --watch",
+    "test:e2e": "pnpm run with-dev-env playwright test",
+    "test:e2e:ui": "pnpm run with-dev-env playwright test --ui",
+    "test:e2e:debug": "pnpm run with-dev-env playwright test --debug",
+    "test:e2e:headed": "pnpm run with-dev-env playwright test --headed",
+    "test:e2e:setup": "pnpm run with-dev-env playwright install",
     "typecheck": "pnpm run-on-packages typecheck && pnpm run with-dev-env pnpm run build; BUILD_EXIT=$?; tsc --noEmit && ([ $BUILD_EXIT -eq 0 ] && npm run db:check || exit $BUILD_EXIT)",
     "services:start": "pnpm with-dev-env pnpm supabase start && (docker ps | grep helperai-nginx || pnpm nginx:start)",
     "services:stop": "pnpm supabase stop && docker stop helperai-nginx || true",
@@ -207,7 +212,8 @@
     "typescript-eslint": "^8.31.0",
     "vercel": "^41.7.0",
     "vite-tsconfig-paths": "^5.0.1",
-    "vitest": "^2.1.1"
+    "vitest": "^2.1.1",
+    "@playwright/test": "^1.48.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
