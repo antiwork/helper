@@ -2,7 +2,6 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,24 +16,6 @@ type TeamSettingProps = {
 
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
-  const utils = api.useUtils();
-  const { mutate: removeMemberMutation, isPending: isRemoving } = api.organization.removeMember.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Team member removed",
-        variant: "success",
-      });
-
-      utils.mailbox.members.list.invalidate({ mailboxSlug });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to remove member",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTeamMembers = teamMembers.filter((member) => {
@@ -45,12 +26,6 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       member.keywords.some((keyword) => keyword.toLowerCase().includes(searchString))
     );
   });
-
-  const removeMember = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove ${name} from your team?`)) {
-      removeMemberMutation({ id });
-    }
-  };
 
   return (
     <SectionWrapper
@@ -78,13 +53,13 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 <TableHead>Name</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
-                <TableHead>More</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <div className="flex justify-center">
                       <LoadingSpinner size="md" />
                     </div>
@@ -100,7 +75,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => (
-                  <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} onDelete={removeMember} />
+                  <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} />
                 ))
               )}
             </TableBody>

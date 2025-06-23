@@ -30,6 +30,20 @@ export const organizationRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "core") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You do not have permission to remove team members.",
+        });
+      }
+
+      if (ctx.user.id === input.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove yourself.",
+        });
+      }
+
       await removeUser(input.id);
     }),
 } satisfies TRPCRouterRecord;

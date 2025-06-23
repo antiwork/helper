@@ -2,6 +2,7 @@
 
 import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,10 +30,9 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
-  onDelete: (id: string, name: string) => void;
 };
 
-const TeamMemberRow = ({ member, mailboxSlug, onDelete }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
@@ -73,6 +73,24 @@ const TeamMemberRow = ({ member, mailboxSlug, onDelete }: TeamMemberRowProps) =>
       setKeywordsInput(member.keywords.join(", "));
       setRole(member.role);
       setDisplayNameInput(member.displayName || "");
+    },
+  });
+
+  const { mutate: removeTeamMember, isPending: isRemoving } = api.organization.removeMember.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Team member removed",
+        variant: "success",
+      });
+
+      utils.mailbox.members.list.invalidate({ mailboxSlug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to remove member",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -177,18 +195,15 @@ const TeamMemberRow = ({ member, mailboxSlug, onDelete }: TeamMemberRowProps) =>
         />
       </TableCell>
       <TableCell>
-        <Button
-          variant="ghost"
-          size="sm"
-          iconOnly
-          onClick={(e) => {
-            e.preventDefault();
-            onDelete(member.id, member.displayName);
-          }}
+        <ConfirmationDialog
+          message={`Are you sure you want to remove ${member.displayName} from your team?`}
+          onConfirm={() => removeTeamMember({ id: member.id })}
         >
-          <Trash className="h-4 w-4" />
-          <span className="sr-only">Delete</span>
-        </Button>
+          <Button variant="ghost" size="sm" iconOnly>
+            <Trash className="h-4 w-4" />
+            <span className="sr-only">Delete</span>
+          </Button>
+        </ConfirmationDialog>
       </TableCell>
     </TableRow>
   );
