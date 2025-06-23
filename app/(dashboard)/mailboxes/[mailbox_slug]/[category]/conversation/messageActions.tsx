@@ -5,6 +5,7 @@ import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slu
 import { DraftedEmail } from "@/app/types/global";
 import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
+import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
@@ -173,6 +174,10 @@ export const MessageActions = () => {
   const { readyFiles, resetFiles } = useFileUpload();
   const { sendDisabled, sending, setSending } = useSendDisabled(draftedEmail.message);
 
+  // Knowledge bank dialog state
+  const [showKnowledgeBankDialog, setShowKnowledgeBankDialog] = useState(false);
+  const [lastSentMessageId, setLastSentMessageId] = useState<number | null>(null);
+
   const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
 
@@ -199,6 +204,7 @@ export const MessageActions = () => {
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,
       });
+
       setDraftedEmail({ message: "", files: [], cc: "", bcc: "", modified: false });
       setInitialMessageObject({ content: "" });
       resetFiles([]);
@@ -211,7 +217,7 @@ export const MessageActions = () => {
         title: "Message sent!",
         variant: "success",
         action: (
-          <>
+          <div className="flex gap-2 items-center">
             <ToastAction
               altText="Visit"
               onClick={() => {
@@ -220,6 +226,15 @@ export const MessageActions = () => {
               }}
             >
               Visit
+            </ToastAction>
+            <ToastAction
+              altText="Generate knowledge bank entry"
+              onClick={() => {
+                setLastSentMessageId(emailId);
+                setShowKnowledgeBankDialog(true);
+              }}
+            >
+              💡 KB
             </ToastAction>
             <ToastAction
               altText="Undo"
@@ -249,7 +264,7 @@ export const MessageActions = () => {
             >
               Undo
             </ToastAction>
-          </>
+          </div>
         ),
       });
     } catch (error) {
@@ -377,6 +392,16 @@ export const MessageActions = () => {
         startRecording={startRecording}
         stopRecording={stopRecording}
       />
+
+      {/* Knowledge Bank Generation Dialog */}
+      {lastSentMessageId && (
+        <GenerateKnowledgeBankDialog
+          open={showKnowledgeBankDialog}
+          onOpenChange={setShowKnowledgeBankDialog}
+          messageId={lastSentMessageId}
+          mailboxSlug={mailboxSlug}
+        />
+      )}
     </div>
   );
 };
