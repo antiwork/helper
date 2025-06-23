@@ -9,15 +9,20 @@ import { type TimeRange } from "./dashboardContent";
 type Props = {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: Date;
+  customDate?: { from?: Date; to?: Date };
 };
 
 type Member = RouterOutputs["mailbox"]["members"]["stats"][number];
 
 export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
+  const statsInput = timeRange === "custom" && customDate?.from && customDate?.to
+    ? { mailboxSlug, period: "24h" as "24h", customDate: customDate.from, customEndDate: customDate.to }
+    : mailboxSlug && timeRange
+      ? { mailboxSlug, period: timeRange as "24h" | "7d" | "30d" | "1y" }
+      : undefined;
   const { data: members, isLoading } = api.mailbox.members.stats.useQuery(
-    { mailboxSlug, period: timeRange === "custom" ? "24h" : timeRange, customDate },
-    { enabled: !!mailboxSlug },
+    statsInput!,
+    { enabled: !!statsInput },
   );
 
   if (isLoading) {

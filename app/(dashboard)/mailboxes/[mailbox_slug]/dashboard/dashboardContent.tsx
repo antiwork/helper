@@ -22,7 +22,7 @@ const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false })
 
 export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
-  const [customDate, setCustomDate] = useState<Date>();
+  const [customDate, setCustomDate] = useState<{ from?: Date; to?: Date }>();
   const isMobile = useIsMobile();
 
   return (
@@ -43,7 +43,8 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
                 }
               }}
               customDate={customDate}
-              onCustomDateChange={setCustomDate}
+              onCustomDateChange={(date) => setCustomDate(date ? { from: date.from, to: date.to } : undefined)}
+              mailboxSlug={mailboxSlug}
             />
           </div>
           <div className="grid md:grid-cols-3 gap-6">
