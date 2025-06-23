@@ -30,15 +30,17 @@ export const GenerateKnowledgeBankDialog = ({
   const [editedContent, setEditedContent] = useState<string>("");
   const [suggestionReason, setSuggestionReason] = useState<string>("");
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [updateEntryId, setUpdateEntryId] = useState<number | null>(null);
 
   const utils = api.useUtils();
 
   const generateSuggestionMutation = api.mailbox.faqs.suggestFromHumanReply.useMutation({
     onSuccess: (data) => {
-      if (data.action === "create_entry") {
+      if (data.action === "create_entry" || data.action === "update_entry") {
         setSuggestedContent(data.content || "");
         setEditedContent(data.content || "");
         setSuggestionReason(data.reason);
+        setUpdateEntryId(data.entryId || null);
         setHasGenerated(true);
       } else {
         toast({
@@ -76,11 +78,31 @@ export const GenerateKnowledgeBankDialog = ({
     },
   });
 
+  const updateKnowledgeMutation = api.mailbox.faqs.update.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Knowledge bank entry updated!",
+        variant: "success",
+      });
+      utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+      onOpenChange(false);
+      resetState();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating knowledge entry",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetState = () => {
     setSuggestedContent("");
     setEditedContent("");
     setSuggestionReason("");
     setHasGenerated(false);
+    setUpdateEntryId(null);
   };
 
   // Auto-run AI suggestion when dialog opens
@@ -100,13 +122,22 @@ export const GenerateKnowledgeBankDialog = ({
       return;
     }
 
-    createKnowledgeMutation.mutate({
-      mailboxSlug,
-      content: editedContent,
-    });
+    if (updateEntryId) {
+      updateKnowledgeMutation.mutate({
+        mailboxSlug,
+        id: updateEntryId,
+        content: editedContent,
+      });
+    } else {
+      createKnowledgeMutation.mutate({
+        mailboxSlug,
+        content: editedContent,
+      });
+    }
   };
 
-  const isLoading = generateSuggestionMutation.isPending || createKnowledgeMutation.isPending;
+  const isLoading =
+    generateSuggestionMutation.isPending || createKnowledgeMutation.isPending || updateKnowledgeMutation.isPending;
 
   return (
     <Dialog
@@ -122,10 +153,12 @@ export const GenerateKnowledgeBankDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5" />
-            Generate Knowledge Bank Entry
+            {updateEntryId ? "Update Knowledge Bank Entry" : "Generate Knowledge Bank Entry"}
           </DialogTitle>
           <DialogDescription>
-            Generate a knowledge bank entry based on your reply to help answer similar questions in the future.
+            {updateEntryId
+              ? "Update an existing knowledge bank entry based on your reply."
+              : "Generate a knowledge bank entry based on your reply to help answer similar questions in the future."}
           </DialogDescription>
         </DialogHeader>
 
@@ -165,8 +198,10 @@ export const GenerateKnowledgeBankDialog = ({
           </Button>
           {hasGenerated && (
             <Button onClick={handleSave} disabled={isLoading}>
-              {createKnowledgeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Knowledge Entry
+              {(createKnowledgeMutation.isPending || updateKnowledgeMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {updateEntryId ? "Update Knowledge Entry" : "Save Knowledge Entry"}
             </Button>
           )}
         </DialogFooter>
