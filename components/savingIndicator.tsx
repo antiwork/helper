@@ -15,8 +15,7 @@ export function SavingIndicator({ state, className }: SavingIndicatorProps) {
       className={cn(
         "flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium transition-all duration-200",
         {
-          "bg-muted text-muted-foreground": state === "saving",
-          "bg-muted text-muted-foreground": state === "saved",
+          "text-muted-foreground": state === "saving" || state === "saved",
           "bg-destructive/10 text-destructive border border-destructive/20": state === "error",
         },
         className,
