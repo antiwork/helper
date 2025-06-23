@@ -9,11 +9,11 @@ import {
   Inbox,
   MonitorSmartphone,
   Settings,
-  Settings as SettingsIcon,
   Ticket,
   User,
   UserPlus,
   Users,
+  Link as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -56,8 +56,8 @@ const settingsItems = [
   { label: "Team", id: "team", icon: Users },
   { label: "Customers", id: "customers", icon: UserPlus },
   { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
-  { label: "Integrations", id: "integrations", icon: Settings },
-  { label: "Preferences", id: "preferences", icon: SettingsIcon },
+  { label: "Integrations", id: "integrations", icon: LinkIcon },
+  { label: "Preferences", id: "preferences", icon: Settings },
 ] as const;
 
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
@@ -181,7 +181,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
-                      <SettingsIcon className="size-4" />
+                      <Settings className="size-4" />
                       <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                       <ChevronDown className="ml-auto size-4 transition-transform duration-200 group-data-[state=closed]/collapsible:rotate-[-90deg]" />
                     </SidebarMenuButton>

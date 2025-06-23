@@ -17,7 +17,6 @@ import GitHubSetting from "./integrations/githubSetting";
 import SlackSetting from "./integrations/slackSetting";
 import KnowledgeSetting from "./knowledge/knowledgeSetting";
 import PreferencesSetting from "./preferences/preferencesSetting";
-import SubNavigation from "./subNavigation";
 import TeamSetting from "./team/teamSetting";
 import MetadataEndpointSetting from "./tools/metadataEndpointSetting";
 import ToolSetting from "./tools/toolSetting";
