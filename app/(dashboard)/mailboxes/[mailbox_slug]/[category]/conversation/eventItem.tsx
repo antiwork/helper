@@ -36,7 +36,11 @@ const statusIcons = {
 export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
-  const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
+  const {
+    data: orgMembers,
+    isLoading: isLoadingMembers,
+    error: membersError,
+  } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -45,7 +49,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const getUserDisplayName = (userId: string | null | undefined): string | null => {
     if (!userId) return null;
     const member = orgMembers?.find((m) => m.id === userId);
-    return member?.displayName || null;
+    return member?.displayName?.trim() || null;
   };
 
   if (!event.changes) return null;
@@ -55,23 +59,27 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const getAssignmentDescription = () => {
     if (event.changes.assignedToAI) return null;
     if (event.changes.assignedToId === undefined) return null;
-    
+
     // Truly unassigned
     if (event.changes.assignedToId === null) {
       return "unassigned";
     }
-    
+
     // User ID exists, check resolution
     if (assignedToUserName) {
       return `assigned to ${assignedToUserName}`;
     }
-    
-    // User ID exists but can't resolve - check if data is loading
-    if (!orgMembers) {
+
+    // Handle different failure states
+    if (membersError) {
+      return "assigned to (error loading users)";
+    }
+
+    if (isLoadingMembers) {
       return "assigned to..."; // Loading state
     }
-    
-    // Data loaded but user not found
+
+    // Data loaded but user not found (orgMembers exists but user not in it)
     return "assigned to unknown user";
   };
 

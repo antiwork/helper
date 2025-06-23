@@ -61,7 +61,11 @@ const MessageItem = ({
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
 
-  const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
+  const {
+    data: orgMembers,
+    isLoading: isLoadingMembers,
+    error: membersError,
+  } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -75,7 +79,21 @@ const MessageItem = ({
 
       if (msg.role === "staff" && msg.userId) {
         const member = orgMembers?.find((m) => m.id === msg.userId);
-        return member?.displayName || "Helper agent";
+        if (member?.displayName?.trim()) {
+          return member.displayName.trim();
+        }
+
+        // Handle error states for staff messages
+        if (membersError) {
+          return "Helper agent (error loading users)";
+        }
+
+        if (isLoadingMembers) {
+          return "Loading...";
+        }
+
+        // User not found after successful load
+        return "Helper agent";
       }
 
       if (msg.role === "ai_assistant") {
@@ -87,7 +105,21 @@ const MessageItem = ({
 
     if (msg.type === "note" && msg.userId) {
       const member = orgMembers?.find((m) => m.id === msg.userId);
-      return member?.displayName || "Helper agent";
+      if (member?.displayName?.trim()) {
+        return member.displayName.trim();
+      }
+
+      // Handle error states for notes
+      if (membersError) {
+        return "Helper agent (error loading users)";
+      }
+
+      if (isLoadingMembers) {
+        return "Loading...";
+      }
+
+      // User not found after successful load
+      return "Helper agent";
     }
 
     return "Helper agent";
