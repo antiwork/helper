@@ -19,64 +19,56 @@ describe("useSavingIndicator", () => {
     const { result } = renderHook(() => useSavingIndicator());
 
     expect(result.current.state).toBe("idle");
-    expect(result.current.isIdle).toBe(true);
-    expect(result.current.isSaving).toBe(false);
-    expect(result.current.isSaved).toBe(false);
-    expect(result.current.isError).toBe(false);
   });
 
   it("should transition to saving state", () => {
     const { result } = renderHook(() => useSavingIndicator());
 
     act(() => {
-      result.current.setSaving();
+      result.current.setState("saving");
     });
 
     expect(result.current.state).toBe("saving");
-    expect(result.current.isSaving).toBe(true);
   });
 
   it("should transition to saved state and auto-reset after 2 seconds", () => {
     const { result } = renderHook(() => useSavingIndicator());
 
     act(() => {
-      result.current.setSaved();
+      result.current.setState("saved");
     });
 
     expect(result.current.state).toBe("saved");
-    expect(result.current.isSaved).toBe(true);
 
     act(() => {
       vi.advanceTimersByTime(2000);
     });
 
     expect(result.current.state).toBe("idle");
-    expect(result.current.isIdle).toBe(true);
   });
 
-  it("should transition to error state and auto-reset after 3 seconds", () => {
+  it("should transition to error state and NOT auto-reset", () => {
     const { result } = renderHook(() => useSavingIndicator());
 
     act(() => {
-      result.current.setError();
+      result.current.setState("error");
     });
 
     expect(result.current.state).toBe("error");
-    expect(result.current.isError).toBe(true);
 
+    // Error should not auto-hide - wait longer than previous timeout
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(5000);
     });
 
-    expect(result.current.state).toBe("idle");
-    expect(result.current.isIdle).toBe(true);
+    expect(result.current.state).toBe("error");
   });
 
   it("should reset state manually", () => {
     const { result } = renderHook(() => useSavingIndicator());
 
     act(() => {
-      result.current.setSaved();
+      result.current.setState("saved");
     });
 
     expect(result.current.state).toBe("saved");
@@ -92,35 +84,30 @@ describe("useSavingIndicator", () => {
     const { result } = renderHook(() => useSavingIndicator());
 
     act(() => {
-      result.current.setSaved();
+      result.current.setState("saved");
     });
 
     expect(result.current.state).toBe("saved");
 
     act(() => {
-      result.current.setError();
+      result.current.setState("error");
     });
 
     expect(result.current.state).toBe("error");
 
+    // Since errors don't auto-hide, it should stay in error state
     act(() => {
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(5000);
     });
 
     expect(result.current.state).toBe("error");
-
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    expect(result.current.state).toBe("idle");
   });
 
   it("should cleanup timeout on unmount", () => {
     const { result, unmount } = renderHook(() => useSavingIndicator());
 
     act(() => {
-      result.current.setSaved();
+      result.current.setState("saved");
     });
 
     expect(result.current.state).toBe("saved");

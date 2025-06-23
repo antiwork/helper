@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SavingIndicator } from "@/components/ui/savingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
@@ -44,10 +44,10 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
-      savingIndicator.setSaved();
+      savingIndicator.setState("saved");
     },
     onError: (error) => {
-      savingIndicator.setError();
+      savingIndicator.setState("error");
       toast({
         title: "Error updating theme",
         description: error.message,
@@ -58,7 +58,7 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
 
   const save = useDebouncedCallback(() => {
     if (!isEnabled && !mailbox.preferences?.theme) return;
-    savingIndicator.setSaving();
+    savingIndicator.setState("saving");
     update({
       mailboxSlug: mailbox.slug,
       preferences: { theme: isEnabled ? mapValues(theme, (value) => `#${normalizeHex(value)}`) : null },
@@ -106,90 +106,95 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
         initialSwitchChecked={isEnabled}
         onSwitchChange={handleSwitchChange}
       >
-      {isEnabled && (
-        <div className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <Label>Background Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.background}
-                onChange={handleColorChange("background")}
-                className="w-[200px]"
-              />
+        {isEnabled && (
+          <div className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <Label>Background Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={theme.background}
+                  onChange={handleColorChange("background")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={theme.background}
+                  onChange={handleColorChange("background")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Foreground Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.foreground}
-                onChange={handleColorChange("foreground")}
-                className="w-[200px]"
-              />
+            <div className="flex flex-col space-y-2">
+              <Label>Foreground Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={theme.foreground}
+                  onChange={handleColorChange("foreground")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={theme.foreground}
+                  onChange={handleColorChange("foreground")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Primary Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.primary}
-                onChange={handleColorChange("primary")}
-                className="h-10 w-20 p-1"
-              />
-              <Input type="text" value={theme.primary} onChange={handleColorChange("primary")} className="w-[200px]" />
+            <div className="flex flex-col space-y-2">
+              <Label>Primary Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={theme.primary}
+                  onChange={handleColorChange("primary")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={theme.primary}
+                  onChange={handleColorChange("primary")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Accent Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.accent}
-                onChange={handleColorChange("accent")}
-                className="h-10 w-20 p-1"
-              />
-              <Input type="text" value={theme.accent} onChange={handleColorChange("accent")} className="w-[200px]" />
+            <div className="flex flex-col space-y-2">
+              <Label>Accent Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={theme.accent}
+                  onChange={handleColorChange("accent")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input type="text" value={theme.accent} onChange={handleColorChange("accent")} className="w-[200px]" />
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Sidebar Color</Label>
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <Input
-                type="color"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="h-10 w-20 p-1"
-              />
-              <Input
-                type="text"
-                value={theme.sidebarBackground}
-                onChange={handleColorChange("sidebarBackground")}
-                className="w-[200px]"
-              />
+            <div className="flex flex-col space-y-2">
+              <Label>Sidebar Color</Label>
+              <div className="grid grid-cols-[auto_1fr] gap-2">
+                <Input
+                  type="color"
+                  value={theme.sidebarBackground}
+                  onChange={handleColorChange("sidebarBackground")}
+                  className="h-10 w-20 p-1"
+                />
+                <Input
+                  type="text"
+                  value={theme.sidebarBackground}
+                  onChange={handleColorChange("sidebarBackground")}
+                  className="w-[200px]"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </SwitchSectionWrapper>
+        )}
+      </SwitchSectionWrapper>
     </div>
   );
 };

@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SavingIndicator } from "@/components/ui/savingIndicator";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
@@ -28,10 +28,10 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
-      savingIndicator.setSaved();
+      savingIndicator.setState("saved");
     },
     onError: (error) => {
-      savingIndicator.setError();
+      savingIndicator.setState("error");
       toast({
         title: "Error updating auto-close settings",
         description: error.message,
@@ -40,7 +40,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
   });
 
   const save = useDebouncedCallback(() => {
-    savingIndicator.setSaving();
+    savingIndicator.setState("saving");
     update({
       mailboxSlug: mailbox.slug,
       autoCloseEnabled: isEnabled,

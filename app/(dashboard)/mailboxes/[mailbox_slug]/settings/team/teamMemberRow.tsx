@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { SavingIndicator } from "@/components/ui/savingIndicator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
@@ -66,10 +66,10 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
             : m,
         );
       });
-      displayNameSaving.setSaved();
+      displayNameSaving.setState("saved");
     },
     onError: (error) => {
-      displayNameSaving.setError();
+      displayNameSaving.setState("error");
       toast({
         title: "Failed to update display name",
         description: error.message,
@@ -94,10 +94,10 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
             : m,
         );
       });
-      roleSaving.setSaved();
+      roleSaving.setState("saved");
     },
     onError: (error) => {
-      roleSaving.setError();
+      roleSaving.setState("error");
       toast({
         title: "Failed to update role",
         description: error.message,
@@ -124,10 +124,10 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
             : m,
         );
       });
-      keywordsSaving.setSaved();
+      keywordsSaving.setState("saved");
     },
     onError: (error) => {
-      keywordsSaving.setError();
+      keywordsSaving.setState("error");
       toast({
         title: "Failed to update keywords",
         description: error.message,
@@ -142,7 +142,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
 
   // Debounced function for keyword updates
   const debouncedUpdateKeywords = useDebouncedCallback((newKeywords: string[]) => {
-    keywordsSaving.setSaving();
+    keywordsSaving.setState("saving");
     updateKeywords({
       mailboxSlug,
       userId: member.id,
@@ -152,7 +152,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   }, 500);
 
   const debouncedUpdateDisplayName = useDebouncedCallback((newDisplayName: string) => {
-    displayNameSaving.setSaving();
+    displayNameSaving.setState("saving");
     updateDisplayName({
       mailboxSlug,
       userId: member.id,
@@ -170,7 +170,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
       setLocalKeywords([]);
     }
 
-    roleSaving.setSaving();
+    roleSaving.setState("saving");
     updateRole({
       mailboxSlug,
       userId: member.id,
@@ -216,48 +216,40 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
         </div>
       </TableCell>
       <TableCell>
-        <div className="relative">
-          <Input
-            value={displayNameInput}
-            onChange={(e) => handleDisplayNameChange(e.target.value)}
-            placeholder="Enter display name"
-            className="w-full max-w-sm"
-          />
-          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-            <SavingIndicator state={displayNameSaving.state} />
-          </div>
-        </div>
+        <Input
+          value={displayNameInput}
+          onChange={(e) => handleDisplayNameChange(e.target.value)}
+          placeholder="Enter display name"
+          className="w-full max-w-sm"
+        />
       </TableCell>
       <TableCell>
-        <div className="relative">
-          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="absolute inset-y-0 right-8 flex items-center pointer-events-none">
-            <SavingIndicator state={roleSaving.state} />
-          </div>
-        </div>
+        <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+            <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+            <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+          </SelectContent>
+        </Select>
       </TableCell>
       <TableCell>
-        <div className="relative">
+        <div className="w-[200px]">
           <Input
             value={keywordsInput}
             onChange={(e) => handleKeywordsChange(e.target.value)}
             placeholder="Enter keywords separated by commas"
             className={role === "nonCore" ? "" : "invisible"}
           />
-          {role === "nonCore" && (
-            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-              <SavingIndicator state={keywordsSaving.state} />
-            </div>
-          )}
+        </div>
+      </TableCell>
+      <TableCell className="w-[120px]">
+        <div className="flex items-center gap-2">
+          <SavingIndicator state={displayNameSaving.state} />
+          <SavingIndicator state={roleSaving.state} />
+          {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
         </div>
       </TableCell>
     </TableRow>

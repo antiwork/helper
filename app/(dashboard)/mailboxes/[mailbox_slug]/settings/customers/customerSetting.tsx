@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SavingIndicator } from "@/components/ui/savingIndicator";
 import { Separator } from "@/components/ui/separator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
@@ -31,10 +31,10 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
-      savingIndicator.setSaved();
+      savingIndicator.setState("saved");
     },
     onError: (error) => {
-      savingIndicator.setError();
+      savingIndicator.setState("error");
       toast({
         title: "Error updating VIP settings",
         description: error.message,
@@ -43,7 +43,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   });
 
   const save = useDebouncedCallback(() => {
-    savingIndicator.setSaving();
+    savingIndicator.setState("saving");
     if (isEnabled) {
       update({
         mailboxSlug: mailbox.slug,
