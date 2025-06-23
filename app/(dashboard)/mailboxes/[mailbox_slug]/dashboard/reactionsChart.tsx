@@ -24,9 +24,9 @@ export function ReactionsChart({
 }: {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: Date;
+  customDate?: { from?: Date; to?: Date };
 }) {
-  const { startDate, period } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
+  const { startDate, endDate, period } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
   const [selectedBar, setSelectedBar] = useState<{
     startTime: Date;
     endTime: Date;
@@ -37,6 +37,7 @@ export function ReactionsChart({
   const { data, isLoading } = api.mailbox.conversations.messages.reactionCount.useQuery({
     mailboxSlug,
     startDate,
+    endDate,
     period,
   });
 
@@ -44,7 +45,7 @@ export function ReactionsChart({
     {
       mailboxSlug,
       createdAfter: selectedBar ? selectedBar.startTime.toISOString() : startDate.toISOString(),
-      createdBefore: selectedBar ? selectedBar.endTime.toISOString() : startDate.toISOString(),
+      createdBefore: selectedBar ? selectedBar.endTime.toISOString() : endDate.toISOString(),
       reactionType: selectedBar?.reactionType ?? "thumbs-up",
     },
     { enabled: !!selectedBar },
