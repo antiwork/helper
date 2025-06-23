@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Inbox,
   Link as LinkIcon,
+  LucideIcon,
   MonitorSmartphone,
   Settings,
   Ticket,
@@ -43,7 +44,6 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { api } from "@/trpc/react";
-import SettingsSidebarCollapsible from "./settingsSidebar";
 
 declare global {
   interface Window {
@@ -180,7 +180,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               <Collapsible open={open} onOpenChange={setOpen} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton>
+                    <SidebarMenuButton tooltip="Settings">
                       <Settings className="size-4" />
                       <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                       <ChevronDown className="ml-auto size-4 transition-transform duration-200 group-data-[state=closed]/collapsible:rotate-[-90deg]" />
@@ -194,10 +194,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                       <SidebarMenuSubItem key={item.id}>
                         <SidebarMenuSubButton
                           asChild
-                          isActive={pathname === `/mailboxes/gumroad/settings/${item.id}`}
+                          isActive={pathname === `/mailboxes/${mailboxSlug}/settings/${item.id}`}
                           className="pl-2"
                         >
-                          <Link href={`/mailboxes/gumroad/settings/${item.id}`}>
+                          <Link href={`/mailboxes/${mailboxSlug}/settings/${item.id}`}>
                             {<item.icon className="size-4" />}
                             <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                           </Link>
