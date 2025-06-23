@@ -12,18 +12,8 @@ export function ColorInput({ label, value, onChange }: ColorInputProps) {
     <div className="flex flex-col space-y-2">
       <Label>{label}</Label>
       <div className="grid grid-cols-[auto_1fr] gap-2">
-        <Input
-          type="color"
-          value={value}
-          onChange={onChange}
-          className="h-10 w-20 p-1"
-        />
-        <Input
-          type="text"
-          value={value}
-          onChange={onChange}
-          className="w-[200px]"
-        />
+        <Input type="color" value={value} onChange={onChange} className="h-10 w-20 p-1" />
+        <Input type="text" value={value} onChange={onChange} className="w-[200px]" />
       </div>
     </div>
   );

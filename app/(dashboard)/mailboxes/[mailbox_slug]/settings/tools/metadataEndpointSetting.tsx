@@ -8,13 +8,13 @@ import type { MetadataEndpoint } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { getMarketingSiteUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
+import { SecretInput } from "@/components/secretInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
-import { SecretInput } from "@/components/secretInput";
 
 type MetadataEndpointSettingProps = {
   metadataEndpoint: MetadataEndpoint | null;

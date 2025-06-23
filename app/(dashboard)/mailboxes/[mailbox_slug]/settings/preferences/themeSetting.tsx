@@ -97,26 +97,10 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     >
       {isEnabled && (
         <div className="space-y-4">
-          <ColorInput
-            label="Background Color"
-            value={theme.background}
-            onChange={handleColorChange("background")}
-          />
-          <ColorInput
-            label="Foreground Color"
-            value={theme.foreground}
-            onChange={handleColorChange("foreground")}
-          />
-          <ColorInput
-            label="Primary Color"
-            value={theme.primary}
-            onChange={handleColorChange("primary")}
-          />
-          <ColorInput
-            label="Accent Color"
-            value={theme.accent}
-            onChange={handleColorChange("accent")}
-          />
+          <ColorInput label="Background Color" value={theme.background} onChange={handleColorChange("background")} />
+          <ColorInput label="Foreground Color" value={theme.foreground} onChange={handleColorChange("foreground")} />
+          <ColorInput label="Primary Color" value={theme.primary} onChange={handleColorChange("primary")} />
+          <ColorInput label="Accent Color" value={theme.accent} onChange={handleColorChange("accent")} />
           <ColorInput
             label="Sidebar Color"
             value={theme.sidebarBackground}

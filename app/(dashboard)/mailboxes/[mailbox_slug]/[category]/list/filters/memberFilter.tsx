@@ -38,15 +38,14 @@ export function MemberFilter({
     member.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const singleMemberName = selectedMembers.length === 1
-    ? members?.find((m) => m.id === selectedMembers[0])?.displayName
-    : undefined;
+  const singleMemberName =
+    selectedMembers.length === 1 ? members?.find((m) => m.id === selectedMembers[0])?.displayName : undefined;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant={selectedMembers.length ? "bright" : "outlined_subtle"} 
+        <Button
+          variant={selectedMembers.length ? "bright" : "outlined_subtle"}
           className="whitespace-nowrap"
           title={singleMemberName}
         >
@@ -74,9 +73,7 @@ export function MemberFilter({
                     onSelect={() => {
                       const isSelected = selectedMembers.includes(member.id);
                       onChange(
-                        isSelected
-                          ? selectedMembers.filter((m) => m !== member.id)
-                          : [...selectedMembers, member.id],
+                        isSelected ? selectedMembers.filter((m) => m !== member.id) : [...selectedMembers, member.id],
                       );
                     }}
                   >
