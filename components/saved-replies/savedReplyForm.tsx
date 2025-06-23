@@ -7,7 +7,6 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
@@ -141,7 +140,11 @@ export function SavedReplyForm({ macro, mailboxSlug, onSuccess, onCancel }: Save
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter your saved reply content here..." className="min-h-32 resize-none" {...field} />
+                <Textarea
+                  placeholder="Enter your saved reply content here..."
+                  className="min-h-32 resize-none"
+                  {...field}
+                />
               </FormControl>
               <FormDescription>{form.watch("content")?.length || 0}/5000 characters</FormDescription>
               <FormMessage />
@@ -154,7 +157,11 @@ export function SavedReplyForm({ macro, mailboxSlug, onSuccess, onCancel }: Save
             Cancel
           </Button>
           <Button type="submit" disabled={createSavedReply.isPending || updateSavedReply.isPending}>
-            {createSavedReply.isPending || updateSavedReply.isPending ? "Saving..." : macro ? "Update Saved Reply" : "Create Saved Reply"}
+            {createSavedReply.isPending || updateSavedReply.isPending
+              ? "Saving..."
+              : macro
+                ? "Update Saved Reply"
+                : "Create Saved Reply"}
           </Button>
         </div>
       </form>
