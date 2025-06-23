@@ -33,7 +33,7 @@ interface TooltipContentProps
   extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
     VariantProps<typeof tooltipContentVariants> {}
 
-const TooltipContent = React.forwardRef<React.ElementRef<typeof TooltipPrimitive.Content>, TooltipContentProps>(
+const TooltipContent = React.forwardRef<React.ComponentRef<typeof TooltipPrimitive.Content>, TooltipContentProps>(
   ({ className, sideOffset = 4, size, variant, ...props }, ref) => (
     <TooltipPrimitive.Content
       ref={ref}
