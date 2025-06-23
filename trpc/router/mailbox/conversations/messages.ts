@@ -64,8 +64,8 @@ export const messagesRouter = {
       z.object({
         message: z.string(),
         fileSlugs: z.array(z.string()),
-        cc: z.array(z.string()),
-        bcc: z.array(z.string()),
+        cc: z.array(z.string().email()),
+        bcc: z.array(z.string().email()),
         shouldAutoAssign: z.boolean().optional().default(true),
         shouldClose: z.boolean().optional().default(true),
         responseToId: z.number().nullable(),
@@ -77,10 +77,8 @@ export const messagesRouter = {
         user: ctx.user,
         message,
         fileSlugs,
-        // TODO Add proper email validation on the frontend and backend using Zod,
-        // similar to how the new conversation modal does it.
-        cc: cc.filter(Boolean),
-        bcc: bcc.filter(Boolean),
+        cc,
+        bcc,
         shouldAutoAssign,
         close: shouldClose,
         responseToId,
