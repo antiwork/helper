@@ -2,11 +2,12 @@
 
 import { Check, RefreshCw, Trash } from "lucide-react";
 import { useState } from "react";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
-import Popover from "@/components/popover";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -79,22 +80,18 @@ const ApiCard = ({
           </div>
           <div className="flex gap-2">
             {!apiData.baseUrl ? (
-              <Popover
-                closeOnOutsideClick
-                trigger={refreshButton}
-                open={isSchemaPopoverOpen}
-                onToggle={setIsSchemaPopoverOpen}
-                className="bg-popover p-4 rounded-md shadow-md border border-border min-w-[400px]"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="schema">Update OpenAPI Schema</Label>
-                    <Textarea
-                      id="schema"
-                      value={schema}
-                      onChange={(e) => setSchema(e.target.value)}
-                      onModEnter={handleSchemaSubmit}
-                      placeholder={`{
+              <Popover open={isSchemaPopoverOpen} onOpenChange={setIsSchemaPopoverOpen}>
+                <PopoverTrigger asChild>{refreshButton({})}</PopoverTrigger>
+                <PopoverContent className="min-w-[400px]">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="schema">Update OpenAPI Schema</Label>
+                      <Textarea
+                        id="schema"
+                        value={schema}
+                        onChange={(e) => setSchema(e.target.value)}
+                        onModEnter={handleSchemaSubmit}
+                        placeholder={`{
   "products": {
     "GET": {
       "url": "/products/:id",
@@ -102,17 +99,18 @@ const ApiCard = ({
     }
   }
 }`}
-                      rows={10}
-                      disabled={isRefreshing}
-                      className="mt-2"
-                    />
+                        rows={10}
+                        disabled={isRefreshing}
+                        className="mt-2"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button type="submit" disabled={isRefreshing} onClick={handleSchemaSubmit}>
+                        {isRefreshing ? "Updating..." : "Update Schema"}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={isRefreshing} onClick={handleSchemaSubmit}>
-                      {isRefreshing ? "Updating..." : "Update Schema"}
-                    </Button>
-                  </div>
-                </div>
+                </PopoverContent>
               </Popover>
             ) : (
               <Button
@@ -129,19 +127,17 @@ const ApiCard = ({
                 {isRefreshed ? "Refreshed" : "Refresh"}
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              onClick={() => {
-                if (confirm("Are you sure you want to delete this API?")) {
-                  deleteApi({ mailboxSlug, apiId: apiData.id });
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to delete this API?"
+              onConfirm={() => {
+                deleteApi({ mailboxSlug, apiId: apiData.id });
               }}
-              disabled={isDeleting}
+              confirmLabel="Yes, delete"
             >
-              <Trash className="h-4 w-4" />
-            </Button>
+              <Button variant="ghost" size="sm" iconOnly disabled={isDeleting}>
+                <Trash className="h-4 w-4" />
+              </Button>
+            </ConfirmationDialog>
           </div>
         </div>
       </CardHeader>

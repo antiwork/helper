@@ -14,7 +14,7 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-export type AutoCloseUpdates = {
+type AutoCloseUpdates = {
   autoCloseEnabled: boolean;
   autoCloseDaysOfInactivity: number;
 };

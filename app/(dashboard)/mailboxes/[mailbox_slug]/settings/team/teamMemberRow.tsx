@@ -18,7 +18,7 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   afk: "Away",
 };
 
-export interface TeamMember {
+interface TeamMember {
   id: string;
   displayName: string;
   email: string | undefined;

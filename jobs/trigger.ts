@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
-export const events = {
+const events = {
   "files/preview.generate": {
     data: z.object({
       fileId: z.number(),

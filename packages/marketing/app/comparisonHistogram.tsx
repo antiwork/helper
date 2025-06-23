@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useBreakpoint } from "./useBreakpoint";
 
-export function ComparisonHistogram() {
+function ComparisonHistogram() {
   const [data] = useState([
     { name: "Day 1", withHelper: 8, withoutHelper: 13 },
     { name: "Day 2", withHelper: 6, withoutHelper: 15 },
