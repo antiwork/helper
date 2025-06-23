@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
 import GitHubSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/github.svg";
-import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -141,7 +140,11 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
   if (!connectUrl) return null;
 
   return (
-    <SectionWrapper title="GitHub Integration" description="Create and track GitHub issues from conversations." fullWidth>
+    <SectionWrapper
+      title="GitHub Integration"
+      description="Create and track GitHub issues from conversations."
+      fullWidth
+    >
       {isGitHubConnected ? (
         <>
           <div className="grid gap-1">
@@ -172,15 +175,20 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
             )}
           </div>
           <div className="mt-4">
-            <ConfirmationDialog
-              message="Are you sure you want to disconnect GitHub? This will remove the repository link and disable GitHub issue creation."
-              onConfirm={() => {
-                onDisconnectGitHub();
+            <Button
+              variant="destructive_outlined"
+              onClick={() => {
+                if (
+                  confirm(
+                    "Are you sure you want to disconnect GitHub? This will remove the repository link and disable GitHub issue creation.",
+                  )
+                ) {
+                  onDisconnectGitHub();
+                }
               }}
-              confirmLabel="Yes, disconnect"
             >
-              <Button variant="destructive_outlined">Disconnect from GitHub</Button>
-            </ConfirmationDialog>
+              Disconnect from GitHub
+            </Button>
           </div>
         </>
       ) : (

@@ -3,7 +3,6 @@ import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { FAQ } from "@/app/types/global";
-import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -203,16 +202,18 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
               </Badge>
             )}
           </button>
-          <ConfirmationDialog
-            message="Are you sure you want to delete this knowledge?"
-            onConfirm={onDelete}
-            confirmLabel="Yes, delete"
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            onClick={(e) => {
+              e.preventDefault();
+              onDelete();
+            }}
           >
-            <Button variant="ghost" size="sm" iconOnly>
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
-          </ConfirmationDialog>
+            <Trash className="h-4 w-4" />
+            <span className="sr-only">Delete</span>
+          </Button>
         </div>
       )}
     </div>

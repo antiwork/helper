@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import type { MetadataEndpoint } from "@/app/types/global";
-import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { getMarketingSiteUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -81,29 +80,31 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
   };
 
   const removeEndpoint = async () => {
-    setIsLoading(true);
-    try {
-      const result = await deleteEndpointMutation({ mailboxSlug });
-      if (result?.error) {
+    if (confirm("Are you sure you want to remove this Metadata Endpoint?")) {
+      setIsLoading(true);
+      try {
+        const result = await deleteEndpointMutation({ mailboxSlug });
+        if (result?.error) {
+          toast({
+            variant: "destructive",
+            title: result.error,
+          });
+          return;
+        }
+        setNewUrl("");
+        setShowSecret(false);
+        router.refresh();
+        toast({
+          title: "Metadata endpoint removed!",
+        });
+      } catch (e) {
         toast({
           variant: "destructive",
-          title: result.error,
+          title: "Error removing metadata endpoint",
         });
-        return;
+      } finally {
+        setIsLoading(false);
       }
-      setNewUrl("");
-      setShowSecret(false);
-      router.refresh();
-      toast({
-        title: "Metadata endpoint removed!",
-      });
-    } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Error removing metadata endpoint",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -252,15 +253,16 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
               />
             </div>
             <div>
-              <ConfirmationDialog
-                message="Are you sure you want to remove this Metadata Endpoint?"
-                onConfirm={removeEndpoint}
-                confirmLabel="Yes, remove"
+              <Button
+                variant="destructive_outlined"
+                disabled={isLoading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  removeEndpoint();
+                }}
               >
-                <Button variant="destructive_outlined" disabled={isLoading}>
-                  Remove endpoint
-                </Button>
-              </ConfirmationDialog>
+                Remove endpoint
+              </Button>
             </div>
           </>
         ) : (

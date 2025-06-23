@@ -1,30 +1,20 @@
 "use client";
 
 import {
-  SidebarGroup,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-
-import {
   BookOpen,
-  Users,
-  UserPlus,
-  MonitorSmartphone,
-  Link,
-  Settings as SettingsIcon,
   ChevronDown,
   ChevronRight,
+  Link,
+  MonitorSmartphone,
+  Settings as SettingsIcon,
+  UserPlus,
+  Users,
 } from "lucide-react";
-import { useQueryState, parseAsStringEnum } from "nuqs";
-import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { parseAsStringEnum, useQueryState } from "nuqs";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const settingsItems = [
   { label: "Knowledge", id: "knowledge", icon: BookOpen },
@@ -48,11 +38,7 @@ export default function SettingsSidebarCollapsible() {
               <SidebarMenuButton>
                 <SettingsIcon className="size-4" />
                 <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                {open ? (
-                  <ChevronDown className="ml-auto h-4 w-4" />
-                ) : (
-                  <ChevronRight className="ml-auto h-4 w-4" />
-                )}
+                {open ? <ChevronDown className="ml-auto h-4 w-4" /> : <ChevronRight className="ml-auto h-4 w-4" />}
               </SidebarMenuButton>
             </CollapsibleTrigger>
           </SidebarMenuItem>

@@ -2,7 +2,6 @@ import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import SlackSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/slack.svg";
-import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -152,7 +151,11 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   if (!connectUrl) return null;
 
   return (
-    <SectionWrapper title="Slack Integration" description="Notify your team and respond without leaving Slack." fullWidth>
+    <SectionWrapper
+      title="Slack Integration"
+      description="Notify your team and respond without leaving Slack."
+      fullWidth
+    >
       {isSlackConnected ? (
         <>
           <div className="grid gap-1">
@@ -187,15 +190,16 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
           </div>
 
           <div className="mt-4">
-            <ConfirmationDialog
-              message="Are you sure you want to disconnect Slack?"
-              onConfirm={() => {
-                onDisconnectSlack();
+            <Button
+              variant="destructive_outlined"
+              onClick={() => {
+                if (confirm("Are you sure you want to disconnect Slack?")) {
+                  onDisconnectSlack();
+                }
               }}
-              confirmLabel="Yes, disconnect"
             >
-              <Button variant="destructive_outlined">Disconnect from Slack</Button>
-            </ConfirmationDialog>
+              Disconnect from Slack
+            </Button>
           </div>
         </>
       ) : (
