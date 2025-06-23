@@ -16,12 +16,12 @@ import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
+import { parseEmailList } from "@/components/utils/email";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import { parseEmailList } from "@/components/utils/email";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
@@ -181,23 +181,19 @@ export const MessageActions = () => {
     setSending(true);
 
     try {
-      const cc = parseEmailList(draftedEmail.cc, (invalidEmail) => {
-        setSending(false);
-        toast({
+      const cc = parseEmailList(draftedEmail.cc);
+      if (!cc.success)
+        return toast({
           variant: "destructive",
-          title: `Invalid CC email address: ${invalidEmail}`,
+          title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
         });
-      });
-      if (cc === null) return;
 
-      const bcc = parseEmailList(draftedEmail.bcc, (invalidEmail) => {
-        setSending(false);
-        toast({
+      const bcc = parseEmailList(draftedEmail.bcc);
+      if (!bcc.success)
+        return toast({
           variant: "destructive",
-          title: `Invalid BCC email address: ${invalidEmail}`,
+          title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
         });
-      });
-      if (bcc === null) return;
 
       const conversationSlug = conversation.slug;
 
@@ -210,8 +206,8 @@ export const MessageActions = () => {
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
-        cc,
-        bcc,
+        cc: cc.data,
+        bcc: bcc.data,
         shouldAutoAssign: assign,
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,

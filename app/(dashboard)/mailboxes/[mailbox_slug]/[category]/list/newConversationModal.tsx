@@ -107,29 +107,27 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
         title: 'Please enter a valid "To" email address',
       });
 
-    const cc = parseEmailList(newConversationInfo.cc, (invalidEmail) => {
-      toast({
+    const cc = parseEmailList(newConversationInfo.cc);
+    if (!cc.success)
+      return toast({
         variant: "destructive",
-        title: `Invalid CC email address: ${invalidEmail}`,
+        title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
       });
-    });
-    if (cc === null) return;
 
-    const bcc = parseEmailList(newConversationInfo.bcc, (invalidEmail) => {
-      toast({
+    const bcc = parseEmailList(newConversationInfo.bcc);
+    if (!bcc.success)
+      return toast({
         variant: "destructive",
-        title: `Invalid BCC email address: ${invalidEmail}`,
+        title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
       });
-    });
-    if (bcc === null) return;
 
     const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
       conversation_slug: conversationSlug,
       to_email_address: toEmailAddress,
       subject: newConversationInfo.subject.trim(),
       message: newConversationInfo.message.trim(),
-      cc,
-      bcc,
+      cc: cc.data,
+      bcc: bcc.data,
       file_slugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
     };
 
