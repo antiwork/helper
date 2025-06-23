@@ -52,17 +52,34 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
 
   const assignedToUserName = getUserDisplayName(event.changes.assignedToId);
 
+  const getAssignmentDescription = () => {
+    if (event.changes.assignedToAI) return null;
+    if (event.changes.assignedToId === undefined) return null;
+    
+    // Truly unassigned
+    if (event.changes.assignedToId === null) {
+      return "unassigned";
+    }
+    
+    // User ID exists, check resolution
+    if (assignedToUserName) {
+      return `assigned to ${assignedToUserName}`;
+    }
+    
+    // User ID exists but can't resolve - check if data is loading
+    if (!orgMembers) {
+      return "assigned to..."; // Loading state
+    }
+    
+    // Data loaded but user not found
+    return "assigned to unknown user";
+  };
+
   const description = hasEventDescription(event.eventType)
     ? eventDescriptions[event.eventType]
     : [
         event.changes.status ? statusVerbs[event.changes.status] : null,
-        !event.changes.assignedToAI && event.changes.assignedToId !== undefined
-          ? assignedToUserName
-            ? `assigned to ${assignedToUserName}`
-            : event.changes.assignedToId === null
-              ? "unassigned"
-              : "assigned to unknown user"
-          : null,
+        getAssignmentDescription(),
         event.changes.assignedToAI ? "assigned to Helper agent" : null,
         event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
       ]
