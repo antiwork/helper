@@ -174,9 +174,8 @@ export const MessageActions = () => {
   const { readyFiles, resetFiles } = useFileUpload();
   const { sendDisabled, sending, setSending } = useSendDisabled(draftedEmail.message);
 
-  // Knowledge bank dialog state
-  const [showKnowledgeBankDialog, setShowKnowledgeBankDialog] = useState(false);
   const [lastSentMessageId, setLastSentMessageId] = useState<number | null>(null);
+  const [showKnowledgeBankDialog, setShowKnowledgeBankDialog] = useState(false);
 
   const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
@@ -234,7 +233,7 @@ export const MessageActions = () => {
                 setShowKnowledgeBankDialog(true);
               }}
             >
-              💡 KB
+              💡 Save
             </ToastAction>
             <ToastAction
               altText="Undo"

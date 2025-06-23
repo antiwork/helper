@@ -1,5 +1,5 @@
 import { Lightbulb, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,9 +83,12 @@ export const GenerateKnowledgeBankDialog = ({
     setHasGenerated(false);
   };
 
-  const handleGenerate = () => {
-    generateSuggestionMutation.mutate({ mailboxSlug, messageId });
-  };
+  // Auto-run AI suggestion when dialog opens
+  useEffect(() => {
+    if (open && messageId && !hasGenerated && !generateSuggestionMutation.isPending) {
+      generateSuggestionMutation.mutate({ mailboxSlug, messageId });
+    }
+  }, [open, messageId, hasGenerated, mailboxSlug]);
 
   const handleSave = () => {
     if (!editedContent.trim()) {
@@ -128,15 +131,11 @@ export const GenerateKnowledgeBankDialog = ({
 
         <div className="space-y-4">
           {!hasGenerated ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground mb-4">
-                AI will analyze your reply and suggest a knowledge bank entry if the information would be valuable for
-                future inquiries.
+            <div className="text-center py-8">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground mb-4" />
+              <p className="text-sm text-muted-foreground">
+                AI is analyzing your reply to suggest a knowledge bank entry...
               </p>
-              <Button onClick={handleGenerate} disabled={isLoading} className="w-full">
-                {generateSuggestionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate Suggestion
-              </Button>
             </div>
           ) : (
             <div className="space-y-4">
