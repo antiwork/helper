@@ -21,7 +21,7 @@ type ConversationListItemProps = {
   isActive: boolean;
   onSelectConversation: (slug: string) => void;
   isSelected: boolean;
-  onToggleSelect: () => void;
+  onToggleSelect: (shiftKey?: boolean) => void;
 };
 
 export const ConversationListItem = ({
@@ -69,8 +69,10 @@ export const ConversationListItem = ({
           <div className="w-5 flex items-center">
             <Checkbox
               checked={isSelected}
-              onCheckedChange={onToggleSelect}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect(e.shiftKey);
+              }}
               className="mt-1"
             />
           </div>

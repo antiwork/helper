@@ -33,6 +33,8 @@ export const List = () => {
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const [shiftSelection, setShiftSelection] = useState<number[]>([]);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: () => {
@@ -50,25 +52,61 @@ export const List = () => {
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   const toggleAllConversations = () => {
-    if (allConversationsSelected || selectedConversations.length > 0) {
-      setAllConversationsSelected(false);
-      setSelectedConversations([]);
-    } else {
-      setAllConversationsSelected(true);
-      setSelectedConversations([]);
-    }
+    setAllConversationsSelected((prev) => !prev);
+    setSelectedConversations([]);
+    setLastSelectedIndex(null);
+    setShiftSelection([]);
   };
 
-  const toggleConversation = (id: number) => {
-    if (allConversationsSelected) {
-      setAllConversationsSelected(false);
-      setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
+  const toggleConversation = (id: number, shiftKey = false) => {
+    const currentIndex = conversations.findIndex((c) => c.id === id);
+
+    if (shiftKey && lastSelectedIndex !== null && !allConversationsSelected) {
+      const startIndex = Math.min(lastSelectedIndex, currentIndex);
+      const endIndex = Math.max(lastSelectedIndex, currentIndex);
+      const rangeIds = conversations.slice(startIndex, endIndex + 1).map((c) => c.id);
+      const isSelecting = !selectedConversations.includes(id);
+
+      setSelectedConversations((prev) => {
+        const currentSelection = new Set(prev);
+        // First, revert the previous shift selection to its original state
+        shiftSelection.forEach((shiftedId) => {
+          if (isSelecting) {
+            if (!prev.includes(shiftedId)) {
+              // If we are now selecting, we might need to remove it if it wasn't selected before
+              currentSelection.delete(shiftedId);
+            }
+          } else if (prev.includes(shiftedId)) {
+            // If we are now deselecting, we might need to add it back if it was selected before
+            currentSelection.add(shiftedId);
+          }
+        });
+
+        // Then apply the new range selection action
+        rangeIds.forEach((rangeId) => {
+          if (isSelecting) {
+            currentSelection.add(rangeId);
+          } else {
+            currentSelection.delete(rangeId);
+          }
+        });
+
+        return Array.from(currentSelection);
+      });
+      setShiftSelection(rangeIds);
     } else {
-      setSelectedConversations(
-        selectedConversations.includes(id)
-          ? selectedConversations.filter((selectedId) => selectedId !== id)
-          : [...selectedConversations, id],
-      );
+      setShiftSelection([]);
+      if (allConversationsSelected) {
+        setAllConversationsSelected(false);
+        setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
+      } else {
+        setSelectedConversations(
+          selectedConversations.includes(id)
+            ? selectedConversations.filter((selectedId) => selectedId !== id)
+            : [...selectedConversations, id],
+        );
+      }
+      setLastSelectedIndex(currentIndex);
     }
   };
 
@@ -86,6 +124,8 @@ export const List = () => {
           onSuccess: ({ updatedImmediately }) => {
             setAllConversationsSelected(false);
             setSelectedConversations([]);
+            setLastSelectedIndex(null);
+            setShiftSelection([]);
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
             if (!updatedImmediately) {
@@ -242,7 +282,7 @@ export const List = () => {
               isActive={conversationSlug === conversation.slug}
               onSelectConversation={navigateToConversation}
               isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-              onToggleSelect={() => toggleConversation(conversation.id)}
+              onToggleSelect={(shiftKey) => toggleConversation(conversation.id, shiftKey)}
             />
           ))}
           <div ref={loadMoreRef} />
