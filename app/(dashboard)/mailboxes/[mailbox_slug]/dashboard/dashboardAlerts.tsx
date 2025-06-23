@@ -41,7 +41,7 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
   if (isLoading)
     return (
       <div className="p-4">
-        <Skeleton className="h-12 snap-center w-full shrink-0 md:w-96" />
+        <Skeleton className="h-[60px] snap-center w-full shrink-0 md:w-96" />
       </div>
     );
 
