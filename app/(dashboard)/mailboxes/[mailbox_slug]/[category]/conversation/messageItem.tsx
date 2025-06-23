@@ -21,6 +21,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -202,17 +203,17 @@ const MessageItem = ({
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        if (confirm("Are you sure you want to separate this conversation?")) {
-                          splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
-                        }
+                    <ConfirmationDialog
+                      message="Are you sure you want to separate this conversation?"
+                      onConfirm={() => {
+                        splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
                       }}
                     >
-                      <Download className="h-4 w-4" />
-                      <span className="text-xs">Merged</span>
-                    </button>
+                      <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                        <Download className="h-4 w-4" />
+                        <span className="text-xs">Merged</span>
+                      </button>
+                    </ConfirmationDialog>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Automatically merged based on similarity. Click to split.</p>

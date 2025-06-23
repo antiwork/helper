@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,12 +94,10 @@ const WebsiteCrawlSetting = () => {
   };
 
   const handleDeleteWebsite = async (websiteId: number) => {
-    if (confirm("Are you sure you want to delete this website? All scanned pages will be deleted.")) {
-      await deleteWebsiteMutation.mutateAsync({
-        mailboxSlug: params.mailbox_slug,
-        websiteId,
-      });
-    }
+    await deleteWebsiteMutation.mutateAsync({
+      mailboxSlug: params.mailbox_slug,
+      websiteId,
+    });
   };
 
   const handleTriggerCrawl = async (websiteId: number) => {
@@ -214,15 +213,17 @@ const WebsiteCrawlSetting = () => {
                       />
                       {triggerCrawlMutation.isPending ? "Updating..." : "Update"}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteWebsite(website.id)}
-                      disabled={deleteWebsiteMutation.isPending}
+                    <ConfirmationDialog
+                      message="Are you sure you want to delete this website? All scanned pages will be deleted."
+                      onConfirm={() => {
+                        handleDeleteWebsite(website.id);
+                      }}
                     >
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
+                      <Button variant="ghost" size="sm" disabled={deleteWebsiteMutation.isPending}>
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </ConfirmationDialog>
                   </div>
                 </div>
               );
