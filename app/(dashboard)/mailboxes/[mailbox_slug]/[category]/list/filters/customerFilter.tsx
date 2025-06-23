@@ -3,7 +3,14 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandSeparator,
+} from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { api } from "@/trpc/react";
@@ -86,6 +93,16 @@ export function CustomerFilter({
               </>
             )}
           </div>
+          {selectedCustomers.length > 0 && (
+            <>
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem onSelect={() => onChange([])} className="cursor-pointer justify-center">
+                  Clear
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
