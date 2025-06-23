@@ -1,16 +1,22 @@
-import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, not, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, DRAFT_STATUSES, files, mailboxes } from "@/db/schema";
-import { conversationEvents } from "@/db/schema/conversationEvents";
+import {
+  conversationEvents,
+  conversationMessages,
+  DRAFT_STATUSES,
+  files,
+  mailboxes,
+  MessageMetadata,
+  notes,
+  Tool,
+} from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
-import { notes } from "@/db/schema/notes";
-import type { Tool } from "@/db/schema/tools";
-import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import type { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { getFullName } from "@/lib/auth/authUtils";
@@ -105,7 +111,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       },
     });
 
-  const [messages, noteRecords, eventRecords, members] = await Promise.all([
+  const [messages, noteRecords, eventRecords] = await Promise.all([
     findOriginalAndMergedMessages(conversationId, findMessages),
     db.query.notes.findMany({
       where: eq(notes.conversationId, conversationId),
@@ -136,22 +142,17 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         reason: true,
       },
     }),
-    db.query.authUsers.findMany(),
   ]);
 
-  const membersById = Object.fromEntries(members.map((user) => [user.id, user]));
-
   const messageInfos = await Promise.all(
-    messages.map((message) =>
-      serializeMessage(message, conversationId, mailbox, (message.userId && membersById[message.userId]) || null),
-    ),
+    messages.map((message) => serializeMessage(message, conversationId, mailbox, null)),
   );
 
   const noteInfos = await Promise.all(
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.userId && membersById[note.userId] ? getFullName(membersById[note.userId]!) : null,
+      userId: note.userId,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -165,13 +166,10 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       ...event,
       changes: {
         ...event.changes,
-        assignedToUser:
-          event.changes.assignedToId && membersById[event.changes.assignedToId]
-            ? getFullName(membersById[event.changes.assignedToId]!)
-            : event.changes.assignedToId,
-        assignedToAI: event.changes.assignedToAI,
+        assignedToId: event.changes?.assignedToId,
+        assignedToAI: event.changes?.assignedToAI,
       },
-      byUser: event.byUserId && membersById[event.byUserId] ? getFullName(membersById[event.byUserId]!) : null,
+      byUserId: event.byUserId,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -238,7 +236,8 @@ export const serializeMessage = async (
     emailTo: message.emailTo,
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
-    from: message.role === "staff" && user ? getFullName(user) : message.emailFrom,
+    from: message.role === "staff" ? null : message.emailFrom, // Frontend resolves staff names using userId
+    userId: message.userId,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:
