@@ -59,27 +59,10 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const getAssignmentDescription = () => {
     if (event.changes.assignedToAI) return null;
     if (event.changes.assignedToId === undefined) return null;
-
-    // Truly unassigned
-    if (event.changes.assignedToId === null) {
-      return "unassigned";
-    }
-
-    // User ID exists, check resolution
-    if (assignedToUserName) {
-      return `assigned to ${assignedToUserName}`;
-    }
-
-    // Handle different failure states
-    if (membersError) {
-      return "assigned to (error loading users)";
-    }
-
-    if (isLoadingMembers) {
-      return "assigned to..."; // Loading state
-    }
-
-    // Data loaded but user not found (orgMembers exists but user not in it)
+    if (event.changes.assignedToId === null) return "unassigned";
+    if (assignedToUserName) return `assigned to ${assignedToUserName}`;
+    if (membersError) return "assigned to (error loading users)";
+    if (isLoadingMembers) return "assigned to...";
     return "assigned to unknown user";
   };
 
