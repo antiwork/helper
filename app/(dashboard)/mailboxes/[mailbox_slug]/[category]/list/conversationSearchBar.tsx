@@ -1,11 +1,14 @@
+import { isMacOS } from "@tiptap/core";
 import { capitalize } from "lodash-es";
 import { ArrowDownUp, Filter, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import useSearchShortcut from "@/components/useSearchShortcut";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -53,6 +56,10 @@ export const ConversationSearchBar = ({
   useEffect(() => {
     debouncedSetSearch(search);
   }, [search]);
+
+  useSearchShortcut(() => {
+    searchInputRef.current?.focus();
+  });
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
@@ -169,6 +176,13 @@ export const ConversationSearchBar = ({
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 h-10 rounded-full text-sm"
           iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
+          iconsSuffix={
+            !search && (
+              <KeyboardShortcut className="text-xs border-muted-foreground/50">
+                {isMacOS() ? "⌘ K" : "Ctrl K"}
+              </KeyboardShortcut>
+            )
+          }
           autoFocus
         />
         <Button
