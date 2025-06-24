@@ -1,8 +1,8 @@
 import cx from "classnames";
+import { useParams, useRouter } from "next/navigation";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import React, { useEffect, useRef, useState } from "react";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import { useParams, useRouter } from "next/navigation";
 
 type NavigationItem = {
   label: string;
@@ -17,7 +17,7 @@ type SubNavigationProps = {
 };
 
 const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
-  const params = useParams<{ mailbox_slug: string, tab: string }>();
+  const params = useParams<{ mailbox_slug: string; tab: string }>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
@@ -27,46 +27,46 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
   const selectedItem = items.find((item) => item.id === params.tab);
 
   if (isMobile) {
-          return (
-            <div className="w-full">
-              <div
-                className="overflow-x-auto"
-                ref={scrollRef}
-                style={{
-                  scrollbarWidth: "none",
-                  msOverflowStyle: "none",
-                }}
-              >
-                <div className="flex whitespace-nowrap pb-1">
-                  {items.map((item) => {
-                    const Icon = item.icon;
-                    const isSelected = item.id === params.tab;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => router.push(`/${item.id}`)}
-                        className={cx(
-                          "flex items-center px-4 py-3 text-sm transition-colors duration-150 ease-in-out",
-                          "max-w-[200px] cursor-pointer",
-                          isSelected
-                            ? "border-b-2 border-bright bg-secondary"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                        )}
-                      >
-                        <Icon
-                          className={cx("mr-2 h-5 w-5 shrink-0", isSelected ? "text-primary-500" : "text-muted-foreground")}
-                        />
-                        <span className={cx("truncate", isSelected ? "text-foreground" : "")}>{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
-            </div>
-          );
-        }
-      
+    return (
+      <div className="w-full">
+        <div
+          className="overflow-x-auto"
+          ref={scrollRef}
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          <div className="flex whitespace-nowrap pb-1">
+            {items.map((item) => {
+              const Icon = item.icon;
+              const isSelected = item.id === params.tab;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => router.push(`/${item.id}`)}
+                  className={cx(
+                    "flex items-center px-4 py-3 text-sm transition-colors duration-150 ease-in-out",
+                    "max-w-[200px] cursor-pointer",
+                    isSelected
+                      ? "border-b-2 border-bright bg-secondary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Icon
+                    className={cx("mr-2 h-5 w-5 shrink-0", isSelected ? "text-primary-500" : "text-muted-foreground")}
+                  />
+                  <span className={cx("truncate", isSelected ? "text-foreground" : "")}>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex w-56 flex-col border-r border-border">
