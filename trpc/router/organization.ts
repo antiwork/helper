@@ -1,7 +1,7 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { addUser, removeUser } from "@/lib/data/user";
+import { addUser } from "@/lib/data/user";
 import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {

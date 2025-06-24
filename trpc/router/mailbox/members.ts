@@ -2,7 +2,7 @@ import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { z } from "zod";
 import { getMemberStats } from "@/lib/data/stats";
-import { getUsersWithMailboxAccess, removeUser, updateUserMailboxData } from "@/lib/data/user";
+import { getUsersWithMailboxAccess, removeMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 
@@ -81,7 +81,7 @@ export const membersRouter = {
       }
 
       try {
-        await removeUser(input.id);
+        await removeMailboxAccess(input.id, ctx.mailbox.id);
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

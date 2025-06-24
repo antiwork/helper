@@ -40,30 +40,49 @@ export const addUser = async (inviterUserId: string, emailAddress: string, displ
   if (error) throw error;
 };
 
-export const removeUser = async (id: string) => {
-  const supabase = createAdminClient();
 
-  const { error } = await supabase.auth.admin.deleteUser(id);
+export const removeMailboxAccess = async (id: string, mailboxId: number) => {
+  const user = await db.query.authUsers.findFirst({
+    where: eq(authUsers.id, id),
+  });
 
-  if (error) throw error;
+  if (!user) throw new Error("User not found");
+
+  const mailboxAccess = (user.user_metadata?.mailboxAccess ?? {}) as Record<string, any>;
+
+  delete mailboxAccess[mailboxId];
+
+  await db
+    .update(authUsers)
+    .set({
+      user_metadata: {
+        ...user.user_metadata,
+        mailboxAccess,
+      },
+    })
+    .where(eq(authUsers.id, id));
 };
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
   const users = await db.query.authUsers.findMany();
 
-  return users.map((user) => {
-    const metadata = user.user_metadata || {};
-    const mailboxAccess = (metadata.mailboxAccess as Record<string, any>) || {};
-    const access = mailboxAccess[mailboxId];
+  return users
+    .filter((user) => {
+      const mailboxAccess = (user.user_metadata?.mailboxAccess ?? {}) as Record<string, any>;
+      return mailboxAccess[mailboxId];
+    })
+    .map((user) => {
+      const mailboxAccess = (user.user_metadata?.mailboxAccess ?? {}) as Record<string, any>;
+      const access = mailboxAccess[mailboxId];
 
-    return {
-      id: user.id,
-      displayName: user.user_metadata?.display_name || "",
-      email: user.email ?? undefined,
-      role: access?.role || "afk",
-      keywords: access?.keywords || [],
-    };
-  });
+      return {
+        id: user.id,
+        displayName: user.user_metadata?.display_name || "",
+        email: user.email ?? undefined,
+        role: access?.role || "afk",
+        keywords: access?.keywords || [],
+      };
+    });
 };
 
 export const updateUserMailboxData = async (
