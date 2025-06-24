@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-extraneous-class */
-import { expect, Page } from "@playwright/test";
 import { promises as fs } from "fs";
+import { expect, Page } from "@playwright/test";
 
 /**
  * Network utilities
@@ -48,11 +48,7 @@ export async function ensureDirectoryExists(dirPath: string) {
 /**
  * Wait for page element to be ready with custom timeout
  */
-export async function waitForElementWithTimeout(
-  page: Page,
-  selector: string,
-  timeout = 10000,
-) {
+export async function waitForElementWithTimeout(page: Page, selector: string, timeout = 10000) {
   await page.waitForSelector(selector, { timeout, state: "visible" });
 }
 
@@ -125,4 +121,15 @@ export function formatCurrency(cents: number): string {
  */
 export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * Conditional wait for debugging - only delays in local development
+ */
+export async function debugWait(page: Page, ms = 1000) {
+  // Only wait if running in headed mode (development/debugging)
+  if (process.env.HEADED === "true" || process.env.DEBUG === "true") {
+    await page.waitForTimeout(ms);
+  }
+  // In CI or headless mode, skip the delay
 }

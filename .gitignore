@@ -52,9 +52,8 @@ scripts/docker/tmp/
 scripts/docker/local-nginx/certs/*
 
 # Playwright
-playwright-report/
+playwright/
 test-results/
-playwright/.cache/
 tests/e2e/debug/*.png
 tests/e2e/screenshots/
 tests/e2e/.auth/

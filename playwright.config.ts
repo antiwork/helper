@@ -57,6 +57,8 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
+  /* TODO: Consider using a separate test database to avoid data conflicts
+   * and allow for more reliable test data setup/teardown */
   webServer: {
     command: "pnpm dev",
     url: "https://helperai.dev",

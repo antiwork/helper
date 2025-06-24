@@ -1,18 +1,9 @@
 import { expect, Page } from "@playwright/test";
+import { debugWait } from "../test-helpers";
 import { BasePage } from "./basePage";
 
 /**
- * DashboardPage - FIXED to use real DOM selectors
- *
- * Previous version used non-existent data-testid attributes, making it unusable.
- * This version uses actual selectors that exist in the Helper application DOM:
- * - input[placeholder="Search conversations"] for search
- * - button:has-text("open") for filters
- * - button:has-text("Gumroad") for account buttons
- * - Real DOM elements instead of test-only attributes
- *
- * Now the page object can be used consistently across tests instead of
- * bypassing it with direct selectors.
+ * DashboardPage - Page object for Helper dashboard interactions
  */
 export class DashboardPage extends BasePage {
   // Real selectors that actually exist in the application
@@ -63,7 +54,7 @@ export class DashboardPage extends BasePage {
 
   async clickOpenFilter() {
     await this.page.locator(this.openFilter).click();
-    await this.page.waitForTimeout(1000); // Allow for filter response
+    await debugWait(this.page, 1000); // Allow for filter response
   }
 
   async expectAccountInfo() {
@@ -74,7 +65,7 @@ export class DashboardPage extends BasePage {
 
   async clickGumroadButton() {
     await this.page.locator(this.gumroadButton).first().click();
-    await this.page.waitForTimeout(2000);
+    await debugWait(this.page, 2000);
   }
 
   async handleSelectAll() {
@@ -82,7 +73,7 @@ export class DashboardPage extends BasePage {
 
     if (selectAllCount > 0) {
       await this.page.locator(this.selectAllButton).click();
-      await this.page.waitForTimeout(1000);
+      await debugWait(this.page, 1000);
       return true;
     }
     return false;
