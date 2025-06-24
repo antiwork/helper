@@ -2,6 +2,8 @@
 
 set -e
 
+REQUIRED_NODE_VERSION="v22.14.0"
+
 cleanup() {
     echo "Shutting down..."
     echo -e "\033[34mℹ️ The app will be stopped, but background services are still running. Use pnpm services:stop to stop them.\033[0m"
@@ -12,12 +14,21 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
-    pnpm generate-ssl-certificates
+# Node.js version check
+current_node_version=$(node -v 2>/dev/null || echo "not found")
+if [ "$current_node_version" != "$REQUIRED_NODE_VERSION" ]; then
+    echo -e "\033[31m✖ Required Node.js version is $REQUIRED_NODE_VERSION, but found $current_node_version.\033[0m"
+    echo "Please install the correct version using nvm or your preferred version manager."
+    exit 1
 fi
 
 corepack enable
+corepack prepare
 pnpm install
+
+if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
+    pnpm generate-ssl-certificates
+fi
 
 # Check if .env.local exists
 if [ ! -f ".env.local" ]; then
