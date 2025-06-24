@@ -72,30 +72,26 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
   const handleSelect = () => {
     if (!dateRange?.from || !dateRange?.to || !isValidTimeRange()) return;
     
-    try {
-      const from = new Date(dateRange.from);
-      const to = new Date(dateRange.to);
-      
-      if (timeFrom) {
-        const [hstr, mstr] = timeFrom.split(":");
-        const h = Number(hstr);
-        const m = Number(mstr);
-        if (!isNaN(h) && !isNaN(m)) from.setHours(h, m, 0, 0);
-      }
-      
-      if (timeTo) {
-        const [hstr, mstr] = timeTo.split(":");
-        const h = Number(hstr);
-        const m = Number(mstr);
-        if (!isNaN(h) && !isNaN(m)) to.setHours(h, m, 59, 999); 
-      }
-      
-      const newRange = { from, to };
-      setAppliedRange(newRange);
-      onSelect(newRange);
-    } catch (error) {
-      console.error("Error setting date range:", error);
+    const from = new Date(dateRange.from);
+    const to = new Date(dateRange.to);
+    
+    if (timeFrom) {
+      const [hstr, mstr] = timeFrom.split(":");
+      const h = Number(hstr);
+      const m = Number(mstr);
+      if (!isNaN(h) && !isNaN(m)) from.setHours(h, m, 0, 0);
     }
+    
+    if (timeTo) {
+      const [hstr, mstr] = timeTo.split(":");
+      const h = Number(hstr);
+      const m = Number(mstr);
+      if (!isNaN(h) && !isNaN(m)) to.setHours(h, m, 59, 999); 
+    }
+    
+    const newRange = { from, to };
+    setAppliedRange(newRange);
+    onSelect(newRange);
   };
 
   const handleClear = () => {
