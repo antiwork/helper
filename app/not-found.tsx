@@ -1,6 +1,6 @@
 "use client";
 
-import { Shuffle } from "lucide-react";
+import { ArrowLeft, Home, Shuffle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
@@ -52,66 +52,133 @@ export default function NotFound() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#3D0C11" }}>
-      <header className="sticky top-0 z-50">
-        <nav className="flex flex-col md:flex-row items-center md:justify-between p-4 mx-4 space-y-4 md:space-y-0">
-          <div className="relative w-[100px] h-[32px] mx-auto md:mx-0">
-            <Image
-              src="/logo-white.svg"
-              priority
-              alt="Helper"
-              width={100}
-              height={32}
-              className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100"
-            />
-          </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/40">
+        <nav className="flex items-center justify-between p-3 sm:p-4 mx-auto max-w-7xl">
+          <Link href="/" className="transition-opacity hover:opacity-80 active:scale-95 transition-transform">
+            <div className="relative w-20 h-6 sm:w-24 sm:h-7 md:w-[100px] md:h-[32px]">
+              <Image
+                src="/logo-white.svg"
+                priority
+                alt="Helper"
+                width={100}
+                height={32}
+                className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100 dark:opacity-100"
+              />
+              <Image
+                src="/logo.svg"
+                priority
+                alt="Helper"
+                width={100}
+                height={32}
+                className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-0 dark:opacity-0"
+              />
+            </div>
+          </Link>
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 sm:gap-2 min-h-10 px-3 sm:px-4 active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm">Back to Helper</span>
+            </Button>
+          </Link>
         </nav>
       </header>
 
-      <main className="grow flex flex-col items-center justify-center h-screen bg-secondary-light dark:bg-secondary-dark text-center p-4">
-        <div className="max-w-md">
-          <div className="flex justify-center mb-8">
-            <Image src="/logo_icon.svg" alt="Helper" width={96} height={96} className="md:w-128 md:h-128" />
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-16">
+        <div className="max-w-2xl mx-auto text-center space-y-8">
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-full blur-2xl animate-pulse" />
+              <Image
+                src="/logo_icon.svg"
+                alt="Helper"
+                width={120}
+                height={120}
+                className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32"
+              />
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-6 text-secondary dark:text-foreground">Oops!</h1>
-          <p className="text-lg md:text-xl mb-12 text-secondary dark:text-foreground">
-            The page you're looking for doesn't exist or has been moved.
-          </p>
-          <Link href="/">
-            <Button variant="bright" size="lg" className="relative overflow-hidden group">
-              <span className="relative z-10">Go home</span>
-              <div className="absolute inset-0 w-[200%] transition-transform duration-1000 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%]" />
+
+          <div className="space-y-4">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight">
+              <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+                404
+              </span>
+            </h1>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-foreground">Page not found</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-md mx-auto leading-relaxed">
+              The page you're looking for doesn't exist or has been moved to a different location.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:gap-4 justify-center items-stretch sm:items-center pt-8 px-4 sm:px-0 max-w-sm sm:max-w-none mx-auto sm:flex-row">
+            <Link href="/" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto gap-2 group min-h-12 sm:min-h-11 text-base font-medium active:scale-95 transition-transform"
+              >
+                <Home className="w-5 h-5" />
+                <span>Go home</span>
+                <div className="absolute inset-0 w-[200%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%]" />
+              </Button>
+            </Link>
+            <Button
+              variant="outlined"
+              size="lg"
+              className="w-full sm:w-auto min-h-12 sm:min-h-11 text-base font-medium active:scale-95 transition-transform"
+              onClick={() => window.history.back()}
+            >
+              Go back
             </Button>
-          </Link>
+          </div>
+        </div>
+
+        <div className="mt-12 sm:mt-16 text-center px-4">
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Lost? Try our{" "}
+            <Link href="/" className="text-primary hover:underline font-medium active:opacity-70 transition-opacity">
+              homepage
+            </Link>{" "}
+            or{" "}
+            <Link
+              href="/search"
+              className="text-primary hover:underline font-medium active:opacity-70 transition-opacity"
+            >
+              search
+            </Link>
+          </p>
         </div>
       </main>
 
       <footer
-        className="w-full h-[10vh] px-12 transition-colors duration-300 flex items-center"
+        className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-5 transition-colors duration-300 flex items-center border-t border-border/40"
         style={{ backgroundColor: footerBgColor }}
       >
-        <div className="flex justify-between items-center w-full">
+        <div className="flex justify-between items-center w-full max-w-7xl mx-auto">
           <div className="flex items-center">
-            <div className="flex flex-col items-start">
-              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
-                <Image
-                  src="/logo.svg"
-                  alt="Helper"
-                  width={100}
-                  height={32}
-                  className="transition-opacity duration-300 ease-in-out opacity-100"
-                />
-              </a>
-            </div>
+            <Link href="/" className="transition-opacity hover:opacity-80 active:scale-95 transition-transform">
+              <Image
+                src="/logo.svg"
+                alt="Helper"
+                width={100}
+                height={32}
+                className="w-16 h-5 sm:w-20 sm:h-6 md:w-24 md:h-8 lg:w-[100px] lg:h-[32px]"
+              />
+            </Link>
           </div>
           <div className="flex items-center">
             <Button
               onClick={generateRandomColors}
-              className="transition-colors duration-300"
-              iconOnly
+              className="transition-colors duration-300 min-h-10 min-w-10 sm:min-h-11 sm:min-w-11 active:scale-95 transition-transform"
+              variant="ghost"
+              size="sm"
               style={{ backgroundColor: footerTextColor, color: footerBgColor }}
             >
-              <Shuffle className="w-5 h-5" />
+              <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </div>
