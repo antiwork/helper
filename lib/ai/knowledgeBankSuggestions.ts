@@ -85,7 +85,7 @@ ${similarFAQs.map((faq) => `ID: ${faq.id}\nContent: "${faq.content}"`).join("\n\
     system: baseSystemPrompt,
     messages: [{ role: "user", content: userPrompt }],
     mailbox,
-    queryType: context.type === "human_reply" ? "suggest_knowledge_bank_from_reply" : "suggest_knowledge_bank_changes",
+    queryType: "suggest_knowledge_bank_changes",
     schema: knowledgeBankSuggestionSchema,
   });
 

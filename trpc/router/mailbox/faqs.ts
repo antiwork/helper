@@ -154,11 +154,7 @@ export const faqsRouter = {
         },
       });
 
-      if (!message) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
-      }
-
-      if (message.conversation.mailboxId !== ctx.mailbox.id) {
+      if (message?.conversation.mailboxId !== ctx.mailbox.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Message not found in this mailbox" });
       }
 
