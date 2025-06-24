@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

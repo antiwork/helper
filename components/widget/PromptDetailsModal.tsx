@@ -1,5 +1,5 @@
 import type { Message } from "ai";
-import { ChevronDown, ChevronRight, Info, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Info, X } from "@/components/icons";
 import { useState } from "react";
 import { JsonView } from "@/components/jsonView";
 import MessageMarkdown from "@/components/messageMarkdown";

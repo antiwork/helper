@@ -1,4 +1,4 @@
-import { Check, UserCircle } from "lucide-react";
+import { Check, UserCircle } from "@/components/icons";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";

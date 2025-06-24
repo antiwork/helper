@@ -11,7 +11,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   X,
-} from "lucide-react";
+} from "@/components/icons";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";

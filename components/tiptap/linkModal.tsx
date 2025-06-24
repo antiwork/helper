@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink } from "@/components/icons";
 import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";

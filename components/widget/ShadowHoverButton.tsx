@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Send } from "@/components/icons";
 import { useState } from "react";
 
 export default function ShadowHoverButton({

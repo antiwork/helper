@@ -1,4 +1,4 @@
-import { Camera, Mic } from "lucide-react";
+import { Camera, Mic } from "@/components/icons";
 import * as motion from "motion/react-client";
 import { useCallback, useEffect, useState } from "react";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";

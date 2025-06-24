@@ -8,7 +8,7 @@ import {
   ShieldAlert as ShieldExclamationIcon,
   Sparkles as SparklesIcon,
   User as UserIcon,
-} from "lucide-react";
+} from "@/components/icons";
 import { useMemo, useRef } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";

@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, Users } from "lucide-react";
+import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, Users } from "@/components/icons";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";

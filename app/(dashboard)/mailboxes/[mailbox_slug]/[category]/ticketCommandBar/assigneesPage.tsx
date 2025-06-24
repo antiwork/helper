@@ -1,4 +1,4 @@
-import { Bot, User } from "lucide-react";
+import { Bot, User } from "@/components/icons";
 import type { CommandGroup } from "./types";
 
 type AssigneesPageProps = {

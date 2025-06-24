@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/react";
-import { ALargeSmall, Mic, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
+import { ALargeSmall, Mic, Minus, MinusIcon, RemoveFormatting } from "@/components/icons";
 import React, { useEffect, useState } from "react";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";

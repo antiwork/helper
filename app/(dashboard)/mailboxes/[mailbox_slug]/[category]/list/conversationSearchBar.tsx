@@ -1,5 +1,5 @@
 import { capitalize } from "lodash-es";
-import { ArrowDownUp, Filter, Search } from "lucide-react";
+import { ArrowDownUp, Filter, Search } from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";

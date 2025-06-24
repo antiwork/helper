@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react";
+import { MessageSquare } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

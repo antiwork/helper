@@ -1,4 +1,4 @@
-import { ExternalLink, Search, X } from "lucide-react";
+import { ExternalLink, Search, X } from "@/components/icons";
 import React from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";

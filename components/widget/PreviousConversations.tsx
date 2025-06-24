@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Trash2 } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";

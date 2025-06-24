@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Send } from "@/components/icons";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";

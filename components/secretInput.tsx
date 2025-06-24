@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, Eye, EyeOff } from "@/components/icons";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Input } from "@/components/ui/input";

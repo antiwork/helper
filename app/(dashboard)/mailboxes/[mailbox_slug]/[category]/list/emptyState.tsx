@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Circle } from "lucide-react";
+import { ArrowRight, Check, Circle } from "@/components/icons";
 import Link from "next/link";
 import { HandHello } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/handHello";
 import { InboxZero } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/inboxZero";

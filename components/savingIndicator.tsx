@@ -1,4 +1,4 @@
-import { Check, Loader2, X } from "lucide-react";
+import { Check, Loader2, X } from "@/components/icons";
 import type { SavingState } from "@/components/hooks/useSavingIndicator";
 import { cn } from "@/lib/utils";
 

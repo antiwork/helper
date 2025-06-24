@@ -1,4 +1,4 @@
-import { Star, User } from "lucide-react";
+import { Star, User } from "@/components/icons";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/trpc/react";

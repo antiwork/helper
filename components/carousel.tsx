@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "@/components/icons";
 import React, { createContext, useContext } from "react";
 import { useGlobalEventListener } from "./useGlobalEventListener";
 

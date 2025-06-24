@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
+import { Clock, PlusCircle, RefreshCw, Trash } from "@/components/icons";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { ConfirmationDialog } from "@/components/confirmationDialog";

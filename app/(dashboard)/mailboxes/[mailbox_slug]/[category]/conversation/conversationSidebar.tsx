@@ -1,4 +1,4 @@
-import { CornerUpLeft, DollarSign, ExternalLink, Mail } from "lucide-react";
+import { CornerUpLeft, DollarSign, ExternalLink, Mail } from "@/components/icons";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { AssignPopoverButton } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/assignPopoverButton";

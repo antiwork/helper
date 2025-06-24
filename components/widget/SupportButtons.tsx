@@ -1,5 +1,5 @@
 import { UIMessage } from "ai";
-import { MessagesSquare, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { MessagesSquare, ThumbsDown, ThumbsUp, X } from "@/components/icons";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";

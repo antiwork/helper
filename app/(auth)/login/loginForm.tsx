@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
 import Image from "next/image";

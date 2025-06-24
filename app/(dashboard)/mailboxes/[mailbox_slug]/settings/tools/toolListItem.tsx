@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Settings } from "@/components/icons";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";

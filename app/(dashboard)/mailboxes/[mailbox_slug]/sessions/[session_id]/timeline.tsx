@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@/components/icons";
 import { useState } from "react";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";

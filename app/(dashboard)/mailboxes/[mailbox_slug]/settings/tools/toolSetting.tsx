@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusCircle } from "lucide-react";
+import { PlusCircle } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";

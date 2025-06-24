@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { AlertTriangle, Paperclip, RefreshCw, X } from "lucide-react";
+import { AlertTriangle, Paperclip, RefreshCw, X } from "@/components/icons";
 import { forwardRef } from "react";
 import { UploadStatus, useFileUpload, type UnsavedFileInfo } from "@/components/fileUploadContext";
 import LoadingSpinner from "@/components/loadingSpinner";

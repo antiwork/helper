@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, RefreshCw, Trash } from "lucide-react";
+import { Check, RefreshCw, Trash } from "@/components/icons";
 import { useState } from "react";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";

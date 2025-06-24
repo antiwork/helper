@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp } from "lucide-react";
+import { ChevronUp } from "@/components/icons";
 import { useRouter } from "next/navigation";
 import { getMarketingSiteUrl } from "@/components/constants";
 import { Avatar } from "@/components/ui/avatar";

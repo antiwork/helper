@@ -1,4 +1,4 @@
-import { Bot, Check, ChevronDown } from "lucide-react";
+import { Bot, Check, ChevronDown } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";

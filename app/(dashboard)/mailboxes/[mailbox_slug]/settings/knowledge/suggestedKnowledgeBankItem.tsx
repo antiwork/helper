@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X } from "lucide-react";
+import { Check, X } from "@/components/icons";
 import { useState } from "react";
 import type { FAQ } from "@/app/types/global";
 import { Button } from "@/components/ui/button";

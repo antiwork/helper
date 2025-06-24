@@ -1,4 +1,4 @@
-import { History, Maximize2, Minimize2, X } from "lucide-react";
+import { History, Maximize2, Minimize2, X } from "@/components/icons";
 import React from "react";
 import { HelperWidgetConfig } from "@helperai/sdk";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

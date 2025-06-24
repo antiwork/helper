@@ -1,5 +1,5 @@
 import { escape } from "lodash-es";
-import { Bot, User } from "lucide-react";
+import { Bot, User } from "@/components/icons";
 import { useEffect, useRef } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem as ConversationListItemType } from "@/app/types/global";

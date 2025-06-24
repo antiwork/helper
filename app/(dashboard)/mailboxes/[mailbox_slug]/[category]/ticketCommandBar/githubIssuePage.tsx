@@ -1,4 +1,4 @@
-import { Check, ExternalLinkIcon } from "lucide-react";
+import { Check, ExternalLinkIcon } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";

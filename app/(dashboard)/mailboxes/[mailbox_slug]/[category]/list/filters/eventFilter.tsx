@@ -1,4 +1,4 @@
-import { BellIcon } from "lucide-react";
+import { BellIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
+import { BookOpen, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "@/components/icons";
 import { useParams } from "next/navigation";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import Loading from "@/app/(dashboard)/mailboxes/[mailbox_slug]/settings/loading";

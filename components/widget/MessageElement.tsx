@@ -1,5 +1,5 @@
 import { formatDuration } from "date-fns";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "@/components/icons";
 import { useEffect, useState } from "react";
 import MessageMarkdown from "@/components/messageMarkdown";
 import type { MessageWithReaction } from "@/components/widget/Message";

@@ -1,4 +1,4 @@
-import { Frown } from "lucide-react";
+import { Frown } from "@/components/icons";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
 import { toast } from "@/components/hooks/use-toast";

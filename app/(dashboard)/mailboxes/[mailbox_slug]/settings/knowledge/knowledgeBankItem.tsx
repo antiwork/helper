@@ -1,5 +1,5 @@
 import { truncate } from "lodash-es";
-import { Check, Trash, X } from "lucide-react";
+import { Check, Trash, X } from "@/components/icons";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { FAQ } from "@/app/types/global";

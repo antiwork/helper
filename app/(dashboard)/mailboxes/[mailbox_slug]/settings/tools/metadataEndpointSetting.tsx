@@ -1,7 +1,7 @@
 "use client";
 
 import cx from "classnames";
-import { ExternalLink, PlusCircle } from "lucide-react";
+import { ExternalLink, PlusCircle } from "@/components/icons";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { MetadataEndpoint } from "@/app/types/global";

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, User } from "lucide-react";
+import { Bot, User } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { Button } from "@/components/ui/button";

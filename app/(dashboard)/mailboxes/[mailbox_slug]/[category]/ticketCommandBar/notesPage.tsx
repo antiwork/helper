@@ -1,4 +1,4 @@
-import { Paperclip } from "lucide-react";
+import { Paperclip } from "@/components/icons";
 import { useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { FileUploadProvider, UploadStatus, useFileUpload } from "@/components/fileUploadContext";

@@ -1,4 +1,4 @@
-import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { ThumbsDown, ThumbsUp } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

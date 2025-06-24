@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { User } from "@/components/icons";
 import { MemberFilter } from "./memberFilter";
 
 export function AssigneeFilter({

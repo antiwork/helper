@@ -1,4 +1,4 @@
-import { MessagesSquare } from "lucide-react";
+import { MessagesSquare } from "@/components/icons";
 import { MemberFilter } from "./memberFilter";
 
 export function ResponderFilter({
