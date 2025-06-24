@@ -63,7 +63,7 @@ export const membersRouter = {
     .input(
       z.object({
         period: z.enum(["24h", "7d", "30d", "1y"]),
-        customDate: z.date().optional(),
+        customStartDate: z.date().optional(),
         customEndDate: z.date().optional(),
       }),
     )
@@ -76,7 +76,7 @@ export const membersRouter = {
         "1y": 24 * 365,
       } as const;
 
-      const startDate = input.customDate || subHours(now, periodInHours[input.period]);
+      const startDate = input.customStartDate || subHours(now, periodInHours[input.period]);
       const endDate = input.customEndDate || now;
       return await getMemberStats(ctx.mailbox, { startDate, endDate });
     }),

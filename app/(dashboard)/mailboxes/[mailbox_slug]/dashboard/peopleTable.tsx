@@ -15,14 +15,14 @@ type Props = {
 type Member = RouterOutputs["mailbox"]["members"]["stats"][number];
 
 export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
-  const statsInput = timeRange === "custom"
-    ? { mailboxSlug, period: "24h", customDate: customDate?.from, customEndDate: customDate?.to }
-    : { mailboxSlug, period: timeRange };
+  const statsInput =
+    timeRange === "custom"
+      ? { mailboxSlug, period: "24h", customStartDate: customDate?.from, customEndDate: customDate?.to }
+      : { mailboxSlug, period: timeRange };
 
-  const { data: members, isLoading } = api.mailbox.members.stats.useQuery(
-    statsInput,
-    { enabled: timeRange !== "custom" || !!(customDate?.from && customDate?.to) },
-  );
+  const { data: members, isLoading } = api.mailbox.members.stats.useQuery(statsInput, {
+    enabled: timeRange !== "custom" || !!(customDate?.from && customDate?.to),
+  });
 
   if (isLoading) {
     return (
