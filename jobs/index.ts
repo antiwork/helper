@@ -5,6 +5,7 @@ import { bulkUpdateConversations } from "./bulkUpdateConversations";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
 import { checkConversationResolution } from "./checkConversationResolution";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
+import { classifyConversationsByTopic } from "./classifyConversationsByTopic";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
 import { crawlWebsite } from "./crawlWebsite";
 import { embeddingConversation } from "./embeddingConversation";
@@ -59,6 +60,7 @@ export const eventJobs = {
 };
 
 export const cronJobs = {
+  "*/5 * * * *": { classifyConversationsByTopic },
   "0 19 * * *": { bulkEmbeddingClosedConversations },
   "0 * * * *": {
     checkAssignedTicketResponseTimes,

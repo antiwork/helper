@@ -25,6 +25,7 @@ export const aiUsageEvents = pgTable(
         | "email_auto_ignore"
         | "check_resolution"
         | "merge_similar_conversations"
+        | "issue_topic_generation"
       >(),
     inputTokensCount: integer().notNull(),
     outputTokensCount: integer().notNull(),
