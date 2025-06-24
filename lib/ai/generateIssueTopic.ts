@@ -1,5 +1,5 @@
 import { CoreMessage } from "ai";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, cosineDistance, desc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, issueTopics, mailboxes, ToolMetadata } from "@/db/schema";
@@ -8,6 +8,30 @@ import { generateEmbedding, runAIObjectQuery } from "@/lib/ai";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { findOriginalAndMergedMessages } from "@/lib/data/conversationMessage";
+
+const SIMILARITY_THRESHOLD = 0.9;
+
+const findOrCreateIssueTopic = async (summary: string, embedding: number[]) => {
+  const similarity = sql<number>`1 - (${cosineDistance(issueTopics.embedding, embedding)})`;
+  const [mostSimilarTopic] = await db
+    .select({
+      id: issueTopics.id,
+      similarity,
+    })
+    .from(issueTopics)
+    .orderBy(desc(similarity))
+    .limit(1);
+
+  if (mostSimilarTopic && mostSimilarTopic.similarity > SIMILARITY_THRESHOLD) {
+    const topic = await db.query.issueTopics.findFirst({
+      where: eq(issueTopics.id, mostSimilarTopic.id),
+    });
+    return topic;
+  }
+
+  const [newTopic] = await db.insert(issueTopics).values({ summary, embedding }).returning();
+  return newTopic;
+};
 
 const constructMessagesForIssueTopic = (
   emails: Pick<typeof conversationMessages.$inferSelect, "role" | "cleanedUpText" | "metadata">[],
@@ -76,15 +100,8 @@ export const generateIssueTopic = async (
     },
   });
 
-  let topic = await db.query.issueTopics.findFirst({
-    where: eq(issueTopics.summary, newIssueTopic),
-  });
-
-  if (!topic) {
-    const embedding = await generateEmbedding(newIssueTopic);
-    const newTopics = await db.insert(issueTopics).values({ summary: newIssueTopic, embedding }).returning();
-    topic = newTopics[0];
-  }
+  const embedding = await generateEmbedding(newIssueTopic);
+  const topic = await findOrCreateIssueTopic(newIssueTopic, embedding);
 
   if (!topic) {
     // This should not happen, but as a safeguard
