@@ -23,7 +23,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
   const { isBelowMd } = useBreakpoint("md");
   useEffect(() => setIsMobile(isBelowMd), [isBelowMd]);
 
-  const selectedItem = items.find((item) => item.id === params.tab);
+  const selectedItem = items.find((item) => item.id === params.tab) || items[0];
 
   if (isMobile) {
     return (
