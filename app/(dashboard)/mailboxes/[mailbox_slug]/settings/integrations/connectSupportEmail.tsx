@@ -22,7 +22,6 @@ const ConnectSupportEmail = () => {
     <SectionWrapper
       title="Support Email"
       description="Connect your support email to receive and send emails from your support email address."
-      fullWidth
     >
       {error && (
         <div className="mb-4 rounded-lg bg-destructive-100 px-4 py-3 text-destructive-900" role="alert">
