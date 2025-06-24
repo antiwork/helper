@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
-  if (!code || !state) return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=invalid_code`);
+  if (!code || !state)
+    return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=invalid_code`);
 
   try {
     const { tokens } = await auth.getToken(code);
