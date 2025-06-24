@@ -101,7 +101,6 @@ export const updateUserMailboxData = async (
   });
   if (updateError) throw updateError;
   if (!updatedUser) throw new Error("Failed to update user");
-  console.log("upsatedUser", updatedUser.user_metadata.mailboxAccess);
 
   return {
     id: updatedUser.id,
