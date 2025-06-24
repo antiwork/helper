@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { getBaseUrl, getMarketingSiteUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
+import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +45,9 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   );
   const [widgetHost, setWidgetHost] = useState(mailbox.widgetHost ?? "");
   const [isCopied, setIsCopied] = useState(false);
+  const chatVisibilitySaving = useSavingIndicator();
+  const hostUrlSaving = useSavingIndicator();
+  const emailResponseSaving = useSavingIndicator();
   const { showChatWidget, setShowChatWidget } = useShowChatWidget();
 
   useEffect(() => {
@@ -51,33 +56,86 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   }, [mode]);
 
   const utils = api.useUtils();
-  const { mutate: update } = api.mailbox.update.useMutation({
+  const { mutate: updateChatVisibility } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      chatVisibilitySaving.setState("saved");
     },
     onError: (error) => {
+      chatVisibilitySaving.setState("error");
       toast({
-        title: "Error updating chat widget settings",
+        title: "Error updating chat visibility settings",
         description: error.message,
       });
     },
   });
 
-  const save = useDebouncedCallback(() => {
-    update({
+  const { mutate: updateHostUrl } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      hostUrlSaving.setState("saved");
+    },
+    onError: (error) => {
+      hostUrlSaving.setState("error");
+      toast({
+        title: "Error updating host URL",
+        description: error.message,
+      });
+    },
+  });
+
+  const { mutate: updateEmailResponse } = api.mailbox.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      emailResponseSaving.setState("saved");
+    },
+    onError: (error) => {
+      emailResponseSaving.setState("error");
+      toast({
+        title: "Error updating email response settings",
+        description: error.message,
+      });
+    },
+  });
+
+  const saveChatVisibility = useDebouncedCallback(() => {
+    chatVisibilitySaving.setState("saving");
+    updateChatVisibility({
       mailboxSlug: mailbox.slug,
       widgetDisplayMode: mode,
       widgetDisplayMinValue: mode === "revenue_based" && /^\d+$/.test(minValue) ? Number(minValue) : null,
+    });
+  }, 500);
+
+  const saveHostUrl = useDebouncedCallback(() => {
+    hostUrlSaving.setState("saving");
+    updateHostUrl({
+      mailboxSlug: mailbox.slug,
+      widgetHost: widgetHost || null,
+    });
+  }, 500);
+
+  const saveEmailResponse = useDebouncedCallback(() => {
+    emailResponseSaving.setState("saving");
+    updateEmailResponse({
+      mailboxSlug: mailbox.slug,
       preferences: {
         autoRespondEmailToChat: autoRespond === "off" ? null : autoRespond,
       },
-      widgetHost: widgetHost || null,
     });
-  }, 2000);
+  }, 500);
 
   useOnChange(() => {
-    save();
-  }, [mode, minValue, autoRespond, widgetHost]);
+    saveChatVisibility();
+  }, [mode, minValue]);
+
+  useOnChange(() => {
+    saveHostUrl();
+  }, [widgetHost]);
+
+  useOnChange(() => {
+    saveEmailResponse();
+  }, [autoRespond]);
 
   const handleSwitchChange = (checked: boolean) => {
     const newMode = checked ? "always" : "off";
@@ -225,7 +283,7 @@ ${NODE_HMAC_SAMPLE_CODE}
   `.trim();
 
   return (
-    <div>
+    <div className="space-y-6">
       <SectionWrapper
         className="max-w-3xl space-y-4"
         title="Widget Installation"
@@ -564,75 +622,90 @@ export default async function RootLayout({
           </TabsContent>
         </Tabs>
       </SectionWrapper>
-      <SwitchSectionWrapper
-        title="Chat Icon Visibility"
-        description="Choose when your customers can see the chat widget on your website or app"
-        initialSwitchChecked={mode !== "off"}
-        onSwitchChange={handleSwitchChange}
-      >
-        {mode !== "off" && (
-          <div className="space-y-4">
-            <div className="flex flex-col space-y-2">
-              <Label>Show chat icon for</Label>
-              <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
-                <SelectTrigger className="w-[350px]">
-                  <SelectValue placeholder="Select when to show chat icon" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="always">All customers</SelectItem>
-                  <SelectItem value="revenue_based">Customers with value greater than</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {mode === "revenue_based" && (
-              <div className="flex items-center space-x-4">
-                <Input
-                  id="min-value"
-                  type="number"
-                  value={minValue}
-                  onChange={(e) => setMinValue(e.target.value)}
-                  className="max-w-[200px]"
-                  min="0"
-                  step="1"
-                />
+      <div className="relative">
+        <div className="absolute top-2 right-4 z-10">
+          <SavingIndicator state={chatVisibilitySaving.state} />
+        </div>
+        <SwitchSectionWrapper
+          title="Chat Icon Visibility"
+          description="Choose when your customers can see the chat widget on your website or app"
+          initialSwitchChecked={mode !== "off"}
+          onSwitchChange={handleSwitchChange}
+        >
+          {mode !== "off" && (
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Label>Show chat icon for</Label>
+                <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
+                  <SelectTrigger className="w-[350px]">
+                    <SelectValue placeholder="Select when to show chat icon" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="always">All customers</SelectItem>
+                    <SelectItem value="revenue_based">Customers with value greater than</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+
+              {mode === "revenue_based" && (
+                <div className="flex items-center space-x-4">
+                  <Input
+                    id="min-value"
+                    type="number"
+                    value={minValue}
+                    onChange={(e) => setMinValue(e.target.value)}
+                    className="max-w-[200px]"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </SwitchSectionWrapper>
+      </div>
+
+      <div className="relative">
+        <div className="absolute top-2 right-4 z-10">
+          <SavingIndicator state={hostUrlSaving.state} />
+        </div>
+        <SectionWrapper
+          title="Chat widget host URL"
+          description="The URL where your chat widget is installed. If set, customers will be able to continue email conversations in the chat widget."
+        >
+          <div className="flex flex-col space-y-2">
+            <Label htmlFor="widgetHost">Host URL</Label>
+            <Input
+              id="widgetHost"
+              type="url"
+              value={widgetHost}
+              onChange={(e) => setWidgetHost(e.target.value)}
+              placeholder="https://example.com"
+              className="max-w-[350px]"
+            />
           </div>
-        )}
-      </SwitchSectionWrapper>
+        </SectionWrapper>
+      </div>
 
-      <SectionWrapper
-        title="Chat widget host URL"
-        description="The URL where your chat widget is installed. If set, customers will be able to continue email conversations in the chat widget."
-      >
-        <div className="flex flex-col space-y-2">
-          <Label htmlFor="widgetHost">Host URL</Label>
-          <Input
-            id="widgetHost"
-            type="url"
-            value={widgetHost}
-            onChange={(e) => setWidgetHost(e.target.value)}
-            placeholder="https://example.com"
-            className="max-w-[350px]"
-          />
+      <div className="relative">
+        <div className="absolute top-2 right-4 z-10">
+          <SavingIndicator state={emailResponseSaving.state} />
         </div>
-      </SectionWrapper>
-
-      <SectionWrapper
-        title="Respond to email inquiries with chat"
-        description="Automatically respond to emails as if the customer was using the chat widget."
-      >
-        <div className="space-y-4">
-          <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="off">Off</TabsTrigger>
-              <TabsTrigger value="draft">Draft</TabsTrigger>
-              <TabsTrigger value="reply">Reply</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </SectionWrapper>
+        <SectionWrapper
+          title="Respond to email inquiries with chat"
+          description="Automatically respond to emails as if the customer was using the chat widget."
+        >
+          <div className="space-y-4">
+            <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="off">Off</TabsTrigger>
+                <TabsTrigger value="draft">Draft</TabsTrigger>
+                <TabsTrigger value="reply">Reply</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </SectionWrapper>
+      </div>
 
       {showChatWidget && (
         <div className="fixed bottom-8 right-24 bg-primary text-primary-foreground px-3 py-1.5 rounded-md">

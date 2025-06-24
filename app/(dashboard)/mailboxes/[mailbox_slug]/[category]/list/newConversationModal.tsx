@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { isValidEmailAddress } from "@/components/utils/email";
+import { parseEmailList } from "@/components/utils/email";
+import { parseEmailAddress } from "@/lib/emails";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterInputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -98,34 +99,37 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
   const sendMessage = async () => {
     if (sendDisabled) return;
     stopRecording();
-    const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
-      conversation_slug: conversationSlug,
-      to_email_address: newConversationInfo.to_email_address.trim(),
-      subject: newConversationInfo.subject.trim(),
-      message: newConversationInfo.message.trim(),
-      cc: parseEmailList(newConversationInfo.cc),
-      bcc: parseEmailList(newConversationInfo.bcc),
-      file_slugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
-    };
-    if (!isValidEmailAddress(parsedNewConversationInfo.to_email_address))
+
+    const toEmailAddress = parseEmailAddress(newConversationInfo.to_email_address.trim())?.address;
+    if (!toEmailAddress)
       return toast({
         variant: "destructive",
         title: 'Please enter a valid "To" email address',
       });
-    for (const email of parsedNewConversationInfo.cc) {
-      if (!isValidEmailAddress(email))
-        return toast({
-          variant: "destructive",
-          title: `Invalid CC email address: ${email}`,
-        });
-    }
-    for (const email of parsedNewConversationInfo.bcc) {
-      if (!isValidEmailAddress(email))
-        return toast({
-          variant: "destructive",
-          title: `Invalid BCC email address: ${email}`,
-        });
-    }
+
+    const cc = parseEmailList(newConversationInfo.cc);
+    if (!cc.success)
+      return toast({
+        variant: "destructive",
+        title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
+      });
+
+    const bcc = parseEmailList(newConversationInfo.bcc);
+    if (!bcc.success)
+      return toast({
+        variant: "destructive",
+        title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
+      });
+
+    const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
+      conversation_slug: conversationSlug,
+      to_email_address: toEmailAddress,
+      subject: newConversationInfo.subject.trim(),
+      message: newConversationInfo.message.trim(),
+      cc: cc.data,
+      bcc: bcc.data,
+      file_slugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
+    };
 
     await createNewConversation({ mailboxSlug, conversation: parsedNewConversationInfo });
   };
@@ -274,19 +278,6 @@ const CcAndBccInfo = ({
     </div>
   );
 };
-
-/**
- * @example
- * // "1@test.com, 2@test.com" -> ["1@test.com", "2@test.com"]
- * const emails = parseEmailList("1@test.com, 2@test.com");
- */
-const parseEmailList = (list: string) =>
-  list
-    .trim()
-    .replace(/\s/g, "")
-    .split(",")
-    .filter(Boolean)
-    .map((emailAdress) => emailAdress.trim());
 
 const Wrapper = ({ mailboxSlug, conversationSlug, onSubmit }: Props) => (
   <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug}>
