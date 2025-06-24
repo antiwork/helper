@@ -17,6 +17,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
+import { parseEmailList } from "@/components/utils/email";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
@@ -36,17 +37,22 @@ export const isEmptyContent = (text: string | undefined) => {
   return !dom.documentElement.textContent && !dom.querySelector('img[src]:not([src=""])');
 };
 
-export const useSendDisabled = (message: string | undefined) => {
+export const useSendDisabled = (message: string | undefined, conversationStatus?: string | null) => {
   const [sending, setSending] = useState(false);
   const { uploading, failedAttachmentsExist, hasReadyFileAttachments } = useFileUpload();
 
   const sendDisabled =
-    sending || (isEmptyContent(message) && !hasReadyFileAttachments) || uploading || failedAttachmentsExist;
+    sending ||
+    (isEmptyContent(message) && !hasReadyFileAttachments) ||
+    uploading ||
+    failedAttachmentsExist ||
+    conversationStatus === "closed" ||
+    conversationStatus === "spam";
   return { sendDisabled, sending, setSending };
 };
 
 export const MessageActions = () => {
-  const { navigateToConversation } = useConversationListContext();
+  const { navigateToConversation, removeConversation } = useConversationListContext();
   const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
@@ -60,6 +66,15 @@ export const MessageActions = () => {
     if (!mailboxPreferences?.preferences?.confetti) return;
     triggerConfetti();
   };
+
+  const replyMutation = api.mailbox.conversations.messages.reply.useMutation({
+    onSuccess: async (_, variables) => {
+      await utils.mailbox.conversations.get.invalidate({
+        mailboxSlug,
+        conversationSlug: variables.conversationSlug,
+      });
+    },
+  });
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
@@ -97,16 +112,9 @@ export const MessageActions = () => {
   );
   const [initialMessageObject, setInitialMessageObject] = useState({ content: "" });
   const { undoneEmail, setUndoneEmail } = useUndoneEmailStore();
+
   useEffect(() => {
     if (!conversation) return;
-
-    if (undoneEmail) {
-      setDraftedEmail({ ...undoneEmail, modified: true });
-      setInitialMessageObject({ content: undoneEmail.message });
-      resetFiles(undoneEmail.files);
-      setUndoneEmail(undefined);
-      return;
-    }
 
     if (!draftedEmail.modified) {
       const email = generateInitialDraftedEmail(conversation);
@@ -172,7 +180,34 @@ export const MessageActions = () => {
   });
 
   const { readyFiles, resetFiles } = useFileUpload();
-  const { sendDisabled, sending, setSending } = useSendDisabled(draftedEmail.message);
+  const { sendDisabled, sending, setSending } = useSendDisabled(draftedEmail.message, conversation?.status);
+
+  useEffect(() => {
+    if (!conversation || !undoneEmail) return;
+
+    const hasUnsavedChanges = draftedEmail.modified && !isEmptyContent(draftedEmail.message);
+
+    if (hasUnsavedChanges) {
+      const shouldOverwrite = confirm(
+        "You have unsaved changes that will be lost. Do you want to continue with restoring the unsent message?",
+      );
+
+      if (!shouldOverwrite) {
+        setUndoneEmail(undefined);
+        return;
+      }
+    }
+
+    setDraftedEmail({ ...undoneEmail, modified: true });
+    setInitialMessageObject({ content: undoneEmail.message });
+    resetFiles(undoneEmail.files);
+
+    if (editorRef.current?.editor && !editorRef.current.editor.isDestroyed) {
+      editorRef.current.editor.commands.setContent(undoneEmail.message);
+    }
+
+    setUndoneEmail(undefined);
+  }, [undoneEmail, conversation]);
 
   const [lastSentMessageId, setLastSentMessageId] = useState<number | null>(null);
   const [showKnowledgeBankDialog, setShowKnowledgeBankDialog] = useState(false);
@@ -182,50 +217,97 @@ export const MessageActions = () => {
 
     stopRecording();
     setSending(true);
+    const originalDraftedEmail = { ...draftedEmail, files: readyFiles };
 
     try {
-      const cc_emails = draftedEmail.cc.replace(/\s/g, "").split(",");
-      const bcc_emails = draftedEmail.bcc.replace(/\s/g, "").split(",");
+      const cc = parseEmailList(draftedEmail.cc);
+      if (!cc.success)
+        return toast({
+          variant: "destructive",
+          title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
+        });
+
+      const bcc = parseEmailList(draftedEmail.bcc);
+      if (!bcc.success)
+        return toast({
+          variant: "destructive",
+          title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
+        });
+
       const conversationSlug = conversation.slug;
 
       const lastUserMessage = conversation.messages
         ?.filter((m) => m.type === "message" && m.role === "user")
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
-      const { id: emailId } = await utils.client.mailbox.conversations.messages.reply.mutate({
+      const { id: emailId } = await replyMutation.mutateAsync({
         mailboxSlug,
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
-        cc: cc_emails,
-        bcc: bcc_emails,
+        cc: cc.data,
+        bcc: bcc.data,
         shouldAutoAssign: assign,
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,
       });
 
-      setDraftedEmail({ message: "", files: [], cc: "", bcc: "", modified: false });
+      // Clear the draft immediately after message is sent successfully
+      setDraftedEmail((prev) => ({ ...prev, message: "", files: [], modified: false }));
       setInitialMessageObject({ content: "" });
       resetFiles([]);
       setStoredMessage("");
+      setShowCommandBar(false);
+
+      try {
+        if (editorRef.current?.editor && !editorRef.current.editor.isDestroyed) {
+          editorRef.current.editor.commands.clearContent();
+        }
+      } catch (error) {
+        captureExceptionAndLog(error);
+      }
+
+      // Handle status update separately - if this fails, draft is already cleared
+      let shouldTriggerConfetti = false;
       if (conversation.status === "open" && close) {
-        updateStatus("closed");
-        if (!assign) triggerMailboxConfetti();
+        try {
+          // Use direct update to avoid redundant toast since we're already showing "Replied and closed"
+          await utils.client.mailbox.conversations.update.mutate({
+            mailboxSlug,
+            conversationSlug,
+            status: "closed",
+          });
+          // Remove conversation from list and move to next
+          removeConversation();
+          if (!assign) shouldTriggerConfetti = true;
+        } catch (error) {
+          captureExceptionAndLog(error);
+          toast({
+            variant: "destructive",
+            title: "Message sent but failed to close conversation",
+            description: "The message was sent successfully, but there was an error closing the conversation.",
+          });
+        }
+      }
+
+      if (shouldTriggerConfetti) {
+        triggerMailboxConfetti();
       }
       toast({
-        title: "Message sent!",
+        title: close ? "Replied and closed" : "Message sent!",
         variant: "success",
         action: (
           <div className="flex gap-2 items-center">
-            <ToastAction
-              altText="Visit"
-              onClick={() => {
-                utils.mailbox.conversations.get.invalidate({ mailboxSlug, conversationSlug });
-                navigateToConversation(conversation.slug);
-              }}
-            >
-              Visit
-            </ToastAction>
+            {close && (
+              <ToastAction
+                altText="Visit"
+                onClick={() => {
+                  navigateToConversation(conversation.slug);
+                }}
+              >
+                Visit
+              </ToastAction>
+            )}
             <ToastAction
               altText="Generate knowledge bank entry"
               onClick={() => {
@@ -244,7 +326,7 @@ export const MessageActions = () => {
                     conversationSlug,
                     emailId,
                   });
-                  setUndoneEmail({ ...draftedEmail, files: readyFiles });
+                  setUndoneEmail(originalDraftedEmail);
                   toast({
                     title: "Message unsent",
                     variant: "success",
@@ -274,10 +356,6 @@ export const MessageActions = () => {
       });
     } finally {
       setSending(false);
-    }
-
-    if (conversation?.status !== "open") {
-      refetch();
     }
   };
 
@@ -367,8 +445,8 @@ export const MessageActions = () => {
         defaultContent={initialMessageObject}
         editable={true}
         onUpdate={(message, isEmpty) => updateDraftedEmail({ message: isEmpty ? "" : message })}
-        onModEnter={() => handleSend({ assign: false })}
-        onOptionEnter={() => handleSend({ assign: false, close: false })}
+        onModEnter={() => !sendDisabled && handleSend({ assign: false })}
+        onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
         onSlashKey={() => commandInputRef.current?.focus()}
         enableImageUpload
         enableFileUpload
