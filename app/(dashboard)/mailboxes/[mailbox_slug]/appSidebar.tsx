@@ -150,10 +150,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/settings/knowledge`}
+                  isActive={pathname.includes(`/mailboxes/${mailboxSlug}/settings`)}
                   tooltip="Settings"
                 >
-                  <Link href={`/mailboxes/${mailboxSlug}/settings`}>
+                  <Link href={`/mailboxes/${mailboxSlug}/settings/knowledge`}>
                     <Settings className="size-4" />
                     <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                   </Link>

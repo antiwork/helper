@@ -1,6 +1,5 @@
 import cx from "classnames";
 import { useParams, useRouter } from "next/navigation";
-import { parseAsStringEnum, useQueryState } from "nuqs";
 import React, { useEffect, useRef, useState } from "react";
 import { useBreakpoint } from "@/components/useBreakpoint";
 
@@ -44,7 +43,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => router.push(`/${item.id}`)}
+                  onClick={() => router.push(`/mailboxes/${params.mailbox_slug}/settings/${item.id}`)}
                   className={cx(
                     "flex items-center px-4 py-3 text-sm transition-colors duration-150 ease-in-out",
                     "max-w-[200px] cursor-pointer",
