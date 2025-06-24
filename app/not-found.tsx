@@ -52,47 +52,41 @@ export default function NotFound() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/40">
-        <nav className="flex items-center justify-between p-3 sm:p-4 mx-auto max-w-7xl">
-          <Link href="/" className="transition-opacity hover:opacity-80 active:scale-95 transition-transform">
-            <div className="relative w-20 h-6 sm:w-24 sm:h-7 md:w-[100px] md:h-[32px]">
-              <Image
-                src="/logo-white.svg"
-                priority
-                alt="Helper"
-                width={100}
-                height={32}
-                className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100 dark:opacity-100"
-              />
-              <Image
-                src="/logo.svg"
-                priority
-                alt="Helper"
-                width={100}
-                height={32}
-                className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-0 dark:opacity-0"
-              />
-            </div>
-          </Link>
-          <Link href="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 sm:gap-2 min-h-10 px-3 sm:px-4 active:scale-95 transition-transform"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm">Back to Helper</span>
-            </Button>
-          </Link>
-        </nav>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#3D0C11" }}>
+      <header className="sticky top-0 z-50" style={{ backgroundColor: "rgba(61, 12, 17, 0.8)" }}>
+        <div className="backdrop-blur-sm border-b border-white/10">
+          <nav className="flex items-center justify-between p-3 sm:p-4 mx-auto max-w-7xl">
+            <Link href="/" className="transition-opacity hover:opacity-80 active:scale-95 transition-transform">
+              <div className="relative w-20 h-6 sm:w-24 sm:h-7 md:w-[100px] md:h-[32px]">
+                <Image
+                  src="/logo-white.svg"
+                  priority
+                  alt="Helper"
+                  width={100}
+                  height={32}
+                  className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100"
+                />
+              </div>
+            </Link>
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 sm:gap-2 min-h-10 px-3 sm:px-4 active:scale-95 transition-transform text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm">Back to Helper</span>
+              </Button>
+            </Link>
+          </nav>
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-16">
         <div className="max-w-2xl mx-auto text-center space-y-8">
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-yellow-400/10 to-orange-400/20 rounded-full blur-2xl animate-pulse" />
               <Image
                 src="/logo_icon.svg"
                 alt="Helper"
@@ -105,12 +99,12 @@ export default function NotFound() {
 
           <div className="space-y-4">
             <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
                 404
               </span>
             </h1>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-foreground">Page not found</h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-md mx-auto leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white">Page not found</h2>
+            <p className="text-lg sm:text-xl text-white/80 max-w-md mx-auto leading-relaxed">
               The page you're looking for doesn't exist or has been moved to a different location.
             </p>
           </div>
@@ -119,17 +113,17 @@ export default function NotFound() {
             <Link href="/" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="w-full sm:w-auto gap-2 group min-h-12 sm:min-h-11 text-base font-medium active:scale-95 transition-transform"
+                className="w-full sm:w-auto gap-2 group min-h-12 sm:min-h-11 text-base font-medium active:scale-95 transition-transform bg-white text-black hover:bg-white/90"
               >
                 <Home className="w-5 h-5" />
                 <span>Go home</span>
-                <div className="absolute inset-0 w-[200%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%]" />
+                <div className="absolute inset-0 w-[200%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-[100%] group-hover:translate-x-[100%]" />
               </Button>
             </Link>
             <Button
-              variant="outlined"
+              variant="ghost"
               size="lg"
-              className="w-full sm:w-auto min-h-12 sm:min-h-11 text-base font-medium active:scale-95 transition-transform"
+              className="w-full sm:w-auto min-h-12 sm:min-h-11 text-base font-medium active:scale-95 transition-transform text-white border border-white/20 hover:bg-white/10"
               onClick={() => window.history.back()}
             >
               Go back
@@ -138,15 +132,15 @@ export default function NotFound() {
         </div>
 
         <div className="mt-12 sm:mt-16 text-center px-4">
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <p className="text-sm sm:text-base text-white/60">
             Lost? Try our{" "}
-            <Link href="/" className="text-primary hover:underline font-medium active:opacity-70 transition-opacity">
+            <Link href="/" className="text-orange-400 hover:underline font-medium active:opacity-70 transition-opacity">
               homepage
             </Link>{" "}
             or{" "}
             <Link
               href="/search"
-              className="text-primary hover:underline font-medium active:opacity-70 transition-opacity"
+              className="text-orange-400 hover:underline font-medium active:opacity-70 transition-opacity"
             >
               search
             </Link>
@@ -155,7 +149,7 @@ export default function NotFound() {
       </main>
 
       <footer
-        className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-5 transition-colors duration-300 flex items-center border-t border-border/40"
+        className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-5 transition-colors duration-300 flex items-center border-t border-white/10"
         style={{ backgroundColor: footerBgColor }}
       >
         <div className="flex justify-between items-center w-full max-w-7xl mx-auto">
