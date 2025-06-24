@@ -40,6 +40,62 @@ export const addUser = async (inviterUserId: string, emailAddress: string, displ
   if (error) throw error;
 };
 
+export const addMember = async (
+  inviterUserId: string,
+  emailAddress: string,
+  displayName: string,
+  mailboxId: number,
+  role: "core" | "nonCore" | "afk" = "afk",
+) => {
+  const supabase = createAdminClient();
+
+  const { data: existingUsers, error: fetchError } = await supabase.auth.admin.listUsers();
+
+  if (fetchError) throw fetchError;
+
+  const existingUser = existingUsers?.users?.find((user) => user.email?.toLowerCase() === emailAddress.toLowerCase());
+
+  if (existingUser) {
+    const existingMetadata = existingUser.user_metadata || {};
+    const existingMailboxAccess = existingMetadata.mailboxAccess || {};
+
+    const updatedMailboxAccess = {
+      ...existingMailboxAccess,
+      [mailboxId]: {
+        role,
+        keywords: [],
+        updatedAt: new Date().toISOString(),
+      },
+    };
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
+      user_metadata: {
+        ...existingMetadata,
+        display_name: displayName || existingMetadata.display_name,
+        mailboxAccess: updatedMailboxAccess,
+      },
+    });
+
+    if (updateError) throw updateError;
+  } else {
+    const { error: createError } = await supabase.auth.admin.createUser({
+      email: emailAddress,
+      user_metadata: {
+        inviter_user_id: inviterUserId,
+        display_name: displayName,
+        mailboxAccess: {
+          [mailboxId]: {
+            role,
+            keywords: [],
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      },
+    });
+
+    if (createError) throw createError;
+  }
+};
 
 export const removeMailboxAccess = async (id: string, mailboxId: number) => {
   const user = await db.query.authUsers.findFirst({

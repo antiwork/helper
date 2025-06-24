@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useSession } from "@/components/useSession";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
 
@@ -39,6 +40,11 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
+  const { user: currentUser } = useSession() ?? {};
+  const { data: conversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery({
+    mailboxSlug,
+    assignee: [member.id],
+  });
 
   // Separate saving indicators for each operation type
   const displayNameSaving = useSavingIndicator();
@@ -264,23 +270,25 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
           />
         </div>
       </TableCell>
+      <TableCell>
+        {currentUser?.id !== member.id && (
+          <ConfirmationDialog
+            message={`Are you sure you want to remove ${member.displayName} from your team?`}
+            onConfirm={() => removeTeamMember({ id: member.id, mailboxSlug })}
+          >
+            <Button variant="ghost" size="sm" iconOnly>
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </ConfirmationDialog>
+        )}
+      </TableCell>
       <TableCell className="w-[120px]">
         <div className="flex items-center gap-2">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={roleSaving.state} />
           {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
         </div>
-      </TableCell>
-      <TableCell>
-        <ConfirmationDialog
-          message={`Are you sure you want to remove ${member.displayName} from your team?`}
-          onConfirm={() => removeTeamMember({ id: member.id, mailboxSlug })}
-        >
-          <Button variant="ghost" size="sm" iconOnly>
-            <Trash className="h-4 w-4" />
-            <span className="sr-only">Delete</span>
-          </Button>
-        </ConfirmationDialog>
       </TableCell>
     </TableRow>
   );
