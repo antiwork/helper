@@ -50,3 +50,4 @@ db/seeds/localSeeds.ts
 
 scripts/docker/tmp/
 scripts/docker/local-nginx/certs/*
+public/0da07f7d1aade852073d.js
