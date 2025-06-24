@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   onModEnter?: () => void;
-  ref?: React.RefObject<HTMLTextAreaElement>;
+  ref?: React.Ref<HTMLTextAreaElement>;
 }
 
 const Textarea = ({ className, onModEnter, ref, ...props }: TextareaProps) => {
