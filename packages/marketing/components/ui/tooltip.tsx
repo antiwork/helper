@@ -30,18 +30,16 @@ const tooltipContentVariants = cva(
 );
 
 interface TooltipContentProps
-  extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
+  extends React.ComponentPropsWithRef<typeof TooltipPrimitive.Content>,
     VariantProps<typeof tooltipContentVariants> {}
 
-const TooltipContent = React.forwardRef<React.ComponentRef<typeof TooltipPrimitive.Content>, TooltipContentProps>(
-  ({ className, sideOffset = 4, size, variant, ...props }, ref) => (
-    <TooltipPrimitive.Content
-      ref={ref}
-      sideOffset={sideOffset}
-      className={cn(tooltipContentVariants({ size, variant }), className)}
-      {...props}
-    />
-  ),
+const TooltipContent = ({ className, sideOffset = 4, size, variant, ref, ...props }: TooltipContentProps) => (
+  <TooltipPrimitive.Content
+    ref={ref}
+    sideOffset={sideOffset}
+    className={cn(tooltipContentVariants({ size, variant }), className)}
+    {...props}
+  />
 );
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
