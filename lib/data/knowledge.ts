@@ -161,7 +161,7 @@ const suggestionResolvedBlocks = (
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View knowledge bank>`,
+        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings/knowledge|View knowledge bank>`,
       },
     },
   ];

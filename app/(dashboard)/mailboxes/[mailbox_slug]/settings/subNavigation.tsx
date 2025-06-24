@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { parseAsStringEnum, useQueryState } from "nuqs";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { useBreakpoint } from "@/components/useBreakpoint";
 
@@ -16,14 +16,14 @@ type SubNavigationProps = {
 };
 
 const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
-  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(items.map((item) => item.id)));
+  const params = useParams<{ mailbox_slug: string; tab: string }>();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const { isBelowMd } = useBreakpoint("md");
   useEffect(() => setIsMobile(isBelowMd), [isBelowMd]);
 
-  const selectedItem = items.find((item) => item.id === tab) ?? items[0];
-  const setSelectedItem = (item: NavigationItem) => setTab(item.id);
+  const selectedItem = items.find((item) => item.id === params.tab) || items[0];
 
   if (isMobile) {
     return (
@@ -39,11 +39,11 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
           <div className="flex whitespace-nowrap pb-1">
             {items.map((item) => {
               const Icon = item.icon;
-              const isSelected = item.id === selectedItem?.id;
+              const isSelected = item.id === params.tab;
               return (
                 <button
                   key={item.id}
-                  onClick={() => setSelectedItem(item)}
+                  onClick={() => router.push(`/mailboxes/${params.mailbox_slug}/settings/${item.id}`)}
                   className={cx(
                     "flex items-center px-4 py-3 text-sm transition-colors duration-150 ease-in-out",
                     "max-w-[200px] cursor-pointer",
@@ -78,7 +78,7 @@ const SubNavigation: React.FC<SubNavigationProps> = ({ items, footer }) => {
                 key={index}
                 onClick={(e) => {
                   e.preventDefault();
-                  setSelectedItem(item);
+                  router.push(`/mailboxes/${params.mailbox_slug}/settings/${item.id}`);
                 }}
                 className={cx(
                   "flex h-12 items-center px-4 text-sm transition-colors duration-150 ease-in-out",
