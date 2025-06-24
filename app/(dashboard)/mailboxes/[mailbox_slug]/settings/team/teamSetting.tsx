@@ -31,6 +31,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     <SectionWrapper
       title="Manage Team Members"
       description="Add and organize team members for efficient ticket assignment"
+      fullWidth
     >
       <div className="w-full space-y-6">
         <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
