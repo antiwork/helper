@@ -23,18 +23,18 @@ export async function GET(request: NextRequest) {
 
   const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);
 
-  if (!installationId) return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
+  if (!installationId) return NextResponse.redirect(`${redirectUrl}/integrations&githubConnectResult=error`);
 
   try {
     if ((await listRepositories(installationId)).length === 0) {
-      return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
+      return NextResponse.redirect(`${redirectUrl}/integrations&githubConnectResult=error`);
     }
 
     await db.update(mailboxes).set({ githubInstallationId: installationId }).where(eq(mailboxes.id, mailbox.id));
 
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=success`);
+    return NextResponse.redirect(`${redirectUrl}/integrations&githubConnectResult=success`);
   } catch (error) {
     captureExceptionAndThrowIfDevelopment(error);
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&githubConnectResult=error`);
+    return NextResponse.redirect(`${redirectUrl}/integrations&githubConnectResult=error`);
   }
 }

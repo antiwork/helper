@@ -14,20 +14,20 @@ export async function GET(request: NextRequest) {
   const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${state.mailbox_slug}/settings`);
 
   if (!code) {
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=error`);
+    return NextResponse.redirect(`${redirectUrl}/integrations&slackConnectResult=error`);
   }
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=error`);
+    return NextResponse.redirect(`${redirectUrl}/integrations&slackConnectResult=error`);
   }
 
   try {
     const mailbox = await getMailboxBySlug(state.mailbox_slug);
     if (!mailbox) {
-      return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=error`);
+      return NextResponse.redirect(`${redirectUrl}/integrations&slackConnectResult=error`);
     }
     const { teamId, botUserId, accessToken } = await getSlackAccessToken(code);
 
@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
       })
       .where(eq(mailboxes.id, mailbox.id));
 
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=success`);
+    return NextResponse.redirect(`${redirectUrl}/integrations&slackConnectResult=success`);
   } catch (error) {
     Sentry.captureException(error);
-    return NextResponse.redirect(`${redirectUrl}?tab=integrations&slackConnectResult=error`);
+    return NextResponse.redirect(`${redirectUrl}/integrations&slackConnectResult=error`);
   }
 }
