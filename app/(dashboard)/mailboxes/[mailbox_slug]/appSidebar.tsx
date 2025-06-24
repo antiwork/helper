@@ -1,28 +1,11 @@
 "use client";
 
-import {
-  BarChart,
-  BookOpen,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Inbox,
-  Link as LinkIcon,
-  LucideIcon,
-  MonitorSmartphone,
-  Settings,
-  Ticket,
-  User,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,9 +22,6 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { api } from "@/trpc/react";
 
@@ -51,18 +31,8 @@ declare global {
   }
 }
 
-const settingsItems = [
-  { label: "Knowledge", id: "knowledge", icon: BookOpen },
-  { label: "Team", id: "team", icon: Users },
-  { label: "Customers", id: "customers", icon: UserPlus },
-  { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
-  { label: "Integrations", id: "integrations", icon: LinkIcon },
-  { label: "Preferences", id: "preferences", icon: Settings },
-] as const;
-
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
   const router = useRouter();
   const { data: mailboxes } = api.mailbox.list.useQuery();
   const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
@@ -177,36 +147,18 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <Collapsible open={open} onOpenChange={setOpen} className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Settings">
-                      <Settings className="size-4" />
-                      <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                      <ChevronDown className="ml-auto size-4 transition-transform duration-200 group-data-[state=closed]/collapsible:rotate-[-90deg]" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                </SidebarMenuItem>
-
-                <CollapsibleContent className="transition-all duration-300 ease-in-out data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-                  <SidebarMenuSub>
-                    {settingsItems.map((item) => (
-                      <SidebarMenuSubItem key={item.id}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname === `/mailboxes/${mailboxSlug}/settings/${item.id}`}
-                          className="pl-2"
-                        >
-                          <Link href={`/mailboxes/${mailboxSlug}/settings/${item.id}`}>
-                            {<item.icon className="size-4" />}
-                            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </Collapsible>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/settings/knowledge`}
+                  tooltip="Settings"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/settings`}>
+                    <Settings className="size-4" />
+                    <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </div>
