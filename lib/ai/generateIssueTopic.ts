@@ -11,14 +11,16 @@ import { findOriginalAndMergedMessages } from "@/lib/data/conversationMessage";
 
 const SIMILARITY_THRESHOLD = 0.9;
 
-const findOrCreateIssueTopic = async (summary: string, embedding: number[]) => {
+const findOrCreateIssueTopic = async (summary: string, embedding: number[], mailboxId: number) => {
   const similarity = sql<number>`1 - (${cosineDistance(issueTopics.embedding, embedding)})`;
+
   const [mostSimilarTopic] = await db
     .select({
       id: issueTopics.id,
       similarity,
     })
     .from(issueTopics)
+    .where(eq(issueTopics.mailboxId, mailboxId))
     .orderBy(desc(similarity))
     .limit(1);
 
@@ -29,7 +31,7 @@ const findOrCreateIssueTopic = async (summary: string, embedding: number[]) => {
     return topic;
   }
 
-  const [newTopic] = await db.insert(issueTopics).values({ summary, embedding }).returning();
+  const [newTopic] = await db.insert(issueTopics).values({ summary, embedding, mailboxId }).returning();
   return newTopic;
 };
 
@@ -101,7 +103,7 @@ export const generateIssueTopic = async (
   });
 
   const embedding = await generateEmbedding(newIssueTopic);
-  const topic = await findOrCreateIssueTopic(newIssueTopic, embedding);
+  const topic = await findOrCreateIssueTopic(newIssueTopic, embedding, conversation.mailboxId);
 
   if (!topic) {
     // This should not happen, but as a safeguard
