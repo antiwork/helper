@@ -146,8 +146,7 @@ export const mailboxRouter = {
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
   savedReplies: savedRepliesRouter,
-  // Keep backwards compatibility
-  macros: savedRepliesRouter,
+
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
       throw new TRPCError({

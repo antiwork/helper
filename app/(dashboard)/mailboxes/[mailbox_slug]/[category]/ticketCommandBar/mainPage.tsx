@@ -10,7 +10,7 @@ import {
   Sparkles as SparklesIcon,
   User as UserIcon,
 } from "lucide-react";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";
 import { toast } from "@/components/hooks/use-toast";
@@ -95,19 +95,22 @@ export const useMainPage = ({
     setSelectedItemId(null);
   });
 
-  const handleSavedReplySelect = (savedReply: { slug: string; content: string }) => {
-    try {
-      onInsertReply(savedReply.content);
-      incrementSavedReplyUsage({ mailboxSlug, slug: savedReply.slug });
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error using saved reply",
-        description: "Failed to insert saved reply content. Please try again.",
-      });
-    }
-  };
+  const handleSavedReplySelect = useCallback(
+    (savedReply: { slug: string; content: string }) => {
+      try {
+        onInsertReply(savedReply.content);
+        incrementSavedReplyUsage({ mailboxSlug, slug: savedReply.slug });
+        onOpenChange(false);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error using saved reply",
+          description: "Failed to insert saved reply content. Please try again.",
+        });
+      }
+    },
+    [onInsertReply, incrementSavedReplyUsage, mailboxSlug, onOpenChange],
+  );
 
   const mainCommandGroups = useMemo(
     () => [
@@ -221,9 +224,7 @@ export const useMainPage = ({
               items: savedReplies.slice(0, 10).map((savedReply) => ({
                 id: savedReply.slug,
                 label: savedReply.name,
-                description: savedReply.description || undefined,
                 icon: MacroIcon,
-                shortcut: savedReply.shortcut || undefined,
                 onSelect: () => handleSavedReplySelect(savedReply),
               })),
             },

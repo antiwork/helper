@@ -3786,12 +3786,7 @@
           "primaryKey": false,
           "notNull": true
         },
-        "description": {
-          "name": "description",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false
-        },
+
         "mailbox_id": {
           "name": "mailbox_id",
           "type": "bigint",
@@ -3811,12 +3806,7 @@
           "notNull": true,
           "default": true
         },
-        "shortcut": {
-          "name": "shortcut",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": false
-        },
+
         "usage_count": {
           "name": "usage_count",
           "type": "integer",
@@ -3867,43 +3857,6 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "saved_replies_shortcut_idx": {
-          "name": "saved_replies_shortcut_idx",
-          "columns": [
-            {
-              "expression": "shortcut",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "saved_replies_mailbox_shortcut_unique": {
-          "name": "saved_replies_mailbox_shortcut_unique",
-          "columns": [
-            {
-              "expression": "mailbox_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "shortcut",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "shortcut IS NOT NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}

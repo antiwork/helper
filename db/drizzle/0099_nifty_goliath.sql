@@ -5,11 +5,9 @@ CREATE TABLE "saved_replies" (
 	"slug" varchar(50) NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"content" text NOT NULL,
-	"description" varchar(500),
 	"mailbox_id" bigint NOT NULL,
 	"created_by_user_id" text,
 	"is_active" boolean DEFAULT true NOT NULL,
-	"shortcut" varchar(20),
 	"usage_count" integer DEFAULT 0 NOT NULL
 );
 
@@ -17,5 +15,3 @@ ALTER TABLE "saved_replies" ENABLE ROW LEVEL SECURITY;
 CREATE INDEX "saved_replies_mailbox_id_idx" ON "saved_replies" USING btree ("mailbox_id");
 CREATE INDEX "saved_replies_created_by_user_idx" ON "saved_replies" USING btree ("created_by_user_id");
 CREATE INDEX "saved_replies_slug_idx" ON "saved_replies" USING btree ("slug");
-CREATE INDEX "saved_replies_shortcut_idx" ON "saved_replies" USING btree ("shortcut");
-CREATE UNIQUE INDEX "saved_replies_mailbox_shortcut_unique" ON "saved_replies" USING btree ("mailbox_id","shortcut") WHERE shortcut IS NOT NULL;

@@ -12,21 +12,15 @@ export const savedReplies = pgTable(
     slug: randomSlugField("slug"),
     name: varchar({ length: 100 }).notNull(),
     content: text().notNull(),
-    description: varchar({ length: 500 }),
     mailboxId: bigint({ mode: "number" }).notNull(),
     createdByUserId: text("created_by_user_id"),
     isActive: boolean().notNull().default(true),
-    shortcut: varchar({ length: 20 }),
     usageCount: integer().notNull().default(0),
   },
   (table) => [
     index("saved_replies_mailbox_id_idx").on(table.mailboxId),
     index("saved_replies_created_by_user_idx").on(table.createdByUserId),
     index("saved_replies_slug_idx").on(table.slug),
-    index("saved_replies_shortcut_idx").on(table.shortcut),
-    uniqueIndex("saved_replies_mailbox_shortcut_unique")
-      .on(table.mailboxId, table.shortcut)
-      .where(sql`shortcut IS NOT NULL`),
   ],
 ).enableRLS();
 

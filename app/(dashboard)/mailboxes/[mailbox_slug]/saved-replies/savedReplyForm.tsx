@@ -10,21 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
-const savedReplyFormSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
-  content: z.string().min(1, "Content is required").max(5000, "Content must be less than 5000 characters"),
-  description: z.string().max(500, "Description must be less than 500 characters").optional(),
-  shortcut: z.string().max(20, "Shortcut must be less than 20 characters").optional(),
-});
-
-type SavedReplyFormData = z.infer<typeof savedReplyFormSchema>;
-
 type SavedReply = {
   slug: string;
   name: string;
   content: string;
-  description?: string;
-  shortcut?: string;
 };
 
 interface SavedReplyFormProps {
@@ -35,13 +24,16 @@ interface SavedReplyFormProps {
 }
 
 export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }: SavedReplyFormProps) {
-  const form = useForm<SavedReplyFormData>({
-    resolver: zodResolver(savedReplyFormSchema),
+  const form = useForm({
+    resolver: zodResolver(
+      z.object({
+        name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+        content: z.string().min(1, "Content is required"),
+      }),
+    ),
     defaultValues: {
       name: savedReply?.name || "",
       content: savedReply?.content || "",
-      description: savedReply?.description || "",
-      shortcut: savedReply?.shortcut || "",
     },
   });
 
@@ -72,7 +64,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }:
     },
   });
 
-  const onSubmit = (data: SavedReplyFormData) => {
+  const onSubmit = (data: { name: string; content: string }) => {
     const finalData = {
       mailboxSlug,
       ...data,
@@ -88,45 +80,14 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }:
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Welcome Message" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="shortcut"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Shortcut (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., welcome, kb" {...field} />
-                </FormControl>
-                <FormDescription>Quick shortcut to find this saved reply</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
         <FormField
           control={form.control}
-          name="description"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description (Optional)</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Brief description of when to use this saved reply" {...field} />
+                <Input placeholder="e.g., Welcome Message" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -146,7 +107,6 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }:
                   {...field}
                 />
               </FormControl>
-              <FormDescription>{form.watch("content")?.length || 0}/5000 characters</FormDescription>
               <FormMessage />
             </FormItem>
           )}

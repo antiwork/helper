@@ -1,12 +1,11 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 "use client";
 
-import { Copy, Edit3, Plus, Search, Trash2, TrendingUp } from "lucide-react";
+import { Calendar, Copy, Edit3, Plus, Search, Trash2, TrendingUp } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
-import { SavedReplyForm } from "@/components/saved-replies/savedReplyForm";
-import { SavedReplyPreview } from "@/components/saved-replies/savedReplyPreview";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -30,22 +28,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import { SavedReplyForm } from "./savedReplyForm";
+import { SavedReplyPreview } from "./savedReplyPreview";
 
-type SavedReply = {
-  id: string;
-  slug: string;
-  name: string;
-  content: string;
-  description?: string;
-  shortcut?: string;
-  usageCount: number;
-  createdAt: string;
-  updatedAt: string;
-  createdByDisplayName?: string;
-  mailboxName: string;
-};
+type SavedReply = RouterOutputs["mailbox"]["savedReplies"]["list"][number];
 
 export default function SavedRepliesPage() {
   const params = useParams();
@@ -56,7 +44,11 @@ export default function SavedRepliesPage() {
   const [editingSavedReply, setEditingSavedReply] = useState<SavedReply | null>(null);
   const [previewSavedReply, setPreviewSavedReply] = useState<SavedReply | null>(null);
 
-  const { data: savedReplies, refetch } = api.mailbox.savedReplies.list.useQuery({
+  const {
+    data: savedReplies,
+    refetch,
+    isLoading,
+  } = api.mailbox.savedReplies.list.useQuery({
     mailboxSlug,
     search: searchTerm || undefined,
   });
@@ -98,46 +90,60 @@ export default function SavedRepliesPage() {
     <div className="flex-1 space-y-6 p-6 pt-0">
       <PageHeader title="Saved Replies" />
 
-      <Tabs defaultValue="saved-replies" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="saved-replies">All Saved Replies ({savedReplies?.length || 0})</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="saved-replies" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search saved replies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
-
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Saved Reply
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Create New Saved Reply</DialogTitle>
-                  <DialogDescription>
-                    Create a reusable text template that can be quickly inserted into conversations.
-                  </DialogDescription>
-                </DialogHeader>
-                <SavedReplyForm
-                  mailboxSlug={mailboxSlug}
-                  onSuccess={handleCreateSuccess}
-                  onCancel={() => setShowCreateDialog(false)}
-                />
-              </DialogContent>
-            </Dialog>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search saved replies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
           </div>
 
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button disabled={!savedReplies}>
+                <Plus className="h-4 w-4 mr-2" />
+                {!savedReplies ? "Loading..." : "Create Saved Reply"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Saved Reply</DialogTitle>
+                <DialogDescription>
+                  Create a reusable text template that can be quickly inserted into conversations.
+                </DialogDescription>
+              </DialogHeader>
+              <SavedReplyForm
+                mailboxSlug={mailboxSlug}
+                onSuccess={handleCreateSuccess}
+                onCancel={() => setShowCreateDialog(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader className="pb-3">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2 mt-2"></div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-2">
+                    <div className="h-3 bg-muted rounded"></div>
+                    <div className="h-3 bg-muted rounded w-5/6"></div>
+                    <div className="h-3 bg-muted rounded w-4/6"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredSavedReplies.map((savedReply) => (
               <Card key={savedReply.slug} className="hover:shadow-md transition-shadow">
@@ -145,9 +151,6 @@ export default function SavedRepliesPage() {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-lg line-clamp-1">{savedReply.name}</CardTitle>
-                      {savedReply.description && (
-                        <CardDescription className="line-clamp-2">{savedReply.description}</CardDescription>
-                      )}
                     </div>
                     <div className="flex items-center space-x-1">
                       <Button variant="ghost" size="sm" onClick={() => setPreviewSavedReply(savedReply)}>
@@ -184,36 +187,37 @@ export default function SavedRepliesPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      {savedReply.shortcut && (
-                        <Badge variant="gray" className="text-xs font-mono">
-                          {savedReply.shortcut}
-                        </Badge>
-                      )}
+                  <div className="mt-3 text-sm text-muted-foreground line-clamp-3">{savedReply.content}</div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center space-x-1">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>Used {savedReply.usageCount} times</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{new Date(savedReply.updatedAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <div className="mt-3 text-sm text-muted-foreground line-clamp-3">{savedReply.content}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
+        )}
 
-          {filteredSavedReplies.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-muted-foreground mb-4">
-                {searchTerm ? "No saved replies found matching your search" : "No saved replies created yet"}
-              </div>
-              {!searchTerm && (
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Saved Reply
-                </Button>
-              )}
+        {!isLoading && filteredSavedReplies.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-4">
+              {searchTerm ? "No saved replies found matching your search" : "No saved replies created yet"}
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            {!searchTerm && (
+              <Button onClick={() => setShowCreateDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create your first saved reply
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {editingSavedReply && (
         <Dialog open={!!editingSavedReply} onOpenChange={() => setEditingSavedReply(null)}>

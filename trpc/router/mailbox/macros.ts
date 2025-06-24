@@ -1,55 +1,21 @@
 /* eslint-disable @typescript-eslint/non-nullable-type-assertion-style */
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import DOMPurify from "dompurify";
 import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
-import { JSDOM } from "jsdom";
+import DOMPurify from "isomorphic-dompurify";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { macros } from "@/db/schema";
+import { savedReplies } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { mailboxProcedure } from "./procedure";
 
-const window = new JSDOM("").window;
-const purify = DOMPurify(window);
-
 const sanitizeContent = (content: string): string => {
-  return purify.sanitize(content, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
+  return DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "ol", "ul", "li", "blockquote", "a"],
+    ALLOWED_ATTR: ["href", "target", "rel"],
     KEEP_CONTENT: true,
   });
 };
-
-const createSavedReplySchema = z.object({
-  name: z.string().min(1).max(100).trim(),
-  content: z.string().min(1).max(5000).trim(),
-  description: z.string().max(500).trim().optional().or(z.literal("")),
-  shortcut: z
-    .string()
-    .regex(/^[a-z0-9-]+$/, "Shortcut must contain only lowercase letters, numbers, and hyphens")
-    .max(20)
-    .optional()
-    .or(z.literal("")),
-});
-
-const updateSavedReplySchema = z.object({
-  slug: z
-    .string()
-    .min(1)
-    .max(50)
-    .regex(/^[a-z0-9-]+$/, "Invalid slug format"),
-  name: z.string().min(1).max(100).trim().optional(),
-  content: z.string().min(1).max(5000).trim().optional(),
-  description: z.string().max(500).trim().optional().or(z.literal("")),
-  shortcut: z
-    .string()
-    .regex(/^[a-z0-9-]+$/, "Shortcut must contain only lowercase letters, numbers, and hyphens")
-    .max(20)
-    .optional()
-    .or(z.literal("")),
-  isActive: z.boolean().optional(),
-});
 
 export const savedRepliesRouter = {
   list: mailboxProcedure
@@ -60,26 +26,24 @@ export const savedRepliesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const conditions = [eq(macros.mailboxId, ctx.mailbox.id)];
+      const conditions = [eq(savedReplies.mailboxId, ctx.mailbox.id)];
 
       if (input.onlyActive) {
-        conditions.push(eq(macros.isActive, true));
+        conditions.push(eq(savedReplies.isActive, true));
       }
 
       if (input.search) {
         const searchConditions = [
-          ilike(macros.name, `%${input.search}%`),
-          ilike(macros.content, `%${input.search}%`),
-          ilike(macros.description, `%${input.search}%`),
-          ilike(macros.shortcut, `%${input.search}%`),
+          ilike(savedReplies.name, `%${input.search}%`),
+          ilike(savedReplies.content, `%${input.search}%`),
         ] as SQL[];
 
         conditions.push(or(...searchConditions) as SQL);
       }
 
-      const result = await db.query.macros.findMany({
+      const result = await db.query.savedReplies.findMany({
         where: and(...conditions),
-        orderBy: [desc(macros.usageCount), desc(macros.updatedAt)],
+        orderBy: [desc(savedReplies.usageCount), desc(savedReplies.updatedAt)],
       });
 
       const userIds = [...new Set(result.map((m) => m.createdByUserId).filter(Boolean))];
@@ -103,8 +67,8 @@ export const savedRepliesRouter = {
     }),
 
   get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ ctx, input }) => {
-    const savedReply = await db.query.macros.findFirst({
-      where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)),
+    const savedReply = await db.query.savedReplies.findFirst({
+      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)),
     });
 
     if (!savedReply) {
@@ -117,32 +81,19 @@ export const savedRepliesRouter = {
     return savedReply;
   }),
 
-  create: mailboxProcedure.input(createSavedReplySchema).mutation(async ({ ctx, input }) => {
-    // Use transaction to prevent race condition in shortcut validation
-    return await db.transaction(async (tx) => {
-      if (input.shortcut) {
-        const existingShortcut = await tx.query.macros.findFirst({
-          where: and(
-            eq(macros.mailboxId, ctx.mailbox.id),
-            eq(macros.shortcut, input.shortcut),
-            eq(macros.isActive, true),
-          ),
-        });
-
-        if (existingShortcut) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "A saved reply with this shortcut already exists",
-          });
-        }
-      }
-
-      const savedReply = await tx
-        .insert(macros)
+  create: mailboxProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(100).trim(),
+        content: z.string().min(1).trim(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const savedReply = await db
+        .insert(savedReplies)
         .values({
           ...input,
           content: sanitizeContent(input.content),
-          description: input.description ? sanitizeContent(input.description) : input.description,
           mailboxId: ctx.mailbox.id,
           createdByUserId: ctx.user.id,
         })
@@ -150,79 +101,51 @@ export const savedRepliesRouter = {
         .then(takeUniqueOrThrow);
 
       return savedReply;
-    });
-  }),
+    }),
 
-  update: mailboxProcedure.input(updateSavedReplySchema).mutation(async ({ ctx, input }) => {
-    const existingSavedReply = await db.query.macros.findFirst({
-      where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)),
-    });
-
-    if (!existingSavedReply) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Saved reply not found",
+  update: mailboxProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1).max(50),
+        name: z.string().min(1).max(100).trim().optional(),
+        content: z.string().min(1).trim().optional(),
+        isActive: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existingSavedReply = await db.query.savedReplies.findFirst({
+        where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)),
       });
-    }
 
-    // Check if user can edit (creator or admin)
-    const mailboxAccess = ctx.user.user_metadata?.mailboxAccess;
-    const userRole = mailboxAccess?.[ctx.mailbox.id]?.role;
-    const canEdit = existingSavedReply.createdByUserId === ctx.user.id || userRole === "core";
-
-    if (!canEdit) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to edit this saved reply",
-      });
-    }
-
-    // Use transaction to prevent race condition in shortcut validation
-    return await db.transaction(async (tx) => {
-      if (input.shortcut && input.shortcut !== existingSavedReply.shortcut) {
-        const existingShortcut = await tx.query.macros.findFirst({
-          where: and(
-            eq(macros.mailboxId, ctx.mailbox.id),
-            eq(macros.shortcut, input.shortcut),
-            eq(macros.isActive, true),
-          ),
+      if (!existingSavedReply) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Saved reply not found",
         });
-
-        if (existingShortcut) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "A saved reply with this shortcut already exists",
-          });
-        }
       }
 
       const { slug, ...updateData } = input;
 
-      // Sanitize content fields if they're being updated
+      // Sanitize content if being updated
       const sanitizedUpdateData = {
         ...updateData,
         ...(updateData.content && { content: sanitizeContent(updateData.content) }),
-        ...(updateData.description !== undefined &&
-          updateData.description !== "" && {
-            description: sanitizeContent(updateData.description),
-          }),
         updatedAt: new Date(),
       };
 
-      const updatedSavedReply = await tx
-        .update(macros)
+      const updatedSavedReply = await db
+        .update(savedReplies)
         .set(sanitizedUpdateData)
-        .where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)))
+        .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)))
         .returning()
         .then(takeUniqueOrThrow);
 
       return updatedSavedReply;
-    });
-  }),
+    }),
 
   delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
-    const existingSavedReply = await db.query.macros.findFirst({
-      where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)),
+    const existingSavedReply = await db.query.savedReplies.findFirst({
+      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)),
     });
 
     if (!existingSavedReply) {
@@ -232,20 +155,9 @@ export const savedRepliesRouter = {
       });
     }
 
-    // Check if user can delete (creator or admin)
-    const mailboxAccess = ctx.user.user_metadata?.mailboxAccess;
-    const userRole = mailboxAccess?.[ctx.mailbox.id]?.role;
-    const canDelete = existingSavedReply.createdByUserId === ctx.user.id || userRole === "core";
-
-    if (!canDelete) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You don't have permission to delete this saved reply",
-      });
-    }
-
-    // Add mailboxId validation to prevent cross-mailbox deletion
-    await db.delete(macros).where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)));
+    await db
+      .delete(savedReplies)
+      .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)));
 
     return { success: true };
   }),
@@ -254,8 +166,12 @@ export const savedRepliesRouter = {
     .input(z.object({ slug: z.string().min(1).max(50) }))
     .mutation(async ({ ctx, input }) => {
       // Verify saved reply exists and is active before incrementing
-      const savedReply = await db.query.macros.findFirst({
-        where: and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id), eq(macros.isActive, true)),
+      const savedReply = await db.query.savedReplies.findFirst({
+        where: and(
+          eq(savedReplies.slug, input.slug),
+          eq(savedReplies.mailboxId, ctx.mailbox.id),
+          eq(savedReplies.isActive, true),
+        ),
       });
 
       if (!savedReply) {
@@ -266,16 +182,13 @@ export const savedRepliesRouter = {
       }
 
       await db
-        .update(macros)
+        .update(savedReplies)
         .set({
-          usageCount: sql`${macros.usageCount} + 1`,
+          usageCount: sql`${savedReplies.usageCount} + 1`,
           updatedAt: new Date(),
         })
-        .where(and(eq(macros.slug, input.slug), eq(macros.mailboxId, ctx.mailbox.id)));
+        .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)));
 
       return { success: true };
     }),
 } satisfies TRPCRouterRecord;
-
-// Keep backwards compatibility during migration
-export const macrosRouter = savedRepliesRouter;
