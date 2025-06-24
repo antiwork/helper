@@ -3,8 +3,9 @@ import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { faqs } from "@/db/schema";
+import { conversationMessages, faqs } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
+import { generateKnowledgeBankSuggestion } from "@/lib/ai/knowledgeBankSuggestions";
 import { approveSuggestedEdit, rejectSuggestedEdit } from "@/lib/data/knowledge";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { mailboxProcedure } from "./procedure";
@@ -134,5 +135,39 @@ export const faqsRouter = {
       }
 
       await rejectSuggestedEdit(knowledge, ctx.mailbox, ctx.user);
+    }),
+  suggestFromHumanReply: mailboxProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const message = await db.query.conversationMessages.findFirst({
+        where: and(eq(conversationMessages.id, input.messageId), eq(conversationMessages.role, "staff")),
+        with: {
+          conversation: {
+            with: {
+              mailbox: true,
+            },
+          },
+        },
+      });
+
+      if (message?.conversation.mailboxId !== ctx.mailbox.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Message not found in this mailbox" });
+      }
+
+      const messageContent = message.body || message.cleanedUpText || "";
+      if (!messageContent.trim()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Message content is empty" });
+      }
+
+      const suggestion = await generateKnowledgeBankSuggestion(ctx.mailbox, {
+        type: "human_reply",
+        messageContent,
+      });
+
+      return suggestion;
     }),
 } satisfies TRPCRouterRecord;

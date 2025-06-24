@@ -20,6 +20,7 @@ export const aiUsageEvents = pgTable(
         | "reasoning"
         | "conversation_resolution"
         | "suggest_knowledge_bank_changes"
+        | "suggest_knowledge_bank_from_reply"
         | "agent_response"
         | "auto_assign_conversation"
         | "email_auto_ignore"
