@@ -5,6 +5,7 @@ import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slu
 import { DraftedEmail } from "@/app/types/global";
 import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
+import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
@@ -208,6 +209,9 @@ export const MessageActions = () => {
     setUndoneEmail(undefined);
   }, [undoneEmail, conversation]);
 
+  const [lastSentMessageId, setLastSentMessageId] = useState<number | null>(null);
+  const [showKnowledgeBankDialog, setShowKnowledgeBankDialog] = useState(false);
+
   const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
 
@@ -293,7 +297,26 @@ export const MessageActions = () => {
         title: close ? "Replied and closed" : "Message sent!",
         variant: "success",
         action: (
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {close && (
+              <ToastAction
+                altText="Visit"
+                onClick={() => {
+                  navigateToConversation(conversation.slug);
+                }}
+              >
+                Visit
+              </ToastAction>
+            )}
+            <ToastAction
+              altText="Generate knowledge bank entry"
+              onClick={() => {
+                setLastSentMessageId(emailId);
+                setShowKnowledgeBankDialog(true);
+              }}
+            >
+              💡 Save
+            </ToastAction>
             <ToastAction
               altText="Undo"
               onClick={async () => {
@@ -322,16 +345,6 @@ export const MessageActions = () => {
             >
               Undo
             </ToastAction>
-            {close && (
-              <ToastAction
-                altText="Visit"
-                onClick={() => {
-                  navigateToConversation(conversation.slug);
-                }}
-              >
-                Visit
-              </ToastAction>
-            )}
           </div>
         ),
       });
@@ -456,6 +469,16 @@ export const MessageActions = () => {
         startRecording={startRecording}
         stopRecording={stopRecording}
       />
+
+      {/* Knowledge Bank Generation Dialog */}
+      {lastSentMessageId && (
+        <GenerateKnowledgeBankDialog
+          open={showKnowledgeBankDialog}
+          onOpenChange={setShowKnowledgeBankDialog}
+          messageId={lastSentMessageId}
+          mailboxSlug={mailboxSlug}
+        />
+      )}
     </div>
   );
 };
