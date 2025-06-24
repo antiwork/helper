@@ -20,8 +20,8 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
     : { mailboxSlug, period: timeRange };
 
   const { data: members, isLoading } = api.mailbox.members.stats.useQuery(
-    statsInput!,
-    { enabled: !!statsInput },
+    statsInput,
+    { enabled: timeRange !== "custom" || !!(customDate?.from && customDate?.to) },
   );
 
   if (isLoading) {
