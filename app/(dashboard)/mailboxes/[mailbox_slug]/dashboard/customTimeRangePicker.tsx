@@ -32,8 +32,6 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
     selectedDate?.to ? format(selectedDate.to, "HH:mm") : "23:59"
   );
   const [appliedRange, setAppliedRange] = useState<DateRange | undefined>(selectedDate);
-  const [showCount, setShowCount] = useState(false);
-
   useEffect(() => {
     if (selectedDate?.from && selectedDate?.to) {
       setAppliedRange(selectedDate);
@@ -103,20 +101,6 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
     onSelect(emptyRange);
   };
 
-  const { data: conversationCount, isLoading } = api.mailbox.conversations.count.useQuery(
-    appliedRange?.from && appliedRange?.to
-      ? {
-          mailboxSlug,
-          createdAfter: appliedRange.from.toISOString(),
-          createdBefore: appliedRange.to.toISOString(),
-        }
-      : { mailboxSlug },
-    { 
-      enabled: !!appliedRange?.from && !!appliedRange?.to && showCount,
-      staleTime: 30000 
-    }
-  );
-
   return (
     <div className={cn("flex flex-col gap-2 md:flex-row md:gap-2 w-full", className)}>
       <Popover>
@@ -181,12 +165,6 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
           Clear
         </Button>
       </div>
-      
-      {showCount && appliedRange?.from && appliedRange?.to && (
-        <div className="text-sm text-muted-foreground">
-          {isLoading ? "Loading..." : `${conversationCount || 0} conversations`}
-        </div>
-      )}
     </div>
   );
 }
