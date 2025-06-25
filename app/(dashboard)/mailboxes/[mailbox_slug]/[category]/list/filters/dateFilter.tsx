@@ -101,6 +101,7 @@ export function DateFilter({
     const presetValue = value as DatePresetValue;
 
     if (presetValue === "custom") {
+      // we purposely don't call setSelectedPreset here because we want that to be done when the user selects a date
       setShowCustomPicker(true);
       return;
     }
