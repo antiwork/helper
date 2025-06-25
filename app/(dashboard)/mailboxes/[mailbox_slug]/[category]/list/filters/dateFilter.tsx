@@ -122,6 +122,11 @@ export function DateFilter({
   };
 
   const handleCustomDateSelect = (date: DateRange | undefined) => {
+    if (!date) {
+      clearFilter();
+      return;
+    }
+
     setCustomDate(date);
     if (date?.from) {
       setSelectedPreset("custom");
