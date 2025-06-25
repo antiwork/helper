@@ -3,6 +3,7 @@
 import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
+import ConversationsDialog from "@/components/conversationsDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
@@ -33,18 +34,19 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
+  conversations: any[];
+  updateConversation: (
+    assignedTo: { id: string; displayName: string } | { ai: true } | null,
+    conversationSlug: string,
+  ) => Promise<void>;
 };
 
-const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
   const { user: currentUser } = useSession() ?? {};
-  const { data: conversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery({
-    mailboxSlug,
-    assignee: [member.id],
-  });
 
   // Separate saving indicators for each operation type
   const displayNameSaving = useSavingIndicator();
@@ -271,17 +273,31 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
         </div>
       </TableCell>
       <TableCell>
-        {currentUser?.id !== member.id && (
-          <ConfirmationDialog
-            message={`Are you sure you want to remove ${member.displayName} from your team?`}
-            onConfirm={() => removeTeamMember({ id: member.id, mailboxSlug })}
-          >
-            <Button variant="ghost" size="sm" iconOnly>
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
-          </ConfirmationDialog>
-        )}
+        {currentUser?.id !== member.id &&
+          (conversations.length > 0 ? (
+            <ConversationsDialog
+              assignedToId={member.id}
+              mailboxSlug={mailboxSlug}
+              conversations={conversations}
+              updateConversation={updateConversation}
+              description="Please reassign the tickets before delete the member"
+            >
+              <Button variant="ghost" size="sm" iconOnly>
+                <Trash className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </ConversationsDialog>
+          ) : (
+            <ConfirmationDialog
+              message={`Are you sure you want to remove ${member.displayName} from your team?`}
+              onConfirm={() => removeTeamMember({ id: member.id, mailboxSlug })}
+            >
+              <Button variant="ghost" size="sm" iconOnly>
+                <Trash className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </ConfirmationDialog>
+          ))}
       </TableCell>
       <TableCell className="w-[120px]">
         <div className="flex items-center gap-2">
