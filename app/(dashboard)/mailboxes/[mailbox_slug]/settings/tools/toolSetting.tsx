@@ -30,6 +30,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
     <SectionWrapper
       title="Tools"
       description="Connect your API using an OpenAPI spec to let Helper take actions in your app when drafting replies."
+      fullWidth
     >
       <div className="flex flex-col gap-8">
         {!showApiForm && (

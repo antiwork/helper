@@ -89,6 +89,7 @@ const KnowledgeBankSetting = () => {
           Helper will suggest improvements to your knowledge bank to ensure it's up to date.
         </>
       }
+      fullWidth
     >
       <Input
         type="text"

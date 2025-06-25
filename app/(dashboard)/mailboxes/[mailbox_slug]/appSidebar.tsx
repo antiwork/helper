@@ -1,6 +1,20 @@
 "use client";
 
-import { BarChart, CheckCircle, ChevronDown, Inbox, Settings, Ticket, User, Users } from "lucide-react";
+import {
+  BarChart,
+  BookOpen,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  Inbox,
+  Link as LinkIcon,
+  MonitorSmartphone,
+  Settings,
+  Ticket,
+  User,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
@@ -30,6 +44,15 @@ declare global {
     __unstable__onBeforeSetActive: () => void;
   }
 }
+
+const settingsItems = [
+  { label: "Knowledge", id: "knowledge", icon: BookOpen },
+  { label: "Team", id: "team", icon: Users },
+  { label: "Customers", id: "customers", icon: UserPlus },
+  { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
+  { label: "Integrations", id: "integrations", icon: LinkIcon },
+  { label: "Preferences", id: "preferences", icon: Settings },
+] as const;
 
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
@@ -78,90 +101,125 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
       </SidebarHeader>
 
       <SidebarContent className="flex flex-col h-full">
-        <div>
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`} tooltip="Mine">
-                  <Link href={`/mailboxes/${mailboxSlug}/mine`}>
-                    <User className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Mine</span>
-                  </Link>
-                </SidebarMenuButton>
-                {openCounts && openCounts.mine > 0 && <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>}
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}
-                  tooltip="Assigned"
-                >
-                  <Link href={`/mailboxes/${mailboxSlug}/assigned`}>
-                    <Users className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Assigned</span>
-                  </Link>
-                </SidebarMenuButton>
-                {openCounts && openCounts.assigned > 0 && <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>}
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/unassigned`}
-                  tooltip="Up for grabs"
-                >
-                  <Link href={`/mailboxes/${mailboxSlug}/unassigned`}>
-                    <Ticket className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Up for grabs</span>
-                  </Link>
-                </SidebarMenuButton>
-                {openCounts && openCounts.unassigned > 0 && (
-                  <SidebarMenuBadge>{openCounts.unassigned}</SidebarMenuBadge>
-                )}
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`} tooltip="All">
-                  <Link href={`/mailboxes/${mailboxSlug}/all`}>
-                    <Inbox className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">All</span>
-                  </Link>
-                </SidebarMenuButton>
-                {openCounts && openCounts.conversations > 0 && (
-                  <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
-                )}
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </div>
-        <div className="mt-auto">
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}
-                  tooltip="Dashboard"
-                >
-                  <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
-                    <BarChart className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.includes(`/mailboxes/${mailboxSlug}/settings`)}
-                  tooltip="Settings"
-                >
-                  <Link href={`/mailboxes/${mailboxSlug}/settings/knowledge`}>
-                    <Settings className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </div>
+        {pathname.startsWith(`/mailboxes/${mailboxSlug}/settings`) ? (
+          <>
+            <SidebarGroup>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Back to Home">
+                    <Link href={`/mailboxes/${mailboxSlug}/mine`}>
+                      <ChevronLeft className="size-4" />
+                      <span className="group-data-[collapsible=icon]:hidden">Back to Home</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarMenu>
+                {settingsItems.map((item) => (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/settings/${item.id}`}
+                      tooltip={item.label}
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/settings/${item.id}`}>
+                        <item.icon className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </>
+        ) : (
+          <>
+            <div>
+              <SidebarGroup>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`} tooltip="Mine">
+                      <Link href={`/mailboxes/${mailboxSlug}/mine`}>
+                        <User className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Mine</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {openCounts && openCounts.mine > 0 && <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>}
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}
+                      tooltip="Assigned"
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/assigned`}>
+                        <Users className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Assigned</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {openCounts && openCounts.assigned > 0 && (
+                      <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/unassigned`}
+                      tooltip="Up for grabs"
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/unassigned`}>
+                        <Ticket className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Up for grabs</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {openCounts && openCounts.unassigned > 0 && (
+                      <SidebarMenuBadge>{openCounts.unassigned}</SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`} tooltip="All">
+                      <Link href={`/mailboxes/${mailboxSlug}/all`}>
+                        <Inbox className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">All</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {openCounts && openCounts.conversations > 0 && (
+                      <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+            </div>
+            <div className="mt-auto">
+              <SidebarGroup>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}
+                      tooltip="Dashboard"
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
+                        <BarChart className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Settings">
+                      <Link href={`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`}>
+                        <Settings className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+            </div>
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

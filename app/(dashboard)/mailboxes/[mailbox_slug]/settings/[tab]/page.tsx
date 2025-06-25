@@ -78,12 +78,14 @@ export default function TabsPage() {
     },
   ];
 
+  const selectedItem = items.find((item) => item.id === params.tab) || items[0];
+
   return (
     <div className="flex h-full flex-col">
       <PageHeader title="Settings" />
       <FileUploadProvider mailboxSlug={mailbox.slug}>
         <div className="grow overflow-y-auto">
-          <SubNavigation items={items} />
+          <div className="grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
         </div>
       </FileUploadProvider>
     </div>
