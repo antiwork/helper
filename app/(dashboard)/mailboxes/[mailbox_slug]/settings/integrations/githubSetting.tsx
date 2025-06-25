@@ -141,10 +141,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
   if (!connectUrl) return null;
 
   return (
-    <SectionWrapper
-      title="GitHub Integration"
-      description="Create and track GitHub issues from conversations."
-    >
+    <SectionWrapper title="GitHub Integration" description="Create and track GitHub issues from conversations.">
       {isGitHubConnected ? (
         <>
           <div className="grid gap-1">

@@ -152,10 +152,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   if (!connectUrl) return null;
 
   return (
-    <SectionWrapper
-      title="Slack Integration"
-      description="Notify your team and respond without leaving Slack."
-    >
+    <SectionWrapper title="Slack Integration" description="Notify your team and respond without leaving Slack.">
       {isSlackConnected ? (
         <>
           <div className="grid gap-1">
