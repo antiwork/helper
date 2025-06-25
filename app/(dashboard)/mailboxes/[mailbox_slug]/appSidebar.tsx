@@ -148,11 +148,11 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === `/mailboxes/${mailboxSlug}/saved-replies`}
-                  tooltip="Saved Replies"
+                  tooltip="Saved replies"
                 >
                   <Link href={`/mailboxes/${mailboxSlug}/saved-replies`}>
                     <MessageSquareText className="size-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Saved Replies</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Saved replies</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

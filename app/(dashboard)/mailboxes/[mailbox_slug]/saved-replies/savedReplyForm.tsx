@@ -27,7 +27,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }:
   const form = useForm({
     resolver: zodResolver(
       z.object({
-        name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+        name: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
         content: z.string().min(1, "Content is required"),
       }),
     ),
@@ -85,7 +85,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }:
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Welcome Message" {...field} />
               </FormControl>
@@ -117,11 +117,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel }:
             Cancel
           </Button>
           <Button type="submit" disabled={createSavedReply.isPending || updateSavedReply.isPending}>
-            {createSavedReply.isPending || updateSavedReply.isPending
-              ? "Saving..."
-              : savedReply
-                ? "Update Saved Reply"
-                : "Create Saved Reply"}
+            {createSavedReply.isPending || updateSavedReply.isPending ? "Saving..." : savedReply ? "Update" : "Add"}
           </Button>
         </div>
       </form>

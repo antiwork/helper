@@ -15,3 +15,5 @@ ALTER TABLE "saved_replies" ENABLE ROW LEVEL SECURITY;
 CREATE INDEX "saved_replies_mailbox_id_idx" ON "saved_replies" USING btree ("mailbox_id");
 CREATE INDEX "saved_replies_created_by_user_idx" ON "saved_replies" USING btree ("created_by_user_id");
 CREATE INDEX "saved_replies_slug_idx" ON "saved_replies" USING btree ("slug");
+ALTER TABLE "saved_replies" ADD CONSTRAINT "saved_replies_mailbox_id_mailboxes_mailbox_id_fk" FOREIGN KEY ("mailbox_id") REFERENCES "public"."mailboxes_mailbox"("id") ON DELETE cascade ON UPDATE no action;
+CREATE UNIQUE INDEX "saved_replies_slug_mailbox_unique" ON "saved_replies" USING btree ("slug","mailbox_id");

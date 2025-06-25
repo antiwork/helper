@@ -3,9 +3,9 @@ import {
   CornerRightUp as ArrowUturnUpIcon,
   MessageSquare as ChatBubbleLeftIcon,
   Mail as EnvelopeIcon,
-  MessageSquareText as MacroIcon,
   PenSquare as PencilSquareIcon,
   Play as PlayIcon,
+  MessageSquareText as SavedReplyIcon,
   ShieldAlert as ShieldExclamationIcon,
   Sparkles as SparklesIcon,
   User as UserIcon,
@@ -220,11 +220,11 @@ export const useMainPage = ({
       ...(savedReplies && savedReplies.length > 0
         ? [
             {
-              heading: "Saved Replies",
+              heading: "Saved replies",
               items: savedReplies.slice(0, 10).map((savedReply) => ({
                 id: savedReply.slug,
                 label: savedReply.name,
-                icon: MacroIcon,
+                icon: SavedReplyIcon,
                 onSelect: () => handleSavedReplySelect(savedReply),
               })),
             },
