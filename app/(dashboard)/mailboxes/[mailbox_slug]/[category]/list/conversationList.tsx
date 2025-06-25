@@ -23,6 +23,7 @@ import NewConversationModalContent from "./newConversationModal";
 type ListItem = ConversationItem & { isNew?: boolean };
 
 export const List = () => {
+  console.log("[ConversationList] Rendering List component");
   const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
   const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -239,7 +240,7 @@ export const List = () => {
           <LoadingSpinner size="lg" />
         </div>
       ) : conversations.length === 0 ? (
-        <NoConversations />
+        <NoConversations filtered={Object.values(filterValues).some(Boolean) || !!input.search} />
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
           {conversations.map((conversation) => (
