@@ -70,7 +70,7 @@ pnpm exec playwright show-report
 ## 📁 Structure
 
 - `auth/` - Login and authentication tests
-- `dashboard/` - Main application workflow tests
+- `dashboard/` - Conversations and workflow tests
 - `setup/` - Authentication state generation
 - `utils/` - Page objects and test helpers
 

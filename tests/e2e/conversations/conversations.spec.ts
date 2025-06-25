@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { expect, test } from "@playwright/test";
-import { DashboardPage } from "../utils/page-objects/dashboardPage";
+import { ConversationsPage } from "../utils/page-objects/conversationsPage";
 import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
 
 // Use the working authentication
@@ -20,30 +20,30 @@ test.describe("Working Conversation Management", () => {
     }
   });
 
-  test("should work with DashboardPage object (FIXED)", async ({ page }) => {
-    const dashboardPage = new DashboardPage(page);
+  test("should work with ConversationsPage object", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
 
     // Now using the actual working page object with real selectors
-    await dashboardPage.expectDashboardVisible();
-    await dashboardPage.expectAccountInfo();
+    await conversationsPage.expectConversationsVisible();
+    await conversationsPage.expectAccountInfo();
 
     // Test search functionality
-    await dashboardPage.searchConversations("test search");
-    await dashboardPage.expectSearchValue("test search");
-    await dashboardPage.clearSearch();
+    await conversationsPage.searchConversations("test search");
+    await conversationsPage.expectSearchValue("test search");
+    await conversationsPage.clearSearch();
 
     // Test filters
-    await dashboardPage.clickOpenFilter();
+    await conversationsPage.clickOpenFilter();
 
     // Test mobile responsiveness
-    await dashboardPage.setMobileViewport();
-    await dashboardPage.expectDashboardVisible();
-    await dashboardPage.setDesktopViewport();
+    await conversationsPage.setMobileViewport();
+    await conversationsPage.expectConversationsVisible();
+    await conversationsPage.setDesktopViewport();
 
     // Test authentication persistence
-    await dashboardPage.refreshAndWaitForAuth();
+    await conversationsPage.refreshAndWaitForAuth();
 
-    await takeDebugScreenshot(page, "dashboard-page-object-working.png");
+    await takeDebugScreenshot(page, "conversations-page-object-working.png");
   });
 
   test("should display dashboard with conversations", async ({ page }) => {
@@ -211,7 +211,7 @@ test.describe("Working Conversation Management", () => {
     expect(currentUrl).toContain("helperai.dev");
   });
 
-  test("should support keyboard navigation", { timeout: 60000 }, async ({ page }) => {
+  test("should support keyboard navigation", async ({ page }) => {
     const searchInput = page.locator('input[placeholder="Search conversations"]');
 
     // Focus directly on the search input instead of relying on tab order

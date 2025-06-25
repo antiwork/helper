@@ -3,9 +3,9 @@ import { debugWait } from "../test-helpers";
 import { BasePage } from "./basePage";
 
 /**
- * DashboardPage - Page object for Helper dashboard interactions
+ * ConversationsPage - Page object for Helper conversations interactions
  */
-export class DashboardPage extends BasePage {
+export class ConversationsPage extends BasePage {
   // Real selectors that actually exist in the application
   private readonly searchInput = 'input[placeholder="Search conversations"]';
   private readonly openFilter = 'button:has-text("open")';
@@ -18,17 +18,17 @@ export class DashboardPage extends BasePage {
   private readonly conversationsList = "[data-conversation-list]"; // Fallback generic selector
   private readonly conversationItem = "[data-conversation-item]"; // Fallback generic selector
 
-  async navigateToDashboard() {
+  async navigateToConversations() {
     await this.goto("/mailboxes/gumroad/mine");
     await this.waitForPageLoad();
   }
 
-  async waitForDashboardLoad() {
+  async waitForConversationsLoad() {
     await this.page.waitForLoadState("networkidle");
     await expect(this.page.locator(this.searchInput)).toBeVisible();
   }
 
-  async expectDashboardVisible() {
+  async expectConversationsVisible() {
     await expect(this.page).toHaveTitle("Helper");
     await expect(this.page.locator(this.searchInput)).toBeVisible();
     await expect(this.page.locator(this.openFilter)).toBeVisible();
@@ -101,7 +101,7 @@ export class DashboardPage extends BasePage {
     await this.page.reload();
     await this.page.waitForLoadState("networkidle");
     await expect(this.page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
-    await this.waitForDashboardLoad();
+    await this.waitForConversationsLoad();
   }
 
   async focusSearchInput() {

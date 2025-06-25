@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-extraneous-class */
 import { promises as fs } from "fs";
 import { expect, Page } from "@playwright/test";
 

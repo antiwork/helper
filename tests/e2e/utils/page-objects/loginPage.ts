@@ -4,9 +4,9 @@ import { BasePage } from "./basePage";
 export class LoginPage extends BasePage {
   private readonly emailInput = "#email"; // Using actual id instead of data-testid
   private readonly submitButton = 'button[type="submit"]';
-  private readonly otpInputs = '[data-input-otp-slot]'; // OTP input slots
+  private readonly otpInputs = "[data-input-otp-slot]"; // OTP input slots
   private readonly loginForm = "form"; // Using actual form selector
-  private readonly otpForm = '[data-input-otp-slot]'; // OTP input slots
+  private readonly otpForm = "[data-input-otp-slot]"; // OTP input slots
   private readonly errorMessage = '.error, [role="alert"], .text-destructive'; // Common error selectors
 
   async navigateToLogin() {
