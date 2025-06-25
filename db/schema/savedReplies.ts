@@ -33,7 +33,3 @@ export const savedRepliesRelations = relations(savedReplies, ({ one }) => ({
     references: [mailboxes.id],
   }),
 }));
-
-// Keep the old export for backwards compatibility during migration
-export const macros = savedReplies;
-export const macrosRelations = savedRepliesRelations;

@@ -43,7 +43,6 @@ export default function SavedRepliesPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSavedReply, setEditingSavedReply] = useState<SavedReply | null>(null);
-  const [previewSavedReply, setPreviewSavedReply] = useState<SavedReply | null>(null);
 
   // Debounce search term to avoid losing focus on every keystroke
   useEffect(() => {
@@ -154,6 +153,7 @@ export default function SavedRepliesPage() {
                 key={savedReply.slug}
                 className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => setEditingSavedReply(savedReply)}
+                data-testid="saved-reply-card"
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -168,13 +168,19 @@ export default function SavedRepliesPage() {
                           e.stopPropagation();
                           handleCopySavedReply(savedReply.content);
                         }}
+                        data-testid="copy-button"
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4" data-testid="copy-icon" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                            <Trash2 className="h-4 w-4" />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid="delete-button"
+                          >
+                            <Trash2 className="h-4 w-4" data-testid="delete-icon" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -255,15 +261,6 @@ export default function SavedRepliesPage() {
             />
           </DialogContent>
         </Dialog>
-      )}
-
-      {previewSavedReply && (
-        <SavedReplyPreview
-          savedReply={previewSavedReply}
-          mailboxSlug={mailboxSlug}
-          open={!!previewSavedReply}
-          onOpenChange={() => setPreviewSavedReply(null)}
-        />
       )}
     </div>
   );

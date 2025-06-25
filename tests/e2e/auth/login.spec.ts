@@ -107,8 +107,10 @@ test.describe("Working Authentication", () => {
     // Check if we're still on login (might show error or stay on login)
     const currentUrl = page.url();
 
-    // Should still be on login page or show some response
-    expect(currentUrl).toContain("helperai.dev");
+    // Should still be on login page or show some response - handle both local and production URLs
+    expect(
+      currentUrl.includes("login") || currentUrl.includes("helperai.dev") || currentUrl.includes("localhost"),
+    ).toBeTruthy();
   });
 
   test("should handle empty email submission", async ({ page }) => {

@@ -204,8 +204,10 @@ test.describe("Working Conversation Management", () => {
     // Check where we end up
     const currentUrl = page.url();
 
-    // Should still be within the app
-    expect(currentUrl).toContain("helperai.dev");
+    // Should still be within the app - handle both local and production URLs
+    expect(
+      currentUrl.includes("mailboxes") || currentUrl.includes("helperai.dev") || currentUrl.includes("localhost"),
+    ).toBeTruthy();
 
     // Verify if navigation occurred or modal/dropdown opened
     if (currentUrl !== urlBefore) {

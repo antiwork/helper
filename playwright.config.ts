@@ -18,7 +18,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "https://helperai.dev",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3010",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -60,10 +60,9 @@ export default defineConfig({
   /* TODO: Consider using a separate test database to avoid data conflicts
    * and allow for more reliable test data setup/teardown */
   webServer: {
-    command: "pnpm dev",
-    url: "https://helperai.dev",
-    reuseExistingServer: true,
-    ignoreHTTPSErrors: true,
-    timeout: 120 * 1000, // 2 minutes for server startup
+    command: "pnpm dev:test",
+    url: "http://localhost:3010",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 });
