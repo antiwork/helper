@@ -9,6 +9,7 @@ const globalSetup = isEvals ? [] : ["./tests/support/globalSetup.ts"];
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.next/**", "**/e2e/**"],
     coverage: {
       provider: "v8",
     },
