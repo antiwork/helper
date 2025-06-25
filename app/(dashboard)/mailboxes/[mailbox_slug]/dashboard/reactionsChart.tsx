@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { Bar, BarChart, ReferenceLine, XAxis, YAxis } from "recharts";
 import ConversationsModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversationsModal";
 import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
@@ -24,7 +25,7 @@ export function ReactionsChart({
 }: {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: { from?: Date; to?: Date };
+  customDate?: DateRange;
 }) {
   const { startDate, endDate, period } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
   const [selectedBar, setSelectedBar] = useState<{

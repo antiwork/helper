@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { DateRange } from "react-day-picker";
 import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
 import LoadingSpinner from "@/components/loadingSpinner";
 import {
@@ -36,7 +37,7 @@ const chartConfig = {
 interface StatusByTypeChartProps {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: { from?: Date; to?: Date };
+  customDate?: DateRange;
 }
 
 export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: StatusByTypeChartProps) {

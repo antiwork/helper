@@ -1,5 +1,6 @@
 "use client";
 
+import { DateRange as DayPickerDateRange } from "react-day-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomTimeRangePicker } from "./customTimeRangePicker";
 import { type TimeRange } from "./dashboardContent";
@@ -12,7 +13,7 @@ const timeRangeOptions: { value: TimeRange; label: string }[] = [
   { value: "custom", label: "Custom" },
 ];
 
-type DateRange = { from?: Date; to?: Date };
+type DateRange = DayPickerDateRange;
 
 type Props = {
   value: TimeRange;
@@ -47,7 +48,7 @@ export function TimeRangeSelector({ value, onValueChange, className, customDate,
 
 export const timeRangeToQuery = (
   timeRange: TimeRange,
-  customDate?: { from?: Date; to?: Date },
+  customDate?: DateRange,
 ): { startDate: Date; endDate: Date; period: "hourly" | "daily" | "monthly" } => {
   const now = new Date();
   const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));

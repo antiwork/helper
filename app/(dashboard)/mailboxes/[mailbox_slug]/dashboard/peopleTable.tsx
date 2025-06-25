@@ -1,5 +1,6 @@
 "use client";
 
+import { DateRange } from "react-day-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { type RouterOutputs } from "@/trpc";
@@ -9,7 +10,7 @@ import { type TimeRange } from "./dashboardContent";
 type Props = {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: { from?: Date; to?: Date };
+  customDate?: DateRange;
 };
 
 type Member = RouterOutputs["mailbox"]["members"]["stats"][number];
@@ -17,7 +18,7 @@ type Member = RouterOutputs["mailbox"]["members"]["stats"][number];
 export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
   const statsInput =
     timeRange === "custom"
-      ? { mailboxSlug, period: "24h", customStartDate: customDate?.from, customEndDate: customDate?.to }
+      ? { mailboxSlug, period: "24h" as const, customStartDate: customDate?.from, customEndDate: customDate?.to }
       : { mailboxSlug, period: timeRange };
 
   const { data: members, isLoading } = api.mailbox.members.stats.useQuery(statsInput, {
