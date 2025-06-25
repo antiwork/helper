@@ -16,17 +16,20 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Node.js version check
-current_node_version=$(node -v 2>/dev/null || echo "not found")
-if [ "$current_node_version" != "$REQUIRED_NODE_VERSION" ]; then
-    echo -e "\033[31m✖ Required Node.js version is $REQUIRED_NODE_VERSION, but found $current_node_version.\033[0m"
-    echo "Please install the correct version using nvm or your preferred version manager."
+current_node_version=$(node -v 2>/dev/null || echo "nothing")
+required_major=$(echo "$REQUIRED_NODE_VERSION" | cut -d'.' -f1)
+current_major=$(echo "$current_node_version" | cut -d'.' -f1)
+
+if [ "$current_node_version" = "nothing" ] || [ "$current_major" != "$required_major" ]; then
+    echo -e "\033[31m✖ Required Node.js major version is $required_major, but found $current_node_version.\033[0m"
+    echo "Please install a compatible version using nvm or your preferred version manager."
     exit 1
 fi
 
 corepack enable
 
 # PNPM version check
-current_pnpm_version=$(pnpm -v 2>/dev/null || echo "not found")
+current_pnpm_version=$(pnpm -v 2>/dev/null || echo "nothing")
 if [ "$current_pnpm_version" != "$REQUIRED_PNPM_VERSION" ]; then
     echo -e "\033[31m✖ Required PNPM version is $REQUIRED_PNPM_VERSION, but found $current_pnpm_version.\033[0m"
     echo "Please install the correct version using: corepack prepare pnpm@$REQUIRED_PNPM_VERSION --activate"
