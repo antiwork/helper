@@ -16,42 +16,42 @@ const DATE_PRESETS = [
   {
     value: "allTime",
     label: "All time",
-    range: null,
+    getRange: () => null,
   },
   {
     value: "today",
     label: "Today",
-    range: { from: startOfDay(new Date()), to: endOfDay(new Date()) },
+    getRange: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }),
   },
   {
     value: "yesterday",
     label: "Yesterday",
-    range: { from: startOfDay(subDays(new Date(), 1)), to: endOfDay(subDays(new Date(), 1)) },
+    getRange: () => ({ from: startOfDay(subDays(new Date(), 1)), to: endOfDay(subDays(new Date(), 1)) }),
   },
   {
     value: "last7days",
     label: "Last 7 days",
-    range: { from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) },
+    getRange: () => ({ from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) }),
   },
   {
     value: "thisMonth",
     label: "This month",
-    range: { from: startOfMonth(new Date()), to: endOfMonth(new Date()) },
+    getRange: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }),
   },
   {
     value: "last30days",
     label: "Last 30 days",
-    range: { from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) },
+    getRange: () => ({ from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) }),
   },
   {
     value: "thisYear",
     label: "This year",
-    range: { from: startOfYear(new Date()), to: endOfYear(new Date()) },
+    getRange: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }),
   },
   {
     value: "custom",
     label: "Custom",
-    range: null,
+    getRange: () => null,
   },
 ] as const;
 
@@ -73,8 +73,9 @@ export function DateFilter({
     const initialFrom = new Date(initialStartDate);
     const initialTo = initialEndDate ? new Date(initialEndDate) : undefined;
 
-    for (const { value, range } of DATE_PRESETS) {
+    for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
+      const range = getRange();
       if (
         range &&
         range.from.getTime() === initialFrom.getTime() &&
@@ -109,7 +110,8 @@ export function DateFilter({
 
     const preset = DATE_PRESETS.find((p) => p.value === presetValue);
     if (preset) {
-      onSelect(preset.range?.from.toISOString() ?? null, preset.range?.to.toISOString() ?? null);
+      const range = preset.getRange();
+      onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
     }
   };
 
