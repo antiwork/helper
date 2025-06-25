@@ -98,6 +98,11 @@ export function DateFilter({
   const [showCustomPicker, setShowCustomPicker] = useState(selectedPreset === "custom");
 
   const handlePresetChange = (value: string) => {
+    const validPresets = DATE_PRESETS.map((p) => p.value);
+    if (!validPresets.includes(value as DatePresetValue)) {
+      console.error(`Invalid preset value: ${value}`);
+      return;
+    }
     const presetValue = value as DatePresetValue;
 
     if (presetValue === "custom") {
@@ -156,11 +161,7 @@ export function DateFilter({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-auto">
         {!showCustomPicker ? (
-          <DropdownMenuRadioGroup
-            value={selectedPreset || "undefined"}
-            onValueChange={handlePresetChange}
-            className="flex flex-col"
-          >
+          <DropdownMenuRadioGroup value={selectedPreset} onValueChange={handlePresetChange} className="flex flex-col">
             {DATE_PRESETS.map((preset) => (
               <DropdownMenuRadioItem
                 key={preset.value}
