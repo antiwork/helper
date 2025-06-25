@@ -73,6 +73,13 @@ export const membersRouter = {
         });
       }
 
+      if (ctx.user.id === input.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove yourself from the team.",
+        });
+      }
+
       try {
         await banUser(input.id);
       } catch (error) {

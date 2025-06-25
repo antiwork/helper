@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
@@ -5,7 +6,6 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
-import { TRPCError } from "@trpc/server";
 
 export const UserRoles = {
   CORE: "core",
