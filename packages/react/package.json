@@ -28,13 +28,13 @@
     "@types/node": "^22.15.3",
     "@types/react": "^19.0.0",
     "@vitest/coverage-v8": "^1.0.4",
+    "glob-promise": "^6.0.0",
     "jsdom": "^23.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tsup": "^8.3.6",
     "typescript": "^5.3.3",
-    "vitest": "^1.0.4",
-    "glob-promise": "^6.0.0"
+    "vitest": "^3.2.4"
   },
   "keywords": [
     "helper",
@@ -48,7 +48,6 @@
   ],
   "author": "Helper (https://helper.ai)",
   "license": "MIT",
-  "dependencies": {},
   "homepage": "https://helper.ai",
   "publishConfig": {
     "access": "public"

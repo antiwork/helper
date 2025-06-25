@@ -9,7 +9,7 @@ import hooksPlugin from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 const restrictEnvAccess = tseslint.config(
-  { ignores: ["**/env.ts"] },
+  { ignores: ["**/env.ts", "tests/e2e/**"] },
   {
     files: ["**/*.js", "**/*.ts", "**/*.tsx"],
     rules: {
@@ -205,7 +205,7 @@ const nextjsConfig = tseslint.config(
 /** @type {import('typescript-eslint').Config} */
 export default [
   {
-    ignores: [".next/**", ".source/**"],
+    ignores: [".next/**", ".source/**", "tests/e2e/**"],
   },
   ...baseConfig,
   ...reactConfig,
