@@ -394,12 +394,9 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
     }
 
     return (
-      <div className={cn("relative flex flex-col gap-4", className)}>
+      <div className={cn("relative flex flex-col gap-4 h-full", className)}>
         <div
-          className={cn(
-            "grow flex flex-col min-h-0 rounded border border-border bg-background",
-            toolbarOpen && isAboveMd && "pb-14",
-          )}
+          className={cn("grow flex flex-col min-h-0 rounded border border-border bg-background")}
           aria-label={ariaLabel}
         >
           <div
@@ -459,7 +456,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
             </BubbleMenu>
           )}
         </div>
-        <div className="flex w-full justify-between md:justify-start">
+        <div className="flex w-full justify-between">
           <div className="w-full md:w-auto">
             <Toolbar
               {...{
