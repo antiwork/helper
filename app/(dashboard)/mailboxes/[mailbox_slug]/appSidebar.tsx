@@ -121,18 +121,6 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <>
             <SidebarGroup>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Back to Home" className="h-10">
-                    <Link href={`/mailboxes/${mailboxSlug}/mine`}>
-                      <ChevronLeft className="size-4" />
-                      <span className="group-data-[collapsible=icon]:hidden">Back to App</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarMenu>
                 {settingsItems.map((item) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
