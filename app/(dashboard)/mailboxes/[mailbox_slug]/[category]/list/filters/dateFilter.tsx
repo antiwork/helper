@@ -69,10 +69,14 @@ export function DateFilter({
   const [selectedPreset, setSelectedPreset] = useState<DatePresetValue>(() => {
     if (!initialStartDate) return "allTime";
 
-    // Try to match initial dates to a preset
     const initialFrom = new Date(initialStartDate);
     const initialTo = initialEndDate ? new Date(initialEndDate) : undefined;
 
+    // Match initial dates to presets.
+    // The timestamp comparison is fine because preset functions use date boundaries
+    // (start/end of day/month/year) that are deterministic for the same date, though
+    // it may fail across day boundaries  - which is fine because worst case scenario
+    // we'll show the user "Custom" as the selected preset.
     for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
       const range = getRange();
