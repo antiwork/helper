@@ -1,14 +1,12 @@
-import { isMacOS } from "@tiptap/core";
 import { capitalize } from "lodash-es";
 import { ArrowDownUp, Filter, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardShortcut } from "@/components/keyboardShortcut";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import useSearchShortcut from "@/components/useSearchShortcut";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -57,7 +55,7 @@ export const ConversationSearchBar = ({
     debouncedSetSearch(search);
   }, [search]);
 
-  useSearchShortcut(() => {
+  useHotkeys(["ctrl+k", "meta+k"], () => {
     searchInputRef.current?.focus();
   });
 
