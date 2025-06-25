@@ -9,7 +9,7 @@ import {
   Inbox,
   Link as LinkIcon,
   MonitorSmartphone,
-  Settings,
+  Settings as SettingsIcon,
   Ticket,
   User,
   UserPlus,
@@ -51,7 +51,7 @@ const settingsItems = [
   { label: "Customers", id: "customers", icon: UserPlus },
   { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
   { label: "Integrations", id: "integrations", icon: LinkIcon },
-  { label: "Preferences", id: "preferences", icon: Settings },
+  { label: "Preferences", id: "preferences", icon: SettingsIcon },
 ] as const;
 
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
@@ -228,7 +228,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild tooltip="Settings">
                       <Link href={`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`}>
-                        <Settings className="size-4" />
+                        <SettingsIcon className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                       </Link>
                     </SidebarMenuButton>
