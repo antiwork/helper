@@ -88,9 +88,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
               >
                 <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
-                <span className="truncate text-base group-data-[collapsible=icon]:hidden">
-                  {currentMailbox?.name}
-                </span>
+                <span className="truncate text-base group-data-[collapsible=icon]:hidden">{currentMailbox?.name}</span>
                 <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
               </Button>
             </DropdownMenuTrigger>
