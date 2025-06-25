@@ -2,7 +2,7 @@
 
 import { Calendar, Copy, Edit3, Plus, Search, Trash2, TrendingUp } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { PageHeader } from "@/components/pageHeader";
 import {
@@ -40,9 +40,19 @@ export default function SavedRepliesPage() {
   const mailboxSlug = params.mailbox_slug as string;
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSavedReply, setEditingSavedReply] = useState<SavedReply | null>(null);
   const [previewSavedReply, setPreviewSavedReply] = useState<SavedReply | null>(null);
+
+  // Debounce search term to avoid losing focus on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const {
     data: savedReplies,
@@ -50,7 +60,7 @@ export default function SavedRepliesPage() {
     isLoading,
   } = api.mailbox.savedReplies.list.useQuery({
     mailboxSlug,
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
   });
 
   const { mutate: deleteSavedReply } = api.mailbox.savedReplies.delete.useMutation({
@@ -92,13 +102,13 @@ export default function SavedRepliesPage() {
   };
 
   const filteredSavedReplies = savedReplies || [];
-  const hasReplies = !isLoading && filteredSavedReplies.length > 0;
+  const hasRepliesOrSearch = filteredSavedReplies.length > 0 || searchTerm.length > 0;
 
   return (
     <div className="flex-1 space-y-6 p-6 pt-0">
       <div className="flex items-center justify-between w-full">
         <PageHeader title="Saved replies" />
-        {hasReplies && (
+        {hasRepliesOrSearch && (
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
