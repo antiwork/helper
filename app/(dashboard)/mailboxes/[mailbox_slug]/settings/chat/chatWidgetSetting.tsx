@@ -632,6 +632,7 @@ export default async function RootLayout({
           description="Choose when your customers can see the chat widget on your website or app"
           initialSwitchChecked={mode !== "off"}
           onSwitchChange={handleSwitchChange}
+          fullWidth
         >
           {mode !== "off" && (
             <div className="space-y-4">

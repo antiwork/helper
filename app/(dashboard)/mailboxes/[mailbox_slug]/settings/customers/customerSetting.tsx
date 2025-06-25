@@ -74,6 +74,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
         description="Configure settings for high-value customers"
         initialSwitchChecked={isEnabled}
         onSwitchChange={setIsEnabled}
+        fullWidth
       >
         {isEnabled && (
           <div className="space-y-8">
