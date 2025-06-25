@@ -50,3 +50,11 @@ db/seeds/localSeeds.ts
 
 scripts/docker/tmp/
 scripts/docker/local-nginx/certs/*
+
+# Playwright
+playwright/
+playwright-report/
+test-results/
+tests/e2e/debug/*.png
+tests/e2e/screenshots/
+tests/e2e/.auth/
