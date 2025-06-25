@@ -145,7 +145,6 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
           </a>
         </>
       }
-      fullWidth
     >
       <div className="grid gap-3">
         <div className="grid gap-1">

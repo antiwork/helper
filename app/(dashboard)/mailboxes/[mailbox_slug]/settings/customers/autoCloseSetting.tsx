@@ -76,7 +76,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
       <SectionWrapper
         title="Auto-close Inactive Tickets"
         description="Automatically close tickets that have been inactive for a specified period of time."
-        fullWidth
+
       >
         <div className="space-y-6">
           <div className="flex items-center justify-between">

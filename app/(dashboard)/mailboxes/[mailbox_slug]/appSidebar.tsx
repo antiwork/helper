@@ -74,7 +74,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               <SidebarMenuButton asChild size="sm">
                 <Link href={`/mailboxes/${mailboxSlug}/mine`} className="flex items-center gap-2">
                   <ChevronLeft className="size-4" />
-                  <span className="font-medium">Back to App</span>
+                  <span className="font-medium">Back to app</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

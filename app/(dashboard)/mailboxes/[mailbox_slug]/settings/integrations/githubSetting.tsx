@@ -144,7 +144,6 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
     <SectionWrapper
       title="GitHub Integration"
       description="Create and track GitHub issues from conversations."
-      fullWidth
     >
       {isGitHubConnected ? (
         <>

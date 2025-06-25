@@ -104,7 +104,6 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
         description="Choose the appearance of your mailbox with custom colors"
         initialSwitchChecked={isEnabled}
         onSwitchChange={handleSwitchChange}
-        fullWidth
       >
         {isEnabled && (
           <div className="space-y-4">

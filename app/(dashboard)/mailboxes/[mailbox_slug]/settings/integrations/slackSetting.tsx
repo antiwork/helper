@@ -155,7 +155,6 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     <SectionWrapper
       title="Slack Integration"
       description="Notify your team and respond without leaving Slack."
-      fullWidth
     >
       {isSlackConnected ? (
         <>

@@ -148,7 +148,6 @@ const WebsiteCrawlSetting = () => {
             <div>Content is automatically updated weekly, but you can also update it manually.</div>
           </>
         }
-        fullWidth
       >
         <div className="space-y-4">
           {isLoadingWebsites ? (

@@ -298,7 +298,6 @@ ${NODE_HMAC_SAMPLE_CODE}
             <ExternalLink className="size-4" />
           </a>
         }
-        fullWidth
       >
         <Tabs defaultValue="vanilla" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -632,7 +631,6 @@ export default async function RootLayout({
           description="Choose when your customers can see the chat widget on your website or app"
           initialSwitchChecked={mode !== "off"}
           onSwitchChange={handleSwitchChange}
-          fullWidth
         >
           {mode !== "off" && (
             <div className="space-y-4">
@@ -674,7 +672,6 @@ export default async function RootLayout({
         <SectionWrapper
           title="Chat widget host URL"
           description="The URL where your chat widget is installed. If set, customers will be able to continue email conversations in the chat widget."
-          fullWidth
         >
           <div className="flex flex-col space-y-2">
             <Label htmlFor="widgetHost">Host URL</Label>
@@ -697,7 +694,6 @@ export default async function RootLayout({
         <SectionWrapper
           title="Respond to email inquiries with chat"
           description="Automatically respond to emails as if the customer was using the chat widget."
-          fullWidth
         >
           <div className="space-y-4">
             <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
