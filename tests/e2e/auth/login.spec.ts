@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { expect, test } from "@playwright/test";
 import { LoginPage } from "../utils/page-objects/loginPage";
 import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
@@ -37,15 +36,11 @@ test.describe("Working Authentication", () => {
 
     if (currentUrl.includes("/login")) {
       // We're still on login page, likely showing OTP form
-      console.log("OTP step detected - checking for OTP inputs");
-
       // Look for OTP input slots
       const otpInputs = page.locator("[data-input-otp-slot]");
       const otpCount = await otpInputs.count();
 
       if (otpCount > 0) {
-        console.log(`Found ${otpCount} OTP input slots`);
-
         // For development/testing, try common test OTP or skip if not available
         // In a real test environment, you'd retrieve the OTP from email or test database
         try {
@@ -57,14 +52,13 @@ test.describe("Working Authentication", () => {
           // Wait for auto-submission or manual submit
           await debugWait(page, 2000);
         } catch (error) {
-          console.log("OTP filling failed, checking if we can proceed anyway");
+          // OTP filling failed, checking if we can proceed anyway
         }
       }
     }
 
     // Check final result - either we're redirected or still need manual intervention
     const finalUrl = page.url();
-    console.log(`Final URL after login attempt: ${finalUrl}`);
 
     if (finalUrl.includes("mailboxes")) {
       // Success! We got redirected to dashboard
@@ -76,14 +70,11 @@ test.describe("Working Authentication", () => {
       await takeDebugScreenshot(page, "successful-login.png");
     } else {
       // Still on login page - this is expected in a test environment without proper OTP setup
-      console.log("Login stayed on auth page - this is expected without OTP setup");
-
       // Verify we at least got to the OTP step (shows the process is working)
       const otpInputs = page.locator("[data-input-otp-slot]");
       const hasOtpForm = (await otpInputs.count()) > 0;
 
       if (hasOtpForm) {
-        console.log("✅ Successfully reached OTP step - login flow is working");
         await takeDebugScreenshot(page, "otp-form.png");
       } else {
         // Check if there are any error messages
@@ -92,7 +83,7 @@ test.describe("Working Authentication", () => {
 
         if (hasError) {
           const errorText = await errorMessage.first().textContent();
-          console.log(`Login error: ${errorText}`);
+          // Login error detected
         }
 
         await takeDebugScreenshot(page, "login-status.png");
@@ -115,7 +106,6 @@ test.describe("Working Authentication", () => {
 
     // Check if we're still on login (might show error or stay on login)
     const currentUrl = page.url();
-    console.log(`URL after different email: ${currentUrl}`);
 
     // Should still be on login page or show some response
     expect(currentUrl).toContain("helperai.dev");
@@ -152,7 +142,6 @@ test.describe("Working Authentication", () => {
     await debugWait(page, 3000);
 
     const mobileUrl = page.url();
-    console.log(`Mobile login URL: ${mobileUrl}`);
 
     if (mobileUrl.includes("mailboxes")) {
       // Success! Redirected to dashboard
@@ -165,9 +154,9 @@ test.describe("Working Authentication", () => {
       const hasOtpForm = (await otpInputs.count()) > 0;
 
       if (hasOtpForm) {
-        console.log("✅ Mobile login reached OTP step successfully");
+        // Mobile login reached OTP step successfully
       } else {
-        console.log("Mobile login stayed on email step");
+        // Mobile login stayed on email step
       }
 
       // Verify page is still functional

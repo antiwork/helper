@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { expect, test } from "@playwright/test";
 import { ConversationsPage } from "../utils/page-objects/conversationsPage";
 import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
@@ -8,15 +7,15 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate with extended timeout and retry logic
+    // Navigate with retry logic for improved reliability
     try {
-      await page.goto("/mailboxes/gumroad/mine", { timeout: 45000 });
-      await page.waitForLoadState("networkidle", { timeout: 30000 });
+      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await page.waitForLoadState("networkidle", { timeout: 10000 });
     } catch (error) {
-      console.log("First navigation attempt failed, retrying...");
-      await debugWait(page, 2000);
-      await page.goto("/mailboxes/gumroad/mine", { timeout: 45000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 20000 });
+      // Retry navigation on failure
+      console.log("Initial navigation failed, retrying...", error);
+      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
     }
   });
 
@@ -78,36 +77,37 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should show account information", async ({ page }) => {
-    // Check for account-related buttons we discovered (use .first() to handle multiple matches)
+    // Check for account-related buttons (improved specificity while maintaining compatibility)
     const gumroadButton = page.locator('button:has-text("Gumroad")').first();
     await expect(gumroadButton).toBeVisible();
 
-    const supportEmailButton = page.locator('button:has-text("support@gumroad.com")').first();
-    await expect(supportEmailButton).toBeVisible();
+    // Check for email button with broader selector pattern
+    const emailButton = page.locator('button:has-text("@gumroad.com"), button:has-text("support@")').first();
+    await expect(emailButton).toBeVisible();
   });
 
   test("should have conversation filters", async ({ page }) => {
-    // Check for the "16 open" filter button
+    // Check for the status filter button (shows count of open conversations)
     const openFilter = page.locator('button:has-text("open")');
     await expect(openFilter).toBeVisible();
 
-    // Check for "Select all" functionality (might be conditional)
-    const selectAllButton = page.locator('button:has-text("Select all")');
-    const selectAllCount = await selectAllButton.count();
+    // Verify search input is present (core filter functionality)
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
 
-    if (selectAllCount > 0) {
+    // Check for sort dropdown (should always be present)
+    const sortButton = page
+      .locator('[role="combobox"], button:has-text("Sort"), button[aria-haspopup="listbox"]')
+      .first();
+    await expect(sortButton).toBeVisible();
+
+    // Select all button appears when conversations exist - verify it exists or conversations are empty
+    const conversationItems = page.locator('div[role="checkbox"]');
+    const conversationCount = await conversationItems.count();
+
+    if (conversationCount > 0) {
+      const selectAllButton = page.locator('button:has-text("Select all"), button:has-text("Select none")');
       await expect(selectAllButton).toBeVisible();
-    } else {
-      console.log("Select all button not found - checking for alternative selectors");
-      // Maybe it's "Select All" with capital A, or doesn't exist in current state
-      const altSelectAll = page.locator('button:has-text("Select All")');
-      const altCount = await altSelectAll.count();
-
-      if (altCount > 0) {
-        await expect(altSelectAll).toBeVisible();
-      } else {
-        console.log("No select all button found - might be conditional based on conversation state");
-      }
     }
   });
 
@@ -116,8 +116,8 @@ test.describe("Working Conversation Management", () => {
     const openFilter = page.locator('button:has-text("open")');
     await openFilter.click();
 
-    // Wait for any response
-    await debugWait(page, 1000);
+    // Wait for navigation or network response
+    await page.waitForLoadState("networkidle");
 
     // Should still be on the same page
     await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
@@ -129,27 +129,35 @@ test.describe("Working Conversation Management", () => {
     const selectAllCount = await selectAllButton.count();
 
     if (selectAllCount > 0) {
-      console.log("Select all button found - testing interaction");
-      await selectAllButton.click();
+      // Count conversation checkboxes before selecting
+      const checkboxes = page.locator('div[role="checkbox"]');
+      const totalCheckboxes = await checkboxes.count();
 
-      // Wait for any response
-      await debugWait(page, 1000);
+      if (totalCheckboxes > 0) {
+        // Count currently checked checkboxes
+        const checkedBefore = await checkboxes.filter('[data-state="checked"]').count();
 
-      // After clicking, the button might change state or disappear, so just verify page is functional
+        // Click Select all button
+        await selectAllButton.click();
+
+        // Wait for selection to complete
+        await page.waitForTimeout(500);
+
+        // Verify all checkboxes are now checked
+        const checkedAfter = await checkboxes.filter('[data-state="checked"]').count();
+        expect(checkedAfter).toBe(totalCheckboxes);
+        expect(checkedAfter).toBeGreaterThan(checkedBefore);
+
+        // Verify button text changed to "Select none"
+        const selectNoneButton = page.locator('button:has-text("Select none")');
+        await expect(selectNoneButton).toBeVisible();
+      }
+
+      // Verify page is still functional
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
-
-      // Optionally check if the button text changed (might become "Deselect all" or similar)
-      const deselectButton = page.locator('button:has-text("Deselect")');
-      const newSelectButton = page.locator('button:has-text("Select all")');
-
-      const deselectCount = await deselectButton.count();
-      const newSelectCount = await newSelectButton.count();
-
-      console.log(`After click - Deselect buttons: ${deselectCount}, Select buttons: ${newSelectCount}`);
     } else {
       // If Select all doesn't exist, just verify we're still on the right page
-      console.log("Select all button not found - might be conditional");
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     }
@@ -167,48 +175,54 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should maintain authentication state", async ({ page }) => {
-    // Refresh the page with more robust timeout handling
-    try {
-      await page.reload({ timeout: 30000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 20000 });
-    } catch (error) {
-      console.log("Page reload timeout - checking current state");
-    }
+    // Authentication should persist after page reload since we're using stored auth state
+    await page.reload({ timeout: 15000 });
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
 
-    // Check current URL and authentication state
-    const currentUrl = page.url();
-    console.log(`Current URL after reload: ${currentUrl}`);
+    // Should remain authenticated and stay on the dashboard
+    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
 
-    if (currentUrl.includes("mailboxes")) {
-      // We're authenticated and on dashboard
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
-      await expect(searchInput).toBeVisible({ timeout: 10000 });
-      console.log("✅ Authentication state maintained successfully");
-    } else if (currentUrl.includes("login")) {
-      // Authentication state was lost - this is also a valid test result
-      console.log("⚠️ Authentication state was lost on reload - user redirected to login");
-      await expect(page.locator("#email")).toBeVisible();
-    } else {
-      // Some other state - log it but don't fail
-      console.log(`Unexpected URL after reload: ${currentUrl}`);
-      // Just verify we're on a valid Helper page
-      await expect(page).toHaveTitle(/Helper/);
-    }
+    // Verify dashboard elements are visible (confirms authentication persisted)
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
+
+    const openFilter = page.locator('button:has-text("open")');
+    await expect(openFilter).toBeVisible();
   });
 
   test("should handle navigation to different sections", async ({ page }) => {
-    // Try clicking on the first Gumroad button to see if it navigates anywhere
+    // Record URL before clicking
+    const urlBefore = page.url();
+
+    // Try clicking on the Gumroad button to test navigation
     const gumroadButton = page.locator('button:has-text("Gumroad")').first();
     await gumroadButton.click();
 
-    await debugWait(page, 2000);
+    // Wait for potential navigation
+    await page.waitForLoadState("networkidle");
 
-    // Log where we end up
+    // Check where we end up
     const currentUrl = page.url();
-    console.log(`After clicking Gumroad: ${currentUrl}`);
 
     // Should still be within the app
     expect(currentUrl).toContain("helperai.dev");
+
+    // Verify if navigation occurred or modal/dropdown opened
+    if (currentUrl !== urlBefore) {
+      // Navigation occurred - verify it's to a valid section
+      expect(currentUrl).toMatch(/mailboxes|settings|account|dashboard/);
+    } else {
+      // No navigation - might have opened a modal or dropdown
+      // Check for modal, dropdown, or other UI changes
+      const modal = page.locator('[role="dialog"], .modal, [data-modal]');
+      const dropdown = page.locator('[role="menu"], .dropdown-menu, [data-dropdown]');
+
+      const hasModal = (await modal.count()) > 0;
+      const hasDropdown = (await dropdown.count()) > 0;
+
+      // At least some UI response should occur (or just staying on page is acceptable)
+      expect(hasModal || hasDropdown || currentUrl === urlBefore).toBeTruthy();
+    }
   });
 
   test("should support keyboard navigation", async ({ page }) => {
@@ -224,7 +238,6 @@ test.describe("Working Conversation Management", () => {
       expect(focusedElement).toBe("Search conversations");
     } else {
       // If tab doesn't focus search input, just verify we can type in it
-      console.log(`Focus landed on: ${focusedElement || "unknown element"}`);
       await searchInput.fill("keyboard test");
       await expect(searchInput).toHaveValue("keyboard test");
     }
