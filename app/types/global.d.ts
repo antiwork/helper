@@ -6,11 +6,6 @@ export type MetadataEndpoint = {
   hmacSecret: string;
 };
 
-export type PromptLineUpdate = {
-  lineIndex?: number;
-  content?: string;
-};
-
 export type FAQ = RouterOutputs["mailbox"]["faqs"]["list"][number];
 
 type Draft = {
@@ -52,7 +47,4 @@ export type Pagination = {
   total_pages: number;
 };
 
-export type SupportAccount = {
-  id: number;
-  email: string;
-};
+
