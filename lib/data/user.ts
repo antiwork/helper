@@ -47,8 +47,14 @@ export const banUser = async (userId: string) => {
   const bannedUntil = new Date();
   bannedUntil.setFullYear(bannedUntil.getFullYear() + 50);
 
+  const { data: { user }, error: getUserError } = await supabase.auth.admin.getUserById(userId);
+  if (getUserError) throw getUserError;
+
+  const existingAppMetadata = user?.app_metadata || {};
+
   const { error } = await supabase.auth.admin.updateUserById(userId, {
     app_metadata: {
+      ...existingAppMetadata,
       banned: true,
       banned_until: bannedUntil.toISOString(),
     },
