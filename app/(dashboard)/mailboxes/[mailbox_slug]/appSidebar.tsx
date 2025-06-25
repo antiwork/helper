@@ -67,56 +67,54 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
       className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed top-0 h-svh"
       collapsible="icon"
     >
-      {!isSettingsPage && (
-        <SidebarHeader>
-          {isSettingsPage ? (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild size="sm">
-                  <Link href={`/mailboxes/${mailboxSlug}/mine`} className="flex items-center gap-2">
-                    <ChevronLeft className="size-4" />
-                    <span className="font-medium">Back to App</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="sidebar"
-                  size="sm"
-                  className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      <SidebarHeader>
+        {isSettingsPage ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild size="sm">
+                <Link href={`/mailboxes/${mailboxSlug}/mine`} className="flex items-center gap-2">
+                  <ChevronLeft className="size-4" />
+                  <span className="font-medium">Back to App</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="sidebar"
+                size="sm"
+                className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+              >
+                <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
+                <span className="truncate text-base group-data-[collapsible=icon]:hidden">
+                  {currentMailbox?.name}
+                </span>
+                <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="start" className="min-w-[180px]">
+              {mailboxes?.map((mailbox) => (
+                <DropdownMenuItem
+                  key={mailbox.slug}
+                  onClick={() => {
+                    const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
+                    router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
+                  }}
+                  className="flex items-center gap-2"
                 >
-                  <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
-                  <span className="truncate text-base group-data-[collapsible=icon]:hidden">
-                    {currentMailbox?.name}
+                  <Avatar src={undefined} fallback={mailbox.name} size="sm" />
+                  <span className="truncate text-base">{mailbox.name}</span>
+                  <span className="ml-auto">
+                    {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
                   </span>
-                  <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="bottom" align="start" className="min-w-[180px]">
-                {mailboxes?.map((mailbox) => (
-                  <DropdownMenuItem
-                    key={mailbox.slug}
-                    onClick={() => {
-                      const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
-                      router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Avatar src={undefined} fallback={mailbox.name} size="sm" />
-                    <span className="truncate text-base">{mailbox.name}</span>
-                    <span className="ml-auto">
-                      {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </SidebarHeader>
-      )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </SidebarHeader>
 
       <SidebarContent className="flex flex-col h-full">
         {isSettingsPage ? (
