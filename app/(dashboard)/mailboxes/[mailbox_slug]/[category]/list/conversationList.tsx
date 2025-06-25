@@ -29,7 +29,7 @@ export const List = () => {
     useConversationListContext();
 
   const [showFilters, setShowFilters] = useState(false);
-  const { filterValues, activeFilterCount, updateFilter } = useConversationFilters();
+  const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -224,7 +224,14 @@ export const List = () => {
               </div>
             </div>
           )}
-          {showFilters && <ConversationFilters filterValues={filterValues} onUpdateFilter={updateFilter} />}
+          {showFilters && (
+            <ConversationFilters
+              filterValues={filterValues}
+              onUpdateFilter={updateFilter}
+              onClearFilters={clearFilters}
+              activeFilterCount={activeFilterCount}
+            />
+          )}
         </div>
       </div>
       {isPending ? (
