@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Cell, Label, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { DateRange } from "react-day-picker";
+import { Cell, Label, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
 import LoadingSpinner from "@/components/loadingSpinner";
 import {

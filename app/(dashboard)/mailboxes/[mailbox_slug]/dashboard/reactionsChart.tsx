@@ -27,7 +27,10 @@ export function ReactionsChart({
   timeRange: TimeRange;
   customDate?: DateRange;
 }) {
-  const { startDate, endDate, period } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
+  const { startDate, endDate, period } = useMemo(
+    () => timeRangeToQuery(timeRange, customDate),
+    [timeRange, customDate],
+  );
   const [selectedBar, setSelectedBar] = useState<{
     startTime: Date;
     endTime: Date;

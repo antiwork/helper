@@ -24,7 +24,14 @@ type Props = {
   mailboxSlug: string;
 };
 
-export function TimeRangeSelector({ value, onValueChange, className, customDate, onCustomDateChange, mailboxSlug }: Props) {
+export function TimeRangeSelector({
+  value,
+  onValueChange,
+  className,
+  customDate,
+  onCustomDateChange,
+  mailboxSlug,
+}: Props) {
   return (
     <div className="flex items-center gap-2">
       <Select value={value} onValueChange={onValueChange}>

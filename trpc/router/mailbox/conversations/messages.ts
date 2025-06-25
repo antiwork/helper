@@ -1,5 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, eq, exists, gte, inArray, isNotNull, isNull, not, sql, lte } from "drizzle-orm";
+import { and, eq, exists, gte, inArray, isNotNull, isNull, lte, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -149,7 +149,10 @@ export const messagesRouter = {
       })();
 
       const dateFilter = input.endDate
-        ? and(gte(conversationMessages.reactionCreatedAt, input.startDate), lte(conversationMessages.reactionCreatedAt, input.endDate))
+        ? and(
+            gte(conversationMessages.reactionCreatedAt, input.startDate),
+            lte(conversationMessages.reactionCreatedAt, input.endDate),
+          )
         : gte(conversationMessages.reactionCreatedAt, input.startDate);
 
       const data = await db
@@ -191,11 +194,7 @@ export const messagesRouter = {
         db
           .$count(
             conversations,
-            and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
-              eq(conversations.status, "open"),
-              createdAtFilter,
-            ),
+            and(eq(conversations.mailboxId, ctx.mailbox.id), eq(conversations.status, "open"), createdAtFilter),
           )
           .then((count) => ({ type: "open", count })),
 
