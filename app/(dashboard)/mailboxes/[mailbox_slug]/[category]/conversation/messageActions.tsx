@@ -294,9 +294,10 @@ export const MessageActions = () => {
         triggerMailboxConfetti();
       }
       toast({
+        duration: 10000,
         title: close ? "Replied and closed" : "Message sent!",
         variant: "success",
-        action: (
+        description: (
           <div className="flex gap-2 items-center">
             {close && (
               <ToastAction
@@ -315,7 +316,7 @@ export const MessageActions = () => {
                 setShowKnowledgeBankDialog(true);
               }}
             >
-              💡 Save
+              Generate knowledge
             </ToastAction>
             <ToastAction
               altText="Undo"
