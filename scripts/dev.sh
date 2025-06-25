@@ -3,7 +3,7 @@
 set -e
 
 REQUIRED_NODE_VERSION="v$(cat .node-version)"
-REQUIRED_PNPM_VERSION="$(cat .pnpm-version)"
+REQUIRED_PNPM_VERSION="10.8.0"
 
 cleanup() {
     echo "Shutting down..."
@@ -24,8 +24,6 @@ if [ "$current_node_version" != "$REQUIRED_NODE_VERSION" ]; then
 fi
 
 corepack enable
-corepack prepare
-pnpm install
 
 # PNPM version check
 current_pnpm_version=$(pnpm -v 2>/dev/null || echo "not found")
@@ -34,6 +32,8 @@ if [ "$current_pnpm_version" != "$REQUIRED_PNPM_VERSION" ]; then
     echo "Please install the correct version using: corepack prepare pnpm@$REQUIRED_PNPM_VERSION --activate"
     exit 1
 fi
+
+pnpm install
 
 if [ ! -f "scripts/docker/local-nginx/certs/helperai_dev.crt" ]; then
     pnpm generate-ssl-certificates

@@ -26,7 +26,6 @@ You'll need:
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [Node.js](https://nodejs.org/en/download/) (see [`.node-version`](.node-version))
-- [pnpm](https://pnpm.io/installation) (see [`.pnpm-version`](.pnpm-version))
 
 ### Install local Certificate Authority
 
