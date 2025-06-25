@@ -117,7 +117,7 @@ export function DateFilter({
     setCustomDate(date);
     if (date?.from) {
       setSelectedPreset("custom");
-      onSelect(date.from.toISOString(), date.to?.toISOString().replace("T00:00:00.000Z", "T23:59:59.999Z") ?? null);
+      onSelect(date.from.toISOString(), date.to ? endOfDay(date.to).toISOString() : null);
     }
   };
 
