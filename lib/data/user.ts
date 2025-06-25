@@ -5,6 +5,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
+import { TRPCError } from "@trpc/server";
 
 export const UserRoles = {
   CORE: "core",
@@ -40,105 +41,40 @@ export const addUser = async (inviterUserId: string, emailAddress: string, displ
   if (error) throw error;
 };
 
-export const addMember = async (
-  inviterUserId: string,
-  emailAddress: string,
-  displayName: string,
-  mailboxId: number,
-  role: "core" | "nonCore" | "afk" = "afk",
-) => {
+export const banUser = async (userId: string) => {
   const supabase = createAdminClient();
 
-  const { data: existingUsers, error: fetchError } = await supabase.auth.admin.listUsers();
+  const bannedUntil = new Date();
+  bannedUntil.setFullYear(bannedUntil.getFullYear() + 50);
 
-  if (fetchError) throw fetchError;
-
-  const existingUser = existingUsers?.users?.find((user) => user.email?.toLowerCase() === emailAddress.toLowerCase());
-
-  if (existingUser) {
-    const existingMetadata = existingUser.user_metadata || {};
-    const existingMailboxAccess = existingMetadata.mailboxAccess || {};
-
-    const updatedMailboxAccess = {
-      ...existingMailboxAccess,
-      [mailboxId]: {
-        role,
-        keywords: [],
-        updatedAt: new Date().toISOString(),
-      },
-    };
-
-    const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
-      user_metadata: {
-        ...existingMetadata,
-        display_name: displayName || existingMetadata.display_name,
-        mailboxAccess: updatedMailboxAccess,
-      },
-    });
-
-    if (updateError) throw updateError;
-  } else {
-    const { error: createError } = await supabase.auth.admin.createUser({
-      email: emailAddress,
-      user_metadata: {
-        inviter_user_id: inviterUserId,
-        display_name: displayName,
-        mailboxAccess: {
-          [mailboxId]: {
-            role,
-            keywords: [],
-            updatedAt: new Date().toISOString(),
-          },
-        },
-      },
-    });
-
-    if (createError) throw createError;
-  }
-};
-
-export const removeMailboxAccess = async (id: string, mailboxId: number) => {
-  const user = await db.query.authUsers.findFirst({
-    where: eq(authUsers.id, id),
+  const { error } = await supabase.auth.admin.updateUserById(userId, {
+    app_metadata: {
+      banned: true,
+      banned_until: bannedUntil.toISOString(),
+    },
   });
 
-  if (!user) throw new Error("User not found");
-
-  const mailboxAccess = (user.user_metadata?.mailboxAccess ?? {}) as Record<string, any>;
-
-  delete mailboxAccess[mailboxId];
-
-  await db
-    .update(authUsers)
-    .set({
-      user_metadata: {
-        ...user.user_metadata,
-        mailboxAccess,
-      },
-    })
-    .where(eq(authUsers.id, id));
+  if (error) {
+    throw error;
+  }
 };
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
   const users = await db.query.authUsers.findMany();
 
-  return users
-    .filter((user) => {
-      const mailboxAccess = (user.user_metadata?.mailboxAccess ?? {}) as Record<string, any>;
-      return mailboxAccess[mailboxId];
-    })
-    .map((user) => {
-      const mailboxAccess = (user.user_metadata?.mailboxAccess ?? {}) as Record<string, any>;
-      const access = mailboxAccess[mailboxId];
+  return users.map((user) => {
+    const metadata = user.user_metadata || {};
+    const mailboxAccess = (metadata.mailboxAccess as Record<string, any>) || {};
+    const access = mailboxAccess[mailboxId];
 
-      return {
-        id: user.id,
-        displayName: user.user_metadata?.display_name || "",
-        email: user.email ?? undefined,
-        role: access?.role || "afk",
-        keywords: access?.keywords || [],
-      };
-    });
+    return {
+      id: user.id,
+      displayName: user.user_metadata?.display_name || "",
+      email: user.email ?? undefined,
+      role: access?.role || "afk",
+      keywords: access?.keywords || [],
+    };
+  });
 };
 
 export const updateUserMailboxData = async (

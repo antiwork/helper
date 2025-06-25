@@ -2,39 +2,11 @@ import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
 import { z } from "zod";
 import { getMemberStats } from "@/lib/data/stats";
-import { addMember, getUsersWithMailboxAccess, removeMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
+import { banUser, getUsersWithMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 
 export const membersRouter = {
-  addMember: mailboxProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        displayName: z.string(),
-        role: z.enum(["core", "nonCore", "afk"]).optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        await addMember(ctx.user.id, input.email, input.displayName, ctx.mailbox.id, input.role);
-      } catch (error) {
-        captureExceptionAndLog(error, {
-          tags: { route: "mailbox.members.add" },
-          extra: {
-            inviterUserId: ctx.user.id,
-            mailboxId: ctx.mailbox.id,
-            mailboxSlug: ctx.mailbox.slug,
-            email: input.email,
-          },
-        });
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to add team member.",
-        });
-      }
-    }),
-
   update: mailboxProcedure
     .input(
       z.object({
@@ -102,7 +74,7 @@ export const membersRouter = {
       }
 
       try {
-        await removeMailboxAccess(input.id, ctx.mailbox.id);
+        await banUser(input.id);
       } catch (error) {
         captureExceptionAndLog(error, {
           tags: { route: "mailbox.members.delete" },
