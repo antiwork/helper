@@ -100,7 +100,7 @@ export function DateFilter({
   const handlePresetChange = (value: string) => {
     const validPresets = DATE_PRESETS.map((p) => p.value);
     if (!validPresets.includes(value as DatePresetValue)) {
-      console.error(`Invalid preset value: ${value}`);
+      clearFilter();
       return;
     }
     const presetValue = value as DatePresetValue;
