@@ -50,9 +50,8 @@ const Toolbar = ({
   const [linkData, setLinkData] = useState({ url: "", text: "" });
   const [activeLinkElement, setActiveLinkElement] = useState<HTMLElement | null>(null);
   const [linkModalPosition, setLinkModalPosition] = useState<{ top: number; left: number; width: number } | null>(null);
-  const [linkModalSize, setLinkModalSize] = useState<{ width: number; height: number } | null>(null);
   const linkButtonRef = useRef<HTMLButtonElement | null>(null);
-  const linkModalRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => setLinkData({ url: "", text: "" }), [editor]);
   const toggleLinkModal = (open: boolean) => {
     if (!open) return setLinkModalOpen(false);
@@ -231,14 +230,13 @@ const Toolbar = ({
           </button>
           {isLinkModalOpen && linkModalPosition && createPortal(
             <div
-              ref={linkModalRef}
               style={{
                 position: "absolute",
-                top: linkModalPosition.top - (linkModalSize?.height ?? 0) - 8,
-                left: linkModalPosition.left + linkModalPosition.width / 2 - (linkModalSize?.width ?? 384) / 2,
+                top: linkModalPosition.top - 8,
+                left: linkModalPosition.left + linkModalPosition.width / 2 - 192,
                 zIndex: 50,
               }}
-              className="w-96"
+              className="w-96 -translate-y-full"
             >
               <LinkModal
                 isLinkModalOpen={isLinkModalOpen}
@@ -294,15 +292,6 @@ const Toolbar = ({
       )}
     </>
   );
-
-  useEffect(() => {
-    if (isLinkModalOpen && linkModalRef.current) {
-      setLinkModalSize({
-        width: linkModalRef.current.offsetWidth,
-        height: linkModalRef.current.offsetHeight,
-      });
-    }
-  }, [isLinkModalOpen]);
 
   return (
     <div className="flex items-center gap-2">
