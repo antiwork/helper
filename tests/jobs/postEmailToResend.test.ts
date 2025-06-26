@@ -7,7 +7,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { postEmailToResend } from "@/jobs/postEmailToResend";
+import { sendEmail } from "@/jobs/postEmailToGmail";
 import * as sentryUtils from "@/lib/shared/sentry";
 
 const mockResendSend = vi.fn().mockResolvedValue({ data: { id: "resend-email-id" }, error: null });
@@ -20,8 +20,8 @@ vi.mock("resend", () => ({
   })),
 }));
 
-vi.mock("@/lib/emails/conversationReply", () => ({
-  default: vi.fn().mockReturnValue("Mock conversation reply email"),
+vi.mock("@/lib/emails/aiReply", () => ({
+  default: vi.fn().mockReturnValue("Mock AI reply email"),
 }));
 
 vi.mock("@/lib/env", async () => {
@@ -43,7 +43,9 @@ beforeEach(() => {
 });
 
 const setupConversationForResendSending = async () => {
-  const { mailbox } = await userFactory.createRootUser();
+  const { mailbox } = await userFactory.createRootUser({
+    mailboxOverrides: { gmailSupportEmailId: null },
+  });
 
   const { conversation } = await conversationFactory.create(mailbox.id, {
     conversationProvider: "gmail",
@@ -80,13 +82,13 @@ describe("postEmailToResend", () => {
         role: "staff",
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toBeNull();
+      expect(await sendEmail({ messageId: message.id })).toBeNull();
       expect(mockResendSend).toHaveBeenCalledTimes(1);
       expect(mockResendSend).toHaveBeenCalledWith({
         from: "test@example.com",
         to: "customer@example.com",
         subject: "Re: Conversation subject",
-        react: "Mock conversation reply email",
+        react: "Mock AI reply email",
       });
       await assertMarkSent(message.id);
     });
@@ -105,12 +107,12 @@ describe("postEmailToResend", () => {
         role: "staff",
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toBeNull();
+      expect(await sendEmail({ messageId: message.id })).toBeNull();
       expect(mockResendSend).toHaveBeenCalledWith({
         from: "test@example.com",
         to: "customer@example.com",
         subject: "Reply from Helper",
-        react: "Mock conversation reply email",
+        react: "Mock AI reply email",
       });
       await assertMarkSent(message.id);
     });
@@ -123,7 +125,7 @@ describe("postEmailToResend", () => {
         role: "ai_assistant",
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toBeNull();
+      expect(await sendEmail({ messageId: message.id })).toBeNull();
       await assertMarkSent(message.id);
     });
   });
@@ -137,7 +139,7 @@ describe("postEmailToResend", () => {
         deletedAt: new Date(),
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toBeNull();
+      expect(await sendEmail({ messageId: message.id })).toBeNull();
       expect(await db.query.conversations.findFirst({ where: eq(conversations.id, conversation.id) })).toMatchObject({
         status: "closed",
       });
@@ -161,7 +163,7 @@ describe("postEmailToResend", () => {
         body: "Content",
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toEqual("The conversation emailFrom is missing.");
+      expect(await sendEmail({ messageId: message.id })).toEqual("The conversation emailFrom is missing.");
       await assertMarkFailed(message.id);
     });
 
@@ -180,7 +182,7 @@ describe("postEmailToResend", () => {
         body: "Content",
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toEqual("Resend is not configured.");
+      expect(await sendEmail({ messageId: message.id })).toEqual("Resend is not configured.");
       await assertMarkFailed(message.id);
 
       // @ts-expect-error - Restoring mocked env
@@ -200,7 +202,7 @@ describe("postEmailToResend", () => {
         error: { message: "Invalid API key" },
       });
 
-      expect(await postEmailToResend({ messageId: message.id })).toEqual("Failed to send via Resend: Invalid API key");
+      expect(await sendEmail({ messageId: message.id })).toEqual("Failed to send via Resend: Invalid API key");
       await assertMarkFailed(message.id);
     });
 
@@ -213,7 +215,7 @@ describe("postEmailToResend", () => {
       mockResendSend.mockRejectedValueOnce(new Error("Network error"));
       vi.mocked(sentryUtils.captureExceptionAndThrowIfDevelopment).mockImplementation(() => {});
 
-      expect(await postEmailToResend({ messageId: message.id })).toEqual("Unexpected error: Error: Network error");
+      expect(await sendEmail({ messageId: message.id })).toEqual("Unexpected error: Error: Network error");
       await assertMarkFailed(message.id);
     });
   });

@@ -21,8 +21,7 @@ import { importRecentGmailThreads } from "./importRecentGmailThreads";
 import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
 import { notifyVipMessage } from "./notifyVipMessage";
-import { postEmailToGmail } from "./postEmailToGmail";
-import { postEmailToResend } from "./postEmailToResend";
+import { sendEmail } from "./postEmailToGmail";
 import { publishNewConversationEvent } from "./publishNewConversationEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
 import { renewMailboxWatches } from "./renewMailboxWatches";
@@ -39,8 +38,7 @@ export const eventJobs = {
   mergeSimilarConversations,
   publishNewConversationEvent,
   notifyVipMessage,
-  postEmailToGmail,
-  postEmailToResend,
+  sendEmail,
   handleAutoResponse,
   bulkUpdateConversations,
   updateSuggestedActions,

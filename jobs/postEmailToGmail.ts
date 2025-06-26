@@ -1,27 +1,12 @@
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
+import { postEmailToGmail } from "@/lib/emails/postEmailToGmail";
+import { postEmailToResend } from "@/lib/emails/postEmailToResend";
 import { env } from "@/lib/env";
-import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
-import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
-import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { postEmailToResend } from "./postEmailToResend";
-import { assertDefinedOrRaiseNonRetriableError } from "./utils";
+import { markFailed } from "./utils/emailStatus";
 
-const markSent = async (emailId: number) => {
-  await db.update(conversationMessages).set({ status: "sent" }).where(eq(conversationMessages.id, emailId));
-  return null;
-};
-
-const markFailed = async (emailId: number, conversationId: number, error: string) => {
-  await db.transaction(async (tx) => {
-    await tx.update(conversationMessages).set({ status: "failed" }).where(eq(conversationMessages.id, emailId));
-    await tx.update(conversations).set({ status: "open" }).where(eq(conversations.id, conversationId));
-  });
-  return error;
-};
-
-export const postEmailToGmail = async ({ messageId: emailId }: { messageId: number }) => {
+export const sendEmail = async ({ messageId: emailId }: { messageId: number }) => {
   const email = await db.query.conversationMessages.findFirst({
     where: and(
       eq(conversationMessages.id, emailId),
@@ -47,63 +32,19 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
       files: true,
     },
   });
+
   if (!email) {
-    // The email was likely undone
     return null;
   }
 
-  try {
-    if (!email.conversation.emailFrom) {
-      return await markFailed(emailId, email.conversationId, "The conversation emailFrom is missing.");
-    }
-    if (!email.conversation.mailbox.gmailSupportEmail) {
-      if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
-        return await postEmailToResend({ messageId: emailId });
-      }
-      return await markFailed(emailId, email.conversationId, "No email sending method configured (Gmail or Resend).");
-    }
-
-    const pastThreadEmail = await db.query.conversationMessages.findFirst({
-      where: and(
-        eq(conversationMessages.conversationId, email.conversationId),
-        isNotNull(conversationMessages.gmailThreadId),
-        isNull(conversationMessages.deletedAt),
-      ),
-      orderBy: desc(conversationMessages.createdAt),
-    });
-
-    const gmailService = getGmailService(email.conversation.mailbox.gmailSupportEmail);
-    const gmailSupportEmailAddress = email.conversation.mailbox.gmailSupportEmail.email;
-
-    const rawEmail = await convertConversationMessageToRaw(
-      { ...email, conversation: { ...email.conversation, emailFrom: email.conversation.emailFrom } },
-      gmailSupportEmailAddress,
-    );
-    const response = await sendGmailEmail(gmailService, rawEmail, pastThreadEmail?.gmailThreadId ?? null);
-    if (response.status < 200 || response.status >= 300) {
-      return await markFailed(emailId, email.conversationId, `Failed to post to Gmail: ${response.statusText}`);
-    }
-    const sentEmail = await getMessageMetadataById(
-      gmailService,
-      assertDefinedOrRaiseNonRetriableError(response.data.id),
-    );
-    const sentEmailHeaders = sentEmail?.data?.payload?.headers ?? [];
-
-    await db
-      .update(conversationMessages)
-      .set({
-        gmailMessageId: response.data.id,
-        gmailThreadId: response.data.threadId,
-        messageId: sentEmailHeaders.find((header) => header.name?.toLowerCase() === "message-id")?.value ?? null,
-        references: sentEmailHeaders.find((header) => header.name?.toLowerCase() === "references")?.value ?? null,
-      })
-      .where(eq(conversationMessages.id, emailId));
-
-    const result = await markSent(emailId);
-
-    return result;
-  } catch (e) {
-    captureExceptionAndThrowIfDevelopment(e);
-    return await markFailed(emailId, email.conversationId, `Unexpected error: ${e}`);
+  if (!email.conversation.emailFrom) {
+    return await markFailed(emailId, email.conversationId, "The conversation emailFrom is missing.");
   }
+
+  if (email.conversation.mailbox.gmailSupportEmail) {
+    return await postEmailToGmail(email, emailId);
+  } else if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
+    return await postEmailToResend(email, emailId);
+  }
+  return await markFailed(emailId, email.conversationId, "No email sending method configured (Gmail or Resend).");
 };
