@@ -75,61 +75,7 @@ export type TipTapEditorRef = {
 
 type TipTapEditorPropsWithRef = TipTapEditorProps & { signature?: ReactNode; ref: React.Ref<TipTapEditorRef> };
 
-<<<<<<< chore/remove-element-ref
 const initialMentionState = { isOpen: false, position: null, range: null, selectedIndex: 0 };
-=======
-const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { signature?: ReactNode }>(
-  (
-    {
-      defaultContent,
-      onUpdate,
-      onModEnter,
-      onOptionEnter,
-      onSlashKey,
-      autoFocus,
-      customToolbar,
-      enableImageUpload,
-      enableFileUpload,
-      placeholder,
-      signature,
-      editable,
-      ariaLabel,
-      className,
-      actionButtons,
-      isRecordingSupported,
-      isRecording,
-      startRecording,
-      stopRecording,
-    },
-    ref,
-  ) => {
-    const { mailboxSlug } = useConversationListContext();
-    const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery({ mailboxSlug });
-    const { isAboveMd } = useBreakpoint("md");
-    const [isMacOS, setIsMacOS] = React.useState(false);
-    const [toolbarOpen, setToolbarOpen] = React.useState(() => {
-      if (typeof window !== "undefined") {
-        return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
-      }
-      return isAboveMd;
-    });
-    const [mentionState, setMentionState] = React.useState<{
-      isOpen: boolean;
-      position: { top: number; left: number } | null;
-      range: { from: number; to: number } | null;
-      selectedIndex: number;
-    }>(initialMentionState);
-    const mentionStateRef = useRefToLatest(mentionState);
-
-    useEffect(() => {
-      localStorage.setItem("editorToolbarOpen", String(toolbarOpen));
-    }, [toolbarOpen]);
-
-    const updateContent = useRefToLatest((editor: Editor) => {
-      const serializedContent = editor.getHTML();
-      onUpdate(serializedContent, editor.isEmpty && isEmptyContent(serializedContent));
-    });
->>>>>>> main
 
 const TipTapEditor = ({
   defaultContent,
@@ -151,7 +97,6 @@ const TipTapEditor = ({
   isRecording,
   startRecording,
   stopRecording,
-  hideDesktopToolbar,
   ref,
 }: TipTapEditorPropsWithRef) => {
   const { mailboxSlug } = useConversationListContext();
@@ -413,19 +358,6 @@ const TipTapEditor = ({
     const docText = editor.view.state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
     if (docText !== "@") {
       setMentionState(initialMentionState);
-<<<<<<< chore/remove-element-ref
-=======
-    };
-
-    React.useEffect(() => {
-      setMentionState((state) => ({ ...state, selectedIndex: 0 }));
-    }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
-
-    const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
-
-    if (!editor) {
-      return null;
->>>>>>> main
     }
   }, [editor, mentionState.isOpen, mentionState.range, editor?.view.state]);
 
@@ -453,6 +385,8 @@ const TipTapEditor = ({
   React.useEffect(() => {
     setMentionState((state) => ({ ...state, selectedIndex: 0 }));
   }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
+
+  const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
 
   if (!editor) {
     return null;
@@ -506,7 +440,6 @@ const TipTapEditor = ({
             </div>
           ) : null}
         </div>
-<<<<<<< chore/remove-element-ref
 
         {editor && (
           <BubbleMenu
@@ -541,32 +474,9 @@ const TipTapEditor = ({
               isRecordingSupported,
               startRecording,
               stopRecording,
-              hideDesktopToolbar,
+              hasActionButtons: showActionButtons,
             }}
           />
-=======
-        <div className="flex w-full justify-between md:justify-start">
-          <div className="w-full md:w-auto">
-            <Toolbar
-              {...{
-                open: toolbarOpen,
-                setOpen: setToolbarOpen,
-                editor,
-                uploadFileAttachments,
-                uploadInlineImages,
-                customToolbar,
-                enableImageUpload,
-                enableFileUpload,
-                isRecording,
-                isRecordingSupported,
-                startRecording,
-                stopRecording,
-                hasActionButtons: showActionButtons,
-              }}
-            />
-          </div>
-          {showActionButtons ? <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div> : null}
->>>>>>> main
         </div>
         {toolbarOpen && !isAboveMd ? null : <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div>}
       </div>
