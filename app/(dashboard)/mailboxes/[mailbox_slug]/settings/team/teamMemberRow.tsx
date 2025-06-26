@@ -39,9 +39,10 @@ type TeamMemberRowProps = {
     assignedTo: { id: string; displayName: string } | { ai: true } | null,
     conversationSlug: string,
   ) => Promise<void>;
+  onFinalReassignAndDelete: (id: string) => void
 };
 
-const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation, onFinalReassignAndDelete }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
@@ -145,24 +146,6 @@ const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation 
       });
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
-    },
-  });
-
-  const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Team member removed",
-        variant: "success",
-      });
-
-      utils.mailbox.members.list.invalidate({ mailboxSlug });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to remove member",
-        description: error.message,
-        variant: "destructive",
-      });
     },
   });
 
@@ -274,30 +257,19 @@ const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation 
       </TableCell>
       <TableCell>
         {currentUser?.id !== member.id &&
-          (conversations.length > 0 ? (
             <ConversationsDialog
               assignedToId={member.id}
               mailboxSlug={mailboxSlug}
               conversations={conversations}
               updateConversation={updateConversation}
               description="Please reassign the tickets before delete the member"
+              onFinalReassignAndDelete={() => onFinalReassignAndDelete( member.id )}
             >
               <Button variant="ghost" size="sm" iconOnly>
                 <Trash className="h-4 w-4" />
                 <span className="sr-only">Delete</span>
               </Button>
-            </ConversationsDialog>
-          ) : (
-            <ConfirmationDialog
-              message={`Are you sure you want to remove ${member.displayName} from your team?`}
-              onConfirm={() => removeTeamMember({ id: member.id, mailboxSlug })}
-            >
-              <Button variant="ghost" size="sm" iconOnly>
-                <Trash className="h-4 w-4" />
-                <span className="sr-only">Delete</span>
-              </Button>
-            </ConfirmationDialog>
-          ))}
+            </ConversationsDialog>}
       </TableCell>
       <TableCell className="w-[120px]">
         <div className="flex items-center gap-2">

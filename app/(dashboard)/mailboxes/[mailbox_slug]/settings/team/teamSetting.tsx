@@ -29,7 +29,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     );
   });
 
-  const { data: data, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery({
+  const { data, isFetching: isFetchingConversations } = api.mailbox.conversations.list.useQuery({
     mailboxSlug,
   });
 
@@ -40,13 +40,25 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
         title: "Error updating conversation",
         description: error.message,
       });
-    },
-    onSuccess: (data) => {
-      utils.mailbox.conversations.list.invalidate({
-        mailboxSlug,
-      });
-    },
+    }
   });
+
+    const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Team member removed",
+          variant: "success",
+        });
+        utils.mailbox.members.list.invalidate({ mailboxSlug });
+      },
+      onError: (error) => {
+        toast({
+          title: "Failed to remove member",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
   const handleAssignTicket = async (
     assignedTo: { id: string; displayName: string } | { ai: true } | null,
@@ -61,6 +73,16 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
         assignedToAI: false,
         assignedToId: assignedTo?.id ?? null,
       });
+    }
+  };
+
+  const handleFinalReassignAndDelete = async (id: string) => {
+    try {
+      await utils.mailbox.members.list.invalidate({ mailboxSlug });
+      removeTeamMember({ id, mailboxSlug });
+      toast({ title: "Member removed", variant: "success" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Failed to reassign conversations" });
     }
   };
 
@@ -124,6 +146,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                       mailboxSlug={mailboxSlug}
                       conversations={memberConversations}
                       updateConversation={handleAssignTicket}
+                      onFinalReassignAndDelete={handleFinalReassignAndDelete}
                     />
                   );
                 })

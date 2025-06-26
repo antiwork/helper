@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "./ui/button";
 
 interface ConversationsDialogProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ interface ConversationsDialogProps {
     conversationSlug: string,
     mailboxSlug: string,
   ) => Promise<void>;
+  onFinalReassignAndDelete: () => void
 }
 
 interface ConversationItemProps {
@@ -81,8 +83,17 @@ export default function ConversationsDialog({
   conversations,
   updateConversation,
   description,
+  assignedToId,
+  onFinalReassignAndDelete
 }: ConversationsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [reassignmentMap, setReassignmentMap] = useState<Record<string, string>>({});
+
+  const allReassigned = conversations.every((conversation : any) => {
+    const reassignedTo = reassignmentMap[conversation.slug];
+    return reassignedTo !== assignedToId;
+  });
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -115,14 +126,27 @@ export default function ConversationsDialog({
                 <ConversationItem
                   key={conversation.id}
                   conversation={conversation}
-                  onAssignTicket={(assignedTo: { id: string; displayName: string } | { ai: true } | null) =>
-                    updateConversation(assignedTo, conversation.slug, mailboxSlug)
-                  }
+                  onAssignTicket={(assignedTo: { id: string; displayName: string } | { ai: true } | null) =>{
+                    updateConversation(assignedTo, conversation.slug, mailboxSlug);
+                    setReassignmentMap((prev) => ({
+                      ...prev,
+                      [conversation.slug]: assignedTo ? ("ai" in assignedTo ? "ai" : assignedTo.id) : null,
+                    }));
+                  }}
                 />
               ))
             )}
           </div>
         </div>
+
+        {allReassigned && (
+          <div className="flex justify-end p-4 border-t">
+            <Button onClick={onFinalReassignAndDelete} disabled={!allReassigned} variant="destructive">
+              Reassign and delete member
+            </Button>
+          </div>
+        )}
+
       </DialogContent>
     </Dialog>
   );
