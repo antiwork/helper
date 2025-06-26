@@ -38,6 +38,7 @@ type TipTapEditorProps = {
   ariaLabel?: string;
   className?: string;
   actionButtons?: React.ReactNode;
+  hideDesktopToolbar?: boolean;
   isRecordingSupported: boolean;
   isRecording: boolean;
   startRecording: () => void;
@@ -93,6 +94,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       ariaLabel,
       className,
       actionButtons,
+      hideDesktopToolbar,
       isRecordingSupported,
       isRecording,
       startRecording,
@@ -475,6 +477,7 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
                 isRecordingSupported,
                 startRecording,
                 stopRecording,
+                hideDesktopToolbar,
               }}
             />
           </div>
