@@ -76,7 +76,7 @@ export const useMainPage = ({
 
   const { data: savedReplies } = api.mailbox.savedReplies.list.useQuery(
     { mailboxSlug, onlyActive: true },
-    { staleTime: 300_000, refetchOnMount: false, refetchOnWindowFocus: false },
+    { refetchOnWindowFocus: false },
   );
 
   const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();

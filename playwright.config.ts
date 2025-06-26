@@ -11,14 +11,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Opt out of parallel tests on CI for better stability */
-  workers: process.env.CI ? 1 : undefined,
+  /* Use multiple workers for faster test execution */
+  workers: 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3010",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://helperai.dev",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -29,16 +29,16 @@ export default defineConfig({
     /* Record video on failure */
     video: "retain-on-failure",
 
-    /* Ignore HTTPS errors for local development */
+    /* Ignore HTTPS errors for development environments */
     ignoreHTTPSErrors: true,
 
-    /* Extended timeouts for local SSL setup */
-    actionTimeout: 15000,
-    navigationTimeout: 45000,
+    /* Standard timeouts */
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
   },
 
-  /* Global timeout increased for flaky local environment */
-  timeout: 45000,
+  /* Standard timeout */
+  timeout: 30000,
 
   /* Configure projects for major browsers */
   projects: [
@@ -57,8 +57,7 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  /* TODO: Consider using a separate test database to avoid data conflicts
-   * and allow for more reliable test data setup/teardown */
+  /* Note: Tests clean saved replies for consistent state on each run */
   webServer: {
     command: "pnpm dev:test",
     url: "http://localhost:3010",

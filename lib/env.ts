@@ -16,9 +16,9 @@ const getSupabaseUrl = () => {
   if (process.env.NODE_ENV === "test" || process.env.CI === "true") {
     return "https://localhost:54321";
   }
-  // In local development, use local Supabase by default
+  // In local development, use remote Supabase instance
   if (process.env.NODE_ENV === "development") {
-    return "https://localhost:54321";
+    return "https://supabase.helperai.dev";
   }
   // For production/preview, require explicit configuration
   return "https://supabase.helperai.dev";

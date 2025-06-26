@@ -126,13 +126,30 @@ export class SavedRepliesPage extends BasePage {
 
   async searchSavedReplies(searchTerm: string) {
     await this.searchInput.fill(searchTerm);
-    // Wait for debounced search (300ms + buffer)
+    // Wait for debounced search (300ms + buffer) and API response
     await this.page.waitForTimeout(500);
+
+    // Wait for any loading states to complete
+    try {
+      await this.page.waitForLoadState("networkidle", { timeout: 3000 });
+    } catch {
+      // Continue if networkidle times out
+    }
+
+    // Extra wait for React re-renders to stabilize
+    await this.page.waitForTimeout(200);
   }
 
   async clearSearch() {
     await this.searchInput.clear();
+    // Wait for debounced clear operation and re-render
     await this.page.waitForTimeout(500);
+    try {
+      await this.page.waitForLoadState("networkidle", { timeout: 3000 });
+    } catch {
+      // Continue if networkidle times out
+    }
+    await this.page.waitForTimeout(200);
   }
 
   async fillSavedReplyForm(name: string, content: string) {
@@ -189,7 +206,29 @@ export class SavedRepliesPage extends BasePage {
   async waitForToast(message: string) {
     // Toast messages appear in ToastTitle components - make this optional to avoid test failures
     try {
-      await expect(this.page.locator(`[role="alert"]:has-text("${message}")`)).toBeVisible({ timeout: 3000 });
+      // Try multiple possible toast selectors
+      const toastSelectors = [
+        `[role="alert"]:has-text("${message}")`,
+        `[data-testid="toast"]:has-text("${message}")`,
+        `.toast:has-text("${message}")`,
+        `*:has-text("${message}")[role="status"]`,
+      ];
+
+      let toastFound = false;
+      for (const selector of toastSelectors) {
+        try {
+          await this.page.locator(selector).waitFor({ state: "visible", timeout: 2000 });
+          toastFound = true;
+          break;
+        } catch {
+          // Try next selector
+        }
+      }
+
+      if (!toastFound) {
+        // Final attempt with a more general approach
+        await this.page.waitForSelector(`text="${message}"`, { timeout: 1000 });
+      }
     } catch (error) {
       // Toast not found - this is acceptable, continue with test
       console.log(`Toast message "${message}" not found, continuing...`);

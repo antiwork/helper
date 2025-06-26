@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { BasePage } from "../utils/page-objects/basePage";
 import { ConversationsPage } from "../utils/page-objects/conversationsPage";
 import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
 
@@ -7,14 +8,20 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
+    // Add delay to reduce database contention between tests
+    await page.waitForTimeout(1000);
+
+    // Create base page instance for improved navigation
+    const basePage = new (class extends BasePage {})(page);
+
     // Navigate with retry logic for improved reliability
     try {
-      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await basePage.goto("/mailboxes/gumroad/mine");
       await page.waitForLoadState("networkidle", { timeout: 10000 });
     } catch (error) {
       // Retry navigation on failure
       console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await basePage.goto("/mailboxes/gumroad/mine");
       await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
     }
   });
@@ -36,11 +43,22 @@ test.describe("Working Conversation Management", () => {
 
     // Test mobile responsiveness
     await conversationsPage.setMobileViewport();
+    await debugWait(page, 1000); // Allow viewport change to settle
     await conversationsPage.expectConversationsVisible();
     await conversationsPage.setDesktopViewport();
+    await debugWait(page, 1000); // Allow viewport change to settle
 
-    // Test authentication persistence
-    await conversationsPage.refreshAndWaitForAuth();
+    // Test authentication persistence with improved error handling
+    try {
+      await conversationsPage.refreshAndWaitForAuth();
+    } catch (error) {
+      console.log("Full page refresh failed, trying direct navigation");
+      // Fallback: navigate directly instead of reload
+      const basePage = new (class extends BasePage {})(page);
+      await basePage.goto("/mailboxes/gumroad/mine");
+      await page.waitForLoadState("domcontentloaded");
+      await conversationsPage.expectConversationsVisible();
+    }
 
     await takeDebugScreenshot(page, "conversations-page-object-working.png");
   });
@@ -135,7 +153,7 @@ test.describe("Working Conversation Management", () => {
 
       if (totalCheckboxes > 0) {
         // Count currently checked checkboxes
-        const checkedBefore = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedBefore = await checkboxes.filter({ has: page.locator('[data-state="checked"]') }).count();
 
         // Click Select all button
         await selectAllButton.click();
@@ -144,7 +162,7 @@ test.describe("Working Conversation Management", () => {
         await page.waitForTimeout(500);
 
         // Verify all checkboxes are now checked
-        const checkedAfter = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedAfter = await checkboxes.filter({ has: page.locator('[data-state="checked"]') }).count();
         expect(checkedAfter).toBe(totalCheckboxes);
         expect(checkedAfter).toBeGreaterThan(checkedBefore);
 

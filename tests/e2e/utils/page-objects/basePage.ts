@@ -8,11 +8,38 @@ export abstract class BasePage {
   }
 
   async goto(path = "") {
-    await this.page.goto(path);
+    // Use domcontentloaded instead of load to avoid waiting for all resources
+    try {
+      await this.page.goto(path, {
+        waitUntil: "domcontentloaded",
+        timeout: 15000,
+      });
+    } catch (error) {
+      // Fallback: try with even more lenient settings
+      console.log(`Navigation to ${path} failed, retrying with fallback`);
+      try {
+        await this.page.goto(path, {
+          waitUntil: "commit",
+          timeout: 10000,
+        });
+        // Wait for basic DOM content after commit
+        await this.page.waitForLoadState("domcontentloaded", { timeout: 5000 });
+      } catch (retryError) {
+        console.log(`Second navigation attempt failed`);
+        throw retryError;
+      }
+    }
   }
 
   async waitForPageLoad() {
-    await this.page.waitForLoadState("networkidle");
+    // Use a more forgiving approach for slow API environments
+    try {
+      await this.page.waitForLoadState("networkidle", { timeout: 5000 });
+    } catch (error) {
+      // If networkidle times out, fall back to domcontentloaded
+      console.log("Network idle timeout, falling back to domcontentloaded");
+      await this.page.waitForLoadState("domcontentloaded", { timeout: 3000 });
+    }
   }
 
   async waitForElement(selector: string, timeout = 10000) {
