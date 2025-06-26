@@ -478,7 +478,7 @@ const TipTapEditor = ({
             }}
           />
         </div>
-        {toolbarOpen && !isAboveMd ? null : <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div>}
+        {showActionButtons ? <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div> : null}
       </div>
     </div>
   );
