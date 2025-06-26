@@ -224,13 +224,12 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                       tooltip="Settings"
                       onClick={() => {
                         previousAppUrlRef.current = pathname;
-                        router.push(`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`);
                       }}
                     >
-                      <div>
+                      <Link href={`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`}>
                         <SettingsIcon className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                      </div>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
