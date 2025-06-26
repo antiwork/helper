@@ -239,7 +239,7 @@ export const List = () => {
           <LoadingSpinner size="lg" />
         </div>
       ) : conversations.length === 0 ? (
-        <NoConversations filtered={Object.values(filterValues).some(Boolean) || !!input.search} />
+        <NoConversations filtered={activeFilterCount > 0 || !!input.search} />
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
           {conversations.map((conversation) => (
