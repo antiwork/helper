@@ -389,6 +389,8 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
       setMentionState((state) => ({ ...state, selectedIndex: 0 }));
     }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
 
+    const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
+
     if (!editor) {
       return null;
     }
@@ -475,10 +477,11 @@ const TipTapEditor = React.forwardRef<TipTapEditorRef, TipTapEditorProps & { sig
                 isRecordingSupported,
                 startRecording,
                 stopRecording,
+                hasActionButtons: showActionButtons,
               }}
             />
           </div>
-          {toolbarOpen && !isAboveMd ? null : <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div>}
+          {showActionButtons ? <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div> : null}
         </div>
       </div>
     );
