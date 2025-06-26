@@ -205,21 +205,13 @@ const Toolbar = ({
           <button
             ref={linkButtonRef}
             type="button"
-            onClick={() => {
-              if (linkButtonRef.current) {
-                const rect = linkButtonRef.current.getBoundingClientRect();
-                setLinkModalPosition({
-                  top: rect.top + window.scrollY,
-                  left: rect.left + window.scrollX,
-                  width: rect.width,
-                });
-              } else {
-                setLinkModalPosition({
-                  top: window.scrollY + 100,
-                  left: window.scrollX + 100,
-                  width: 200,
-                });
-              }
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setLinkModalPosition({
+                top: rect.top + window.scrollY,
+                left: rect.left + window.scrollX,
+                width: rect.width,
+              });
               toggleLinkModal(true);
             }}
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
@@ -239,10 +231,13 @@ const Toolbar = ({
               style={{
                 position: "absolute",
                 top: linkModalPosition.top - 8,
-                left: linkModalPosition.left + linkModalPosition.width / 2 - 192,
+                left: linkModalPosition.left + linkModalPosition.width / 2,
+                transform: "translateX(-50%) translateY(-100%)",
                 zIndex: 50,
+                width: "90vw",
+                maxWidth: "16rem"
               }}
-              className="w-96 -translate-y-full"
+              className="w-96 max-w-[16rem] sm:max-w-xs md:max-w-md"
             >
               <LinkModal
                 isLinkModalOpen={isLinkModalOpen}
