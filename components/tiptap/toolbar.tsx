@@ -27,6 +27,7 @@ type ToolbarProps = {
   isRecordingSupported: boolean;
   startRecording: () => void;
   stopRecording: () => void;
+  hideDesktopToolbar?: boolean;
 };
 
 const Toolbar = ({
@@ -41,6 +42,7 @@ const Toolbar = ({
   isRecordingSupported,
   startRecording,
   stopRecording,
+  hideDesktopToolbar,
 }: ToolbarProps) => {
   const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
@@ -312,6 +314,7 @@ const Toolbar = ({
             : "flex flex-1 min-w-0 gap-1",
           open && isAboveMd && "left-3",
           !open && !isAboveMd && "hidden",
+          hideDesktopToolbar && isAboveMd && "hidden",
         )}
       >
         {toolbarContent}
