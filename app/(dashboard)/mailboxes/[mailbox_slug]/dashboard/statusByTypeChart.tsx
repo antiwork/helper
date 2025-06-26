@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { DateRange } from "react-day-picker";
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -36,15 +37,16 @@ const chartConfig = {
 interface StatusByTypeChartProps {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: Date;
+  customDate?: DateRange;
 }
 
 export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: StatusByTypeChartProps) {
-  const { startDate } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
+  const { startDate, endDate } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
 
   const { data, isLoading } = api.mailbox.conversations.messages.statusByTypeCount.useQuery({
     mailboxSlug,
     startDate,
+    endDate,
   });
 
   if (isLoading || !data) {
