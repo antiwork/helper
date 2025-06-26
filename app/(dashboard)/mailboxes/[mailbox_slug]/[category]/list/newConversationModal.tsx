@@ -188,6 +188,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
             isRecording={isRecording}
             startRecording={startRecording}
             stopRecording={stopRecording}
+            hideDesktopToolbar={true}
           />
         </div>
       </div>
