@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ const settingsItems = [
 export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const previousAppUrlRef = useRef<string | null>(null);
   const { data: mailboxes } = api.mailbox.list.useQuery();
   const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
   const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
@@ -71,11 +73,18 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
         {isSettingsPage ? (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild size="sm">
-                <Link href={`/mailboxes/${mailboxSlug}/mine`} className="flex items-center gap-2">
+              <SidebarMenuButton
+                asChild
+                onClick={() => {
+                  const fallback = `/mailboxes/${mailboxSlug}/mine`;
+                  router.push(previousAppUrlRef.current || fallback);
+                }}
+                tooltip="Back to app"
+              >
+                <div className="flex items-center gap-2 h-10">
                   <ChevronLeft className="size-4" />
-                  <span className="font-medium">Back to app</span>
-                </Link>
+                  <span className="font-medium group-data-[collapsible=icon]:hidden">Back to app</span>
+                </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -210,11 +219,18 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Settings">
-                      <Link href={`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip="Settings"
+                      onClick={() => {
+                        previousAppUrlRef.current = pathname;
+                        router.push(`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`);
+                      }}
+                    >
+                      <div>
                         <SettingsIcon className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                      </Link>
+                      </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
