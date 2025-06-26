@@ -9,9 +9,10 @@ type LinkModalProps = {
   setLinkModalOpen: (open: boolean) => void;
   setLinkData: (data: { url: string; text: string }) => void;
   setLink: () => void;
+  className?: string;
 };
 
-const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, setLink }: LinkModalProps) => {
+const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, setLink, className }: LinkModalProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useOnOutsideClick([containerRef], () => setLinkModalOpen(false));
@@ -29,7 +30,7 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
   return (
     <div
       ref={containerRef}
-      className="flex w-full sm:w-96 flex-col gap-2 rounded-lg border border-border bg-background p-4 shadow-lg"
+      className={className ? className : "flex w-full sm:w-96 flex-col gap-2 rounded-lg border border-border bg-background p-4 shadow-lg"}
     >
       <div className="relative flex items-center">
         <Input
