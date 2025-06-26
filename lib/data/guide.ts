@@ -8,7 +8,7 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 export type GuideSession = typeof guideSessions.$inferSelect;
 export type GuideSessionEvent = typeof guideSessionEvents.$inferSelect;
 
-export type GuideSessionEventData = {
+type GuideSessionEventData = {
   steps?: string[];
   state_analysis?: string;
   progress_evaluation?: string;

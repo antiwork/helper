@@ -82,28 +82,36 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`}>
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`} tooltip="Mine">
                   <Link href={`/mailboxes/${mailboxSlug}/mine`}>
                     <User className="size-4" />
-                    <span>Mine</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Mine</span>
                   </Link>
                 </SidebarMenuButton>
                 {openCounts && openCounts.mine > 0 && <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}
+                  tooltip="Assigned"
+                >
                   <Link href={`/mailboxes/${mailboxSlug}/assigned`}>
                     <Users className="size-4" />
-                    <span>Assigned</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Assigned</span>
                   </Link>
                 </SidebarMenuButton>
                 {openCounts && openCounts.assigned > 0 && <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/unassigned`}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/unassigned`}
+                  tooltip="Up for grabs"
+                >
                   <Link href={`/mailboxes/${mailboxSlug}/unassigned`}>
                     <Ticket className="size-4" />
-                    <span>Up for grabs</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Up for grabs</span>
                   </Link>
                 </SidebarMenuButton>
                 {openCounts && openCounts.unassigned > 0 && (
@@ -111,10 +119,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 )}
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`}>
+                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`} tooltip="All">
                   <Link href={`/mailboxes/${mailboxSlug}/all`}>
                     <Inbox className="size-4" />
-                    <span>All</span>
+                    <span className="group-data-[collapsible=icon]:hidden">All</span>
                   </Link>
                 </SidebarMenuButton>
                 {openCounts && openCounts.conversations > 0 && (
@@ -128,18 +136,26 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}
+                  tooltip="Dashboard"
+                >
                   <Link href={`/mailboxes/${mailboxSlug}/dashboard`}>
                     <BarChart className="size-4" />
-                    <span>Dashboard</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/settings`}>
-                  <Link href={`/mailboxes/${mailboxSlug}/settings`}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.includes(`/mailboxes/${mailboxSlug}/settings`)}
+                  tooltip="Settings"
+                >
+                  <Link href={`/mailboxes/${mailboxSlug}/settings/knowledge`}>
                     <Settings className="size-4" />
-                    <span>Settings</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -154,18 +170,3 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
     </Sidebar>
   );
 }
-
-// Remove the SidebarTrigger component definition
-
-// Remove unused components
-// const ConversationListContent = ({ mailboxSlug }: { mailboxSlug: string }) => (
-//   <div className="flex-1 overflow-hidden flex h-full flex-col">
-//     <InboxProvider>
-//       <List variant="desktop" />
-//     </InboxProvider>
-//   </div>
-// );
-
-// const ConversationList = dynamic(() => Promise.resolve(ConversationListContent), {
-//   ssr: false,
-// });

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 
-export type HelpArticle = {
+type HelpArticle = {
   title: string;
   url: string;
 };

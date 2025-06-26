@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert } from "@/components/ui/alert";
@@ -16,21 +17,6 @@ const ConnectSupportEmail = () => {
   const { data: { supportAccount, enabled, hasResend, hasEmailSending } = {}, isLoading } = api.gmailSupportEmail.get.useQuery({
     mailboxSlug: params.mailbox_slug as string,
   });
-
-  const handleConnectOrDisconnect = async () => {
-    if (supportAccount) {
-      if (
-        confirm(
-          "Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account.",
-        )
-      ) {
-        await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
-        router.refresh();
-      }
-    } else {
-      location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`;
-    }
-  };
 
   return (
     <SectionWrapper
@@ -63,9 +49,20 @@ const ConnectSupportEmail = () => {
             Learn how!
           </Link>
         </Alert>
+      ) : supportAccount ? (
+        <ConfirmationDialog
+          message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account."
+          onConfirm={async () => {
+            await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
+            router.refresh();
+          }}
+          confirmLabel="Yes, disconnect"
+        >
+          <Button variant="destructive_outlined">{`Disconnect ${supportAccount.email}`}</Button>
+        </ConfirmationDialog>
       ) : (
-        <Button variant={supportAccount ? "destructive_outlined" : "subtle"} onClick={handleConnectOrDisconnect}>
-          {supportAccount ? `Disconnect ${supportAccount.email}` : "Connect your Gmail"}
+        <Button variant="subtle" onClick={() => (location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`)}>
+          Connect your Gmail
         </Button>
       )}
     </SectionWrapper>

@@ -21,6 +21,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -60,6 +61,48 @@ const MessageItem = ({
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
 
+  const {
+    data: orgMembers,
+    isLoading: isLoadingMembers,
+    error: membersError,
+  } = api.organization.getMembers.useQuery(undefined, {
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const getDisplayName = (msg: MessageType | NoteType): string => {
+    if (msg.type === "message") {
+      if (msg.role === "user") {
+        return msg.from || "Anonymous";
+      }
+
+      if (msg.role === "staff" && msg.userId) {
+        const member = orgMembers?.find((m) => m.id === msg.userId);
+        if (member?.displayName?.trim()) return member.displayName.trim();
+        if (membersError) return "(error loading users)";
+        if (isLoadingMembers) return "Loading...";
+        return "Unknown user";
+      }
+
+      if (msg.role === "ai_assistant") {
+        return "Helper agent";
+      }
+
+      return msg.from || "Helper agent";
+    }
+
+    if (msg.type === "note" && msg.userId) {
+      const member = orgMembers?.find((m) => m.id === msg.userId);
+      if (member?.displayName?.trim()) return member.displayName.trim();
+      if (membersError) return "(error loading users)";
+      if (isLoadingMembers) return "Loading...";
+      return "Unknown user";
+    }
+
+    return "Helper agent";
+  };
+
   const messageLabels: JSX.Element[] = [];
   messageLabels.push(
     <span key={`${message.id}-from`} className="flex items-center gap-1">
@@ -71,12 +114,12 @@ const MessageItem = ({
         )
       ) : message.type === "note" ? (
         <Edit className="h-3 w-3" />
-      ) : message.from ? (
+      ) : message.role === "staff" ? (
         <User className="h-3 w-3" />
       ) : (
         <Bot className="h-3 w-3" />
       )}
-      {message.from ? message.from : message.role === "user" ? "Anonymous" : "Helper agent"}
+      {getDisplayName(message)}
     </span>,
   );
   if (message.type === "message" && message.emailTo)
@@ -202,17 +245,17 @@ const MessageItem = ({
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        if (confirm("Are you sure you want to separate this conversation?")) {
-                          splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
-                        }
+                    <ConfirmationDialog
+                      message="Are you sure you want to separate this conversation?"
+                      onConfirm={() => {
+                        splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
                       }}
                     >
-                      <Download className="h-4 w-4" />
-                      <span className="text-xs">Merged</span>
-                    </button>
+                      <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                        <Download className="h-4 w-4" />
+                        <span className="text-xs">Merged</span>
+                      </button>
+                    </ConfirmationDialog>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Automatically merged based on similarity. Click to split.</p>

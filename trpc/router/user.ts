@@ -46,7 +46,7 @@ export const userRouter = {
       const { error } = await resend.emails.send({
         from: env.RESEND_FROM_ADDRESS,
         to: assertDefined(user.email),
-        subject: "Your OTP for Helper",
+        subject: `Your OTP for Helper: ${data.properties.email_otp}`,
         react: OtpEmail({ otp: data.properties.email_otp }),
       });
       if (error) {

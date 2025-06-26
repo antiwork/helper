@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { Bar, BarChart, ReferenceLine, XAxis, YAxis } from "recharts";
 import ConversationsModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversationsModal";
 import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
@@ -24,9 +25,12 @@ export function ReactionsChart({
 }: {
   mailboxSlug: string;
   timeRange: TimeRange;
-  customDate?: Date;
+  customDate?: DateRange;
 }) {
-  const { startDate, period } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
+  const { startDate, endDate, period } = useMemo(
+    () => timeRangeToQuery(timeRange, customDate),
+    [timeRange, customDate],
+  );
   const [selectedBar, setSelectedBar] = useState<{
     startTime: Date;
     endTime: Date;
@@ -37,6 +41,7 @@ export function ReactionsChart({
   const { data, isLoading } = api.mailbox.conversations.messages.reactionCount.useQuery({
     mailboxSlug,
     startDate,
+    endDate,
     period,
   });
 
@@ -44,7 +49,7 @@ export function ReactionsChart({
     {
       mailboxSlug,
       createdAfter: selectedBar ? selectedBar.startTime.toISOString() : startDate.toISOString(),
-      createdBefore: selectedBar ? selectedBar.endTime.toISOString() : startDate.toISOString(),
+      createdBefore: selectedBar ? selectedBar.endTime.toISOString() : endDate.toISOString(),
       reactionType: selectedBar?.reactionType ?? "thumbs-up",
     },
     { enabled: !!selectedBar },

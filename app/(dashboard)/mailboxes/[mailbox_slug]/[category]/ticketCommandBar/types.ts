@@ -1,4 +1,4 @@
-export type CommandItem = {
+type CommandItem = {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;

@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
+import { api } from "@/trpc/react";
 
 const eventDescriptions = {
   resolved_by_ai: "AI resolution",
@@ -34,24 +35,51 @@ const statusIcons = {
 
 export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+
+  const {
+    data: orgMembers,
+    isLoading: isLoadingMembers,
+    error: membersError,
+  } = api.organization.getMembers.useQuery(undefined, {
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const getUserDisplayName = (userId: string | null | undefined): string | null => {
+    if (!userId) return null;
+    const member = orgMembers?.find((m) => m.id === userId);
+    return member?.displayName?.trim() || null;
+  };
+
   if (!event.changes) return null;
+
+  const assignedToUserName = getUserDisplayName(event.changes.assignedToId);
+
+  const getAssignmentDescription = () => {
+    if (event.changes.assignedToAI) return null;
+    if (event.changes.assignedToId === undefined) return null;
+    if (event.changes.assignedToId === null) return "unassigned";
+    if (assignedToUserName) return `assigned to ${assignedToUserName}`;
+    if (membersError) return "assigned to (error loading users)";
+    if (isLoadingMembers) return "assigned to...";
+    return "assigned to unknown user";
+  };
 
   const description = hasEventDescription(event.eventType)
     ? eventDescriptions[event.eventType]
     : [
         event.changes.status ? statusVerbs[event.changes.status] : null,
-        !event.changes.assignedToAI && event.changes.assignedToUser !== undefined
-          ? event.changes.assignedToUser
-            ? `assigned to ${event.changes.assignedToUser}`
-            : "unassigned"
-          : null,
+        getAssignmentDescription(),
         event.changes.assignedToAI ? "assigned to Helper agent" : null,
         event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
       ]
         .filter(Boolean)
         .join(" and ");
 
-  const hasDetails = event.byUser || event.reason;
+  const hasDetails = event.byUserId || event.reason;
+  const byUserName = getUserDisplayName(event.byUserId);
+
   const Icon =
     event.eventType === "resolved_by_ai"
       ? CheckCircle
@@ -79,9 +107,9 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
       {hasDetails && detailsExpanded && (
         <div className="mt-2 text-sm text-muted-foreground border rounded p-4">
           <div className="flex flex-col gap-1">
-            {event.byUser && (
+            {byUserName && (
               <div>
-                <strong>By:</strong> {event.byUser}
+                <strong>By:</strong> {byUserName}
               </div>
             )}
             {event.reason && (
@@ -95,5 +123,3 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
     </div>
   );
 };
-
-export default EventItem;

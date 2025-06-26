@@ -1,13 +1,14 @@
 "use client";
 
 import cx from "classnames";
-import { Copy, ExternalLink, Eye, EyeOff, PlusCircle } from "lucide-react";
+import { ExternalLink, PlusCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import CopyToClipboard from "react-copy-to-clipboard";
 import type { MetadataEndpoint } from "@/app/types/global";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { getMarketingSiteUrl } from "@/components/constants";
 import { toast } from "@/components/hooks/use-toast";
+import { SecretInput } from "@/components/secretInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,12 +27,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [newUrl, setNewUrl] = useState(metadataEndpoint?.url || "");
-  const [showSecret, setShowSecret] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [copyTooltip, setCopyTooltip] = useState({
-    open: false,
-    content: "",
-  });
 
   const { mutateAsync: createEndpointMutation } = api.mailbox.metadataEndpoint.create.useMutation();
   const { mutateAsync: deleteEndpointMutation } = api.mailbox.metadataEndpoint.delete.useMutation();
@@ -80,31 +76,28 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
   };
 
   const removeEndpoint = async () => {
-    if (confirm("Are you sure you want to remove this Metadata Endpoint?")) {
-      setIsLoading(true);
-      try {
-        const result = await deleteEndpointMutation({ mailboxSlug });
-        if (result?.error) {
-          toast({
-            variant: "destructive",
-            title: result.error,
-          });
-          return;
-        }
-        setNewUrl("");
-        setShowSecret(false);
-        router.refresh();
-        toast({
-          title: "Metadata endpoint removed!",
-        });
-      } catch (e) {
+    setIsLoading(true);
+    try {
+      const result = await deleteEndpointMutation({ mailboxSlug });
+      if (result?.error) {
         toast({
           variant: "destructive",
-          title: "Error removing metadata endpoint",
+          title: result.error,
         });
-      } finally {
-        setIsLoading(false);
+        return;
       }
+      setNewUrl("");
+      router.refresh();
+      toast({
+        title: "Metadata endpoint removed!",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error removing metadata endpoint",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -191,77 +184,18 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
           <>
             <div className="grid gap-1">
               <Label>HMAC Secret</Label>
-              <Input
-                type={showSecret ? "text" : "password"}
-                value={metadataEndpoint.hmacSecret}
-                disabled
-                iconsSuffix={
-                  <>
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            className="flex items-center gap-1"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setTimeout(() => {
-                                setShowSecret(!showSecret);
-                              }, 100);
-                            }}
-                          >
-                            {showSecret ? (
-                              <EyeOff className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <Eye className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>{showSecret ? "Hide" : "Show"}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <CopyToClipboard
-                      text={metadataEndpoint.hmacSecret}
-                      onCopy={(_) => {
-                        setCopyTooltip((copyTooltip) => ({ ...copyTooltip, content: "Copied!" }));
-                        setTimeout(() => {
-                          setCopyTooltip((copyTooltip) => ({ ...copyTooltip, content: "" }));
-                        }, 1000);
-                      }}
-                    >
-                      <span>
-                        <TooltipProvider delayDuration={0}>
-                          <Tooltip
-                            open={copyTooltip.open || !!copyTooltip.content}
-                            onOpenChange={(open) => setCopyTooltip({ ...copyTooltip, open })}
-                          >
-                            <TooltipTrigger asChild>
-                              <button
-                                className="text-primary flex cursor-pointer items-center gap-1"
-                                onClick={(e) => e.preventDefault()}
-                              >
-                                <Copy className="h-4 w-4 text-muted-foreground" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>{copyTooltip.content || "Copy"}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </span>
-                    </CopyToClipboard>
-                  </>
-                }
-              />
+              <SecretInput value={metadataEndpoint.hmacSecret} ariaLabel="HMAC Secret" />
             </div>
             <div>
-              <Button
-                variant="destructive_outlined"
-                disabled={isLoading}
-                onClick={(e) => {
-                  e.preventDefault();
-                  removeEndpoint();
-                }}
+              <ConfirmationDialog
+                message="Are you sure you want to remove this Metadata Endpoint?"
+                onConfirm={removeEndpoint}
+                confirmLabel="Yes, remove"
               >
-                Remove endpoint
-              </Button>
+                <Button variant="destructive_outlined" disabled={isLoading}>
+                  Remove endpoint
+                </Button>
+              </ConfirmationDialog>
             </div>
           </>
         ) : (

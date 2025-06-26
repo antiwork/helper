@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
 import GitHubSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/github.svg";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,12 +13,12 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-export type GitHubUpdates = {
+type GitHubUpdates = {
   repoOwner?: string | null;
   repoName?: string | null;
 };
 
-export const GitHubRepositories = ({
+const GitHubRepositories = ({
   id,
   selectedRepoFullName,
   mailbox,
@@ -171,20 +172,15 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
             )}
           </div>
           <div className="mt-4">
-            <Button
-              variant="destructive_outlined"
-              onClick={() => {
-                if (
-                  confirm(
-                    "Are you sure you want to disconnect GitHub? This will remove the repository link and disable GitHub issue creation.",
-                  )
-                ) {
-                  onDisconnectGitHub();
-                }
+            <ConfirmationDialog
+              message="Are you sure you want to disconnect GitHub? This will remove the repository link and disable GitHub issue creation."
+              onConfirm={() => {
+                onDisconnectGitHub();
               }}
+              confirmLabel="Yes, disconnect"
             >
-              Disconnect from GitHub
-            </Button>
+              <Button variant="destructive_outlined">Disconnect from GitHub</Button>
+            </ConfirmationDialog>
           </div>
         </>
       ) : (
