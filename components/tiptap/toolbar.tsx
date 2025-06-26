@@ -213,6 +213,12 @@ const Toolbar = ({
                   left: rect.left + window.scrollX,
                   width: rect.width,
                 });
+              } else {
+                setLinkModalPosition({
+                  top: window.scrollY + 100,
+                  left: window.scrollX + 100,
+                  width: 200,
+                });
               }
               toggleLinkModal(true);
             }}
