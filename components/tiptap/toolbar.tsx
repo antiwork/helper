@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/react";
 import { ALargeSmall, Mic, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
 import LinkModal from "@/components/tiptap/linkModal";
@@ -14,6 +14,7 @@ import ToolbarImage from "./icons/image.svg";
 import ToolbarItalic from "./icons/italic.svg";
 import ToolbarLink from "./icons/link.svg";
 import ToolbarOrderedList from "./icons/ordered-list.svg";
+import { createPortal } from "react-dom";
 
 type ToolbarProps = {
   editor: Editor | null;
@@ -48,6 +49,10 @@ const Toolbar = ({
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
   const [linkData, setLinkData] = useState({ url: "", text: "" });
   const [activeLinkElement, setActiveLinkElement] = useState<HTMLElement | null>(null);
+  const [linkModalPosition, setLinkModalPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [linkModalSize, setLinkModalSize] = useState<{ width: number; height: number } | null>(null);
+  const linkButtonRef = useRef<HTMLButtonElement | null>(null);
+  const linkModalRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => setLinkData({ url: "", text: "" }), [editor]);
   const toggleLinkModal = (open: boolean) => {
     if (!open) return setLinkModalOpen(false);
@@ -199,8 +204,19 @@ const Toolbar = ({
             <ToolbarBlockquote />
           </button>
           <button
+            ref={linkButtonRef}
             type="button"
-            onClick={() => toggleLinkModal(true)}
+            onClick={() => {
+              if (linkButtonRef.current) {
+                const rect = linkButtonRef.current.getBoundingClientRect();
+                setLinkModalPosition({
+                  top: rect.top + window.scrollY,
+                  left: rect.left + window.scrollX,
+                  width: rect.width,
+                });
+              }
+              toggleLinkModal(true);
+            }}
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
           >
             <ToolbarLink />
@@ -213,16 +229,29 @@ const Toolbar = ({
           >
             <RemoveFormatting className="w-4 h-4" />
           </button>
-          {isLinkModalOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-2">
+          {isLinkModalOpen && linkModalPosition && createPortal(
+            <div
+              ref={linkModalRef}
+              style={{
+                position: "absolute",
+                top: linkModalPosition.top - (linkModalSize?.height ?? 0) - 8,
+                left: linkModalPosition.left + linkModalPosition.width / 2 - (linkModalSize?.width ?? 384) / 2,
+                zIndex: 50,
+              }}
+              className="w-96"
+            >
               <LinkModal
                 isLinkModalOpen={isLinkModalOpen}
                 linkData={linkData}
                 setLinkData={setLinkData}
-                setLinkModalOpen={setLinkModalOpen}
+                setLinkModalOpen={(open) => {
+                  setLinkModalOpen(open);
+                  if (!open) setLinkModalPosition(null);
+                }}
                 setLink={setLink}
               />
-            </div>
+            </div>,
+            document.body
           )}
           {enableImageUpload && (
             <label htmlFor={imageFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
@@ -265,6 +294,15 @@ const Toolbar = ({
       )}
     </>
   );
+
+  useEffect(() => {
+    if (isLinkModalOpen && linkModalRef.current) {
+      setLinkModalSize({
+        width: linkModalRef.current.offsetWidth,
+        height: linkModalRef.current.offsetHeight,
+      });
+    }
+  }, [isLinkModalOpen]);
 
   return (
     <div className="flex items-center gap-2">
