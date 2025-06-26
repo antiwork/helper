@@ -1,8 +1,8 @@
-import { useToolExecution } from "components/useToolExecution";
 import { Fragment } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/hooks/use-assign-ticket";
 import { formatParameter } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/toolItem";
+import { useToolExecution } from "@/components/hooks/use-tool-execution";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";

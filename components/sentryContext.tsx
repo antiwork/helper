@@ -2,7 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/components/hooks/use-session";
 
 export const SentryContext = () => {
   const { user } = useSession() ?? {};

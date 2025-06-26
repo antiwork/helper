@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useRefToLatest } from "@/components/useRefToLatest";
+import { useRefToLatest } from "@/components/hooks/use-ref-to-latest";
 
 export const useGlobalEventListener = <EventName extends keyof WindowEventMap>(
   eventName: EventName,

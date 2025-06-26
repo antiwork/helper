@@ -7,7 +7,7 @@ import { createTRPCReact } from "@trpc/react-query";
 import { lazy, Suspense, useState } from "react";
 import SuperJSON from "superjson";
 import { getBaseUrl } from "@/components/constants";
-import { useRunOnce } from "@/components/useRunOnce";
+import { useRunOnce } from "@/components/hooks/use-run-once";
 import { env } from "@/lib/env";
 import type { AppRouter } from "@/trpc";
 import { createQueryClient } from "./query-client";

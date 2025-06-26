@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { createContext, useContext } from "react";
-import { useGlobalEventListener } from "./useGlobalEventListener";
+import { useGlobalEventListener } from "./hooks/use-global-event-listener";
 
 export enum CarouselDirection {
   LEFT = "left",

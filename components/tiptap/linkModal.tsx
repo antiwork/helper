@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useOnOutsideClick } from "@/components/hooks/use-on-outside-click";
 import { Input } from "@/components/ui/input";
-import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 
 type LinkModalProps = {
   isLinkModalOpen: boolean;

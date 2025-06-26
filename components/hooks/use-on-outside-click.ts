@@ -1,6 +1,6 @@
 import type * as React from "react";
+import { useGlobalEventListener } from "@/components/hooks/use-global-event-listener";
 import { isElementWithin } from "@/components/isElementWithin";
-import { useGlobalEventListener } from "@/components/useGlobalEventListener";
 
 // `els` is a white-list of elements that should receive clicks without triggering `callback`
 export const useOnOutsideClick = (

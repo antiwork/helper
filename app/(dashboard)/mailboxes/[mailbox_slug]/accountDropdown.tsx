@@ -3,6 +3,7 @@
 import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getMarketingSiteUrl } from "@/components/constants";
+import { useSession } from "@/components/hooks/use-session";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/client";
 

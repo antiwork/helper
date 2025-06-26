@@ -3,12 +3,12 @@
 import { Bot, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
+import useKeyboardShortcut from "@/components/hooks/use-keyboard-shortcut";
+import { useSession } from "@/components/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import useKeyboardShortcut from "@/components/useKeyboardShortcut";
-import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";

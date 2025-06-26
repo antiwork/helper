@@ -1,6 +1,6 @@
 import debounce from "lodash/debounce";
 import * as React from "react";
-import { useRefToLatest } from "@/components/useRefToLatest";
+import { useRefToLatest } from "@/components/hooks/use-ref-to-latest";
 
 export const useDebouncedCallback = <T extends unknown[]>(cb: (...args: T) => void, delay: number) => {
   const underlyingFnRef = useRefToLatest(cb);

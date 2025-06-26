@@ -1,9 +1,9 @@
 import { ExternalLink, Search, X } from "lucide-react";
 import React from "react";
 import { createPortal } from "react-dom";
+import { useBreakpoint } from "@/components/hooks/use-breakpoint";
+import { useOnOutsideClick } from "@/components/hooks/use-on-outside-click";
 import { Input } from "@/components/ui/input";
-import { useBreakpoint } from "@/components/useBreakpoint";
-import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 
 type HelpArticle = {
   title: string;

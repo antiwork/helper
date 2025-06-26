@@ -1,7 +1,7 @@
-import { useToolExecution } from "components/useToolExecution";
 import { useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { formatParameter } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/toolItem";
+import { useToolExecution } from "@/components/hooks/use-tool-execution";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

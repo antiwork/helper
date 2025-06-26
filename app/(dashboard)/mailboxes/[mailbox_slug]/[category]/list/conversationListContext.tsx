@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { createContext, useContext, useMemo } from "react";
 import { ConversationListItem } from "@/app/types/global";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useDebouncedCallback } from "@/components/hooks/use-debounced-callback";
 import { assertDefined } from "@/components/utils/assert";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEventOnce } from "@/lib/realtime/hooks";

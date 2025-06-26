@@ -1,6 +1,7 @@
 import { Check, UserCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { useDebouncedCallback } from "@/components/hooks/use-debounced-callback";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { api } from "@/trpc/react";
 
 export function CustomerFilter({

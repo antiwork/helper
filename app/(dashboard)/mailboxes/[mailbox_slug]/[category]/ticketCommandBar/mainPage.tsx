@@ -12,8 +12,8 @@ import {
 import { useMemo, useRef } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";
+import useKeyboardShortcut from "@/components/hooks/use-keyboard-shortcut";
 import { toast } from "@/components/hooks/use-toast";
-import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { api } from "@/trpc/react";
 import GitHubSvg from "../icons/github.svg";
 import { CommandGroup } from "./types";

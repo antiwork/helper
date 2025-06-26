@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useDebouncedCallback } from "@/components/hooks/use-debounced-callback";
 import { Button } from "@/components/ui/button";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
 import { AssigneeFilter } from "./filters/assigneeFilter";
 import { CustomerFilter } from "./filters/customerFilter";

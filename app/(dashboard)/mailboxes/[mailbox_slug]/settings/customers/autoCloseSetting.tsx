@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedCallback } from "@/components/hooks/use-debounced-callback";
+import { useOnChange } from "@/components/hooks/use-on-change";
 import { useSavingIndicator } from "@/components/hooks/use-saving-indicator";
 import { toast } from "@/components/hooks/use-toast";
 import { SavingIndicator } from "@/components/savingIndicator";
@@ -8,8 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";

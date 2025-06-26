@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedCallback } from "@/components/hooks/use-debounced-callback";
+import { useOnChange } from "@/components/hooks/use-on-change";
 import { useSavingIndicator } from "@/components/hooks/use-saving-indicator";
 import { toast } from "@/components/hooks/use-toast";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Input } from "@/components/ui/input";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
-import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";

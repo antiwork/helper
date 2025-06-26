@@ -1,9 +1,9 @@
 import { Bot, Check, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSession } from "@/components/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 
 export type AssigneeOption =

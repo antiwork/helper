@@ -1,7 +1,7 @@
 import cx from "classnames";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import { useBreakpoint } from "@/components/useBreakpoint";
+import { useBreakpoint } from "@/components/hooks/use-breakpoint";
 
 type NavigationItem = {
   label: string;

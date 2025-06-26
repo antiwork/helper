@@ -1,11 +1,11 @@
 import type { Editor } from "@tiptap/react";
 import { ALargeSmall, Mic, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useBreakpoint } from "@/components/hooks/use-breakpoint";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
 import LinkModal from "@/components/tiptap/linkModal";
 import { Button } from "@/components/ui/button";
-import { useBreakpoint } from "@/components/useBreakpoint";
 import { cn } from "@/lib/utils";
 import ToolbarBlockquote from "./icons/blockquote.svg";
 import ToolbarBold from "./icons/bold.svg";
