@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSavingIndicator } from "@/components/hooks/use-saving-indicator";
 import { toast } from "@/components/hooks/use-toast";
-import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Input } from "@/components/ui/input";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";

@@ -7,8 +7,8 @@ import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
+import { useSpeechRecognition } from "@/components/hooks/use-speech-recognition";
 import { toast } from "@/components/hooks/use-toast";
-import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
@@ -26,7 +26,7 @@ import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
-import { useUndoneEmailStore } from "./conversation";
+import { useUndoneEmailStore } from "./hooks/use-undone-email-store";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
 

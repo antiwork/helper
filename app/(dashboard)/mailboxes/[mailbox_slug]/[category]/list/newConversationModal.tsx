@@ -6,8 +6,8 @@ import {
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
+import { useSpeechRecognition } from "@/components/hooks/use-speech-recognition";
 import { toast } from "@/components/hooks/use-toast";
-import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";

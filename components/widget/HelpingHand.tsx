@@ -13,7 +13,7 @@ import {
   showWidget,
 } from "@/lib/widget/messages";
 import { GuideInstructions, Step } from "@/types/guide";
-import { AISteps } from "./ai-steps";
+import { AISteps } from "./aiSteps";
 
 type Status = "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
 

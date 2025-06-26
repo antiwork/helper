@@ -1,7 +1,7 @@
 import { Camera, Mic } from "lucide-react";
 import * as motion from "motion/react-client";
 import { useCallback, useEffect, useState } from "react";
-import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
+import { useSpeechRecognition } from "@/components/hooks/use-speech-recognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

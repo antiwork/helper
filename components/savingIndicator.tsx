@@ -1,5 +1,5 @@
 import { Check, Loader2, X } from "lucide-react";
-import type { SavingState } from "@/components/hooks/useSavingIndicator";
+import type { SavingState } from "@/components/hooks/use-saving-indicator";
 import { cn } from "@/lib/utils";
 
 interface SavingIndicatorProps {
