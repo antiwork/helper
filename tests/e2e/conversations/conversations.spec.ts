@@ -95,7 +95,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should show account information", async ({ page }) => {
-    // Check for account-related buttons (improved specificity while maintaining compatibility)
+    // Check for account-related buttons (using working selectors)
     const gumroadButton = page.locator('button:has-text("Gumroad")').first();
     await expect(gumroadButton).toBeVisible();
 
@@ -246,20 +246,30 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should support keyboard navigation", async ({ page }) => {
+    // Test keyboard navigation by focusing and using key interactive elements
     const searchInput = page.locator('input[placeholder="Search conversations"]');
 
-    // Focus directly on the search input instead of relying on tab order
+    // Test that search input can be focused and used with keyboard
     await searchInput.focus();
+    await expect(searchInput).toBeFocused();
 
-    // Check if search input is focused
-    const focusedElement = await page.evaluate(() => document.activeElement?.getAttribute("placeholder"));
+    // Test keyboard input works
+    await page.keyboard.type("keyboard test");
+    await expect(searchInput).toHaveValue("keyboard test");
 
-    if (focusedElement === "Search conversations") {
-      expect(focusedElement).toBe("Search conversations");
-    } else {
-      // If tab doesn't focus search input, just verify we can type in it
-      await searchInput.fill("keyboard test");
-      await expect(searchInput).toHaveValue("keyboard test");
-    }
+    // Test navigation with Enter key (should work for form submission)
+    await page.keyboard.press("Escape"); // Clear any state
+
+    // Test tab navigation between interactive elements
+    await page.keyboard.press("Tab");
+
+    // Verify that tab navigation works by checking if focus moved
+    const activeElementAfterTab = await page.evaluate(() => document.activeElement?.tagName || "BODY");
+
+    // Should be able to tab to some interactive element (not just stay on body)
+    expect(["INPUT", "BUTTON", "A"].includes(activeElementAfterTab)).toBeTruthy();
+
+    // Clear for cleanup
+    await searchInput.clear();
   });
 });
