@@ -24,16 +24,8 @@ export class ConversationsPage extends BasePage {
   }
 
   async waitForConversationsLoad() {
-    // Wait for network to settle with a reasonable timeout
-    try {
-      await this.page.waitForLoadState("networkidle", { timeout: 10000 });
-    } catch (error) {
-      // If networkidle fails, just wait for DOM content
-      console.log("Network idle timeout in waitForConversationsLoad, continuing...");
-    }
-
-    // Ensure search input is visible (main indicator page is ready)
-    await expect(this.page.locator(this.searchInput)).toBeVisible({ timeout: 15000 });
+    await this.page.waitForLoadState("networkidle");
+    await expect(this.page.locator(this.searchInput)).toBeVisible();
   }
 
   async expectConversationsVisible() {
@@ -106,29 +98,10 @@ export class ConversationsPage extends BasePage {
   }
 
   async refreshAndWaitForAuth() {
-    // Use domcontentloaded instead of load to avoid waiting for all resources
-    await this.page.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
-
-    // Wait for network activity to settle, but with a reasonable timeout
-    try {
-      await this.page.waitForLoadState("networkidle", { timeout: 15000 });
-    } catch (error) {
-      // If networkidle times out, try domcontentloaded fallback
-      console.log("Network idle timeout, falling back to domcontentloaded");
-      await this.page.waitForLoadState("domcontentloaded", { timeout: 10000 });
-    }
-
-    // Verify URL and basic page elements are present
+    await this.page.reload();
+    await this.page.waitForLoadState("networkidle");
     await expect(this.page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
-
-    // Wait for conversations to load with more lenient timeout
-    try {
-      await this.waitForConversationsLoad();
-    } catch (error) {
-      // If full conversations load fails, at least verify basic authentication
-      console.log("Full conversations load timeout, checking basic authentication");
-      await expect(this.page.locator(this.searchInput)).toBeVisible({ timeout: 10000 });
-    }
+    await this.waitForConversationsLoad();
   }
 
   async focusSearchInput() {
