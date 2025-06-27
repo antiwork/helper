@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
-import { userProfiles } from "@/db/schema/userProfiles";
 
 export const UserRoles = {
   CORE: "core",
@@ -69,7 +69,6 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     };
   });
 };
-
 
 export const updateUserMailboxData = async (
   userId: string,
