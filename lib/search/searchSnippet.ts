@@ -30,8 +30,7 @@ export function createSearchSnippet(
   }
 
   // If match is early enough that normal truncation would show it, return original
-  const truncateLength = 150;
-  if (firstMatchIndex + matchLength <= truncateLength) {
+  if (firstMatchIndex + matchLength <= maxLength) {
     return text;
   }
 
@@ -45,15 +44,21 @@ export function createSearchSnippet(
 
   if (start > 0) {
     const wordStart = text.lastIndexOf(' ', start);
-    if (wordStart > start) {
-      start = wordStart + 1;
+    if (wordStart !== -1) {
+      const newStart = wordStart + 1;
+      if (end - newStart <= maxLength) {
+        start = newStart;
+      }
     }
   }
 
   if (end < text.length) {
     const wordEnd = text.indexOf(' ', end);
-    if (wordEnd !== -1 && wordEnd < text.length) {
-      end = wordEnd;
+    if (wordEnd !== -1) {
+      const newEnd = wordEnd;
+      if (newEnd - start <= maxLength) {
+        end = newEnd;
+      }
     }
   }
 
