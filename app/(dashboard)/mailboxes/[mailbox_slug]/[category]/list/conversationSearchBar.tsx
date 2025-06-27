@@ -55,7 +55,7 @@ export const ConversationSearchBar = ({
     debouncedSetSearch(search);
   }, [search]);
 
-  useHotkeys(["ctrl+k", "meta+k"], () => {
+  useHotkeys("mod+k", () => {
     searchInputRef.current?.focus();
   });
 
