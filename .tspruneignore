@@ -1,0 +1,6 @@
+public
+packages
+tests/e2e/**
+**/app/global-error.tsx
+**/instrumentation.ts
+**/middleware.ts
