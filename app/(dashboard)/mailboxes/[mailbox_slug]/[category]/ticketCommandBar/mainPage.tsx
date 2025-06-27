@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {
   CornerUpLeft as ArrowUturnLeftIcon,
   CornerRightUp as ArrowUturnUpIcon,
@@ -76,7 +77,7 @@ export const useMainPage = ({
 
   const { data: savedReplies } = api.mailbox.savedReplies.list.useQuery(
     { mailboxSlug, onlyActive: true },
-    { refetchOnWindowFocus: false },
+    { refetchOnWindowFocus: false, refetchOnMount: true },
   );
 
   const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
@@ -96,7 +97,7 @@ export const useMainPage = ({
   });
 
   const handleSavedReplySelect = useCallback(
-    async (savedReply: { slug: string; content: string }) => {
+    (savedReply: { slug: string; content: string }) => {
       try {
         if (!onInsertReply) {
           throw new Error("onInsertReply function is not available");
@@ -107,7 +108,7 @@ export const useMainPage = ({
 
         // Track usage separately - don't fail the insertion if tracking fails
         incrementSavedReplyUsage(
-          { slug: savedReply.slug },
+          { slug: savedReply.slug, mailboxSlug },
           {
             onError: (error) => {
               // Log tracking error but don't show to user since content was inserted successfully
