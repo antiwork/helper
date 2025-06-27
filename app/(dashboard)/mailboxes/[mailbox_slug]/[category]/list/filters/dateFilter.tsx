@@ -81,11 +81,9 @@ export function DateFilter({
       if (value === "custom") continue;
       const range = getRange();
       if (
-        range &&
-        range.from.getTime() === initialFrom.getTime() &&
-        range.to &&
+        range?.from.getTime() === initialFrom.getTime() &&
         initialTo &&
-        range.to.getTime() === initialTo.getTime()
+        range.to?.getTime() === initialTo.getTime()
       ) {
         return value;
       }
