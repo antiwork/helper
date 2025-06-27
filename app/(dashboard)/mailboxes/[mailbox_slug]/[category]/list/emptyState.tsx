@@ -6,7 +6,7 @@ import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox
 import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/shared/queries";
 import { cn } from "@/lib/utils";
 
-export const NoConversations = () => {
+export const NoConversations = ({ filtered }: { filtered?: boolean }) => {
   const { input } = useConversationsListInput();
   const { conversationListData } = useConversationListContext();
 
@@ -15,6 +15,15 @@ export const NoConversations = () => {
   const isOnboarding = !hasEmailSending || !onboardingState?.hasWidgetHost;
 
   const shouldShowNoTickets = !input.status?.length || input.status?.[0] === "open";
+
+  if (filtered) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <h2 className="font-semibold mb-2">No conversations found for this filter</h2>
+        <p className="text-sm text-muted-foreground">Try adjusting your filters or search.</p>
+      </div>
+    );
+  }
 
   if (isOnboarding) {
     return (

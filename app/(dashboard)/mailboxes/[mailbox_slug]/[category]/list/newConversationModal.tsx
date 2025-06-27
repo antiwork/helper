@@ -4,6 +4,7 @@ import {
   FAILED_ATTACHMENTS_TOOLTIP_MESSAGE,
   useSendDisabled,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
 import { toast } from "@/components/hooks/use-toast";
@@ -170,27 +171,26 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
           }
           onModEnter={sendMessage}
         />
-        <div className="min-h-[10rem]">
-          <TipTapEditor
-            ref={editorRef}
-            ariaLabel="Message"
-            defaultContent={messageMemoized}
-            onModEnter={sendMessage}
-            onUpdate={(message, isEmpty) =>
-              setNewConversationInfo((info) => ({
-                ...info,
-                message: isEmpty ? "" : message,
-              }))
-            }
-            enableImageUpload
-            enableFileUpload
-            isRecordingSupported={isRecordingSupported}
-            isRecording={isRecording}
-            startRecording={startRecording}
-            stopRecording={stopRecording}
-            hideDesktopToolbar={true}
-          />
-        </div>
+        <TipTapEditor
+          ref={editorRef}
+          ariaLabel="Message"
+          placeholder="Type your message here..."
+          defaultContent={messageMemoized}
+          onModEnter={sendMessage}
+          onUpdate={(message, isEmpty) =>
+            setNewConversationInfo((info) => ({
+              ...info,
+              message: isEmpty ? "" : message,
+            }))
+          }
+          enableImageUpload
+          enableFileUpload
+          signature={<EmailSignature />}
+          isRecordingSupported={isRecordingSupported}
+          isRecording={isRecording}
+          startRecording={startRecording}
+          stopRecording={stopRecording}
+        />
       </div>
 
       <DialogFooter>
