@@ -78,7 +78,11 @@ Now linking your Gmail account from Settings → Integrations should grant Gmail
 
 Enables various features including messaging channels when tickets are received, messaging users when tickets are assigned, and an AI agent.
 
-1. Set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or similar to get a public forwarding URL pointing to `localhost:3010`.
+<Callout>
+  If running locally, set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or
+  similar to get a public forwarding URL pointing to `localhost:3010`.
+</Callout>
+
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app.
 1. Under "Basic Information", find your app credentials.
 1. Add the following values as environment variables:
@@ -93,6 +97,8 @@ Enables various features including messaging channels when tickets are received,
    - `message.channels`
    - `message.im`
    - `tokens_revoked`
+   - `link_shared`
+1. Under "Event Subscriptions", add your Helper domain under "App unfurl domains"
 1. Under "Interactivity & Shortcuts", add `https://<your-helper-domain>/api/webhooks/slack/response` as the interactivity request URL
 1. Under "Agents & AI Apps", check "Agent or Assistant"
 1. Under "App Home", check "Always Show My Bot as Online"
@@ -101,6 +107,11 @@ Enables various features including messaging channels when tickets are received,
 ### GitHub
 
 Enables creating GitHub issues from tickets and replying to the customer when the issue is closed.
+
+<Callout>
+  If running locally, set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or
+  similar to get a public forwarding URL pointing to `localhost:3010`.
+</Callout>
 
 1. Go to [github.com/settings/apps](https://github.com/settings/apps) and click "New GitHub App".
 1. Fill in the required fields, including a name for your app.
