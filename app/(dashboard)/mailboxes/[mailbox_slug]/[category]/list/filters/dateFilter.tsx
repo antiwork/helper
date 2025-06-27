@@ -11,6 +11,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { assertDefined } from "@/components/utils/assert";
 
 const DATE_PRESETS = [
   {
@@ -80,11 +81,7 @@ export function DateFilter({
     for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
       const range = getRange();
-      if (
-        range?.from.getTime() === initialFrom.getTime() &&
-        initialTo &&
-        range.to?.getTime() === initialTo.getTime()
-      ) {
+      if (range?.from.getTime() === initialFrom.getTime() && initialTo && range.to?.getTime() === initialTo.getTime()) {
         return value;
       }
     }
@@ -99,14 +96,7 @@ export function DateFilter({
 
   const [showCustomPicker, setShowCustomPicker] = useState(selectedPreset === "custom");
 
-  const handlePresetChange = (value: string) => {
-    const validPresets = DATE_PRESETS.map((p) => p.value);
-    if (!validPresets.includes(value as DatePresetValue)) {
-      clearFilter();
-      return;
-    }
-    const presetValue = value as DatePresetValue;
-
+  const handlePresetChange = (presetValue: DatePresetValue) => {
     if (presetValue === "custom") {
       // we purposely don't call setSelectedPreset here because we want that to be done when the user selects a date
       setShowCustomPicker(true);
@@ -116,11 +106,9 @@ export function DateFilter({
     setSelectedPreset(presetValue);
     setShowCustomPicker(false);
 
-    const preset = DATE_PRESETS.find((p) => p.value === presetValue);
-    if (preset) {
-      const range = preset.getRange();
-      onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
-    }
+    const preset = assertDefined(DATE_PRESETS.find((p) => p.value === presetValue));
+    const range = preset.getRange();
+    onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
   };
 
   const handleCustomDateSelect = (date: DateRange | undefined) => {
@@ -168,7 +156,12 @@ export function DateFilter({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-auto">
         {!showCustomPicker ? (
-          <DropdownMenuRadioGroup value={selectedPreset} onValueChange={handlePresetChange} className="flex flex-col">
+          <DropdownMenuRadioGroup
+            value={selectedPreset}
+            // this cast is safe because the values are derived from the DATE_PRESETS array
+            onValueChange={(value) => handlePresetChange(value as DatePresetValue)}
+            className="flex flex-col"
+          >
             {DATE_PRESETS.map((preset) => (
               <DropdownMenuRadioItem
                 key={preset.value}
