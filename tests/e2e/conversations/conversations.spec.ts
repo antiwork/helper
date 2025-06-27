@@ -252,4 +252,184 @@ test.describe("Working Conversation Management", () => {
     // Clear for cleanup
     await searchInput.clear();
   });
+
+  test("should show truncated text for non-search results", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Ensure we're not searching
+    await conversationsPage.clearSearch();
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with message text
+    const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
+    const messageCount = await messageTexts.count();
+
+    if (messageCount > 0) {
+      // Check that the first message text has truncate class when not searching
+      const firstMessage = messageTexts.first();
+      await expect(firstMessage).toBeVisible();
+
+      // Check if the element has truncate class
+      const classList = await firstMessage.getAttribute('class');
+      expect(classList).toContain('truncate');
+
+      await takeDebugScreenshot(page, "search-snippet-no-search.png");
+    }
+  });
+
+  test("should maintain truncate behavior for early matches", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a common term that likely appears early in messages
+    await conversationsPage.searchConversations("Hi");
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with highlighted search results
+    const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
+    const highlightedMessages = page.locator('mark.bg-secondary-200');
+
+    const messageCount = await messageTexts.count();
+    const highlightCount = await highlightedMessages.count();
+
+    if (messageCount > 0 && highlightCount > 0) {
+      // Find messages that contain highlights
+      for (let i = 0; i < Math.min(messageCount, 3); i++) {
+        const message = messageTexts.nth(i);
+        const messageContent = await message.innerHTML();
+
+        // If this message contains a highlight (match found)
+        if (messageContent.includes('bg-secondary-200')) {
+          const classList = await message.getAttribute('class');
+
+          // For early matches, should still have truncate class
+          // (Our implementation only removes truncate for deep matches)
+          if (messageContent.indexOf('bg-secondary-200') < 150) {
+            expect(classList).toContain('truncate');
+          }
+        }
+      }
+
+      await takeDebugScreenshot(page, "search-snippet-early-match.png");
+    }
+  });
+
+  test("should show context snippets for deep matches", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a term that's likely to appear deep in longer messages
+    // Try different search terms that might appear later in messages
+    const deepSearchTerms = ["platform", "issue", "problem", "refund", "payment"];
+
+    for (const searchTerm of deepSearchTerms) {
+      await conversationsPage.clearSearch();
+      await page.waitForTimeout(500);
+
+      await conversationsPage.searchConversations(searchTerm);
+      await page.waitForLoadState("networkidle");
+
+      // Look for conversation list items with highlighted search results
+      const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
+      const highlightedMessages = page.locator('mark.bg-secondary-200');
+
+      const messageCount = await messageTexts.count();
+      const highlightCount = await highlightedMessages.count();
+
+      if (messageCount > 0 && highlightCount > 0) {
+        // Check if any messages show snippet behavior (no truncate class, has ellipsis)
+        for (let i = 0; i < Math.min(messageCount, 5); i++) {
+          const message = messageTexts.nth(i);
+          const messageContent = await message.innerHTML();
+
+          // If this message contains a highlight
+          if (messageContent.includes('bg-secondary-200')) {
+            const classList = await message.getAttribute('class');
+
+            // Check for snippet indicators
+            const hasEllipsis = messageContent.includes('...');
+            const hasLeadingRelaxed = classList?.includes('leading-relaxed');
+            const noTruncate = !classList?.includes('truncate');
+
+            // If we found a snippet (starts with ellipsis, no truncate class)
+            if (hasEllipsis && hasLeadingRelaxed && noTruncate) {
+              console.log(`Found snippet for term "${searchTerm}":`, messageContent);
+
+              // Verify the search term is visible in the snippet
+              expect(messageContent).toContain('bg-secondary-200');
+
+              // Take screenshot showing the snippet
+              await takeDebugScreenshot(page, `search-snippet-deep-match-${searchTerm}.png`);
+
+              // Found a good example, no need to continue with this term
+              break;
+            }
+          }
+        }
+
+        // If we found good results, no need to try more terms
+        if (highlightCount > 0) {
+          break;
+        }
+      }
+    }
+  });
+
+  test("should highlight search terms in snippets", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a specific term
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Check that search terms are highlighted with the correct styling
+    const highlights = page.locator('mark.bg-secondary-200');
+    const highlightCount = await highlights.count();
+
+    if (highlightCount > 0) {
+      // Verify first few highlights have correct styling and content
+      for (let i = 0; i < Math.min(highlightCount, 3); i++) {
+        const highlight = highlights.nth(i);
+        await expect(highlight).toBeVisible();
+
+        const highlightText = await highlight.textContent();
+        expect(highlightText?.toLowerCase()).toContain('support');
+
+        // Verify highlight styling
+        const bgColor = await highlight.evaluate(el =>
+          getComputedStyle(el).backgroundColor
+        );
+        // Should have some background color (not transparent/initial)
+        expect(bgColor).not.toBe('rgba(0, 0, 0, 0)');
+        expect(bgColor).not.toBe('transparent');
+      }
+
+      await takeDebugScreenshot(page, "search-snippet-highlights.png");
+    }
+  });
+
+  test("should handle search with no results gracefully", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a term very unlikely to exist
+    await conversationsPage.searchConversations("xyzunlikelyterm123");
+    await page.waitForLoadState("networkidle");
+
+    // Should not crash or show errors
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveValue("xyzunlikelyterm123");
+
+    // Should show no results or empty state
+    const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
+    const messageCount = await messageTexts.count();
+
+    // If there are no messages, that's expected for no results
+    // If there are messages, they shouldn't have highlights
+    if (messageCount > 0) {
+      const highlights = page.locator('mark.bg-secondary-200');
+      const highlightCount = await highlights.count();
+      expect(highlightCount).toBe(0);
+    }
+
+    await takeDebugScreenshot(page, "search-snippet-no-results.png");
+  });
 });

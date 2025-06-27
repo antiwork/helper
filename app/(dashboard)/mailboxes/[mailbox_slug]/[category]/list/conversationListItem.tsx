@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/components/utils/currency";
 import { cn } from "@/lib/utils";
+import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { useConversationListContext } from "./conversationListContext";
@@ -35,6 +36,7 @@ export const ConversationListItem = ({
   const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
   const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
+  const maxBodyLength = 300;
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -47,10 +49,20 @@ export const ConversationListItem = ({
   }, [conversation, isActive]);
 
   let highlightedSubject = escape(conversation.subject);
-  let highlightedBody = escape(conversation.matchedMessageText ?? conversation.recentMessageText ?? "");
+  let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
+  let shouldTruncate = true;
+
+  if (searchTerms.length > 0 && bodyText) {
+    const originalText = bodyText;
+    bodyText = createSearchSnippet(bodyText, searchTerms, maxBodyLength);
+    shouldTruncate = bodyText === originalText;
+  }
+
+  let highlightedBody = escape(bodyText);
+
   if (searchTerms.length > 0) {
     highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
-    if (conversation.matchedMessageText) {
+    if (bodyText) {
       highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
   }
@@ -140,7 +152,10 @@ export const ConversationListItem = ({
                 />
                 {highlightedBody && (
                   <p
-                    className="text-muted-foreground truncate max-w-4xl text-xs md:text-sm"
+                    className={`text-muted-foreground max-w-4xl text-xs md:text-sm ${
+                      shouldTruncate ? 'truncate' : 'leading-relaxed'
+                    }`}
+                    style={shouldTruncate ? {} : { wordBreak: 'break-word' }}
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}
