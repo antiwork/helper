@@ -1,6 +1,8 @@
 public
 packages
 tests/e2e/**
+
+# Ignore Next.js special files that are entrypoints or handled by the framework, not imported directly
 **/app/global-error.tsx
 **/instrumentation.ts
 **/middleware.ts
