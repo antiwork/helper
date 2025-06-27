@@ -10,20 +10,6 @@ const defaultRootUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : `https://${process.env.VERCEL_URL ?? "helperai.dev"}`;
 
-// Supabase URL based on environment
-const getSupabaseUrl = () => {
-  // In CI or test environments, use mock/test Supabase
-  if (process.env.NODE_ENV === "test" || process.env.CI === "true") {
-    return "https://localhost:54321";
-  }
-  // In local development, use remote Supabase instance
-  if (process.env.NODE_ENV === "development") {
-    return "https://supabase.helperai.dev";
-  }
-  // For production/preview, require explicit configuration
-  return "https://supabase.helperai.dev";
-};
-
 export const env = createEnv({
   extends: [vercel()],
   shared: {
@@ -126,7 +112,7 @@ export const env = createEnv({
       "development",
     ),
 
-    NEXT_PUBLIC_SUPABASE_URL: z.string().url().min(1).default(getSupabaseUrl()),
+    NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "https://supabase.helperai.dev"),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
     NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(
       z.string().min(1),

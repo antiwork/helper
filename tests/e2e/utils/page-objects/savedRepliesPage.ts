@@ -31,7 +31,6 @@ export class SavedRepliesPage extends BasePage {
   readonly cardContent: Locator;
   readonly cardUsageCount: Locator;
   readonly copyButton: Locator;
-  readonly deleteCardButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -65,7 +64,6 @@ export class SavedRepliesPage extends BasePage {
     this.cardContent = page.locator('[data-testid="saved-reply-card"] .text-muted-foreground');
     this.cardUsageCount = page.locator('[data-testid="saved-reply-card"] text*="Used"');
     this.copyButton = page.locator('[data-testid="copy-button"]');
-    this.deleteCardButton = page.locator('[data-testid="delete-button"]');
   }
 
   // Navigation
@@ -183,8 +181,8 @@ export class SavedRepliesPage extends BasePage {
     await this.copyButton.nth(index).click();
   }
 
-  async clickDeleteButton(index = 0) {
-    await this.deleteCardButton.nth(index).click();
+  async clickDeleteButtonInModal() {
+    await this.deleteButton.click();
   }
 
   async confirmDelete() {
@@ -266,7 +264,12 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async deleteSavedReply(index: number) {
-    await this.clickDeleteButton(index);
+    // Click on the saved reply card to open edit modal
+    await this.savedReplyCards.nth(index).click();
+    await this.expectEditDialogVisible();
+
+    // Click delete button in the modal
+    await this.clickDeleteButtonInModal();
     await this.expectDeleteDialogVisible();
     await this.confirmDelete();
     await this.waitForToast("Saved reply deleted successfully");
