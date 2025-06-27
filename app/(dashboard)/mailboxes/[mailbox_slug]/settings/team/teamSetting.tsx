@@ -29,20 +29,6 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     );
   });
 
-  const { data, isFetching: isFetchingConversations } = api.mailbox.conversations.list.useQuery({
-    mailboxSlug,
-  });
-
-  const { mutateAsync: updateConversation, isPending: isUpdating } = api.mailbox.conversations.update.useMutation({
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Error updating conversation",
-        description: error.message,
-      });
-    }
-  });
-
     const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
       onSuccess: () => {
         toast({
@@ -59,32 +45,6 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
         });
       },
     });
-
-  const handleAssignTicket = async (
-    assignedTo: { id: string; displayName: string } | { ai: true } | null,
-    conversationSlug: string,
-  ) => {
-    if (assignedTo && "ai" in assignedTo) {
-      await updateConversation({ mailboxSlug, conversationSlug, assignedToAI: true });
-    } else {
-      await updateConversation({
-        mailboxSlug,
-        conversationSlug,
-        assignedToAI: false,
-        assignedToId: assignedTo?.id ?? null,
-      });
-    }
-  };
-
-  const handleFinalReassignAndDelete = async (id: string) => {
-    try {
-      await utils.mailbox.members.list.invalidate({ mailboxSlug });
-      removeTeamMember({ id, mailboxSlug });
-      toast({ title: "Member removed", variant: "success" });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Failed to reassign conversations" });
-    }
-  };
 
   return (
     <SectionWrapper
@@ -135,18 +95,11 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => {
-                  const memberConversations = (data?.conversations ?? []).filter(
-                    (conversation) => conversation.assignedToId === member.id,
-                  );
-
                   return (
                     <TeamMemberRow
                       key={member.id}
                       member={member}
                       mailboxSlug={mailboxSlug}
-                      conversations={memberConversations}
-                      updateConversation={handleAssignTicket}
-                      onFinalReassignAndDelete={handleFinalReassignAndDelete}
                     />
                   );
                 })

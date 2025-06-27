@@ -34,15 +34,9 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
-  conversations: any[];
-  updateConversation: (
-    assignedTo: { id: string; displayName: string } | { ai: true } | null,
-    conversationSlug: string,
-  ) => Promise<void>;
-  onFinalReassignAndDelete: (id: string) => void
 };
 
-const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation, onFinalReassignAndDelete }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
@@ -260,10 +254,7 @@ const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation,
             <ConversationsDialog
               assignedToId={member.id}
               mailboxSlug={mailboxSlug}
-              conversations={conversations}
-              updateConversation={updateConversation}
               description="Please reassign the tickets before delete the member"
-              onFinalReassignAndDelete={() => onFinalReassignAndDelete( member.id )}
             >
               <Button variant="ghost" size="sm" iconOnly>
                 <Trash className="h-4 w-4" />

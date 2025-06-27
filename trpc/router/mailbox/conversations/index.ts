@@ -194,6 +194,43 @@ export const conversationsRouter = {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
+  reassignAll: conversationProcedure
+    .input(
+      z.object({
+        previousAssigneeId: z.string().nonempty(),
+        newAssigneeId: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [prevAssignee, newAssignee] = await Promise.all([
+        db.query.authUsers.findFirst({
+          where: eq(authUsers.id, input.previousAssigneeId),
+        }),
+        db.query.authUsers.findFirst({
+          where: eq(authUsers.id, input.newAssigneeId),
+        }),
+      ]);
+
+      if (!prevAssignee || !newAssignee) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid assignee(s)" });
+      }
+
+      const { list } = await searchConversations(
+        ctx.mailbox,
+        { ...searchSchema.parse({}), assignee: [input.previousAssigneeId] },
+        ctx.user.id
+      );
+      console.log("listinside", list);
+
+      const conversationsToUpdate = await list;
+
+      for (const conversation of conversationsToUpdate.results) {
+        await updateConversation(conversation.id, {
+          set: { assignedToId: input.newAssigneeId,}
+        });
+      }
+    }),
+
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
     const email = await db.query.conversationMessages.findFirst({
       where: and(

@@ -13,92 +13,79 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "./hooks/use-toast";
+import { api } from "@/trpc/react";
 
 interface ConversationsDialogProps {
   children: React.ReactNode;
   assignedToId: string;
   mailboxSlug: string;
-  conversations: any;
   description?: string;
-  updateConversation: (
-    assignedTo: { id: string; displayName: string } | { ai: true } | null,
-    conversationSlug: string,
-    mailboxSlug: string,
-  ) => Promise<void>;
-  onFinalReassignAndDelete: () => void
 }
 
-interface ConversationItemProps {
-  conversation: any;
-  onAssignTicket: (assignedTo: { id: string; displayName: string } | { ai: true } | null) => void;
-}
+export type AssigneeOption =
+  | {
+      id: string;
+      displayName: string;
+    }
+  | { ai: true };
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function ConversationItem({ conversation, onAssignTicket }: ConversationItemProps) {
-  return (
-    <div className="flex items-center justify-between p-4 border-b transition-colors">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        {/* Status and Provider */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <Badge className={`text-xs ${conversation.status}`}>{conversation.status}</Badge>
-          {conversation.assignedToAI && <Badge className="text-xs">AI</Badge>}
-        </div>
-
-        {/* Subject and Details */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-1">
-            <h3 className="font-medium text-sm truncate max-w-[300px]">{conversation.subject}</h3>
-            <span className="text-xs text-muted-foreground flex-shrink-0">{formatDate(conversation.createdAt)}</span>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="truncate max-w-[200px]">{conversation.emailFrom}</span>
-            {/* <span className="truncate max-w-[400px]">{conversation.recentMessageText}</span> */}
-          </div>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex-shrink-0">
-        <AssignSelect
-          selectedUserId={conversation.assignedToId}
-          onChange={(id) => onAssignTicket(id)}
-          aiOption={conversation.assignedToAI}
-        />
-      </div>
-    </div>
-  );
-}
 
 export default function ConversationsDialog({
   children,
   mailboxSlug,
-  conversations,
-  updateConversation,
   description,
-  assignedToId,
-  onFinalReassignAndDelete
+  assignedToId
 }: ConversationsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [reassignmentMap, setReassignmentMap] = useState<Record<string, string>>({});
+  const utils = api.useUtils();
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
+  const [assignMessage, setAssignMessage] = useState<string>("");
 
-  const allReassigned = conversations.every((conversation : any) => {
-    const reassignedTo = reassignmentMap[conversation.slug];
-    return reassignedTo !== assignedToId;
+  const { data: count } = api.mailbox.conversations.count.useQuery({ mailboxSlug, assignee: [assignedToId] });
+
+  const { mutateAsync: reassignAllConversations, isPending: isUpdating } = api.mailbox.conversations.reassignAll.useMutation({
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error updating conversation",
+        description: error.message,
+      });
+    },
+    onSuccess: (data) => {
+      utils.mailbox.conversations.count.invalidate({ mailboxSlug, assignee: [assignedToId] });
+    }
   });
+
+  const handleAssignSelectChange = (assignee: AssigneeOption | null) => {
+    setAssignedTo(assignee);
+  };
+
+  const handleAssignSubmit = () => {
+    if (!assignedTo || !("id" in assignedTo)) {
+      toast({
+        variant: "destructive",
+        title: "Please select a valid assignee",
+      });
+      return;
+    }
+    reassignAllConversations({
+      mailboxSlug,
+      conversationSlug: "", 
+      previousAssigneeId: assignedToId,
+      newAssigneeId: assignedTo.id,
+    });
+  };
 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto scrollbar-hidden">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -106,47 +93,30 @@ export default function ConversationsDialog({
           </DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        <div className="flex flex-col space-y-4">
+          <h4 className="font-medium">Assign conversation {count?.total ? `(${count?.total})` : ""}</h4>
 
-        <div className="mt-4">
-          {/* List Header */}
-          <div className="flex items-center justify-between p-4 border-b font-medium text-xs">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="w-20">Status</div>
-              <div className="flex-1">Subject & Details</div>
-            </div>
-            <div className="w-10">Actions</div>
-          </div>
+          <AssignSelect
+            selectedUserId={assignedToId}
+            onChange={handleAssignSelectChange}
+            aiOption
+          />
 
-          {/* Conversations List */}
-          <div className="flex flex-col gap-4">
-            {conversations.length === 0 ? (
-              <div className="text-center text-muted-foreground text-sm py-12">No conversations found</div>
-            ) : (
-              conversations.map((conversation: any) => (
-                <ConversationItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  onAssignTicket={(assignedTo: { id: string; displayName: string } | { ai: true } | null) =>{
-                    updateConversation(assignedTo, conversation.slug, mailboxSlug);
-                    setReassignmentMap((prev) => ({
-                      ...prev,
-                      [conversation.slug]: assignedTo ? ("ai" in assignedTo ? "ai" : assignedTo.id) : null,
-                    }));
-                  }}
-                />
-              ))
-            )}
+          <div className="grid gap-1">
+            <Label htmlFor="assignMessage">Message</Label>
+            <Textarea
+              name="assignMessage"
+              placeholder="Add an optional reason for assignment..."
+              value={assignMessage}
+              rows={3}
+              onChange={(e) => setAssignMessage(e.target.value)}
+            />
           </div>
         </div>
 
-        {allReassigned && (
-          <div className="flex justify-end p-4 border-t">
-            <Button onClick={onFinalReassignAndDelete} disabled={!allReassigned} variant="destructive">
-              Reassign and delete member
-            </Button>
-          </div>
-        )}
-
+        <Button onClick={handleAssignSubmit} variant="destructive">
+          Reassign and delete member
+        </Button>
       </DialogContent>
     </Dialog>
   );
