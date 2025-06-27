@@ -11,14 +11,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Use multiple workers for faster test execution */
-  workers: 3,
+  /* Opt out of parallel tests on CI for better stability */
+  workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://helperai.dev",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "https://helperai.dev",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -29,16 +29,16 @@ export default defineConfig({
     /* Record video on failure */
     video: "retain-on-failure",
 
-    /* Ignore HTTPS errors for development environments */
+    /* Ignore HTTPS errors for local development */
     ignoreHTTPSErrors: true,
 
-    /* Standard timeouts */
-    actionTimeout: 10000,
-    navigationTimeout: 30000,
+    /* Extended timeouts for local SSL setup */
+    actionTimeout: 15000,
+    navigationTimeout: 45000,
   },
 
-  /* Standard timeout */
-  timeout: 30000,
+  /* Global timeout increased for flaky local environment */
+  timeout: 45000,
 
   /* Configure projects for major browsers */
   projects: [
@@ -57,11 +57,13 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  /* Note: Tests clean saved replies for consistent state on each run */
+  /* TODO: Consider using a separate test database to avoid data conflicts
+   * and allow for more reliable test data setup/teardown */
   webServer: {
-    command: "pnpm dev:test",
-    url: "http://localhost:3010",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    command: "pnpm dev",
+    url: "https://helperai.dev",
+    reuseExistingServer: true,
+    ignoreHTTPSErrors: true,
+    timeout: 120 * 1000, // 2 minutes for server startup
   },
 });

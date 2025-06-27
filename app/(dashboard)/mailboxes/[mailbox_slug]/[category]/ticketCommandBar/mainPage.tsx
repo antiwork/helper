@@ -96,20 +96,35 @@ export const useMainPage = ({
   });
 
   const handleSavedReplySelect = useCallback(
-    (savedReply: { slug: string; content: string }) => {
+    async (savedReply: { slug: string; content: string }) => {
       try {
+        if (!onInsertReply) {
+          throw new Error("onInsertReply function is not available");
+        }
+
         onInsertReply(savedReply.content);
-        incrementSavedReplyUsage({ mailboxSlug, slug: savedReply.slug });
         onOpenChange(false);
+
+        // Track usage separately - don't fail the insertion if tracking fails
+        incrementSavedReplyUsage(
+          { slug: savedReply.slug },
+          {
+            onError: (error) => {
+              // Log tracking error but don't show to user since content was inserted successfully
+              console.error("Failed to track saved reply usage:", error);
+            },
+          },
+        );
       } catch (error) {
+        console.error("Failed to insert saved reply content:", error);
         toast({
           variant: "destructive",
-          title: "Error using saved reply",
-          description: "Failed to insert saved reply content. Please try again.",
+          title: "Failed to insert saved reply",
+          description: "Could not insert the saved reply content. Please try again.",
         });
       }
     },
-    [onInsertReply, incrementSavedReplyUsage, mailboxSlug, onOpenChange],
+    [onInsertReply, incrementSavedReplyUsage, onOpenChange],
   );
 
   const mainCommandGroups = useMemo(
