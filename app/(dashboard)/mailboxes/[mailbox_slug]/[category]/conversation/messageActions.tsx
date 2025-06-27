@@ -10,7 +10,6 @@ import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankD
 import { useBreakpoint } from "@/components/hooks/use-breakpoint";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import useKeyboardShortcut from "@/components/hooks/use-keyboard-shortcut";
-import { useSession } from "@/components/hooks/use-session";
 import { useSpeechRecognition } from "@/components/hooks/use-speech-recognition";
 import { toast } from "@/components/hooks/use-toast";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
@@ -18,8 +17,6 @@ import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
-import { useBreakpoint } from "@/components/hooks/use-breakpoint";
-import useKeyboardShortcut from "@/components/hooks/use-keyboard-shortcut";
 import { parseEmailList } from "@/components/utils/email";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
