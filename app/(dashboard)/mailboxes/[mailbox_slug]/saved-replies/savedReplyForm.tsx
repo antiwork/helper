@@ -144,7 +144,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
           {savedReply && onDelete ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive" disabled={deleteSavedReply.isPending}>
+                <Button type="button" variant="destructive_outlined" disabled={deleteSavedReply.isPending}>
                   Delete
                 </Button>
               </AlertDialogTrigger>
