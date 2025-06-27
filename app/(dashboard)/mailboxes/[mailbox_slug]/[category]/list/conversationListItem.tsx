@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/components/utils/currency";
-import { cn } from "@/lib/utils";
 import { createSearchSnippet } from "@/lib/search/searchSnippet";
+import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { useConversationListContext } from "./conversationListContext";
@@ -153,9 +153,9 @@ export const ConversationListItem = ({
                 {highlightedBody && (
                   <p
                     className={`text-muted-foreground max-w-4xl text-xs md:text-sm ${
-                      shouldTruncate ? 'truncate' : 'leading-relaxed'
+                      shouldTruncate ? "truncate" : "leading-relaxed"
                     }`}
-                    style={shouldTruncate ? {} : { wordBreak: 'break-word' }}
+                    style={shouldTruncate ? {} : { wordBreak: "break-word" }}
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}
