@@ -5,6 +5,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
+import { userProfiles } from "@/db/schema/userProfiles";
 
 export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
   const supabase = createAdminClient();
@@ -42,22 +43,33 @@ export type UserWithMailboxAccessData = {
 };
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
-  const users = await db.query.authUsers.findMany();
+  const users = await db
+    .select({
+      id: authUsers.id,
+      email: authUsers.email,
+      rawMetadata: authUsers.user_metadata,
+      displayName: userProfiles.displayName,
+      permissions: userProfiles.permissions,
+      access: userProfiles.access,
+    })
+    .from(authUsers)
+    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
   return users.map((user) => {
-    const metadata = user.user_metadata || {};
-    const mailboxAccess = (metadata.mailboxAccess as Record<string, any>) || {};
-    const access = mailboxAccess[mailboxId];
+    const access = user.access ?? { role: "afk", keywords: [] };
+    const permissions = user.permissions ?? "member";
 
     return {
       id: user.id,
-      displayName: user.user_metadata?.display_name || "",
+      displayName: user.displayName || user.rawMetadata?.display_name || "",
       email: user.email ?? undefined,
-      role: access?.role || "afk",
-      keywords: access?.keywords || [],
+      role: access.role,
+      keywords: access?.keywords ?? [],
+      permissions,
     };
   });
 };
+
 
 export const updateUserMailboxData = async (
   userId: string,
