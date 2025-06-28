@@ -65,6 +65,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedItemId,
     onToggleCc,
     setSelectedTool,
+    onInsertReply,
   });
 
   const previousRepliesGroups = usePreviousRepliesPage({
@@ -101,7 +102,16 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const visibleGroups = currentGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.hidden && item.label.toLowerCase().includes(inputValue.toLowerCase())),
+      items: group.items.filter((item) => {
+        if (item.hidden) return false;
+
+        const searchTerm = inputValue.toLowerCase();
+        const matchesLabel = item.label.toLowerCase().includes(searchTerm);
+        const matchesShortcut = item.shortcut?.toLowerCase().includes(searchTerm);
+        const matchesDescription = item.description?.toLowerCase().includes(searchTerm);
+
+        return matchesLabel || matchesShortcut || matchesDescription;
+      }),
     }))
     .filter((group) => group.items.length > 0);
   const visibleItems = visibleGroups.flatMap((group) => group.items);

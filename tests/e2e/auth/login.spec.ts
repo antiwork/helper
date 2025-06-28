@@ -94,7 +94,7 @@ test.describe("Working Authentication", () => {
     }
   });
 
-  test("should handle different email addresses", { timeout: 60000 }, async ({ page }) => {
+  test("should handle different email addresses", async ({ page }) => {
     await loginPage.navigateToLogin();
 
     // Try different email

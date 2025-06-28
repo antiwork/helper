@@ -4,6 +4,7 @@ type CommandItem = {
   icon: React.ComponentType<{ className?: string }>;
   onSelect: () => void;
   shortcut?: string;
+  description?: string;
   hidden?: boolean;
 };
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {
   CornerUpLeft as ArrowUturnLeftIcon,
   CornerRightUp as ArrowUturnUpIcon,
@@ -5,11 +6,12 @@ import {
   Mail as EnvelopeIcon,
   PenSquare as PencilSquareIcon,
   Play as PlayIcon,
+  MessageSquareText as SavedReplyIcon,
   ShieldAlert as ShieldExclamationIcon,
   Sparkles as SparklesIcon,
   User as UserIcon,
 } from "lucide-react";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";
 import { toast } from "@/components/hooks/use-toast";
@@ -24,6 +26,7 @@ type MainPageProps = {
   setSelectedItemId: (id: string | null) => void;
   onToggleCc: () => void;
   setSelectedTool: (tool: Tool) => void;
+  onInsertReply: (content: string) => void;
 };
 
 export const useMainPage = ({
@@ -32,6 +35,7 @@ export const useMainPage = ({
   setSelectedItemId,
   onToggleCc,
   setSelectedTool,
+  onInsertReply,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
   const utils = api.useUtils();
@@ -71,6 +75,13 @@ export const useMainPage = ({
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
 
+  const { data: savedReplies } = api.mailbox.savedReplies.list.useQuery(
+    { mailboxSlug, onlyActive: true },
+    { refetchOnWindowFocus: false, refetchOnMount: true },
+  );
+
+  const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
+
   const { data: mailbox } = api.mailbox.get.useQuery(
     { mailboxSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!mailboxSlug },
@@ -84,6 +95,38 @@ export const useMainPage = ({
     setPage("notes");
     setSelectedItemId(null);
   });
+
+  const handleSavedReplySelect = useCallback(
+    (savedReply: { slug: string; content: string }) => {
+      try {
+        if (!onInsertReply) {
+          throw new Error("onInsertReply function is not available");
+        }
+
+        onInsertReply(savedReply.content);
+        onOpenChange(false);
+
+        // Track usage separately - don't fail the insertion if tracking fails
+        incrementSavedReplyUsage(
+          { slug: savedReply.slug, mailboxSlug },
+          {
+            onError: (error) => {
+              // Log tracking error but don't show to user since content was inserted successfully
+              console.error("Failed to track saved reply usage:", error);
+            },
+          },
+        );
+      } catch (error) {
+        console.error("Failed to insert saved reply content:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to insert saved reply",
+          description: "Could not insert the saved reply content. Please try again.",
+        });
+      }
+    },
+    [onInsertReply, incrementSavedReplyUsage, onOpenChange],
+  );
 
   const mainCommandGroups = useMemo(
     () => [
@@ -190,6 +233,19 @@ export const useMainPage = ({
           },
         ],
       },
+      ...(savedReplies && savedReplies.length > 0
+        ? [
+            {
+              heading: "Saved replies",
+              items: savedReplies.slice(0, 10).map((savedReply) => ({
+                id: savedReply.slug,
+                label: savedReply.name,
+                icon: SavedReplyIcon,
+                onSelect: () => handleSavedReplySelect(savedReply),
+              })),
+            },
+          ]
+        : []),
       ...(tools && tools.all.length > 0
         ? [
             {
@@ -204,7 +260,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, savedReplies, handleSavedReplySelect],
   );
 
   return mainCommandGroups;

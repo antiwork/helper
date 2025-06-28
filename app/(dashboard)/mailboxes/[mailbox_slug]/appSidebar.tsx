@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   Inbox,
   Link as LinkIcon,
+  MessageSquareText,
   MonitorSmartphone,
   Settings as SettingsIcon,
   Ticket,
@@ -199,6 +200,22 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     {openCounts && openCounts.conversations > 0 && (
                       <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
                     )}
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+              <SidebarGroup>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/saved-replies`}
+                      tooltip="Saved replies"
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/saved-replies`}>
+                        <MessageSquareText className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Saved replies</span>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroup>
