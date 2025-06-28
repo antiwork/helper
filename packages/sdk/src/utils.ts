@@ -1,5 +1,7 @@
 // This file is used for the NPM package output and is meant to be imported into the Next.js app
 
+export * from "./apiTypes";
+
 export type { InteractiveElement } from "./domTree";
 
 export type HelperWidgetConfig = {

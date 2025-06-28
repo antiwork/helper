@@ -1,3 +1,4 @@
+import { createConversationParams, CreateConversationResponse } from "@helperai/sdk";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { CHAT_CONVERSATION_SUBJECT, createConversation } from "@/lib/data/conversation";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
@@ -15,7 +16,11 @@ export async function POST(request: Request) {
     return corsResponse({ error: authResult.error }, { status: 401 });
   }
 
-  const { isPrompt } = await request.json();
+  const { data: { isPrompt } = {}, error } = createConversationParams.safeParse(await request.json());
+  if (error) {
+    return corsResponse({ error: error.message }, { status: 400 });
+  }
+
   const isVisitor = authResult.session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
 
@@ -39,5 +44,5 @@ export async function POST(request: Request) {
     anonymousSessionId: authResult.session.isAnonymous ? authResult.session.anonymousSessionId : undefined,
   });
 
-  return corsResponse({ conversationSlug: newConversation.slug });
+  return corsResponse({ conversationSlug: newConversation.slug } satisfies CreateConversationResponse);
 }

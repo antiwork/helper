@@ -18,7 +18,8 @@
     "@rrweb/types": "2.0.0-alpha.18",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "scroll-into-view-if-needed": "^3.1.0"
+    "scroll-into-view-if-needed": "^3.1.0",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "webpack": "^5.94.0",
