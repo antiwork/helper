@@ -33,50 +33,74 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
     return text;
   }
 
-  // Match is deep in text, create snippet centered around it
-  // Reserve space for ellipses (3 chars each for start/end)
-  const ellipsesLength = 6; // "..." at start + "..." at end
-  const availableLength = maxLength - ellipsesLength;
+  // Handle edge case: if maxLength is too small, just return truncated text
+  if (maxLength <= 6) {
+    return text.substring(0, maxLength);
+  }
 
+  // Calculate snippet boundaries without pre-reserving ellipses space
   let start: number;
   let end: number;
 
-  // If match is longer than available space, truncate to show beginning of match
-  if (matchLength >= availableLength) {
+  // If match is very long, prioritize showing the beginning of the match
+  if (matchLength > maxLength - 6) {
     start = firstMatchIndex;
-    end = firstMatchIndex + availableLength;
+    end = Math.min(text.length, firstMatchIndex + maxLength - 6);
   } else {
-    const contextBefore = Math.floor((availableLength - matchLength) / 2);
-    const contextAfter = availableLength - matchLength - contextBefore;
+    // Calculate context with generous space (we'll adjust for ellipses later)
+    const contextBefore = Math.floor((maxLength - matchLength) / 2);
+    const contextAfter = maxLength - matchLength - contextBefore;
 
     start = Math.max(0, firstMatchIndex - contextBefore);
     end = Math.min(text.length, firstMatchIndex + matchLength + contextAfter);
   }
 
-  // Adjust to word boundaries if possible, staying within available length
+  // Adjust to word boundaries if possible
   if (start > 0) {
     const wordStart = text.lastIndexOf(" ", start);
-    if (wordStart !== -1) {
-      const newStart = wordStart + 1;
-      if (end - newStart <= availableLength) {
-        start = newStart;
-      }
+    if (wordStart !== -1 && wordStart >= firstMatchIndex - Math.floor(maxLength / 2)) {
+      start = wordStart + 1;
     }
   }
 
   if (end < text.length) {
     const wordEnd = text.indexOf(" ", end);
-    if (wordEnd !== -1) {
-      const newEnd = wordEnd;
-      if (newEnd - start <= availableLength) {
-        end = newEnd;
-      }
+    if (wordEnd !== -1 && wordEnd <= firstMatchIndex + matchLength + Math.floor(maxLength / 2)) {
+      end = wordEnd;
     }
   }
 
+  // Extract base snippet
   let snippet = text.substring(start, end);
-  if (start > 0) snippet = `...${snippet}`;
-  if (end < text.length) snippet += "...";
+
+  // Add ellipses and ensure total length doesn't exceed maxLength
+  const needsStartEllipsis = start > 0;
+  const needsEndEllipsis = end < text.length;
+
+  if (needsStartEllipsis && needsEndEllipsis) {
+    // Need both ellipses (6 chars total)
+    if (snippet.length > maxLength - 6) {
+      snippet = snippet.substring(0, maxLength - 6);
+    }
+    snippet = `...${snippet}...`;
+  } else if (needsStartEllipsis) {
+    // Need only start ellipsis (3 chars)
+    if (snippet.length > maxLength - 3) {
+      snippet = snippet.substring(0, maxLength - 3);
+    }
+    snippet = `...${snippet}`;
+  } else if (needsEndEllipsis) {
+    // Need only end ellipsis (3 chars)
+    if (snippet.length > maxLength - 3) {
+      snippet = snippet.substring(0, maxLength - 3);
+    }
+    snippet = `${snippet}...`;
+  } else {
+    // No ellipses needed
+    if (snippet.length > maxLength) {
+      snippet = snippet.substring(0, maxLength);
+    }
+  }
 
   return snippet;
 }
