@@ -113,10 +113,8 @@ export const ConversationFilters = ({
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
       <DateFilter
-        // A hack to force the date filter to re-render when the date changes
-        key={`${filterValues.createdAfter}-${filterValues.createdBefore}`}
-        initialStartDate={filterValues.createdAfter}
-        initialEndDate={filterValues.createdBefore}
+        startDate={filterValues.createdAfter}
+        endDate={filterValues.createdBefore}
         onSelect={(startDate, endDate) => {
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
