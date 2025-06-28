@@ -34,17 +34,31 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
   }
 
   // Match is deep in text, create snippet centered around it
-  const contextBefore = Math.floor((maxLength - matchLength) / 2);
-  const contextAfter = maxLength - matchLength - contextBefore;
+  // Reserve space for ellipses (3 chars each for start/end)
+  const ellipsesLength = 6; // "..." at start + "..." at end
+  const availableLength = maxLength - ellipsesLength;
 
-  let start = Math.max(0, firstMatchIndex - contextBefore);
-  let end = Math.min(text.length, firstMatchIndex + matchLength + contextAfter);
+  let start: number;
+  let end: number;
 
+  // If match is longer than available space, truncate to show beginning of match
+  if (matchLength >= availableLength) {
+    start = firstMatchIndex;
+    end = firstMatchIndex + availableLength;
+  } else {
+    const contextBefore = Math.floor((availableLength - matchLength) / 2);
+    const contextAfter = availableLength - matchLength - contextBefore;
+
+    start = Math.max(0, firstMatchIndex - contextBefore);
+    end = Math.min(text.length, firstMatchIndex + matchLength + contextAfter);
+  }
+
+  // Adjust to word boundaries if possible, staying within available length
   if (start > 0) {
     const wordStart = text.lastIndexOf(" ", start);
     if (wordStart !== -1) {
       const newStart = wordStart + 1;
-      if (end - newStart <= maxLength) {
+      if (end - newStart <= availableLength) {
         start = newStart;
       }
     }
@@ -54,7 +68,7 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
     const wordEnd = text.indexOf(" ", end);
     if (wordEnd !== -1) {
       const newEnd = wordEnd;
-      if (newEnd - start <= maxLength) {
+      if (newEnd - start <= availableLength) {
         end = newEnd;
       }
     }
