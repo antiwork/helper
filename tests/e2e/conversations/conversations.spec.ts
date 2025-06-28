@@ -252,4 +252,18 @@ test.describe("Working Conversation Management", () => {
     // Clear for cleanup
     await searchInput.clear();
   });
+
+  test("should focus search input with Ctrl+K hotkey", async ({ page }) => {
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+
+    // Clear focus from the search input to ensure it's not initially focused
+    await searchInput.blur();
+
+    // Press Ctrl+K or Cmd+K on Mac
+    await page.keyboard.press("ControlOrMeta+k");
+
+    // Verify search input is now focused
+    const focusedElement = await page.evaluate(() => document.activeElement?.getAttribute("placeholder"));
+    expect(focusedElement).toBe("Search conversations");
+  });
 });
