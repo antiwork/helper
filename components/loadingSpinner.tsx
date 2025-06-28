@@ -17,24 +17,23 @@ const spinnerVariants = cva("relative", {
 
 interface LoadingSpinnerProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof spinnerVariants> {
   spinnerClassName?: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
-const LoadingSpinner = React.forwardRef<HTMLDivElement, LoadingSpinnerProps>(
-  ({ className, spinnerClassName, size, ...props }, ref) => {
-    return (
-      <div className={cn(spinnerVariants({ size }), className)} ref={ref} {...props}>
-        <div
-          className={cn(
-            spinnerVariants({ size }),
-            "border-primary absolute inset-0 animate-spin rounded-full border",
-            spinnerClassName,
-            "border-t-transparent",
-          )}
-        />
-      </div>
-    );
-  },
-);
+const LoadingSpinner = ({ className, spinnerClassName, size, ref, ...props }: LoadingSpinnerProps) => {
+  return (
+    <div className={cn(spinnerVariants({ size }), className)} ref={ref} {...props}>
+      <div
+        className={cn(
+          spinnerVariants({ size }),
+          "border-primary absolute inset-0 animate-spin rounded-full border",
+          spinnerClassName,
+          "border-t-transparent",
+        )}
+      />
+    </div>
+  );
+};
 
 LoadingSpinner.displayName = "LoadingSpinner";
 

@@ -41,7 +41,7 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
     const result = await handler;
     await db.update(jobRuns).set({ status: "success", result }).where(eq(jobRuns.id, jobRun.id));
     // eslint-disable-next-line no-console
-    console.log(`Job ${jobRun.id} (${jobRun.job}) completed`);
+    console.log(`Job ${jobRun.id} (${jobRun.job}) completed with:`, result);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.log(`Job ${jobRun.id} (${jobRun.job}) failed`);
