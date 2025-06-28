@@ -2,7 +2,7 @@ import * as React from "react";
 import { onModEnterKeyboardEvent } from "@/components/onModEnterKeyboardEvent";
 import { cn } from "@/lib/utils";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onModEnter?: () => void;
   hint?: React.ReactNode;
   iconsSuffix?: React.ReactNode;

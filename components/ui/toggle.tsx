@@ -38,4 +38,4 @@ const Toggle = ({
 
 Toggle.displayName = TogglePrimitive.Root.displayName;
 
-export { Toggle };
+export { Toggle, toggleVariants };
