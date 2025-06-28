@@ -23,7 +23,7 @@
     "dev": "bash scripts/dev.sh",
     "dev:email": "pnpm run with-dev-env email dev --dir lib/emails --port 3060",
     "dev:next": "lsof -ti:3010 | xargs kill -9 || true && pnpm next dev --turbopack -H 0.0.0.0",
-    "dev:test": "pnpm run with-dev-env next dev --port 3010 --turbo",
+    "dev:test": "pnpm run with-dev-env next dev --port 3010 --turbopack",
     "eval:dev": "EVALITE=true NODE_ENV=test pnpm run with-dev-env evalite watch",
     "evals": "EVALITE=true NODE_ENV=test pnpm run with-dev-env evalite",
     "format": "pnpm run-on-packages format && prettier --check . --ignore-path ./.gitignore --ignore-path ./.prettierignore",
