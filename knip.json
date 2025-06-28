@@ -1,5 +1,3 @@
 {
-    "ignore": [
-        "components/ui/*"
-    ]
+  "ignore": ["components/ui/*"]
 }
