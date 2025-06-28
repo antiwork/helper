@@ -107,11 +107,6 @@ export const env = createEnv({
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_VERCEL_ENV: defaultUnlessDeployed(
-      z.enum(["development", "preview", "production"]) as any,
-      "development",
-    ),
-
     NEXT_PUBLIC_SUPABASE_URL: defaultUnlessDeployed(z.string().url().min(1), "https://supabase.helperai.dev"),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
     NEXT_PUBLIC_SUPABASE_ANON_KEY: defaultUnlessDeployed(
@@ -127,7 +122,6 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
-    NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

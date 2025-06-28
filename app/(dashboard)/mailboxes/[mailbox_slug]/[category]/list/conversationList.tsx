@@ -29,7 +29,7 @@ export const List = () => {
     useConversationListContext();
 
   const [showFilters, setShowFilters] = useState(false);
-  const { filterValues, activeFilterCount, updateFilter } = useConversationFilters();
+  const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
   const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -110,10 +110,12 @@ export const List = () => {
     }
   };
 
-  const handleBulkUpdate = (status: "closed" | "spam") => {
+  const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
       const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
+      const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+
       bulkUpdate(
         {
           conversationFilter,
@@ -128,7 +130,13 @@ export const List = () => {
             setShiftSelection([]);
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
-            if (!updatedImmediately) {
+
+            if (updatedImmediately) {
+              const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
+              toast({
+                title: `${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`,
+              });
+            } else {
               toast({ title: "Starting update, refresh to see status." });
             }
           },
@@ -244,27 +252,47 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="link"
-                    className="h-auto"
-                    onClick={() => handleBulkUpdate("closed")}
-                    disabled={isBulkUpdating}
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    variant="link"
-                    className="h-auto"
-                    onClick={() => handleBulkUpdate("spam")}
-                    disabled={isBulkUpdating}
-                  >
-                    Mark as spam
-                  </Button>
+                  {searchParams.status === "closed" ? (
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("open")}
+                      disabled={isBulkUpdating}
+                    >
+                      Reopen
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("closed")}
+                      disabled={isBulkUpdating}
+                    >
+                      Close
+                    </Button>
+                  )}
+                  {searchParams.status !== "spam" && (
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("spam")}
+                      disabled={isBulkUpdating}
+                    >
+                      Mark as spam
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           )}
-          {showFilters && <ConversationFilters filterValues={filterValues} onUpdateFilter={updateFilter} />}
+          {showFilters && (
+            <ConversationFilters
+              filterValues={filterValues}
+              onUpdateFilter={updateFilter}
+              onClearFilters={clearFilters}
+              activeFilterCount={activeFilterCount}
+            />
+          )}
         </div>
       </div>
       {isPending ? (
@@ -272,7 +300,7 @@ export const List = () => {
           <LoadingSpinner size="lg" />
         </div>
       ) : conversations.length === 0 ? (
-        <NoConversations />
+        <NoConversations filtered={activeFilterCount > 0 || !!input.search} />
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
           {conversations.map((conversation) => (

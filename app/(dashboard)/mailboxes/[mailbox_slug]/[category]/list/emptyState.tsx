@@ -6,7 +6,7 @@ import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox
 import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/shared/queries";
 import { cn } from "@/lib/utils";
 
-export const NoConversations = () => {
+export const NoConversations = ({ filtered }: { filtered?: boolean }) => {
   const { input } = useConversationsListInput();
   const { conversationListData } = useConversationListContext();
 
@@ -16,6 +16,15 @@ export const NoConversations = () => {
 
   const shouldShowNoTickets = !input.status?.length || input.status?.[0] === "open";
 
+  if (filtered) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <h2 className="font-semibold mb-2">No conversations found for this filter</h2>
+        <p className="text-sm text-muted-foreground">Try adjusting your filters or search.</p>
+      </div>
+    );
+  }
+
   if (isOnboarding) {
     return (
       <div className="mx-auto flex-1 flex flex-col items-center justify-center gap-6 text-muted-foreground">
@@ -23,7 +32,7 @@ export const NoConversations = () => {
         <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
         <div className="grid gap-2">
           <Link
-            href={`/mailboxes/${input.mailboxSlug}/settings?tab=in-app-chat`}
+            href={`/mailboxes/${input.mailboxSlug}/settings/in-app-chat`}
             className="border transition-colors hover:border-foreground rounded-lg p-4"
           >
             <div className="flex items-center gap-2">

@@ -1,7 +1,14 @@
 import { Check, LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandSeparator,
+} from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { api } from "@/trpc/react";
 
@@ -85,6 +92,16 @@ export function MemberFilter({
                 ))}
             </CommandGroup>
           </div>
+          {selectedMembers.length > 0 && (
+            <>
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem onSelect={() => onChange([])} className="cursor-pointer justify-center">
+                  Clear
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

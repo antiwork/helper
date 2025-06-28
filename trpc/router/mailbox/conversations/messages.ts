@@ -1,5 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, eq, exists, gte, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
+import { and, eq, exists, gte, inArray, isNotNull, isNull, lte, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -64,8 +64,8 @@ export const messagesRouter = {
       z.object({
         message: z.string(),
         fileSlugs: z.array(z.string()),
-        cc: z.array(z.string()),
-        bcc: z.array(z.string()),
+        cc: z.array(z.string().email()),
+        bcc: z.array(z.string().email()),
         shouldAutoAssign: z.boolean().optional().default(true),
         shouldClose: z.boolean().optional().default(true),
         responseToId: z.number().nullable(),
@@ -77,10 +77,8 @@ export const messagesRouter = {
         user: ctx.user,
         message,
         fileSlugs,
-        // TODO Add proper email validation on the frontend and backend using Zod,
-        // similar to how the new conversation modal does it.
-        cc: cc.filter(Boolean),
-        bcc: bcc.filter(Boolean),
+        cc,
+        bcc,
         shouldAutoAssign,
         close: shouldClose,
         responseToId,
@@ -132,6 +130,7 @@ export const messagesRouter = {
     .input(
       z.object({
         startDate: z.date(),
+        endDate: z.date().optional(),
         period: z.enum(["hourly", "daily", "monthly"]),
       }),
     )
@@ -147,6 +146,13 @@ export const messagesRouter = {
         }
       })();
 
+      const dateFilter = input.endDate
+        ? and(
+            gte(conversationMessages.reactionCreatedAt, input.startDate),
+            lte(conversationMessages.reactionCreatedAt, input.endDate),
+          )
+        : gte(conversationMessages.reactionCreatedAt, input.startDate);
+
       const data = await db
         .select({
           timePeriod: sql<string>`to_char(${conversationMessages.reactionCreatedAt}, ${groupByFormat}) AS period`,
@@ -157,7 +163,7 @@ export const messagesRouter = {
         .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
         .where(
           and(
-            gte(conversationMessages.reactionCreatedAt, input.startDate),
+            dateFilter,
             isNotNull(conversationMessages.reactionType),
             isNull(conversationMessages.deletedAt),
             eq(conversations.mailboxId, ctx.mailbox.id),
@@ -174,18 +180,19 @@ export const messagesRouter = {
     .input(
       z.object({
         startDate: z.date(),
+        endDate: z.date().optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
+      const createdAtFilter = input.endDate
+        ? and(gte(conversations.createdAt, input.startDate), lte(conversations.createdAt, input.endDate))
+        : gte(conversations.createdAt, input.startDate);
+
       const results = await Promise.all([
         db
           .$count(
             conversations,
-            and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
-              eq(conversations.status, "open"),
-              gte(conversations.createdAt, input.startDate),
-            ),
+            and(eq(conversations.mailboxId, ctx.mailbox.id), eq(conversations.status, "open"), createdAtFilter),
           )
           .then((count) => ({ type: "open", count })),
 
@@ -195,7 +202,7 @@ export const messagesRouter = {
             and(
               eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
-              gte(conversations.createdAt, input.startDate),
+              createdAtFilter,
               exists(
                 db
                   .select()
@@ -233,7 +240,7 @@ export const messagesRouter = {
             and(
               eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
-              gte(conversations.createdAt, input.startDate),
+              createdAtFilter,
               exists(
                 db
                   .select()

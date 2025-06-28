@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
+import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,6 +37,11 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
 
+  // Separate saving indicators for each operation type
+  const displayNameSaving = useSavingIndicator();
+  const roleSaving = useSavingIndicator();
+  const keywordsSaving = useSavingIndicator();
+
   const utils = api.useUtils();
 
   useEffect(() => {
@@ -44,8 +51,37 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     setDisplayNameInput(member.displayName || "");
   }, [member.keywords, member.role, member.displayName]);
 
-  const { mutate: updateTeamMember } = api.mailbox.members.update.useMutation({
+  // Separate mutations for each operation type
+  const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
+      // Only update displayName field to avoid race conditions
+      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map((m) =>
+          m.id === member.id
+            ? {
+                ...m,
+                displayName: data.displayName,
+              }
+            : m,
+        );
+      });
+      displayNameSaving.setState("saved");
+    },
+    onError: (error) => {
+      displayNameSaving.setState("error");
+      toast({
+        title: "Failed to update display name",
+        description: error.message,
+        variant: "destructive",
+      });
+      setDisplayNameInput(member.displayName || "");
+    },
+  });
+
+  const { mutate: updateRole } = api.mailbox.members.update.useMutation({
+    onSuccess: (data) => {
+      // Update both role and keywords since role changes can affect keywords
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((m) =>
@@ -54,54 +90,86 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
                 ...m,
                 role: data.role,
                 keywords: data.keywords,
-                displayName: data.displayName,
               }
             : m,
         );
       });
+      roleSaving.setState("saved");
     },
     onError: (error) => {
+      roleSaving.setState("error");
       toast({
-        title: "Failed to update team member",
+        title: "Failed to update role",
         description: error.message,
         variant: "destructive",
       });
-
-      setKeywordsInput(member.keywords.join(", "));
       setRole(member.role);
-      setDisplayNameInput(member.displayName || "");
+      setKeywordsInput(member.keywords.join(", "));
+      setLocalKeywords(member.keywords);
+    },
+  });
+
+  const { mutate: updateKeywords } = api.mailbox.members.update.useMutation({
+    onSuccess: (data) => {
+      // Only update keywords field to avoid race conditions
+      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map((m) =>
+          m.id === member.id
+            ? {
+                ...m,
+                keywords: data.keywords,
+              }
+            : m,
+        );
+      });
+      keywordsSaving.setState("saved");
+    },
+    onError: (error) => {
+      keywordsSaving.setState("error");
+      toast({
+        title: "Failed to update keywords",
+        description: error.message,
+        variant: "destructive",
+      });
+      setKeywordsInput(member.keywords.join(", "));
+      setLocalKeywords(member.keywords);
     },
   });
 
   // Debounced function for keyword updates
   const debouncedUpdateKeywords = useDebouncedCallback((newKeywords: string[]) => {
-    updateTeamMember({
+    keywordsSaving.setState("saving");
+    updateKeywords({
       mailboxSlug,
       userId: member.id,
-      role,
       keywords: newKeywords,
     });
-  }, 800);
+  }, 500);
 
   const debouncedUpdateDisplayName = useDebouncedCallback((newDisplayName: string) => {
-    updateTeamMember({
+    displayNameSaving.setState("saving");
+    updateDisplayName({
       mailboxSlug,
       userId: member.id,
       displayName: newDisplayName,
     });
-  }, 800);
+  }, 500);
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
 
-    const newKeywords = newRole !== "nonCore" ? [] : localKeywords;
+    // Clear keywords when changing FROM nonCore to another role
+    // Keep keywords when changing TO nonCore
+    const newKeywords = newRole === "nonCore" ? localKeywords : [];
 
     if (newRole !== "nonCore") {
       setKeywordsInput("");
       setLocalKeywords([]);
     }
 
-    updateTeamMember({
+    roleSaving.setState("saving");
+    updateRole({
       mailboxSlug,
       userId: member.id,
       role: newRole,
@@ -150,7 +218,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
           value={displayNameInput}
           onChange={(e) => handleDisplayNameChange(e.target.value)}
           placeholder="Enter display name"
-          className="w-full max-w-sm bg-background border border-border"
+          className="w-full max-w-sm"
         />
       </TableCell>
       <TableCell>
@@ -166,12 +234,21 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
         </Select>
       </TableCell>
       <TableCell>
-        <Input
-          value={keywordsInput}
-          onChange={(e) => handleKeywordsChange(e.target.value)}
-          placeholder="Enter keywords separated by commas"
-          className={role === "nonCore" ? "" : "invisible"}
-        />
+        <div className="w-[200px]">
+          <Input
+            value={keywordsInput}
+            onChange={(e) => handleKeywordsChange(e.target.value)}
+            placeholder="Enter keywords separated by commas"
+            className={role === "nonCore" ? "" : "invisible"}
+          />
+        </div>
+      </TableCell>
+      <TableCell className="w-[120px]">
+        <div className="flex items-center gap-2">
+          <SavingIndicator state={displayNameSaving.state} />
+          <SavingIndicator state={roleSaving.state} />
+          {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
+        </div>
       </TableCell>
     </TableRow>
   );
