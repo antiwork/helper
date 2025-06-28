@@ -78,29 +78,94 @@ Now linking your Gmail account from Settings → Integrations should grant Gmail
 
 Enables various features including messaging channels when tickets are received, messaging users when tickets are assigned, and an AI agent.
 
-1. Set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or similar to get a public forwarding URL pointing to `localhost:3010`.
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app.
-1. Under "Basic Information", find your app credentials.
-1. Add the following values as environment variables:
+<Callout>
+  If running locally, set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or
+  similar to get a public forwarding URL pointing to `localhost:3010`.
+</Callout>
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app. Select "From a manifest" and paste the following manifest, substituting `<your-helper-domain>` with your Helper domain:
+
+```json
+{
+  "display_information": {
+    "name": "Helper",
+    "description": "Get help replying to your customers",
+    "background_color": "#480f0e"
+  },
+  "features": {
+    "app_home": {
+      "home_tab_enabled": false,
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
+    },
+    "bot_user": {
+      "display_name": "Helper",
+      "always_online": true
+    },
+    "unfurl_domains": ["<your-helper-domain>"],
+    "assistant_view": {
+      "assistant_description": "Ask Helper about tickets, perform actions and send replies.",
+      "suggested_prompts": []
+    }
+  },
+  "oauth_config": {
+    "redirect_urls": ["https://<your-helper-domain>/api/connect/slack/callback"],
+    "scopes": {
+      "bot": [
+        "app_mentions:read",
+        "assistant:write",
+        "channels:history",
+        "channels:join",
+        "channels:read",
+        "chat:write",
+        "im:history",
+        "im:read",
+        "im:write",
+        "links:read",
+        "users:read",
+        "users:read.email",
+        "links:write"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "request_url": "https://<your-helper-domain>/api/webhooks/slack/event",
+      "bot_events": [
+        "app_mention",
+        "assistant_thread_started",
+        "link_shared",
+        "message.channels",
+        "message.im",
+        "tokens_revoked"
+      ]
+    },
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://<your-helper-domain>/api/webhooks/slack/response"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}
+```
+
+2. Under "Basic Information", find your app credentials.
+3. Add the following values as environment variables:
    - `SLACK_CLIENT_ID`: Client ID from Basic Information
    - `SLACK_CLIENT_SECRET`: Client Secret from Basic Information
    - `SLACK_SIGNING_SECRET`: Signing Secret from Basic Information
-1. Under "OAuth & Permissions", add all scopes listed in `lib/slack/constants.ts`
-1. Under "Event Subscriptions", add `https://<your-helper-domain>/api/webhooks/slack/event` as the event request URL
-1. Also under "Event Subscriptions", subscribe to the following bot events:
-   - `app_mention`
-   - `assistant_thread_started`
-   - `message.channels`
-   - `message.im`
-   - `tokens_revoked`
-1. Under "Interactivity & Shortcuts", add `https://<your-helper-domain>/api/webhooks/slack/response` as the interactivity request URL
-1. Under "Agents & AI Apps", check "Agent or Assistant"
-1. Under "App Home", check "Always Show My Bot as Online"
-1. Install the app to your workspace.
+4. Install the app to your workspace.
 
 ### GitHub
 
 Enables creating GitHub issues from tickets and replying to the customer when the issue is closed.
+
+<Callout>
+  If running locally, set up and start [Serveo](https://serveo.net), [ngrok](https://ngrok.com/docs/getting-started) or
+  similar to get a public forwarding URL pointing to `localhost:3010`.
+</Callout>
 
 1. Go to [github.com/settings/apps](https://github.com/settings/apps) and click "New GitHub App".
 1. Fill in the required fields, including a name for your app.

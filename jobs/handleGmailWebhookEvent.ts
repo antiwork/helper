@@ -218,6 +218,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
     gmailMessageId?: string;
     gmailThreadId?: string;
     messageId?: number;
+    conversationSlug?: string;
   }[] = [];
 
   for (const { message } of messagesAdded) {
@@ -356,6 +357,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       results.push({
         message: `Created message ${newEmail.id}`,
         messageId: newEmail.id,
+        conversationSlug: conversation.slug,
         responded: !shouldIgnore,
         isAutomatedResponseOrThankYou,
         gmailMessageId,
