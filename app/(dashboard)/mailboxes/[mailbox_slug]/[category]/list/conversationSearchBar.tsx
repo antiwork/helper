@@ -2,6 +2,7 @@ import { capitalize } from "lodash-es";
 import { ArrowDownUp, Filter, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,6 +54,10 @@ export const ConversationSearchBar = ({
   useEffect(() => {
     debouncedSetSearch(search);
   }, [search]);
+
+  useHotkeys("mod+k", () => {
+    searchInputRef.current?.focus();
+  });
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
