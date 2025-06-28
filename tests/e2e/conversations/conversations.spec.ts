@@ -275,7 +275,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Look for conversation list items with message text
-    const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
     const messageCount = await messageTexts.count();
 
     if (messageCount > 0) {
@@ -284,8 +284,8 @@ test.describe("Working Conversation Management", () => {
       await expect(firstMessage).toBeVisible();
 
       // Check if the element has truncate class
-      const classList = await firstMessage.getAttribute('class');
-      expect(classList).toContain('truncate');
+      const classList = await firstMessage.getAttribute("class");
+      expect(classList).toContain("truncate");
 
       await takeDebugScreenshot(page, "search-snippet-no-search.png");
     }
@@ -299,8 +299,8 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Look for conversation list items with highlighted search results
-    const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
-    const highlightedMessages = page.locator('mark.bg-secondary-200');
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const highlightedMessages = page.locator("mark.bg-secondary-200");
 
     const messageCount = await messageTexts.count();
     const highlightCount = await highlightedMessages.count();
@@ -312,13 +312,13 @@ test.describe("Working Conversation Management", () => {
         const messageContent = await message.innerHTML();
 
         // If this message contains a highlight (match found)
-        if (messageContent.includes('bg-secondary-200')) {
-          const classList = await message.getAttribute('class');
+        if (messageContent.includes("bg-secondary-200")) {
+          const classList = await message.getAttribute("class");
 
           // For early matches, should still have truncate class
           // (Our implementation only removes truncate for deep matches)
-          if (messageContent.indexOf('bg-secondary-200') < 150) {
-            expect(classList).toContain('truncate');
+          if (messageContent.indexOf("bg-secondary-200") < 150) {
+            expect(classList).toContain("truncate");
           }
         }
       }
@@ -342,8 +342,8 @@ test.describe("Working Conversation Management", () => {
       await page.waitForLoadState("networkidle");
 
       // Look for conversation list items with highlighted search results
-      const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
-      const highlightedMessages = page.locator('mark.bg-secondary-200');
+      const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+      const highlightedMessages = page.locator("mark.bg-secondary-200");
 
       const messageCount = await messageTexts.count();
       const highlightCount = await highlightedMessages.count();
@@ -355,20 +355,20 @@ test.describe("Working Conversation Management", () => {
           const messageContent = await message.innerHTML();
 
           // If this message contains a highlight
-          if (messageContent.includes('bg-secondary-200')) {
-            const classList = await message.getAttribute('class');
+          if (messageContent.includes("bg-secondary-200")) {
+            const classList = await message.getAttribute("class");
 
             // Check for snippet indicators
-            const hasEllipsis = messageContent.includes('...');
-            const hasLeadingRelaxed = classList?.includes('leading-relaxed');
-            const noTruncate = !classList?.includes('truncate');
+            const hasEllipsis = messageContent.includes("...");
+            const hasLeadingRelaxed = classList?.includes("leading-relaxed");
+            const noTruncate = !classList?.includes("truncate");
 
             // If we found a snippet (starts with ellipsis, no truncate class)
             if (hasEllipsis && hasLeadingRelaxed && noTruncate) {
               console.log(`Found snippet for term "${searchTerm}":`, messageContent);
 
               // Verify the search term is visible in the snippet
-              expect(messageContent).toContain('bg-secondary-200');
+              expect(messageContent).toContain("bg-secondary-200");
 
               // Take screenshot showing the snippet
               await takeDebugScreenshot(page, `search-snippet-deep-match-${searchTerm}.png`);
@@ -395,7 +395,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Check that search terms are highlighted with the correct styling
-    const highlights = page.locator('mark.bg-secondary-200');
+    const highlights = page.locator("mark.bg-secondary-200");
     const highlightCount = await highlights.count();
 
     if (highlightCount > 0) {
@@ -405,15 +405,13 @@ test.describe("Working Conversation Management", () => {
         await expect(highlight).toBeVisible();
 
         const highlightText = await highlight.textContent();
-        expect(highlightText?.toLowerCase()).toContain('support');
+        expect(highlightText?.toLowerCase()).toContain("support");
 
         // Verify highlight styling
-        const bgColor = await highlight.evaluate(el =>
-          getComputedStyle(el).backgroundColor
-        );
+        const bgColor = await highlight.evaluate((el) => getComputedStyle(el).backgroundColor);
         // Should have some background color (not transparent/initial)
-        expect(bgColor).not.toBe('rgba(0, 0, 0, 0)');
-        expect(bgColor).not.toBe('transparent');
+        expect(bgColor).not.toBe("rgba(0, 0, 0, 0)");
+        expect(bgColor).not.toBe("transparent");
       }
 
       await takeDebugScreenshot(page, "search-snippet-highlights.png");
@@ -433,13 +431,13 @@ test.describe("Working Conversation Management", () => {
     await expect(searchInput).toHaveValue("xyzunlikelyterm123");
 
     // Should show no results or empty state
-    const messageTexts = page.locator('p.text-muted-foreground.max-w-4xl.text-xs');
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
     const messageCount = await messageTexts.count();
 
     // If there are no messages, that's expected for no results
     // If there are messages, they shouldn't have highlights
     if (messageCount > 0) {
-      const highlights = page.locator('mark.bg-secondary-200');
+      const highlights = page.locator("mark.bg-secondary-200");
       const highlightCount = await highlights.count();
       expect(highlightCount).toBe(0);
     }

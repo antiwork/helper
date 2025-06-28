@@ -2,15 +2,14 @@
  * Creates a smart text snippet that shows context around matched search terms
  * Returns the original text if the match is early enough to be shown with normal truncation
  */
-export function createSearchSnippet(
-  text: string,
-  searchTerms: string[],
-  maxLength: number = 150
-): string {
+export function createSearchSnippet(text: string, searchTerms: string[], maxLength = 150): string {
   if (!text || !searchTerms.length) {
     return text;
   }
 
+  if (maxLength <= 0) {
+    throw new Error("maxLength must be positive");
+  }
 
   const normalizedText = text.toLowerCase();
   let firstMatchIndex = -1;
@@ -41,9 +40,8 @@ export function createSearchSnippet(
   let start = Math.max(0, firstMatchIndex - contextBefore);
   let end = Math.min(text.length, firstMatchIndex + matchLength + contextAfter);
 
-
   if (start > 0) {
-    const wordStart = text.lastIndexOf(' ', start);
+    const wordStart = text.lastIndexOf(" ", start);
     if (wordStart !== -1) {
       const newStart = wordStart + 1;
       if (end - newStart <= maxLength) {
@@ -53,7 +51,7 @@ export function createSearchSnippet(
   }
 
   if (end < text.length) {
-    const wordEnd = text.indexOf(' ', end);
+    const wordEnd = text.indexOf(" ", end);
     if (wordEnd !== -1) {
       const newEnd = wordEnd;
       if (newEnd - start <= maxLength) {
@@ -62,10 +60,9 @@ export function createSearchSnippet(
     }
   }
 
-
   let snippet = text.substring(start, end);
-  if (start > 0) snippet = "..." + snippet;
-  if (end < text.length) snippet = snippet + "...";
+  if (start > 0) snippet = `...${snippet}`;
+  if (end < text.length) snippet += "...";
 
   return snippet;
 }
