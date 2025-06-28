@@ -12,7 +12,7 @@ import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import { useAssignTicket } from "./hooks/use-assign-ticket";
+import { useAssignTicket } from "./useAssignTicket";
 
 export const AssignPopoverButton = ({
   initialAssignedToId,
