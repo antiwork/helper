@@ -177,6 +177,7 @@ export const ConversationSearchBar = ({
           autoFocus
         />
         <Button
+          id="filter-toggle"
           type="button"
           variant="ghost"
           size="sm"

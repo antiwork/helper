@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { endOfDay, startOfDay } from "date-fns";
 import { ConversationsPage } from "../utils/page-objects/conversationsPage";
 import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
 
@@ -265,5 +266,147 @@ test.describe("Working Conversation Management", () => {
     // Verify search input is now focused
     const focusedElement = await page.evaluate(() => document.activeElement?.getAttribute("placeholder"));
     expect(focusedElement).toBe("Search conversations");
+  });
+
+  test("should handle date filter presets", async ({ page }) => {
+    const filterToggleButton = page.locator("#filter-toggle");
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const dateFilterButton = page.locator("#date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Initially should show "Created" (All time)
+    await expect(dateFilterButton).toHaveText(/Created/);
+
+    // Click to open dropdown
+    await dateFilterButton.click();
+
+    // Test "Today" preset
+    const todayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Today" });
+    await expect(todayOption).toBeVisible();
+    await todayOption.click();
+
+    // Sleep for half a second to ensure the filter is set
+    await page.waitForTimeout(500);
+
+    // Button label should change to "Today"
+    await expect(dateFilterButton).toHaveText(/Today/);
+
+    // Check the url params for "Today"
+    const urlParams = new URL(page.url()).searchParams;
+    expect(urlParams.get("createdAfter")).toBe(startOfDay(new Date()).toISOString());
+    expect(urlParams.get("createdBefore")).toBe(endOfDay(new Date()).toISOString());
+  });
+
+  test("should handle custom date picker", async ({ page }) => {
+    const filterToggleButton = page.locator("#filter-toggle");
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const dateFilterButton = page.locator("#date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Open date filter dropdown
+    await dateFilterButton.click();
+
+    // Click "Custom" option
+    const customOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Custom" });
+    await customOption.click();
+
+    // Calendar should be visible
+    const calendar = page.locator('table[aria-multiselectable="true"]').first();
+    await expect(calendar).toBeVisible();
+
+    // Click on a date (try to click on day 15 of current month)
+    const dayButton = page.locator('table[aria-multiselectable="true"] button[aria-label*="15"]').first();
+    await dayButton.click();
+
+    // Sleep for half a second to ensure the date is selected
+    await page.waitForTimeout(500);
+
+    // Button label should show the selected date
+    await expect(dateFilterButton).toContainText("15");
+
+    // Test "Back" button
+    const backButton = page.locator("button").filter({ hasText: "Back" });
+    await expect(backButton).toBeVisible();
+    await backButton.click();
+
+    // Should be back to preset options
+    const todayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Today" });
+    await expect(todayOption).toBeVisible();
+  });
+
+  test("should clear date filter with clear filters button", async ({ page }) => {
+    const filterToggleButton = page.locator("#filter-toggle");
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const dateFilterButton = page.locator("#date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Set a date filter
+    await dateFilterButton.click();
+    const yesterdayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Yesterday" });
+    await yesterdayOption.click();
+    await expect(dateFilterButton).toHaveText(/Yesterday/);
+
+    // Sleep for half a second to ensure the filter is set
+    await page.waitForTimeout(500);
+
+    // Clear filters button should appear
+    const clearFiltersButton = page.locator("#clear-filters-button");
+    await expect(clearFiltersButton).toBeVisible();
+
+    // Click clear filters
+    await clearFiltersButton.click();
+
+    // Sleep for half a second to ensure the filter is cleared
+    await page.waitForTimeout(500);
+
+    // Date filter should reset to "Created"
+    await expect(dateFilterButton).toHaveText(/Created/);
+
+    // Clear filters button should disappear
+    await expect(clearFiltersButton).not.toBeVisible();
+  });
+
+  test("should preserve date filter after page refresh", async ({ page }) => {
+    const toggleFilters = async () => {
+      const filterToggleButton = page.locator("#filter-toggle");
+      await expect(filterToggleButton).toBeVisible();
+      await filterToggleButton.click();
+    };
+
+    await toggleFilters();
+
+    const dateFilterButton = page.locator("#date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Set "Last 30 days" filter
+    await dateFilterButton.click();
+    const last30DaysOption = page
+      .locator('[role="menuitemradio"], [role="option"]')
+      .filter({ hasText: "Last 30 days" });
+    await last30DaysOption.click();
+    await expect(dateFilterButton).toHaveText(/Last 30 days/);
+
+    // sleep for 1 second to ensure the filter is set
+    await page.waitForTimeout(1000);
+
+    // Refresh the page
+    await page.reload({ timeout: 15000 });
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
+
+    await toggleFilters();
+
+    // Filter should be preserved
+    const dateFilterButtonAfterRefresh = page.locator("#date-filter-button");
+    await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
+
+    // Clear filters button should still be visible
+    const clearFiltersButton = page.locator("button").filter({ hasText: "Clear filters" });
+    await expect(clearFiltersButton).toBeVisible();
   });
 });

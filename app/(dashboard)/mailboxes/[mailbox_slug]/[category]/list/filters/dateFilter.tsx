@@ -156,7 +156,11 @@ export function DateFilter({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
+        <Button
+          id="date-filter-button"
+          variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"}
+          className="whitespace-nowrap"
+        >
           <CalendarIcon className="h-4 w-4 mr-2" />
           {buttonLabel}
         </Button>
