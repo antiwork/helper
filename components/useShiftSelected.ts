@@ -1,10 +1,7 @@
 import { useCallback, useState } from "react";
 
 // Derived from https://github.com/stereobooster/useful-react-snippets/blob/0435d95947b5aa672d68dd9783ce045bb9038202/useShiftSelected/useShiftSelected.ts
-export const useShiftSelected = <P>(
-  initialState: Array<P>,
-  change: (addOrRemove: boolean, items: Array<P>) => void,
-) => {
+export const useShiftSelected = <P>(initialState: P[], change: (addOrRemove: boolean, items: P[]) => void) => {
   const [previousSelected, setPreviousSelected] = useState<P | null>(null);
   const [previousChecked, setPreviousChecked] = useState<boolean>(false);
   const [currentSelected, setCurrentSelected] = useState<P | null>(null);
