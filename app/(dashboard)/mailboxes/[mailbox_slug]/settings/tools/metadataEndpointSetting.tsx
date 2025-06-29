@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import type { MetadataEndpoint } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { getMarketingSiteUrl } from "@/components/constants";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { SecretInput } from "@/components/secretInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

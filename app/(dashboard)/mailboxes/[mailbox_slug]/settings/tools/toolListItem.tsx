@@ -2,7 +2,7 @@
 
 import { Settings } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

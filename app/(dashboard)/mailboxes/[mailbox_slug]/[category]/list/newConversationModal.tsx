@@ -7,8 +7,8 @@ import {
 import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
+import { toast } from "@/components/hooks/useToast";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";

@@ -2,7 +2,7 @@
 
 import { PlusCircle, X } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

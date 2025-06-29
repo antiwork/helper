@@ -4,7 +4,7 @@ import { ArrowLeft, Menu } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { AppSidebarOpen } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebarOpen";
-import { useIsMobile } from "@/components/hooks/use-mobile";
+import { useIsMobile } from "@/components/hooks/useMobile";
 import { Avatar } from "@/components/ui/avatar";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";

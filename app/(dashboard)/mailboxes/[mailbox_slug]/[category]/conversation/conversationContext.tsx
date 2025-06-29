@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext } from "react";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { ToastAction } from "@/components/ui/toast";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";

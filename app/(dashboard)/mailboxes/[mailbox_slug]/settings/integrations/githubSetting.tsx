@@ -4,7 +4,7 @@ import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
 import GitHubSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/github.svg";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
