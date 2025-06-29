@@ -95,11 +95,9 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
       snippet = snippet.substring(0, maxLength - 3);
     }
     snippet = `${snippet}...`;
-  } else {
-    // No ellipses needed
-    if (snippet.length > maxLength) {
-      snippet = snippet.substring(0, maxLength);
-    }
+  } else if (snippet.length > maxLength) {
+    // No ellipses needed, just truncate if necessary
+    snippet = snippet.substring(0, maxLength);
   }
 
   return snippet;
