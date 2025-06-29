@@ -20,8 +20,14 @@ begin
   values (
     new.id,
     new.raw_user_meta_data ->> 'display_name',
-    'member',                         -- default permissions
-    jsonb_build_object('role', 'afk', 'keywords', jsonb_build_array()), -- default access
+    coalesce(new.raw_user_meta_data ->> 'permissions', 'member'),
+    jsonb_build_object(
+      'role', coalesce(new.raw_user_meta_data ->> 'role', 'afk'),
+      'keywords', coalesce(
+        (new.raw_user_meta_data -> 'keywords')::jsonb,
+        '[]'::jsonb
+      )
+    ),
     now(),
     now()
   );

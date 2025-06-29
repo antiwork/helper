@@ -30,13 +30,14 @@ export type UserWithMailboxAccessData = {
   keywords: MailboxAccess["keywords"];
 };
 
-export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
+export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string, permission?: string) => {
   const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.createUser({
     email: emailAddress,
     user_metadata: {
       inviter_user_id: inviterUserId,
       display_name: displayName,
+      permissions: permission ?? "member",
     },
   });
   if (error) throw error;

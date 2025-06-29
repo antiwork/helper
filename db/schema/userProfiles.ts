@@ -4,6 +4,7 @@ import { authUsers } from "../supabaseSchema/auth";
 
 export type AccessRole = "afk" | "core" | "nonCore";
 
+// Created automatically when a user is inserted via a Postgres trigger. See db/drizzle/0101_little_arclight.sql 
 export const userProfiles = pgTable("user_profiles", {
   id: uuid()
     .primaryKey()
