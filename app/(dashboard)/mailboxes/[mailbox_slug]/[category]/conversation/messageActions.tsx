@@ -1,5 +1,3 @@
-import { isMacOS } from "@tiptap/core";
-import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
@@ -10,10 +8,8 @@ import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankD
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
-import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
-import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
@@ -26,6 +22,7 @@ import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
 import { useUndoneEmailStore } from "./conversation";
+import { MessageActionButtons } from "./messageActionButtons";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
 
@@ -52,10 +49,8 @@ export const useSendDisabled = (message: string | undefined, conversationStatus?
 
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
-  const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
-  const { searchParams } = useConversationsListInput();
+  const { data: conversation, mailboxSlug, updateStatus } = useConversationContext();
   const utils = api.useUtils();
-  const { isAboveMd } = useBreakpoint("md");
 
   const { data: mailboxPreferences } = api.mailbox.get.useQuery({
     mailboxSlug,
@@ -358,44 +353,6 @@ export const MessageActions = () => {
     }
   };
 
-  const actionButtons = (
-    <>
-      <div className="flex items-center gap-4 md:flex-row-reverse">
-        {(conversation?.status ?? searchParams.status) !== "spam" &&
-          ((conversation?.status ?? searchParams.status) === "closed" ? (
-            <Button variant="outlined" onClick={() => updateStatus("open")}>
-              <CornerUpLeft className="mr-2 h-4 w-4" />
-              Reopen
-            </Button>
-          ) : (
-            <>
-              <Button
-                size={isAboveMd ? "default" : "sm"}
-                variant="outlined"
-                onClick={() => handleSend({ assign: false, close: false })}
-                disabled={sendDisabled}
-              >
-                Reply
-                {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
-                )}
-              </Button>
-              <Button
-                size={isAboveMd ? "default" : "sm"}
-                onClick={() => handleSend({ assign: false })}
-                disabled={sendDisabled}
-              >
-                {sending ? "Replying..." : "Reply and close"}
-                {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
-                )}
-              </Button>
-            </>
-          ))}
-      </div>
-    </>
-  );
-
   const updateDraftedEmail = (changes: Partial<DraftedEmail>) => {
     setDraftedEmail((email) => ({ ...email, ...changes, modified: true }));
     setStoredMessage(changes.message);
@@ -449,7 +406,15 @@ export const MessageActions = () => {
         onSlashKey={() => commandInputRef.current?.focus()}
         enableImageUpload
         enableFileUpload
-        actionButtons={actionButtons}
+        actionButtons={
+          <MessageActionButtons
+            conversation={conversation}
+            sendDisabled={sendDisabled}
+            sending={sending}
+            onSend={handleSend}
+            onUpdateStatus={updateStatus}
+          />
+        }
         signature={<EmailSignature />}
         isRecordingSupported={isRecordingSupported}
         isRecording={isRecording}
