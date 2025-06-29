@@ -17,7 +17,7 @@ type TeamInviteProps = {
 export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
   const [displayNameInput, setDisplayNameInput] = useState("");
-  const [permissions, setPermissions] = useState<"member" | "admin">("member");
+  const [permissions, setPermissions] = useState<"member" | "admin" | undefined>(undefined);
 
   const utils = api.useUtils();
 
@@ -31,6 +31,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
 
       setEmailInput("");
       setDisplayNameInput("");
+      setPermissions(undefined);
 
       utils.mailbox.members.list.invalidate({ mailboxSlug });
     },
@@ -66,7 +67,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
   };
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput);
-  const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding;
+  const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding && permissions;
 
   return (
     <div className="flex gap-4">
