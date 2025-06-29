@@ -20,6 +20,7 @@ vi.mock("@/lib/data/user", () => ({
     CORE: "core",
     NON_CORE: "nonCore",
     AFK: "afk",
+    ADMIN: "admin",
   },
 }));
 
@@ -146,6 +147,8 @@ describe("generateMailboxWeeklyReport", () => {
       { id: "user6", email: "chris@example.com", displayName: "Chris Lee", replyCount: 0, role: "nonCore" },
       // AFK member
       { id: "user7", email: "bob@example.com", displayName: "Bob White", replyCount: 0, role: "afk" },
+      // ADMIN member
+      { id: "user8", email: "admin@example.com", displayName: "Admin User", replyCount: 0, role: "admin" },
     ]);
 
     vi.mocked(getSlackUsersByEmail).mockResolvedValue(

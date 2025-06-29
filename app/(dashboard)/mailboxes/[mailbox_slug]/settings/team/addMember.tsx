@@ -6,6 +6,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/trpc/react";
 
 type TeamInviteProps = {
@@ -16,6 +17,7 @@ type TeamInviteProps = {
 export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
   const [displayNameInput, setDisplayNameInput] = useState("");
+  const [permissions, setPermissions] = useState<"member" | "admin" | undefined>(undefined);
 
   const utils = api.useUtils();
 
@@ -29,6 +31,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
 
       setEmailInput("");
       setDisplayNameInput("");
+      setPermissions(undefined);
 
       utils.mailbox.members.list.invalidate({ mailboxSlug });
     },
@@ -58,12 +61,13 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       addMemberMutation({
         email: emailInput,
         displayName: displayNameInput,
+        permissions: permissions,
       });
     }
   };
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput);
-  const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding;
+  const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding && permissions;
 
   return (
     <div className="flex gap-4">
@@ -108,6 +112,20 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
             <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
           </button>
         )}
+      </div>
+      <div className="relative flex-1">
+        <Label className="sr-only" htmlFor="permissions-input">
+          Permissions
+        </Label>
+        <Select value={permissions} onValueChange={(value: string) => setPermissions(value as "member" | "admin")}>
+          <SelectTrigger>
+            <SelectValue placeholder="Permissions" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="member">Member</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <Button onClick={inviteMember} disabled={!canAddMember}>
         {isAdding ? (
