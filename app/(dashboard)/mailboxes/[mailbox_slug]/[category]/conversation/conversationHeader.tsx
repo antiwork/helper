@@ -1,16 +1,6 @@
-import {
-    ChevronLeft,
-    ChevronRight,
-    Info,
-    Link as LinkIcon,
-    PanelRightClose,
-    PanelRightOpen,
-    X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Link as LinkIcon, PanelRightClose, PanelRightOpen, X } from "lucide-react";
 import { useMediaQuery } from "react-responsive";
-import {
-    useConversationContext,
-} from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
+import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/viewers";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { Button } from "@/components/ui/button";
