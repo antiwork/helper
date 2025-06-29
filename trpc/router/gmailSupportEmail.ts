@@ -10,12 +10,21 @@ import { mailboxProcedure } from "./mailbox";
 export const gmailSupportEmailRouter = {
   get: mailboxProcedure.query(async ({ ctx }) => {
     if (!env.GOOGLE_CLIENT_ID) {
-      return { enabled: false };
+      return {
+        enabled: false,
+        hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
+        hasEmailSending: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
+      };
     }
 
     const gmailSupportEmail = await getGmailSupportEmail(ctx.mailbox);
+    const hasResend = !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS);
+    const hasEmailSending = hasResend || !!gmailSupportEmail;
+
     return {
       enabled: true,
+      hasResend,
+      hasEmailSending,
       supportAccount: gmailSupportEmail
         ? {
             id: gmailSupportEmail.id,
