@@ -8,7 +8,6 @@ import {
   ModalView,
   WebClient,
 } from "@slack/web-api";
-import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";

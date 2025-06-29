@@ -36,13 +36,8 @@ export function useConversationQuery(mailboxSlug: string, conversationSlug: stri
 }
 
 export const ConversationContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const {
-    mailboxSlug,
-    currentConversationSlug,
-    removeConversation,
-    removeConversationKeepActive,
-    navigateToConversation,
-  } = useConversationListContext();
+  const { mailboxSlug, currentConversationSlug, removeConversation, navigateToConversation } =
+    useConversationListContext();
   const conversationSlug = assertDefined(
     currentConversationSlug,
     "ConversationContext can only be used when currentConversationSlug is defined",
@@ -91,7 +86,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
         description: error.message,
       });
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       utils.mailbox.conversations.get.invalidate({
         mailboxSlug,
         conversationSlug: variables.conversationSlug,

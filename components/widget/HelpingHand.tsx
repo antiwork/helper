@@ -2,7 +2,6 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import {
   cancelGuide,
@@ -53,7 +52,6 @@ export default function HelpingHand({
   const [status, setStatus] = useState<Status>(pendingResume ? "pending-resume" : "initializing");
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
-  const [done, setDone] = useState<{ success: boolean; message: string } | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const lastSerializedStepsRef = useRef<string>(JSON.stringify([]));
   const sessionIdRef = useRef<string | null>(null);
@@ -133,7 +131,6 @@ export default function HelpingHand({
     if (toolResultCount >= 10) {
       const message = "Failed to complete the task, too many attempts";
       guideDone(false, message);
-      setDone({ success: false, message });
       setStatus("error");
       addChatToolResult({
         toolCallId: actionToolCallId,
@@ -159,7 +156,6 @@ export default function HelpingHand({
     if (type === "done") {
       const message = action.text || "Task completed successfully";
       await guideDone(action.success, message);
-      setDone({ success: action.success, message });
       setStatus("done");
       addChatToolResult({
         toolCallId,

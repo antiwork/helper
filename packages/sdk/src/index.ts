@@ -951,7 +951,7 @@ class HelperWidget {
   }
 
   private hideAllNotifications(): void {
-    this.notificationBubbles.forEach((bubble, conversationSlug) => {
+    this.notificationBubbles.forEach((_, conversationSlug) => {
       this.hideNotification(conversationSlug);
     });
   }

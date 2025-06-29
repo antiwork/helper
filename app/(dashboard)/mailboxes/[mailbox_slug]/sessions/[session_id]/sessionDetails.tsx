@@ -53,10 +53,6 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
     }
   };
 
-  const handleViewReplay = () => {
-    router.push(`/mailboxes/${mailbox.slug}/sessions/${session.id}/replay`);
-  };
-
   // Effect to process replay events
   useEffect(() => {
     if (replayEvents.length === 0) {

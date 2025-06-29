@@ -50,9 +50,6 @@ export default function Home() {
   const showMeButtonRef = useRef<HTMLButtonElement>(null);
   const helperMessageRef = useRef<HTMLDivElement>(null);
 
-  const [footerBgColor, setFooterBgColor] = useState("#2B0808");
-  const [footerTextColor, setFooterTextColor] = useState("#FFFFFF");
-
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -648,12 +645,12 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: footerBgColor }}>
+        <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: "#2B0808" }}>
           <div className="flex items-center">
             <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
               <svg width="200" height="40" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M57 91L41.4115 47.5L72.5885 47.5L57 91Z" fill={footerTextColor} />
-                <path d="M25 91L9.41154 47.5L40.5885 47.5L25 91Z" fill={footerTextColor} />
+                <path d="M57 91L41.4115 47.5L72.5885 47.5L57 91Z" fill={"#FFFFFF"} />
+                <path d="M25 91L9.41154 47.5L40.5885 47.5L25 91Z" fill={"#FFFFFF"} />
               </svg>
             </a>
           </div>
