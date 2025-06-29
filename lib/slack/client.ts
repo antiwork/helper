@@ -217,7 +217,7 @@ export const getSlackAccessToken = async (code: string) => {
   };
 };
 
-export const listSlackUsers = async (token: string) => {
+const listSlackUsers = async (token: string) => {
   const response = await fetch("https://slack.com/api/users.list", {
     headers: {
       Authorization: `Bearer ${token}`,
