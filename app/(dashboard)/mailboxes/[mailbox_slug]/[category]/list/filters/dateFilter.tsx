@@ -200,7 +200,6 @@ export function DateFilter({
         ) : (
           <DropdownMenuRadioGroup
             value={selectedPreset}
-            // this cast is safe because the values are derived from the DATE_PRESETS array
             onValueChange={(value) => handlePresetChange(value as DatePresetValue)}
             className="flex flex-col"
           >
