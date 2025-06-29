@@ -1,14 +1,19 @@
 "use client";
 
+import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
+import ConversationsDialog from "@/components/conversationsDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useSession } from "@/components/useSession";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
 
@@ -29,13 +34,20 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
+  conversations: any[];
+  updateConversation: (
+    assignedTo: { id: string; displayName: string } | { ai: true } | null,
+    conversationSlug: string,
+  ) => Promise<void>;
+  onFinalReassignAndDelete: (id: string) => void
 };
 
-const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, conversations, updateConversation, onFinalReassignAndDelete }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
+  const { user: currentUser } = useSession() ?? {};
 
   // Separate saving indicators for each operation type
   const displayNameSaving = useSavingIndicator();
@@ -242,6 +254,22 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
             className={role === "nonCore" ? "" : "invisible"}
           />
         </div>
+      </TableCell>
+      <TableCell>
+        {currentUser?.id !== member.id &&
+            <ConversationsDialog
+              assignedToId={member.id}
+              mailboxSlug={mailboxSlug}
+              conversations={conversations}
+              updateConversation={updateConversation}
+              description="Please reassign the tickets before delete the member"
+              onFinalReassignAndDelete={() => onFinalReassignAndDelete( member.id )}
+            >
+              <Button variant="ghost" size="sm" iconOnly>
+                <Trash className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </ConversationsDialog>}
       </TableCell>
       <TableCell className="w-[120px]">
         <div className="flex items-center gap-2">

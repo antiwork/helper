@@ -1,4 +1,4 @@
-import { type TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { addUser } from "@/lib/data/user";

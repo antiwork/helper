@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
@@ -38,6 +39,33 @@ export const addUser = async (inviterUserId: string, emailAddress: string, displ
     },
   });
   if (error) throw error;
+};
+
+export const banUser = async (userId: string) => {
+  const supabase = createAdminClient();
+
+  const bannedUntil = new Date();
+  bannedUntil.setFullYear(bannedUntil.getFullYear() + 50);
+
+  const {
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.admin.getUserById(userId);
+  if (getUserError) throw getUserError;
+
+  const existingAppMetadata = user?.app_metadata || {};
+
+  const { error } = await supabase.auth.admin.updateUserById(userId, {
+    app_metadata: {
+      ...existingAppMetadata,
+      banned: true,
+      banned_until: bannedUntil.toISOString(),
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
 };
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
