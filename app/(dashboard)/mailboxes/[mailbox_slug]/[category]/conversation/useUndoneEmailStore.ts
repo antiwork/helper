@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { DraftedEmail } from "@/app/types/global";
+import { type DraftedEmail } from "@/app/types/global";
 
 export const useUndoneEmailStore = create<{
   undoneEmail: DraftedEmail | undefined;
