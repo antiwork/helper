@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { triggerConfetti } from "@/components/confetti";
-import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
+import { toast } from "@/components/hooks/useToast";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
 import { RouterOutputs } from "@/trpc";

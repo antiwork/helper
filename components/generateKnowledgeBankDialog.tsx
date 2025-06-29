@@ -1,7 +1,7 @@
 import { Lightbulb, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

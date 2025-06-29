@@ -3,7 +3,7 @@
 import { PlusCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

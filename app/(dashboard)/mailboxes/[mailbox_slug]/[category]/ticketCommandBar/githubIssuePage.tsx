@@ -1,6 +1,6 @@
 import { Check, ExternalLinkIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";

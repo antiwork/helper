@@ -12,7 +12,7 @@ import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/components/hooks/useToast";
 import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";

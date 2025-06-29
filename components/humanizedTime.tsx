@@ -1,5 +1,5 @@
 import { intervalToDuration } from "date-fns";
-import { useNow } from "./hooks/use-now";
+import { useNow } from "./hooks/useNow";
 
 type HumanizedTimeProps = {
   time: string | Date;
