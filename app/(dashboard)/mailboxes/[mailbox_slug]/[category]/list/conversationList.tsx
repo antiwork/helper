@@ -8,6 +8,8 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSelected } from "@/components/useSelected";
+import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
@@ -30,7 +32,6 @@ export const List = () => {
 
   const [showFilters, setShowFilters] = useState(false);
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
-  const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
@@ -49,27 +50,31 @@ export const List = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
-  const toggleAllConversations = () => {
-    if (allConversationsSelected || selectedConversations.length > 0) {
-      setAllConversationsSelected(false);
-      setSelectedConversations([]);
-    } else {
-      setAllConversationsSelected(true);
-      setSelectedConversations([]);
-    }
-  };
+  const {
+    selected: selectedConversations,
+    change: changeSelectedConversations,
+    clear: clearSelectedConversations,
+    set: setSelectedConversations,
+  } = useSelected<number>([]);
 
-  const toggleConversation = (id: number) => {
+  const onShiftSelectConversation = useShiftSelected<number>(
+    conversations.map((c) => c.id),
+    changeSelectedConversations,
+  );
+
+  const toggleConversation = (id: number, isSelected: boolean, shiftKey: boolean) => {
     if (allConversationsSelected) {
+      // If all conversations are selected, toggle the selected conversation
       setAllConversationsSelected(false);
       setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
     } else {
-      setSelectedConversations(
-        selectedConversations.includes(id)
-          ? selectedConversations.filter((selectedId) => selectedId !== id)
-          : [...selectedConversations, id],
-      );
+      onShiftSelectConversation(id, isSelected, shiftKey);
     }
+  };
+
+  const toggleAllConversations = () => {
+    setAllConversationsSelected((prev) => !prev);
+    clearSelectedConversations();
   };
 
   const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
@@ -87,7 +92,7 @@ export const List = () => {
         {
           onSuccess: ({ updatedImmediately }) => {
             setAllConversationsSelected(false);
-            setSelectedConversations([]);
+            clearSelectedConversations();
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
 
@@ -270,7 +275,7 @@ export const List = () => {
               isActive={conversationSlug === conversation.slug}
               onSelectConversation={navigateToConversation}
               isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-              onToggleSelect={() => toggleConversation(conversation.id)}
+              onToggleSelect={(isSelected, shiftKey) => toggleConversation(conversation.id, isSelected, shiftKey)}
             />
           ))}
           <div ref={loadMoreRef} />
