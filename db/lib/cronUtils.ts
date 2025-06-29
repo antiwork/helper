@@ -10,7 +10,7 @@ export const setupCron = async (job: string, schedule: string) => {
   `);
 };
 
-export const unscheduleCron = async (job: string) => {
+const unscheduleCron = async (job: string) => {
   await db.execute(sql`
     select cron.unschedule(${job});
   `);
