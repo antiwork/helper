@@ -6,8 +6,8 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api } from "@/trpc/react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { api } from "@/trpc/react";
 
 type TeamInviteProps = {
   mailboxSlug: string;
@@ -116,12 +116,9 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
         <Label className="sr-only" htmlFor="permissions-input">
           Permissions
         </Label>
-        <Select
-          value={permissions}
-          onValueChange={(value: string) => setPermissions(value as "member" | "admin")}
-        >
+        <Select value={permissions} onValueChange={(value: string) => setPermissions(value as "member" | "admin")}>
           <SelectTrigger>
-            <SelectValue placeholder="Permissions" /> 
+            <SelectValue placeholder="Permissions" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="member">Member</SelectItem>

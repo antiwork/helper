@@ -11,7 +11,6 @@ export const UserRoles = {
   CORE: "core",
   NON_CORE: "nonCore",
   AFK: "afk",
-  ADMIN: "admin",
 } as const;
 
 export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
@@ -28,9 +27,15 @@ export type UserWithMailboxAccessData = {
   email: string | undefined;
   role: UserRole;
   keywords: MailboxAccess["keywords"];
+  permissions: string;
 };
 
-export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string, permission?: string) => {
+export const addUser = async (
+  inviterUserId: string,
+  emailAddress: string,
+  displayName: string,
+  permission?: string,
+) => {
   const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.createUser({
     email: emailAddress,
@@ -114,12 +119,24 @@ export const updateUserMailboxData = async (
   if (updateError) throw updateError;
   if (!updatedUser) throw new Error("Failed to update user");
 
+  await db
+    .update(userProfiles)
+    .set({
+      displayName: updates.displayName,
+      access: {
+        role: updates.role || "afk",
+        keywords: updates.keywords || [],
+      },
+    })
+    .where(eq(userProfiles.id, updatedUser.id));
+
   return {
     id: updatedUser.id,
     displayName: getFullName(updatedUser),
     email: updatedUser.email ?? undefined,
     role: updatedMailboxData.role || "afk",
     keywords: updatedMailboxData.keywords || [],
+    permissions: updatedMailboxData.permissions,
   };
 };
 
