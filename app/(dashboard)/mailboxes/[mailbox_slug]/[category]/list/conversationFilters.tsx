@@ -139,7 +139,7 @@ export const ConversationFilters = ({
       <EventFilter selectedEvents={filterValues.events} onChange={(events) => onUpdateFilter({ events })} />
       <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => onUpdateFilter({ isPrompt })} />
       {activeFilterCount > 0 && (
-        <Button id="clear-filters-button" variant="ghost" onClick={onClearFilters}>
+        <Button data-testid="clear-filters-button" variant="ghost" onClick={onClearFilters}>
           Clear filters
         </Button>
       )}
