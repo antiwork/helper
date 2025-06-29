@@ -269,11 +269,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle date filter presets", async ({ page }) => {
-    const filterToggleButton = page.locator("#filter-toggle");
+    const filterToggleButton = page.getByTestId("filter-toggle");
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.locator("#date-filter-button");
+    const dateFilterButton = page.getByTestId("date-filter-button");
     await expect(dateFilterButton).toBeVisible();
 
     // Initially should show "Created" (All time)
@@ -300,11 +300,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle custom date picker", async ({ page }) => {
-    const filterToggleButton = page.locator("#filter-toggle");
+    const filterToggleButton = page.getByTestId("filter-toggle");
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.locator("#date-filter-button");
+    const dateFilterButton = page.getByTestId("date-filter-button");
     await expect(dateFilterButton).toBeVisible();
 
     // Open date filter dropdown
@@ -339,11 +339,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should clear date filter with clear filters button", async ({ page }) => {
-    const filterToggleButton = page.locator("#filter-toggle");
+    const filterToggleButton = page.getByTestId("filter-toggle");
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.locator("#date-filter-button");
+    const dateFilterButton = page.getByTestId("date-filter-button");
     await expect(dateFilterButton).toBeVisible();
 
     // Set a date filter
@@ -356,7 +356,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForTimeout(500);
 
     // Clear filters button should appear
-    const clearFiltersButton = page.locator("#clear-filters-button");
+    const clearFiltersButton = page.getByTestId("clear-filters-button");
     await expect(clearFiltersButton).toBeVisible();
 
     // Click clear filters
@@ -374,14 +374,14 @@ test.describe("Working Conversation Management", () => {
 
   test("should preserve date filter after page refresh", async ({ page }) => {
     const toggleFilters = async () => {
-      const filterToggleButton = page.locator("#filter-toggle");
+      const filterToggleButton = page.getByTestId("filter-toggle");
       await expect(filterToggleButton).toBeVisible();
       await filterToggleButton.click();
     };
 
     await toggleFilters();
 
-    const dateFilterButton = page.locator("#date-filter-button");
+    const dateFilterButton = page.getByTestId("date-filter-button");
     await expect(dateFilterButton).toBeVisible();
 
     // Set "Last 30 days" filter
@@ -402,7 +402,7 @@ test.describe("Working Conversation Management", () => {
     await toggleFilters();
 
     // Filter should be preserved
-    const dateFilterButtonAfterRefresh = page.locator("#date-filter-button");
+    const dateFilterButtonAfterRefresh = page.getByTestId("date-filter-button");
     await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
 
     // Clear filters button should still be visible

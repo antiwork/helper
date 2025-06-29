@@ -157,7 +157,7 @@ export function DateFilter({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          id="date-filter-button"
+          data-testid="date-filter-button"
           variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"}
           className="whitespace-nowrap"
         >
