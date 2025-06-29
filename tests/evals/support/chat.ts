@@ -78,7 +78,7 @@ export const buildMessagesWithMocks = ({
   });
 };
 
-export const parseMessagesWithMocks = (input: string) => {
+const parseMessagesWithMocks = (input: string) => {
   const { messages, mailboxName, tools, promptRetrievalData } = JSON.parse(input);
   const parsedTools: Record<string, HelperTool> = tools;
 

@@ -267,6 +267,82 @@ test.describe("Working Conversation Management", () => {
     expect(focusedElement).toBe("Search conversations");
   });
 
+  test("should support shift-click for range selection", async ({ page }) => {
+    // Check if there are multiple conversation checkboxes to test with
+    const checkboxes = page.locator('button[role="checkbox"]');
+    const checkboxCount = await checkboxes.count();
+
+    if (checkboxCount >= 5) {
+      // Clear any existing selections first
+      const selectNoneButton = page.locator('button:has-text("Select none")');
+      if ((await selectNoneButton.count()) > 0) {
+        await selectNoneButton.click();
+        await page.waitForTimeout(300);
+      }
+
+      // Click the first checkbox normally
+      await checkboxes.nth(0).click();
+      await page.waitForTimeout(200);
+
+      // Verify first checkbox is selected
+      const firstCheckbox = checkboxes.nth(0);
+      await expect(firstCheckbox).toHaveAttribute("data-state", "checked");
+
+      // Shift+click on the third checkbox to select range (0, 1, 2)
+      await checkboxes.nth(2).click({ modifiers: ["Shift"] });
+      await page.waitForTimeout(300);
+
+      // Verify that checkboxes in the range are selected (0, 1, 2)
+      for (let i = 0; i <= 2; i++) {
+        await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
+      }
+
+      // Shift+click on the fifth checkbox to expand the selection to (0, 1, 2, 3, 4)
+      await checkboxes.nth(4).click({ modifiers: ["Shift"] });
+      await page.waitForTimeout(300);
+
+      // Verify that checkboxes in the range are selected (0, 1, 2, 3, 4)
+      for (let i = 0; i <= 4; i++) {
+        await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
+      }
+
+      // Verify selection count is displayed
+      const selectionText = page.locator("text=/5 selected|All conversations selected/");
+      await expect(selectionText).toBeVisible();
+
+      // Shift+click on the second checkbox to shrink the selection to (0, 1)
+      await checkboxes.nth(1).click({ modifiers: ["Shift"] });
+      await page.waitForTimeout(300);
+
+      // Verify that checkboxes in the range are selected (0, 1)
+      for (let i = 0; i <= 1; i++) {
+        await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
+      }
+
+      // Shift+click on the fourth checkbox to expand the selection to (0, 1, 2, 3)
+      await checkboxes.nth(3).click({ modifiers: ["Shift"] });
+      await page.waitForTimeout(300);
+
+      // Verify that checkboxes in the range are selected (0, 1, 2, 3)
+      for (let i = 0; i <= 3; i++) {
+        await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
+      }
+
+      // Select all conversations
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await selectAllButton.click();
+      await page.waitForTimeout(300);
+
+      // Verify that all checkboxes are selected
+      for (let i = 0; i < checkboxCount; i++) {
+        await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
+      }
+    } else {
+      // If not enough conversations, log a warning
+      console.warn("Not enough conversations to test shift-click selection");
+    }
+  });
+
   test("should show truncated text for non-search results", async ({ page }) => {
     const conversationsPage = new ConversationsPage(page);
 
