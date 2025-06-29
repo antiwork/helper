@@ -82,7 +82,7 @@ export default function TabsPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader title={selectedItem?.label ?? "Settings"} />
-      <FileUploadProvider mailboxSlug={mailbox.slug}>
+      <FileUploadProvider>
         <div className="grow overflow-y-auto">
           <div className="grow overflow-y-auto bg-background px-4 pb-4">{selectedItem?.content}</div>
         </div>

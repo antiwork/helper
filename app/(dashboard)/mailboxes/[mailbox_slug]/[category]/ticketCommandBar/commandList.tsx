@@ -7,12 +7,11 @@ type CommandListProps = {
   isLoading: boolean;
   page: "main" | "previous-replies" | "assignees" | "notes" | "tools" | "github-issue";
   groups: CommandGroup[];
-  selectedItemId: string | null;
   onSelect: (id: string) => void;
   onMouseEnter: (id: string | null) => void;
 };
 
-export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect, onMouseEnter }: CommandListProps) => {
+export const CommandList = ({ isLoading, page, groups, onSelect, onMouseEnter }: CommandListProps) => {
   if (isLoading && page === "previous-replies") {
     return (
       <div className="flex flex-col items-center justify-center py-6 gap-2 pointer-events-none">

@@ -118,14 +118,11 @@ const Inbox = () => {
 };
 
 const InboxProvider = ({ children }: { children: ReactNode }) => {
-  const mailboxSlug = useParams<{ mailbox_slug: string }>().mailbox_slug;
   const [conversationSlug] = useQueryState("id");
 
   return (
     <ConversationListContextProvider currentConversationSlug={conversationSlug}>
-      <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug ?? undefined}>
-        {children}
-      </FileUploadProvider>
+      <FileUploadProvider conversationSlug={conversationSlug ?? undefined}>{children}</FileUploadProvider>
     </ConversationListContextProvider>
   );
 };

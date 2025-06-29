@@ -108,9 +108,9 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
 };
 
 export const NotesPage = (props: NotesPageProps) => {
-  const { mailboxSlug, conversationSlug } = useConversationContext();
+  const { conversationSlug } = useConversationContext();
   return (
-    <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug}>
+    <FileUploadProvider conversationSlug={conversationSlug}>
       <NotesPageContent {...props} />
     </FileUploadProvider>
   );

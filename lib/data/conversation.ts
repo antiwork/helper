@@ -34,8 +34,6 @@ export type Conversation = typeof conversations.$inferSelect;
 
 export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
-const MAX_RELATED_CONVERSATIONS_COUNT = 3;
-
 export const createConversation = async (
   conversation: NewConversation,
   tx: Transaction | typeof db = db,

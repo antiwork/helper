@@ -52,7 +52,7 @@ export const useSendDisabled = (message: string | undefined, conversationStatus?
 
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
-  const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
+  const { data: conversation, mailboxSlug, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");

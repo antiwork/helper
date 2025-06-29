@@ -105,15 +105,6 @@ const Toolbar = ({
     }
   }, [isLinkModalOpen, activeLinkElement]);
 
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const setLink = () => {
     if (!editor) return;
 

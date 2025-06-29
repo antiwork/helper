@@ -5,7 +5,7 @@ import { ClientHelperProvider } from "./ClientHelperProvider";
 /**
  * Props for the HelperProvider component
  * @typedef {Object} HelperProviderProps
- * @extends HelperConfig
+ * @extends HelperWidgetConfig
  * @property {React.ReactNode} children - Child components to be wrapped by the provider
  * @property {string} [host] - Optional host URL for the Helper service
  */

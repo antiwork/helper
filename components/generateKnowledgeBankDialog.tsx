@@ -29,7 +29,6 @@ export const GenerateKnowledgeBankDialog = ({
   messageId,
   mailboxSlug,
 }: GenerateKnowledgeBankDialogProps) => {
-  const [suggestedContent, setSuggestedContent] = useState<string>("");
   const [editedContent, setEditedContent] = useState<string>("");
   const [suggestionReason, setSuggestionReason] = useState<string>("");
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -47,7 +46,6 @@ export const GenerateKnowledgeBankDialog = ({
   const generateSuggestionMutation = api.mailbox.faqs.suggestFromHumanReply.useMutation({
     onSuccess: (data) => {
       if (data.action === "create_entry" || data.action === "update_entry") {
-        setSuggestedContent(data.content || "");
         setEditedContent(data.content || "");
         setSuggestionReason(data.reason);
         setUpdateEntryId(data.entryId || null);
@@ -114,7 +112,6 @@ export const GenerateKnowledgeBankDialog = ({
   });
 
   const resetState = () => {
-    setSuggestedContent("");
     setEditedContent("");
     setSuggestionReason("");
     setHasGenerated(false);

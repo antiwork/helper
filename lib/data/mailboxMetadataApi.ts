@@ -51,7 +51,7 @@ export const createMailboxMetadataApi = async (mailboxSlug: string, params: { ur
 };
 
 export const deleteMailboxMetadataApiByMailboxSlug = async (mailboxSlug: string): Promise<void> => {
-  const { mailbox, metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+  const { metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
   if (!metadataApi) {
     throw new DataError("Mailbox does not have a metadata endpoint");
   }

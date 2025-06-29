@@ -16,12 +16,11 @@ export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
 
 type Props = {
   mailboxSlug: string;
-  currentMailbox: { name: string; slug: string };
 };
 
 const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false });
 
-export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
+export function DashboardContent({ mailboxSlug }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<DateRange>();
   const isMobile = useIsMobile();

@@ -1,25 +1,15 @@
-import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, not, notInArray, or, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import {
-  conversationEvents,
-  conversationMessages,
-  DRAFT_STATUSES,
-  files,
-  mailboxes,
-  MessageMetadata,
-  notes,
-  Tool,
-} from "@/db/schema";
+import { conversationEvents, conversationMessages, DRAFT_STATUSES, files, mailboxes, notes, Tool } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
 import type { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
-import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { formatBytes } from "../files";

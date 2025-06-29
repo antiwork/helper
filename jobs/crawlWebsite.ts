@@ -5,7 +5,6 @@ import { websiteCrawls, websites } from "@/db/schema";
 import { env } from "@/lib/env";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
-const CONCURRENCY_LIMIT = 3;
 const PAGE_LIMIT = 150;
 const firecrawl = env.FIRECRAWL_API_KEY ? new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY }) : null;
 
