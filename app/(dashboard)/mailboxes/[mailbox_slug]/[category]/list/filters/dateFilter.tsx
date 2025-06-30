@@ -1,6 +1,6 @@
 import { endOfDay, endOfMonth, endOfQuarter, endOfYear, isSameDay, startOfDay, startOfMonth, startOfQuarter, startOfYear, subDays, subQuarters } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -92,6 +92,7 @@ export function DateFilter({
 }) {
   const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedPreset = useMemo<DatePresetValue>(() => {
     // no start date means nothing is selected, default to "all time"
@@ -157,16 +158,26 @@ export function DateFilter({
     onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
   };
 
-  // Add keyboard shortcut support
+  // Add keyboard shortcut support - only when dropdown is focused
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle shortcuts when focus is within our dropdown component
+      const activeElement = document.activeElement;
+      
+      // Check if focus is within the dropdown component tree
+      const isFocusInDropdown = dropdownRef.current?.contains(activeElement) ||
+                               activeElement?.closest('[data-testid="date-filter-button"]');
+      
+      if (!isFocusInDropdown) return;
+
       const key = e.key.toUpperCase();
       const preset = DATE_PRESETS.find((p) => p.shortcut === key);
       
       if (preset) {
         e.preventDefault();
+        e.stopPropagation();
         handlePresetChange(preset.value);
         if (preset.value !== "custom") {
           setIsOpen(false);
@@ -174,8 +185,8 @@ export function DateFilter({
       }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, [isOpen, handlePresetChange]);
 
   const buttonLabel = useMemo(() => {
@@ -208,8 +219,9 @@ export function DateFilter({
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
+    <div ref={dropdownRef}>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
         <Button
           data-testid="date-filter-button"
           variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"}
@@ -275,6 +287,7 @@ export function DateFilter({
           </DropdownMenuRadioGroup>
         )}
       </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+    </div>
   );
 }
