@@ -8,6 +8,28 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { GenericContainer } from "testcontainers";
 import * as schema from "@/db/schema";
 
+async function waitForDatabase(connectionString: string, maxRetries = 30, delay = 250) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`Attempting database connection (attempt ${i + 1}/${maxRetries})...`);
+      const testDb = drizzle(connectionString, { schema });
+      await testDb.execute(sql`SELECT 1`);
+      await (testDb.$client as any).end();
+      console.log("Database connection successful!");
+      return;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`Database connection failed (attempt ${i + 1}/${maxRetries}): ${errorMessage}`);
+
+      if (i === maxRetries - 1) {
+        throw new Error(`Database failed to become ready after ${maxRetries} attempts. Last error: ${errorMessage}`);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
 export async function setupDockerTestDb() {
   console.log("Starting Docker test database setup...");
 
@@ -21,7 +43,7 @@ export async function setupDockerTestDb() {
     .withHealthCheck({
       test: ["CMD-SHELL", `PGPASSWORD=password pg_isready --host localhost --username postgres --dbname postgres`],
       interval: 250,
-      timeout: 1000,
+      timeout: 3000,
       retries: 1000,
     })
     .start();
@@ -29,6 +51,10 @@ export async function setupDockerTestDb() {
   console.log("PostgreSQL container started successfully.");
 
   const adminConnectionString = `postgres://supabase_admin:password@${container.getHost()}:${container.getMappedPort(5432)}/postgres`;
+
+  console.log("Waiting for database to be ready...");
+  await waitForDatabase(adminConnectionString);
+
   const adminDb = drizzle(adminConnectionString, { schema });
 
   console.log("Applying patches ...");
