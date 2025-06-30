@@ -1,7 +1,5 @@
 import FileSaver from "file-saver";
 import {
-  ArrowLeft,
-  ArrowRight,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
@@ -16,8 +14,6 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useStickToBottom } from "use-stick-to-bottom";
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import {
   ConversationContextProvider,
   useConversationContext,
@@ -27,7 +23,6 @@ import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conve
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/previewModal";
 import {
-  DraftedEmail,
   type AttachedFile,
   type ConversationEvent,
   type Conversation as ConversationType,
@@ -58,21 +53,6 @@ export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
 };
 
 const { Carousel, CarouselButton, CarouselContext } = createCarousel<AttachedFile>();
-
-export const useUndoneEmailStore = create<{
-  undoneEmail: DraftedEmail | undefined;
-  setUndoneEmail: (undoneEmail: DraftedEmail | undefined) => void;
-}>()(
-  devtools(
-    (set) => ({
-      undoneEmail: undefined,
-      setUndoneEmail: (undoneEmail) => set({ undoneEmail }),
-    }),
-    {
-      name: "undone-email-store",
-    },
-  ),
-);
 
 const CopyLinkButton = () => {
   const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
