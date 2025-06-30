@@ -42,7 +42,10 @@ const DATE_PRESETS = [
     value: "yesterday",
     label: "Yesterday",
     shortcut: "Y",
-    getRange: () => ({ from: startOfDay(subDays(new Date(), 1)), to: endOfDay(subDays(new Date(), 1)) }),
+    getRange: () => ({
+      from: startOfDay(subDays(new Date(), 1)),
+      to: endOfDay(subDays(new Date(), 1)),
+    }),
   },
   {
     value: "last7days",
@@ -53,7 +56,7 @@ const DATE_PRESETS = [
   {
     value: "last14days",
     label: "Last 14 days",
-    shortcut: "1",
+    shortcut: "F",
     getRange: () => ({ from: startOfDay(subDays(new Date(), 13)), to: endOfDay(new Date()) }),
   },
   {
@@ -107,20 +110,18 @@ export function DateFilter({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedPreset = useMemo<DatePresetValue>(() => {
-    // no start date means nothing is selected, default to "all time"
     if (!startDate) return "allTime";
 
     const from = new Date(startDate);
     const to = endDate ? new Date(endDate) : undefined;
 
-    // Match selected dates to presets using proper date comparison
     for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
       const range = getRange();
       if (!range && !startDate) return value;
       if (range?.from && range?.to && to) {
-        const fromMatches = Math.abs(range.from.getTime() - from.getTime()) < 1000;
-        const toMatches = Math.abs(range.to.getTime() - to.getTime()) < 1000;
+        const fromMatches = isSameDay(range.from, from);
+        const toMatches = isSameDay(range.to, to);
         if (fromMatches && toMatches) {
           return value;
         }
@@ -164,8 +165,10 @@ export function DateFilter({
 
     const handleKeyPress = (e: KeyboardEvent) => {
       const activeElement = document.activeElement;
+
       const isFocusInDropdown =
         dropdownRef.current?.contains(activeElement) || activeElement?.closest('[data-testid="date-filter-button"]');
+
       if (!isFocusInDropdown) return;
 
       const key = e.key.toUpperCase();
