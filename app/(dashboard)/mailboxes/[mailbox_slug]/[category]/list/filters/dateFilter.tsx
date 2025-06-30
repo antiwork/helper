@@ -1,4 +1,4 @@
-import { endOfDay, endOfMonth, endOfYear, startOfDay, startOfMonth, startOfYear, subDays } from "date-fns";
+import { endOfDay, endOfMonth, endOfQuarter, endOfYear, isSameDay, startOfDay, startOfMonth, startOfQuarter, startOfYear, subDays, subQuarters } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -17,41 +17,64 @@ const DATE_PRESETS = [
   {
     value: "allTime",
     label: "All time",
+    shortcut: "A",
     getRange: () => null,
   },
   {
     value: "today",
     label: "Today",
+    shortcut: "T",
     getRange: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }),
   },
   {
     value: "yesterday",
     label: "Yesterday",
+    shortcut: "Y",
     getRange: () => ({ from: startOfDay(subDays(new Date(), 1)), to: endOfDay(subDays(new Date(), 1)) }),
   },
   {
     value: "last7days",
     label: "Last 7 days",
+    shortcut: "7",
     getRange: () => ({ from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) }),
   },
   {
-    value: "thisMonth",
-    label: "This month",
-    getRange: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }),
+    value: "last14days",
+    label: "Last 14 days",
+    shortcut: "1",
+    getRange: () => ({ from: startOfDay(subDays(new Date(), 13)), to: endOfDay(new Date()) }),
   },
   {
     value: "last30days",
     label: "Last 30 days",
+    shortcut: "3",
     getRange: () => ({ from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) }),
+  },
+  {
+    value: "thisMonth",
+    label: "This month",
+    shortcut: "M",
+    getRange: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }),
+  },
+  {
+    value: "lastQuarter",
+    label: "Last quarter",
+    shortcut: "Q",
+    getRange: () => {
+      const lastQuarter = subQuarters(new Date(), 1);
+      return { from: startOfQuarter(lastQuarter), to: endOfQuarter(lastQuarter) };
+    },
   },
   {
     value: "thisYear",
     label: "This year",
+    shortcut: "R",
     getRange: () => ({ from: startOfYear(new Date()), to: endOfYear(new Date()) }),
   },
   {
     value: "custom",
     label: "Custom",
+    shortcut: "C",
     getRange: () => null,
   },
 ] as const;
@@ -68,6 +91,7 @@ export function DateFilter({
   onSelect: (startDate: string | null, endDate: string | null) => void;
 }) {
   const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const selectedPreset = useMemo<DatePresetValue>(() => {
     // no start date means nothing is selected, default to "all time"
@@ -76,16 +100,24 @@ export function DateFilter({
     const from = new Date(startDate);
     const to = endDate ? new Date(endDate) : undefined;
 
-    // Match selected dates to presets.
-    // The timestamp comparison is fine because preset functions use date boundaries
-    // (start/end of day/month/year) that are deterministic for the same date, though
-    // it may fail across day boundaries  - which is fine because worst case scenario
-    // we'll show the user "Custom" as the selected preset.
+    // Match selected dates to presets using proper date comparison
     for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
       const range = getRange();
-      if (range?.from.getTime() === from.getTime() && to && range.to?.getTime() === to.getTime()) {
+      
+      // For null ranges (All time)
+      if (!range && !startDate) {
         return value;
+      }
+      
+      // Compare dates properly to avoid timezone and millisecond issues
+      if (range?.from && range?.to && to) {
+        const fromMatches = Math.abs(range.from.getTime() - from.getTime()) < 1000; // within 1 second
+        const toMatches = Math.abs(range.to.getTime() - to.getTime()) < 1000;
+        
+        if (fromMatches && toMatches) {
+          return value;
+        }
       }
     }
 
@@ -111,19 +143,7 @@ export function DateFilter({
     }
   }, [customDate]);
 
-  const buttonLabel = useMemo(() => {
-    if (selectedPreset === "allTime") return "Created";
-
-    if (selectedPreset === "custom" && customDate?.from) {
-      return customDate.to
-        ? `${customDate.from.toLocaleDateString()} - ${customDate.to.toLocaleDateString()}`
-        : customDate.from.toLocaleDateString();
-    }
-
-    const preset = assertDefined(DATE_PRESETS.find((p) => p.value === selectedPreset));
-    return preset.label;
-  }, [selectedPreset, customDate]);
-
+  // Define handlePresetChange before using it
   const handlePresetChange = (presetValue: DatePresetValue) => {
     if (presetValue === "custom") {
       setShowCustomPicker(true);
@@ -136,6 +156,40 @@ export function DateFilter({
     const range = preset.getRange();
     onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
   };
+
+  // Add keyboard shortcut support
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      const key = e.key.toUpperCase();
+      const preset = DATE_PRESETS.find((p) => p.shortcut === key);
+      
+      if (preset) {
+        e.preventDefault();
+        handlePresetChange(preset.value);
+        if (preset.value !== "custom") {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isOpen, handlePresetChange]);
+
+  const buttonLabel = useMemo(() => {
+    if (selectedPreset === "allTime") return "Created";
+
+    if (selectedPreset === "custom" && customDate?.from) {
+      return customDate.to
+        ? `${customDate.from.toLocaleDateString()} - ${customDate.to.toLocaleDateString()}`
+        : customDate.from.toLocaleDateString();
+    }
+
+    const preset = assertDefined(DATE_PRESETS.find((p) => p.value === selectedPreset));
+    return preset.label;
+  }, [selectedPreset, customDate]);
 
   const handleCustomDateSelect = (date: DateRange | undefined) => {
     if (!date) {
@@ -154,7 +208,7 @@ export function DateFilter({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           data-testid="date-filter-button"
@@ -212,8 +266,10 @@ export function DateFilter({
                     event.preventDefault();
                   }
                 }}
+                className="flex items-center justify-between"
               >
-                {preset.label}
+                <span>{preset.label}</span>
+                <span className="text-xs text-muted-foreground ml-4">{preset.shortcut}</span>
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
