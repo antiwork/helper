@@ -486,3 +486,85 @@ test.describe("Working Conversation Management", () => {
     await expect(clearFiltersButton).toBeVisible();
   });
 });
+
+test.describe("Recent Searches Feature", () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate to conversations page
+    try {
+      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await page.waitForLoadState("networkidle", { timeout: 10000 });
+    } catch (error) {
+      console.log("Initial navigation failed, retrying...", error);
+      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
+    }
+  });
+
+  test("should populate search field when clicking on recent search", async ({ page }) => {
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
+
+    // Create a unique search term
+    const searchTerm = `clickable-search-${Date.now()}`;
+
+    // Perform and save a search
+    await searchInput.fill(searchTerm);
+    await page.waitForTimeout(1500); // Wait for save
+
+    // Clear and focus to see recent searches
+    await searchInput.clear();
+    await searchInput.blur();
+    await searchInput.click();
+    await page.waitForTimeout(500);
+
+    // Look for the recent search item and click it
+    const recentSearchItem = page.locator('div[class*="cursor-pointer"]').filter({
+      hasText: searchTerm,
+    });
+
+    await recentSearchItem.click();
+    await page.waitForTimeout(300);
+
+    // Verify the search input now contains the clicked term
+    await expect(searchInput).toHaveValue(searchTerm);
+  });
+
+  test("should delete recent searches with X button", async ({ page }) => {
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
+
+    // Create a unique search term for deletion test
+    const searchTerm = `deletable-search-${Date.now()}`;
+
+    // Perform and save a search
+    await searchInput.fill(searchTerm);
+    await page.waitForTimeout(1500); // Wait for save
+
+    // Clear and focus to see recent searches
+    await searchInput.clear();
+    await searchInput.blur();
+    await searchInput.click();
+    await page.waitForTimeout(500);
+
+    // Look for the recent search item
+    const recentSearchContainer = page
+      .locator('div[class*="group"]')
+      .filter({
+        hasText: searchTerm,
+      })
+      .first();
+
+    // Hover to reveal the delete button
+    await recentSearchContainer.hover();
+    await page.waitForTimeout(200);
+
+    // Click the X button (delete button)
+    const deleteButton = recentSearchContainer.locator('button[title="Remove search"]').first();
+    await deleteButton.click();
+    await page.waitForTimeout(500);
+
+    // Verify the search term is no longer in the dropdown
+    const deletedSearchItem = page.locator(`text="${searchTerm}"`);
+    await expect(deletedSearchItem).not.toBeVisible();
+  });
+});

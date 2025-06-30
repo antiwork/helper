@@ -694,6 +694,13 @@
       "when": 1750510579520,
       "tag": "0098_lean_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1751317543505,
+      "tag": "0099_graceful_kid_colt",
+      "breakpoints": true
     }
   ]
 }

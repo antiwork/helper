@@ -1,5 +1,5 @@
 import { capitalize } from "lodash-es";
-import { ArrowDownUp, Filter, Search } from "lucide-react";
+import { ArrowDownUp, Filter, Search, X } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -31,12 +31,26 @@ export const ConversationSearchBar = ({
   showFilters,
   setShowFilters,
 }: ConversationSearchBarProps) => {
+  const utils = api.useUtils();
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState(searchParams.search || "");
+  const [showRecentSearches, setShowRecentSearches] = useState(false);
 
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
+  const { data: recentSearches = [] } = api.mailbox.recentSearches.list.useQuery({ mailboxSlug: input.mailboxSlug });
+  const saveRecentSearchMutation = api.mailbox.recentSearches.save.useMutation({
+    onSuccess: () => {
+      utils.mailbox.recentSearches.list.invalidate({ mailboxSlug: input.mailboxSlug });
+    },
+  });
+  const deleteRecentSearchMutation = api.mailbox.recentSearches.delete.useMutation({
+    onSuccess: () => {
+      utils.mailbox.recentSearches.list.invalidate({ mailboxSlug: input.mailboxSlug });
+    },
+  });
 
   const status = openCount
     ? [
@@ -48,16 +62,74 @@ export const ConversationSearchBar = ({
 
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
+    if (val.trim()) {
+      saveRecentSearchMutation.mutate({
+        mailboxSlug: input.mailboxSlug,
+        searchTerm: val.trim(),
+      });
+    }
     searchInputRef.current?.focus();
   }, 300);
+
+  const debouncedSaveSearch = useDebouncedCallback((val: string) => {
+    if (val.trim()) {
+      saveRecentSearchMutation.mutate({
+        mailboxSlug: input.mailboxSlug,
+        searchTerm: val.trim(),
+      });
+    }
+  }, 1000);
 
   useEffect(() => {
     debouncedSetSearch(search);
   }, [search]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowRecentSearches(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useHotkeys("mod+k", () => {
     searchInputRef.current?.focus();
   });
+
+  const handleSearchFocus = useCallback(() => {
+    if (recentSearches.length > 0 && !search.trim()) {
+      setShowRecentSearches(true);
+    }
+  }, [recentSearches.length, search]);
+
+  const handleRecentSearchClick = useCallback(
+    (searchTerm: string) => {
+      setSearch(searchTerm);
+      setShowRecentSearches(false);
+      debouncedSaveSearch(searchTerm);
+    },
+    [debouncedSaveSearch],
+  );
+
+  const handleDeleteRecentSearch = useCallback(
+    (searchId: number, event: React.MouseEvent) => {
+      event.stopPropagation();
+      deleteRecentSearchMutation.mutate({
+        mailboxSlug: input.mailboxSlug,
+        searchId,
+      });
+    },
+    [deleteRecentSearchMutation, input.mailboxSlug],
+  );
+
+  const handleClearSearch = useCallback(() => {
+    setSearch("");
+    setShowRecentSearches(false);
+    searchInputRef.current?.focus();
+  }, []);
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
@@ -166,16 +238,56 @@ export const ConversationSearchBar = ({
           </button>
         )}
       </div>
-      <div className="flex-1 max-w-[400px] flex items-center gap-2">
-        <Input
-          ref={searchInputRef}
-          placeholder="Search conversations"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 h-10 rounded-full text-sm"
-          iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
-          autoFocus
-        />
+      <div className="flex-1 max-w-[400px] flex items-center gap-2 relative" ref={searchContainerRef}>
+        <div className="relative flex-1">
+          <Input
+            ref={searchInputRef}
+            placeholder="Search conversations"
+            value={search}
+            onChange={(e) => {
+              setShowRecentSearches(false);
+              setSearch(e.target.value);
+            }}
+            onFocus={handleSearchFocus}
+            className="flex-1 h-10 rounded-full text-sm pr-4"
+            iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
+            iconsSuffix={
+              search.trim() && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="p-1 hover:bg-muted rounded-sm transition-colors"
+                  title="Clear search"
+                >
+                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              )
+            }
+            autoFocus
+          />
+          {showRecentSearches && recentSearches.length > 0 && (
+            <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="py-1">
+                {recentSearches.map((recentSearch) => (
+                  <div
+                    key={recentSearch.id}
+                    className="flex items-center justify-between px-3 py-2 text-sm hover:bg-muted/50 cursor-pointer group"
+                    onClick={() => handleRecentSearchClick(recentSearch.searchTerm)}
+                  >
+                    <span className="flex-1 truncate">{recentSearch.searchTerm}</span>
+                    <button
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-sm transition-opacity"
+                      onClick={(e) => handleDeleteRecentSearch(recentSearch.id, e)}
+                      title="Remove search"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <Button
           data-testid="filter-toggle"
           type="button"
