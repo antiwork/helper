@@ -50,12 +50,9 @@ export const ConversationListItem = ({
 
   let highlightedSubject = escape(conversation.subject);
   let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
-  let shouldTruncate = true;
 
   if (searchTerms.length > 0 && bodyText) {
-    const originalText = bodyText;
     bodyText = createSearchSnippet(bodyText, searchTerms, maxBodyLength);
-    shouldTruncate = bodyText === originalText;
   }
 
   let highlightedBody = escape(bodyText);
@@ -151,10 +148,7 @@ export const ConversationListItem = ({
                 />
                 {highlightedBody && (
                   <p
-                    className={`text-muted-foreground max-w-4xl text-xs md:text-sm ${
-                      shouldTruncate ? "truncate" : "leading-relaxed"
-                    }`}
-                    style={shouldTruncate ? {} : { wordBreak: "break-word" }}
+                    className="text-muted-foreground max-w-4xl text-xs md:text-sm truncate"
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}

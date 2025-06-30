@@ -1,25 +1,20 @@
 /**
- * Creates a smart text snippet that shows context around matched search terms
- * Returns the original text if the match is early enough to be shown with normal truncation
+ * Creates a search snippet that shows context around matched search terms
+ * Uses a simplified approach: find match -> go back 25 chars -> find word break -> add ellipsis
  */
 export function createSearchSnippet(text: string, searchTerms: string[], maxLength = 150): string {
   if (!text || !searchTerms.length) {
     return text;
   }
 
-  if (maxLength <= 0) {
-    throw new Error("maxLength must be positive");
-  }
-
   const normalizedText = text.toLowerCase();
   let firstMatchIndex = -1;
-  let matchLength = 0;
 
+  // Find the first match
   for (const term of searchTerms) {
     const index = normalizedText.indexOf(term.toLowerCase());
     if (index !== -1 && (firstMatchIndex === -1 || index < firstMatchIndex)) {
       firstMatchIndex = index;
-      matchLength = term.length;
     }
   }
 
@@ -28,76 +23,24 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
     return text;
   }
 
-  // If match is early enough that normal truncation would show it, return original
-  if (firstMatchIndex + matchLength <= maxLength) {
-    return text;
-  }
-
-  // Handle edge case: if maxLength is too small, just return truncated text
-  if (maxLength <= 6) {
-    return text.substring(0, maxLength);
-  }
-
-  // Calculate snippet boundaries without pre-reserving ellipses space
-  let start: number;
-  let end: number;
-
-  // If match is very long, prioritize showing the beginning of the match
-  if (matchLength > maxLength - 6) {
-    start = firstMatchIndex;
-    end = Math.min(text.length, firstMatchIndex + maxLength - 6);
-  } else {
-    // Calculate context with generous space (we'll adjust for ellipses later)
-    const contextBefore = Math.floor((maxLength - matchLength) / 2);
-    const contextAfter = maxLength - matchLength - contextBefore;
-
-    start = Math.max(0, firstMatchIndex - contextBefore);
-    end = Math.min(text.length, firstMatchIndex + matchLength + contextAfter);
-  }
-
-  // Adjust to word boundaries if possible
-  if (start > 0) {
-    const wordStart = text.lastIndexOf(" ", start);
-    if (wordStart !== -1 && wordStart >= firstMatchIndex - Math.floor(maxLength / 2)) {
-      start = wordStart + 1;
+  // Go back 25 characters from the match
+  const contextStart = Math.max(0, firstMatchIndex - 25);
+  
+  // Find the nearest word break
+  let start = contextStart;
+  if (contextStart > 0) {
+    const wordBreak = text.indexOf(' ', contextStart);
+    if (wordBreak !== -1 && wordBreak < firstMatchIndex) {
+      start = wordBreak + 1;
     }
   }
 
-  if (end < text.length) {
-    const wordEnd = text.indexOf(" ", end);
-    if (wordEnd !== -1 && wordEnd <= firstMatchIndex + matchLength + Math.floor(maxLength / 2)) {
-      end = wordEnd;
-    }
-  }
-
-  // Extract base snippet
-  let snippet = text.substring(start, end);
-
-  // Add ellipses and ensure total length doesn't exceed maxLength
+  // Add start ellipsis if we're not at the beginning
   const needsStartEllipsis = start > 0;
-  const needsEndEllipsis = end < text.length;
-
-  if (needsStartEllipsis && needsEndEllipsis) {
-    // Need both ellipses (6 chars total)
-    if (snippet.length > maxLength - 6) {
-      snippet = snippet.substring(0, maxLength - 6);
-    }
-    snippet = `...${snippet}...`;
-  } else if (needsStartEllipsis) {
-    // Need only start ellipsis (3 chars)
-    if (snippet.length > maxLength - 3) {
-      snippet = snippet.substring(0, maxLength - 3);
-    }
-    snippet = `...${snippet}`;
-  } else if (needsEndEllipsis) {
-    // Need only end ellipsis (3 chars)
-    if (snippet.length > maxLength - 3) {
-      snippet = snippet.substring(0, maxLength - 3);
-    }
-    snippet = `${snippet}...`;
-  } else if (snippet.length > maxLength) {
-    // No ellipses needed, just truncate if necessary
-    snippet = snippet.substring(0, maxLength);
+  let snippet = text.substring(start);
+  
+  if (needsStartEllipsis) {
+    snippet = '...' + snippet;
   }
 
   return snippet;
