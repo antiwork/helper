@@ -56,7 +56,7 @@ const DATE_PRESETS = [
   {
     value: "last14days",
     label: "Last 14 days",
-    shortcut: "4",
+    shortcut: "1",
     getRange: () => ({ from: startOfDay(subDays(new Date(), 13)), to: endOfDay(new Date()) }),
   },
   {
