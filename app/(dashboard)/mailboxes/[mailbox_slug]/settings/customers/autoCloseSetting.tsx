@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
@@ -32,8 +32,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      toast({
-        title: "Error updating auto-close settings",
+      toast.error("Error updating auto-close settings", {
         description: error.message,
       });
     },
@@ -54,16 +53,13 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
 
   const { mutate: runAutoClose, isPending: isAutoClosePending } = api.mailbox.autoClose.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Auto-close triggered",
+      toast.success("Auto-close triggered", {
         description: "The auto-close job has been triggered successfully.",
       });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: error.message,
-        variant: "destructive",
       });
     },
   });

@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { toast } from "sonner";
 import SlackSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/slack.svg";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,10 +40,7 @@ export const SlackChannels = ({
         );
       } catch (e) {
         Sentry.captureException(e);
-        toast({
-          title: "Error fetching available channels",
-          variant: "destructive",
-        });
+        toast.error("Error fetching available channels");
       }
     };
 
@@ -98,10 +95,7 @@ export const SlackChannels = ({
             setAlertChannelName("");
           }
           if (!isValid) {
-            toast({
-              title: "Channel not found",
-              variant: "destructive",
-            });
+            toast.error("Channel not found");
           }
         }}
       />
@@ -124,10 +118,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
-      toast({
-        title: "Error updating Slack settings",
-        description: error.message,
-      });
+      toast.error("Error updating Slack settings", { description: error.message });
     },
   });
   useShowToastForSlackConnectStatus();
@@ -136,15 +127,9 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     try {
       await disconnectSlack({ mailboxSlug: mailbox.slug });
       setSlackConnected(false);
-      toast({
-        title: "Slack app uninstalled from your workspace",
-        variant: "success",
-      });
+      toast.success("Slack app uninstalled from your workspace");
     } catch (e) {
-      toast({
-        title: "Error disconnecting Slack",
-        variant: "destructive",
-      });
+      toast.error("Error disconnecting Slack");
     }
   };
 

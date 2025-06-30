@@ -2,7 +2,7 @@
 
 import { PlusCircle, X } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +21,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
 
   const { mutate: addMemberMutation, isPending: isAdding } = api.organization.addMember.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Team member added",
-        description: `${emailInput} can now log in`,
-        variant: "success",
-      });
+      toast.success("Team member added", { description: `${emailInput} can now log in` });
 
       setEmailInput("");
       setDisplayNameInput("");
@@ -33,11 +29,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       utils.mailbox.members.list.invalidate({ mailboxSlug });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to send invitation",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Failed to send invitation", { description: error.message });
     },
   });
 
@@ -49,11 +41,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      toast({
-        title: "Member already exists",
-        description: "This user is already in your organization",
-        variant: "destructive",
-      });
+      toast.error("Member already exists", { description: "This user is already in your organization" });
     } else {
       addMemberMutation({
         email: emailInput,

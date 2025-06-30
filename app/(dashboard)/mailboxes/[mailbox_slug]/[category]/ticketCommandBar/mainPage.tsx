@@ -10,9 +10,9 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";
-import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { api } from "@/trpc/react";
 import GitHubSvg from "../icons/github.svg";
@@ -39,10 +39,10 @@ export const useMainPage = ({
   const dismissToastRef = useRef<() => void>(() => {});
   const { mutate: generateDraft } = api.mailbox.conversations.generateDraft.useMutation({
     onMutate: () => {
-      dismissToastRef.current = toast({
-        title: "Generating draft...",
+      const toastId = toast("Generating draft...", {
         duration: 30_000,
-      }).dismiss;
+      });
+      dismissToastRef.current = () => toast.dismiss(toastId);
     },
     onSuccess: (draft) => {
       dismissToastRef.current?.();
@@ -51,18 +51,12 @@ export const useMainPage = ({
           data ? { ...data, draft } : data,
         );
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error generating draft",
-        });
+        toast.error("Error generating draft");
       }
     },
     onError: () => {
       dismissToastRef.current?.();
-      toast({
-        variant: "destructive",
-        title: "Error generating draft",
-      });
+      toast.error("Error generating draft");
     },
   });
 

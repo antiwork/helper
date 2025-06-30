@@ -1,8 +1,8 @@
 import { Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { FileUploadProvider, UploadStatus, useFileUpload } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,22 +60,14 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
 
     for (const file of files) {
       onUpload(file, { inline: false }).upload.catch((message: string | null) =>
-        toast({
-          title: message ?? `Failed to upload ${file.name}`,
-          variant: "destructive",
-        }),
+        toast.error(message ?? `Failed to upload ${file.name}`),
       );
     }
     event.target.value = "";
   };
 
   const retryUpload = (file: File) =>
-    onRetry(file).upload.catch((message: string | null) =>
-      toast({
-        title: message ?? `Failed to upload ${file.name}`,
-        variant: "destructive",
-      }),
-    );
+    onRetry(file).upload.catch((message: string | null) => toast.error(message ?? `Failed to upload ${file.name}`));
 
   return (
     <div className="flex-1 flex flex-col p-4">

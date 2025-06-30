@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   FAILED_ATTACHMENTS_TOOLTIP_MESSAGE,
   useSendDisabled,
@@ -7,7 +8,6 @@ import {
 import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
@@ -57,10 +57,8 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
   );
 
   const handleError = useCallback((error: string) => {
-    toast({
-      title: "Speech Recognition Error",
+    toast.error("Speech Recognition Error", {
       description: error,
-      variant: "destructive",
     });
   }, []);
 
@@ -79,18 +77,12 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     onMutate: () => setSending(true),
     onSuccess: () => {
       router.refresh();
-      toast({
-        title: "Message sent",
-        variant: "success",
-      });
+      toast.success("Message sent");
       onSubmit();
     },
     onError: (e) => {
       captureExceptionAndLog(e);
-      toast({
-        title: "Failed to create conversation",
-        variant: "destructive",
-      });
+      toast.error("Failed to create conversation");
     },
     onSettled: () => {
       setSending(false);
@@ -102,25 +94,15 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     stopRecording();
 
     const toEmailAddress = parseEmailAddress(newConversationInfo.to_email_address.trim())?.address;
-    if (!toEmailAddress)
-      return toast({
-        variant: "destructive",
-        title: 'Please enter a valid "To" email address',
-      });
+    if (!toEmailAddress) return toast.error('Please enter a valid "To" email address');
 
     const cc = parseEmailList(newConversationInfo.cc);
     if (!cc.success)
-      return toast({
-        variant: "destructive",
-        title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
-      });
+      return toast.error(`Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`);
 
     const bcc = parseEmailList(newConversationInfo.bcc);
     if (!bcc.success)
-      return toast({
-        variant: "destructive",
-        title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
-      });
+      return toast.error(`Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`);
 
     const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
       conversation_slug: conversationSlug,

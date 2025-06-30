@@ -1,7 +1,7 @@
 import { Frown } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import type { Message } from "@/app/types/global";
-import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,10 +19,8 @@ export const FlagAsBadAction = ({ message, conversationSlug, mailboxSlug }: Flag
   const utils = api.useUtils();
   const { mutateAsync: flagAsBad } = api.mailbox.conversations.messages.flagAsBad.useMutation({
     onError: (error) => {
-      toast({
-        title: "Error flagging message as bad",
+      toast.error(`Error flagging message as bad`, {
         description: error.message,
-        variant: "destructive",
       });
     },
   });
