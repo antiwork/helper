@@ -382,6 +382,17 @@ export const MessageActions = () => {
               </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
+                variant="outlined"
+                onClick={() => updateStatus("closed")}
+                disabled={conversation?.status === "closed"}
+              >
+                Close
+                {isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>
+                )}
+              </Button>
+              <Button
+                size={isAboveMd ? "default" : "sm"}
                 onClick={() => handleSend({ assign: false })}
                 disabled={sendDisabled}
               >
