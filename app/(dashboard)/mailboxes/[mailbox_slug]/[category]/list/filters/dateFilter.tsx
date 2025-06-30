@@ -56,7 +56,7 @@ const DATE_PRESETS = [
   {
     value: "last14days",
     label: "Last 14 days",
-    shortcut: "F",
+    shortcut: "4",
     getRange: () => ({ from: startOfDay(subDays(new Date(), 13)), to: endOfDay(new Date()) }),
   },
   {
@@ -118,7 +118,6 @@ export function DateFilter({
     for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
       const range = getRange();
-      if (!range && !startDate) return value;
       if (range?.from && range?.to && to) {
         const fromMatches = isSameDay(range.from, from);
         const toMatches = isSameDay(range.to, to);
