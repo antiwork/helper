@@ -387,9 +387,7 @@ export const MessageActions = () => {
                 disabled={conversation?.status === "closed"}
               >
                 Close
-                {isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>
-                )}
+                {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
               </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
