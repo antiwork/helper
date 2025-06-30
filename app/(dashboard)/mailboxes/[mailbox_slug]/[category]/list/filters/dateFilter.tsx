@@ -1,4 +1,16 @@
-import { endOfDay, endOfMonth, endOfQuarter, endOfYear, isSameDay, startOfDay, startOfMonth, startOfQuarter, startOfYear, subDays, subQuarters } from "date-fns";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
+  isSameDay,
+  startOfDay,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+  subDays,
+  subQuarters,
+} from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -105,24 +117,16 @@ export function DateFilter({
     for (const { value, getRange } of DATE_PRESETS) {
       if (value === "custom") continue;
       const range = getRange();
-      
-      // For null ranges (All time)
-      if (!range && !startDate) {
-        return value;
-      }
-      
-      // Compare dates properly to avoid timezone and millisecond issues
+      if (!range && !startDate) return value;
       if (range?.from && range?.to && to) {
-        const fromMatches = Math.abs(range.from.getTime() - from.getTime()) < 1000; // within 1 second
+        const fromMatches = Math.abs(range.from.getTime() - from.getTime()) < 1000;
         const toMatches = Math.abs(range.to.getTime() - to.getTime()) < 1000;
-        
         if (fromMatches && toMatches) {
           return value;
         }
       }
     }
 
-    // if no preset matches, default to "custom"
     return "custom";
   }, [startDate, endDate]);
 
@@ -137,14 +141,11 @@ export function DateFilter({
   }, [selectedPreset, startDate, endDate]);
 
   useEffect(() => {
-    // this is needed to prevent the custom picker from being shown
-    // when the user clears all filters
     if (!customDate?.from) {
       setShowCustomPicker(false);
     }
   }, [customDate]);
 
-  // Define handlePresetChange before using it
   const handlePresetChange = (presetValue: DatePresetValue) => {
     if (presetValue === "custom") {
       setShowCustomPicker(true);
@@ -158,23 +159,18 @@ export function DateFilter({
     onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
   };
 
-  // Add keyboard shortcut support - only when dropdown is focused
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Only handle shortcuts when focus is within our dropdown component
       const activeElement = document.activeElement;
-      
-      // Check if focus is within the dropdown component tree
-      const isFocusInDropdown = dropdownRef.current?.contains(activeElement) ||
-                               activeElement?.closest('[data-testid="date-filter-button"]');
-      
+      const isFocusInDropdown =
+        dropdownRef.current?.contains(activeElement) || activeElement?.closest('[data-testid="date-filter-button"]');
       if (!isFocusInDropdown) return;
 
       const key = e.key.toUpperCase();
       const preset = DATE_PRESETS.find((p) => p.shortcut === key);
-      
+
       if (preset) {
         e.preventDefault();
         e.stopPropagation();
@@ -222,71 +218,71 @@ export function DateFilter({
     <div ref={dropdownRef}>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
-        <Button
-          data-testid="date-filter-button"
-          variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"}
-          className="whitespace-nowrap"
-        >
-          <CalendarIcon className="h-4 w-4 mr-2" />
-          {buttonLabel}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-auto">
-        {showCustomPicker ? (
-          <div>
-            <Calendar
-              autoFocus
-              mode="range"
-              defaultMonth={customDate?.from}
-              selected={customDate}
-              onSelect={handleCustomDateSelect}
-              numberOfMonths={2}
-            />
-            <div className="flex justify-between p-2 border-t">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowCustomPicker(false);
-                }}
-              >
-                Back
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  clearFilter();
-                }}
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <DropdownMenuRadioGroup
-            value={selectedPreset}
-            onValueChange={(value) => handlePresetChange(value as DatePresetValue)}
-            className="flex flex-col"
+          <Button
+            data-testid="date-filter-button"
+            variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"}
+            className="whitespace-nowrap"
           >
-            {DATE_PRESETS.map((preset) => (
-              <DropdownMenuRadioItem
-                key={preset.value}
-                value={preset.value}
-                onSelect={(event) => {
-                  if (preset.value === "custom") {
-                    event.preventDefault();
-                  }
-                }}
-                className="flex items-center justify-between"
-              >
-                <span>{preset.label}</span>
-                <span className="text-xs text-muted-foreground ml-4">{preset.shortcut}</span>
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        )}
-      </DropdownMenuContent>
+            <CalendarIcon className="h-4 w-4 mr-2" />
+            {buttonLabel}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-auto">
+          {showCustomPicker ? (
+            <div>
+              <Calendar
+                autoFocus
+                mode="range"
+                defaultMonth={customDate?.from}
+                selected={customDate}
+                onSelect={handleCustomDateSelect}
+                numberOfMonths={2}
+              />
+              <div className="flex justify-between p-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowCustomPicker(false);
+                  }}
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    clearFilter();
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <DropdownMenuRadioGroup
+              value={selectedPreset}
+              onValueChange={(value) => handlePresetChange(value as DatePresetValue)}
+              className="flex flex-col"
+            >
+              {DATE_PRESETS.map((preset) => (
+                <DropdownMenuRadioItem
+                  key={preset.value}
+                  value={preset.value}
+                  onSelect={(event) => {
+                    if (preset.value === "custom") {
+                      event.preventDefault();
+                    }
+                  }}
+                  className="flex items-center justify-between"
+                >
+                  <span>{preset.label}</span>
+                  <span className="text-xs text-muted-foreground ml-4">{preset.shortcut}</span>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          )}
+        </DropdownMenuContent>
       </DropdownMenu>
     </div>
   );
