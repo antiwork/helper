@@ -68,16 +68,6 @@ export default function NotFound() {
                 />
               </div>
             </Link>
-            <Link href="/">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 sm:gap-2 min-h-10 px-3 sm:px-4 active:scale-95 transition-transform text-white hover:bg-white/10"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm">Back to Helper</span>
-              </Button>
-            </Link>
           </nav>
         </div>
       </header>
@@ -136,13 +126,6 @@ export default function NotFound() {
             Lost? Try our{" "}
             <Link href="/" className="text-orange-400 hover:underline font-medium active:opacity-70 transition-opacity">
               homepage
-            </Link>{" "}
-            or{" "}
-            <Link
-              href="/search"
-              className="text-orange-400 hover:underline font-medium active:opacity-70 transition-opacity"
-            >
-              search
             </Link>
           </p>
         </div>
