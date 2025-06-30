@@ -9,7 +9,7 @@ export const searchSchema = z.object({
       "Cursor to start paginating from. Set to null for the first page and use the nextCursor from the previous page.",
     ),
   limit: z.number().min(1).max(100).default(DEFAULT_CONVERSATIONS_PER_PAGE),
-  sort: z.enum(["newest", "oldest", "highest_value"]).catch("oldest").nullish(),
+  sort: z.enum(["newest", "oldest", "highest_value", "lowest_value"]).catch("oldest").nullish(),
   category: z.enum(["conversations", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
   search: z.string().nullish().describe("Search term to look for in tickets"),
   status: z.array(z.enum(["open", "closed", "spam"]).catch("open")).nullish(),

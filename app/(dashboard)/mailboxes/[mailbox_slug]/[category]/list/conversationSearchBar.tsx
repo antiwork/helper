@@ -12,7 +12,7 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 
 type StatusOption = "open" | "closed" | "spam";
-type SortOption = "oldest" | "newest" | "highest_value";
+type SortOption = "oldest" | "newest" | "highest_value" | "lowest_value";
 
 interface ConversationSearchBarProps {
   toggleAllConversations: () => void;
@@ -111,6 +111,11 @@ export const ConversationSearchBar = ({
             },
           ]
         : []),
+      {
+        value: `lowest_value` as const,
+        label: `Lowest Value`,
+        selected: searchParams.sort === "lowest_value",
+      },
       {
         value: `oldest` as const,
         label: `Oldest`,

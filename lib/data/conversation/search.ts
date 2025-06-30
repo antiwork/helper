@@ -142,6 +142,8 @@ export const searchConversations = async (
   const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox(mailbox));
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
+  } else if (metadataEnabled && filters.sort === "lowest_value") {
+    orderBy.unshift(sql`${platformCustomers.value} ASC NULLS LAST`);
   }
 
   const list = memoize(() =>

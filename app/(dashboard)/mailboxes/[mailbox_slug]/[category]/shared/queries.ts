@@ -8,7 +8,7 @@ export const useConversationsListInput = () => {
   }>();
   const [searchParams, setSearchParams] = useQueryStates({
     status: parseAsStringEnum(["open", "closed", "spam"] as const),
-    sort: parseAsStringEnum(["oldest", "newest", "highest_value"] as const),
+    sort: parseAsStringEnum(["oldest", "newest", "highest_value", "lowest_value"] as const),
     search: parseAsString,
     assignee: parseAsArrayOf(parseAsString),
     createdAfter: parseAsString,
