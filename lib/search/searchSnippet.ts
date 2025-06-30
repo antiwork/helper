@@ -3,7 +3,8 @@
  * Uses a simplified approach: find match -> go back 25 chars -> find word break -> add ellipsis
  */
 export function createSearchSnippet(text: string, searchTerms: string[], maxLength = 150): string {
-  if (!text || !searchTerms.length) {
+  // Input validation for robustness
+  if (!text || !searchTerms.length || maxLength <= 0) {
     return text;
   }
 
@@ -12,6 +13,8 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
 
   // Find the first match
   for (const term of searchTerms) {
+    // Skip empty search terms for better reliability
+    if (!term.trim()) continue;
     const index = normalizedText.indexOf(term.toLowerCase());
     if (index !== -1 && (firstMatchIndex === -1 || index < firstMatchIndex)) {
       firstMatchIndex = index;
@@ -26,11 +29,11 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
   // Go back 25 characters from the match
   const contextStart = Math.max(0, firstMatchIndex - 25);
 
-  // Find the nearest word break
+  // Find the nearest word break for better context preservation
   let start = contextStart;
   if (contextStart > 0) {
-    const wordBreak = text.indexOf(" ", contextStart);
-    if (wordBreak !== -1 && wordBreak < firstMatchIndex) {
+    const wordBreak = text.lastIndexOf(" ", contextStart);
+    if (wordBreak !== -1) {
       start = wordBreak + 1;
     }
   }
@@ -41,16 +44,19 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
 
   // Respect maxLength
   if (needsStartEllipsis) {
-    // Reserve 3 chars for start ellipsis
-    if (snippet.length > maxLength - 3) {
-      snippet = snippet.substring(0, maxLength - 3);
-    }
-    snippet = `...${snippet}`;
-  } else {
-    // No start ellipsis needed
-    if (snippet.length > maxLength) {
+    // Handle edge case: if maxLength is too small for ellipsis
+    if (maxLength <= 3) {
       snippet = snippet.substring(0, maxLength);
+    } else {
+      // Reserve 3 chars for start ellipsis
+      if (snippet.length > maxLength - 3) {
+        snippet = snippet.substring(0, maxLength - 3);
+      }
+      snippet = `...${snippet}`;
     }
+  } else if (snippet.length > maxLength) {
+    // No start ellipsis needed, just truncate if necessary
+    snippet = snippet.substring(0, maxLength);
   }
 
   return snippet;

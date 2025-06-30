@@ -59,7 +59,8 @@ export const ConversationListItem = ({
 
   if (searchTerms.length > 0) {
     highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
-    if (bodyText) {
+    // Only highlight body text if search terms were actually found in the message body
+    if (conversation.matchedMessageText) {
       highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
   }
