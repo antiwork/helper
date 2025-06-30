@@ -153,7 +153,7 @@ const ScrollToTopButton = ({
           className={cn(
             "absolute bottom-4 left-4 transition-all duration-200 h-8 w-8 p-0 rounded-full",
             "flex items-center justify-center",
-            "bg-background border border-border shadow-xs",
+            "bg-background border border-border shadow-xs cursor-pointer",
             "hover:border-primary hover:shadow-md hover:bg-muted",
             show ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none",
           )}
