@@ -32,6 +32,7 @@ interface FilterBaseProps<T extends FilterItem> {
   getItemValue?: (item: T) => string;
   singleSelectionDisplay?: (itemName: string) => string;
   multiSelectionDisplay?: (count: number) => string;
+  disableClientFiltering?: boolean;
 }
 
 export function FilterBase<T extends FilterItem>({
@@ -48,6 +49,7 @@ export function FilterBase<T extends FilterItem>({
   getItemValue = (item) => item.id,
   singleSelectionDisplay = (name) => name,
   multiSelectionDisplay = (count) => `${count} selected`,
+  disableClientFiltering = false,
 }: FilterBaseProps<T>) {
   const [open, setOpen] = useState(false);
   const [localSearchTerm, setLocalSearchTerm] = useState("");
@@ -55,8 +57,11 @@ export function FilterBase<T extends FilterItem>({
   const actualOnSearchChange = onSearchChange ?? setLocalSearchTerm;
 
   const filteredItems = useMemo(() => {
+    if (disableClientFiltering) {
+      return items;
+    }
     return items.filter((item) => item.displayName.toLowerCase().includes(actualSearchTerm.toLowerCase()));
-  }, [items, actualSearchTerm]);
+  }, [items, actualSearchTerm, disableClientFiltering]);
 
   const singleItemName =
     selectedItems.length === 1 ? items.find((item) => getItemValue(item) === selectedItems[0])?.displayName : undefined;

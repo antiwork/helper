@@ -48,6 +48,7 @@ export function CustomerFilter({
       getItemValue={(item) => item.displayName}
       singleSelectionDisplay={(email) => email}
       multiSelectionDisplay={(count) => `${count} customers`}
+      disableClientFiltering
     />
   );
 }
