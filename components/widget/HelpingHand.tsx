@@ -248,7 +248,7 @@ export default function HelpingHand({
       const data = await response.json();
       setGuideSessionId(data.sessionId);
       sessionIdRef.current = data.sessionId; // Immediately update ref
-      const steps = data.steps.map((step: string, index: number) => ({
+      const steps = data.steps.map((step: string) => ({
         description: step,
         completed: false,
       }));
@@ -257,7 +257,7 @@ export default function HelpingHand({
       setStatus("running");
       sendInitialPrompt({ resumed: false });
       sendStartGuide(data.sessionId);
-    } catch (error) {
+    } catch (_error) {
       setStatus("error");
     }
   };

@@ -134,9 +134,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     }),
   ]);
 
-  const messageInfos = await Promise.all(
-    messages.map((message) => serializeMessage(message, conversationId, mailbox, null)),
-  );
+  const messageInfos = await Promise.all(messages.map((message) => serializeMessage(message, conversationId, mailbox)));
 
   const noteInfos = await Promise.all(
     noteRecords.map(async (note) => ({
@@ -201,7 +199,6 @@ export const serializeMessage = async (
   },
   conversationId: number,
   mailbox: typeof mailboxes.$inferSelect,
-  user?: DbOrAuthUser | null,
 ) => {
   const messageFiles =
     message.files ??

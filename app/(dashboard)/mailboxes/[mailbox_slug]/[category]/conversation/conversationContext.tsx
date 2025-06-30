@@ -86,7 +86,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
         description: error.message,
       });
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_data, variables) => {
       utils.mailbox.conversations.get.invalidate({
         mailboxSlug,
         conversationSlug: variables.conversationSlug,

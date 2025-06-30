@@ -1,7 +1,5 @@
 import FileSaver from "file-saver";
 import {
-  ArrowLeft,
-  ArrowRight,
   ArrowUp,
   ChevronLeft,
   ChevronRight,

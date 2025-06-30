@@ -33,7 +33,7 @@ describe("generateConversationSummary", () => {
       role: "user",
       cleanedUpText: "My order number is 12345.",
     });
-    const { message } = await conversationMessagesFactory.create(conversation.id, {
+    await conversationMessagesFactory.create(conversation.id, {
       role: "staff",
       cleanedUpText: "Thank you. I see your order. What specific question do you have?",
     });
@@ -89,7 +89,7 @@ describe("generateConversationSummary", () => {
   it("does not generate a summary for conversations with 2 or fewer messages", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create(mailbox.id);
-    const { message } = await conversationMessagesFactory.create(conversation.id, {
+    await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "Test message",
     });

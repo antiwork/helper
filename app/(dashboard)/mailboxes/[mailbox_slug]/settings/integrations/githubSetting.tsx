@@ -119,7 +119,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
         title: "GitHub disconnected successfully",
         variant: "success",
       });
-    } catch (e) {
+    } catch (_e) {
       toast({
         title: "Error disconnecting GitHub",
         variant: "destructive",

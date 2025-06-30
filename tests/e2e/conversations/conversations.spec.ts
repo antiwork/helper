@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { ConversationsPage } from "../utils/page-objects/conversationsPage";
-import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot } from "../utils/test-helpers";
 
 // Use the working authentication
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -135,7 +135,7 @@ test.describe("Working Conversation Management", () => {
 
       if (totalCheckboxes > 0) {
         // Count currently checked checkboxes
-        const checkedBefore = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedBefore = await checkboxes.filter({ has: page.locator('[data-state="checked"]') }).count();
 
         // Click Select all button
         await selectAllButton.click();
@@ -144,7 +144,7 @@ test.describe("Working Conversation Management", () => {
         await page.waitForTimeout(500);
 
         // Verify all checkboxes are now checked
-        const checkedAfter = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedAfter = await checkboxes.filter({ has: page.locator('[data-state="checked"]') }).count();
         expect(checkedAfter).toBe(totalCheckboxes);
         expect(checkedAfter).toBeGreaterThan(checkedBefore);
 

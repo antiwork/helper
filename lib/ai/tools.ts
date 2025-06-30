@@ -1,5 +1,5 @@
 import { waitUntil } from "@vercel/functions";
-import { CoreMessage, tool, type Tool } from "ai";
+import { tool, type Tool } from "ai";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { triggerEvent } from "@/jobs/trigger";
@@ -13,7 +13,7 @@ import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
-const fetchUserInformation = async (email: string, mailboxSlug: string, reason: string) => {
+const fetchUserInformation = async (email: string, mailboxSlug: string) => {
   try {
     const metadata = await fetchMetadata(email, mailboxSlug);
     return metadata?.prompt;
@@ -169,7 +169,7 @@ export const buildTools = async (
       parameters: z.object({
         reason: z.string().describe("reason for fetching user information"),
       }),
-      execute: ({ reason }) => reasoningMiddleware(fetchUserInformation(email, mailbox.slug, reason)),
+      execute: () => reasoningMiddleware(fetchUserInformation(email, mailbox.slug)),
     });
   }
 

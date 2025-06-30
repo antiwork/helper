@@ -113,7 +113,7 @@ export default function Page() {
           const payload = jwtDecode<DecodedPayload>(content.sessionToken);
           setTheme(payload?.theme);
           setDefaultTitle(payload?.title ?? null);
-        } catch (error) {}
+        } catch (_error) {}
       } else if (action === "OPEN_CONVERSATION") {
         const { conversationSlug } = content;
         onSelectConversation(conversationSlug);

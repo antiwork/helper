@@ -18,7 +18,7 @@ type Props = {
   mailboxSlug: string;
 };
 
-export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailboxSlug }: Props) {
+export function CustomTimeRangePicker({ onSelect, className, selectedDate }: Props) {
   const [dateRange, setDateRange] = useState<DateRange>(
     selectedDate?.from && selectedDate?.to
       ? { from: selectedDate.from, to: selectedDate.to }

@@ -76,7 +76,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
       setRrwebEvents(formattedEvents);
       setIsReplayReady(true);
       setIsReplayLoading(false);
-    } catch (err) {
+    } catch (_err) {
       setReplayError("Failed to process replay data");
       setIsReplayLoading(false);
     }
@@ -108,7 +108,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             },
           });
         })
-        .catch((err) => {
+        .catch((_err) => {
           setReplayError("Failed to initialize replay player");
         });
     }
@@ -130,7 +130,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
       if (event.data) {
         details = JSON.stringify(eventData, null, 2);
       }
-    } catch (error) {
+    } catch (_error) {
       details = "Error parsing event data";
     }
 
