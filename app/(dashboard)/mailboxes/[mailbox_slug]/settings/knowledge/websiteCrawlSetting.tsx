@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,33 +36,35 @@ const WebsiteCrawlSetting = () => {
 
   const addWebsiteMutation = api.mailbox.websites.create.useMutation({
     onSuccess: () => {
-      showSuccessToast("Website added!");
+      toast.success("Website added!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
       setShowAddWebsite(false);
       setNewWebsite({ name: "", url: "" });
     },
-    onError: (error) => {
-      showErrorToast("Failed to add website", error);
+    onError: () => {
+      toast.error("Error adding website", { description: "Please try again later." });
     },
   });
 
   const deleteWebsiteMutation = api.mailbox.websites.delete.useMutation({
     onSuccess: () => {
-      showSuccessToast("Website deleted!");
+      toast.success("Website deleted!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: (error) => {
-      showErrorToast("Failed to delete website", error);
+    onError: () => {
+      toast.error("Error deleting website", { description: "Please try again later." });
     },
   });
 
   const triggerCrawlMutation = api.mailbox.websites.triggerCrawl.useMutation({
     onSuccess: () => {
-      showSuccessToast("Website scan started!", "The scan will run in the background. Check back later for results.");
+      toast.success("Website scan started!", {
+        description: "The scan will run in the background. Check back later for results.",
+      });
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: (error) => {
-      showErrorToast("Failed to start website scan", error);
+    onError: () => {
+      toast.error("Error starting website scan", { description: "Please try again later." });
     },
   });
 

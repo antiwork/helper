@@ -27,7 +27,9 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      showErrorToast("Failed to update auto-close settings", error);
+      toast.error("Error updating auto-close settings", {
+        description: error.message,
+      });
     },
   });
 
@@ -46,10 +48,14 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
 
   const { mutate: runAutoClose, isPending: isAutoClosePending } = api.mailbox.autoClose.useMutation({
     onSuccess: () => {
-      showSuccessToast("Auto-close triggered");
+      toast.success("Auto-close triggered", {
+        description: "The auto-close job has been triggered successfully.",
+      });
     },
     onError: (error) => {
-      showErrorToast("Failed to run auto-close", error);
+      toast.error("Error", {
+        description: error.message,
+      });
     },
   });
 

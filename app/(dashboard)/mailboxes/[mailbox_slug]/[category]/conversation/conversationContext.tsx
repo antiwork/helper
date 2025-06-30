@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext } from "react";
+import { toast } from "sonner";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import { toast } from "@/components/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
@@ -81,7 +80,9 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
         );
       }
 
-      showErrorToast("Failed to update conversation", error);
+      toast.error("Error updating conversation", {
+        description: error.message,
+      });
     },
     onSuccess: (_data, variables) => {
       utils.mailbox.conversations.get.invalidate({
@@ -102,35 +103,30 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
       await update({ status });
 
       if (status === "open") {
-        showSuccessToast("Conversation reopened");
+        toast.success("Conversation reopened");
       } else {
         removeConversation();
         if (status === "closed") {
-          showSuccessToast("Conversation closed");
+          toast.success("Conversation closed");
         }
       }
 
       if (status === "spam") {
         const undoStatus = previousStatus ?? "open";
-        toast({
-          title: "Marked as spam",
-          action: (
-            <ToastAction
-              altText="Undo"
-              onClick={async () => {
-                try {
-                  await update({ status: undoStatus });
-                  navigateToConversation(conversationSlug);
-                  showSuccessToast("No longer marked as spam");
-                } catch (e) {
-                  captureExceptionAndThrowIfDevelopment(e);
-                  showErrorToast("Failed to undo action");
-                }
-              }}
-            >
-              Undo
-            </ToastAction>
-          ),
+        toast.info("Marked as spam", {
+          action: {
+            label: "Undo",
+            onClick: async () => {
+              try {
+                await update({ status: undoStatus });
+                navigateToConversation(conversationSlug);
+                toast.success("No longer marked as spam");
+              } catch (e) {
+                captureExceptionAndThrowIfDevelopment(e);
+                toast.error("Failed to undo");
+              }
+            },
+          },
         });
       }
     },

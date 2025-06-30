@@ -3,6 +3,7 @@
 import { PlusCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,18 +45,18 @@ const KnowledgeBankSetting = () => {
       setShowNewFaqForm(false);
       setNewFaqContent("");
     },
-    onError: (error) => {
-      showErrorToast("Failed to create knowledge", error);
+    onError: () => {
+      toast.error("Error creating knowledge");
     },
   });
 
   const deleteMutation = api.mailbox.faqs.delete.useMutation({
     onSuccess: () => {
-      showSuccessToast("Knowledge deleted!");
+      toast.success("Knowledge deleted!");
       utils.mailbox.faqs.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: (error) => {
-      showErrorToast("Failed to delete knowledge", error);
+    onError: () => {
+      toast.error("Error deleting knowledge");
     },
   });
 

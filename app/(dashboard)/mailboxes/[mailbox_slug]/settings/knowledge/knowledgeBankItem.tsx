@@ -2,6 +2,7 @@ import { truncate } from "lodash-es";
 import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sooner";
 import type { FAQ } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Badge } from "@/components/ui/badge";
@@ -104,7 +105,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       setEditingContent(null);
     },
     onError: () => {
-      showErrorToast("Failed to update knowledge");
+      toast.error("Error updating knowledge");
     },
   });
 
@@ -113,7 +114,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      showErrorToast("Failed to update knowledge");
+      toast.error("Error updating knowledge");
     },
   });
 
@@ -122,7 +123,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      showErrorToast("Failed to update knowledge");
+      toast.error("Error updating knowledge");
     },
   });
 

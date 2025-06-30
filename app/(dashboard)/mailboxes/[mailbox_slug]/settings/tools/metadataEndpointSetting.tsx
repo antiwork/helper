@@ -4,10 +4,10 @@ import cx from "classnames";
 import { ExternalLink, PlusCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import type { MetadataEndpoint } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { getMarketingSiteUrl } from "@/components/constants";
-import { toast } from "@/components/hooks/use-toast";
 import { SecretInput } from "@/components/secretInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,22 +55,13 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
     try {
       const result = await createEndpointMutation({ mailboxSlug, url: newUrl });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Metadata endpoint added!",
-      });
-    } catch (error) {
-      captureExceptionAndLog(error);
-      toast({
-        variant: "destructive",
-        title: "Error adding metadata endpoint",
-      });
+      toast.success("Metadata endpoint added!");
+    } catch (e) {
+      toast.error("Error adding metadata endpoint");
     } finally {
       setIsLoading(false);
     }
@@ -81,23 +72,14 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
     try {
       const result = await deleteEndpointMutation({ mailboxSlug });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       setNewUrl("");
       router.refresh();
-      toast({
-        title: "Metadata endpoint removed!",
-      });
-    } catch (error) {
-      captureExceptionAndLog(error);
-      toast({
-        variant: "destructive",
-        title: "Error removing metadata endpoint",
-      });
+      toast.success("Metadata endpoint removed!");
+    } catch (e) {
+      toast.error("Error removing metadata endpoint");
     } finally {
       setIsLoading(false);
     }
@@ -108,23 +90,14 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
     try {
       const { data: result } = await testEndpointQuery();
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: result.error,
-        });
+        toast.error(result.error);
         setTestRequestStatus("error");
         return;
       }
-      toast({
-        title: "Test request succeeded!",
-      });
+      toast.success("Test request succeeded!");
       setTestRequestStatus("success");
-    } catch (error) {
-      captureExceptionAndLog(error);
-      toast({
-        variant: "destructive",
-        title: "Error sending test request",
-      });
+    } catch (e) {
+      toast.error("Error sending test request");
       setTestRequestStatus("error");
     } finally {
       setTimeout(() => setTestRequestStatus("idle"), 3000);

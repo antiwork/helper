@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
@@ -83,7 +84,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     },
     onError: (error) => {
       displayNameSaving.setState("error");
-      showErrorToast("Failed to update display name", error);
+      toast.error("Failed to update display name", { description: error.message });
       setDisplayNameInput(member.displayName || "");
     },
   });
@@ -99,7 +100,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     },
     onError: (error) => {
       roleSaving.setState("error");
-      showErrorToast("Failed to update role", error);
+      toast.error("Failed to update role", { description: error.message });
       setRole(member.role);
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
@@ -117,7 +118,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     },
     onError: (error) => {
       keywordsSaving.setState("error");
-      showErrorToast("Failed to update keywords", error);
+      toast.error("Failed to update keywords", { description: error.message });
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
     },

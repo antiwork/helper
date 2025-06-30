@@ -3,6 +3,7 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
@@ -45,8 +46,8 @@ export const List = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
-    onError: (error) => {
-      showErrorToast("Failed to update conversations", error);
+    onError: () => {
+      toast.error("Failed to update conversations");
     },
   });
 
@@ -111,9 +112,9 @@ export const List = () => {
                 : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
 
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-              showSuccessToast(`${ticketsText} ${actionText}`);
+              toast(`${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`);
             } else {
-              showSuccessToast("Starting update, refresh to see status.");
+              toast("Starting update, refresh to see status.");
             }
           },
         },

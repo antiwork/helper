@@ -1,7 +1,7 @@
 import { Lightbulb, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -58,39 +58,44 @@ export const GenerateKnowledgeBankDialog = ({
           setOriginalContent(existingEntry?.content || "");
         }
       } else {
-        toast({
-          title: "No knowledge entry needed",
+        toast.info("No knowledge entry needed", {
           description: data.reason,
         });
         onOpenChange(false);
       }
     },
     onError: (error) => {
-      showErrorToast("Failed to generate suggestion", error);
+      toast.error("Error generating suggestion", {
+        description: error.message,
+      });
     },
   });
 
   const createKnowledgeMutation = api.mailbox.faqs.create.useMutation({
     onSuccess: () => {
-      showSuccessToast("Knowledge bank entry created!");
+      toast.success("Knowledge bank entry created!");
       utils.mailbox.faqs.list.invalidate();
       onOpenChange(false);
       resetState();
     },
     onError: (error) => {
-      showErrorToast("Failed to create knowledge entry", error);
+      toast.error("Error creating knowledge entry", {
+        description: error.message,
+      });
     },
   });
 
   const updateKnowledgeMutation = api.mailbox.faqs.update.useMutation({
     onSuccess: () => {
-      showSuccessToast("Knowledge bank entry updated!");
+      toast.success("Knowledge bank entry updated!");
       utils.mailbox.faqs.list.invalidate();
       onOpenChange(false);
       resetState();
     },
     onError: (error) => {
-      showErrorToast("Failed to update knowledge entry", error);
+      toast.error("Error updating knowledge entry", {
+        description: error.message,
+      });
     },
   });
 
@@ -124,7 +129,9 @@ export const GenerateKnowledgeBankDialog = ({
 
   const handleSave = () => {
     if (!editedContent.trim()) {
-      showErrorToast("Content required", "Please enter content for the knowledge bank entry");
+      toast.error("Content required", {
+        description: "Please enter content for the knowledge bank entry",
+      });
       return;
     }
 

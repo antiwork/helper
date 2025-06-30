@@ -2,6 +2,7 @@
 
 import { PlusCircle, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +24,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
 
   const { mutate: addMemberMutation, isPending: isAdding } = api.organization.addMember.useMutation({
     onSuccess: () => {
-      showSuccessToast("Team member added", `${emailInput} can now log in`);
+      toast.success("Team member added", { description: `${emailInput} can now log in` });
 
       setEmailInput("");
       setDisplayNameInput("");
@@ -32,7 +33,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       utils.mailbox.members.list.invalidate({ mailboxSlug });
     },
     onError: (error) => {
-      showErrorToast("Failed to send invitation", error);
+      toast.error("Failed to send invitation", { description: error.message });
     },
   });
 
@@ -44,7 +45,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      showErrorToast("Member already exists", "This user is already in your organization");
+      toast.error("Member already exists", { description: "This user is already in your organization" });
     } else {
       addMemberMutation({
         email: emailInput,

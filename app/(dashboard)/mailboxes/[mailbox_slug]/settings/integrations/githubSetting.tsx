@@ -1,9 +1,9 @@
 import { useRouter } from "next/navigation";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
+import { toast } from "sonner";
 import GitHubSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/github.svg";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,7 +31,9 @@ const GitHubRepositories = ({
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
-      showErrorToast("Failed to update GitHub settings", error);
+      toast.error("Error updating GitHub settings", {
+        description: error.message,
+      });
     },
   });
 
@@ -44,12 +46,9 @@ const GitHubRepositories = ({
             mailboxSlug: mailbox.slug,
           }),
         );
-      } catch (error) {
-        captureExceptionAndLog(error);
-        toast({
-          title: "Error fetching available repositories",
-          variant: "destructive",
-        });
+      } catch (e) {
+        Sentry.captureException(e);
+        toast.error("Error fetching available repositories");
       } finally {
         setIsLoading(false);
       }
@@ -95,10 +94,10 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
 
   useEffect(() => {
     if (githubConnectResult === "success") {
-      showSuccessToast("GitHub connected successfully");
+      toast.success("GitHub connected successfully");
       setGithubConnectResult(null);
     } else if (githubConnectResult === "error") {
-      showErrorToast("Failed to connect GitHub");
+      toast.error("Failed to connect GitHub");
       setGithubConnectResult(null);
     }
   }, [githubConnectResult, router, setGithubConnectResult]);
@@ -107,16 +106,9 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
     try {
       await disconnectGitHub({ mailboxSlug: mailbox.slug });
       setGitHubConnected(false);
-      toast({
-        title: "GitHub disconnected successfully",
-        variant: "success",
-      });
-    } catch (error) {
-      captureExceptionAndLog(error);
-      toast({
-        title: "Error disconnecting GitHub",
-        variant: "destructive",
-      });
+      toast.success("GitHub disconnected successfully");
+    } catch (e) {
+      toast.error("Error disconnecting GitHub");
     }
   };
 
