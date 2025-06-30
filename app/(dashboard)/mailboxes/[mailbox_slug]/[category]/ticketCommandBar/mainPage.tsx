@@ -15,10 +15,10 @@ import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slu
 import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";
 import { toast } from "@/components/hooks/use-toast";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import GitHubSvg from "../icons/github.svg";
 import { CommandGroup } from "./types";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type MainPageProps = {
   onOpenChange: (open: boolean) => void;
@@ -117,7 +117,11 @@ export const useMainPage = ({
           },
         );
       } catch (error) {
-        captureExceptionAndLog("Failed to insert saved reply content:", error);
+        captureExceptionAndLog("Failed to insert saved reply content", {
+          extra: {
+            error,
+          },
+        });
         toast({
           variant: "destructive",
           title: "Failed to insert saved reply",

@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import type { HelperWidgetConfig } from "../types";
 import { ClientHelperProvider } from "./ClientHelperProvider";
