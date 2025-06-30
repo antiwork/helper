@@ -140,7 +140,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
           )}
         />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           {savedReply && onDelete ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -161,11 +161,9 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          ) : (
-            <div />
-          )}
+          ) : null}
 
-          <div className="flex items-center space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
             <Button type="button" variant="outlined" onClick={onCancel}>
               Cancel
             </Button>

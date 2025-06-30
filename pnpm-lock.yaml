@@ -205,9 +205,6 @@ importers:
       date-fns-tz:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@3.6.0)
-      dompurify:
-        specifier: ^3.2.6
-        version: 3.2.6
       drizzle-orm:
         specifier: ^0.38.3
         version: 0.38.4(@opentelemetry/api@1.9.0)(@types/pg@8.11.14)(@types/react@19.1.2)(better-sqlite3@11.9.1)(pg@8.15.6)(postgres@3.4.5)(react@19.1.0)
@@ -10893,6 +10890,7 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-hotkeys-hook@5.1.0:
     resolution: {integrity: sha512-GCNGXjBzV9buOS3REoQFmSmE4WTvBhYQ0YrAeeMZI83bhXg3dRWsLHXDutcVDdEjwJqJCxk5iewWYX5LtFUd7g==}
     peerDependencies:
@@ -24323,6 +24321,7 @@ snapshots:
   react-hook-form@7.58.1(react@19.1.0):
     dependencies:
       react: 19.1.0
+
   react-hotkeys-hook@5.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0

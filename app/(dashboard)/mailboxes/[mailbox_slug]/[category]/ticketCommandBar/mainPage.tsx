@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import {
   CornerUpLeft as ArrowUturnLeftIcon,
   CornerRightUp as ArrowUturnUpIcon,
@@ -19,6 +18,7 @@ import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { api } from "@/trpc/react";
 import GitHubSvg from "../icons/github.svg";
 import { CommandGroup } from "./types";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type MainPageProps = {
   onOpenChange: (open: boolean) => void;
@@ -112,12 +112,12 @@ export const useMainPage = ({
           {
             onError: (error) => {
               // Log tracking error but don't show to user since content was inserted successfully
-              console.error("Failed to track saved reply usage:", error);
+              captureExceptionAndLog("Failed to track saved reply usage:", error);
             },
           },
         );
       } catch (error) {
-        console.error("Failed to insert saved reply content:", error);
+        captureExceptionAndLog("Failed to insert saved reply content:", error);
         toast({
           variant: "destructive",
           title: "Failed to insert saved reply",
