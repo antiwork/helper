@@ -1,5 +1,5 @@
 import { Check, LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface FilterItem {
   id: string;
@@ -53,7 +54,9 @@ export function FilterBase<T extends FilterItem>({
   const actualSearchTerm = searchTerm ?? localSearchTerm;
   const actualOnSearchChange = onSearchChange ?? setLocalSearchTerm;
 
-  const filteredItems = items.filter((item) => item.displayName.toLowerCase().includes(actualSearchTerm.toLowerCase()));
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => item.displayName.toLowerCase().includes(actualSearchTerm.toLowerCase()));
+  }, [items, actualSearchTerm]);
 
   const singleItemName =
     selectedItems.length === 1 ? items.find((item) => getItemValue(item) === selectedItems[0])?.displayName : undefined;
@@ -103,9 +106,10 @@ export function FilterBase<T extends FilterItem>({
                           }}
                         >
                           <Check
-                            className={`mr-2 h-4 w-4 ${
-                              selectedItems.includes(itemValue) ? "opacity-100" : "opacity-0"
-                            }`}
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedItems.includes(itemValue) ? "opacity-100" : "opacity-0",
+                            )}
                           />
                           <span className="truncate">{item.displayName}</span>
                         </CommandItem>
