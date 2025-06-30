@@ -47,6 +47,11 @@ export const List = () => {
   const conversations = conversationListData?.conversations ?? [];
   const defaultSort = conversationListData?.defaultSort;
 
+  const isFiltered = activeFilterCount > 0 || !!input.search;
+  const { data: countData } = api.mailbox.conversations.count.useQuery(input, {
+    enabled: isFiltered,
+  });
+
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -257,6 +262,11 @@ export const List = () => {
               onClearFilters={clearFilters}
               activeFilterCount={activeFilterCount}
             />
+          )}
+          {isFiltered && countData && countData.total > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {countData.total} result{countData.total === 1 ? "" : "s"} found
+            </div>
           )}
         </div>
       </div>
