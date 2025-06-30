@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,19 +24,12 @@ const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
 
   const importMutation = api.mailbox.tools.import.useMutation({
     onSuccess: () => {
-      toast({
-        title: "API imported successfully",
-        variant: "success",
-      });
+      toast.success("API imported successfully");
       utils.mailbox.tools.list.invalidate({ mailboxSlug });
       onCancel();
     },
     onError: (error) => {
-      toast({
-        title: "Failed to import API",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Failed to import API", { description: error.message });
     },
   });
 
@@ -46,18 +39,12 @@ const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
 
   const handleImport = async () => {
     if (!apiKey) {
-      toast({
-        title: "API key is required",
-        variant: "destructive",
-      });
+      toast.error("API key is required");
       return;
     }
 
     if (!apiName) {
-      toast({
-        title: "API name is required",
-        variant: "destructive",
-      });
+      toast.error("API name is required");
       return;
     }
 

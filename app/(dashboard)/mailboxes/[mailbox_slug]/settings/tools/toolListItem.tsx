@@ -2,7 +2,7 @@
 
 import { Settings } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
       );
     },
     onError: (error) => {
-      toast({ variant: "destructive", title: "Error updating tool", description: error.message });
+      toast.error("Error updating tool", { description: error.message });
     },
   });
 

@@ -1,11 +1,11 @@
 import { CornerUpLeft, DollarSign, ExternalLink, Mail } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
+import { toast } from "sonner";
 import { AssignPopoverButton } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/assignPopoverButton";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { Conversation } from "@/app/types/global";
-import { toast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { SimilarityCircle } from "@/components/similarityCircle";
@@ -145,17 +145,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
           {conversation.emailFrom && (
             <CopyToClipboard
               text={conversation.emailFrom ?? ""}
-              onCopy={(_, success) =>
-                success
-                  ? toast({
-                      variant: "success",
-                      title: "Copied!",
-                    })
-                  : toast({
-                      variant: "destructive",
-                      title: "Failed to copy to clipboard",
-                    })
-              }
+              onCopy={(_, success) => (success ? toast.success("Copied!") : toast.error("Failed to copy to clipboard"))}
             >
               <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2">
                 <Mail className="h-4 w-4" />

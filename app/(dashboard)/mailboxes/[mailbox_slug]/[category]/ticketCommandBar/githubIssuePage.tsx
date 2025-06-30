@@ -1,6 +1,6 @@
 import { Check, ExternalLinkIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -74,10 +74,8 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
   const handleCreateIssue = async () => {
     if (!mailbox?.githubConnected || !mailbox.githubRepoOwner || !mailbox.githubRepoName) {
-      toast({
-        title: "GitHub repository not configured",
+      toast.error("GitHub repository not configured", {
         description: "Please configure a GitHub repository in the mailbox settings.",
-        variant: "destructive",
       });
       return;
     }
@@ -90,14 +88,12 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         body,
       });
 
-      toast({
-        title: "GitHub issue created",
+      toast.success("GitHub issue created", {
         description: (
           <a href={result.issueUrl} target="_blank" rel="noopener noreferrer" className="underline">
             View issue #{result.issueNumber}
           </a>
         ),
-        variant: "success",
       });
       onOpenChange(false);
 
@@ -105,20 +101,16 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         refetchConversation();
       }, 500);
     } catch (error) {
-      toast({
-        title: "Failed to create GitHub issue",
+      toast.error("Failed to create GitHub issue", {
         description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
       });
     }
   };
 
   const handleLinkIssue = async () => {
     if (!selectedIssueNumber) {
-      toast({
-        title: "No issue selected",
+      toast.error("No issue selected", {
         description: "Please select an issue to link",
-        variant: "destructive",
       });
       return;
     }
@@ -130,14 +122,12 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         issueNumber: selectedIssueNumber,
       });
 
-      toast({
-        title: "GitHub issue linked",
+      toast.success("GitHub issue linked", {
         description: (
           <a href={result.issueUrl} target="_blank" rel="noopener noreferrer" className="underline">
             View issue #{result.issueNumber}
           </a>
         ),
-        variant: "success",
       });
       onOpenChange(false);
 
@@ -145,10 +135,8 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         refetchConversation();
       }, 500);
     } catch (error) {
-      toast({
-        title: "Failed to link GitHub issue",
+      toast.error("Failed to link GitHub issue", {
         description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
       });
     }
   };

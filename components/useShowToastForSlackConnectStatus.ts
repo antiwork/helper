@@ -1,6 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 
 const useShowToastForSlackConnectStatus = () => {
   const router = useRouter();
@@ -11,15 +11,9 @@ const useShowToastForSlackConnectStatus = () => {
     if (!slackConnectResult) return;
 
     if (slackConnectResult === "success") {
-      toast({
-        title: "Slack successfully connected. Your teammates can now sign in.",
-        variant: "success",
-      });
+      toast.success("Slack successfully connected. Your teammates can now sign in.");
     } else if (slackConnectResult === "error") {
-      toast({
-        title: "Failed to connect Slack, please try again",
-        variant: "destructive",
-      });
+      toast.error("Failed to connect Slack, please try again");
     }
 
     url.searchParams.delete("slackConnectResult");

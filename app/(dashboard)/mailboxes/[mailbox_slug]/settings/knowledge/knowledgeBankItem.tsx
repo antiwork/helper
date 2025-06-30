@@ -2,9 +2,9 @@ import { truncate } from "lodash-es";
 import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sooner";
 import type { FAQ } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -105,7 +105,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       setEditingContent(null);
     },
     onError: () => {
-      toast({ title: "Error updating knowledge", variant: "destructive" });
+      toast.error("Error updating knowledge");
     },
   });
 
@@ -114,7 +114,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      toast({ title: "Error updating knowledge", variant: "destructive" });
+      toast.error("Error updating knowledge");
     },
   });
 
@@ -123,7 +123,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      toast({ title: "Error updating knowledge", variant: "destructive" });
+      toast.error("Error updating knowledge");
     },
   });
 

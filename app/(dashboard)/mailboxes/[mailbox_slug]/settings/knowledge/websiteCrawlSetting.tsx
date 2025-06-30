@@ -4,8 +4,8 @@ import { format } from "date-fns";
 import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,55 +34,35 @@ const WebsiteCrawlSetting = () => {
 
   const addWebsiteMutation = api.mailbox.websites.create.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Website added!",
-        variant: "success",
-      });
+      toast.success("Website added!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
       setShowAddWebsite(false);
       setNewWebsite({ name: "", url: "" });
     },
     onError: () => {
-      toast({
-        title: "Error adding website",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("Error adding website", { description: "Please try again later." });
     },
   });
 
   const deleteWebsiteMutation = api.mailbox.websites.delete.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Website deleted!",
-        variant: "success",
-      });
+      toast.success("Website deleted!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
     onError: () => {
-      toast({
-        title: "Error deleting website",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("Error deleting website", { description: "Please try again later." });
     },
   });
 
   const triggerCrawlMutation = api.mailbox.websites.triggerCrawl.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Website scan started!",
+      toast.success("Website scan started!", {
         description: "The scan will run in the background. Check back later for results.",
-        variant: "success",
       });
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
     onError: () => {
-      toast({
-        title: "Error starting website scan",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("Error starting website scan", { description: "Please try again later." });
     },
   });
 

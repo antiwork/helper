@@ -1,7 +1,7 @@
+import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/shared/queries";
-import { toast } from "@/components/hooks/use-toast";
 import { api } from "@/trpc/react";
 
 export const useAssignTicket = () => {
@@ -31,13 +31,13 @@ export const useAssignTicket = () => {
         })),
       };
     });
-    toast({
-      title: assignedToAI
+    toast(
+      assignedToAI
         ? "Assigned to Helper agent"
         : assignedTo
           ? `Assigned ${assignedTo.displayName}`
           : "Unassigned ticket",
-    });
+    );
     if (
       (input.category === "mine" && assignedToId !== conversationListData?.assignedToIds?.[0]) ||
       (input.category === "unassigned" && assignedToId) ||

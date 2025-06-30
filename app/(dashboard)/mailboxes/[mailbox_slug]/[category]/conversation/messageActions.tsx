@@ -1,6 +1,7 @@
 import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
@@ -8,13 +9,11 @@ import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
-import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
-import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
@@ -160,10 +159,8 @@ export const MessageActions = () => {
   }, []);
 
   const handleError = useCallback((error: string) => {
-    toast({
-      title: "Speech Recognition Error",
+    toast.error(`Speech Recognition Error`, {
       description: error,
-      variant: "destructive",
     });
   }, []);
 
@@ -220,17 +217,11 @@ export const MessageActions = () => {
     try {
       const cc = parseEmailList(draftedEmail.cc);
       if (!cc.success)
-        return toast({
-          variant: "destructive",
-          title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
-        });
+        return toast.error(`Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`);
 
       const bcc = parseEmailList(draftedEmail.bcc);
       if (!bcc.success)
-        return toast({
-          variant: "destructive",
-          title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
-        });
+        return toast.error(`Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`);
 
       const conversationSlug = conversation.slug;
 
@@ -280,9 +271,7 @@ export const MessageActions = () => {
           if (!assign) shouldTriggerConfetti = true;
         } catch (error) {
           captureExceptionAndLog(error);
-          toast({
-            variant: "destructive",
-            title: "Message sent but failed to close conversation",
+          toast.error("Message sent but failed to close conversation", {
             description: "The message was sent successfully, but there was an error closing the conversation.",
           });
         }
@@ -291,33 +280,32 @@ export const MessageActions = () => {
       if (shouldTriggerConfetti) {
         triggerMailboxConfetti();
       }
-      toast({
+      toast.success(close ? "Replied and closed" : "Message sent!", {
         duration: 10000,
-        title: close ? "Replied and closed" : "Message sent!",
-        variant: "success",
         description: (
           <div className="flex gap-2 items-center">
+            {/* TODO: button styles */}
             {close && (
-              <ToastAction
-                altText="Visit"
+              <button
+                className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90"
                 onClick={() => {
                   navigateToConversation(conversation.slug);
                 }}
               >
                 Visit
-              </ToastAction>
+              </button>
             )}
-            <ToastAction
-              altText="Generate knowledge bank entry"
+            <button
+              className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90"
               onClick={() => {
                 setLastSentMessageId(emailId);
                 setShowKnowledgeBankDialog(true);
               }}
             >
               Generate knowledge
-            </ToastAction>
-            <ToastAction
-              altText="Undo"
+            </button>
+            <button
+              className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90"
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
@@ -326,16 +314,10 @@ export const MessageActions = () => {
                     emailId,
                   });
                   setUndoneEmail(originalDraftedEmail);
-                  toast({
-                    title: "Message unsent",
-                    variant: "success",
-                  });
+                  toast.success("Message unsent");
                 } catch (e) {
                   captureExceptionAndLog(e);
-                  toast({
-                    variant: "destructive",
-                    title: "Failed to unsend email",
-                  });
+                  toast.error("Failed to unsend email");
                 } finally {
                   utils.mailbox.conversations.get.invalidate({ mailboxSlug, conversationSlug });
                   navigateToConversation(conversation.slug);
@@ -343,16 +325,13 @@ export const MessageActions = () => {
               }}
             >
               Undo
-            </ToastAction>
+            </button>
           </div>
         ),
       });
     } catch (error) {
       captureExceptionAndLog(error);
-      toast({
-        variant: "destructive",
-        title: "Error submitting message",
-      });
+      toast.error("Error submitting message");
     } finally {
       setSending(false);
     }

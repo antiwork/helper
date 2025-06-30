@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Input } from "@/components/ui/input";
@@ -23,10 +23,7 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      toast({
-        title: "Error updating preferences",
-        description: error.message,
-      });
+      toast.error("Error updating preferences", { description: error.message });
     },
   });
 

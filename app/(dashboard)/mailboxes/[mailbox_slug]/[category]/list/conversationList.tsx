@@ -2,8 +2,8 @@ import { Send } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
-import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -37,10 +37,7 @@ export const List = () => {
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Failed to update conversations",
-      });
+      toast.error("Failed to update conversations");
     },
   });
 
@@ -98,11 +95,9 @@ export const List = () => {
 
             if (updatedImmediately) {
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-              toast({
-                title: `${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`,
-              });
+              toast(`${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`);
             } else {
-              toast({ title: "Starting update, refresh to see status." });
+              toast("Starting update, refresh to see status.");
             }
           },
         },

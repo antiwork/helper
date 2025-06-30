@@ -2,7 +2,7 @@
 
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -19,10 +19,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error fetching APIs",
-        variant: "destructive",
-      });
+      toast.error("Error fetching APIs");
     }
   }, [error]);
 
