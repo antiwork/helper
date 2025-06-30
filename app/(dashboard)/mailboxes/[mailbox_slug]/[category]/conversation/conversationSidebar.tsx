@@ -5,7 +5,7 @@ import { AssignPopoverButton } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { Conversation } from "@/app/types/global";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { SimilarityCircle } from "@/components/similarityCircle";

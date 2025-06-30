@@ -1,10 +1,10 @@
 import { Camera, Mic } from "lucide-react";
 import * as motion from "motion/react-client";
 import { useCallback, useEffect, useState } from "react";
-import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSpeechRecognition } from "@/components/useSpeechRecognition";
 import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
 import { useScreenshotStore } from "@/components/widget/widgetState";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";

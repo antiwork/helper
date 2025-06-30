@@ -3,9 +3,9 @@
 import { mapValues } from "lodash-es";
 import { useEffect, useState } from "react";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
-import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 import { SavingIndicator } from "@/components/savingIndicator";
+import { useSavingIndicator } from "@/components/ui/useSavingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";

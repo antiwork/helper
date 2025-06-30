@@ -1,7 +1,7 @@
 import { Frown } from "lucide-react";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

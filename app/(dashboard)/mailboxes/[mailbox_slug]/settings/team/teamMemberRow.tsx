@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { useSavingIndicator } from "@/components/ui/useSavingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";

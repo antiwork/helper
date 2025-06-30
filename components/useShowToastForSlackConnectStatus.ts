@@ -1,6 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 
 const useShowToastForSlackConnectStatus = () => {
   const router = useRouter();

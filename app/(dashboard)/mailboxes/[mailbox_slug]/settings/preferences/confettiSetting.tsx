@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { triggerConfetti } from "@/components/confetti";
-import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
+import { useSavingIndicator } from "@/components/ui/useSavingIndicator";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SwitchSectionWrapper } from "../sectionWrapper";

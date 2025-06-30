@@ -7,14 +7,14 @@ import {
 import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
-import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
-import { toast } from "@/components/hooks/useToast";
+import { toast } from "@/components/hooks/use-toast";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSpeechRecognition } from "@/components/useSpeechRecognition";
 import { parseEmailList } from "@/components/utils/email";
 import { parseEmailAddress } from "@/lib/emails";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
