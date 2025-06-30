@@ -25,22 +25,32 @@ export function createSearchSnippet(text: string, searchTerms: string[], maxLeng
 
   // Go back 25 characters from the match
   const contextStart = Math.max(0, firstMatchIndex - 25);
-  
+
   // Find the nearest word break
   let start = contextStart;
   if (contextStart > 0) {
-    const wordBreak = text.indexOf(' ', contextStart);
+    const wordBreak = text.indexOf(" ", contextStart);
     if (wordBreak !== -1 && wordBreak < firstMatchIndex) {
       start = wordBreak + 1;
     }
   }
 
-  // Add start ellipsis if we're not at the beginning
+  // Extract snippet respecting maxLength
   const needsStartEllipsis = start > 0;
   let snippet = text.substring(start);
-  
+
+  // Respect maxLength
   if (needsStartEllipsis) {
-    snippet = '...' + snippet;
+    // Reserve 3 chars for start ellipsis
+    if (snippet.length > maxLength - 3) {
+      snippet = snippet.substring(0, maxLength - 3);
+    }
+    snippet = `...${snippet}`;
+  } else {
+    // No start ellipsis needed
+    if (snippet.length > maxLength) {
+      snippet = snippet.substring(0, maxLength);
+    }
   }
 
   return snippet;
