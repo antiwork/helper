@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
@@ -31,7 +31,7 @@ type TeamMemberRowProps = {
   mailboxSlug: string;
 };
 
-const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
+const TeamMemberRowComponent = ({ member, mailboxSlug }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
@@ -253,5 +253,19 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     </TableRow>
   );
 };
+
+const TeamMemberRow = memo(TeamMemberRowComponent, (prevProps, nextProps) => {
+  // Only re-render if member data has changed
+  return (
+    prevProps.member.id === nextProps.member.id &&
+    prevProps.member.displayName === nextProps.member.displayName &&
+    prevProps.member.email === nextProps.member.email &&
+    prevProps.member.role === nextProps.member.role &&
+    JSON.stringify(prevProps.member.keywords) === JSON.stringify(nextProps.member.keywords) &&
+    prevProps.mailboxSlug === nextProps.mailboxSlug
+  );
+});
+
+TeamMemberRow.displayName = 'TeamMemberRow';
 
 export default TeamMemberRow;

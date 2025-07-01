@@ -1,6 +1,6 @@
 import { escape } from "lodash-es";
 import { Bot, User } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem as ConversationListItemType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -24,7 +24,7 @@ type ConversationListItemProps = {
   onToggleSelect: (isSelected: boolean, shiftKey: boolean) => void;
 };
 
-export const ConversationListItem = ({
+const ConversationListItemComponent = ({
   conversation,
   isActive,
   onSelectConversation,
@@ -151,6 +151,28 @@ export const ConversationListItem = ({
     </div>
   );
 };
+
+export const ConversationListItem = memo(ConversationListItemComponent, (prevProps, nextProps) => {
+  // Only re-render if essential props have changed
+  return (
+    prevProps.conversation.slug === nextProps.conversation.slug &&
+    prevProps.conversation.subject === nextProps.conversation.subject &&
+    prevProps.conversation.recentMessageText === nextProps.conversation.recentMessageText &&
+    prevProps.conversation.matchedMessageText === nextProps.conversation.matchedMessageText &&
+    prevProps.conversation.updatedAt === nextProps.conversation.updatedAt &&
+    prevProps.conversation.status === nextProps.conversation.status &&
+    prevProps.conversation.priority === nextProps.conversation.priority &&
+    prevProps.conversation.assignedToId === nextProps.conversation.assignedToId &&
+    prevProps.conversation.assignedToAI === nextProps.conversation.assignedToAI &&
+    prevProps.conversation.emailFrom === nextProps.conversation.emailFrom &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.onSelectConversation === nextProps.onSelectConversation &&
+    prevProps.onToggleSelect === nextProps.onToggleSelect
+  );
+});
+
+ConversationListItem.displayName = 'ConversationListItem';
 
 const AssignedToLabel = ({
   assignedToId,

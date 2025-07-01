@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { useMemo, useState, type JSX } from "react";
+import { memo, useMemo, useState, type JSX } from "react";
 import type { AttachedFile, Conversation, Message as MessageType, Note as NoteType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
@@ -41,7 +41,7 @@ const hasReasoningMetadata = (metadata: any): metadata is { reasoning: string } 
   return metadata && typeof metadata.reasoning === "string";
 };
 
-const MessageItem = ({
+const MessageItemComponent = ({
   mailboxSlug,
   conversation,
   message,
@@ -380,5 +380,21 @@ const MessageItem = ({
     </div>
   );
 };
+
+const MessageItem = memo(MessageItemComponent, (prevProps, nextProps) => {
+  // Only re-render if message content or key props have changed
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.body === nextProps.message.body &&
+    prevProps.message.createdAt === nextProps.message.createdAt &&
+    prevProps.message.flags === nextProps.message.flags &&
+    prevProps.message.files?.length === nextProps.message.files?.length &&
+    prevProps.conversation.slug === nextProps.conversation.slug &&
+    prevProps.mailboxSlug === nextProps.mailboxSlug &&
+    JSON.stringify(prevProps.message.files) === JSON.stringify(nextProps.message.files)
+  );
+});
+
+MessageItem.displayName = 'MessageItem';
 
 export default MessageItem;
