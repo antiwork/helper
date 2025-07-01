@@ -14,6 +14,7 @@ type ConversationListContextType = {
   mailboxSlug: string;
   conversationListData: RouterOutputs["mailbox"]["conversations"]["list"] | null;
   isPending: boolean;
+  isFetching: boolean;
   isFetchingNextPage: boolean;
   hasNextPage: boolean;
   currentIndex: number;
