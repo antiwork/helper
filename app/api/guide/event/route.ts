@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { createApiHandler } from "@/app/api/route-handler";
+import { corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
 import { createGuideSessionEvent, updateGuideSession } from "@/lib/data/guide";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 const eventSchema = z.object({
   type: z.enum(guideSessionEventTypeEnum.enumValues),
@@ -13,23 +13,24 @@ const eventSchema = z.object({
   data: z.record(z.string(), z.unknown()),
 });
 
+const requestSchema = z.object({
+  sessionId: z.string().min(1),
+  events: z.array(z.any()),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  isRecording: z.boolean().optional(),
+});
+
 export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  try {
-    const authResult = await authenticateWidget(request);
-    if (!authResult.success) {
-      return corsResponse({ error: authResult.error }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { sessionId, events, metadata, isRecording } = body;
-
-    if (!sessionId || !events?.length) {
-      return corsResponse({ error: "Missing required parameters" }, { status: 400 });
-    }
+export const POST = createApiHandler(
+  async (
+    context: { params?: Record<string, string>; mailbox: any; session: any },
+    validatedBody: z.infer<typeof requestSchema>,
+  ) => {
+    const { sessionId, events, metadata, isRecording } = validatedBody;
+    const { mailbox } = context;
 
     const guideSession = assertDefined(
       await db.query.guideSessions.findFirst({
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       }),
     );
 
-    if (guideSession.mailboxId !== authResult.mailbox.id) {
+    if (guideSession.mailboxId !== mailbox.id) {
       return corsResponse({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -77,8 +78,9 @@ export async function POST(request: Request) {
     }
 
     return corsResponse({ success: true, eventsReceived: events.length });
-  } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
-    return corsResponse({ error: "Failed to process events" }, { status: 500 });
-  }
-}
+  },
+  {
+    requiresAuth: true,
+    requestSchema,
+  },
+);
