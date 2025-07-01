@@ -1,6 +1,6 @@
 {
-  "id": "2950a685-938a-4a5f-9823-d0c5b015db75",
-  "prevId": "a65c6b50-8b38-48aa-bc86-d821ca8a5a1a",
+  "id": "a65c6b50-8b38-48aa-bc86-d821ca8a5a1a",
+  "prevId": "ebcc2c4b-268d-48fa-8f5a-45e081f30b95",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3802,7 +3802,7 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": true
+      "isRLSEnabled": false
     }
   },
   "enums": {
