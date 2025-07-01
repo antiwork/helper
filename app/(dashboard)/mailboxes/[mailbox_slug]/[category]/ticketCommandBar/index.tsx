@@ -36,7 +36,10 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
   const pageRef = useRef<string>("main");
-  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam" | "reopen"; open: boolean } | null>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    type: "close" | "spam" | "reopen";
+    open: boolean;
+  } | null>(null);
   const { user: currentUser } = useSession() ?? {};
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -157,10 +160,14 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedItemId(visibleItems[0]?.id ?? null);
   }, [inputValue]);
 
-  useKeyboardShortcut("/", (e) => {
-    e.preventDefault();
-    inputRef.current?.focus();
-  }, { enableInDialog: true });
+  useKeyboardShortcut(
+    "/",
+    (e) => {
+      e.preventDefault();
+      inputRef.current?.focus();
+    },
+    { enableInDialog: true },
+  );
 
   const handleSelect = (itemId: string) => {
     const selectedItem = visibleItems.find((item) => item.id === itemId);
@@ -302,8 +309,8 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
               {confirmationDialog?.type === "close"
                 ? "Are you sure you want to close this ticket?"
                 : confirmationDialog?.type === "spam"
-                ? "Are you sure you want to mark this ticket as spam?"
-                : "Are you sure you want to reopen this ticket?"}
+                  ? "Are you sure you want to mark this ticket as spam?"
+                  : "Are you sure you want to reopen this ticket?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -314,8 +321,8 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
               {confirmationDialog?.type === "close"
                 ? "Yes, close"
                 : confirmationDialog?.type === "spam"
-                ? "Yes, mark as spam"
-                : "Yes, reopen"}
+                  ? "Yes, mark as spam"
+                  : "Yes, reopen"}
             </Button>
           </DialogFooter>
         </DialogContent>

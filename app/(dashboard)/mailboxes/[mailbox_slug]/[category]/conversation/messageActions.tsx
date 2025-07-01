@@ -76,7 +76,10 @@ export const MessageActions = () => {
     },
   });
 
-  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam" | "reopen"; open: boolean } | null>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    type: "close" | "spam" | "reopen";
+    open: boolean;
+  } | null>(null);
 
   const handleCloseTicket = () => {
     setConfirmationDialog({ type: "close", open: true });
@@ -505,8 +508,8 @@ export const MessageActions = () => {
               {confirmationDialog?.type === "close"
                 ? "Are you sure you want to close this ticket?"
                 : confirmationDialog?.type === "spam"
-                ? "Are you sure you want to mark this ticket as spam?"
-                : "Are you sure you want to reopen this ticket?"}
+                  ? "Are you sure you want to mark this ticket as spam?"
+                  : "Are you sure you want to reopen this ticket?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -517,8 +520,8 @@ export const MessageActions = () => {
               {confirmationDialog?.type === "close"
                 ? "Yes, close"
                 : confirmationDialog?.type === "spam"
-                ? "Yes, mark as spam"
-                : "Yes, reopen"}
+                  ? "Yes, mark as spam"
+                  : "Yes, reopen"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -118,26 +118,38 @@ export const useMainPage = ({
     setSelectedItemId(null);
   });
 
-  useKeyboardShortcut("c", (e) => {
-    e.preventDefault();
-    if (conversation?.status !== "closed" && conversation?.status !== "spam") {
-      handleCloseTicket();
-    }
-  }, { enableInDialog: true });
+  useKeyboardShortcut(
+    "c",
+    (e) => {
+      e.preventDefault();
+      if (conversation?.status !== "closed" && conversation?.status !== "spam") {
+        handleCloseTicket();
+      }
+    },
+    { enableInDialog: true },
+  );
 
-  useKeyboardShortcut("s", (e) => {
-    e.preventDefault();
-    if (conversation?.status !== "spam") {
-      handleMarkAsSpam();
-    }
-  }, { enableInDialog: true });
+  useKeyboardShortcut(
+    "s",
+    (e) => {
+      e.preventDefault();
+      if (conversation?.status !== "spam") {
+        handleMarkAsSpam();
+      }
+    },
+    { enableInDialog: true },
+  );
 
-  useKeyboardShortcut("z", (e) => {
-    e.preventDefault();
-    if (conversation?.status === "closed" || conversation?.status === "spam") {
-      handleReopenTicket();
-    }
-  }, { enableInDialog: true });
+  useKeyboardShortcut(
+    "z",
+    (e) => {
+      e.preventDefault();
+      if (conversation?.status === "closed" || conversation?.status === "spam") {
+        handleReopenTicket();
+      }
+    },
+    { enableInDialog: true },
+  );
 
   const mainCommandGroups = useMemo(
     () => [
@@ -249,7 +261,16 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, handleCloseTicket, handleMarkAsSpam, handleReopenTicket],
+    [
+      onOpenChange,
+      conversation,
+      tools?.suggested,
+      onToggleCc,
+      isGitHubConnected,
+      handleCloseTicket,
+      handleMarkAsSpam,
+      handleReopenTicket,
+    ],
   );
 
   return mainCommandGroups;
