@@ -1,9 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "@/components/hooks/use-toast";
+import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
+import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
 type SavedReply = {
@@ -36,6 +38,34 @@ interface SavedReplyFormProps {
 }
 
 export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, onDelete }: SavedReplyFormProps) {
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+  
+  const contentMemoized = useMemo(() => ({ content: savedReply?.content || "" }), [savedReply?.content]);
+  
+  const handleSegment = useCallback((segment: string) => {
+    if (editorRef.current?.editor) {
+      editorRef.current.editor.commands.insertContent(segment);
+    }
+  }, []);
+
+  const handleError = useCallback((error: string) => {
+    toast({
+      title: "Speech Recognition Error",
+      description: error,
+      variant: "destructive",
+    });
+  }, []);
+
+  const {
+    isSupported: isRecordingSupported,
+    isRecording,
+    startRecording,
+    stopRecording,
+  } = useSpeechRecognition({
+    onSegment: handleSegment,
+    onError: handleError,
+  });
+
   const form = useForm({
     resolver: zodResolver(
       z.object({
@@ -129,10 +159,18 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea
+                <TipTapEditor
+                  ref={editorRef}
+                  ariaLabel="Saved reply content"
                   placeholder="Enter your saved reply content here..."
-                  className="min-h-32 resize-none"
-                  {...field}
+                  defaultContent={contentMemoized}
+                  onUpdate={(content, isEmpty) => field.onChange(isEmpty ? "" : content)}
+                  enableImageUpload={false}
+                  enableFileUpload={false}
+                  isRecordingSupported={isRecordingSupported}
+                  isRecording={isRecording}
+                  startRecording={startRecording}
+                  stopRecording={stopRecording}
                 />
               </FormControl>
               <FormMessage />
