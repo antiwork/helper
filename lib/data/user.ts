@@ -119,7 +119,7 @@ export const updateUserMailboxData = async (
   if (updateError) throw updateError;
   if (!updatedUser) throw new Error("Failed to update user");
 
-  await db
+  const [updatedProfile] = await db
     .update(userProfiles)
     .set({
       displayName: updates.displayName,
@@ -128,15 +128,16 @@ export const updateUserMailboxData = async (
         keywords: updates.keywords || [],
       },
     })
-    .where(eq(userProfiles.id, updatedUser.id));
+    .where(eq(userProfiles.id, updatedUser.id))
+    .returning();
 
   return {
     id: updatedUser.id,
     displayName: getFullName(updatedUser),
     email: updatedUser.email ?? undefined,
-    role: updatedMailboxData.role || "afk",
-    keywords: updatedMailboxData.keywords || [],
-    permissions: updatedMailboxData.permissions,
+    role: updatedProfile?.access?.role || "afk",
+    keywords: updatedProfile?.access?.keywords || [],
+    permissions: updatedProfile?.permissions ?? "",
   };
 };
 
