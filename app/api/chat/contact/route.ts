@@ -1,11 +1,11 @@
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { createApiHandler } from "@/app/api/route-handler";
+import { corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { triggerEvent } from "@/jobs/trigger";
 import { createConversation, generateConversationSubject } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const requestSchema = z.object({
   email: z.string().email(),
@@ -16,64 +16,55 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  const body = await request.json();
-  const result = requestSchema.safeParse(body);
+async function handler(
+  request: Request,
+  context: { params?: Record<string, string>; mailbox: any; session: any },
+  validatedBody: z.infer<typeof requestSchema>,
+) {
+  const { email, message } = validatedBody;
+  const { mailbox } = context;
 
-  if (!result.success) {
-    return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
-  }
-
-  const { email, message } = result.data;
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { mailbox } = authResult;
-
-  try {
-    const result = await db.transaction(async (tx) => {
-      const newConversation = await createConversation(
-        {
-          emailFrom: email,
-          mailboxId: mailbox.id,
-          subject: "Contact Form Submission",
-          status: "open",
-          source: "form",
-          assignedToAI: true,
-          isPrompt: false,
-          isVisitor: false,
-        },
-        tx,
-      );
-
-      const userMessage = await createConversationMessage(
-        {
-          conversationId: newConversation.id,
-          emailFrom: email,
-          body: message,
-          role: "user",
-          status: "sent",
-          isPerfect: false,
-          isFlaggedAsBad: false,
-        },
-        tx,
-      );
-
-      return { newConversation, userMessage };
-    });
-
-    waitUntil(
-      generateConversationSubject(result.newConversation.id, [{ role: "user", content: message, id: "temp" }], mailbox),
+  const result = await db.transaction(async (tx) => {
+    const newConversation = await createConversation(
+      {
+        emailFrom: email,
+        mailboxId: mailbox.id,
+        subject: "Contact Form Submission",
+        status: "open",
+        source: "form",
+        assignedToAI: true,
+        isPrompt: false,
+        isVisitor: false,
+      },
+      tx,
     );
 
-    waitUntil(triggerEvent("conversations/auto-response.create", { messageId: result.userMessage.id }));
+    const userMessage = await createConversationMessage(
+      {
+        conversationId: newConversation.id,
+        emailFrom: email,
+        body: message,
+        role: "user",
+        status: "sent",
+        isPerfect: false,
+        isFlaggedAsBad: false,
+      },
+      tx,
+    );
 
-    return corsResponse({ success: true, conversationSlug: result.newConversation.slug });
-  } catch (error) {
-    captureExceptionAndLog(error);
-    return corsResponse({ error: "Failed to send message" }, { status: 500 });
-  }
+    return { newConversation, userMessage };
+  });
+
+  waitUntil(
+    generateConversationSubject(result.newConversation.id, [{ role: "user", content: message, id: "temp" }], mailbox),
+  );
+
+  waitUntil(triggerEvent("conversations/auto-response.create", { messageId: result.userMessage.id }));
+
+  return corsResponse({ success: true, conversationSlug: result.newConversation.slug });
 }
+
+export const POST = createApiHandler(handler, {
+  requiresAuth: true,
+  requestSchema,
+});
