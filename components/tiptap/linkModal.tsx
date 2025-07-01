@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";
 
@@ -9,9 +10,19 @@ type LinkModalProps = {
   setLinkModalOpen: (open: boolean) => void;
   setLinkData: (data: { url: string; text: string }) => void;
   setLink: () => void;
+  position?: { top: number; left: number };
+  zIndex?: number;
 };
 
-const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, setLink }: LinkModalProps) => {
+const LinkModal = ({
+  isLinkModalOpen,
+  linkData,
+  setLinkData,
+  setLinkModalOpen,
+  setLink,
+  position,
+  zIndex,
+}: LinkModalProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useOnOutsideClick([containerRef], () => setLinkModalOpen(false));
@@ -26,10 +37,17 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
 
   const isValid = linkData.url && /^https?:\/\//.test(linkData.url);
 
-  return (
+  const modal = (
     <div
       ref={containerRef}
       className="flex w-full sm:w-96 flex-col gap-2 rounded-lg border border-border bg-background p-4 shadow-lg"
+      style={{
+        position: position ? "absolute" : undefined,
+        top: position?.top,
+        left: position?.left,
+        zIndex: zIndex ?? 9999,
+        minWidth: 320,
+      }}
     >
       <div className="relative flex items-center">
         <Input
@@ -73,6 +91,11 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
       </button>
     </div>
   );
+
+  if (position) {
+    return createPortal(modal, document.body);
+  }
+  return modal;
 };
 
 export default LinkModal;

@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/react";
 import { ALargeSmall, Mic, Minus, MinusIcon, RemoveFormatting } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ToolbarFile from "@/components/tiptap/icons/file.svg";
 import { imageFileTypes } from "@/components/tiptap/image";
 import LinkModal from "@/components/tiptap/linkModal";
@@ -48,6 +48,8 @@ const Toolbar = ({
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
   const [linkData, setLinkData] = useState({ url: "", text: "" });
   const [activeLinkElement, setActiveLinkElement] = useState<HTMLElement | null>(null);
+  const [linkIconPosition, setLinkIconPosition] = useState<{ top: number; left: number } | null>(null);
+  const linkButtonRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => setLinkData({ url: "", text: "" }), [editor]);
   const toggleLinkModal = (open: boolean) => {
     if (!open) return setLinkModalOpen(false);
@@ -67,6 +69,13 @@ const Toolbar = ({
       setLinkData({ url: linkMark.href || "", text: label });
     } else {
       setLinkData({ url: "", text: label });
+    }
+    if (linkButtonRef.current) {
+      const rect = linkButtonRef.current.getBoundingClientRect();
+      setLinkIconPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX + rect.width / 2 - 160,
+      });
     }
     setLinkModalOpen(true);
   };
@@ -200,6 +209,7 @@ const Toolbar = ({
           </button>
           <button
             type="button"
+            ref={linkButtonRef}
             onClick={() => toggleLinkModal(true)}
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
           >
@@ -213,16 +223,16 @@ const Toolbar = ({
           >
             <RemoveFormatting className="w-4 h-4" />
           </button>
-          {isLinkModalOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-2">
-              <LinkModal
-                isLinkModalOpen={isLinkModalOpen}
-                linkData={linkData}
-                setLinkData={setLinkData}
-                setLinkModalOpen={setLinkModalOpen}
-                setLink={setLink}
-              />
-            </div>
+          {isLinkModalOpen && linkIconPosition && (
+            <LinkModal
+              isLinkModalOpen={isLinkModalOpen}
+              linkData={linkData}
+              setLinkData={setLinkData}
+              setLinkModalOpen={setLinkModalOpen}
+              setLink={setLink}
+              position={linkIconPosition}
+              zIndex={9999}
+            />
           )}
           {enableImageUpload && (
             <label htmlFor={imageFieldId} className={`${baseToolbarStyles} cursor-pointer`}>
