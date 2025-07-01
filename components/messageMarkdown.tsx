@@ -1,4 +1,7 @@
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import { Pluggable } from "unified";
 
 const rehypeAddWbrAfterSlash = () => {
   return (tree: any) => {
@@ -125,14 +128,40 @@ interface MessageMarkdownProps {
   children: string | null;
   className?: string;
   components?: any;
+  allowHtml?: boolean;
 }
 
-export default function MessageMarkdown({ children, className, components }: MessageMarkdownProps) {
+const createSanitizeSchema = (allowHtml: boolean) => {
+  if (!allowHtml) {
+    return {
+      tagNames: [],
+      attributes: {},
+    };
+  }
+
+  return {
+    ...defaultSchema,
+    tagNames: [...(defaultSchema.tagNames || []), "wbr"],
+    attributes: {
+      ...defaultSchema.attributes,
+      "*": [...(defaultSchema.attributes?.["*"] || []), "className", "style"],
+    },
+  };
+};
+
+export default function MessageMarkdown({ children, className, components, allowHtml = true }: MessageMarkdownProps) {
+  const sanitizeSchema = createSanitizeSchema(allowHtml);
+
+  const rehypePlugins: Pluggable[] = [rehypeRaw, rehypeAddWbrAfterSlash];
+  if (allowHtml) {
+    rehypePlugins.push([rehypeSanitize, sanitizeSchema]);
+  }
+
   return (
     <ReactMarkdown
       className={className}
       remarkPlugins={[remarkAutolink]}
-      rehypePlugins={[rehypeAddWbrAfterSlash]}
+      rehypePlugins={rehypePlugins}
       components={{
         a: ({ children, ...props }: any) => (
           <a target="_blank" rel="noopener noreferrer" {...props}>
