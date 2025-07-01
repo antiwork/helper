@@ -17,24 +17,6 @@ interface ApiHandlerOptions<TBodySchema extends z.ZodSchema = z.ZodSchema> {
   requestSchema?: TBodySchema;
 }
 
-export function createApiHandler<TBodySchema extends z.ZodSchema>(
-  handler: (
-    req: NextRequest,
-    context: { params?: Record<string, string> },
-    validatedBody: z.infer<TBodySchema>,
-  ) => Promise<NextResponse | Response>,
-  options: ApiHandlerOptions<TBodySchema> & { requiresAuth?: false },
-): (req: NextRequest, context: { params?: Record<string, string> }) => Promise<NextResponse | Response>;
-
-export function createApiHandler<TBodySchema extends z.ZodSchema>(
-  handler: (
-    req: NextRequest,
-    context: AuthenticatedRequestContext,
-    validatedBody: z.infer<TBodySchema>,
-  ) => Promise<NextResponse | Response>,
-  options: ApiHandlerOptions<TBodySchema> & { requiresAuth: true },
-): (req: NextRequest, context: { params?: Record<string, string> }) => Promise<NextResponse | Response>;
-
 export function createApiHandler<TBodySchema extends z.ZodSchema = z.ZodSchema>(
   handler: (
     req: NextRequest,
