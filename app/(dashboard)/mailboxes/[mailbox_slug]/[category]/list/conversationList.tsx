@@ -95,6 +95,8 @@ export const List = () => {
             clearSelectedConversations();
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
+            void utils.mailbox.openCount.invalidate();
+            void utils.mailbox.statusCounts.invalidate();
 
             if (updatedImmediately) {
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";

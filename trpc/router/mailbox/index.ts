@@ -63,6 +63,59 @@ export const mailboxRouter = {
       unassigned: all - assigned,
     };
   }),
+  statusCounts: mailboxProcedure.query(async ({ ctx }) => {
+    const countByStatus = async (status: "open" | "closed" | "spam", where?: SQL) => {
+      const result = await db
+        .select({ count: count() })
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.mailboxId, ctx.mailbox.id),
+            eq(conversations.status, status),
+            isNull(conversations.mergedIntoId),
+            where,
+          ),
+        );
+      return result[0]?.count ?? 0;
+    };
+
+    const [
+      openAll, openMine, openAssigned,
+      closedAll, closedMine, closedAssigned,
+      spamAll, spamMine, spamAssigned
+    ] = await Promise.all([
+      countByStatus("open"),
+      countByStatus("open", eq(conversations.assignedToId, ctx.user.id)),
+      countByStatus("open", isNotNull(conversations.assignedToId)),
+      countByStatus("closed"),
+      countByStatus("closed", eq(conversations.assignedToId, ctx.user.id)),
+      countByStatus("closed", isNotNull(conversations.assignedToId)),
+      countByStatus("spam"),
+      countByStatus("spam", eq(conversations.assignedToId, ctx.user.id)),
+      countByStatus("spam", isNotNull(conversations.assignedToId)),
+    ]);
+
+    return {
+      open: {
+        conversations: openAll,
+        mine: openMine,
+        assigned: openAssigned,
+        unassigned: openAll - openAssigned,
+      },
+      closed: {
+        conversations: closedAll,
+        mine: closedMine,
+        assigned: closedAssigned,
+        unassigned: closedAll - closedAssigned,
+      },
+      spam: {
+        conversations: spamAll,
+        mine: spamMine,
+        assigned: spamAssigned,
+        unassigned: spamAll - spamAssigned,
+      },
+    };
+  }),
   get: mailboxProcedure.query(async ({ ctx }) => {
     return await getMailboxInfo(ctx.mailbox);
   }),
