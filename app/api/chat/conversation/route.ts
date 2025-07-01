@@ -1,3 +1,4 @@
+import { createApiHandler } from "@/app/api/route-handler";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { CHAT_CONVERSATION_SUBJECT, createConversation } from "@/lib/data/conversation";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
@@ -9,12 +10,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
+export async function handler(request: Request) {
   const { isPrompt } = await request.json();
   const isVisitor = authResult.session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
@@ -41,3 +37,7 @@ export async function POST(request: Request) {
 
   return corsResponse({ conversationSlug: newConversation.slug });
 }
+
+export const POST = createApiHandler(handler, {
+  requiresAuth: true,
+});
