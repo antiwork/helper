@@ -14,6 +14,7 @@ import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
 import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
@@ -75,6 +76,29 @@ export const MessageActions = () => {
     },
   });
 
+  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam"; open: boolean } | null>(null);
+
+  const handleCloseTicket = () => {
+    setConfirmationDialog({ type: "close", open: true });
+  };
+
+  const handleMarkAsSpam = () => {
+    setConfirmationDialog({ type: "spam", open: true });
+  };
+
+  const handleConfirmAction = () => {
+    if (confirmationDialog?.type === "close") {
+      updateStatus("closed");
+    } else if (confirmationDialog?.type === "spam") {
+      updateStatus("spam");
+    }
+    setConfirmationDialog(null);
+  };
+
+  const handleCancelConfirmation = () => {
+    setConfirmationDialog(null);
+  };
+
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
       updateStatus("open");
@@ -82,12 +106,12 @@ export const MessageActions = () => {
   });
   useKeyboardShortcut("s", () => {
     if (conversation?.status !== "spam") {
-      updateStatus("spam");
+      handleMarkAsSpam();
     }
   });
   useKeyboardShortcut("c", () => {
     if (conversation?.status !== "closed") {
-      updateStatus("closed");
+      handleCloseTicket();
     }
   });
 
@@ -466,6 +490,27 @@ export const MessageActions = () => {
           mailboxSlug={mailboxSlug}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmationDialog?.open || false} onOpenChange={(open) => !open && handleCancelConfirmation()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogDescription className="text-base">
+              {confirmationDialog?.type === "close"
+                ? "Are you sure you want to close this ticket?"
+                : "Are you sure you want to mark this ticket as spam?"}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={handleCancelConfirmation}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmAction}>
+              {confirmationDialog?.type === "close" ? "Yes, close" : "Yes, mark as spam"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

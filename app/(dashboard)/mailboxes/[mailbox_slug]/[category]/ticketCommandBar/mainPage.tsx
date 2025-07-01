@@ -24,6 +24,8 @@ type MainPageProps = {
   setSelectedItemId: (id: string | null) => void;
   onToggleCc: () => void;
   setSelectedTool: (tool: Tool) => void;
+  onRequestCloseConfirmation?: () => void;
+  onRequestSpamConfirmation?: () => void;
 };
 
 export const useMainPage = ({
@@ -32,6 +34,8 @@ export const useMainPage = ({
   setSelectedItemId,
   onToggleCc,
   setSelectedTool,
+  onRequestCloseConfirmation,
+  onRequestSpamConfirmation,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
   const utils = api.useUtils();
@@ -78,12 +82,44 @@ export const useMainPage = ({
 
   const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
 
+  const handleCloseTicket = () => {
+    if (onRequestCloseConfirmation) {
+      onRequestCloseConfirmation();
+    } else {
+      updateStatus("closed");
+      onOpenChange(false);
+    }
+  };
+
+  const handleMarkAsSpam = () => {
+    if (onRequestSpamConfirmation) {
+      onRequestSpamConfirmation();
+    } else {
+      updateStatus("spam");
+      onOpenChange(false);
+    }
+  };
+
   useKeyboardShortcut("n", (e) => {
     e.preventDefault();
     onOpenChange(true);
     setPage("notes");
     setSelectedItemId(null);
   });
+
+  useKeyboardShortcut("c", (e) => {
+    e.preventDefault();
+    if (conversation?.status !== "closed" && conversation?.status !== "spam") {
+      handleCloseTicket();
+    }
+  }, { enableInDialog: true });
+
+  useKeyboardShortcut("s", (e) => {
+    e.preventDefault();
+    if (conversation?.status !== "spam") {
+      handleMarkAsSpam();
+    }
+  }, { enableInDialog: true });
 
   const mainCommandGroups = useMemo(
     () => [
@@ -94,10 +130,7 @@ export const useMainPage = ({
             id: "close",
             label: "Close ticket",
             icon: ArrowUturnLeftIcon,
-            onSelect: () => {
-              updateStatus("closed");
-              onOpenChange(false);
-            },
+            onSelect: handleCloseTicket,
             shortcut: "C",
             hidden: conversation?.status === "closed" || conversation?.status === "spam",
           },
@@ -126,10 +159,7 @@ export const useMainPage = ({
             id: "spam",
             label: "Mark as spam",
             icon: ShieldExclamationIcon,
-            onSelect: () => {
-              updateStatus("spam");
-              onOpenChange(false);
-            },
+            onSelect: handleMarkAsSpam,
             shortcut: "S",
             hidden: conversation?.status === "spam",
           },
@@ -204,7 +234,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, handleCloseTicket, handleMarkAsSpam],
   );
 
   return mainCommandGroups;
