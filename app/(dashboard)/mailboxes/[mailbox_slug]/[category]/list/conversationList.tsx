@@ -2,6 +2,7 @@ import { Send } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -130,24 +131,13 @@ export const List = () => {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   // Handle Cmd+A / Ctrl+A to select all conversations
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
-        // Only handle if we're not in an input field
-        const target = event.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-          return;
-        }
-        
-        event.preventDefault();
-        setAllConversationsSelected(true);
-        clearSelectedConversations();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [setAllConversationsSelected, clearSelectedConversations]);
+  useHotkeys("mod+a", () => {
+    setAllConversationsSelected(true);
+    clearSelectedConversations();
+  }, {
+    enableOnFormTags: false, // Don't trigger when focused on form elements
+    preventDefault: true,
+  });
 
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
