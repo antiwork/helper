@@ -197,6 +197,20 @@ export const useMainPage = ({
     },
     [onInsertReply, incrementSavedReplyUsage, onOpenChange],
   );
+  
+  useKeyboardShortcut("c", (e) => {
+    e.preventDefault();
+    if (conversation?.status !== "closed" && conversation?.status !== "spam") {
+      handleCloseTicket();
+    }
+  }, { enableInDialog: true });
+
+  useKeyboardShortcut("s", (e) => {
+    e.preventDefault();
+    if (conversation?.status !== "spam") {
+      handleMarkAsSpam();
+    }
+  }, { enableInDialog: true });
 
   const mainCommandGroups = useMemo(
     () => [
