@@ -38,7 +38,7 @@ export const ConversationListContextProvider = ({
   children: React.ReactNode;
 }) => {
   const { input } = useConversationsListInput();
-  const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
+  const { data, isPending, isFetching, isFetchingNextPage, fetchNextPage, hasNextPage } =
     api.mailbox.conversations.list.useInfiniteQuery(input, {
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? null,
       refetchOnWindowFocus: false,
@@ -170,6 +170,7 @@ export const ConversationListContextProvider = ({
           }
         : null,
       isPending,
+      isFetching,
       isFetchingNextPage,
       hasNextPage,
       currentTotal,
@@ -183,7 +184,7 @@ export const ConversationListContextProvider = ({
       removeConversationKeepActive,
       navigateToConversation: setId,
     }),
-    [input.mailboxSlug, currentConversationSlug, conversations, lastPage, isPending, isFetchingNextPage, hasNextPage],
+    [input.mailboxSlug, currentConversationSlug, conversations, lastPage, isPending, isFetching, isFetchingNextPage, hasNextPage],
   );
 
   return <ConversationListContext.Provider value={value}>{children}</ConversationListContext.Provider>;

@@ -16,7 +16,7 @@ type ToolSettingProps = {
 
 const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
   const [showApiForm, setShowApiForm] = useState(false);
-  const { data: apis = [], isLoading: apisLoading, error } = api.mailbox.tools.list.useQuery({ mailboxSlug });
+  const { data: apis = [], isLoading: apisLoading, isFetching: apisFetching, error } = api.mailbox.tools.list.useQuery({ mailboxSlug });
 
   useEffect(() => {
     if (error) {
@@ -45,7 +45,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
         <div className="space-y-6">
           {showApiForm && <ApiForm mailboxSlug={mailboxSlug} onCancel={() => setShowApiForm(false)} />}
 
-          {apisLoading ? (
+          {(apisLoading || (apisFetching && apis.length === 0)) ? (
             <ToolsListSkeleton count={2} />
           ) : (
             apis.map((api) => <ApiCard key={api.id} api={api} mailboxSlug={mailboxSlug} />)

@@ -24,7 +24,7 @@ interface SessionsListProps {
 export default function SessionsList({ mailbox, limit }: SessionsListProps) {
   const router = useRouter();
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, error } =
+  const { data, fetchNextPage, hasNextPage, isLoading, isFetching, isFetchingNextPage, error } =
     api.mailbox.getSessionsPaginated.useInfiniteQuery(
       {
         mailboxSlug: mailbox.slug,
@@ -76,11 +76,11 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
             <CardDescription>View and manage guide sessions for {mailbox.name}</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading && sessions.length === 0 && (
+            {(isLoading || (isFetching && sessions.length === 0)) && (
               <SessionsListSkeleton count={5} />
             )}
 
-            {!isLoading && sessions.length === 0 && (
+            {!(isLoading || (isFetching && sessions.length === 0)) && sessions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <p className="text-muted-foreground mb-4">No guide sessions found</p>
               </div>
