@@ -1,4 +1,7 @@
+import { eq } from "drizzle-orm";
 import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { db } from "@/db/client";
+import { mailboxes } from "@/db/schema";
 import { CHAT_CONVERSATION_SUBJECT, createConversation } from "@/lib/data/conversation";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 
@@ -38,6 +41,13 @@ export async function POST(request: Request) {
     assignedToAI: true,
     anonymousSessionId: authResult.session.isAnonymous ? authResult.session.anonymousSessionId : undefined,
   });
+
+  if (!authResult.mailbox.chatIntegrationUsed) {
+    await db
+      .update(mailboxes)
+      .set({ chatIntegrationUsed: true })
+      .where(eq(mailboxes.id, authResult.mailbox.id));
+  }
 
   return corsResponse({ conversationSlug: newConversation.slug });
 }
