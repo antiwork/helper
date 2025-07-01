@@ -44,6 +44,7 @@ export function AccountDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="end" className="w-(--radix-popper-anchor-width)">
         <DropdownMenuItem
+          className="cursor-pointer"
           onSelect={(e) => {
             e.preventDefault();
             window.open(`${getMarketingSiteUrl()}/docs`, "_blank", "noopener,noreferrer");
@@ -51,7 +52,7 @@ export function AccountDropdown() {
         >
           <span>Documentation</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
           <span>Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

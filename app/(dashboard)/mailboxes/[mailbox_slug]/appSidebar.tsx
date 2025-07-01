@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   Inbox,
   Link as LinkIcon,
+  MessageSquareText,
   MonitorSmartphone,
   Settings as SettingsIcon,
   Ticket,
@@ -75,6 +76,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
+                className="cursor-pointer"
                 onClick={() => {
                   const fallback = `/mailboxes/${mailboxSlug}/mine`;
                   router.push(previousAppUrlRef.current || fallback);
@@ -109,7 +111,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
                     router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 cursor-pointer"
                 >
                   <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                   <span className="truncate text-base">{mailbox.name}</span>
@@ -199,6 +201,22 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     {openCounts && openCounts.conversations > 0 && (
                       <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
                     )}
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+              <SidebarGroup>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/saved-replies`}
+                      tooltip="Saved replies"
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/saved-replies`}>
+                        <MessageSquareText className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Saved replies</span>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroup>
