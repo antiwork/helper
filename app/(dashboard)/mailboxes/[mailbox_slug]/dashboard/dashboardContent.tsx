@@ -61,7 +61,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
                 </div>
               </div>
             </Panel>
-            <Panel title="Reactions" className="h-[400px] md:-order-1">
+            <Panel title="Reactions" className="h-[400px] md:-order-1 overflow-hidden">
               <ReactionsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
             </Panel>
           </div>
