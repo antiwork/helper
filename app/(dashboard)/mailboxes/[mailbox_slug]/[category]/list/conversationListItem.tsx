@@ -51,7 +51,8 @@ export const ConversationListItem = ({
   let highlightedSubject = escape(conversation.subject);
   let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
 
-  if (searchTerms.length > 0 && bodyText) {
+  // Only create snippets and highlight when we have actual search matches
+  if (searchTerms.length > 0 && conversation.matchedMessageText && bodyText) {
     bodyText = createSearchSnippet(bodyText, searchTerms, maxBodyLength);
   }
 
