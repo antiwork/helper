@@ -1,7 +1,8 @@
 import { openai } from "@ai-sdk/openai";
 import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
 import { z } from "zod";
-import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { createApiHandler } from "@/app/api/route-handler";
+import { corsResponse } from "@/app/api/widget/utils";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../../components/utils/assert";
@@ -72,208 +73,215 @@ Instructions:
 Current date: {{CURRENT_DATE}}
 Current user email: {{USER_EMAIL}}`;
 
-export async function POST(request: Request) {
-  const { message, steps, sessionId } = await request.json();
+const requestSchema = z.object({
+  message: z.any(),
+  steps: z.array(z.any()),
+  sessionId: z.string(),
+});
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
+export const POST = createApiHandler(
+  async (
+    request: Request,
+    context: { params?: Record<string, string>; mailbox: any; session: any },
+    validatedBody: z.infer<typeof requestSchema>,
+  ) => {
+    const { message, steps, sessionId } = validatedBody;
+    const { session, mailbox } = context;
+    const userEmail = session.isAnonymous ? null : session.email || null;
 
-  const { session, mailbox } = authResult;
-  const userEmail = session.isAnonymous ? null : session.email || null;
+    const guideSession = assertDefined(await getGuideSessionByUuid(sessionId));
+    const guideSessionActions = await getGuideSessionActions(guideSession.id);
 
-  const guideSession = assertDefined(await getGuideSessionByUuid(sessionId));
-  const guideSessionActions = await getGuideSessionActions(guideSession.id);
+    const previousMessages: Message[] = guideSessionActions.map((action) => {
+      const actionData = action.data as {
+        currentState: string;
+        actionType: string;
+        params: any;
+        previousPageDetails: { url: string; title: string; elements: string };
+        newPageDetails: { url: string; title: string; elements: string };
+        result: string;
+      };
 
-  const previousMessages: Message[] = guideSessionActions.map((action) => {
-    const actionData = action.data as {
-      currentState: string;
-      actionType: string;
-      params: any;
-      previousPageDetails: { url: string; title: string; elements: string };
-      newPageDetails: { url: string; title: string; elements: string };
-      result: string;
-    };
-
-    let textResult = "";
-    if (actionData.result === "Performed") {
-      textResult = `Successfully performed action ${actionData.actionType}
+      let textResult = "";
+      if (actionData.result === "Performed") {
+        textResult = `Successfully performed action ${actionData.actionType}
       Now, the current URL is: ${actionData.newPageDetails.url}
       Current Page Title: ${actionData.newPageDetails.title}`;
-    } else {
-      textResult = `Failed to perform action ${actionData.actionType}`;
-    }
+      } else {
+        textResult = `Failed to perform action ${actionData.actionType}`;
+      }
 
-    return {
-      id: action.id.toString(),
-      role: "assistant",
-      content: "",
-      toolInvocations: [
-        {
-          id: action.id.toString(),
-          toolName: "AgentOutput",
-          state: "result",
-          result: textResult,
-          toolCallId: `call_${action.id}`,
-          args: {
-            current_state: actionData.currentState,
-            action: {
-              type: actionData.actionType,
-              ...actionData.params,
+      return {
+        id: action.id.toString(),
+        role: "assistant",
+        content: "",
+        toolInvocations: [
+          {
+            id: action.id.toString(),
+            toolName: "AgentOutput",
+            state: "result",
+            result: textResult,
+            toolCallId: `call_${action.id}`,
+            args: {
+              current_state: actionData.currentState,
+              action: {
+                type: actionData.actionType,
+                ...actionData.params,
+              },
             },
           },
-        },
-      ],
-    };
-  });
+        ],
+      };
+    });
 
-  const messages = appendClientMessage({
-    messages: previousMessages,
-    message,
-  });
+    const messages = appendClientMessage({
+      messages: previousMessages,
+      message,
+    });
 
-  const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
-  const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
-    .replace("{{MAILBOX_NAME}}", mailbox.name)
-    .replace("{{PLANNED_STEPS}}", formattedSteps)
-    .replace("{{INSTRUCTIONS}}", guideSession.instructions || "")
-    .replace("{{CURRENT_DATE}}", new Date().toISOString());
+    const formattedSteps = steps.map((step: any, index: number) => `${index + 1}. ${step.description}`).join("\n");
+    const systemPrompt = PROMPT.replace("{{USER_EMAIL}}", userEmail || "Anonymous user")
+      .replace("{{MAILBOX_NAME}}", mailbox.name)
+      .replace("{{PLANNED_STEPS}}", formattedSteps)
+      .replace("{{INSTRUCTIONS}}", guideSession.instructions || "")
+      .replace("{{CURRENT_DATE}}", new Date().toISOString());
 
-  const tools = {
-    AgentOutput: tool({
-      description: "Required tool to complete the task, provide the current state, next goal and the action to take",
-      parameters: z
-        .object({
-          current_state: z.object({
-            evaluation_previous_goal: z.string(),
-            next_goal: z.string().describe("Next goal to complete, do not include sample values, only actual values"),
-            completed_steps: z
-              .array(z.number().int())
-              .describe("List of steps that have been completed, empty array if none, index starts at 1"),
-          }),
-          action: z
-            .discriminatedUnion("type", [
-              z.object({
-                type: z.literal("done"),
-                text: z.string(),
-                success: z.boolean().default(true).optional(),
-              }),
-              z.object({
-                type: z.literal("wait"),
-                seconds: z.number().int().default(3),
-              }),
-              z.object({
-                type: z.literal("click_element"),
-                index: z.number().int(),
-                xpath: z.string().nullable().optional(),
-                hasSideEffects: z
-                  .boolean()
-                  .default(false)
-                  .describe(
-                    "Whether the action has side effects, e.g. clicking on a button that deletes data, modifying data or creating data",
-                  ),
-                sideEffectDescription: z
-                  .string()
-                  .describe(
-                    "Description of the side effect/action, e.g. 'Deletes all data from the account', 'Modifies the data of the account', 'Creates a new account'",
-                  ),
-              }),
-              z.object({
-                type: z.literal("input_text"),
-                index: z.number().int(),
-                text: z.string(),
-                xpath: z.string().nullable().optional(),
-              }),
-              z.object({
-                type: z.literal("send_keys"),
-                index: z.number().int(),
-                text: z.string(),
-              }),
-              z.object({
-                type: z.literal("scroll_to_element"),
-                index: z.number().int(),
-              }),
-              z.object({
-                type: z.literal("get_dropdown_options"),
-                index: z.number().int(),
-              }),
-              z
-                .object({
-                  type: z.literal("select_option"),
+    const tools = {
+      AgentOutput: tool({
+        description: "Required tool to complete the task, provide the current state, next goal and the action to take",
+        parameters: z
+          .object({
+            current_state: z.object({
+              evaluation_previous_goal: z.string(),
+              next_goal: z.string().describe("Next goal to complete, do not include sample values, only actual values"),
+              completed_steps: z
+                .array(z.number().int())
+                .describe("List of steps that have been completed, empty array if none, index starts at 1"),
+            }),
+            action: z
+              .discriminatedUnion("type", [
+                z.object({
+                  type: z.literal("done"),
+                  text: z.string(),
+                  success: z.boolean().default(true).optional(),
+                }),
+                z.object({
+                  type: z.literal("wait"),
+                  seconds: z.number().int().default(3),
+                }),
+                z.object({
+                  type: z.literal("click_element"),
+                  index: z.number().int(),
+                  xpath: z.string().nullable().optional(),
+                  hasSideEffects: z
+                    .boolean()
+                    .default(false)
+                    .describe(
+                      "Whether the action has side effects, e.g. clicking on a button that deletes data, modifying data or creating data",
+                    ),
+                  sideEffectDescription: z
+                    .string()
+                    .describe(
+                      "Description of the side effect/action, e.g. 'Deletes all data from the account', 'Modifies the data of the account', 'Creates a new account'",
+                    ),
+                }),
+                z.object({
+                  type: z.literal("input_text"),
                   index: z.number().int(),
                   text: z.string(),
-                })
-                .describe("Select an option from a dropdown <select> element"),
-            ])
-            .describe("Only call one action at a time."),
-        })
-        .passthrough(),
-    }),
-  };
+                  xpath: z.string().nullable().optional(),
+                }),
+                z.object({
+                  type: z.literal("send_keys"),
+                  index: z.number().int(),
+                  text: z.string(),
+                }),
+                z.object({
+                  type: z.literal("scroll_to_element"),
+                  index: z.number().int(),
+                }),
+                z.object({
+                  type: z.literal("get_dropdown_options"),
+                  index: z.number().int(),
+                }),
+                z
+                  .object({
+                    type: z.literal("select_option"),
+                    index: z.number().int(),
+                    text: z.string(),
+                  })
+                  .describe("Select an option from a dropdown <select> element"),
+              ])
+              .describe("Only call one action at a time."),
+          })
+          .passthrough(),
+      }),
+    };
 
-  const model = openai("gpt-4.1", { parallelToolCalls: false });
+    const model = openai("gpt-4.1", { parallelToolCalls: false });
 
-  return createDataStreamResponse({
-    execute: (dataStream) => {
-      const result = streamText({
-        system: systemPrompt,
-        model,
-        temperature: 0.1,
-        messages,
-        tools,
-        toolChoice: "required",
-        onError: (error) => {
-          captureExceptionAndLogIfDevelopment(error);
-        },
-        experimental_repairToolCall: async ({ toolCall, tools, error, messages, system }) => {
-          // eslint-disable-next-line no-console
-          console.log("Fixing tool call: ", error);
+    return createDataStreamResponse({
+      execute: (dataStream) => {
+        const result = streamText({
+          system: systemPrompt,
+          model,
+          temperature: 0.1,
+          messages,
+          tools,
+          toolChoice: "required",
+          onError: (error) => {
+            captureExceptionAndLogIfDevelopment(error);
+          },
+          experimental_repairToolCall: async ({ toolCall, tools, error, messages, system }) => {
+            // eslint-disable-next-line no-console
+            console.log("Fixing tool call: ", error);
 
-          const result = await generateText({
-            model,
-            system,
-            messages: [
-              ...messages,
-              {
-                role: "assistant",
-                content: [
-                  {
-                    type: "tool-call",
-                    toolCallId: toolCall.toolCallId,
-                    toolName: toolCall.toolName,
-                    args: toolCall.args,
-                  },
-                ],
-              },
-              {
-                role: "tool" as const,
-                content: [
-                  {
-                    type: "tool-result",
-                    toolCallId: toolCall.toolCallId,
-                    toolName: toolCall.toolName,
-                    result: error.message,
-                  },
-                ],
-              },
-            ],
-            tools,
-          });
+            const result = await generateText({
+              model,
+              system,
+              messages: [
+                ...messages,
+                {
+                  role: "assistant",
+                  content: [
+                    {
+                      type: "tool-call",
+                      toolCallId: toolCall.toolCallId,
+                      toolName: toolCall.toolName,
+                      args: toolCall.args,
+                    },
+                  ],
+                },
+                {
+                  role: "tool" as const,
+                  content: [
+                    {
+                      type: "tool-result",
+                      toolCallId: toolCall.toolCallId,
+                      toolName: toolCall.toolName,
+                      result: error.message,
+                    },
+                  ],
+                },
+              ],
+              tools,
+            });
 
-          const newToolCall = result.toolCalls.find((newToolCall) => newToolCall.toolName === toolCall.toolName);
+            const newToolCall = result.toolCalls.find((newToolCall) => newToolCall.toolName === toolCall.toolName);
 
-          return newToolCall != null
-            ? {
-                toolCallType: "function" as const,
-                toolCallId: toolCall.toolCallId,
-                toolName: toolCall.toolName,
-                args: JSON.stringify(newToolCall.args),
-              }
-            : null;
-        },
-      });
-      result.mergeIntoDataStream(dataStream);
-    },
-  });
-}
+            return newToolCall != null
+              ? {
+                  toolCallType: "function" as const,
+                  toolCallId: toolCall.toolCallId,
+                  toolName: toolCall.toolName,
+                  args: JSON.stringify(newToolCall.args),
+                }
+              : null;
+          },
+        });
+        result.mergeIntoDataStream(dataStream);
+      },
+    });
+  },
+  { requiresAuth: true, requestSchema },
+);
