@@ -44,6 +44,13 @@ const ConversationsModal = ({
     setSelectedConversation(conversations?.[0]?.slug ?? null);
   }, [conversations]);
 
+  // Reset mobile view to "list" when modal opens
+  useEffect(() => {
+    if (open) {
+      setMobileView("list");
+    }
+  }, [open]);
+
   const { data: selectedConversationData, isLoading: isLoadingConversation } = api.mailbox.conversations.get.useQuery(
     { mailboxSlug, conversationSlug: selectedConversation ?? "" },
     { enabled: !!selectedConversation },
@@ -68,6 +75,8 @@ const ConversationsModal = ({
                 "md:block", // Always show on desktop
                 mobileView === "list" ? "block" : "hidden", // Show/hide on mobile based on state
               )}
+              role="navigation"
+              aria-label="Conversation list"
             >
               {/* Mobile: Add back button when showing list */}
               <div className="md:hidden bg-muted/30 p-3 border-b border-border">
@@ -83,6 +92,9 @@ const ConversationsModal = ({
                         "bg-accent": selectedConversation === conversation.slug,
                       },
                     )}
+                    role="button"
+                    tabIndex={0}
+                    aria-selected={selectedConversation === conversation.slug}
                     onClick={() => {
                       setSelectedConversation(conversation.slug);
                       setMobileView("detail"); // Switch to detail view on mobile
@@ -101,7 +113,7 @@ const ConversationsModal = ({
                             href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hover:text-foreground transition-colors p-1 -m-1"
+                            className="hover:text-foreground transition-colors p-1 md:p-1 -m-1 md:-m-1 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
@@ -135,9 +147,16 @@ const ConversationsModal = ({
               <div className="md:hidden bg-background border-b border-border p-3 flex items-center gap-3">
                 <button
                   onClick={() => setMobileView("list")}
-                  className="flex items-center gap-2 text-sm font-medium hover:text-accent-foreground transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setMobileView("list");
+                    }
+                  }}
+                  className="flex items-center gap-2 text-sm font-medium hover:text-accent-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded px-2 py-1"
+                  aria-label="Back to conversation list"
                 >
-                  ← Back to conversations
+                  <span aria-hidden="true">←</span> Back to conversations
                 </button>
               </div>
 
