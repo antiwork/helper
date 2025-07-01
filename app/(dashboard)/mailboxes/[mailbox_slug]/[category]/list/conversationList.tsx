@@ -129,6 +129,26 @@ export const List = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+  // Handle Cmd+A / Ctrl+A to select all conversations
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'a') {
+        // Only handle if we're not in an input field
+        const target = event.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
+        
+        event.preventDefault();
+        setAllConversationsSelected(true);
+        clearSelectedConversations();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [setAllConversationsSelected, clearSelectedConversations]);
+
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
