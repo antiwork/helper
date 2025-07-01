@@ -240,99 +240,104 @@ const MessageItem = ({
               ) : null}
             </div>
           </div>
-          <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
-            {message.type === "message" && message.isMerged && (
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ConfirmationDialog
-                      message="Are you sure you want to separate this conversation?"
-                      onConfirm={() => {
-                        splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
-                      }}
-                    >
-                      <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                        <Download className="h-4 w-4" />
-                        <span className="text-xs">Merged</span>
-                      </button>
-                    </ConfirmationDialog>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Automatically merged based on similarity. Click to split.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {message.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
-            {hasReasoning && !userMessage && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                    <Sparkles className="h-4 w-4" />
-                    <span className="text-xs">View AI reasoning</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[min(calc(100vw-2rem),400px)]"
-                  align="start"
-                  side="top"
-                  avoidCollisions
-                  collisionPadding={16}
-                >
-                  <div className="space-y-2">
-                    <h4 className="font-medium">AI Reasoning</h4>
-                    <div className="max-h-[300px] overflow-y-auto">
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {isAIMessage && hasReasoningMetadata(message.metadata) && message.metadata.reasoning}
-                      </p>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-            {message.type === "message" && message.reactionType && (
-              <span className="inline-flex items-center gap-1 text-xs">
-                {message.reactionType === "thumbs-up" ? (
-                  <ThumbsUp size={14} className="text-green-500" />
-                ) : (
-                  <ThumbsDown size={14} className="text-red-500" />
-                )}
-                {message.reactionFeedback}
-              </span>
-            )}
-            {message.type === "message" && message.isFlaggedAsBad && (
-              <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
-                <Frown size={14} className="text-red-500" /> {message.reason ?? "Flagged as bad"}
-              </span>
-            )}
-            <div className="flex flex-1 items-center gap-2">
-              <div
-                className={cx("flex flex-1 items-center gap-2", {
-                  "justify-end": rightAlignedMessage,
-                })}
-              >
-                <HumanizedTime time={message.createdAt} />
-                {message.type === "message" && message.slackUrl && (
-                  <span>
-                    <a target="_blank" href={message.slackUrl}>
-                      &nbsp;{message.role === "user" ? "alerted on Slack" : "via Slack"}
-                    </a>
-                  </span>
-                )}
-                {onViewDraftedReply && (
-                  <span>
-                    &nbsp;·{" "}
-                    <button className="cursor-pointer underline" onClick={onViewDraftedReply}>
-                      View drafted reply
+          <div className="flex w-full items-start justify-between gap-2 md:gap-3 text-sm text-muted-foreground mt-3">
+            {/* Left side: reactions, flags, etc */}
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              {message.type === "message" && message.isMerged && (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <ConfirmationDialog
+                        message="Are you sure you want to separate this conversation?"
+                        onConfirm={() => {
+                          splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
+                        }}
+                      >
+                        <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                          <Download className="h-4 w-4" />
+                          <span className="text-xs">Merged</span>
+                        </button>
+                      </ConfirmationDialog>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Automatically merged based on similarity. Click to split.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {message.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
+              {hasReasoning && !userMessage && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                      <Sparkles className="h-4 w-4" />
+                      <span className="text-xs">View AI reasoning</span>
                     </button>
-                  </span>
-                )}
-              </div>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[min(calc(100vw-2rem),400px)]"
+                    align="start"
+                    side="top"
+                    avoidCollisions
+                    collisionPadding={16}
+                  >
+                    <div className="space-y-2">
+                      <h4 className="font-medium">AI Reasoning</h4>
+                      <div className="max-h-[300px] overflow-y-auto">
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {isAIMessage && hasReasoningMetadata(message.metadata) && message.metadata.reasoning}
+                        </p>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+              {message.type === "message" && message.reactionType && (
+                <span className="inline-flex items-center gap-1 text-xs">
+                  {message.reactionType === "thumbs-up" ? (
+                    <ThumbsUp size={14} className="text-green-500" />
+                  ) : (
+                    <ThumbsDown size={14} className="text-red-500" />
+                  )}
+                  {message.reactionFeedback}
+                </span>
+              )}
+              {message.type === "message" && message.isFlaggedAsBad && (
+                <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                  <Frown size={14} className="text-red-500" /> {message.reason ?? "Flagged as bad"}
+                </span>
+              )}
+            </div>
+
+            {/* Right side: time display - no nested flex containers */}
+            <div
+              className={cx("flex items-center gap-2 shrink-0", {
+                "ml-auto": rightAlignedMessage,
+              })}
+            >
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                <HumanizedTime time={message.createdAt} />
+              </span>
+              {message.type === "message" && message.slackUrl && (
+                <span className="text-xs text-muted-foreground">
+                  <a target="_blank" href={message.slackUrl}>
+                    {message.role === "user" ? "alerted on Slack" : "via Slack"}
+                  </a>
+                </span>
+              )}
+              {onViewDraftedReply && (
+                <span className="text-xs text-muted-foreground">
+                  ·{" "}
+                  <button className="cursor-pointer underline" onClick={onViewDraftedReply}>
+                    View drafted reply
+                  </button>
+                </span>
+              )}
               {message.type === "message" && message.status === "failed" && (
-                <div className="align-center flex items-center justify-center gap-0.5 text-sm text-destructive">
-                  <XCircle className="h-4 w-4" />
-                  <span>Message failed to send</span>
-                </div>
+                <span className="text-xs text-destructive flex items-center gap-1">
+                  <XCircle className="h-3 w-3" />
+                  Failed
+                </span>
               )}
               {message.type === "message" && message.role === "ai_assistant" && (
                 <FlagAsBadAction message={message} conversationSlug={conversation.slug} mailboxSlug={mailboxSlug} />

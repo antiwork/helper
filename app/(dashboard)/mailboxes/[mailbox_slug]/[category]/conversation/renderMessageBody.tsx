@@ -4,10 +4,19 @@ import MessageMarkdown from "@/components/messageMarkdown";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { cn } from "@/lib/utils";
 
-const extractEmailParts = (htmlString: string) =>
-  extractEmailPartsFromDocument(
-    new DOMParser().parseFromString(DOMPurify.sanitize(htmlString, { FORBID_TAGS: ["script", "style"] }), "text/html"),
+const decodeHtmlEntities = (str: string): string => {
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = str;
+  return textarea.value;
+};
+
+const extractEmailParts = (htmlString: string) => {
+  // Decode HTML entities first in case the content is double-encoded
+  const decodedHtml = decodeHtmlEntities(htmlString);
+  return extractEmailPartsFromDocument(
+    new DOMParser().parseFromString(DOMPurify.sanitize(decodedHtml, { FORBID_TAGS: ["script", "style"] }), "text/html"),
   );
+};
 
 const adjustAttributes = (html: string) => {
   try {
