@@ -119,6 +119,7 @@ const parseMessagesWithMocks = (input: string) => {
     githubRepoName: null,
     autoCloseEnabled: false,
     autoCloseDaysOfInactivity: 14,
+    chatIntegrationUsed: false,
     preferences: {
       confetti: false,
     },
