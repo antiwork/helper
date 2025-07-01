@@ -129,19 +129,27 @@ const ScrollToTopButton = ({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <a
+        <button
           className={cn(
             "absolute bottom-4 left-4 transition-all duration-200 h-8 w-8 p-0 rounded-full",
             "flex items-center justify-center",
             "bg-background border border-border shadow-xs",
             "hover:border-primary hover:shadow-md hover:bg-muted",
+            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
             show ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none",
           )}
           onClick={scrollToTop}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              scrollToTop();
+            }
+          }}
           aria-label="Scroll to top"
+          tabIndex={show ? 0 : -1}
         >
           <ArrowUp className="h-4 w-4 text-foreground" />
-        </a>
+        </button>
       </TooltipTrigger>
       <TooltipContent>Scroll to top</TooltipContent>
     </Tooltip>
@@ -332,6 +340,8 @@ const CarouselPreviewContent = ({
                     onClick={() =>
                       currentFile.presignedUrl && FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)
                     }
+                    aria-label={`Download ${currentFile.name}`}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded p-1 hover:bg-muted transition-colors"
                   >
                     <Download className="text-primary h-5 w-5 shrink-0" />
                     <span className="sr-only">Download</span>
@@ -406,11 +416,20 @@ const ConversationContent = () => {
   const conversationMetadata = {
     emailFrom: (
       <div className="flex items-center gap-3">
-        <Tooltip open>
+        <Tooltip open={emailCopied}>
           <TooltipTrigger asChild>
             <div
               onClick={copyEmailToClipboard}
-              className="lg:text-base text-sm text-foreground responsive-break-words truncate cursor-pointer hover:text-primary"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  copyEmailToClipboard();
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label="Copy email address to clipboard"
+              className="lg:text-base text-sm text-foreground responsive-break-words truncate cursor-pointer hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
             </div>
