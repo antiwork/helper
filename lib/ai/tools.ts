@@ -66,7 +66,7 @@ const requestHumanSupport = async (
   }
 
   await updateOriginalConversation(conversation.id, {
-    set: { status: "open", assignedToAI: false },
+    set: { status: "open", assignedToAI: false, lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt },
     message: reason,
     type: "request_human_support",
   });
