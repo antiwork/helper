@@ -27,6 +27,9 @@ type MainPageProps = {
   onToggleCc: () => void;
   setSelectedTool: (tool: Tool) => void;
   onInsertReply: (content: string) => void;
+  onRequestCloseConfirmation?: () => void;
+  onRequestSpamConfirmation?: () => void;
+  onRequestReopenConfirmation?: () => void;
 };
 
 export const useMainPage = ({
@@ -36,6 +39,9 @@ export const useMainPage = ({
   onToggleCc,
   setSelectedTool,
   onInsertReply,
+  onRequestCloseConfirmation,
+  onRequestSpamConfirmation,
+  onRequestReopenConfirmation,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
   const utils = api.useUtils();
@@ -89,12 +95,72 @@ export const useMainPage = ({
 
   const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
 
+  const handleCloseTicket = () => {
+    if (onRequestCloseConfirmation) {
+      onRequestCloseConfirmation();
+    } else {
+      updateStatus("closed");
+      onOpenChange(false);
+    }
+  };
+
+  const handleMarkAsSpam = () => {
+    if (onRequestSpamConfirmation) {
+      onRequestSpamConfirmation();
+    } else {
+      updateStatus("spam");
+      onOpenChange(false);
+    }
+  };
+
+  const handleReopenTicket = () => {
+    if (onRequestReopenConfirmation) {
+      onRequestReopenConfirmation();
+    } else {
+      updateStatus("open");
+      onOpenChange(false);
+    }
+  };
+
   useKeyboardShortcut("n", (e) => {
     e.preventDefault();
     onOpenChange(true);
     setPage("notes");
     setSelectedItemId(null);
   });
+
+  useKeyboardShortcut(
+    "c",
+    (e) => {
+      e.preventDefault();
+      if (conversation?.status !== "closed" && conversation?.status !== "spam") {
+        handleCloseTicket();
+      }
+    },
+    { enableInDialog: true },
+  );
+
+  useKeyboardShortcut(
+    "s",
+    (e) => {
+      e.preventDefault();
+      if (conversation?.status !== "spam") {
+        handleMarkAsSpam();
+      }
+    },
+    { enableInDialog: true },
+  );
+
+  useKeyboardShortcut(
+    "z",
+    (e) => {
+      e.preventDefault();
+      if (conversation?.status === "closed" || conversation?.status === "spam") {
+        handleReopenTicket();
+      }
+    },
+    { enableInDialog: true },
+  );
 
   const handleSavedReplySelect = useCallback(
     (savedReply: { slug: string; content: string }) => {
@@ -141,10 +207,7 @@ export const useMainPage = ({
             id: "close",
             label: "Close ticket",
             icon: ArrowUturnLeftIcon,
-            onSelect: () => {
-              updateStatus("closed");
-              onOpenChange(false);
-            },
+            onSelect: handleCloseTicket,
             shortcut: "C",
             hidden: conversation?.status === "closed" || conversation?.status === "spam",
           },
@@ -152,10 +215,7 @@ export const useMainPage = ({
             id: "reopen",
             label: "Reopen ticket",
             icon: ArrowUturnUpIcon,
-            onSelect: () => {
-              updateStatus("open");
-              onOpenChange(false);
-            },
+            onSelect: handleReopenTicket,
             shortcut: "Z",
             hidden: conversation?.status === "open",
           },
@@ -173,10 +233,7 @@ export const useMainPage = ({
             id: "spam",
             label: "Mark as spam",
             icon: ShieldExclamationIcon,
-            onSelect: () => {
-              updateStatus("spam");
-              onOpenChange(false);
-            },
+            onSelect: handleMarkAsSpam,
             shortcut: "S",
             hidden: conversation?.status === "spam",
           },
@@ -264,7 +321,18 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, savedReplies, handleSavedReplySelect],
+    [
+      onOpenChange,
+      conversation,
+      tools?.suggested,
+      onToggleCc,
+      isGitHubConnected,
+      savedReplies,
+      handleSavedReplySelect,
+      handleCloseTicket,
+      handleReopenTicket,
+      handleMarkAsSpam,
+    ],
   );
 
   return mainCommandGroups;

@@ -5,6 +5,7 @@ import { useAssignTicket } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[cat
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import { Button } from "@/components/ui/button";
 import { Command } from "@/components/ui/command";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useSession } from "@/components/useSession";
@@ -28,12 +29,16 @@ type TicketCommandBarProps = {
 };
 
 export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc, inputRef }: TicketCommandBarProps) {
-  const { conversationSlug, mailboxSlug } = useConversationContext();
+  const { conversationSlug, mailboxSlug, updateStatus } = useConversationContext();
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
   const pageRef = useRef<string>("main");
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    type: "close" | "spam" | "reopen";
+    open: boolean;
+  } | null>(null);
   const { user: currentUser } = useSession() ?? {};
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -66,6 +71,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     onToggleCc,
     setSelectedTool,
     onInsertReply,
+    onRequestCloseConfirmation: () => setConfirmationDialog({ type: "close", open: true }),
+    onRequestSpamConfirmation: () => setConfirmationDialog({ type: "spam", open: true }),
+    onRequestReopenConfirmation: () => setConfirmationDialog({ type: "reopen", open: true }),
   });
 
   const previousRepliesGroups = usePreviousRepliesPage({
@@ -81,6 +89,22 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     onAssignTicket: (assignedTo) => assignTicket(assignedTo, null),
     onOpenChange,
   });
+
+  const handleConfirmAction = () => {
+    if (confirmationDialog?.type === "close") {
+      updateStatus("closed");
+    } else if (confirmationDialog?.type === "spam") {
+      updateStatus("spam");
+    } else if (confirmationDialog?.type === "reopen") {
+      updateStatus("open");
+    }
+    onOpenChange(false);
+    setConfirmationDialog(null);
+  };
+
+  const handleCancelConfirmation = () => {
+    setConfirmationDialog(null);
+  };
 
   const currentGroups = (() => {
     switch (page) {
@@ -145,10 +169,14 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedItemId(visibleItems[0]?.id ?? null);
   }, [inputValue]);
 
-  useKeyboardShortcut("/", (e) => {
-    e.preventDefault();
-    inputRef.current?.focus();
-  });
+  useKeyboardShortcut(
+    "/",
+    (e) => {
+      e.preventDefault();
+      inputRef.current?.focus();
+    },
+    { enableInDialog: true },
+  );
 
   const handleSelect = (itemId: string) => {
     const selectedItem = visibleItems.find((item) => item.id === itemId);
@@ -221,64 +249,93 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     }
   };
 
-  return open && page === "notes" ? (
-    <FormPage onOpenChange={onOpenChange}>
-      <NotesPage onOpenChange={onOpenChange} />
-    </FormPage>
-  ) : open && selectedTool ? (
-    <FormPage onOpenChange={onOpenChange}>
-      <ToolForm tool={selectedTool} onOpenChange={onOpenChange} />
-    </FormPage>
-  ) : open && page === "github-issue" ? (
-    <FormPage onOpenChange={onOpenChange}>
-      <GitHubIssuePage onOpenChange={onOpenChange} />
-    </FormPage>
-  ) : (
+  return (
     <>
-      <div>
-        <Input
-          ref={inputRef}
-          placeholder={page === "previous-replies" ? "Search previous replies..." : "Type a command..."}
-          className="rounded-sm rounded-b-none"
-          iconsPrefix={<KeyboardShortcut className="text-muted-foreground">/</KeyboardShortcut>}
-          onFocus={() => onOpenChange(true)}
-          onBlur={() => {
-            const oldPage = pageRef.current;
+      {open && page === "notes" ? (
+        <FormPage onOpenChange={onOpenChange}>
+          <NotesPage onOpenChange={onOpenChange} />
+        </FormPage>
+      ) : open && selectedTool ? (
+        <FormPage onOpenChange={onOpenChange}>
+          <ToolForm tool={selectedTool} onOpenChange={onOpenChange} />
+        </FormPage>
+      ) : open && page === "github-issue" ? (
+        <FormPage onOpenChange={onOpenChange}>
+          <GitHubIssuePage onOpenChange={onOpenChange} />
+        </FormPage>
+      ) : (
+        <>
+          <div>
+            <Input
+              ref={inputRef}
+              placeholder={page === "previous-replies" ? "Search previous replies..." : "Type a command..."}
+              className="rounded-sm rounded-b-none"
+              iconsPrefix={<KeyboardShortcut className="text-muted-foreground">/</KeyboardShortcut>}
+              onFocus={() => onOpenChange(true)}
+              onBlur={() => {
+                const oldPage = pageRef.current;
 
-            // Changing page blurs the input temporarily, so wait and see if the blur was because of the page change
-            setTimeout(() => {
-              if (pageRef.current === oldPage) onOpenChange(false);
-              else inputRef.current?.focus();
-            }, 100);
-          }}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-      </div>
-      <SuggestedActions
-        className={open ? "hidden" : undefined}
-        tools={tools?.suggested ?? null}
-        orgMembers={orgMembers ?? null}
-      />
-      <Command
-        loop
-        value={selectedItemId || ""}
-        onValueChange={setSelectedItemId}
-        className={cn(
-          "rounded-t-none flex-1 flex flex-col overflow-auto [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
-          !open && "hidden",
-        )}
-      >
-        <CommandList
-          isLoading={isLoadingPreviousReplies}
-          page={page}
-          groups={visibleGroups}
-          selectedItemId={selectedItemId}
-          onSelect={handleSelect}
-          onMouseEnter={setSelectedItemId}
-        />
-      </Command>
+                // Changing page blurs the input temporarily, so wait and see if the blur was because of the page change
+                setTimeout(() => {
+                  if (pageRef.current === oldPage) onOpenChange(false);
+                  else inputRef.current?.focus();
+                }, 100);
+              }}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+          <SuggestedActions
+            className={open ? "hidden" : undefined}
+            tools={tools?.suggested ?? null}
+            orgMembers={orgMembers ?? null}
+          />
+          <Command
+            loop
+            value={selectedItemId || ""}
+            onValueChange={setSelectedItemId}
+            className={cn(
+              "rounded-t-none flex-1 flex flex-col overflow-auto [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
+              !open && "hidden",
+            )}
+          >
+            <CommandList
+              isLoading={isLoadingPreviousReplies}
+              page={page}
+              groups={visibleGroups}
+              selectedItemId={selectedItemId}
+              onSelect={handleSelect}
+              onMouseEnter={setSelectedItemId}
+            />
+          </Command>
+        </>
+      )}
+      <Dialog open={confirmationDialog?.open || false} onOpenChange={(open) => !open && handleCancelConfirmation()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogDescription className="text-base">
+              {confirmationDialog?.type === "close"
+                ? "Are you sure you want to close this ticket?"
+                : confirmationDialog?.type === "spam"
+                  ? "Are you sure you want to mark this ticket as spam?"
+                  : "Are you sure you want to reopen this ticket?"}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={handleCancelConfirmation}>
+              No
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmAction}>
+              {confirmationDialog?.type === "close"
+                ? "Yes, close"
+                : confirmationDialog?.type === "spam"
+                  ? "Yes, mark as spam"
+                  : "Yes, reopen"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
