@@ -16,55 +16,56 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-async function handler(
-  request: Request,
-  context: { params?: Record<string, string>; mailbox: any; session: any },
-  validatedBody: z.infer<typeof requestSchema>,
-) {
-  const { email, message } = validatedBody;
-  const { mailbox } = context;
+export const POST = createApiHandler(
+  async (
+    request: Request,
+    context: { params?: Record<string, string>; mailbox: any; session: any },
+    validatedBody: z.infer<typeof requestSchema>,
+  ) => {
+    const { email, message } = validatedBody;
+    const { mailbox } = context;
 
-  const result = await db.transaction(async (tx) => {
-    const newConversation = await createConversation(
-      {
-        emailFrom: email,
-        mailboxId: mailbox.id,
-        subject: "Contact Form Submission",
-        status: "open",
-        source: "form",
-        assignedToAI: true,
-        isPrompt: false,
-        isVisitor: false,
-      },
-      tx,
+    const result = await db.transaction(async (tx) => {
+      const newConversation = await createConversation(
+        {
+          emailFrom: email,
+          mailboxId: mailbox.id,
+          subject: "Contact Form Submission",
+          status: "open",
+          source: "form",
+          assignedToAI: true,
+          isPrompt: false,
+          isVisitor: false,
+        },
+        tx,
+      );
+
+      const userMessage = await createConversationMessage(
+        {
+          conversationId: newConversation.id,
+          emailFrom: email,
+          body: message,
+          role: "user",
+          status: "sent",
+          isPerfect: false,
+          isFlaggedAsBad: false,
+        },
+        tx,
+      );
+
+      return { newConversation, userMessage };
+    });
+
+    waitUntil(
+      generateConversationSubject(result.newConversation.id, [{ role: "user", content: message, id: "temp" }], mailbox),
     );
 
-    const userMessage = await createConversationMessage(
-      {
-        conversationId: newConversation.id,
-        emailFrom: email,
-        body: message,
-        role: "user",
-        status: "sent",
-        isPerfect: false,
-        isFlaggedAsBad: false,
-      },
-      tx,
-    );
+    waitUntil(triggerEvent("conversations/auto-response.create", { messageId: result.userMessage.id }));
 
-    return { newConversation, userMessage };
-  });
-
-  waitUntil(
-    generateConversationSubject(result.newConversation.id, [{ role: "user", content: message, id: "temp" }], mailbox),
-  );
-
-  waitUntil(triggerEvent("conversations/auto-response.create", { messageId: result.userMessage.id }));
-
-  return corsResponse({ success: true, conversationSlug: result.newConversation.slug });
-}
-
-export const POST = createApiHandler(handler, {
-  requiresAuth: true,
-  requestSchema,
-});
+    return corsResponse({ success: true, conversationSlug: result.newConversation.slug });
+  },
+  {
+    requiresAuth: true,
+    requestSchema,
+  },
+);
