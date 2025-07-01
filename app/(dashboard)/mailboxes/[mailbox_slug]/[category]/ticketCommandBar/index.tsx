@@ -36,7 +36,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
   const pageRef = useRef<string>("main");
-  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam"; open: boolean } | null>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam" | "reopen"; open: boolean } | null>(null);
   const { user: currentUser } = useSession() ?? {};
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
@@ -70,6 +70,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedTool,
     onRequestCloseConfirmation: () => setConfirmationDialog({ type: "close", open: true }),
     onRequestSpamConfirmation: () => setConfirmationDialog({ type: "spam", open: true }),
+    onRequestReopenConfirmation: () => setConfirmationDialog({ type: "reopen", open: true }),
   });
 
   const previousRepliesGroups = usePreviousRepliesPage({
@@ -91,6 +92,8 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
       updateStatus("closed");
     } else if (confirmationDialog?.type === "spam") {
       updateStatus("spam");
+    } else if (confirmationDialog?.type === "reopen") {
+      updateStatus("open");
     }
     onOpenChange(false);
     setConfirmationDialog(null);
@@ -298,7 +301,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
             <DialogDescription className="text-base">
               {confirmationDialog?.type === "close"
                 ? "Are you sure you want to close this ticket?"
-                : "Are you sure you want to mark this ticket as spam?"}
+                : confirmationDialog?.type === "spam"
+                ? "Are you sure you want to mark this ticket as spam?"
+                : "Are you sure you want to reopen this ticket?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -306,7 +311,11 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
               No
             </Button>
             <Button variant="destructive" onClick={handleConfirmAction}>
-              {confirmationDialog?.type === "close" ? "Yes, close" : "Yes, mark as spam"}
+              {confirmationDialog?.type === "close"
+                ? "Yes, close"
+                : confirmationDialog?.type === "spam"
+                ? "Yes, mark as spam"
+                : "Yes, reopen"}
             </Button>
           </DialogFooter>
         </DialogContent>

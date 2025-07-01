@@ -76,7 +76,7 @@ export const MessageActions = () => {
     },
   });
 
-  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam"; open: boolean } | null>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{ type: "close" | "spam" | "reopen"; open: boolean } | null>(null);
 
   const handleCloseTicket = () => {
     setConfirmationDialog({ type: "close", open: true });
@@ -86,11 +86,17 @@ export const MessageActions = () => {
     setConfirmationDialog({ type: "spam", open: true });
   };
 
+  const handleReopenTicket = () => {
+    setConfirmationDialog({ type: "reopen", open: true });
+  };
+
   const handleConfirmAction = () => {
     if (confirmationDialog?.type === "close") {
       updateStatus("closed");
     } else if (confirmationDialog?.type === "spam") {
       updateStatus("spam");
+    } else if (confirmationDialog?.type === "reopen") {
+      updateStatus("open");
     }
     setConfirmationDialog(null);
   };
@@ -101,7 +107,7 @@ export const MessageActions = () => {
 
   useKeyboardShortcut("z", () => {
     if (conversation?.status === "closed" || conversation?.status === "spam") {
-      updateStatus("open");
+      handleReopenTicket();
     }
   });
   useKeyboardShortcut("s", () => {
@@ -498,7 +504,9 @@ export const MessageActions = () => {
             <DialogDescription className="text-base">
               {confirmationDialog?.type === "close"
                 ? "Are you sure you want to close this ticket?"
-                : "Are you sure you want to mark this ticket as spam?"}
+                : confirmationDialog?.type === "spam"
+                ? "Are you sure you want to mark this ticket as spam?"
+                : "Are you sure you want to reopen this ticket?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -506,7 +514,11 @@ export const MessageActions = () => {
               No
             </Button>
             <Button variant="destructive" onClick={handleConfirmAction}>
-              {confirmationDialog?.type === "close" ? "Yes, close" : "Yes, mark as spam"}
+              {confirmationDialog?.type === "close"
+                ? "Yes, close"
+                : confirmationDialog?.type === "spam"
+                ? "Yes, mark as spam"
+                : "Yes, reopen"}
             </Button>
           </DialogFooter>
         </DialogContent>

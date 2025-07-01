@@ -26,6 +26,7 @@ type MainPageProps = {
   setSelectedTool: (tool: Tool) => void;
   onRequestCloseConfirmation?: () => void;
   onRequestSpamConfirmation?: () => void;
+  onRequestReopenConfirmation?: () => void;
 };
 
 export const useMainPage = ({
@@ -36,6 +37,7 @@ export const useMainPage = ({
   setSelectedTool,
   onRequestCloseConfirmation,
   onRequestSpamConfirmation,
+  onRequestReopenConfirmation,
 }: MainPageProps): CommandGroup[] => {
   const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
   const utils = api.useUtils();
@@ -100,6 +102,15 @@ export const useMainPage = ({
     }
   };
 
+  const handleReopenTicket = () => {
+    if (onRequestReopenConfirmation) {
+      onRequestReopenConfirmation();
+    } else {
+      updateStatus("open");
+      onOpenChange(false);
+    }
+  };
+
   useKeyboardShortcut("n", (e) => {
     e.preventDefault();
     onOpenChange(true);
@@ -121,6 +132,13 @@ export const useMainPage = ({
     }
   }, { enableInDialog: true });
 
+  useKeyboardShortcut("z", (e) => {
+    e.preventDefault();
+    if (conversation?.status === "closed" || conversation?.status === "spam") {
+      handleReopenTicket();
+    }
+  }, { enableInDialog: true });
+
   const mainCommandGroups = useMemo(
     () => [
       {
@@ -138,10 +156,7 @@ export const useMainPage = ({
             id: "reopen",
             label: "Reopen ticket",
             icon: ArrowUturnUpIcon,
-            onSelect: () => {
-              updateStatus("open");
-              onOpenChange(false);
-            },
+            onSelect: handleReopenTicket,
             shortcut: "Z",
             hidden: conversation?.status === "open",
           },
@@ -234,7 +249,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, handleCloseTicket, handleMarkAsSpam],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, handleCloseTicket, handleMarkAsSpam, handleReopenTicket],
   );
 
   return mainCommandGroups;
