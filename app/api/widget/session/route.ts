@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { createApiHandler } from "@/app/api/route-handler";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
@@ -30,85 +31,88 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  const body = await request.json();
-  const result = requestSchema.safeParse(body);
+export const POST = createApiHandler(
+  async (
+    request: Request,
+    context: { params?: Record<string, string> },
+    validatedBody: z.infer<typeof requestSchema>,
+  ) => {
+    const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentToken } =
+      validatedBody;
 
-  if (!result.success) {
-    return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
-  }
+    const mailboxRecord = await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.slug, mailboxSlug),
+      columns: {
+        id: true,
+        slug: true,
+        widgetDisplayMode: true,
+        widgetDisplayMinValue: true,
+        isWhitelabel: true,
+        preferences: true,
+        name: true,
+        widgetHMACSecret: true,
+      },
+    });
 
-  const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentToken } =
-    result.data;
-
-  const mailboxRecord = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, mailboxSlug),
-    columns: {
-      id: true,
-      slug: true,
-      widgetDisplayMode: true,
-      widgetDisplayMinValue: true,
-      isWhitelabel: true,
-      preferences: true,
-      name: true,
-      widgetHMACSecret: true,
-    },
-  });
-
-  if (!mailboxRecord) {
-    return corsResponse({ error: "Invalid mailbox" }, { status: 400 });
-  }
-
-  let platformCustomer = null;
-  let showWidget = mailboxRecord.widgetDisplayMode === "always";
-
-  // Only perform email-related checks if email is provided
-  if (email) {
-    if (!timestamp || !emailHash) {
-      return corsResponse({ error: "Email authentication fields missing" }, { status: 400 });
+    if (!mailboxRecord) {
+      return corsResponse({ error: "Invalid mailbox" }, { status: 400 });
     }
 
-    const timestampDate = new Date(timestamp);
-    if (Math.abs(timestampDate.getTime() - Date.now()) > CLOCK_SKEW_TOLERANCE_MS) {
-      return corsResponse({ valid: false, error: "Timestamp is too far in the past" }, { status: 401 });
+    let platformCustomer = null;
+    let showWidget = mailboxRecord.widgetDisplayMode === "always";
+
+    // Only perform email-related checks if email is provided
+    if (email) {
+      if (!timestamp || !emailHash) {
+        return corsResponse({ error: "Email authentication fields missing" }, { status: 400 });
+      }
+
+      const timestampDate = new Date(timestamp);
+      if (Math.abs(timestampDate.getTime() - Date.now()) > CLOCK_SKEW_TOLERANCE_MS) {
+        return corsResponse({ valid: false, error: "Timestamp is too far in the past" }, { status: 401 });
+      }
+
+      const computedHmac = await getEmailHash(email, mailboxSlug, timestamp);
+      if (!computedHmac || computedHmac !== emailHash) {
+        return corsResponse({ valid: false, error: "Invalid HMAC signature" }, { status: 401 });
+      }
+
+      if (customerMetadata) {
+        await upsertPlatformCustomer({
+          email,
+          mailboxId: mailboxRecord.id,
+          customerMetadata,
+        });
+      }
+
+      platformCustomer = await getPlatformCustomer(mailboxRecord.id, email);
+
+      showWidget =
+        mailboxRecord.widgetDisplayMode === "always" ||
+        (mailboxRecord.widgetDisplayMode === "revenue_based" &&
+          platformCustomer?.value &&
+          mailboxRecord.widgetDisplayMinValue != null &&
+          Number(platformCustomer.value) / 100 >= mailboxRecord.widgetDisplayMinValue) ||
+        false;
     }
 
-    const computedHmac = await getEmailHash(email, mailboxSlug, timestamp);
-    if (!computedHmac || computedHmac !== emailHash) {
-      return corsResponse({ valid: false, error: "Invalid HMAC signature" }, { status: 401 });
+    const token = createWidgetSession(mailboxRecord, { email, showWidget, currentToken });
+
+    let notifications;
+    if (platformCustomer) {
+      notifications = await fetchAndUpdateUnsentNotifications(platformCustomer);
     }
 
-    if (customerMetadata) {
-      await upsertPlatformCustomer({
-        email,
-        mailboxId: mailboxRecord.id,
-        customerMetadata,
-      });
-    }
-
-    platformCustomer = await getPlatformCustomer(mailboxRecord.id, email);
-
-    showWidget =
-      mailboxRecord.widgetDisplayMode === "always" ||
-      (mailboxRecord.widgetDisplayMode === "revenue_based" &&
-        platformCustomer?.value &&
-        mailboxRecord.widgetDisplayMinValue != null &&
-        Number(platformCustomer.value) / 100 >= mailboxRecord.widgetDisplayMinValue) ||
-      false;
-  }
-
-  const token = createWidgetSession(mailboxRecord, { email, showWidget, currentToken });
-
-  let notifications;
-  if (platformCustomer) {
-    notifications = await fetchAndUpdateUnsentNotifications(platformCustomer);
-  }
-
-  return corsResponse({
-    valid: true,
-    token,
-    showWidget,
-    notifications,
-    experimentalReadPage,
-  });
-}
+    return corsResponse({
+      valid: true,
+      token,
+      showWidget,
+      notifications,
+      experimentalReadPage,
+    });
+  },
+  {
+    requiresAuth: false,
+    requestSchema,
+  },
+);
