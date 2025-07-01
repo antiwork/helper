@@ -15,7 +15,7 @@ const eventSchema = z.object({
 
 const requestSchema = z.object({
   sessionId: z.string().min(1),
-  events: z.array(z.any()),
+  events: z.array(eventSchema),
   metadata: z.record(z.string(), z.unknown()).optional(),
   isRecording: z.boolean().optional(),
 });
