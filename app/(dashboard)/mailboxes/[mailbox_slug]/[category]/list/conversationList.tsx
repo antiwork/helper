@@ -133,7 +133,7 @@ export const List = () => {
   // Handle Cmd+A / Ctrl+A to select all conversations
   useHotkeys("mod+a", () => {
     setAllConversationsSelected(true);
-    clearSelectedConversations();
+    clearSelectedConversations(); // Clear individual selections since we're selecting all
   }, {
     enableOnFormTags: false, // Don't trigger when focused on form elements
     preventDefault: true,
