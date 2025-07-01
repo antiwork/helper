@@ -1,8 +1,10 @@
 import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { ReadPageToolConfig } from "@helperai/sdk";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { createApiHandler } from "@/app/api/route-handler";
+import { corsOptions, corsResponse } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
@@ -17,14 +19,14 @@ import { WidgetSessionPayload } from "@/lib/widgetSession";
 
 export const maxDuration = 60;
 
-interface ChatRequestBody {
-  message: Message;
-  token: string;
-  conversationSlug: string;
-  readPageTool: ReadPageToolConfig | null;
-  guideEnabled: boolean;
-  isToolResult?: boolean;
-}
+const chatRequestBodySchema = z.object({
+  message: z.any(),
+  token: z.string(),
+  conversationSlug: z.string(),
+  readPageTool: z.any().nullable(),
+  guideEnabled: z.boolean(),
+  isToolResult: z.boolean().optional(),
+});
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload, mailbox: Mailbox) => {
   const conversation = await getConversationBySlugAndMailbox(conversationSlug, mailbox.id);
@@ -33,8 +35,6 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
     throw new Error("Conversation not found");
   }
 
-  // For anonymous sessions, only allow access if the conversation has no emailFrom
-  // For authenticated sessions, only allow access if the emailFrom matches
   if (session.isAnonymous) {
     if (conversation.emailFrom !== null) {
       throw new Error("Unauthorized");
@@ -50,15 +50,14 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  const { message, conversationSlug, readPageTool, guideEnabled, isToolResult }: ChatRequestBody = await request.json();
+async function handler(
+  request: Request,
+  context: { params?: Record<string, string>; mailbox: Mailbox; session: WidgetSessionPayload },
+  validatedBody: z.infer<typeof chatRequestBodySchema>,
+) {
+  const { message, conversationSlug, readPageTool, guideEnabled, isToolResult } = validatedBody;
+  const { session, mailbox } = context;
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { session, mailbox } = authResult;
   const conversation = await getConversation(conversationSlug, session, mailbox);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
@@ -113,3 +112,8 @@ export async function POST(request: Request) {
     },
   });
 }
+
+export const POST = createApiHandler(handler, {
+  requiresAuth: true,
+  requestSchema: chatRequestBodySchema,
+});
