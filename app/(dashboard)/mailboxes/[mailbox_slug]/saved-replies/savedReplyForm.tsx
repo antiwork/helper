@@ -39,9 +39,9 @@ interface SavedReplyFormProps {
 
 export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, onDelete }: SavedReplyFormProps) {
   const editorRef = useRef<TipTapEditorRef | null>(null);
-  
+
   const contentMemoized = useMemo(() => ({ content: savedReply?.content || "" }), [savedReply?.content]);
-  
+
   const handleSegment = useCallback((segment: string) => {
     if (editorRef.current?.editor) {
       editorRef.current.editor.commands.insertContent(segment);
