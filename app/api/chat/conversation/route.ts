@@ -43,10 +43,7 @@ export async function POST(request: Request) {
   });
 
   if (!authResult.mailbox.chatIntegrationUsed) {
-    await db
-      .update(mailboxes)
-      .set({ chatIntegrationUsed: true })
-      .where(eq(mailboxes.id, authResult.mailbox.id));
+    await db.update(mailboxes).set({ chatIntegrationUsed: true }).where(eq(mailboxes.id, authResult.mailbox.id));
   }
 
   return corsResponse({ conversationSlug: newConversation.slug });
