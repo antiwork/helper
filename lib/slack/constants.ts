@@ -10,6 +10,8 @@ export const REQUIRED_SCOPES = [
   "im:history",
   "im:read",
   "im:write",
+  "links:read",
+  "links:write",
   "users:read",
   "users:read.email",
 ];

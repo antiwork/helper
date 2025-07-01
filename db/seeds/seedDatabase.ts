@@ -60,7 +60,16 @@ export const seedDatabase = async () => {
     const users = await Promise.all(
       env.INITIAL_USER_EMAILS.map(async (email) =>
         assertDefined(
-          (await supabase.auth.admin.createUser({ email, password: "password", email_confirm: true })).data.user,
+          (
+            await supabase.auth.admin.createUser({
+              email,
+              password: "password",
+              email_confirm: true,
+              user_metadata: {
+                permissions: "admin",
+              },
+            })
+          ).data.user,
         ),
       ),
     );

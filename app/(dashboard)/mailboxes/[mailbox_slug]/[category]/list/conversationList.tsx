@@ -8,6 +8,8 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSelected } from "@/components/useSelected";
+import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
@@ -30,7 +32,6 @@ export const List = () => {
 
   const [showFilters, setShowFilters] = useState(false);
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
-  const [selectedConversations, setSelectedConversations] = useState<number[]>([]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
@@ -49,33 +50,39 @@ export const List = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
-  const toggleAllConversations = () => {
-    if (allConversationsSelected || selectedConversations.length > 0) {
-      setAllConversationsSelected(false);
-      setSelectedConversations([]);
-    } else {
-      setAllConversationsSelected(true);
-      setSelectedConversations([]);
-    }
-  };
+  const {
+    selected: selectedConversations,
+    change: changeSelectedConversations,
+    clear: clearSelectedConversations,
+    set: setSelectedConversations,
+  } = useSelected<number>([]);
 
-  const toggleConversation = (id: number) => {
+  const onShiftSelectConversation = useShiftSelected<number>(
+    conversations.map((c) => c.id),
+    changeSelectedConversations,
+  );
+
+  const toggleConversation = (id: number, isSelected: boolean, shiftKey: boolean) => {
     if (allConversationsSelected) {
+      // If all conversations are selected, toggle the selected conversation
       setAllConversationsSelected(false);
       setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
     } else {
-      setSelectedConversations(
-        selectedConversations.includes(id)
-          ? selectedConversations.filter((selectedId) => selectedId !== id)
-          : [...selectedConversations, id],
-      );
+      onShiftSelectConversation(id, isSelected, shiftKey);
     }
   };
 
-  const handleBulkUpdate = (status: "closed" | "spam") => {
+  const toggleAllConversations = () => {
+    setAllConversationsSelected((prev) => !prev);
+    clearSelectedConversations();
+  };
+
+  const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
       const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
+      const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+
       bulkUpdate(
         {
           conversationFilter,
@@ -85,10 +92,16 @@ export const List = () => {
         {
           onSuccess: ({ updatedImmediately }) => {
             setAllConversationsSelected(false);
-            setSelectedConversations([]);
+            clearSelectedConversations();
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
-            if (!updatedImmediately) {
+
+            if (updatedImmediately) {
+              const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
+              toast({
+                title: `${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`,
+              });
+            } else {
               toast({ title: "Starting update, refresh to see status." });
             }
           },
@@ -204,22 +217,35 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="link"
-                    className="h-auto"
-                    onClick={() => handleBulkUpdate("closed")}
-                    disabled={isBulkUpdating}
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    variant="link"
-                    className="h-auto"
-                    onClick={() => handleBulkUpdate("spam")}
-                    disabled={isBulkUpdating}
-                  >
-                    Mark as spam
-                  </Button>
+                  {searchParams.status === "closed" ? (
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("open")}
+                      disabled={isBulkUpdating}
+                    >
+                      Reopen
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("closed")}
+                      disabled={isBulkUpdating}
+                    >
+                      Close
+                    </Button>
+                  )}
+                  {searchParams.status !== "spam" && (
+                    <Button
+                      variant="link"
+                      className="h-auto"
+                      onClick={() => handleBulkUpdate("spam")}
+                      disabled={isBulkUpdating}
+                    >
+                      Mark as spam
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -239,7 +265,7 @@ export const List = () => {
           <LoadingSpinner size="lg" />
         </div>
       ) : conversations.length === 0 ? (
-        <NoConversations />
+        <NoConversations filtered={activeFilterCount > 0 || !!input.search} />
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
           {conversations.map((conversation) => (
@@ -249,7 +275,7 @@ export const List = () => {
               isActive={conversationSlug === conversation.slug}
               onSelectConversation={navigateToConversation}
               isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-              onToggleSelect={() => toggleConversation(conversation.id)}
+              onToggleSelect={(isSelected, shiftKey) => toggleConversation(conversation.id, isSelected, shiftKey)}
             />
           ))}
           <div ref={loadMoreRef} />

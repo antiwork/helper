@@ -10,7 +10,7 @@ export const setupCron = async (job: string, schedule: string) => {
   `);
 };
 
-export const unscheduleCron = async (job: string) => {
+const unscheduleCron = async (job: string) => {
   await db.execute(sql`
     select cron.unschedule(${job});
   `);
@@ -92,6 +92,7 @@ export const setupJobFunctions = async () => {
       message_record record;
       job_count integer := 0;
       response text;
+      start_time timestamp := clock_timestamp();
     begin
       loop
         select * into message_record from pgmq.pop('jobs');
@@ -100,6 +101,11 @@ export const setupJobFunctions = async () => {
           exit;
         end if;
         
+        if extract(epoch from (clock_timestamp() - start_time)) >= 20 then
+          raise notice 'Stopping job processing after 20 seconds, processed % jobs', job_count;
+          exit;
+        end if;
+
         job_count := job_count + 1;
         
         response := call_job_endpoint(message_record.message::text, message_record.msg_id::text);
@@ -107,7 +113,7 @@ export const setupJobFunctions = async () => {
         raise notice 'Processed job %, response: %', message_record.msg_id, response;
       end loop;
       
-      return format('Processed %s jobs', job_count);
+      return format('Processed %s jobs in %s seconds', job_count, round(extract(epoch from (clock_timestamp() - start_time))::numeric, 2));
     end;
     $$ language plpgsql;
   `);

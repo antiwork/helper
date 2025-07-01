@@ -1,17 +1,16 @@
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
-import { userProfiles } from "@/db/schema/userProfiles";
 
 export const UserRoles = {
   CORE: "core",
   NON_CORE: "nonCore",
   AFK: "afk",
-  ADMIN: "admin",
 } as const;
 
 export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
@@ -28,15 +27,22 @@ export type UserWithMailboxAccessData = {
   email: string | undefined;
   role: UserRole;
   keywords: MailboxAccess["keywords"];
+  permissions: string;
 };
 
-export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
+export const addUser = async (
+  inviterUserId: string,
+  emailAddress: string,
+  displayName: string,
+  permission?: string,
+) => {
   const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.createUser({
     email: emailAddress,
     user_metadata: {
       inviter_user_id: inviterUserId,
       display_name: displayName,
+      permissions: permission ?? "member",
     },
   });
   if (error) throw error;
@@ -69,7 +75,6 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     };
   });
 };
-
 
 export const updateUserMailboxData = async (
   userId: string,
@@ -114,12 +119,24 @@ export const updateUserMailboxData = async (
   if (updateError) throw updateError;
   if (!updatedUser) throw new Error("Failed to update user");
 
+  await db
+    .update(userProfiles)
+    .set({
+      displayName: updates.displayName,
+      access: {
+        role: updates.role || "afk",
+        keywords: updates.keywords || [],
+      },
+    })
+    .where(eq(userProfiles.id, updatedUser.id));
+
   return {
     id: updatedUser.id,
     displayName: getFullName(updatedUser),
     email: updatedUser.email ?? undefined,
     role: updatedMailboxData.role || "afk",
     keywords: updatedMailboxData.keywords || [],
+    permissions: updatedMailboxData.permissions,
   };
 };
 

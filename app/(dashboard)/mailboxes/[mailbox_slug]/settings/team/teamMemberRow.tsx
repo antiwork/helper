@@ -16,7 +16,6 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
   nonCore: "Non-core",
   afk: "Away",
-  admin: "Admin",
 };
 
 interface TeamMember {
@@ -231,7 +230,6 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
             <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
             <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
             <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-            <SelectItem value="admin">{ROLE_DISPLAY_NAMES.admin}</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>
