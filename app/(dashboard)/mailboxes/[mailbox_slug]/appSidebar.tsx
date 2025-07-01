@@ -76,6 +76,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
+                className="cursor-pointer"
                 onClick={() => {
                   const fallback = `/mailboxes/${mailboxSlug}/mine`;
                   router.push(previousAppUrlRef.current || fallback);
@@ -110,7 +111,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
                     router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 cursor-pointer"
                 >
                   <Avatar src={undefined} fallback={mailbox.name} size="sm" />
                   <span className="truncate text-base">{mailbox.name}</span>
