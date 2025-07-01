@@ -108,7 +108,14 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
         <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
           <span className="text-muted-foreground">Status</span>
           <div>
-            <Badge>{conversation.status || "open"}</Badge>
+            <Badge variant={
+              conversation.status === "open" ? "success" :
+              conversation.status === "spam" ? "destructive" :
+              conversation.status === "closed" ? "gray" :
+              "success" // default to success for open
+            }>
+              {conversation.status || "open"}
+            </Badge>
           </div>
           <span className="text-muted-foreground">Assignee</span>
           <AssignPopoverButton

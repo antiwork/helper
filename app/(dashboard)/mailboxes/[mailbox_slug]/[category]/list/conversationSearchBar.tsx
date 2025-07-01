@@ -139,7 +139,16 @@ export const ConversationSearchBar = ({
                   <span
                     className={cn(
                       "w-2 h-2 rounded-full",
-                      statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
+                      (() => {
+                        const selectedStatus = statusOptions.find(({ selected }) => selected)?.value;
+                        return selectedStatus === "open"
+                          ? "bg-green-500"
+                          : selectedStatus === "closed"
+                            ? "bg-gray-400"
+                            : selectedStatus === "spam"
+                              ? "bg-red-500"
+                              : "bg-green-500"; // default
+                      })(),
                     )}
                   />
                   {statusOptions.find(({ selected }) => selected)?.label}
@@ -149,7 +158,21 @@ export const ConversationSearchBar = ({
             <SelectContent>
               {statusOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value} className="">
-                  {option.label}
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        option.value === "open"
+                          ? "bg-green-500"
+                          : option.value === "closed"
+                            ? "bg-gray-400"
+                            : option.value === "spam"
+                              ? "bg-red-500"
+                              : "bg-green-500", // default
+                      )}
+                    />
+                    {option.label}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

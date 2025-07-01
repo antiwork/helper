@@ -129,7 +129,17 @@ export const ConversationListItem = ({
                       />
                     )}
                   </div>
-                  {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
+                  <div className="flex items-center gap-1">
+                    {/* Status indicator */}
+                    <div className={`h-[0.5rem] w-[0.5rem] rounded-full ${
+                      conversation.status === "open" ? "bg-green-500" :
+                      conversation.status === "closed" ? "bg-gray-400" :
+                      conversation.status === "spam" ? "bg-red-500" :
+                      "bg-green-500" // default to green for open
+                    }`} />
+                    {/* New conversation indicator */}
+                    {conversation.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
