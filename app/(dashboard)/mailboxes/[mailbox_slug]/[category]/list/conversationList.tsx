@@ -129,6 +129,12 @@ export const List = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+  // Clear selections when status filter changes
+  useEffect(() => {
+    setAllConversationsSelected(false);
+    clearSelectedConversations();
+  }, [searchParams.status, clearSelectedConversations]);
+
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
