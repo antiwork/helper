@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Calendar, Eye, Loader2 } from "lucide-react";
+import { SessionsListSkeleton } from "@/components/skeletons/SessionsListSkeleton";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -76,9 +77,7 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
           </CardHeader>
           <CardContent>
             {isLoading && sessions.length === 0 && (
-              <div className="flex justify-center items-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+              <SessionsListSkeleton count={5} />
             )}
 
             {!isLoading && sessions.length === 0 && (

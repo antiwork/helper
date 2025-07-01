@@ -2,6 +2,7 @@
 
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ToolsListSkeleton } from "@/components/skeletons/ToolsListSkeleton";
 import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
@@ -45,17 +46,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
           {showApiForm && <ApiForm mailboxSlug={mailboxSlug} onCancel={() => setShowApiForm(false)} />}
 
           {apisLoading ? (
-            <>
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-4">
-                  <div className="h-5 w-8 rounded bg-secondary animate-skeleton" />
-                  <div className="grow space-y-2">
-                    <div className="h-4 w-32 rounded bg-secondary animate-skeleton" />
-                    <div className="h-4 w-48 rounded bg-secondary animate-skeleton" />
-                  </div>
-                </div>
-              ))}
-            </>
+            <ToolsListSkeleton count={2} />
           ) : (
             apis.map((api) => <ApiCard key={api.id} api={api} mailboxSlug={mailboxSlug} />)
           )}

@@ -4,7 +4,7 @@ import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { toast } from "@/components/hooks/use-toast";
-import LoadingSpinner from "@/components/loadingSpinner";
+import { ConversationListSkeleton } from "@/components/skeletons/ConversationListSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -261,8 +261,8 @@ export const List = () => {
         </div>
       </div>
       {isPending ? (
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner size="lg" />
+        <div className="flex-1 px-4">
+          <ConversationListSkeleton count={8} />
         </div>
       ) : conversations.length === 0 ? (
         <NoConversations filtered={activeFilterCount > 0 || !!input.search} />
@@ -281,7 +281,7 @@ export const List = () => {
           <div ref={loadMoreRef} />
           {isFetchingNextPage && (
             <div className="flex justify-center py-4">
-              <LoadingSpinner size="md" />
+              <ConversationListSkeleton count={3} />
             </div>
           )}
         </div>
