@@ -26,6 +26,7 @@ export function OPTIONS() {
 
 export const POST = createApiHandler(
   async (
+    request: Request,
     context: { params?: Record<string, string>; mailbox: any; session: any },
     validatedBody: z.infer<typeof requestSchema>,
   ) => {
