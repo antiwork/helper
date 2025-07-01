@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 
 const rehypeAddWbrAfterSlash = () => {
   return (tree: any) => {
@@ -132,7 +133,7 @@ export default function MessageMarkdown({ children, className, components }: Mes
     <ReactMarkdown
       className={className}
       remarkPlugins={[remarkAutolink]}
-      rehypePlugins={[rehypeAddWbrAfterSlash]}
+      rehypePlugins={[rehypeRaw, rehypeAddWbrAfterSlash]}
       components={{
         a: ({ children, ...props }: any) => (
           <a target="_blank" rel="noopener noreferrer" {...props}>
