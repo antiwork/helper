@@ -152,8 +152,10 @@ const createSanitizeSchema = (allowHtml: boolean) => {
 export default function MessageMarkdown({ children, className, components, allowHtml = true }: MessageMarkdownProps) {
   const sanitizeSchema = createSanitizeSchema(allowHtml);
 
-  const rehypePlugins: Pluggable[] = [rehypeRaw, rehypeAddWbrAfterSlash];
+  const rehypePlugins: Pluggable[] = [rehypeAddWbrAfterSlash];
+
   if (allowHtml) {
+    rehypePlugins.unshift(rehypeRaw);
     rehypePlugins.push([rehypeSanitize, sanitizeSchema]);
   }
 
