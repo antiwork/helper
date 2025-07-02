@@ -18,7 +18,7 @@ export class SavedRepliesPage extends BasePage {
   readonly deleteDialog: Locator;
   readonly dialogTitle: Locator;
   readonly nameInput: Locator;
-  readonly contentTextarea: Locator;
+  readonly contentEditor: Locator;
   readonly saveButton: Locator;
   readonly cancelButton: Locator;
   readonly addButton: Locator;
@@ -51,7 +51,7 @@ export class SavedRepliesPage extends BasePage {
     this.deleteDialog = page.locator('[role="alertdialog"]:has-text("Delete saved reply")');
     this.dialogTitle = page.locator('[role="dialog"] h2, [role="alertdialog"] h2');
     this.nameInput = page.locator('input[placeholder*="Welcome Message"]');
-    this.contentTextarea = page.locator('textarea[placeholder*="Enter your saved reply content"]');
+    this.contentEditor = page.locator('[role="textbox"][contenteditable="true"]');
     this.saveButton = page.locator('button:has-text("Saving...")');
     this.cancelButton = page.locator('button:has-text("Cancel")');
     this.addButton = page.locator('button:has-text("Add")');
@@ -152,7 +152,8 @@ export class SavedRepliesPage extends BasePage {
 
   async fillSavedReplyForm(name: string, content: string) {
     await this.nameInput.fill(name);
-    await this.contentTextarea.fill(content);
+    await this.contentEditor.click();
+    await this.contentEditor.fill(content);
   }
 
   async clickSaveButton() {
@@ -160,13 +161,20 @@ export class SavedRepliesPage extends BasePage {
     const addBtn = this.page.locator('button:has-text("Add")');
     const updateBtn = this.page.locator('button:has-text("Update")');
 
+    await this.page.waitForTimeout(300); // Brief wait for form to stabilize
+
     if (await addBtn.isVisible()) {
+      await addBtn.scrollIntoViewIfNeeded();
       await addBtn.click();
     } else if (await updateBtn.isVisible()) {
+      await updateBtn.scrollIntoViewIfNeeded();
       await updateBtn.click();
     } else {
       throw new Error("Neither Add nor Update button found");
     }
+
+    // Wait for the dialog to close
+    await this.page.waitForTimeout(500);
   }
 
   async clickCancelButton() {
@@ -234,17 +242,18 @@ export class SavedRepliesPage extends BasePage {
   }
 
   // Helper methods
-  async createSavedReply(name: string, content: string) {
-    // Handle both empty state and existing replies state
-    const isEmpty = await this.emptyState.isVisible().catch(() => false);
-
-    if (isEmpty) {
+  async openCreateDialog() {
+    const replyCount = await this.getSavedReplyCount();
+    if (replyCount === 0) {
       await this.clickCreateOneButton();
     } else {
       await this.clickNewReplyButton();
     }
-
     await this.expectCreateDialogVisible();
+  }
+
+  async createSavedReply(name: string, content: string) {
+    await this.openCreateDialog();
     await this.fillSavedReplyForm(name, content);
     await this.clickSaveButton();
     await this.waitForToast("Saved reply created successfully");
@@ -256,7 +265,8 @@ export class SavedRepliesPage extends BasePage {
 
     // Clear existing content
     await this.nameInput.clear();
-    await this.contentTextarea.clear();
+    await this.contentEditor.click();
+    await this.contentEditor.clear();
 
     await this.fillSavedReplyForm(newName, newContent);
     await this.clickSaveButton();
