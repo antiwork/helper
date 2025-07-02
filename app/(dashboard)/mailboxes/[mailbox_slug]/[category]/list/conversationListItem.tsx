@@ -83,7 +83,10 @@ export const ConversationListItem = ({
                           });
                         },
                         onError: () => {
-                          const actionText = previousStatus === "open" ? "reopen" : "close";
+                          const actionText = previousStatus === "open" ? "reopen" : 
+                                            previousStatus === "closed" ? "reopen" : 
+                                            previousStatus === "spam" ? "undo spam" :
+                                            "reopen";
                           toast({ title: `Failed to ${actionText} conversation`, variant: "destructive" });
                         }
                       },

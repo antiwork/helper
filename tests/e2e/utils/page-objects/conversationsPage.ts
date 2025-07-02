@@ -118,13 +118,88 @@ export class ConversationsPage extends BasePage {
     expect(this.page.url()).toContain(fragment);
   }
 
-  // Generic conversation list methods (these would need real selectors when we find them)
-  getConversationCount(): number {
-    // This would need real conversation item selectors
-    return 0;
+  // Quick actions selectors
+  private readonly conversationListItem = '.group';
+  private readonly quickActionsContainer = '.md\\:opacity-0.md\\:group-hover\\:opacity-100';
+  private readonly closeButton = 'button:has(svg[data-testid="lucide-archive"])';
+  private readonly spamButton = 'button:has(svg[data-testid="lucide-shield-alert"])';
+  private readonly reopenButton = 'button:has(svg[data-testid="lucide-corner-up-left"])';
+  private readonly toast = '.toast, [role="alert"]';
+
+  // Quick actions methods
+  async hoverFirstConversation() {
+    const firstConversation = this.page.locator(this.conversationListItem).first();
+    await firstConversation.hover();
+    return firstConversation;
   }
 
-  selectConversation(index = 0) {
-    // This would need real conversation item selectors
+  async expectQuickActionsVisible() {
+    const quickActions = this.page.locator(this.quickActionsContainer).first();
+    await expect(quickActions).toBeVisible();
+  }
+
+  async expectQuickActionsHidden() {
+    const quickActions = this.page.locator(this.quickActionsContainer).first();
+    await expect(quickActions).toBeHidden();
+  }
+
+  async clickCloseButton() {
+    const firstConversation = this.page.locator(this.conversationListItem).first();
+    const closeBtn = firstConversation.locator(this.closeButton).first();
+    await expect(closeBtn).toBeVisible({ timeout: 5000 });
+    await closeBtn.click();
+  }
+
+  async clickSpamButton() {
+    const firstConversation = this.page.locator(this.conversationListItem).first();
+    const spamBtn = firstConversation.locator(this.spamButton).first();
+    await expect(spamBtn).toBeVisible({ timeout: 5000 });
+    await spamBtn.click();
+  }
+
+  async clickReopenButton() {
+    const firstConversation = this.page.locator(this.conversationListItem).first();
+    const reopenBtn = firstConversation.locator(this.reopenButton).first();
+    await expect(reopenBtn).toBeVisible({ timeout: 5000 });
+    await reopenBtn.click();
+  }
+
+  async clickUndoInToast() {
+    const undoButton = this.page.locator(this.toast).locator('button:has-text("Undo")');
+    await undoButton.click();
+  }
+
+  async expectSuccessToast(message: string) {
+    const successToast = this.page.locator(this.toast).filter({ hasText: new RegExp(message, 'i') });
+    await expect(successToast).toBeVisible({ timeout: 5000 });
+  }
+
+  async expectErrorToast() {
+    const errorToast = this.page.locator(this.toast).filter({ hasText: /Failed|error/i });
+    await expect(errorToast).toBeVisible({ timeout: 5000 });
+  }
+
+  async navigateToOpenConversations() {
+    await this.goto("/mailboxes/gumroad/open");
+    await this.waitForPageLoad();
+  }
+
+  async navigateToClosedConversations() {
+    await this.goto("/mailboxes/gumroad/closed");
+    await this.waitForPageLoad();
+  }
+
+  async navigateToSpamConversations() {
+    await this.goto("/mailboxes/gumroad/spam");
+    await this.waitForPageLoad();
+  }
+
+  // Generic conversation list methods
+  async getConversationCount(): Promise<number> {
+    return await this.page.locator(this.conversationListItem).count();
+  }
+
+  async hasConversations(): Promise<boolean> {
+    return (await this.getConversationCount()) > 0;
   }
 }
