@@ -12,6 +12,7 @@ import {
   isNotNull,
   isNull,
   lt,
+  not,
   or,
   SQL,
   sql,
@@ -98,6 +99,59 @@ export const searchConversations = async (
         }
       : {}),
     ...(filters.events?.length ? { events: hasEvent(inArray(conversationEvents.type, filters.events)) } : {}),
+    ...(filters.closedBy === "ai"
+      ? {
+          closedByAi: and(
+            eq(conversations.status, "closed"),
+            exists(
+              db
+                .select()
+                .from(conversationMessages)
+                .where(
+                  and(
+                    eq(conversationMessages.conversationId, conversations.id),
+                    eq(conversationMessages.role, "ai_assistant"),
+                    eq(conversationMessages.status, "sent"),
+                    isNull(conversationMessages.deletedAt),
+                  ),
+                ),
+            ),
+            not(
+              exists(
+                db
+                  .select()
+                  .from(conversationMessages)
+                  .where(
+                    and(
+                      eq(conversationMessages.conversationId, conversations.id),
+                      eq(conversationMessages.role, "staff"),
+                      isNull(conversationMessages.deletedAt),
+                    ),
+                  ),
+              ),
+            ),
+          ),
+        }
+      : {}),
+    ...(filters.closedBy === "human"
+      ? {
+          closedByHuman: and(
+            eq(conversations.status, "closed"),
+            exists(
+              db
+                .select()
+                .from(conversationMessages)
+                .where(
+                  and(
+                    eq(conversationMessages.conversationId, conversations.id),
+                    eq(conversationMessages.role, "staff"),
+                    isNull(conversationMessages.deletedAt),
+                  ),
+                ),
+            ),
+          ),
+        }
+      : {}),
     ...(filters.closed ? { closed: hasStatusChangeEvent("closed", filters.closed, CLOSED_BY_AGENT_MESSAGE) } : {}),
     ...(filters.reopened
       ? { reopened: hasStatusChangeEvent("open", filters.reopened, REOPENED_BY_AGENT_MESSAGE) }

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
 import { AssigneeFilter } from "./filters/assigneeFilter";
+import { ClosedByFilter } from "./filters/closedByFilter";
 import { CustomerFilter } from "./filters/customerFilter";
 import { DateFilter } from "./filters/dateFilter";
 import { EventFilter } from "./filters/eventFilter";
@@ -21,6 +22,7 @@ interface FilterValues {
   isPrompt: boolean | undefined;
   reactionType: "thumbs-up" | "thumbs-down" | null;
   events: ("request_human_support" | "resolved_by_ai")[];
+  closedBy: "ai" | "human" | null;
 }
 
 interface ConversationFiltersProps {
@@ -43,6 +45,7 @@ export const useConversationFilters = () => {
     isPrompt: searchParams.isPrompt ?? undefined,
     reactionType: searchParams.reactionType ?? null,
     events: searchParams.events ?? [],
+    closedBy: searchParams.closedBy ?? null,
   });
 
   const activeFilterCount = useMemo(() => {
@@ -55,6 +58,7 @@ export const useConversationFilters = () => {
     if (filterValues.isPrompt !== undefined) count++;
     if (filterValues.reactionType !== null) count++;
     if (filterValues.events.length > 0) count++;
+    if (filterValues.closedBy !== null) count++;
     return count;
   }, [filterValues]);
 
@@ -73,6 +77,7 @@ export const useConversationFilters = () => {
       isPrompt: searchParams.isPrompt ?? undefined,
       reactionType: searchParams.reactionType ?? null,
       events: searchParams.events ?? [],
+      closedBy: searchParams.closedBy ?? null,
     });
   }, [searchParams]);
 
@@ -92,6 +97,7 @@ export const useConversationFilters = () => {
       isPrompt: null,
       reactionType: null,
       events: null,
+      closedBy: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
   };
@@ -110,6 +116,15 @@ export const ConversationFilters = ({
   activeFilterCount,
   onClearFilters,
 }: ConversationFiltersProps) => {
+  const { searchParams } = useConversationsListInput();
+
+  // If the status is not closed, clear the closedBy filter
+  useEffect(() => {
+    if (searchParams.status !== "closed" && filterValues.closedBy !== null) {
+      onUpdateFilter({ closedBy: null });
+    }
+  }, [searchParams.status, filterValues.closedBy, onUpdateFilter]);
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
       <DateFilter
@@ -119,6 +134,9 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
+      {searchParams.status === "closed" && (
+        <ClosedByFilter closedBy={filterValues.closedBy} onChange={(closedBy) => onUpdateFilter({ closedBy })} />
+      )}
       <AssigneeFilter
         selectedAssignees={filterValues.assignee}
         onChange={(assignees) => onUpdateFilter({ assignee: assignees })}

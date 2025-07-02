@@ -19,6 +19,7 @@ export const useConversationsListInput = () => {
     isPrompt: parseAsBoolean,
     reactionType: parseAsStringEnum(["thumbs-up", "thumbs-down"] as const),
     events: parseAsArrayOf(parseAsStringEnum(["request_human_support", "resolved_by_ai"] as const)),
+    closedBy: parseAsStringEnum(["ai", "human"] as const),
   });
 
   const input = {
@@ -36,6 +37,7 @@ export const useConversationsListInput = () => {
     isPrompt: searchParams.isPrompt ?? undefined,
     reactionType: searchParams.reactionType ?? undefined,
     events: searchParams.events ?? undefined,
+    closedBy: searchParams.closedBy ?? undefined,
   };
 
   return { input, searchParams, setSearchParams };

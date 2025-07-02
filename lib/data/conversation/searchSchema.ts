@@ -33,6 +33,10 @@ export const searchSchema = z.object({
     .array(z.enum(["request_human_support", "resolved_by_ai"]))
     .optional()
     .describe("Filter tickets that were escalated to humans or resolved by AI"),
+  closedBy: z
+    .enum(["ai", "human"])
+    .optional()
+    .describe("Filter tickets by whether they were closed by AI or manually by a human"),
 
   closed: z
     .object({

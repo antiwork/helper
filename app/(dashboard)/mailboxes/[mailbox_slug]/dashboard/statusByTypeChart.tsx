@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from "recharts";
@@ -41,6 +42,7 @@ interface StatusByTypeChartProps {
 }
 
 export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: StatusByTypeChartProps) {
+  const router = useRouter();
   const { startDate, endDate } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
 
   const { data, isLoading } = api.mailbox.conversations.messages.statusByTypeCount.useQuery({
@@ -48,6 +50,29 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
     startDate,
     endDate,
   });
+
+  const handleSliceClick = (type: string) => {
+    const searchParams = new URLSearchParams();
+
+    // Set date range
+    searchParams.set("createdAfter", startDate.toISOString());
+    if (endDate) {
+      searchParams.set("createdBefore", endDate.toISOString());
+    }
+
+    // Set status and closedBy based on type
+    if (type === "open") {
+      searchParams.set("status", "open");
+    } else if (type === "ai") {
+      searchParams.set("status", "closed");
+      searchParams.set("closedBy", "ai");
+    } else if (type === "human") {
+      searchParams.set("status", "closed");
+      searchParams.set("closedBy", "human");
+    }
+
+    router.push(`/mailboxes/${mailboxSlug}/all?${searchParams.toString()}`);
+  };
 
   if (isLoading || !data) {
     return (
@@ -101,6 +126,7 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
                     key={entry.name}
                     fill={entry.fill}
                     className="transition-opacity duration-100 hover:opacity-90 cursor-pointer"
+                    onClick={() => handleSliceClick(entry.name)}
                   />
                 ))}
                 <Label
