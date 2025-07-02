@@ -191,7 +191,7 @@ export const ConversationSearchBar = ({
       <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
         <SelectTrigger
           variant="bare"
-          className="w-auto text-foreground [&>svg]:text-foreground text-sm min-w-[110px] justify-center"
+          className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
           hideArrow="mobileOnly"
         >
           <SelectValue
