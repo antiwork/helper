@@ -23,6 +23,21 @@ interface ConversationSearchBarProps {
   setShowFilters: (showFilters: boolean) => void;
 }
 
+const statuses = [
+  {
+    value: "open",
+    label: "Open",
+  },
+  {
+    value: "closed",
+    label: "Closed",
+  },
+  {
+    value: "spam",
+    label: "Spam",
+  },
+] satisfies { value: StatusOption; label: string }[];
+
 export const ConversationSearchBar = ({
   toggleAllConversations,
   allConversationsSelected,
@@ -36,15 +51,7 @@ export const ConversationSearchBar = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(searchParams.search || "");
 
-  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
-
-  const status = openCount
-    ? [
-        { status: "open", count: openCount[input.category] },
-        { status: "closed", count: 0 },
-        { status: "spam", count: 0 },
-      ]
-    : [];
+  const { data: countData } = api.mailbox.conversations.count.useQuery(input);
 
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
@@ -81,24 +88,23 @@ export const ConversationSearchBar = ({
   );
 
   const statusOptions = useMemo(() => {
-    const statuses = status.flatMap((s) => ({
-      value: s.status as StatusOption,
-      label: s.count ? `${s.count} ${s.status}` : capitalize(s.status),
-      selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
+    const arr = statuses.flatMap((s) => ({
+      ...s,
+      selected: searchParams.status ? searchParams.status == s.value : s.value === "open",
     }));
 
     if (searchParams.status) {
-      if (!statuses.some((s) => s.value === searchParams.status)) {
-        statuses.push({
-          value: searchParams.status as StatusOption,
+      if (!arr.some((s) => s.value === searchParams.status)) {
+        arr.push({
+          value: searchParams.status,
           label: capitalize(searchParams.status),
           selected: true,
         });
       }
     }
 
-    return statuses;
-  }, [status, searchParams]);
+    return arr;
+  }, [searchParams]);
 
   const sortOptions = useMemo(
     () => [
@@ -128,43 +134,38 @@ export const ConversationSearchBar = ({
   return (
     <div className="flex items-center justify-between gap-2 md:gap-6 py-1">
       <div className="flex items-center gap-4">
-        {statusOptions.length > 1 ? (
-          <Select
-            value={statusOptions.find(({ selected }) => selected)?.value || ""}
-            onValueChange={handleStatusFilterChange}
-          >
-            <SelectTrigger className="w-auto text-foreground [&>svg]:text-foreground text-sm">
-              <SelectValue placeholder="Select status">
-                <span className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
-                    )}
-                  />
-                  {statusOptions.find(({ selected }) => selected)?.label}
-                </span>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="">
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : statusOptions[0] ? (
-          <div className="text-sm text-foreground">{statusOptions[0].label}</div>
-        ) : null}
-        {statusOptions.length > 0 && (
-          <button
-            onClick={toggleAllConversations}
-            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer"
-          >
-            {allConversationsSelected ? "Select none" : "Select all"}
-          </button>
-        )}
+        <Select
+          value={statusOptions.find(({ selected }) => selected)?.value || ""}
+          onValueChange={handleStatusFilterChange}
+        >
+          <SelectTrigger className="w-auto text-foreground [&>svg]:text-foreground text-sm">
+            <SelectValue placeholder="Select status">
+              <span className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
+                  )}
+                />
+                {countData ? `${countData.total} ` : ""}
+                {statusOptions.find(({ selected }) => selected)?.label}
+              </span>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="">
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <button
+          onClick={toggleAllConversations}
+          className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+        >
+          {allConversationsSelected ? "Select none" : "Select all"}
+        </button>
       </div>
       <div className="flex-1 max-w-[400px] flex items-center gap-2">
         <Input
