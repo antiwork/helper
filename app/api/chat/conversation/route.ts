@@ -9,7 +9,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, { ession, mailbox }) => {
+export const POST = withAuth(async ({ request }, { session, mailbox }) => {
   const { isPrompt } = await request.json();
   const isVisitor = session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
