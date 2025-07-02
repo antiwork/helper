@@ -67,7 +67,7 @@ export function Timeline({ events }: TimelineProps) {
     try {
       const parsedJson = JSON.parse(details);
       return <JsonViewer data={parsedJson} />;
-    } catch (error) {
+    } catch (_error) {
       // If parsing fails, render the original string
       return <div className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap">{details}</div>;
     }

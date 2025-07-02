@@ -62,7 +62,7 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   let session;
   try {
     session = verifyWidgetSession(token, mailbox);
-  } catch (error) {
+  } catch (_error) {
     return { success: false, error: "Invalid session token" };
   }
 
