@@ -170,9 +170,9 @@
   }
 
   .dark {
-    --sidebar-width: 12rem;
+    --sidebar-width: 16rem;
     --sidebar-width-icon: 3rem;
-    --sidebar-width-mobile: 90%;
+    --sidebar-width-mobile: 60%; /* Mobile sidebar width */
     --sidebar-background: hsl(0 58% 10%); /* Updated to match background color */
     --sidebar-foreground: hsl(0 0% 100%);
     --sidebar-primary: hsl(0 58% 10%);
