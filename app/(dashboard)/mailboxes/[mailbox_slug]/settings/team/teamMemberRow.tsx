@@ -29,9 +29,10 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
+  variant?: "default" | "compact";
 };
 
-const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
@@ -205,27 +206,81 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     return "?";
   };
 
+  if (variant === "compact") {
+    return (
+      <TableRow>
+        <TableCell className="min-w-[180px]">
+          <div className="flex items-center gap-2">
+            <Avatar fallback={getAvatarFallback(member)} size="sm" />
+            <span className="truncate text-sm">{member.email || "No email"}</span>
+          </div>
+        </TableCell>
+        <TableCell className="min-w-[160px]">
+          <div className="relative grow">
+            <Input
+              value={displayNameInput}
+              onChange={(e) => handleDisplayNameChange(e.target.value)}
+              placeholder="Display name"
+              className="w-full text-sm h-9"
+            />
+          </div>
+        </TableCell>
+        <TableCell className="w-[140px]">
+          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
+            <SelectTrigger className="w-full text-sm h-9">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+            </SelectContent>
+          </Select>
+        </TableCell>
+        <TableCell className="min-w-[180px]">
+          <div className="w-full">
+            <div className="relative grow">
+              <Input
+                value={keywordsInput}
+                onChange={(e) => handleKeywordsChange(e.target.value)}
+                placeholder="Keywords"
+                className={role === "nonCore" ? "w-full text-sm h-9" : "invisible w-full text-sm h-9"}
+              />
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="w-[100px]">
+          <div className="flex items-center gap-1">
+            <SavingIndicator state={displayNameSaving.state} />
+            <SavingIndicator state={roleSaving.state} />
+            {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
   return (
     <TableRow>
-      <TableCell className="min-w-[200px] sm:w-auto">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <TableCell className="w-auto">
+        <div className="flex items-center gap-3">
           <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate text-sm sm:text-base">{member.email || "No email"}</span>
+          <span className="truncate">{member.email || "No email"}</span>
         </div>
       </TableCell>
-      <TableCell className="min-w-[150px] sm:min-w-[200px]">
+      <TableCell className="min-w-[200px]">
         <div className="relative grow">
           <Input
             value={displayNameInput}
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
-            className="w-full text-sm sm:text-base"
+            className="w-full"
           />
         </div>
       </TableCell>
-      <TableCell className="w-[140px] sm:w-[180px]">
+      <TableCell className="w-[180px]">
         <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-          <SelectTrigger className="w-full text-sm sm:text-base">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
@@ -235,20 +290,20 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell className="min-w-[180px] sm:min-w-[200px]">
+      <TableCell className="min-w-[200px]">
         <div className="w-full">
           <div className="relative grow">
             <Input
               value={keywordsInput}
               onChange={(e) => handleKeywordsChange(e.target.value)}
               placeholder="Enter keywords separated by commas"
-              className={role === "nonCore" ? "w-full text-sm sm:text-base" : "invisible w-full text-sm sm:text-base"}
+              className={role === "nonCore" ? "w-full" : "invisible w-full"}
             />
           </div>
         </div>
       </TableCell>
-      <TableCell className="w-[100px] sm:w-[120px]">
-        <div className="flex items-center gap-1 sm:gap-2">
+      <TableCell className="w-[120px]">
+        <div className="flex items-center gap-2">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={roleSaving.state} />
           {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
