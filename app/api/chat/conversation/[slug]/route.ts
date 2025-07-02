@@ -8,8 +8,8 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
 
-export const GET = withAuth(async ({ request }, { session, mailbox }) => {
-  const { slug } = request.query;
+export const GET = withAuth(async ({ request, context: { params } }, { session, mailbox }) => {
+  const { slug } = await params;
 
   let baseCondition;
   if (session.isAnonymous && session.anonymousSessionId) {

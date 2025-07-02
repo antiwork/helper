@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { Mailbox } from "@/lib/data/mailbox";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
 const corsHeaders = {
@@ -71,12 +72,12 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
 }
 
 type AuthenticatedHandler = (
-  inner: { request: NextApiRequest; response: NextApiResponse },
+  inner: { request: NextRequest; context: { params: Promise<{ id: string; slug: string }> } },
   auth: { session: WidgetSessionPayload; mailbox: Mailbox },
-) => Promise<NextResponse>;
+) => Promise<Response>;
 
 export function withAuth(handler: AuthenticatedHandler) {
-  return async (request: NextRequest) => {
+  return async (request: Request, context: { params: Promise<{ id: string; slug: string }> }) => {
     if (request.method === "OPTIONS") {
       return new NextResponse(null, { status: 204, headers: corsHeaders });
     }
@@ -93,6 +94,6 @@ export function withAuth(handler: AuthenticatedHandler) {
       });
     }
 
-    return handler(request, { session: authResult.session, mailbox: authResult.mailbox });
+    return handler({ request, context }, { session: authResult.session, mailbox: authResult.mailbox });
   };
 }

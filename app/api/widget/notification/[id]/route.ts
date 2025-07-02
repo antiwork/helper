@@ -12,8 +12,8 @@ export function OPTIONS() {
   return corsOptions("PATCH");
 }
 
-export const PATCH = withAuth(async ({ request }, { session, mailbox }) => {
-  const { id } = request.query;
+export const PATCH = withAuth(async ({ request, context: { params } }, { session, mailbox }) => {
+  const { id } = await params;
   const notificationId = parseInt(id);
 
   if (!session.email) {

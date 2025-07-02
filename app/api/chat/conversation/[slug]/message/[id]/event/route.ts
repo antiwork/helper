@@ -12,8 +12,8 @@ const EventPayloadSchema = z.object({
   }),
 });
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
-  const { id, slug } = request.query;
+export const POST = withAuth(async ({ request, context: { params } }, { session, mailbox }) => {
+  const { id, slug } = await params;
   let messageId;
   try {
     const parsedId = z.coerce.bigint().parse(id);
