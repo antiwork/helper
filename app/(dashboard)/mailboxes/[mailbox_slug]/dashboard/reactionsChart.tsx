@@ -91,7 +91,7 @@ export function ReactionsChart({
 
   return (
     <>
-      <ChartContainer config={chartConfig} className="h-[300px] w-full min-w-0 overflow-hidden">
+      <ChartContainer config={chartConfig} className="h-[300px] w-full min-w-0">
         <BarChart data={Object.values(chartData)} stackOffset="sign" barGap={16}>
           <XAxis dataKey="label" axisLine={false} tickLine={false} />
           <YAxis width={20} domain={["dataMin", "dataMax"]} axisLine={false} tickLine={false} />
