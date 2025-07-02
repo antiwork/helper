@@ -32,7 +32,6 @@ import {
 import { CarouselDirection, createCarousel } from "@/components/carousel";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -199,12 +198,12 @@ const MessageActionsPanel = () => {
 };
 
 const ConversationHeader = ({
-  conversationMetadata,
+  subject,
   isAboveSm,
   sidebarVisible,
   setSidebarVisible,
 }: {
-  conversationMetadata: any;
+  subject: string;
   isAboveSm: boolean;
   sidebarVisible: boolean;
   setSidebarVisible: (visible: boolean) => void;
@@ -240,7 +239,7 @@ const ConversationHeader = ({
       </div>
       <div className="flex-1 min-w-0 flex justify-center">
         <div className="truncate text-base font-semibold text-foreground text-center max-w-full">
-          {conversationMetadata.subject ?? "(no subject)"}
+          {subject ?? "(no subject)"}
         </div>
       </div>
       <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">
@@ -397,52 +396,6 @@ const ConversationContent = () => {
     .getData(input)
     ?.conversations.find((c) => c.slug === conversationSlug);
 
-  const [emailCopied, setEmailCopied] = useState(false);
-  const copyEmailToClipboard = async () => {
-    const email = conversationListInfo?.emailFrom || conversationInfo?.emailFrom;
-    if (email) {
-      await navigator.clipboard.writeText(email);
-      setEmailCopied(true);
-      setTimeout(() => setEmailCopied(false), 2000);
-    }
-  };
-
-  const conversationMetadata = {
-    emailFrom: (
-      <div className="flex items-center gap-3">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              onClick={copyEmailToClipboard}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  copyEmailToClipboard();
-                }
-              }}
-              tabIndex={0}
-              role="button"
-              aria-label="Copy email address to clipboard"
-              className="lg:text-base text-sm text-foreground responsive-break-words truncate cursor-pointer hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="right">Copied!</TooltipContent>
-        </Tooltip>
-        {(conversationListInfo?.conversationProvider || conversationInfo?.conversationProvider) === "helpscout" && (
-          <Badge variant="dark">Help Scout</Badge>
-        )}
-        {conversationInfo?.customerMetadata?.isVip && (
-          <Badge variant="bright" className="no-underline">
-            VIP
-          </Badge>
-        )}
-      </div>
-    ),
-    subject: (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)"),
-  };
-
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
 
@@ -487,7 +440,9 @@ const ConversationContent = () => {
                   setPreviewFiles={setPreviewFiles}
                 />
                 <ConversationHeader
-                  conversationMetadata={conversationMetadata}
+                  subject={
+                    (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)")
+                  }
                   isAboveSm={isAboveSm}
                   sidebarVisible={sidebarVisible}
                   setSidebarVisible={setSidebarVisible}
@@ -538,7 +493,7 @@ const ConversationContent = () => {
           setPreviewFiles={setPreviewFiles}
         />
         <ConversationHeader
-          conversationMetadata={conversationMetadata}
+          subject={(conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)")}
           isAboveSm={isAboveSm}
           sidebarVisible={sidebarVisible}
           setSidebarVisible={setSidebarVisible}
