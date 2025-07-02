@@ -38,7 +38,7 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
   const isAnonymousAuthorized = session.isAnonymous && conversation.emailFrom === null;
   const isAuthenticatedAuthorized = session.email && conversation.emailFrom === session.email;
 
-  if (!isAnonymousAuthorized && isAuthenticatedAuthorized) {
+  if (!isAnonymousAuthorized && !isAuthenticatedAuthorized) {
     throw new Error("Unauthorized");
   }
 
