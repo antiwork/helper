@@ -15,7 +15,6 @@ import { githubRouter } from "./github";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
-import { recentSearchesRouter } from "./recentSearches";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
@@ -139,7 +138,6 @@ export const mailboxRouter = {
   conversations: conversationsRouter,
   faqs: faqsRouter,
   members: membersRouter,
-  recentSearches: recentSearchesRouter,
   slack: slackRouter,
   github: githubRouter,
   tools: toolsRouter,

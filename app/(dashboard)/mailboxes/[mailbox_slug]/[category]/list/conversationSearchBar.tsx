@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useRecentSearches } from "@/components/useRecentSearches";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -31,7 +32,6 @@ export const ConversationSearchBar = ({
   showFilters,
   setShowFilters,
 }: ConversationSearchBarProps) => {
-  const utils = api.useUtils();
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -40,17 +40,7 @@ export const ConversationSearchBar = ({
   const [showRecentSearches, setShowRecentSearches] = useState(false);
 
   const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
-  const { data: recentSearches = [] } = api.mailbox.recentSearches.list.useQuery({ mailboxSlug: input.mailboxSlug });
-  const saveRecentSearchMutation = api.mailbox.recentSearches.save.useMutation({
-    onSuccess: () => {
-      utils.mailbox.recentSearches.list.invalidate({ mailboxSlug: input.mailboxSlug });
-    },
-  });
-  const deleteRecentSearchMutation = api.mailbox.recentSearches.delete.useMutation({
-    onSuccess: () => {
-      utils.mailbox.recentSearches.list.invalidate({ mailboxSlug: input.mailboxSlug });
-    },
-  });
+  const { recentSearches, saveRecentSearch, deleteRecentSearch } = useRecentSearches(input.mailboxSlug);
 
   const status = openCount
     ? [
@@ -63,20 +53,14 @@ export const ConversationSearchBar = ({
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
     if (val.trim()) {
-      saveRecentSearchMutation.mutate({
-        mailboxSlug: input.mailboxSlug,
-        searchTerm: val.trim(),
-      });
+      saveRecentSearch(val.trim());
     }
     searchInputRef.current?.focus();
   }, 300);
 
   const debouncedSaveSearch = useDebouncedCallback((val: string) => {
     if (val.trim()) {
-      saveRecentSearchMutation.mutate({
-        mailboxSlug: input.mailboxSlug,
-        searchTerm: val.trim(),
-      });
+      saveRecentSearch(val.trim());
     }
   }, 1000);
 
@@ -117,12 +101,9 @@ export const ConversationSearchBar = ({
   const handleDeleteRecentSearch = useCallback(
     (searchId: number, event: React.MouseEvent) => {
       event.stopPropagation();
-      deleteRecentSearchMutation.mutate({
-        mailboxSlug: input.mailboxSlug,
-        searchId,
-      });
+      deleteRecentSearch(searchId);
     },
-    [deleteRecentSearchMutation, input.mailboxSlug],
+    [deleteRecentSearch],
   );
 
   const handleClearSearch = useCallback(() => {
