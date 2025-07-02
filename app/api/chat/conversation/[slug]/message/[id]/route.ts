@@ -1,7 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { authenticateWidget } from "@/app/api/widget/utils";
+import { withAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -19,14 +19,8 @@ const MessageReactionSchema = z.discriminatedUnion("type", [
     feedback: z.string().nullish(),
   }),
 ]);
-
-export async function POST(request: Request, { params }: { params: Promise<{ id: string; slug: string }> }) {
+export const POST = withAuth(async ({ request, context: { params } }, { session }) => {
   const { id, slug } = await params;
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return Response.json({ error: authResult.error }, { status: 401 });
-  }
 
   let messageId;
   try {
@@ -51,7 +45,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== authResult.session.email)) {
+  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 
@@ -108,7 +102,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   waitUntil(publishEvent(messageId));
 
   return Response.json({ reaction });
-}
+});
 
 const publishEvent = async (messageId: number) => {
   const message = assertDefined(
