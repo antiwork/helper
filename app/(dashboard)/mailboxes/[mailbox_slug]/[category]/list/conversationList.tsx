@@ -3,6 +3,7 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,8 @@ export const List = () => {
     });
   });
 
+  const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+
   return (
     <div className="flex flex-col w-full h-full">
       <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
@@ -218,33 +221,45 @@ export const List = () => {
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
                   {searchParams.status === "closed" ? (
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("open")}
-                      disabled={isBulkUpdating}
+                    <ConfirmationDialog
+                      message={`Are you sure you want to reopen ${selectedCount} conversation${
+                        selectedCount === 1 ? "" : "s"
+                      }?`}
+                      onConfirm={() => handleBulkUpdate("open")}
+                      confirmLabel="Yes, reopen"
+                      confirmVariant="bright"
                     >
-                      Reopen
-                    </Button>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        Reopen
+                      </Button>
+                    </ConfirmationDialog>
                   ) : (
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("closed")}
-                      disabled={isBulkUpdating}
+                    <ConfirmationDialog
+                      message={`Are you sure you want to close ${selectedCount} conversation${
+                        selectedCount === 1 ? "" : "s"
+                      }?`}
+                      onConfirm={() => handleBulkUpdate("closed")}
+                      confirmLabel="Yes, close"
+                      confirmVariant="bright"
                     >
-                      Close
-                    </Button>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        Close
+                      </Button>
+                    </ConfirmationDialog>
                   )}
                   {searchParams.status !== "spam" && (
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("spam")}
-                      disabled={isBulkUpdating}
+                    <ConfirmationDialog
+                      message={`Are you sure you want to mark ${selectedCount} conversation${
+                        selectedCount === 1 ? "" : "s"
+                      } as spam?`}
+                      onConfirm={() => handleBulkUpdate("spam")}
+                      confirmLabel="Yes, mark as spam"
+                      confirmVariant="bright"
                     >
-                      Mark as spam
-                    </Button>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        Mark as spam
+                      </Button>
+                    </ConfirmationDialog>
                   )}
                 </div>
               </div>
