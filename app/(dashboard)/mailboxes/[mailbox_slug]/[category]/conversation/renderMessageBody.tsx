@@ -1,5 +1,3 @@
-"use client";
-
 import "@/components/linkCta.css";
 import DOMPurify from "isomorphic-dompurify";
 import MessageMarkdown from "@/components/messageMarkdown";

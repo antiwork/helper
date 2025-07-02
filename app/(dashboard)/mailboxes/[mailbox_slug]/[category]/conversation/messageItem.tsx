@@ -315,7 +315,7 @@ const MessageItem = ({
                 "ml-auto": rightAlignedMessage,
               })}
             >
-              <span className="text-sm text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
                 <HumanizedTime time={message.createdAt} />
               </span>
               {message.type === "message" && message.slackUrl && (
