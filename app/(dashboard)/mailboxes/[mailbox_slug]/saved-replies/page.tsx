@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SavedReplyForm } from "./savedReplyForm";
@@ -59,7 +60,8 @@ export default function SavedRepliesPage() {
     try {
       await navigator.clipboard.writeText(content);
       toast({ title: "Saved reply copied to clipboard", variant: "success" });
-    } catch (_error) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       toast({ title: "Failed to copy saved reply", variant: "destructive" });
     }
   };
