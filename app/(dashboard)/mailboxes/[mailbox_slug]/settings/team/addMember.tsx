@@ -84,7 +84,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
             className="absolute inset-y-0 right-0 flex items-center pr-3 touch-manipulation"
             onClick={() => setEmailInput("")}
             disabled={isAdding}
-            aria-label="Clear email"
+            aria-label="Clear email address"
           >
             <X className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </button>
@@ -107,6 +107,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
             className="absolute inset-y-0 right-0 flex items-center pr-3 touch-manipulation"
             onClick={() => setDisplayNameInput("")}
             disabled={isAdding}
+            aria-label="Clear display name"
           >
             <X className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </button>
