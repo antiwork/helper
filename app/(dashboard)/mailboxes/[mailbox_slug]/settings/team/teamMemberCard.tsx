@@ -11,15 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
-import { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
-
-interface TeamMember {
-  id: string;
-  displayName: string;
-  email: string | undefined;
-  role: UserRole;
-  keywords: string[];
-}
+import { ROLE_DISPLAY_NAMES, type TeamMember } from "./teamMemberRow";
+import { getAvatarFallback } from "./util";
 
 type TeamMemberCardProps = {
   member: TeamMember;
@@ -177,19 +170,6 @@ const TeamMemberCard = ({ member, mailboxSlug }: TeamMemberCardProps) => {
   const handleDisplayNameChange = (value: string) => {
     setDisplayNameInput(value);
     debouncedUpdateDisplayName(value);
-  };
-
-  const getAvatarFallback = (member: TeamMember): string => {
-    if (member.displayName?.trim()) {
-      return member.displayName;
-    }
-
-    if (member.email) {
-      const emailUsername = member.email.split("@")[0];
-      return emailUsername || member.email;
-    }
-
-    return "?";
   };
 
   return (

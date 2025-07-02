@@ -11,6 +11,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
+import { getAvatarFallback } from "./util";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
@@ -18,7 +19,7 @@ export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   afk: "Away",
 };
 
-interface TeamMember {
+export interface TeamMember {
   id: string;
   displayName: string;
   email: string | undefined;
@@ -191,19 +192,6 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
   const handleDisplayNameChange = (value: string) => {
     setDisplayNameInput(value);
     debouncedUpdateDisplayName(value);
-  };
-
-  const getAvatarFallback = (member: TeamMember): string => {
-    if (member.displayName?.trim()) {
-      return member.displayName;
-    }
-
-    if (member.email) {
-      const emailUsername = member.email.split("@")[0];
-      return emailUsername || member.email;
-    }
-
-    return "?";
   };
 
   if (variant === "compact") {
