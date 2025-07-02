@@ -1,12 +1,12 @@
 import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations as conversationsTable } from "@/db/schema";
-import { authenticateWidget } from "../../widget/utils";
+import { authenticateWidget, withAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
 export const GET = withAuth(async ({ request }, { session, mailbox }) => {
-  const url = new URL(req.url);
+  const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
 
   let baseCondition;
