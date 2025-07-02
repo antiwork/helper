@@ -139,12 +139,6 @@ const ScrollToTopButton = ({
             show ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none",
           )}
           onClick={scrollToTop}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              scrollToTop();
-            }
-          }}
           aria-label="Scroll to top"
           tabIndex={show ? 0 : -1}
         >
@@ -434,7 +428,7 @@ const ConversationContent = () => {
               {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
             </div>
           </TooltipTrigger>
-          {emailCopied && <TooltipContent side="right">Copied!</TooltipContent>}
+          <TooltipContent side="right">Copied!</TooltipContent>
         </Tooltip>
         {(conversationListInfo?.conversationProvider || conversationInfo?.conversationProvider) === "helpscout" && (
           <Badge variant="dark">Help Scout</Badge>
