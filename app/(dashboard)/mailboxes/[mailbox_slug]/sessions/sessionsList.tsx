@@ -3,7 +3,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { Calendar, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { SessionsListSkeleton } from "@/components/skeletons/SessionsListSkeleton";
 import { Badge } from "@/components/ui/badge";

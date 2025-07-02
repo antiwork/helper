@@ -10,7 +10,7 @@ export class NonRetriableError extends Error {
 export const assertDefinedOrRaiseNonRetriableError = <T>(value: T | null | undefined): T => {
   try {
     return assertDefined(value);
-  } catch (error) {
+  } catch (_error) {
     throw new NonRetriableError("Value is undefined");
   }
 };
