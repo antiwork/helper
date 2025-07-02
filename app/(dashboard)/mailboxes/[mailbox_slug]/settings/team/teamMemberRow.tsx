@@ -207,23 +207,25 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
 
   return (
     <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
+      <TableCell className="min-w-[200px] sm:w-auto">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate">{member.email || "No email"}</span>
+          <span className="truncate text-sm sm:text-base">{member.email || "No email"}</span>
         </div>
       </TableCell>
-      <TableCell>
-        <Input
-          value={displayNameInput}
-          onChange={(e) => handleDisplayNameChange(e.target.value)}
-          placeholder="Enter display name"
-          className="w-full max-w-sm"
-        />
+      <TableCell className="min-w-[150px] sm:min-w-[200px]">
+        <div className="relative grow">
+          <Input
+            value={displayNameInput}
+            onChange={(e) => handleDisplayNameChange(e.target.value)}
+            placeholder="Enter display name"
+            className="w-full text-sm sm:text-base"
+          />
+        </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[140px] sm:w-[180px]">
         <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full text-sm sm:text-base">
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
@@ -233,18 +235,20 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell>
-        <div className="w-[200px]">
-          <Input
-            value={keywordsInput}
-            onChange={(e) => handleKeywordsChange(e.target.value)}
-            placeholder="Enter keywords separated by commas"
-            className={role === "nonCore" ? "" : "invisible"}
-          />
+      <TableCell className="min-w-[180px] sm:min-w-[200px]">
+        <div className="w-full">
+          <div className="relative grow">
+            <Input
+              value={keywordsInput}
+              onChange={(e) => handleKeywordsChange(e.target.value)}
+              placeholder="Enter keywords separated by commas"
+              className={role === "nonCore" ? "w-full text-sm sm:text-base" : "invisible w-full text-sm sm:text-base"}
+            />
+          </div>
         </div>
       </TableCell>
-      <TableCell className="w-[120px]">
-        <div className="flex items-center gap-2">
+      <TableCell className="w-[100px] sm:w-[120px]">
+        <div className="flex items-center gap-1 sm:gap-2">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={roleSaving.state} />
           {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}

@@ -45,17 +45,18 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
           />
         )}
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="w-[180px]">Support role</TableHead>
-                <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
-                <TableHead className="w-[120px]">Status</TableHead>
-              </TableRow>
-            </TableHeader>
+        <div className="rounded-md border overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table className="min-w-[800px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px] sm:w-auto">Email</TableHead>
+                  <TableHead className="min-w-[150px] sm:min-w-[200px]">Name</TableHead>
+                  <TableHead className="w-[140px] sm:w-[180px]">Support role</TableHead>
+                  <TableHead className="min-w-[180px] sm:min-w-[200px]">Auto-assign keywords</TableHead>
+                  <TableHead className="w-[100px] sm:w-[120px]">Status</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
@@ -79,7 +80,8 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 ))
               )}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">

@@ -66,7 +66,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
   const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding;
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
       <div className="relative flex-1">
         <Label className="sr-only" htmlFor="email-input">
           Email Address
@@ -77,6 +77,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
           disabled={isAdding}
+          className="text-sm sm:text-base"
         />
         {emailInput && (
           <button
@@ -98,6 +99,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
           value={displayNameInput}
           onChange={(e) => setDisplayNameInput(e.target.value)}
           disabled={isAdding}
+          className="text-sm sm:text-base"
         />
         {displayNameInput && (
           <button
@@ -109,13 +111,13 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
           </button>
         )}
       </div>
-      <Button onClick={inviteMember} disabled={!canAddMember}>
+      <Button onClick={inviteMember} disabled={!canAddMember} className="w-full sm:w-auto text-sm sm:text-base">
         {isAdding ? (
           <>Adding...</>
         ) : (
           <>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Member
+            <span className="sm:inline">Add Member</span>
           </>
         )}
       </Button>
