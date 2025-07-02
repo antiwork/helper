@@ -410,12 +410,12 @@ const ConversationContent = () => {
   const conversationMetadata = {
     emailFrom: (
       <div className="flex items-center gap-3">
-        <Tooltip open={emailCopied}>
+        <Tooltip>
           <TooltipTrigger asChild>
             <div
               onClick={copyEmailToClipboard}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   copyEmailToClipboard();
                 }
