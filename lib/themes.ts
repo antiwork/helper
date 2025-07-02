@@ -42,8 +42,6 @@ export const buildThemeCss = (theme: MailboxTheme) => {
     :root,
     .light,
     .dark {
-      --sidebar-width: 280px;
-      --sidebar-width-mobile: 100%;
       --sidebar-background: ${sidebarBackground};
       --sidebar-foreground: ${sidebarForeground};
       --sidebar-primary: ${sidebarBackground};
