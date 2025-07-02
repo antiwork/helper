@@ -14,10 +14,6 @@ export class ConversationsPage extends BasePage {
   private readonly selectAllButton = 'button:has-text("Select all")';
   private readonly deselectButton = 'button:has-text("Deselect")';
 
-  // Conversation list selectors (these need to be verified)
-  private readonly conversationsList = "[data-conversation-list]"; // Fallback generic selector
-  private readonly conversationItem = "[data-conversation-item]"; // Fallback generic selector
-
   async navigateToConversations() {
     await this.goto("/mailboxes/gumroad/mine");
     await this.waitForPageLoad();
