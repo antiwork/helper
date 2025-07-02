@@ -227,6 +227,7 @@ export const List = () => {
                       }?`}
                       onConfirm={() => handleBulkUpdate("open")}
                       confirmLabel="Yes, reopen"
+                      confirmVariant="bright"
                     >
                       <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
                         Reopen
@@ -239,6 +240,7 @@ export const List = () => {
                       }?`}
                       onConfirm={() => handleBulkUpdate("closed")}
                       confirmLabel="Yes, close"
+                      confirmVariant="bright"
                     >
                       <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
                         Close
@@ -252,6 +254,7 @@ export const List = () => {
                       } as spam?`}
                       onConfirm={() => handleBulkUpdate("spam")}
                       confirmLabel="Yes, mark as spam"
+                      confirmVariant="bright"
                     >
                       <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
                         Mark as spam
