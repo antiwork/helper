@@ -160,7 +160,7 @@ export const ConversationSearchBar = ({
         {statusOptions.length > 0 && (
           <button
             onClick={() => toggleAllConversations()}
-            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"
           >
             {allConversationsSelected ? "Select none" : "Select all"}
           </button>
@@ -191,7 +191,7 @@ export const ConversationSearchBar = ({
       <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
         <SelectTrigger
           variant="bare"
-          className="w-auto text-foreground [&>svg]:text-foreground text-sm"
+          className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
           hideArrow="mobileOnly"
         >
           <SelectValue
