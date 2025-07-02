@@ -8,12 +8,7 @@ import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
-import {
-  getActionButtons,
-  handleMessageSlackAction,
-  OPEN_ATTACHMENT_COLOR,
-  RESOLVED_ATTACHMENT_COLOR,
-} from "@/lib/slack/shared";
+import { getActionButtons, OPEN_ATTACHMENT_COLOR, RESOLVED_ATTACHMENT_COLOR } from "@/lib/slack/shared";
 
 export const updateVipMessageOnClose = async (conversationId: number, byUserId: string | null) => {
   const vipMessages = await db.query.conversationMessages.findMany({

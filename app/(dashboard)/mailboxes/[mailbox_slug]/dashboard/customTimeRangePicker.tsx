@@ -1,6 +1,6 @@
 "use client";
 
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { DateRange as DayPickerDateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
 
 type DateRange = DayPickerDateRange;
 
@@ -19,7 +18,7 @@ type Props = {
   mailboxSlug: string;
 };
 
-export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailboxSlug }: Props) {
+export function CustomTimeRangePicker({ onSelect, className, selectedDate }: Props) {
   const [dateRange, setDateRange] = useState<DateRange>(
     selectedDate?.from && selectedDate?.to
       ? { from: selectedDate.from, to: selectedDate.to }
@@ -27,10 +26,8 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
   );
   const [timeFrom, setTimeFrom] = useState(() => (selectedDate?.from ? format(selectedDate.from, "HH:mm") : "00:00"));
   const [timeTo, setTimeTo] = useState(() => (selectedDate?.to ? format(selectedDate.to, "HH:mm") : "23:59"));
-  const [appliedRange, setAppliedRange] = useState<DateRange | undefined>(selectedDate);
   useEffect(() => {
     if (selectedDate?.from && selectedDate?.to) {
-      setAppliedRange(selectedDate);
       setDateRange(selectedDate);
       setTimeFrom(format(selectedDate.from, "HH:mm"));
       setTimeTo(format(selectedDate.to, "HH:mm"));
@@ -84,7 +81,6 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
     }
 
     const newRange = { from, to };
-    setAppliedRange(newRange);
     onSelect(newRange);
   };
 
@@ -93,7 +89,6 @@ export function CustomTimeRangePicker({ onSelect, className, selectedDate, mailb
     setDateRange(emptyRange);
     setTimeFrom("00:00");
     setTimeTo("23:59");
-    setAppliedRange(undefined);
     onSelect(emptyRange);
   };
 

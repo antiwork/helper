@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import { authUsers } from "@/db/supabaseSchema/auth";
 import { serializeMessage } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
 import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/realtime/channels";
@@ -24,12 +23,7 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
     await publishToRealtime({
       channel: conversationChannelId(message.conversation.mailbox.slug, message.conversation.slug),
       event: "conversation.message",
-      data: await serializeMessage(
-        message,
-        message.conversation.id,
-        message.conversation.mailbox,
-        message.userId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.userId) }) : null,
-      ),
+      data: await serializeMessage(message, message.conversation.id, message.conversation.mailbox),
       trim: (data, amount) => ({
         ...data,
         body: data.body && amount < data.body.length ? data.body.slice(0, data.body.length - amount) : null,

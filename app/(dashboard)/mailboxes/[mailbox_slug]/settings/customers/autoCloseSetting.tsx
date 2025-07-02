@@ -14,11 +14,6 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-type AutoCloseUpdates = {
-  autoCloseEnabled: boolean;
-  autoCloseDaysOfInactivity: number;
-};
-
 export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) {
   const [isEnabled, setIsEnabled] = useState(mailbox.autoCloseEnabled);
   const [daysOfInactivity, setDaysOfInactivity] = useState(mailbox.autoCloseDaysOfInactivity?.toString() ?? "30");
