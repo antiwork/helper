@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
@@ -72,7 +72,7 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
 }
 
 type AuthenticatedHandler = (
-  inner: { request: NextRequest; context: { params: Promise<{ id: string; slug: string }> } },
+  inner: { request: Request; context: { params: Promise<{ id: string; slug: string }> } },
   auth: { session: WidgetSessionPayload; mailbox: Mailbox },
 ) => Promise<Response>;
 
