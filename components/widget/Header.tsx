@@ -6,7 +6,6 @@ import { closeWidget, toggleWidgetHeight } from "@/lib/widget/messages";
 
 type Props = {
   config: HelperWidgetConfig;
-  isAnonymous: boolean;
   onShowPreviousConversations: () => void;
   onNewConversation: () => void;
   title: string;
@@ -19,13 +18,7 @@ const NewChatIcon = React.memo(() => (
   </svg>
 ));
 
-const Header = React.memo(function Header({
-  config,
-  isAnonymous,
-  onShowPreviousConversations,
-  onNewConversation,
-  title,
-}: Props) {
+const Header = React.memo(function Header({ config, onShowPreviousConversations, onNewConversation, title }: Props) {
   const [isMaximized, setIsMaximized] = React.useState(() => {
     return localStorage.getItem("helper_widget_minimized") !== "true";
   });

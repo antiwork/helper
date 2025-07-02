@@ -140,7 +140,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
         title: "Slack app uninstalled from your workspace",
         variant: "success",
       });
-    } catch (e) {
+    } catch (_e) {
       toast({
         title: "Error disconnecting Slack",
         variant: "destructive",

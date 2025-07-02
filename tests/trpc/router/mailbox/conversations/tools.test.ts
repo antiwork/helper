@@ -36,7 +36,8 @@ describe("toolsRouter", () => {
           },
         ],
       });
-      const { tool } = await toolsFactory.create({
+
+      await toolsFactory.create({
         mailboxId: mailbox.id,
         slug: "test-tool",
         name: "Test Tool",
