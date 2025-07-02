@@ -16,7 +16,6 @@ type CommandListProps = {
 
 export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect, onMouseEnter }: CommandListProps) => {
   const selectedItemRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (selectedItemRef.current) {
@@ -38,7 +37,7 @@ export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect,
   }
 
   return (
-    <CmdList ref={listRef} className="max-h-none h-full overflow-y-auto pt-1">
+    <CmdList className="max-h-none h-full overflow-y-auto pt-1">
       <CommandEmpty>No results found.</CommandEmpty>
       {groups.map((group, index) => (
         <CmdGroup key={group.heading} heading={group.heading} className={index === 0 ? "mt-2" : undefined}>
