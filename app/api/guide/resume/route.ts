@@ -8,22 +8,12 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async ({ request }, { session: { email }, mailbox }) => {
   const { sessionId } = await request.json();
 
   if (!sessionId || typeof sessionId !== "string") {
     return corsResponse({ error: "Missing or invalid sessionId" }, { status: 400 });
   }
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const {
-    mailbox,
-    session: { email },
-  } = authResult;
 
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);
@@ -50,4 +40,4 @@ export async function POST(request: Request) {
     captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Failed to fetch guide session" }, { status: 500 });
   }
-}
+});

@@ -1,26 +1,21 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { cache } from "react";
-import { authenticateWidget } from "@/app/api/widget/utils";
+import { authenticateWidget, withAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
 
-export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return Response.json({ error: authResult.error }, { status: 401 });
-  }
+export const GET = withAuth(async ({ request }, { session, mailbox }) => {
+  const { slug } = request.query;
 
   let baseCondition;
-  if (authResult.session.isAnonymous && authResult.session.anonymousSessionId) {
-    baseCondition = eq(conversations.anonymousSessionId, authResult.session.anonymousSessionId);
-  } else if (authResult.session.email) {
-    baseCondition = eq(conversations.emailFrom, authResult.session.email);
+  if (session.isAnonymous && session.anonymousSessionId) {
+    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
+  } else if (session.email) {
+    baseCondition = eq(conversations.emailFrom, session.email);
   } else {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
@@ -119,7 +114,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     ),
     isEscalated: !originalConversation.assignedToAI,
   });
-}
+});
 
 const getUserAnnotation = cache(async (userId: string) => {
   const user = await db.query.authUsers.findFirst({

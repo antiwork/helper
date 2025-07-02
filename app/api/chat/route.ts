@@ -2,7 +2,7 @@ import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
 import { ReadPageToolConfig } from "@helperai/sdk";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { authenticateWidget, corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
@@ -35,11 +35,10 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 
   // For anonymous sessions, only allow access if the conversation has no emailFrom
   // For authenticated sessions, only allow access if the emailFrom matches
-  if (session.isAnonymous) {
-    if (conversation.emailFrom !== null) {
-      throw new Error("Unauthorized");
-    }
-  } else if (session.email && conversation.emailFrom !== session.email) {
+  const isAnonymousAuthorized = session.isAnonymous && conversation.emailFrom === null;
+  const isAuthenticatedAuthorized = session.email && conversation.emailFrom === session.email;
+
+  if (!isAnonymousAuthorized && isAuthenticatedAuthorized) {
     throw new Error("Unauthorized");
   }
 
@@ -50,15 +49,8 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async ({ request }, { session, mailbox }) => {
   const { message, conversationSlug, readPageTool, guideEnabled, isToolResult }: ChatRequestBody = await request.json();
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { session, mailbox } = authResult;
   const conversation = await getConversation(conversationSlug, session, mailbox);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
@@ -112,4 +104,4 @@ export async function POST(request: Request) {
       }
     },
   });
-}
+});

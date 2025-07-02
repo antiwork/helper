@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { authenticateWidget, corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
@@ -17,13 +17,8 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async ({ request }, auth: { session; mailbox }) => {
   try {
-    const authResult = await authenticateWidget(request);
-    if (!authResult.success) {
-      return corsResponse({ error: authResult.error }, { status: 401 });
-    }
-
     const body = await request.json();
     const { sessionId, events, metadata, isRecording } = body;
 
@@ -37,7 +32,7 @@ export async function POST(request: Request) {
       }),
     );
 
-    if (guideSession.mailboxId !== authResult.mailbox.id) {
+    if (guideSession.mailboxId !== mailbox.id) {
       return corsResponse({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -81,4 +76,4 @@ export async function POST(request: Request) {
     captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Failed to process events" }, { status: 500 });
   }
-}
+});

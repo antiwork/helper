@@ -1,4 +1,4 @@
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { authenticateWidget, corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
 import { CHAT_CONVERSATION_SUBJECT, createConversation } from "@/lib/data/conversation";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 
@@ -9,26 +9,21 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
+export const POST = withAuth(async ({ request }, { ession, mailbox }) => {
   const { isPrompt } = await request.json();
-  const isVisitor = authResult.session.isAnonymous;
+  const isVisitor = session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
 
-  if (isVisitor && authResult.session.email) {
-    const platformCustomer = await getPlatformCustomer(authResult.mailbox.id, authResult.session.email);
+  if (isVisitor && session.email) {
+    const platformCustomer = await getPlatformCustomer(mailbox.id, session.email);
     if (platformCustomer?.isVip && !isPrompt) {
       status = VIP_INITIAL_STATUS;
     }
   }
 
   const newConversation = await createConversation({
-    emailFrom: isVisitor || !authResult.session.email ? null : authResult.session.email,
-    mailboxId: authResult.mailbox.id,
+    emailFrom: isVisitor || !session.email ? null : session.email,
+    mailboxId: mailbox.id,
     subject: CHAT_CONVERSATION_SUBJECT,
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",
@@ -36,8 +31,8 @@ export async function POST(request: Request) {
     isPrompt,
     isVisitor,
     assignedToAI: true,
-    anonymousSessionId: authResult.session.isAnonymous ? authResult.session.anonymousSessionId : undefined,
+    anonymousSessionId: session.isAnonymous ? session.anonymousSessionId : undefined,
   });
 
   return corsResponse({ conversationSlug: newConversation.slug });
-}
+});
