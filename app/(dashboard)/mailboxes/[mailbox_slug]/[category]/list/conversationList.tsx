@@ -201,6 +201,7 @@ export const List = () => {
             defaultSort={defaultSort}
             showFilters={showFilters}
             setShowFilters={setShowFilters}
+            conversationCount={conversations.length}
           />
           {(allConversationsSelected || selectedConversations.length > 0) && (
             <div className="flex items-center justify-between gap-4">

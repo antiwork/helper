@@ -6,6 +6,9 @@ import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
 // Use the working authentication
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
+// Constants for consistent selectors
+const CONVERSATION_LINKS_SELECTOR = 'a[href*="/conversations?id="]';
+
 test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate with retry logic for improved reliability
@@ -103,12 +106,16 @@ test.describe("Working Conversation Management", () => {
     await expect(sortButton).toBeVisible();
 
     // Select all button appears when conversations exist - verify it exists or conversations are empty
-    const conversationItems = page.locator('div[role="checkbox"]');
-    const conversationCount = await conversationItems.count();
+    const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
+    const conversationCount = await conversationLinks.count();
 
     if (conversationCount > 0) {
       const selectAllButton = page.locator('button:has-text("Select all"), button:has-text("Select none")');
       await expect(selectAllButton).toBeVisible();
+    } else {
+      // When no conversations exist, select all button should not be visible
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).not.toBeVisible();
     }
   });
 
@@ -125,18 +132,22 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle select all functionality", async ({ page }) => {
-    // Check if Select all button exists (it might be conditional)
-    const selectAllButton = page.locator('button:has-text("Select all")');
-    const selectAllCount = await selectAllButton.count();
+    // Check if conversations exist first
+    const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
+    const conversationCount = await conversationLinks.count();
 
-    if (selectAllCount > 0) {
+    if (conversationCount > 0) {
+      // Check if Select all button exists when conversations are present
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).toBeVisible();
+
       // Count conversation checkboxes before selecting
-      const checkboxes = page.locator('div[role="checkbox"]');
+      const checkboxes = page.locator('button[role="checkbox"]');
       const totalCheckboxes = await checkboxes.count();
 
       if (totalCheckboxes > 0) {
         // Count currently checked checkboxes
-        const checkedBefore = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedBefore = await checkboxes.locator('[data-state="checked"]').count();
 
         // Click Select all button
         await selectAllButton.click();
@@ -145,7 +156,7 @@ test.describe("Working Conversation Management", () => {
         await page.waitForTimeout(500);
 
         // Verify all checkboxes are now checked
-        const checkedAfter = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedAfter = await checkboxes.locator('[data-state="checked"]').count();
         expect(checkedAfter).toBe(totalCheckboxes);
         expect(checkedAfter).toBeGreaterThan(checkedBefore);
 
@@ -158,7 +169,11 @@ test.describe("Working Conversation Management", () => {
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     } else {
-      // If Select all doesn't exist, just verify we're still on the right page
+      // No conversations exist, verify Select all button is not visible
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).not.toBeVisible();
+      
+      // Verify we're still on the right page
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     }
@@ -170,6 +185,10 @@ test.describe("Working Conversation Management", () => {
     // Key elements should still be visible on mobile
     const searchInput = page.locator('input[placeholder="Search conversations"]');
     await expect(searchInput).toBeVisible();
+
+    // Select all button should be hidden on mobile (hidden md:block class)
+    const selectAllButton = page.locator('button:has-text("Select all")');
+    await expect(selectAllButton).not.toBeVisible();
 
     // Take mobile screenshot
     await takeDebugScreenshot(page, "dashboard-mobile.png");
@@ -329,10 +348,12 @@ test.describe("Working Conversation Management", () => {
         await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
       }
 
-      // Select all conversations
+      // Select all conversations (only if button exists)
       const selectAllButton = page.locator('button:has-text("Select all")');
-      await selectAllButton.click();
-      await page.waitForTimeout(300);
+      if ((await selectAllButton.count()) > 0) {
+        await selectAllButton.click();
+        await page.waitForTimeout(300);
+      }
 
       // Verify that all checkboxes are selected
       for (let i = 0; i < checkboxCount; i++) {
