@@ -51,7 +51,7 @@ export function OPTIONS() {
 }
 
 export async function POST(request: Request) {
-  const { message, conversationSlug, readPageTool, guideEnabled, isToolResult }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
 
   const authResult = await authenticateWidget(request);
   if (!authResult.success) {

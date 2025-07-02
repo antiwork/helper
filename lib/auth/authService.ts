@@ -30,7 +30,7 @@ export const gmailScopesGranted = (scopes: string[]) => {
   return true;
 };
 
-const createInitialMailbox = async (tx: TransactionOrDb) => {
+const createInitialMailbox = async (_tx: TransactionOrDb) => {
   const mailbox = await db
     .insert(mailboxes)
     .values({

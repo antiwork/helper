@@ -18,7 +18,7 @@ function cleanupExpiredItems() {
         if (parsed.expiresAt && parsed.expiresAt < Date.now()) {
           window.localStorage.removeItem(key);
         }
-      } catch (error) {
+      } catch (_error) {
         window.localStorage.removeItem(key);
       }
     }

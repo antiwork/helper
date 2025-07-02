@@ -15,7 +15,7 @@ const DashboardPage = async (props: { params: Promise<PageProps> }) => {
     return redirect("/mailboxes");
   }
 
-  return <DashboardContent mailboxSlug={params.mailbox_slug} currentMailbox={currentMailbox} />;
+  return <DashboardContent mailboxSlug={params.mailbox_slug} />;
 };
 
 export default DashboardPage;
