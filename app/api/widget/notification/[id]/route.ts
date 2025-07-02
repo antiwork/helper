@@ -13,7 +13,7 @@ export function OPTIONS() {
 }
 
 export const PATCH = withAuth(async ({ request }, { session, mailbox }) => {
-  const { id } = await params;
+  const { id } = request.query;
   const notificationId = parseInt(id);
 
   if (!session.email) {

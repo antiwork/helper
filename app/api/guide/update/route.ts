@@ -15,13 +15,13 @@ const updateGuideSchema = z.object({
 });
 
 export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+  const body = await request.json();
   const result = updateGuideSchema.safeParse(body);
-
-  if (!parsedBody.success) {
+  if (!result.success) {
     return corsResponse({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { sessionId, steps } = parsedBody;
+  const { sessionId, steps } = result.data;
 
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);
