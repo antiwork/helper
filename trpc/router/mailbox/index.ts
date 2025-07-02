@@ -79,21 +79,18 @@ export const mailboxRouter = {
       return result[0]?.count ?? 0;
     };
 
-    const [
-      openAll, openMine, openAssigned,
-      closedAll, closedMine, closedAssigned,
-      spamAll, spamMine, spamAssigned
-    ] = await Promise.all([
-      countByStatus("open"),
-      countByStatus("open", eq(conversations.assignedToId, ctx.user.id)),
-      countByStatus("open", isNotNull(conversations.assignedToId)),
-      countByStatus("closed"),
-      countByStatus("closed", eq(conversations.assignedToId, ctx.user.id)),
-      countByStatus("closed", isNotNull(conversations.assignedToId)),
-      countByStatus("spam"),
-      countByStatus("spam", eq(conversations.assignedToId, ctx.user.id)),
-      countByStatus("spam", isNotNull(conversations.assignedToId)),
-    ]);
+    const [openAll, openMine, openAssigned, closedAll, closedMine, closedAssigned, spamAll, spamMine, spamAssigned] =
+      await Promise.all([
+        countByStatus("open"),
+        countByStatus("open", eq(conversations.assignedToId, ctx.user.id)),
+        countByStatus("open", isNotNull(conversations.assignedToId)),
+        countByStatus("closed"),
+        countByStatus("closed", eq(conversations.assignedToId, ctx.user.id)),
+        countByStatus("closed", isNotNull(conversations.assignedToId)),
+        countByStatus("spam"),
+        countByStatus("spam", eq(conversations.assignedToId, ctx.user.id)),
+        countByStatus("spam", isNotNull(conversations.assignedToId)),
+      ]);
 
     return {
       open: {
