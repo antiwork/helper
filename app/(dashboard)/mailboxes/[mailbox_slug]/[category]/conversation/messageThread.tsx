@@ -17,7 +17,7 @@ export const MessageThread = ({
 }) => {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-1 flex-col gap-8 pb-4">
+      <div className="flex flex-1 flex-col gap-8 pb-4 mb-4">
         {conversation.isPrompt && (
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
