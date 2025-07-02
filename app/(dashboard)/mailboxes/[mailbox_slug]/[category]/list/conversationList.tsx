@@ -27,8 +27,15 @@ type ListItem = ConversationItem & { isNew?: boolean };
 export const List = () => {
   const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
-  const { conversationListData, navigateToConversation, isPending, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useConversationListContext();
+  const {
+    conversationListData,
+    navigateToConversation,
+    isPending,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useConversationListContext();
 
   const [showFilters, setShowFilters] = useState(false);
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
@@ -260,7 +267,7 @@ export const List = () => {
           )}
         </div>
       </div>
-      {(isPending || (isFetching && conversations.length === 0) || conversationListData === null) ? (
+      {isPending || (isFetching && conversations.length === 0) || conversationListData === null ? (
         <div className="flex-1 px-4">
           <ConversationListSkeleton count={8} />
         </div>

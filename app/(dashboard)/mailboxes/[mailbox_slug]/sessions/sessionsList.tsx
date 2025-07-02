@@ -2,10 +2,10 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Calendar, Eye, Loader2 } from "lucide-react";
-import { SessionsListSkeleton } from "@/components/skeletons/SessionsListSkeleton";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { SessionsListSkeleton } from "@/components/skeletons/SessionsListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,9 +76,7 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
             <CardDescription>View and manage guide sessions for {mailbox.name}</CardDescription>
           </CardHeader>
           <CardContent>
-            {(isLoading || (isFetching && sessions.length === 0)) && (
-              <SessionsListSkeleton count={5} />
-            )}
+            {(isLoading || (isFetching && sessions.length === 0)) && <SessionsListSkeleton count={5} />}
 
             {!(isLoading || (isFetching && sessions.length === 0)) && sessions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
