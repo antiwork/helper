@@ -15,6 +15,7 @@ import { githubRouter } from "./github";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
+import { savedRepliesRouter } from "./savedReplies";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
@@ -144,6 +145,8 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
+  savedReplies: savedRepliesRouter,
+
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
       throw new TRPCError({
