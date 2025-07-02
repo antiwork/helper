@@ -2,6 +2,7 @@ import { Send } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
@@ -73,8 +74,8 @@ export const List = () => {
     }
   };
 
-  const toggleAllConversations = () => {
-    setAllConversationsSelected((prev) => !prev);
+  const toggleAllConversations = (forceValue?: boolean) => {
+    setAllConversationsSelected((prev) => forceValue ?? !prev);
     clearSelectedConversations();
   };
 
@@ -130,10 +131,14 @@ export const List = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+  useHotkeys("mod+a", () => toggleAllConversations(true), {
+    enableOnFormTags: false,
+    preventDefault: true,
+  });
+
   // Clear selections when status filter changes
   useEffect(() => {
-    setAllConversationsSelected(false);
-    clearSelectedConversations();
+    toggleAllConversations(false);
   }, [searchParams.status, clearSelectedConversations]);
 
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
