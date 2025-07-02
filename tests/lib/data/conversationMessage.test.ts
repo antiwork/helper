@@ -297,7 +297,7 @@ describe("getMessages", () => {
     const { conversation } = await conversationFactory.create(mailbox.id);
 
     // Create event with null assignedToId (unassignment)
-    const { event } = await conversationEventsFactory.create(conversation.id, {
+    await conversationEventsFactory.create(conversation.id, {
       byUserId: user.id,
       type: "update",
       changes: { assignedToId: null, assignedToAI: false },
@@ -335,11 +335,11 @@ describe("getMessages", () => {
     });
 
     // Create note and event
-    const { note } = await noteFactory.create(conversation.id, {
+    await noteFactory.create(conversation.id, {
       userId: user2.id,
     });
 
-    const { event } = await conversationEventsFactory.create(conversation.id, {
+    await conversationEventsFactory.create(conversation.id, {
       byUserId: user1.id,
       changes: { assignedToId: user2.id },
     });

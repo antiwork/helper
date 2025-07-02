@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   );
 
   try {
-    const result = await generateGuidePlan(title, instructions, mailbox);
+    const result = await generateGuidePlan(title, instructions);
     let conversationId: number | null = null;
 
     if (conversationSlug) {

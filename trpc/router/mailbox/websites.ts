@@ -17,7 +17,7 @@ const fetchPageTitle = async (url: string): Promise<string> => {
 
     const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     return titleMatch?.[1] ? titleMatch[1].trim() : new URL(url).hostname;
-  } catch (error) {
+  } catch (_error) {
     return new URL(url).hostname;
   }
 };
