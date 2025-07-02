@@ -1,4 +1,4 @@
-import { authenticateWidget, corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";

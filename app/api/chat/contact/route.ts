@@ -1,6 +1,6 @@
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
-import { authenticateWidget, corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { triggerEvent } from "@/jobs/trigger";
 import { createConversation, generateConversationSubject } from "@/lib/data/conversation";

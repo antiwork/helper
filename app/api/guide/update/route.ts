@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { authenticateWidget, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsResponse, withAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getGuideSessionByUuid, updateGuideSession, type GuideSession } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";

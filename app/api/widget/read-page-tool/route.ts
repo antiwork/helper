@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { generateReadPageTool } from "@/lib/ai/readPageTool";
-import { authenticateWidget } from "../utils";
+import { withAuth } from "../utils";
 
 const requestSchema = z.object({
   pageHTML: z.string(),

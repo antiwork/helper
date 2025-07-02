@@ -1,5 +1,5 @@
 import { waitUntil } from "@vercel/functions";
-import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { corsResponse, withAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { generateGuidePlan } from "@/lib/ai/guide";
 import { createConversation, getConversationBySlug } from "@/lib/data/conversation";

@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations as conversationsTable } from "@/db/schema";
-import { authenticateWidget, withAuth } from "../../widget/utils";
+import { withAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 

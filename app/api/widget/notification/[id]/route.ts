@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { messageNotifications, platformCustomers } from "@/db/schema";
-import { authenticateWidget, corsOptions, corsResponse, withAuth } from "../../utils";
+import { corsOptions, corsResponse, withAuth } from "../../utils";
 
 const updateNotificationSchema = z.object({
   status: z.enum(["read", "dismissed"]),
