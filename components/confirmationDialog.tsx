@@ -1,14 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonProps } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 
@@ -17,9 +16,16 @@ interface ConfirmationDialogProps {
   onConfirm: () => void;
   children: React.ReactNode;
   confirmLabel?: string;
+  confirmVariant?: ButtonProps["variant"];
 }
 
-export function ConfirmationDialog({ message, onConfirm, children, confirmLabel }: ConfirmationDialogProps) {
+export function ConfirmationDialog({
+  message,
+  onConfirm,
+  children,
+  confirmLabel,
+  confirmVariant = "destructive",
+}: ConfirmationDialogProps) {
   const [open, setOpen] = React.useState(false);
 
   const handleConfirm = () => {
@@ -44,7 +50,7 @@ export function ConfirmationDialog({ message, onConfirm, children, confirmLabel 
             No
           </Button>
           <Button
-            variant="destructive"
+            variant={confirmVariant}
             onClick={(e) => {
               e.preventDefault();
               handleConfirm();

@@ -12,7 +12,6 @@ import { SecretInput } from "@/components/secretInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
@@ -65,7 +64,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       toast({
         title: "Metadata endpoint added!",
       });
-    } catch (e) {
+    } catch (_e) {
       toast({
         variant: "destructive",
         title: "Error adding metadata endpoint",
@@ -91,7 +90,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       toast({
         title: "Metadata endpoint removed!",
       });
-    } catch (e) {
+    } catch (_e) {
       toast({
         variant: "destructive",
         title: "Error removing metadata endpoint",
@@ -117,7 +116,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
         title: "Test request succeeded!",
       });
       setTestRequestStatus("success");
-    } catch (e) {
+    } catch (_e) {
       toast({
         variant: "destructive",
         title: "Error sending test request",

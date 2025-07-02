@@ -706,62 +706,68 @@ export function domElements(
    */
   function isTopElement(element) {
     return true;
-    const rect = getCachedBoundingRect(element);
 
-    // If element is not in viewport, consider it top
-    const isInViewport =
-      rect.left < window.innerWidth && rect.right > 0 && rect.top < window.innerHeight && rect.bottom > 0;
+    /**
+     * NOTE: Original implementation - unsure why we always return true here,
+     * should check when working on the guide feature
+     */
 
-    if (!isInViewport) {
-      return true;
-    }
+    // const rect = getCachedBoundingRect(element);
 
-    // Find the correct document context and root element
-    const doc = element.ownerDocument;
+    // // If element is not in viewport, consider it top
+    // const isInViewport =
+    //   rect.left < window.innerWidth && rect.right > 0 && rect.top < window.innerHeight && rect.bottom > 0;
 
-    // If we're in an iframe, elements are considered top by default
-    if (doc !== window.document) {
-      return true;
-    }
+    // if (!isInViewport) {
+    //   return true;
+    // }
 
-    // For shadow DOM, we need to check within its own root context
-    const shadowRoot = element.getRootNode();
-    if (shadowRoot instanceof ShadowRoot) {
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+    // // Find the correct document context and root element
+    // const doc = element.ownerDocument;
 
-      try {
-        const topEl = measureDomOperation(() => shadowRoot.elementFromPoint(centerX, centerY), "elementFromPoint");
-        if (!topEl) return false;
+    // // If we're in an iframe, elements are considered top by default
+    // if (doc !== window.document) {
+    //   return true;
+    // }
 
-        let current = topEl;
-        while (current && current !== shadowRoot) {
-          if (current === element) return true;
-          current = current.parentElement;
-        }
-        return false;
-      } catch (e) {
-        return true;
-      }
-    }
+    // // For shadow DOM, we need to check within its own root context
+    // const shadowRoot = element.getRootNode();
+    // if (shadowRoot instanceof ShadowRoot) {
+    //   const centerX = rect.left + rect.width / 2;
+    //   const centerY = rect.top + rect.height / 2;
 
-    // For elements in viewport, check if they're topmost
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    //   try {
+    //     const topEl = measureDomOperation(() => shadowRoot.elementFromPoint(centerX, centerY), "elementFromPoint");
+    //     if (!topEl) return false;
 
-    try {
-      const topEl = document.elementFromPoint(centerX, centerY);
-      if (!topEl) return false;
+    //     let current = topEl;
+    //     while (current && current !== shadowRoot) {
+    //       if (current === element) return true;
+    //       current = current.parentElement;
+    //     }
+    //     return false;
+    //   } catch (e) {
+    //     return true;
+    //   }
+    // }
 
-      let current = topEl;
-      while (current && current !== document.documentElement) {
-        if (current === element) return true;
-        current = current.parentElement;
-      }
-      return false;
-    } catch (e) {
-      return true;
-    }
+    // // For elements in viewport, check if they're topmost
+    // const centerX = rect.left + rect.width / 2;
+    // const centerY = rect.top + rect.height / 2;
+
+    // try {
+    //   const topEl = document.elementFromPoint(centerX, centerY);
+    //   if (!topEl) return false;
+
+    //   let current = topEl;
+    //   while (current && current !== document.documentElement) {
+    //     if (current === element) return true;
+    //     current = current.parentElement;
+    //   }
+    //   return false;
+    // } catch (e) {
+    //   return true;
+    // }
   }
 
   /**

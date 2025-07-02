@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { bigint, boolean, index, integer, pgTable, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { randomSlugField } from "../lib/random-slug-field";
