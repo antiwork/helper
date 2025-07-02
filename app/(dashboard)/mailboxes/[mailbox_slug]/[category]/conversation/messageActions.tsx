@@ -25,7 +25,7 @@ import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
-import { useUndoneEmailStore } from "./conversation";
+import { useUndoneEmailStore } from "./useUndoneEmailStore";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
 
@@ -369,6 +369,15 @@ export const MessageActions = () => {
             </Button>
           ) : (
             <>
+              <Button
+                size={isAboveMd ? "default" : "sm"}
+                variant="outlined"
+                onClick={() => updateStatus("closed")}
+                disabled={conversation?.status === "closed"}
+              >
+                Close
+                {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
+              </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
