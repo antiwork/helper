@@ -73,8 +73,8 @@ export const List = () => {
     }
   };
 
-  const toggleAllConversations = () => {
-    setAllConversationsSelected((prev) => !prev);
+  const toggleAllConversations = (forceValue?: boolean) => {
+    setAllConversationsSelected((prev) => forceValue ?? !prev);
     clearSelectedConversations();
   };
 
@@ -130,18 +130,10 @@ export const List = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  // Handle Cmd+A / Ctrl+A to select all conversations
-  useHotkeys(
-    "mod+a",
-    () => {
-      setAllConversationsSelected(true);
-      clearSelectedConversations(); // Clear individual selections since we're selecting all
-    },
-    {
-      enableOnFormTags: false, // Don't trigger when focused on form elements
-      preventDefault: true,
-    },
-  );
+  useHotkeys("mod+a", () => toggleAllConversations(true), {
+    enableOnFormTags: false,
+    preventDefault: true,
+  });
 
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
