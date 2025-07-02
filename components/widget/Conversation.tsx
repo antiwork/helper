@@ -24,7 +24,6 @@ type Props = {
   selectedConversationSlug?: string | null;
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
-  isAnonymous: boolean;
   guideEnabled: boolean;
   resumeGuide: GuideInstructions | null;
 };
@@ -42,7 +41,6 @@ export default function Conversation({
   selectedConversationSlug,
   readPageTool,
   onLoadFailed,
-  isAnonymous,
   guideEnabled,
   resumeGuide,
 }: Props) {

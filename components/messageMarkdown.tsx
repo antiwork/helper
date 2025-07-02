@@ -12,7 +12,7 @@ const rehypeAddWbrAfterSlash = () => {
         const parts = node.value.split(/(\/{1,})/);
         if (parts.length > 1) {
           const newChildren: any[] = [];
-          parts.forEach((part: string, index: number) => {
+          parts.forEach((part: string) => {
             if (/^\/{1,}$/.test(part)) {
               newChildren.push({ type: "text", value: part });
               newChildren.push({ type: "element", tagName: "wbr", properties: {}, children: [] });
