@@ -42,67 +42,79 @@ export const ConversationListItem = ({
   const { toast } = useToast();
   const utils = api.useUtils();
 
-  const { mutate: updateStatus, isPending: isUpdating } = api.mailbox.conversations.update.useMutation({
-    onSuccess: (data, variables) => {
-      void utils.mailbox.conversations.list.invalidate();
-      void utils.mailbox.conversations.count.invalidate();
+  const { mutate: updateStatus, isPending: isUpdating } = api.mailbox.conversations.update.useMutation();
 
-      const { status } = variables;
-      const previousStatus = conversation.status;
+  const handleUpdateStatus = (e: React.MouseEvent, newStatus: "open" | "closed" | "spam") => {
+    e.stopPropagation();
+    const previousStatus = conversation.status;
+    
+    updateStatus(
+      {
+        mailboxSlug,
+        conversationSlug: conversation.slug,
+        status: newStatus,
+      },
+      {
+        onSuccess: (data, variables) => {
+          void utils.mailbox.conversations.list.invalidate();
+          void utils.mailbox.conversations.count.invalidate();
 
-      if (status === "spam") {
-        toast({
-          title: "Marked as spam",
-          action: (
-            <ToastAction
-              altText="Undo"
-              onClick={() => {
-                updateStatus(
-                  {
-                    mailboxSlug,
-                    conversationSlug: conversation.slug,
-                    status: previousStatus ?? "open",
-                  },
-                  {
-                    onSuccess: () => {
-                      void utils.mailbox.conversations.list.invalidate();
-                      void utils.mailbox.conversations.count.invalidate();
-                      toast({
-                        title: "No longer marked as spam",
-                      });
-                    },
-                  },
-                );
-              }}
-            >
-              Undo
-            </ToastAction>
-          ),
-        });
-      } else {
-        let title = "";
-        if (status === "open") {
-          title = "Conversation reopened";
-        } else if (status === "closed") {
-          title = "Conversation closed";
-        }
-        if (title) {
-          toast({
-            title,
-            variant: "success",
-          });
+          const { status } = variables;
+
+          if (status === "spam") {
+            toast({
+              title: "Marked as spam",
+              action: (
+                <ToastAction
+                  altText="Undo"
+                  onClick={() => {
+                    updateStatus(
+                      {
+                        mailboxSlug,
+                        conversationSlug: conversation.slug,
+                        status: previousStatus ?? "open",
+                      },
+                      {
+                        onSuccess: () => {
+                          void utils.mailbox.conversations.list.invalidate();
+                          void utils.mailbox.conversations.count.invalidate();
+                          toast({
+                            title: "No longer marked as spam",
+                          });
+                        },
+                        onError: () => {
+                          const actionText = previousStatus === "open" ? "reopen" : "close";
+                          toast({ title: `Failed to ${actionText} conversation`, variant: "destructive" });
+                        }
+                      },
+                    );
+                  }}
+                >
+                  Undo
+                </ToastAction>
+              ),
+            });
+          } else {
+            let title = "";
+            if (status === "open") {
+              title = "Conversation reopened";
+            } else if (status === "closed") {
+              title = "Conversation closed";
+            }
+            if (title) {
+              toast({
+                title,
+                variant: "success",
+              });
+            }
+          }
+        },
+        onError: () => {
+          const actionText = newStatus === "open" ? "reopen" : newStatus === "closed" ? "close" : "mark as spam";
+          toast({ title: `Failed to ${actionText} conversation`, variant: "destructive" });
         }
       }
-    },
-  });
-
-  const handleUpdateStatus = (e: React.MouseEvent, status: "open" | "closed" | "spam") => {
-    e.stopPropagation();
-    updateStatus({
-      mailboxSlug,
-      conversationSlug: conversation.slug,
-      status,
-    });
+    );
   };
 
   useEffect(() => {
@@ -274,7 +286,7 @@ export const ConversationListItem = ({
           </a>
         </div>
       </div>
-      <div className="flex items-center justify-end gap-2 p-2 md:absolute md:right-4 md:bottom-4 md:hidden md:rounded-md md:border md:bg-background md:p-1 md:group-hover:flex">
+      <div className="flex items-center justify-end gap-2 p-2 md:absolute md:right-4 md:bottom-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 md:rounded-md md:border md:bg-background md:p-1">
         {(conversation.status === "closed" || conversation.status === "spam") && actionButtons.reopen}
         {conversation.status !== "closed" && actionButtons.close}
         {conversation.status !== "spam" && actionButtons.spam}
