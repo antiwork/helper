@@ -282,7 +282,7 @@ export const List = () => {
           )}
         </div>
       </div>
-      {isPending || (isFetching && conversations.length === 0) || conversationListData === null ? (
+      {isPending || (isFetching && conversations.length === 0) ? (
         <div className="flex-1 px-4">
           <ConversationListSkeleton count={8} />
         </div>
