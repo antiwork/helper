@@ -22,7 +22,7 @@ const adjustAttributes = (html: string) => {
     }
 
     return doc.body.innerHTML;
-  } catch (e) {
+  } catch (_e) {
     return html;
   }
 };
