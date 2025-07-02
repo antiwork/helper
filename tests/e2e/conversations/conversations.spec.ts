@@ -136,7 +136,7 @@ test.describe("Working Conversation Management", () => {
 
       if (totalCheckboxes > 0) {
         // Count currently checked checkboxes
-        const checkedBefore = await checkboxes.filter({ has: page.locator('[data-state="checked"]') }).count();
+        const checkedBefore = await checkboxes.locator('[data-state="checked"]').count();
 
         // Click Select all button
         await selectAllButton.click();
@@ -145,7 +145,7 @@ test.describe("Working Conversation Management", () => {
         await page.waitForTimeout(500);
 
         // Verify all checkboxes are now checked
-        const checkedAfter = await checkboxes.filter({ has: page.locator('[data-state="checked"]') }).count();
+        const checkedAfter = await checkboxes.locator('[data-state="checked"]').count();
         expect(checkedAfter).toBe(totalCheckboxes);
         expect(checkedAfter).toBeGreaterThan(checkedBefore);
 
