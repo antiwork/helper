@@ -159,7 +159,7 @@ export const ConversationSearchBar = ({
         ) : null}
         {statusOptions.length > 0 && (
           <button
-            onClick={toggleAllConversations}
+            onClick={() => toggleAllConversations()}
             className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"
           >
             {allConversationsSelected ? "Select none" : "Select all"}
