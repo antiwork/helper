@@ -32,7 +32,6 @@ const TeamMemberCard = ({ member, mailboxSlug }: TeamMemberCardProps) => {
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
 
-
   const displayNameSaving = useSavingIndicator();
   const roleSaving = useSavingIndicator();
   const keywordsSaving = useSavingIndicator();
@@ -45,7 +44,6 @@ const TeamMemberCard = ({ member, mailboxSlug }: TeamMemberCardProps) => {
     setLocalKeywords(member.keywords);
     setDisplayNameInput(member.displayName || "");
   }, [member.keywords, member.role, member.displayName]);
-
 
   const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
@@ -128,7 +126,6 @@ const TeamMemberCard = ({ member, mailboxSlug }: TeamMemberCardProps) => {
       setLocalKeywords(member.keywords);
     },
   });
-
 
   const debouncedUpdateKeywords = useDebouncedCallback((newKeywords: string[]) => {
     keywordsSaving.setState("saving");

@@ -111,9 +111,9 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
           </button>
         )}
       </div>
-      <Button 
-        onClick={inviteMember} 
-        disabled={!canAddMember} 
+      <Button
+        onClick={inviteMember}
+        disabled={!canAddMember}
         className="w-full lg:w-auto h-11 touch-manipulation whitespace-nowrap"
       >
         {isAdding ? (

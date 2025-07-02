@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
-import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 import TeamMemberCard from "./teamMemberCard";
+import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 
 type TeamSettingProps = {
   mailboxSlug: string;
