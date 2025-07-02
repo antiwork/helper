@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
