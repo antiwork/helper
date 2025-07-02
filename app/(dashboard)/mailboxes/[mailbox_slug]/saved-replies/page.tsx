@@ -59,7 +59,7 @@ export default function SavedRepliesPage() {
     try {
       await navigator.clipboard.writeText(content);
       toast({ title: "Saved reply copied to clipboard", variant: "success" });
-    } catch (error) {
+    } catch (_error) {
       toast({ title: "Failed to copy saved reply", variant: "destructive" });
     }
   };

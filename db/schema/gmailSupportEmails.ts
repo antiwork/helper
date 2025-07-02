@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, integer, pgTable, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
-import { bytea, encryptedField } from "@/db/lib/encryptedField";
+import { bigint, index, integer, pgTable, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { encryptedField } from "@/db/lib/encryptedField";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { withTimestamps } from "../lib/with-timestamps";
 
