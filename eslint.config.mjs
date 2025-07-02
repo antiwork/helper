@@ -95,7 +95,7 @@ const baseConfig = tseslint.config(
       "@typescript-eslint/no-empty-function": "off",
       "@typescript-eslint/no-require-imports": "error",
       "@typescript-eslint/no-unused-vars": [
-        "off",
+        "error",
         {
           args: "all",
           argsIgnorePattern: "^_",

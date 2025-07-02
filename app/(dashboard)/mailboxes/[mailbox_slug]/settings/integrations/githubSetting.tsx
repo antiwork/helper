@@ -13,11 +13,6 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
-type GitHubUpdates = {
-  repoOwner?: string | null;
-  repoName?: string | null;
-};
-
 const GitHubRepositories = ({
   id,
   selectedRepoFullName,
@@ -124,7 +119,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
         title: "GitHub disconnected successfully",
         variant: "success",
       });
-    } catch (e) {
+    } catch (_e) {
       toast({
         title: "Error disconnecting GitHub",
         variant: "destructive",

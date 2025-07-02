@@ -14,7 +14,7 @@ export const POST = withAuth(async ({ request }, { session, mailbox }) => {
   );
 
   try {
-    const result = await generateGuidePlan(title, instructions, mailbox);
+    const result = await generateGuidePlan(title, instructions);
     let conversationId: number | null = null;
 
     if (conversationSlug) {

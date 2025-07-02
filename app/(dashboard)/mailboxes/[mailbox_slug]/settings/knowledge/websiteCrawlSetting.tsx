@@ -249,7 +249,7 @@ const WebsiteCrawlSetting = () => {
                   await handleAddWebsite(urlWithProtocol);
                   setNewWebsite({ name: "", url: "" });
                   setShowAddWebsite(false);
-                } catch (error) {
+                } catch (_error) {
                   setUrlError("Failed to add website. Please try again.");
                 }
               }}
