@@ -273,7 +273,10 @@ export const MessageActions = () => {
           if (!assign) shouldTriggerConfetti = true;
         } catch (error) {
           captureExceptionAndLog(error);
-          showErrorToast("The message was sent successfully, but there was an error closing the conversation.");
+          showErrorToast(
+            "Failed to close conversation",
+            "The message was sent successfully, but there was an error closing the conversation.",
+          );
         }
       }
 
