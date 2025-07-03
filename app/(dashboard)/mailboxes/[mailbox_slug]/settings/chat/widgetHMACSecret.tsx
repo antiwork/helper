@@ -1,5 +1,3 @@
-"use client";
-
 import { SecretInput } from "@/components/secretInput";
 
 const WidgetHMACSecret = ({ hmacSecret }: { hmacSecret: string }) => {

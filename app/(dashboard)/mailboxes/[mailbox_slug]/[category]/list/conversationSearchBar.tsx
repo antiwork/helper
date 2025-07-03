@@ -21,6 +21,7 @@ interface ConversationSearchBarProps {
   defaultSort: string | undefined;
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
+  conversationCount: number;
 }
 
 const statuses = [
@@ -45,6 +46,7 @@ export const ConversationSearchBar = ({
   defaultSort,
   showFilters,
   setShowFilters,
+  conversationCount,
 }: ConversationSearchBarProps) => {
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
@@ -144,7 +146,13 @@ export const ConversationSearchBar = ({
                 <span
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
+                    statusOptions.find(({ selected }) => selected)?.value === "open"
+                      ? "bg-success"
+                      : statusOptions.find(({ selected }) => selected)?.value === "closed"
+                        ? "bg-muted-foreground"
+                        : statusOptions.find(({ selected }) => selected)?.value === "spam"
+                          ? "bg-destructive"
+                          : "bg-muted",
                   )}
                 />
                 {countData ? `${countData.total} ` : isCountLoading && <Loader2 className="h-3 w-3 animate-spin" />}
@@ -193,7 +201,7 @@ export const ConversationSearchBar = ({
         <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
           <SelectTrigger
             variant="bare"
-            className="w-auto text-foreground [&>svg]:text-foreground text-sm"
+            className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
             hideArrow="mobileOnly"
           >
             <SelectValue

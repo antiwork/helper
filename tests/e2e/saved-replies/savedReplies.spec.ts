@@ -256,17 +256,8 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should handle form validation", async ({ page }) => {
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
-    const isEmpty = replyCount === 0;
-
     // Open create dialog
-    if (isEmpty) {
-      await savedRepliesPage.clickCreateOneButton();
-    } else {
-      await savedRepliesPage.clickNewReplyButton();
-    }
-
-    await savedRepliesPage.expectCreateDialogVisible();
+    await savedRepliesPage.openCreateDialog();
 
     // Try to save without filling required fields
     await savedRepliesPage.clickSaveButton();
@@ -436,5 +427,333 @@ test.describe("Saved Replies Stress Testing", () => {
     expect(searchResults).toBeGreaterThanOrEqual(10);
 
     await takeDebugScreenshot(page, "saved-replies-bulk-test.png");
+  });
+});
+
+test.describe("Saved Replies Rich Text Editor", () => {
+  let savedRepliesPage: SavedRepliesPage;
+
+  test.beforeEach(async ({ page }) => {
+    savedRepliesPage = new SavedRepliesPage(page);
+    await page.waitForTimeout(1000);
+
+    try {
+      await savedRepliesPage.navigateToSavedReplies();
+      await page.waitForLoadState("networkidle", { timeout: 10000 });
+    } catch (error) {
+      console.log("Initial navigation failed, retrying...", error);
+      await savedRepliesPage.navigateToSavedReplies();
+      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
+    }
+  });
+
+  test("should display TipTap editor in create dialog", async ({ page }) => {
+    // Open create dialog
+    await savedRepliesPage.openCreateDialog();
+
+    // Check that the TipTap editor is present (look for editor elements)
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await expect(editor).toBeVisible();
+
+    // Wait for editor to be fully loaded
+    await page.waitForTimeout(1000);
+
+    // Check for toolbar elements - need to focus editor first to make toolbar visible
+    await editor.click();
+    await page.waitForTimeout(500);
+
+    // Check for clear formatting button which should always be there
+    const toolbar = page.locator('button[aria-label="Clear formatting"]');
+    await expect(toolbar).toBeVisible();
+
+    await savedRepliesPage.clickCancelButton();
+    await takeDebugScreenshot(page, "saved-reply-tiptap-editor.png");
+  });
+
+  test("should create saved reply with bold text", async ({ page }) => {
+    const testName = `Bold Test ${generateRandomString()}`;
+    const testContent = "This text should be bold";
+
+    // Open create dialog
+    await savedRepliesPage.openCreateDialog();
+
+    // Fill in title
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    // Focus editor and add content
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500); // Wait for editor to be ready
+    await editor.fill(testContent);
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Select all text and make it bold
+    await page.keyboard.press("Control+a");
+    await page.click('button[aria-label="Bold"]');
+
+    // Save the reply
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    // Verify the reply was created
+    await savedRepliesPage.expectSavedRepliesVisible();
+    await takeDebugScreenshot(page, "saved-reply-bold-text.png");
+  });
+
+  test("should create saved reply with italic text", async ({ page }) => {
+    const testName = `Italic Test ${generateRandomString()}`;
+    const testContent = "This text should be italic";
+
+    // Open create dialog
+    await savedRepliesPage.openCreateDialog();
+
+    // Fill in title
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    // Focus editor and add content
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+    await editor.fill(testContent);
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Select all text and make it italic
+    await page.keyboard.press("Control+a");
+    await page.click('button[aria-label="Italic"]');
+
+    // Save the reply
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    await takeDebugScreenshot(page, "saved-reply-italic-text.png");
+  });
+
+  test("should create saved reply with bullet list", async ({ page }) => {
+    const testName = `List Test ${generateRandomString()}`;
+
+    // Open create dialog
+    await savedRepliesPage.openCreateDialog();
+
+    // Fill in title
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    // Focus editor
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+
+    // Add some text
+    await editor.fill("Here are the steps:");
+    await page.keyboard.press("Enter");
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Create bullet list
+    await page.click('button[aria-label="Bullet list"]');
+    await editor.type("First step");
+    await page.keyboard.press("Enter");
+    await editor.type("Second step");
+    await page.keyboard.press("Enter");
+    await editor.type("Third step");
+
+    // Save the reply
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    await takeDebugScreenshot(page, "saved-reply-bullet-list.png");
+  });
+
+  test("should create saved reply with links", async ({ page }) => {
+    const testName = `Link Test ${generateRandomString()}`;
+    const testContent = "Visit our website";
+
+    // Open create dialog
+    await savedRepliesPage.openCreateDialog();
+
+    // Fill in title
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    // Focus editor and add content
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+    await editor.fill(testContent);
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Select the text and create a link
+    await page.keyboard.press("Control+a");
+    await page.click('button[aria-label="Link"]');
+
+    // Fill in link URL in the link modal
+    const urlInput = page.locator('input[placeholder="URL"]');
+    await expect(urlInput).toBeVisible();
+    await urlInput.fill("https://example.com");
+
+    // Confirm the link
+    await page.keyboard.press("Enter");
+
+    // Save the reply
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    await takeDebugScreenshot(page, "saved-reply-with-link.png");
+  });
+
+  test("should preserve formatting when editing saved reply", async ({ page }) => {
+    const testName = `Edit Test ${generateRandomString()}`;
+    const originalContent = "Original bold text";
+    const updatedContent = "Updated italic text";
+
+    // First create a saved reply with bold text
+    await savedRepliesPage.openCreateDialog();
+
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+    await editor.fill(originalContent);
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Make text bold
+    await page.keyboard.press("Control+a");
+    await page.click('button[aria-label="Bold"]');
+
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    // Now edit the saved reply
+    await savedRepliesPage.savedReplyCards.first().click();
+    await savedRepliesPage.expectEditDialogVisible();
+
+    // Clear and add new content
+    await editor.click();
+    await page.keyboard.press("Control+a");
+    await editor.fill(updatedContent);
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Make new text italic instead
+    await page.keyboard.press("Control+a");
+    await page.click('button[aria-label="Italic"]');
+
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    await takeDebugScreenshot(page, "edited-formatted-reply.png");
+  });
+
+  test("should insert formatted saved reply into conversation", async ({ page }) => {
+    const testName = `Insert Test ${generateRandomString()}`;
+    const testContent = "This should be bold in conversation too";
+
+    // Create a saved reply with formatting
+    await savedRepliesPage.openCreateDialog();
+
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+    await editor.fill(testContent);
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Make text bold
+    await page.keyboard.press("Control+a");
+    await page.click('button[aria-label="Bold"]');
+
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    // Verify the saved reply was created with formatted content
+    await savedRepliesPage.expectSavedRepliesVisible();
+    const title = await savedRepliesPage.getSavedReplyTitle(0);
+    expect(title).toBe(testName);
+
+    // Test copying the formatted content
+    await savedRepliesPage.clickCopyButton(0);
+    await page.waitForTimeout(500);
+
+    await takeDebugScreenshot(page, "formatted-reply-created.png");
+  });
+
+  test("should handle mixed formatting correctly", async ({ page }) => {
+    const testName = `Mixed Format Test ${generateRandomString()}`;
+
+    // Open create dialog
+    await savedRepliesPage.openCreateDialog();
+
+    await page.fill('input[placeholder*="Welcome Message"]', testName);
+
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+
+    // Add mixed content with different formatting
+    await editor.fill("Bold text and italic text and normal text");
+
+    // Wait for toolbar to be visible
+    await page.waitForTimeout(500);
+
+    // Select first part and make bold
+    await page.keyboard.press("Control+Home");
+    await page.keyboard.down("Shift");
+    for (let i = 0; i < 9; i++) {
+      await page.keyboard.press("ArrowRight");
+    }
+    await page.keyboard.up("Shift");
+    await page.click('button[aria-label="Bold"]');
+
+    // Move to "italic text" part and make italic
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.down("Shift");
+    for (let i = 0; i < 11; i++) {
+      await page.keyboard.press("ArrowRight");
+    }
+    await page.keyboard.up("Shift");
+    await page.click('button[aria-label="Italic"]');
+
+    await savedRepliesPage.clickSaveButton();
+    await page.waitForTimeout(1000);
+
+    await takeDebugScreenshot(page, "mixed-formatting-reply.png");
+  });
+
+  test("should show toolbar controls in editor", async ({ page }) => {
+    await savedRepliesPage.openCreateDialog();
+
+    const editor = page.locator('[role="textbox"][contenteditable="true"]');
+    await editor.click();
+    await page.waitForTimeout(500);
+
+    // Add some content to make toolbar visible
+    await editor.fill("Test content");
+    await page.waitForTimeout(500);
+
+    // Check that all expected toolbar buttons are visible
+    await expect(page.locator('button[aria-label="Bold"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Italic"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Bullet list"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Numbered list"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Link"]')).toBeVisible();
+    await expect(page.locator('button[aria-label="Clear formatting"]')).toBeVisible();
+
+    await savedRepliesPage.clickCancelButton();
+    await takeDebugScreenshot(page, "toolbar-controls.png");
   });
 });

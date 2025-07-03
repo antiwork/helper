@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { guideSessionReplays } from "@/db/schema";
 import { GuideSession, GuideSessionEvent } from "@/lib/data/guide";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterOutputs } from "@/trpc";
 import { Timeline, Event as TimelineEvent } from "./timeline";
 
@@ -53,10 +54,6 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
     }
   };
 
-  const handleViewReplay = () => {
-    router.push(`/mailboxes/${mailbox.slug}/sessions/${session.id}/replay`);
-  };
-
   // Effect to process replay events
   useEffect(() => {
     if (replayEvents.length === 0) {
@@ -80,7 +77,8 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
       setRrwebEvents(formattedEvents);
       setIsReplayReady(true);
       setIsReplayLoading(false);
-    } catch (err) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       setReplayError("Failed to process replay data");
       setIsReplayLoading(false);
     }
@@ -112,7 +110,8 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
             },
           });
         })
-        .catch((err) => {
+        .catch((error) => {
+          captureExceptionAndLog(error);
           setReplayError("Failed to initialize replay player");
         });
     }
@@ -135,6 +134,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
         details = JSON.stringify(eventData, null, 2);
       }
     } catch (error) {
+      captureExceptionAndLog(error);
       details = "Error parsing event data";
     }
 

@@ -12,7 +12,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import type { NewRow as NewRowType } from "../useSettings";
 
 type KnowledgeEditFormProps = {
   content: string;
@@ -89,7 +88,7 @@ export const KnowledgeEditForm = ({
 type KnowledgeBankItemProps = {
   mailboxSlug: string;
   onDelete: () => void;
-  faq: FAQ & Partial<NewRowType>;
+  faq: FAQ & Partial<{ key: string }>;
   suggestedReplacement?: FAQ | null;
 };
 
