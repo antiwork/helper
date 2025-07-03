@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { endOfDay, startOfDay } from "date-fns";
 import { ConversationsPage } from "../utils/page-objects/conversationsPage";
-import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot } from "../utils/test-helpers";
 
 // Use the working authentication
 test.use({ storageState: "tests/e2e/.auth/user.json" });

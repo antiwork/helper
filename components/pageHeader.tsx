@@ -1,14 +1,9 @@
 "use client";
 
-import { ArrowLeft, Menu } from "lucide-react";
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
-import { AppSidebarOpen } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebarOpen";
+import { Menu } from "lucide-react";
 import { useIsMobile } from "@/components/hooks/use-mobile";
-import { Avatar } from "@/components/ui/avatar";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
 
 type PageHeaderProps = {
   title: string;
@@ -17,10 +12,6 @@ type PageHeaderProps = {
 };
 
 export function PageHeader({ title, children, variant = "default" }: PageHeaderProps) {
-  const params = useParams<{ mailbox_slug: string }>();
-  const pathname = usePathname();
-  const mailboxSlug = params.mailbox_slug;
-  const isSettings = pathname.endsWith("/settings");
   const isMobile = useIsMobile();
   const { setOpenMobile } = useSidebar();
 
