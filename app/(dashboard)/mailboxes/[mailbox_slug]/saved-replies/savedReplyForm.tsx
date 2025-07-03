@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { api } from "@/trpc/react";
-import { ConfirmationDialog } from "@/components/confirmationDialog";
 
 type SavedReply = {
   slug: string;
@@ -184,8 +184,8 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
               onConfirm={handleDelete}
             >
               <Button type="button" variant="destructive_outlined" disabled={deleteSavedReply.isPending}>
-                  Delete
-                </Button>
+                Delete
+              </Button>
             </ConfirmationDialog>
           ) : null}
 

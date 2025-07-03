@@ -172,7 +172,7 @@ test.describe("Working Conversation Management", () => {
       // No conversations exist, verify Select all button is not visible
       const selectAllButton = page.locator('button:has-text("Select all")');
       await expect(selectAllButton).not.toBeVisible();
-      
+
       // Verify we're still on the right page
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
