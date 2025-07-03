@@ -76,7 +76,7 @@ export const AssignPopoverButton = ({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              "flex items-center gap-1 hover:underline",
+              "flex items-center gap-1 hover:underline min-w-0 w-full text-left",
               !currentAssignee && !assignedToAI && "text-muted-foreground",
             )}
             title={currentAssignee ? currentAssignee.displayName : assignedToAI ? "Helper agent" : "Unassigned"}
@@ -84,12 +84,12 @@ export const AssignPopoverButton = ({
             {assignedToAI ? (
               <>
                 <Bot className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">Helper agent</span>
+                <span className="truncate min-w-0">Helper agent</span>
               </>
             ) : (
               <>
                 <User className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{currentAssignee ? currentAssignee.displayName : "Unassigned"}</span>
+                <span className="truncate min-w-0">{currentAssignee ? currentAssignee.displayName : "Unassigned"}</span>
               </>
             )}
           </button>

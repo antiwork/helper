@@ -1,4 +1,5 @@
 import { assertDefined } from "@/components/utils/assert";
+import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
 export class NonRetriableError extends Error {
   constructor(message: string) {
@@ -10,7 +11,8 @@ export class NonRetriableError extends Error {
 export const assertDefinedOrRaiseNonRetriableError = <T>(value: T | null | undefined): T => {
   try {
     return assertDefined(value);
-  } catch (_error) {
+  } catch (error) {
+    captureExceptionAndLogIfDevelopment(error);
     throw new NonRetriableError("Value is undefined");
   }
 };
