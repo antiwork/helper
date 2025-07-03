@@ -41,7 +41,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      showErrorToast("Failed to add member", "This user is already in your organization");
+      showErrorToast("Member already exists", "This user is already in your organization");
     } else {
       addMemberMutation({
         email: emailInput,

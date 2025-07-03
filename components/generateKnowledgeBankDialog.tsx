@@ -124,7 +124,7 @@ export const GenerateKnowledgeBankDialog = ({
 
   const handleSave = () => {
     if (!editedContent.trim()) {
-      showErrorToast("Failed to save knowledge entry", "Please enter content for the knowledge bank entry");
+      showErrorToast("Content required", "Please enter content for the knowledge bank entry");
       return;
     }
 

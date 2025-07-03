@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { showErrorToast } from "@/lib/utils/toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
+import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {

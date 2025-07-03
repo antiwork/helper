@@ -217,9 +217,7 @@ export const MessageActions = () => {
     try {
       const cc = parseEmailList(draftedEmail.cc);
       if (!cc.success)
-        return showErrorToast(
-          `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
-        );
+        return showErrorToast(`Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`);
 
       const bcc = parseEmailList(draftedEmail.bcc);
       if (!bcc.success)
@@ -275,9 +273,7 @@ export const MessageActions = () => {
           if (!assign) shouldTriggerConfetti = true;
         } catch (error) {
           captureExceptionAndLog(error);
-          showErrorToast(
-            "The message was sent successfully, but there was an error closing the conversation.",
-          );
+          showErrorToast("The message was sent successfully, but there was an error closing the conversation.");
         }
       }
 
