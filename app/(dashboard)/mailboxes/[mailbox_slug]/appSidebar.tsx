@@ -91,7 +91,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
           </SidebarMenu>
         ) : (
           <div className="flex items-center gap-2 w-full h-10 px-2 rounded-lg">
-            <Avatar src={undefined} fallback={mailbox?.name || ""} size="sm" />
+            <Avatar src={undefined} fallback={mailbox?.name || "G"} size="sm" />
             <span className="truncate text-base group-data-[collapsible=icon]:hidden">{mailbox?.name}</span>
           </div>
         )}

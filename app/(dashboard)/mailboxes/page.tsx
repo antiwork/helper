@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
+import { api } from "@/trpc/server";
 
 const Page = async () => {
   const supabase = await createClient();
@@ -11,9 +12,24 @@ const Page = async () => {
   if (error) captureExceptionAndLog(error);
   if (!user) return redirect("/login");
 
-  // Since we removed mailbox switching, redirect to the default mailbox
-  const mailboxSlug = user.user_metadata.lastMailboxSlug || "mailbox";
-  return redirect(`/mailboxes/${mailboxSlug}/mine`);
+  const lastMailboxSlug = user.user_metadata.lastMailboxSlug;
+  if (lastMailboxSlug) {
+    try {
+      await api.mailbox.get({ mailboxSlug: lastMailboxSlug });
+      return redirect(`/mailboxes/${lastMailboxSlug}/mine`);
+    } catch (error) {
+      captureExceptionAndLog(error);
+    }
+  }
+
+  try {
+    await api.mailbox.get({ mailboxSlug: "mailbox" });
+    return redirect(`/mailboxes/mailbox/mine`);
+  } catch (error) {
+    captureExceptionAndLog(error);
+  }
+
+  return redirect("/login");
 };
 
 export default Page;
