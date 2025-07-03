@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stripHtmlTags } from "@/components/utils/html";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SavedReplyForm } from "./savedReplyForm";
@@ -61,7 +62,8 @@ export default function SavedRepliesPage() {
     try {
       await navigator.clipboard.writeText(content);
       toast({ title: "Saved reply copied to clipboard", variant: "success" });
-    } catch (_error) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       toast({ title: "Failed to copy saved reply", variant: "destructive" });
     }
   };
@@ -69,29 +71,30 @@ export default function SavedRepliesPage() {
   const filteredSavedReplies = savedReplies || [];
   const hasRepliesOrSearch = filteredSavedReplies.length > 0 || searchTerm.length > 0;
 
+  const searchInput = (
+    <Input
+      placeholder="Search saved replies..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full h-10 rounded-full text-sm"
+      iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
+    />
+  );
+
   return (
     <FileUploadProvider>
       <div className="flex-1 flex flex-col">
         <PageHeader title="Saved replies">
           {hasRepliesOrSearch && (
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search saved replies..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
-                />
-              </div>
-
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New saved reply
-              </Button>
+            <div className="hidden sm:block">
+              <div className="w-64">{searchInput}</div>
             </div>
           )}
         </PageHeader>
+
+        {hasRepliesOrSearch && (
+          <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border sm:hidden">{searchInput}</div>
+        )}
 
         <div className="flex-1 space-y-6 p-6">
           {isLoading ? (
@@ -166,6 +169,15 @@ export default function SavedRepliesPage() {
             </div>
           )}
         </div>
+
+        <Button
+          onClick={() => setShowCreateDialog(true)}
+          variant="default"
+          iconOnly
+          className="fixed z-50 bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
 
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent className="max-w-2xl">
