@@ -5,7 +5,7 @@ import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
-import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
+import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -174,7 +174,7 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
   if (conversation.assignedToId) return { message: "Skipped: already assigned" };
   if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
 
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
   const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
 
   const activeTeamMembers = teamMembers.filter(
