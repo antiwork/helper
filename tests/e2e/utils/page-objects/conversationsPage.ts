@@ -70,7 +70,7 @@ export class ConversationsPage extends BasePage {
     // Check if there are any conversations first
     const conversationLinks = this.page.locator(this.conversationLinks);
     const conversationCount = await conversationLinks.count();
-    
+
     if (conversationCount === 0) {
       return false; // No conversations, select all should not be available
     }
@@ -89,11 +89,11 @@ export class ConversationsPage extends BasePage {
     // Check if conversations exist first
     const conversationLinks = this.page.locator(this.conversationLinks);
     const conversationCount = await conversationLinks.count();
-    
+
     if (conversationCount === 0) {
       return false; // No conversations, select all should not exist
     }
-    
+
     const count = await this.page.locator(this.selectAllButton).count();
     return count > 0;
   }
