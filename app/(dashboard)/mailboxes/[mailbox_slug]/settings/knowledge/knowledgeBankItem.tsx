@@ -4,13 +4,13 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { FAQ } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 type KnowledgeEditFormProps = {
@@ -104,7 +104,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       setEditingContent(null);
     },
     onError: () => {
-      toast({ title: "Error updating knowledge", variant: "destructive" });
+      showErrorToast("update knowledge", "Error updating knowledge");
     },
   });
 
@@ -113,7 +113,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      toast({ title: "Error updating knowledge", variant: "destructive" });
+      showErrorToast("update knowledge", "Error updating knowledge");
     },
   });
 
@@ -122,7 +122,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      toast({ title: "Error updating knowledge", variant: "destructive" });
+      showErrorToast("update knowledge", "Error updating knowledge");
     },
   });
 

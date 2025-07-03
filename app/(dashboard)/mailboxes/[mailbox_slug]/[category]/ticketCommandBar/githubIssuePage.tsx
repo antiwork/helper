@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { useConversationContext } from "../conversation/conversationContext";
 
@@ -74,11 +75,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
   const handleCreateIssue = async () => {
     if (!mailbox?.githubConnected || !mailbox.githubRepoOwner || !mailbox.githubRepoName) {
-      toast({
-        title: "GitHub repository not configured",
-        description: "Please configure a GitHub repository in the mailbox settings.",
-        variant: "destructive",
-      });
+      showErrorToast("create GitHub issue", "Please configure a GitHub repository in the mailbox settings.");
       return;
     }
 
@@ -105,21 +102,13 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         refetchConversation();
       }, 500);
     } catch (error) {
-      toast({
-        title: "Failed to create GitHub issue",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
+      showErrorToast("create GitHub issue", error);
     }
   };
 
   const handleLinkIssue = async () => {
     if (!selectedIssueNumber) {
-      toast({
-        title: "No issue selected",
-        description: "Please select an issue to link",
-        variant: "destructive",
-      });
+      showErrorToast("link GitHub issue", "Please select an issue to link");
       return;
     }
 
@@ -145,11 +134,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         refetchConversation();
       }, 500);
     } catch (error) {
-      toast({
-        title: "Failed to link GitHub issue",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
+      showErrorToast("link GitHub issue", error);
     }
   };
 

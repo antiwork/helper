@@ -30,10 +30,7 @@ const GitHubRepositories = ({
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
-      toast({
-        title: "Error updating GitHub settings",
-        description: error.message,
-      });
+      showErrorToast("update GitHub settings", error);
     },
   });
 
@@ -97,16 +94,10 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
 
   useEffect(() => {
     if (githubConnectResult === "success") {
-      toast({
-        title: "GitHub connected successfully",
-        variant: "success",
-      });
+      showSuccessToast("GitHub connected successfully");
       setGithubConnectResult(null);
     } else if (githubConnectResult === "error") {
-      toast({
-        title: "Failed to connect GitHub",
-        variant: "destructive",
-      });
+      showErrorToast("connect GitHub", "Failed to connect GitHub");
       setGithubConnectResult(null);
     }
   }, [githubConnectResult, router, setGithubConnectResult]);

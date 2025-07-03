@@ -35,55 +35,33 @@ const WebsiteCrawlSetting = () => {
 
   const addWebsiteMutation = api.mailbox.websites.create.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Website added!",
-        variant: "success",
-      });
+      showSuccessToast("Website added!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
       setShowAddWebsite(false);
       setNewWebsite({ name: "", url: "" });
     },
-    onError: () => {
-      toast({
-        title: "Error adding website",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+    onError: (error) => {
+      showErrorToast("add website", error);
     },
   });
 
   const deleteWebsiteMutation = api.mailbox.websites.delete.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Website deleted!",
-        variant: "success",
-      });
+      showSuccessToast("Website deleted!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: () => {
-      toast({
-        title: "Error deleting website",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+    onError: (error) => {
+      showErrorToast("delete website", error);
     },
   });
 
   const triggerCrawlMutation = api.mailbox.websites.triggerCrawl.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Website scan started!",
-        description: "The scan will run in the background. Check back later for results.",
-        variant: "success",
-      });
+      showSuccessToast("Website scan started!", "The scan will run in the background. Check back later for results.");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: () => {
-      toast({
-        title: "Error starting website scan",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+    onError: (error) => {
+      showErrorToast("start website scan", error);
     },
   });
 
