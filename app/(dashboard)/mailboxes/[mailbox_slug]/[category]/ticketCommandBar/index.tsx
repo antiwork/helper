@@ -276,6 +276,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           groups={visibleGroups}
           onSelect={handleSelect}
           onMouseEnter={setSelectedItemId}
+          selectedItemId={selectedItemId}
         />
       </Command>
     </>
