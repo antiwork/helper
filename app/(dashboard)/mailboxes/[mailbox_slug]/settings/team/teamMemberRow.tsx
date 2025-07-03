@@ -70,7 +70,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     },
     onError: (error) => {
       displayNameSaving.setState("error");
-      showErrorToast("update display name", error.message);
+      showErrorToast("Failed to update display name", error);
       setDisplayNameInput(member.displayName || "");
     },
   });
@@ -94,7 +94,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     },
     onError: (error) => {
       roleSaving.setState("error");
-      showErrorToast("update role", error.message);
+      showErrorToast("Failed to update role", error);
       setRole(member.role);
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
@@ -119,7 +119,7 @@ const TeamMemberRow = ({ member, mailboxSlug }: TeamMemberRowProps) => {
     },
     onError: (error) => {
       keywordsSaving.setState("error");
-      showErrorToast("update keywords", error.message);
+      showErrorToast("Failed to update keywords", error);
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
     },

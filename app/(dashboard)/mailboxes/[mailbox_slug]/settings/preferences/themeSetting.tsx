@@ -47,7 +47,7 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      showErrorToast("update theme", error);
+      showErrorToast("Failed to update theme", error);
     },
   });
 

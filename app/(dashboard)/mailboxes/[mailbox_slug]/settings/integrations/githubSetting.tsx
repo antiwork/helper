@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRunOnce } from "@/components/useRunOnce";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -30,7 +31,7 @@ const GitHubRepositories = ({
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
-      showErrorToast("update GitHub settings", error);
+      showErrorToast("Failed to update GitHub settings", error);
     },
   });
 
@@ -97,7 +98,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
       showSuccessToast("GitHub connected successfully");
       setGithubConnectResult(null);
     } else if (githubConnectResult === "error") {
-      showErrorToast("connect GitHub", "Failed to connect GitHub");
+      showErrorToast("Failed to connect GitHub");
       setGithubConnectResult(null);
     }
   }, [githubConnectResult, router, setGithubConnectResult]);

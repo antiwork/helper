@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
@@ -41,7 +42,7 @@ const WebsiteCrawlSetting = () => {
       setNewWebsite({ name: "", url: "" });
     },
     onError: (error) => {
-      showErrorToast("add website", error);
+      showErrorToast("Failed to add website", error);
     },
   });
 
@@ -51,7 +52,7 @@ const WebsiteCrawlSetting = () => {
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
     onError: (error) => {
-      showErrorToast("delete website", error);
+      showErrorToast("Failed to delete website", error);
     },
   });
 
@@ -61,7 +62,7 @@ const WebsiteCrawlSetting = () => {
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
     onError: (error) => {
-      showErrorToast("start website scan", error);
+      showErrorToast("Failed to start website scan", error);
     },
   });
 

@@ -81,7 +81,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
         );
       }
 
-      showErrorToast("update conversation", error);
+      showErrorToast("Failed to update conversation", error);
     },
     onSuccess: (_data, variables) => {
       utils.mailbox.conversations.get.invalidate({
@@ -124,7 +124,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
                   showSuccessToast("No longer marked as spam");
                 } catch (e) {
                   captureExceptionAndThrowIfDevelopment(e);
-                  showErrorToast("undo action", "Failed to undo");
+                  showErrorToast("Failed to undo action");
                 }
               }}
             >

@@ -57,7 +57,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
   );
 
   const handleError = useCallback((error: string) => {
-    showErrorToast("recognize speech", error);
+    showErrorToast("Failed to recognize speech", error);
   }, []);
 
   const {
@@ -80,7 +80,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     },
     onError: (e) => {
       captureExceptionAndLog(e);
-      showErrorToast("create conversation", e);
+      showErrorToast("Failed to create conversation", e);
     },
     onSettled: () => {
       setSending(false);
@@ -92,19 +92,17 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     stopRecording();
 
     const toEmailAddress = parseEmailAddress(newConversationInfo.to_email_address.trim())?.address;
-    if (!toEmailAddress) return showErrorToast("send message", 'Please enter a valid "To" email address');
+    if (!toEmailAddress) return showErrorToast('Please enter a valid "To" email address');
 
     const cc = parseEmailList(newConversationInfo.cc);
     if (!cc.success)
       return showErrorToast(
-        "send message",
         `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
       );
 
     const bcc = parseEmailList(newConversationInfo.bcc);
     if (!bcc.success)
       return showErrorToast(
-        "send message",
         `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
       );
 

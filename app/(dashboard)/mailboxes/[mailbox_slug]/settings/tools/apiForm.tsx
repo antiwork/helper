@@ -29,7 +29,7 @@ const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
       onCancel();
     },
     onError: (error) => {
-      showErrorToast("import API", error);
+      showErrorToast("Failed to import API", error);
     },
   });
 
@@ -39,12 +39,12 @@ const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
 
   const handleImport = async () => {
     if (!apiKey) {
-      showErrorToast("import API", "API key is required");
+      showErrorToast("API key is required");
       return;
     }
 
     if (!apiName) {
-      showErrorToast("import API", "API name is required");
+      showErrorToast("API name is required");
       return;
     }
 

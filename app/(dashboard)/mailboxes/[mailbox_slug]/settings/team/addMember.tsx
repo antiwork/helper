@@ -29,7 +29,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       utils.mailbox.members.list.invalidate({ mailboxSlug });
     },
     onError: (error) => {
-      showErrorToast("send invitation", error);
+      showErrorToast("Failed to send invitation", error);
     },
   });
 
@@ -41,7 +41,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      showErrorToast("add member", "This user is already in your organization");
+      showErrorToast("Failed to add member", "This user is already in your organization");
     } else {
       addMemberMutation({
         email: emailInput,

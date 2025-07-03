@@ -61,13 +61,12 @@ export const GenerateKnowledgeBankDialog = ({
         toast({
           title: "No knowledge entry needed",
           description: data.reason,
-          variant: "default",
         });
         onOpenChange(false);
       }
     },
     onError: (error) => {
-      showErrorToast("generate suggestion", error);
+      showErrorToast("Failed to generate suggestion", error);
     },
   });
 
@@ -79,7 +78,7 @@ export const GenerateKnowledgeBankDialog = ({
       resetState();
     },
     onError: (error) => {
-      showErrorToast("create knowledge entry", error);
+      showErrorToast("Failed to create knowledge entry", error);
     },
   });
 
@@ -91,7 +90,7 @@ export const GenerateKnowledgeBankDialog = ({
       resetState();
     },
     onError: (error) => {
-      showErrorToast("update knowledge entry", error);
+      showErrorToast("Failed to update knowledge entry", error);
     },
   });
 
@@ -125,7 +124,7 @@ export const GenerateKnowledgeBankDialog = ({
 
   const handleSave = () => {
     if (!editedContent.trim()) {
-      showErrorToast("save knowledge entry", "Please enter content for the knowledge bank entry");
+      showErrorToast("Failed to save knowledge entry", "Please enter content for the knowledge bank entry");
       return;
     }
 

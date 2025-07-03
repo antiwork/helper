@@ -104,7 +104,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       setEditingContent(null);
     },
     onError: () => {
-      showErrorToast("update knowledge", "Error updating knowledge");
+      showErrorToast("Failed to update knowledge");
     },
   });
 
@@ -113,7 +113,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      showErrorToast("update knowledge", "Error updating knowledge");
+      showErrorToast("Failed to update knowledge");
     },
   });
 
@@ -122,7 +122,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
       utils.mailbox.faqs.list.invalidate({ mailboxSlug });
     },
     onError: () => {
-      showErrorToast("update knowledge", "Error updating knowledge");
+      showErrorToast("Failed to update knowledge");
     },
   });
 

@@ -39,7 +39,7 @@ export const List = () => {
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: (error) => {
-      showErrorToast("update conversations", error);
+      showErrorToast("Failed to update conversations", error);
     },
   });
 

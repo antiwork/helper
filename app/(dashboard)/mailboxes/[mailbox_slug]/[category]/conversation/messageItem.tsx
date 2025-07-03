@@ -196,7 +196,7 @@ const MessageItem = ({
     },
     onError: (e) => {
       captureExceptionAndLog(e);
-      showErrorToast("split conversation", e);
+      showErrorToast("Failed to split conversation", e);
     },
   });
 

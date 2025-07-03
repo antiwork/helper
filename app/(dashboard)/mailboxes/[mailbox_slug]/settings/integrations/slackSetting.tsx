@@ -98,7 +98,7 @@ export const SlackChannels = ({
             setAlertChannelName("");
           }
           if (!isValid) {
-            showErrorToast("find channel", "Channel not found");
+            showErrorToast("Channel not found");
           }
         }}
       />
@@ -121,7 +121,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
-      showErrorToast("update Slack settings", error);
+      showErrorToast("Failed to update Slack settings", error);
     },
   });
   useShowToastForSlackConnectStatus();

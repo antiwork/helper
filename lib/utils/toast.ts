@@ -1,19 +1,24 @@
 import { toast } from "@/components/hooks/use-toast";
 
-export function showErrorToast(operation: string, error: unknown) {
-  const message =
-    error instanceof Error ? error.message : typeof error === "string" ? error : "An unexpected error occurred";
+export function showErrorToast(title: string, error?: unknown) {
+  const message = error
+    ? error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "An unexpected error occurred"
+    : undefined;
 
   toast({
-    title: `Failed to ${operation}`,
+    title,
     description: message,
     variant: "destructive",
   });
 }
 
-export function showSuccessToast(operation: string, description?: string) {
+export function showSuccessToast(title: string, description?: string) {
   toast({
-    title: operation.charAt(0).toUpperCase() + operation.slice(1),
+    title,
     description,
     variant: "success",
   });

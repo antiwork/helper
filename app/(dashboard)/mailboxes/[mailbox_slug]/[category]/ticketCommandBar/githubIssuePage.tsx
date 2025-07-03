@@ -75,7 +75,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
   const handleCreateIssue = async () => {
     if (!mailbox?.githubConnected || !mailbox.githubRepoOwner || !mailbox.githubRepoName) {
-      showErrorToast("create GitHub issue", "Please configure a GitHub repository in the mailbox settings.");
+      showErrorToast("Please configure a GitHub repository in the mailbox settings.");
       return;
     }
 
@@ -102,13 +102,13 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         refetchConversation();
       }, 500);
     } catch (error) {
-      showErrorToast("create GitHub issue", error);
+      showErrorToast("Failed to create GitHub issue", error);
     }
   };
 
   const handleLinkIssue = async () => {
     if (!selectedIssueNumber) {
-      showErrorToast("link GitHub issue", "Please select an issue to link");
+      showErrorToast("Please select an issue to link");
       return;
     }
 
@@ -134,7 +134,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
         refetchConversation();
       }, 500);
     } catch (error) {
-      showErrorToast("link GitHub issue", error);
+      showErrorToast("Failed to link GitHub issue", error);
     }
   };
 

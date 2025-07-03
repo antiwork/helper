@@ -31,7 +31,7 @@ const ImageNodeView = ({ node, editor, getPos, updateAttributes, deleteNode }: N
           } catch {}
         })
         .catch((error) => {
-          showErrorToast("upload image", error);
+          showErrorToast("Failed to upload image", error);
           // Tiptap types claim that this won't be undefined, but the types are wrong
           if (getPos() !== undefined) deleteNode();
         });

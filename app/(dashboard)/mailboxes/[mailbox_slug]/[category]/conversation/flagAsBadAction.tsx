@@ -19,7 +19,7 @@ export const FlagAsBadAction = ({ message, conversationSlug, mailboxSlug }: Flag
   const utils = api.useUtils();
   const { mutateAsync: flagAsBad } = api.mailbox.conversations.messages.flagAsBad.useMutation({
     onError: (error) => {
-      showErrorToast("flag message as bad", error);
+      showErrorToast("Failed to flag message as bad", error);
     },
   });
 

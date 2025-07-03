@@ -27,7 +27,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      showErrorToast("update auto-close settings", error);
+      showErrorToast("Failed to update auto-close settings", error);
     },
   });
 
@@ -49,7 +49,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
       showSuccessToast("Auto-close triggered");
     },
     onError: (error) => {
-      showErrorToast("run auto-close", error);
+      showErrorToast("Failed to run auto-close", error);
     },
   });
 

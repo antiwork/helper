@@ -161,7 +161,7 @@ export const MessageActions = () => {
   }, []);
 
   const handleError = useCallback((error: string) => {
-    showErrorToast("recognize speech", error);
+    showErrorToast("Failed to recognize speech", error);
   }, []);
 
   const {
@@ -218,14 +218,12 @@ export const MessageActions = () => {
       const cc = parseEmailList(draftedEmail.cc);
       if (!cc.success)
         return showErrorToast(
-          "send message",
           `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
         );
 
       const bcc = parseEmailList(draftedEmail.bcc);
       if (!bcc.success)
         return showErrorToast(
-          "send message",
           `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
         );
 
@@ -278,7 +276,6 @@ export const MessageActions = () => {
         } catch (error) {
           captureExceptionAndLog(error);
           showErrorToast(
-            "close conversation",
             "The message was sent successfully, but there was an error closing the conversation.",
           );
         }
@@ -325,7 +322,7 @@ export const MessageActions = () => {
                   showSuccessToast("Message unsent");
                 } catch (e) {
                   captureExceptionAndLog(e);
-                  showErrorToast("unsending email", e);
+                  showErrorToast("Failed to unsend email", e);
                 } finally {
                   utils.mailbox.conversations.get.invalidate({ mailboxSlug, conversationSlug });
                   navigateToConversation(conversation.slug);

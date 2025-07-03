@@ -19,7 +19,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
 
   useEffect(() => {
     if (error) {
-      showErrorToast("fetch APIs", error);
+      showErrorToast("Failed to fetch APIs", error);
     }
   }, [error]);
 

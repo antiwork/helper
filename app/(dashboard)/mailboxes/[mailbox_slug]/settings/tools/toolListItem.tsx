@@ -25,7 +25,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
       );
     },
     onError: (error) => {
-      showErrorToast("update tool", error);
+      showErrorToast("Failed to update tool", error);
     },
   });
 
