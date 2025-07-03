@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
 import { useRouter } from "next/navigation";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRunOnce } from "@/components/useRunOnce";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -46,8 +46,8 @@ const GitHubRepositories = ({
             mailboxSlug: mailbox.slug,
           }),
         );
-      } catch (e) {
-        Sentry.captureException(e);
+      } catch (error) {
+        captureExceptionAndLog(error);
         toast({
           title: "Error fetching available repositories",
           variant: "destructive",
@@ -119,7 +119,8 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
         title: "GitHub disconnected successfully",
         variant: "success",
       });
-    } catch (_e) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       toast({
         title: "Error disconnecting GitHub",
         variant: "destructive",

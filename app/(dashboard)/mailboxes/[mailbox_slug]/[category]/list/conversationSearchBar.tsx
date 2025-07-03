@@ -21,6 +21,7 @@ interface ConversationSearchBarProps {
   defaultSort: string | undefined;
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
+  conversationCount: number;
 }
 
 export const ConversationSearchBar = ({
@@ -30,6 +31,7 @@ export const ConversationSearchBar = ({
   defaultSort,
   showFilters,
   setShowFilters,
+  conversationCount,
 }: ConversationSearchBarProps) => {
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
@@ -157,7 +159,7 @@ export const ConversationSearchBar = ({
         ) : statusOptions[0] ? (
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
-        {statusOptions.length > 0 && (
+        {conversationCount > 0 && (
           <button
             onClick={() => toggleAllConversations()}
             className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"

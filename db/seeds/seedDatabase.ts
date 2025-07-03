@@ -85,7 +85,9 @@ export const seedDatabase = async () => {
       if (conversation.emailFrom) {
         try {
           await platformCustomerFactory.create(mailbox.id, { email: conversation.emailFrom });
-        } catch (_e) {}
+        } catch (error) {
+          console.error("Seed process create platform customer factory failed:", error);
+        }
       }
 
       const lastUserMessage = await db.query.conversationMessages.findFirst({

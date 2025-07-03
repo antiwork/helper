@@ -14,6 +14,7 @@ import PreviousConversations from "@/components/widget/PreviousConversations";
 import PromptDetailsModal from "@/components/widget/PromptDetailsModal";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
 import { sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
@@ -113,7 +114,9 @@ export default function Page() {
           const payload = jwtDecode<DecodedPayload>(content.sessionToken);
           setTheme(payload?.theme);
           setDefaultTitle(payload?.title ?? null);
-        } catch (_error) {}
+        } catch (error) {
+          captureExceptionAndLog(error);
+        }
       } else if (action === "OPEN_CONVERSATION") {
         const { conversationSlug } = content;
         onSelectConversation(conversationSlug);
