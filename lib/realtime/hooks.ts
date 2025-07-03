@@ -43,15 +43,29 @@ export const useRealtimeEvent = <Data = any>(
   }, [channel, event]);
 };
 
-// This ensures that the callback is only called once regardless of how many instances of the component exist.
-// Useful for events that trigger tRPC data updates.
 const handledOneTimeMessageIds = new Set();
+const messageTimestamps = new Map<string, number>();
+const MAX_HANDLED_IDS = 500;
+const MESSAGE_TTL = 5 * 60 * 1000;
+
 export const useRealtimeEventOnce: typeof useRealtimeEvent = (channel, event, callback) => {
   useRealtimeEvent(channel, event, (message) => {
     if (handledOneTimeMessageIds.has(message.id)) {
       return;
     }
+
+    const now = Date.now();
+    if (handledOneTimeMessageIds.size > MAX_HANDLED_IDS) {
+      for (const [id, timestamp] of messageTimestamps.entries()) {
+        if (now - timestamp > MESSAGE_TTL) {
+          handledOneTimeMessageIds.delete(id);
+          messageTimestamps.delete(id);
+        }
+      }
+    }
+
     handledOneTimeMessageIds.add(message.id);
+    messageTimestamps.set(message.id, now);
     callback(message);
   });
 };
