@@ -12,6 +12,7 @@ import { SecretInput } from "@/components/secretInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
@@ -64,7 +65,8 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       toast({
         title: "Metadata endpoint added!",
       });
-    } catch (_e) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       toast({
         variant: "destructive",
         title: "Error adding metadata endpoint",
@@ -90,7 +92,8 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       toast({
         title: "Metadata endpoint removed!",
       });
-    } catch (_e) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       toast({
         variant: "destructive",
         title: "Error removing metadata endpoint",
@@ -116,7 +119,8 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
         title: "Test request succeeded!",
       });
       setTestRequestStatus("success");
-    } catch (_e) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       toast({
         variant: "destructive",
         title: "Error sending test request",
