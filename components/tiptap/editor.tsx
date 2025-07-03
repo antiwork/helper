@@ -108,7 +108,7 @@ const TipTapEditor = ({
   const mailboxSlug = propMailboxSlug || contextMailboxSlug;
 
   const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery(
-    { mailboxSlug: mailboxSlug },
+    { mailboxSlug: mailboxSlug ?? "" },
     { enabled: !!mailboxSlug },
   );
   const { isAboveMd } = useBreakpoint("md");
