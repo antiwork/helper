@@ -1,3 +1,5 @@
+"use client";
+
 const isTextNode = (node: Node): node is Text => node.nodeType === Node.TEXT_NODE;
 export const highlightKeywords = (htmlString: string, keywords: string[]) => {
   if (!keywords.length) return htmlString;
