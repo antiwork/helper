@@ -722,6 +722,13 @@
       "when": 1751569682212,
       "tag": "0102_user_profile_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1751585212184,
+      "tag": "0103_backfill_user_profiles",
+      "breakpoints": true
     }
   ]
 }

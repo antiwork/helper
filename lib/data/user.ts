@@ -30,6 +30,12 @@ export type UserWithMailboxAccessData = {
   permissions: string;
 };
 
+export const getProfile = cache(
+  async (userId: string) => await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, userId) }),
+);
+
+export const isAdmin = (profile?: typeof userProfiles.$inferSelect) => profile?.permissions === "admin";
+
 export const addUser = async (
   inviterUserId: string,
   emailAddress: string,
@@ -62,7 +68,7 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
   return users.map((user) => {
-    const access = user.access ?? { role: "afk", keywords: [] };
+    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
 
     return {

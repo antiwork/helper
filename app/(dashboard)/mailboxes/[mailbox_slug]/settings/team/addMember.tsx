@@ -61,7 +61,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       addMemberMutation({
         email: emailInput,
         displayName: displayNameInput,
-        permissions: permissions,
+        permissions,
       });
     }
   };
