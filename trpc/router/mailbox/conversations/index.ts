@@ -196,6 +196,7 @@ export const conversationsRouter = {
         conversationFilter: z.union([z.array(z.number()), searchSchema]),
         assignedToId: z.string().nullable(),
         assignedToAI: z.boolean().optional(),
+        mailboxSlug: z.string(),
       }),
     )
     .mutation(async ({ input, ctx }) => {

@@ -142,6 +142,7 @@ export const List = () => {
         conversationFilter,
         assignedToId,
         assignedToAI,
+        mailboxSlug: input.mailboxSlug,
       },
       {
         onSuccess: ({ updatedImmediately }) => {
