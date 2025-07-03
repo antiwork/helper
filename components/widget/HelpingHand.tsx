@@ -3,6 +3,7 @@ import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import {
   cancelGuide,
   executeGuideAction,
@@ -257,7 +258,8 @@ export default function HelpingHand({
       setStatus("running");
       sendInitialPrompt({ resumed: false });
       sendStartGuide(data.sessionId);
-    } catch (_error) {
+    } catch (error) {
+      captureExceptionAndLog(error);
       setStatus("error");
     }
   };
