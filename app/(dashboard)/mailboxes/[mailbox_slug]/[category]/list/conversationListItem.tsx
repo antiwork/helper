@@ -140,10 +140,11 @@ export const ConversationListItem = ({
           void utils.mailbox.conversations.list.invalidate();
           setShowAssignPopover(false);
           setAssignedTo(null);
+          const displayName = assignedTo && "displayName" in assignedTo ? assignedTo.displayName : null;
           const assignText = assignedToAI 
             ? "assigned to Helper agent" 
             : assignedToId 
-              ? `assigned to ${assignedTo.displayName}`
+              ? `assigned to ${displayName || "user"}`
               : "unassigned";
           toast({
             title: `Conversation ${assignText}`,

@@ -130,45 +130,48 @@ export const List = () => {
     if (!assignedTo) return;
     
     setIsBulkUpdating(true);
-    try {
-      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
-      const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
-      const assignedToId = "id" in assignedTo ? assignedTo.id : null;
-      const assignedToAI = "ai" in assignedTo;
+    
+    // Fix "Select All" scope - use search input for paginated results
+    const conversationFilter = allConversationsSelected ? input : selectedConversations;
+    const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+    const assignedToId = "id" in assignedTo ? assignedTo.id : null;
+    const assignedToAI = "ai" in assignedTo;
 
-      bulkAssign(
-        {
-          conversationFilter,
-          assignedToId,
-          assignedToAI,
-          mailboxSlug: input.mailboxSlug,
-        },
-        {
-          onSuccess: ({ updatedImmediately }) => {
-            setAllConversationsSelected(false);
-            clearSelectedConversations();
-            setShowAssignPopover(false);
-            setAssignedTo(null);
-            void utils.mailbox.conversations.list.invalidate();
+    bulkAssign(
+      {
+        conversationFilter,
+        assignedToId,
+        assignedToAI,
+      },
+      {
+        onSuccess: ({ updatedImmediately }) => {
+          setIsBulkUpdating(false);
+          setAllConversationsSelected(false);
+          clearSelectedConversations();
+          setShowAssignPopover(false);
+          setAssignedTo(null);
+          void utils.mailbox.conversations.list.invalidate();
 
-            if (updatedImmediately) {
-              const assignText = assignedToAI 
-                ? "assigned to Helper agent" 
-                : assignedToId 
-                  ? `assigned to ${assignedTo.displayName}`
-                  : "unassigned";
-              toast({
-                title: `${selectedCount} conversation${selectedCount === 1 ? "" : "s"} ${assignText}`,
-              });
-            } else {
-              toast({ title: "Starting assignment, refresh to see status." });
-            }
-          },
+          if (updatedImmediately) {
+            const displayName = assignedTo && "displayName" in assignedTo ? assignedTo.displayName : null;
+            const assignText = assignedToAI 
+              ? "assigned to Helper agent" 
+              : assignedToId 
+                ? `assigned to ${displayName || "user"}`
+                : "unassigned";
+            toast({
+              title: `${selectedCount} conversation${selectedCount === 1 ? "" : "s"} ${assignText}`,
+            });
+          } else {
+            toast({ title: "Starting assignment, refresh to see status." });
+          }
         },
-      );
-    } finally {
-      setIsBulkUpdating(false);
-    }
+        onError: () => {
+          setIsBulkUpdating(false);
+          toast({ title: "Failed to assign conversations", variant: "destructive" });
+        }
+      }
+    );
   };
 
   useEffect(() => {
