@@ -282,7 +282,7 @@ const CcAndBccInfo = ({
 };
 
 const Wrapper = ({ mailboxSlug, conversationSlug, onSubmit }: Props) => (
-  <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug}>
+  <FileUploadProvider conversationSlug={conversationSlug}>
     <NewConversationModal mailboxSlug={mailboxSlug} conversationSlug={conversationSlug} onSubmit={onSubmit} />
   </FileUploadProvider>
 );

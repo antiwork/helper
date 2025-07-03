@@ -105,15 +105,6 @@ const Toolbar = ({
     }
   }, [isLinkModalOpen, activeLinkElement]);
 
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const setLink = () => {
     if (!editor) return;
 
@@ -167,6 +158,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`${baseToolbarStyles} ${editor.isActive("bold") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Bold"
           >
             <ToolbarBold />
           </button>
@@ -174,6 +166,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={`${baseToolbarStyles} ${editor.isActive("italic") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Italic"
           >
             <ToolbarItalic />
           </button>
@@ -181,6 +174,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={`${baseToolbarStyles} ${editor.isActive("bulletList") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Bullet list"
           >
             <ToolbarBulletList />
           </button>
@@ -188,6 +182,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={`${baseToolbarStyles} ${editor.isActive("orderedList") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Numbered list"
           >
             <ToolbarOrderedList />
           </button>
@@ -195,6 +190,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             className={`${baseToolbarStyles} ${editor.isActive("blockquote") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Blockquote"
           >
             <ToolbarBlockquote />
           </button>
@@ -202,6 +198,7 @@ const Toolbar = ({
             type="button"
             onClick={() => toggleLinkModal(true)}
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Link"
           >
             <ToolbarLink />
           </button>
