@@ -155,7 +155,7 @@ export const ConversationSearchBar = ({
                           : "bg-muted",
                   )}
                 />
-                {countData ? `${countData.total} ` : isCountLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                {countData ? `${countData.total} ` : (isCountLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : '')}
                 {statusOptions.find(({ selected }) => selected)?.label}
               </span>
             </SelectValue>
