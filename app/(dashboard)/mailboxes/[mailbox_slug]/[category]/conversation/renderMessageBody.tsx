@@ -2,6 +2,7 @@ import "@/components/linkCta.css";
 import DOMPurify from "isomorphic-dompurify";
 import MessageMarkdown from "@/components/messageMarkdown";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 
 const extractEmailParts = (htmlString: string) =>
@@ -22,7 +23,8 @@ const adjustAttributes = (html: string) => {
     }
 
     return doc.body.innerHTML;
-  } catch (e) {
+  } catch (error) {
+    captureExceptionAndLog(error);
     return html;
   }
 };

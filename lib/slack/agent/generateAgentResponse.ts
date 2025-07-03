@@ -25,8 +25,8 @@ const searchToolSchema = searchSchema.omit({
 });
 
 // Define the schema for filters separately
-const searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true });
-type SearchFiltersInput = z.infer<typeof searchFiltersSchema>;
+const _searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true });
+type SearchFiltersInput = z.infer<typeof _searchFiltersSchema>;
 
 export const generateAgentResponse = async (
   messages: CoreMessage[],

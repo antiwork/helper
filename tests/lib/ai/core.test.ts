@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import { embed } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateEmbedding } from "@/lib/ai/core";
@@ -15,7 +14,6 @@ vi.mock("ai", () => ({
 describe("generateEmbedding", () => {
   const mockEmbedding = [0.1, 0.2, 0.3];
   const mockInput = "Test input";
-  const cacheKey = `embedding:${createHash("md5").update(mockInput).digest("hex")}`;
 
   beforeEach(() => {
     vi.mocked(embed).mockResolvedValue({

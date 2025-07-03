@@ -1,6 +1,6 @@
 {
-  "id": "f1baa0de-48f4-4b6e-b2ea-afecf1905f62",
-  "prevId": "ebcc2c4b-268d-48fa-8f5a-45e081f30b95",
+  "id": "872fd88f-66cb-471d-aee8-3081b2c6f0f6",
+  "prevId": "f1baa0de-48f4-4b6e-b2ea-afecf1905f62",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1352,6 +1352,28 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "conversations_conversation_status_last_user_email_created_at_idx": {
+          "name": "conversations_conversation_status_last_user_email_created_at_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "last_user_email_created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"conversations_conversation\".\"merged_into_id\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}

@@ -111,10 +111,12 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             <Badge>{conversation.status || "open"}</Badge>
           </div>
           <span className="text-muted-foreground">Assignee</span>
-          <AssignPopoverButton
-            initialAssignedToId={conversation.assignedToId}
-            assignedToAI={conversation.assignedToAI}
-          />
+          <div className="min-w-0">
+            <AssignPopoverButton
+              initialAssignedToId={conversation.assignedToId}
+              assignedToAI={conversation.assignedToAI}
+            />
+          </div>
         </div>
       </div>
 
@@ -157,10 +159,10 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
                     })
               }
             >
-              <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2">
-                <Mail className="h-4 w-4" />
+              <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2 min-w-0">
+                <Mail className="h-4 w-4 flex-shrink-0" />
                 <a
-                  className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline"
+                  className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline min-w-0 flex-1"
                   title={conversation.emailFrom ?? ""}
                 >
                   {conversation.emailFrom}

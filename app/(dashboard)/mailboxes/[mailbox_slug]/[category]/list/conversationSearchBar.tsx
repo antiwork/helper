@@ -22,6 +22,7 @@ interface ConversationSearchBarProps {
   defaultSort: string | undefined;
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
+  conversationCount: number;
 }
 
 export const ConversationSearchBar = ({
@@ -31,6 +32,7 @@ export const ConversationSearchBar = ({
   defaultSort,
   showFilters,
   setShowFilters,
+  conversationCount,
 }: ConversationSearchBarProps) => {
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
@@ -209,10 +211,10 @@ export const ConversationSearchBar = ({
         ) : statusOptions[0] ? (
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
-        {statusOptions.length > 0 && (
+        {conversationCount > 0 && (
           <button
-            onClick={toggleAllConversations}
-            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={() => toggleAllConversations()}
+            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"
           >
             {allConversationsSelected ? "Select none" : "Select all"}
           </button>
@@ -282,7 +284,7 @@ export const ConversationSearchBar = ({
       <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
         <SelectTrigger
           variant="bare"
-          className="w-auto text-foreground [&>svg]:text-foreground text-sm"
+          className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
           hideArrow="mobileOnly"
         >
           <SelectValue
