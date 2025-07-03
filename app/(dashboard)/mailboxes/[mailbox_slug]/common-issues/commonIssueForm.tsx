@@ -11,13 +11,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/hooks/use-toast"
 import { api } from "@/trpc/react"
 
-type CommonIssue = {
-  slug: string
-  title: string
-  keywords: string[]
-  description?: string
-  usageCount: number
-}
+export type CommonIssue = {
+  id: number;
+  slug: string;
+  title: string | null;
+  keywords: string[] | null;
+  description?: string;   // Only keep if description actually exists in your DB, otherwise remove    
+  createdAt: Date;
+  updatedAt: Date;
+  mailboxId: number;
+  createdByUserId: string | null;
+  createdByDisplayName: string;
+  mailboxName: string;
+};
 
 interface CommonIssueFormProps {
   commonIssue?: CommonIssue
@@ -110,12 +116,6 @@ export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, 
     } else {
       createCommonIssue.mutate(finalData)
     }
-    
-    onSuccess({
-      title: title.trim(),
-      keywords,
-      description: description.trim() || undefined,
-    })
 
     setIsLoading(false)
   }

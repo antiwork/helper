@@ -13,74 +13,23 @@ import { CommonIssueForm } from "./commonIssueForm"
 import { useParams } from "next/navigation"
 import { api } from "@/trpc/react"
 
-type CommonIssue = {
-  slug: string
-  title: string
-  keywords: string[]
-  description?: string
-  usageCount: number
-}
-
-// Demo data
-const DEMO_COMMON_ISSUES: CommonIssue[] = [
-  {
-    slug: "login-problems",
-    title: "User Cannot Login to Account",
-    keywords: ["login", "password", "authentication", "access", "signin"],
-    description: "Common issues related to user authentication and login problems",
-    usageCount: 45,
-  },
-  {
-    slug: "payment-failed",
-    title: "Payment Processing Failures",
-    keywords: ["payment", "billing", "credit card", "transaction", "failed", "declined"],
-    description: "Issues with payment processing and billing",
-    usageCount: 32,
-  },
-  {
-    slug: "email-delivery",
-    title: "Email Not Being Delivered",
-    keywords: ["email", "delivery", "spam", "inbox", "notifications"],
-    usageCount: 28,
-  },
-  {
-    slug: "slow-performance",
-    title: "Application Running Slowly",
-    keywords: ["performance", "slow", "loading", "timeout", "speed"],
-    description: "Performance related issues and slow loading times",
-    usageCount: 19,
-  },
-  {
-    slug: "mobile-app-crash",
-    title: "Mobile App Crashes on Startup",
-    keywords: ["mobile", "crash", "startup", "app", "android", "ios"],
-    usageCount: 15,
-  },
-  {
-    slug: "data-sync-issues",
-    title: "Data Not Syncing Between Devices",
-    keywords: ["sync", "data", "devices", "cloud", "backup"],
-    description: "Problems with data synchronization across multiple devices",
-    usageCount: 12,
-  },
-  {
-    slug: "subscription-renewal",
-    title: "Subscription Auto-Renewal Problems",
-    keywords: ["subscription", "renewal", "billing", "auto-pay", "expired"],
-    usageCount: 8,
-  },
-  {
-    slug: "file-upload-error",
-    title: "Cannot Upload Files or Documents",
-    keywords: ["upload", "files", "documents", "attachment", "error"],
-    usageCount: 6,
-  },
-]
+export type CommonIssue = {
+  id: number;
+  slug: string;
+  title: string | null;
+  keywords: string[] | null;
+  description?: string;   // Only keep if description actually exists in your DB, otherwise remove
+  createdAt: Date;
+  updatedAt: Date;
+  mailboxId: number;
+  createdByUserId: string | null;
+  createdByDisplayName: string;
+  mailboxName: string;
+};
 
 export default function CommonIssuesPage() {
   const params = useParams();
   const mailboxSlug = params.mailbox_slug as string;
-  const [commonIssues, setCommonIssues] = useState<CommonIssue[]>(DEMO_COMMON_ISSUES)
   const [searchTerm, setSearchTerm] = useState("")
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -100,23 +49,16 @@ export default function CommonIssuesPage() {
   })
 
   // Filter common issues based on search
-  const filteredCommonIssues = commonIssues.filter((issue) => {
+  const filteredCommonIssues = commonIssuesList?.filter((issue) => {
     if (!debouncedSearchTerm) return true
     const searchLower = debouncedSearchTerm.toLowerCase()
     return (
-      issue.title.toLowerCase().includes(searchLower) ||
-      issue.keywords.some((keyword) => keyword.toLowerCase().includes(searchLower)) ||
-      issue.description?.toLowerCase().includes(searchLower)
+      (issue.title?.toLowerCase().includes(searchLower) ?? false) ||
+      (issue.keywords?.some((keyword) => keyword.toLowerCase().includes(searchLower)) ?? false)
     )
   })
 
   const handleCreateSuccess = (newIssue: Omit<CommonIssue, "slug" | "usageCount" | "createdAt">) => {
-    const issue: CommonIssue = {
-      ...newIssue,
-      slug: `issue-${Date.now()}`,
-      usageCount: 0,
-    }
-    setCommonIssues((prev) => [issue, ...prev])
     setShowCreateDialog(false)
     toast({ title: "Common issue created successfully" })
   }
@@ -124,15 +66,11 @@ export default function CommonIssuesPage() {
   const handleEditSuccess = (updatedIssue: Omit<CommonIssue, "slug" | "usageCount" | "createdAt">) => {
     if (!editingCommonIssue) return
 
-    setCommonIssues((prev) =>
-      prev.map((issue) => (issue.slug === editingCommonIssue.slug ? { ...issue, ...updatedIssue } : issue)),
-    )
     setEditingCommonIssue(null)
     toast({ title: "Common issue updated successfully" })
   }
 
   const handleDelete = (slug: string) => {
-    setCommonIssues((prev) => prev.filter((issue) => issue.slug !== slug))
     setEditingCommonIssue(null)
     toast({ title: "Common issue deleted successfully" })
   }
@@ -146,7 +84,7 @@ export default function CommonIssuesPage() {
     }
   }
 
-  const hasIssuesOrSearch = filteredCommonIssues.length > 0 || searchTerm.length > 0
+  const hasIssuesOrSearch = (filteredCommonIssues?.length ?? 0) > 0 || searchTerm.length > 0
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-background">
@@ -197,7 +135,7 @@ export default function CommonIssuesPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCommonIssues.map((commonIssue) => (
+            {(filteredCommonIssues ?? []).map((commonIssue) => (
               <Card
                 key={commonIssue.slug}
                 className="hover:shadow-md transition-shadow cursor-pointer flex flex-col group"
@@ -210,16 +148,13 @@ export default function CommonIssuesPage() {
                       <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
                         {commonIssue.title}
                       </CardTitle>
-                      {commonIssue.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">{commonIssue.description}</p>
-                      )}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleCopyKeywords(commonIssue.keywords)
+                        handleCopyKeywords(commonIssue.keywords ?? [])
                       }}
                       data-testid="copy-button"
                       className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -231,22 +166,21 @@ export default function CommonIssuesPage() {
                 <CardContent className="pt-0 flex-1 flex flex-col">
                   <div className="flex-1 mb-4">
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {commonIssue.keywords.slice(0, 6).map((keyword, index) => (
+                      {(commonIssue.keywords ?? []).slice(0, 6).map((keyword, index) => (
                         <Badge key={index} className="text-xs">
                           <Tag className="h-3 w-3 mr-1" />
                           {keyword}
                         </Badge>
                       ))}
-                      {commonIssue.keywords.length > 6 && (
+                      {(commonIssue.keywords?.length ?? 0) > 6 && (
                         <Badge className="text-xs">
-                          +{commonIssue.keywords.length - 6} more
+                          +{(commonIssue.keywords?.length ?? 0) - 6} more
                         </Badge>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-                    <span>{commonIssue.keywords.length} keywords</span>
-                    <span>Used {commonIssue.usageCount} times</span>
+                    <span>{commonIssue.keywords?.length ?? 0} keywords</span>
                   </div>
                 </CardContent>
               </Card>
@@ -254,7 +188,7 @@ export default function CommonIssuesPage() {
           </div>
         )}
 
-        {!isLoading && filteredCommonIssues.length === 0 && (
+        {!isLoading && (filteredCommonIssues?.length ?? 0) === 0 && (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
               {searchTerm ? "No common issues found matching your search" : "No common issues yet"}
