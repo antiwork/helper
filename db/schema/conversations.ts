@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { isNull, relations } from "drizzle-orm";
 import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { encryptedField } from "../lib/encryptedField";
@@ -63,6 +63,9 @@ export const conversations = pgTable(
     unique("conversations_conversation_slug_key").on(table.slug),
     index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
+    index("conversations_conversation_status_last_user_email_created_at_idx")
+      .on(table.status, table.lastUserEmailCreatedAt.desc().nullsLast())
+      .where(isNull(table.mergedIntoId)),
   ],
 ).enableRLS();
 
