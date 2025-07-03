@@ -132,7 +132,7 @@ export const ConversationSearchBar = ({
   );
 
   return (
-    <div className="flex items-center justify-between gap-2 md:gap-6 py-1">
+    <div className="flex items-center justify-between gap-2 py-1 md:grid md:grid-cols-3 md:gap-6">
       <div className="flex items-center gap-4">
         <Select
           value={statusOptions.find(({ selected }) => selected)?.value || ""}
@@ -167,7 +167,7 @@ export const ConversationSearchBar = ({
           {allConversationsSelected ? "Select none" : "Select all"}
         </button>
       </div>
-      <div className="flex-1 max-w-[400px] flex items-center gap-2">
+      <div className="flex-1 max-w-[400px] flex items-center gap-2 md:justify-center">
         <Input
           ref={searchInputRef}
           placeholder="Search conversations"
@@ -189,32 +189,34 @@ export const ConversationSearchBar = ({
           {activeFilterCount > 0 && <span className="text-xs ml-1">({activeFilterCount})</span>}
         </Button>
       </div>
-      <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
-        <SelectTrigger
-          variant="bare"
-          className="w-auto text-foreground [&>svg]:text-foreground text-sm"
-          hideArrow="mobileOnly"
-        >
-          <SelectValue
-            placeholder={
-              <>
-                <ArrowDownUp className="h-4 w-4 md:hidden" />
-                <span className="hidden md:block">Sort by</span>
-              </>
-            }
+      <div className="flex justify-end">
+        <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
+          <SelectTrigger
+            variant="bare"
+            className="w-auto text-foreground [&>svg]:text-foreground text-sm"
+            hideArrow="mobileOnly"
           >
-            <ArrowDownUp className="h-4 w-4 md:hidden" />
-            <span className="hidden md:block">{sortOptions.find(({ selected }) => selected)?.label}</span>
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {sortOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+            <SelectValue
+              placeholder={
+                <>
+                  <ArrowDownUp className="h-4 w-4 md:hidden" />
+                  <span className="hidden md:block">Sort by</span>
+                </>
+              }
+            >
+              <ArrowDownUp className="h-4 w-4 md:hidden" />
+              <span className="hidden md:block">{sortOptions.find(({ selected }) => selected)?.label}</span>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };
