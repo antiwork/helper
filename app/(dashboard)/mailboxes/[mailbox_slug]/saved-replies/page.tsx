@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { stripHtmlTags } from "@/components/utils/html";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SavedReplyForm } from "./savedReplyForm";
@@ -139,7 +140,9 @@ export default function SavedRepliesPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 flex-1 flex flex-col">
-                    <div className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">{savedReply.content}</div>
+                    <div className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+                      {stripHtmlTags(savedReply.content)}
+                    </div>
                     <div className="flex items-center justify-start text-xs text-muted-foreground mt-auto">
                       <span>Used {savedReply.usageCount} times</span>
                     </div>

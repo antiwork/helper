@@ -161,7 +161,11 @@ export class SavedRepliesPage extends BasePage {
     const addBtn = this.page.locator('button:has-text("Add")');
     const updateBtn = this.page.locator('button:has-text("Update")');
 
-    await this.page.waitForTimeout(300); // Brief wait for form to stabilize
+    // Wait for either button to be visible before proceeding
+    await Promise.race([
+      addBtn.waitFor({ state: "visible", timeout: 5000 }),
+      updateBtn.waitFor({ state: "visible", timeout: 5000 }),
+    ]);
 
     if (await addBtn.isVisible()) {
       await addBtn.scrollIntoViewIfNeeded();
@@ -173,8 +177,11 @@ export class SavedRepliesPage extends BasePage {
       throw new Error("Neither Add nor Update button found");
     }
 
-    // Wait for the dialog to close
-    await this.page.waitForTimeout(500);
+    // Wait for the dialog to close by waiting for it to not be visible
+    await this.createDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {
+      // If create dialog is not found, try waiting for edit dialog to close
+      return this.editDialog.waitFor({ state: "hidden", timeout: 5000 });
+    });
   }
 
   async clickCancelButton() {
