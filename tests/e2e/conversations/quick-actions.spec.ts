@@ -361,4 +361,205 @@ test.describe("Quick Actions on Conversation List", () => {
     
     await takeDebugScreenshot(page, "undo-error-message.png");
   });
+
+  test("should assign individual conversation to user", async ({ page }) => {
+    // Set desktop viewport for hover functionality
+    await conversationsPage.setDesktopViewport();
+    
+    // Navigate to open conversations
+    await conversationsPage.navigateToOpenConversations();
+    
+    // Check if there are conversations to test with
+    if (!(await conversationsPage.hasConversations())) {
+      console.log("No conversations found, skipping assign test");
+      return;
+    }
+    
+    // Hover to reveal action buttons
+    await conversationsPage.hoverFirstConversation();
+    
+    // Look for assign button (UserPlus icon)
+    const assignButton = page.locator('button:has(svg[data-testid="lucide-user-plus"])').first();
+    await expect(assignButton).toBeVisible();
+    
+    // Click assign button to open popover
+    await assignButton.click();
+    
+    // Wait for assign popover to appear
+    const assignPopover = page.locator('[role="dialog"], .popover-content').filter({ hasText: /Assign conversation/i });
+    await expect(assignPopover).toBeVisible({ timeout: 5000 });
+    
+    // Look for assign select component
+    const assignSelect = assignPopover.locator('select, [role="combobox"], .assign-select');
+    
+    // If assign select is available, try to select an option
+    if (await assignSelect.count() > 0) {
+      // Try to select first available option (could be user or AI)
+      await assignSelect.first().click();
+      
+      // Look for assign button in popover
+      const assignSubmitButton = assignPopover.locator('button').filter({ hasText: /Assign/i });
+      if (await assignSubmitButton.count() > 0) {
+        await assignSubmitButton.click();
+        
+        // Should show success toast
+        await conversationsPage.expectSuccessToast("assigned");
+      }
+    }
+    
+    await takeDebugScreenshot(page, "conversation-assigned.png");
+  });
+
+  test("should show assign button for individual conversations", async ({ page }) => {
+    // Set desktop viewport
+    await conversationsPage.setDesktopViewport();
+    
+    // Navigate to open conversations
+    await conversationsPage.navigateToOpenConversations();
+    
+    // Check if there are conversations to test with
+    if (!(await conversationsPage.hasConversations())) {
+      console.log("No conversations found, skipping assign button test");
+      return;
+    }
+    
+    // Hover over conversation to reveal buttons
+    await conversationsPage.hoverFirstConversation();
+    
+    // Check for assign button (UserPlus icon)
+    const assignButton = page.locator('button:has(svg[data-testid="lucide-user-plus"])');
+    await expect(assignButton.first()).toBeVisible();
+    
+    // Check that assign button is properly positioned with other action buttons
+    const actionButtonsContainer = page.locator('.group .opacity-0').first();
+    const closeButton = page.locator('button:has(svg[data-testid="lucide-archive"])');
+    const spamButton = page.locator('button:has(svg[data-testid="lucide-shield-alert"])');
+    
+    // All action buttons should be in the same container
+    if (await closeButton.count() > 0) {
+      await expect(closeButton.first()).toBeVisible();
+    }
+    if (await spamButton.count() > 0) {
+      await expect(spamButton.first()).toBeVisible();
+    }
+    await expect(assignButton.first()).toBeVisible();
+    
+    await takeDebugScreenshot(page, "assign-button-visible.png");
+  });
+
+  test("should show bulk assign option when conversations are selected", async ({ page }) => {
+    // Set desktop viewport
+    await conversationsPage.setDesktopViewport();
+    
+    // Navigate to open conversations
+    await conversationsPage.navigateToOpenConversations();
+    
+    // Check if there are conversations to test with
+    if (!(await conversationsPage.hasConversations())) {
+      console.log("No conversations found, skipping bulk assign test");
+      return;
+    }
+    
+    // Select first conversation
+    const firstCheckbox = page.locator('input[type="checkbox"]').first();
+    await firstCheckbox.click();
+    
+    // Wait for quick actions bar to appear
+    const quickActionsBar = page.locator('.flex.items-center.justify-between').filter({ hasText: /selected/i });
+    await expect(quickActionsBar).toBeVisible({ timeout: 5000 });
+    
+    // Look for bulk assign button (should have User icon and "Assign" text)
+    const bulkAssignButton = page.locator('button').filter({ hasText: /Assign/i }).and(page.locator(':has(svg[data-testid="lucide-user"])'));
+    await expect(bulkAssignButton).toBeVisible();
+    
+    // Click bulk assign button
+    await bulkAssignButton.click();
+    
+    // Should open assign popover
+    const assignPopover = page.locator('[role="dialog"], .popover-content').filter({ hasText: /Assign.*conversation/i });
+    await expect(assignPopover).toBeVisible({ timeout: 5000 });
+    
+    await takeDebugScreenshot(page, "bulk-assign-popover.png");
+  });
+
+  test("should handle assign errors gracefully", async ({ page }) => {
+    // Set desktop viewport
+    await conversationsPage.setDesktopViewport();
+    
+    // Navigate to open conversations
+    await conversationsPage.navigateToOpenConversations();
+    
+    // Check if there are conversations to test with
+    if (!(await conversationsPage.hasConversations())) {
+      console.log("No conversations found, skipping assign error test");
+      return;
+    }
+    
+    // Intercept assign API calls to simulate errors
+    await page.route('**/api/trpc/mailbox.conversations.update*', (route) => {
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { message: 'Assignment failed' } })
+      });
+    });
+    
+    // Hover and click assign button
+    await conversationsPage.hoverFirstConversation();
+    const assignButton = page.locator('button:has(svg[data-testid="lucide-user-plus"])').first();
+    
+    if (await assignButton.count() > 0) {
+      await assignButton.click();
+      
+      // Wait for assign popover
+      const assignPopover = page.locator('[role="dialog"], .popover-content').filter({ hasText: /Assign conversation/i });
+      if (await assignPopover.isVisible()) {
+        // Try to submit assignment (this should fail with our intercepted error)
+        const assignSubmitButton = assignPopover.locator('button').filter({ hasText: /Assign/i });
+        if (await assignSubmitButton.count() > 0) {
+          await assignSubmitButton.click();
+          
+          // Should show error toast
+          await conversationsPage.expectErrorToast();
+        }
+      }
+    }
+    
+    await takeDebugScreenshot(page, "assign-error.png");
+  });
+
+  test("should prevent assign button clicks from triggering conversation navigation", async ({ page }) => {
+    // Set desktop viewport
+    await conversationsPage.setDesktopViewport();
+    
+    // Navigate to open conversations
+    await conversationsPage.navigateToOpenConversations();
+    
+    // Check if there are conversations to test with
+    if (!(await conversationsPage.hasConversations())) {
+      console.log("No conversations found, skipping assign navigation test");
+      return;
+    }
+    
+    const currentUrl = page.url();
+    
+    // Hover to reveal action buttons
+    await conversationsPage.hoverFirstConversation();
+    
+    // Click assign button (should not navigate)
+    const assignButton = page.locator('button:has(svg[data-testid="lucide-user-plus"])').first();
+    if (await assignButton.count() > 0) {
+      await assignButton.click();
+      
+      // Wait a moment for any potential navigation
+      await page.waitForTimeout(1000);
+      
+      // URL should remain the same (no navigation to conversation details)
+      expect(page.url()).toBe(currentUrl);
+      
+      // Should show assign popover instead of navigating
+      const assignPopover = page.locator('[role="dialog"], .popover-content').filter({ hasText: /Assign conversation/i });
+      await expect(assignPopover).toBeVisible({ timeout: 3000 });
+    }
+  });
 });

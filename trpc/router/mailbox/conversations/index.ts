@@ -190,6 +190,43 @@ export const conversationsRouter = {
       });
       return { updatedImmediately: false };
     }),
+  bulkAssign: mailboxProcedure
+    .input(
+      z.object({
+        conversationFilter: z.union([z.array(z.number()), searchSchema]),
+        assignedToId: z.string().nullable(),
+        assignedToAI: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { conversationFilter, assignedToId, assignedToAI } = input;
+
+      if (assignedToId) {
+        const assignee = await db.query.authUsers.findFirst({
+          where: eq(authUsers.id, assignedToId),
+        });
+        if (!assignee) throw new TRPCError({ code: "BAD_REQUEST", message: "Assignee not found" });
+      }
+
+      if (Array.isArray(conversationFilter) && conversationFilter.length < 25) {
+        for (const conversationId of conversationFilter) {
+          await updateConversation(conversationId, { 
+            set: { assignedToId, assignedToAI }, 
+            byUserId: ctx.user.id 
+          });
+        }
+        return { updatedImmediately: true };
+      }
+
+      await triggerEvent("conversations/bulk-assign", {
+        mailboxId: ctx.mailbox.id,
+        userId: ctx.user.id,
+        conversationFilter: input.conversationFilter,
+        assignedToId: input.assignedToId,
+        assignedToAI: input.assignedToAI,
+      });
+      return { updatedImmediately: false };
+    }),
   generateDraft: conversationProcedure.mutation(async ({ ctx }) => {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);

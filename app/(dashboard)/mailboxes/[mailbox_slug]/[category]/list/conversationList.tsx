@@ -1,14 +1,16 @@
-import { Send } from "lucide-react";
+import { Send, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
+import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSelected } from "@/components/useSelected";
 import { useShiftSelected } from "@/components/useShiftSelected";
@@ -36,12 +38,22 @@ export const List = () => {
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [showAssignPopover, setShowAssignPopover] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: () => {
       toast({
         variant: "destructive",
         title: "Failed to update conversations",
+      });
+    },
+  });
+  const { mutate: bulkAssign } = api.mailbox.conversations.bulkAssign.useMutation({
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to assign conversations",
       });
     },
   });
@@ -105,6 +117,51 @@ export const List = () => {
               });
             } else {
               toast({ title: "Starting update, refresh to see status." });
+            }
+          },
+        },
+      );
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const handleBulkAssign = () => {
+    if (!assignedTo) return;
+    
+    setIsBulkUpdating(true);
+    try {
+      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
+      const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+      const assignedToId = "id" in assignedTo ? assignedTo.id : null;
+      const assignedToAI = "ai" in assignedTo;
+
+      bulkAssign(
+        {
+          conversationFilter,
+          assignedToId,
+          assignedToAI,
+          mailboxSlug: input.mailboxSlug,
+        },
+        {
+          onSuccess: ({ updatedImmediately }) => {
+            setAllConversationsSelected(false);
+            clearSelectedConversations();
+            setShowAssignPopover(false);
+            setAssignedTo(null);
+            void utils.mailbox.conversations.list.invalidate();
+
+            if (updatedImmediately) {
+              const assignText = assignedToAI 
+                ? "assigned to Helper agent" 
+                : assignedToId 
+                  ? `assigned to ${assignedTo.displayName}`
+                  : "unassigned";
+              toast({
+                title: `${selectedCount} conversation${selectedCount === 1 ? "" : "s"} ${assignText}`,
+              });
+            } else {
+              toast({ title: "Starting assignment, refresh to see status." });
             }
           },
         },
@@ -273,6 +330,32 @@ export const List = () => {
                       </Button>
                     </ConfirmationDialog>
                   )}
+                  <Popover open={showAssignPopover} onOpenChange={setShowAssignPopover}>
+                    <PopoverTrigger asChild>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        <User className="h-4 w-4 mr-1" />
+                        Assign
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4">
+                      <div className="flex flex-col space-y-4">
+                        <h4 className="font-medium">Assign {selectedCount} conversation{selectedCount === 1 ? "" : "s"}</h4>
+                        <AssignSelect
+                          selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
+                          onChange={setAssignedTo}
+                          aiOption
+                          aiOptionSelected={!!(assignedTo && "ai" in assignedTo)}
+                        />
+                        <Button 
+                          className="w-full" 
+                          onClick={handleBulkAssign}
+                          disabled={!assignedTo || isBulkUpdating}
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
