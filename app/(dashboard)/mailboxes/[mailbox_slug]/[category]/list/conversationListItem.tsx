@@ -50,7 +50,6 @@ export const ConversationListItem = ({
   let highlightedSubject = escape(conversation.subject);
   let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
 
-  // Only create snippet when we have search terms and matched text
   if (searchTerms.length > 0 && conversation.matchedMessageText) {
     bodyText = createSearchSnippet(bodyText, searchTerms);
   }
@@ -59,7 +58,7 @@ export const ConversationListItem = ({
 
   if (searchTerms.length > 0) {
     highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
-    // Only highlight body if we have matched text
+
     if (conversation.matchedMessageText) {
       highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
