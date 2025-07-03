@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
 const corsHeaders = {
@@ -62,7 +63,8 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   let session;
   try {
     session = verifyWidgetSession(token, mailbox);
-  } catch (_error) {
+  } catch (error) {
+    captureExceptionAndLogIfDevelopment(error);
     return { success: false, error: "Invalid session token" };
   }
 
