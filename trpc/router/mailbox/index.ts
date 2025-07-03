@@ -19,6 +19,7 @@ import { savedRepliesRouter } from "./savedReplies";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
+import { commonIssuesRouter } from "./commonIssues";
 
 export { mailboxProcedure };
 
@@ -146,6 +147,7 @@ export const mailboxRouter = {
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
   savedReplies: savedRepliesRouter,
+  commonIssues: commonIssuesRouter,
 
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
