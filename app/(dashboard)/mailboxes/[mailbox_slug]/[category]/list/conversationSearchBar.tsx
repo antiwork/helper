@@ -1,5 +1,5 @@
 import { capitalize } from "lodash-es";
-import { ArrowDownUp, Filter, Search } from "lucide-react";
+import { ArrowDownUp, Filter, Loader2, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -51,7 +51,7 @@ export const ConversationSearchBar = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(searchParams.search || "");
 
-  const { data: countData } = api.mailbox.conversations.count.useQuery(input);
+  const { data: countData, isLoading: isCountLoading } = api.mailbox.conversations.count.useQuery(input);
 
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
@@ -138,7 +138,7 @@ export const ConversationSearchBar = ({
           value={statusOptions.find(({ selected }) => selected)?.value || ""}
           onValueChange={handleStatusFilterChange}
         >
-          <SelectTrigger className="w-auto text-foreground [&>svg]:text-foreground text-sm">
+          <SelectTrigger className="w-auto min-w-[120px] text-foreground [&>svg]:text-foreground text-sm">
             <SelectValue placeholder="Select status">
               <span className="flex items-center gap-2">
                 <span
@@ -147,7 +147,7 @@ export const ConversationSearchBar = ({
                     statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
                   )}
                 />
-                {countData ? `${countData.total} ` : ""}
+                {countData ? `${countData.total} ` : isCountLoading && <Loader2 className="h-3 w-3 animate-spin" />}
                 {statusOptions.find(({ selected }) => selected)?.label}
               </span>
             </SelectValue>
