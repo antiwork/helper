@@ -36,7 +36,6 @@ export const ConversationListItem = ({
   const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
   const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
-  const maxBodyLength = 300;
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -51,16 +50,16 @@ export const ConversationListItem = ({
   let highlightedSubject = escape(conversation.subject);
   let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
 
-  // Only create snippets and highlight when we have actual search matches
-  if (searchTerms.length > 0 && conversation.matchedMessageText && bodyText) {
-    bodyText = createSearchSnippet(bodyText, searchTerms, maxBodyLength);
+  // Only create snippet when we have search terms and matched text
+  if (searchTerms.length > 0 && conversation.matchedMessageText) {
+    bodyText = createSearchSnippet(bodyText, searchTerms);
   }
 
   let highlightedBody = escape(bodyText);
 
   if (searchTerms.length > 0) {
     highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
-    // Only highlight body text if search terms were actually found in the message body
+    // Only highlight body if we have matched text
     if (conversation.matchedMessageText) {
       highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
