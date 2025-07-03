@@ -141,7 +141,13 @@ export const ConversationSearchBar = ({
                   <span
                     className={cn(
                       "w-2 h-2 rounded-full",
-                      statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
+                      statusOptions.find(({ selected }) => selected)?.value === "open"
+                        ? "bg-success"
+                        : statusOptions.find(({ selected }) => selected)?.value === "closed"
+                          ? "bg-muted-foreground"
+                          : statusOptions.find(({ selected }) => selected)?.value === "spam"
+                            ? "bg-destructive"
+                            : "bg-muted",
                     )}
                   />
                   {statusOptions.find(({ selected }) => selected)?.label}
