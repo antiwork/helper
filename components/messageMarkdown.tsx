@@ -128,6 +128,7 @@ interface MessageMarkdownProps {
   children: string | null;
   className?: string;
   components?: any;
+  allowHtml?: boolean;
 }
 
 const createSanitizeSchema = () => {
@@ -136,15 +137,20 @@ const createSanitizeSchema = () => {
     tagNames: [...(defaultSchema.tagNames || []), "wbr"],
     attributes: {
       ...defaultSchema.attributes,
-      "*": [...(defaultSchema.attributes?.["*"] || []), "className", "style"],
+      "*": [...(defaultSchema.attributes?.["*"] || []), "className"],
     },
   };
 };
 
-export default function MessageMarkdown({ children, className, components }: MessageMarkdownProps) {
+export default function MessageMarkdown({ children, className, components, allowHtml = true }: MessageMarkdownProps) {
   const sanitizeSchema = createSanitizeSchema();
 
-  const rehypePlugins: Pluggable[] = [rehypeRaw, rehypeAddWbrAfterSlash,[rehypeSanitize, sanitizeSchema]];
+  const rehypePlugins: Pluggable[] = [rehypeAddWbrAfterSlash];
+
+  if (allowHtml) {
+    rehypePlugins.unshift(rehypeRaw);
+    rehypePlugins.push([rehypeSanitize, sanitizeSchema]);
+  }
 
   return (
     <ReactMarkdown
