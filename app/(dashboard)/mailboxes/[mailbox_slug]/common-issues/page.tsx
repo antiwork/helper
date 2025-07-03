@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/hooks/use-toast"
 import { CommonIssueForm } from "./commonIssueForm"
 import { useParams } from "next/navigation"
+import { api } from "@/trpc/react"
 
 type CommonIssue = {
   slug: string
@@ -93,6 +94,10 @@ export default function CommonIssuesPage() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchTerm])
+  
+  const { data: commonIssuesList } = api.mailbox.commonIssues.list.useQuery({
+    mailboxSlug
+  })
 
   // Filter common issues based on search
   const filteredCommonIssues = commonIssues.filter((issue) => {

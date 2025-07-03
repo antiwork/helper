@@ -58,6 +58,22 @@ export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, 
       },
     })
 
+    const updateCommonIssue = api.mailbox.commonIssues.update.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Common issue updated successfully",
+          variant: "success",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Failed to update saved reply",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+
   const handleRemoveKeyword = (keywordToRemove: string) => {
     setKeywords(keywords.filter((keyword) => keyword !== keywordToRemove))
   }
@@ -82,14 +98,18 @@ export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, 
       return
     }
     const finalData = {
-        title: title.trim(),
-        keywords,
-        mailboxSlug
+      title: title.trim(),
+      keywords,
+      mailboxSlug
     }
 
     setIsLoading(true)
 
-    createCommonIssue.mutate(finalData)
+    if(commonIssue) {
+      updateCommonIssue.mutate({ slug:commonIssue.slug, ...finalData })
+    } else {
+      createCommonIssue.mutate(finalData)
+    }
     
     onSuccess({
       title: title.trim(),
@@ -103,14 +123,9 @@ export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, 
   const handleDelete = async () => {
     if (!commonIssue || !onDelete) return
 
-    if (!confirm("Are you sure you want to delete this common issue?")) {
-      return
-    }
+    
 
     setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 300))
 
     onDelete()
     setIsLoading(false)

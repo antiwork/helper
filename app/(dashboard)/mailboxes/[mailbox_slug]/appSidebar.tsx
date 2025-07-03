@@ -230,6 +230,22 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroup>
+              <SidebarGroup>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === `/mailboxes/${mailboxSlug}/common-issues`}
+                      tooltip="Common issues"
+                    >
+                      <Link href={`/mailboxes/${mailboxSlug}/common-issues`} onClick={handleItemClick}>
+                        <MessageSquareText className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Common issues</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
             </div>
             <div className="mt-auto">
               <SidebarGroup>
