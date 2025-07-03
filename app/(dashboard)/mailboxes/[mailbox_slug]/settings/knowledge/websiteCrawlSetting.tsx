@@ -9,6 +9,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
@@ -249,7 +250,8 @@ const WebsiteCrawlSetting = () => {
                   await handleAddWebsite(urlWithProtocol);
                   setNewWebsite({ name: "", url: "" });
                   setShowAddWebsite(false);
-                } catch (_error) {
+                } catch (error) {
+                  captureExceptionAndLog(error);
                   setUrlError("Failed to add website. Please try again.");
                 }
               }}
