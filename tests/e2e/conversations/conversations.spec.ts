@@ -1,9 +1,13 @@
 import { expect, test } from "@playwright/test";
+import { endOfDay, startOfDay } from "date-fns";
 import { ConversationsPage } from "../utils/page-objects/conversationsPage";
-import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot } from "../utils/test-helpers";
 
 // Use the working authentication
 test.use({ storageState: "tests/e2e/.auth/user.json" });
+
+// Constants for consistent selectors
+const CONVERSATION_LINKS_SELECTOR = 'a[href*="/conversations?id="]';
 
 test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
@@ -102,12 +106,16 @@ test.describe("Working Conversation Management", () => {
     await expect(sortButton).toBeVisible();
 
     // Select all button appears when conversations exist - verify it exists or conversations are empty
-    const conversationItems = page.locator('div[role="checkbox"]');
-    const conversationCount = await conversationItems.count();
+    const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
+    const conversationCount = await conversationLinks.count();
 
     if (conversationCount > 0) {
       const selectAllButton = page.locator('button:has-text("Select all"), button:has-text("Select none")');
       await expect(selectAllButton).toBeVisible();
+    } else {
+      // When no conversations exist, select all button should not be visible
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).not.toBeVisible();
     }
   });
 
@@ -124,18 +132,22 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle select all functionality", async ({ page }) => {
-    // Check if Select all button exists (it might be conditional)
-    const selectAllButton = page.locator('button:has-text("Select all")');
-    const selectAllCount = await selectAllButton.count();
+    // Check if conversations exist first
+    const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
+    const conversationCount = await conversationLinks.count();
 
-    if (selectAllCount > 0) {
+    if (conversationCount > 0) {
+      // Check if Select all button exists when conversations are present
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).toBeVisible();
+
       // Count conversation checkboxes before selecting
-      const checkboxes = page.locator('div[role="checkbox"]');
+      const checkboxes = page.locator('button[role="checkbox"]');
       const totalCheckboxes = await checkboxes.count();
 
       if (totalCheckboxes > 0) {
         // Count currently checked checkboxes
-        const checkedBefore = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedBefore = await checkboxes.locator('[data-state="checked"]').count();
 
         // Click Select all button
         await selectAllButton.click();
@@ -144,7 +156,7 @@ test.describe("Working Conversation Management", () => {
         await page.waitForTimeout(500);
 
         // Verify all checkboxes are now checked
-        const checkedAfter = await checkboxes.filter('[data-state="checked"]').count();
+        const checkedAfter = await checkboxes.locator('[data-state="checked"]').count();
         expect(checkedAfter).toBe(totalCheckboxes);
         expect(checkedAfter).toBeGreaterThan(checkedBefore);
 
@@ -157,7 +169,11 @@ test.describe("Working Conversation Management", () => {
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     } else {
-      // If Select all doesn't exist, just verify we're still on the right page
+      // No conversations exist, verify Select all button is not visible
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).not.toBeVisible();
+      
+      // Verify we're still on the right page
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     }
@@ -169,6 +185,10 @@ test.describe("Working Conversation Management", () => {
     // Key elements should still be visible on mobile
     const searchInput = page.locator('input[placeholder="Search conversations"]');
     await expect(searchInput).toBeVisible();
+
+    // Select all button should be hidden on mobile (hidden md:block class)
+    const selectAllButton = page.locator('button:has-text("Select all")');
+    await expect(selectAllButton).not.toBeVisible();
 
     // Take mobile screenshot
     await takeDebugScreenshot(page, "dashboard-mobile.png");
@@ -328,10 +348,12 @@ test.describe("Working Conversation Management", () => {
         await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
       }
 
-      // Select all conversations
+      // Select all conversations (only if button exists)
       const selectAllButton = page.locator('button:has-text("Select all")');
-      await selectAllButton.click();
-      await page.waitForTimeout(300);
+      if ((await selectAllButton.count()) > 0) {
+        await selectAllButton.click();
+        await page.waitForTimeout(300);
+      }
 
       // Verify that all checkboxes are selected
       for (let i = 0; i < checkboxCount; i++) {
@@ -341,5 +363,147 @@ test.describe("Working Conversation Management", () => {
       // If not enough conversations, log a warning
       console.warn("Not enough conversations to test shift-click selection");
     }
+  });
+
+  test("should handle date filter presets", async ({ page }) => {
+    const filterToggleButton = page.getByTestId("filter-toggle");
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const dateFilterButton = page.getByTestId("date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Initially should show "Created" (All time)
+    await expect(dateFilterButton).toHaveText(/Created/);
+
+    // Click to open dropdown
+    await dateFilterButton.click();
+
+    // Test "Today" preset
+    const todayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Today" });
+    await expect(todayOption).toBeVisible();
+    await todayOption.click();
+
+    // Sleep for half a second to ensure the filter is set
+    await page.waitForTimeout(500);
+
+    // Button label should change to "Today"
+    await expect(dateFilterButton).toHaveText(/Today/);
+
+    // Check the url params for "Today"
+    const urlParams = new URL(page.url()).searchParams;
+    expect(urlParams.get("createdAfter")).toBe(startOfDay(new Date()).toISOString());
+    expect(urlParams.get("createdBefore")).toBe(endOfDay(new Date()).toISOString());
+  });
+
+  test("should handle custom date picker", async ({ page }) => {
+    const filterToggleButton = page.getByTestId("filter-toggle");
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const dateFilterButton = page.getByTestId("date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Open date filter dropdown
+    await dateFilterButton.click();
+
+    // Click "Custom" option
+    const customOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Custom" });
+    await customOption.click();
+
+    // Calendar should be visible
+    const calendar = page.locator('table[aria-multiselectable="true"]').first();
+    await expect(calendar).toBeVisible();
+
+    // Click on a date (try to click on day 15 of current month)
+    const dayButton = page.locator('table[aria-multiselectable="true"] button[aria-label*="15"]').first();
+    await dayButton.click();
+
+    // Sleep for half a second to ensure the date is selected
+    await page.waitForTimeout(500);
+
+    // Button label should show the selected date
+    await expect(dateFilterButton).toContainText("15");
+
+    // Test "Back" button
+    const backButton = page.locator("button").filter({ hasText: "Back" });
+    await expect(backButton).toBeVisible();
+    await backButton.click();
+
+    // Should be back to preset options
+    const todayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Today" });
+    await expect(todayOption).toBeVisible();
+  });
+
+  test("should clear date filter with clear filters button", async ({ page }) => {
+    const filterToggleButton = page.getByTestId("filter-toggle");
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const dateFilterButton = page.getByTestId("date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Set a date filter
+    await dateFilterButton.click();
+    const yesterdayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Yesterday" });
+    await yesterdayOption.click();
+    await expect(dateFilterButton).toHaveText(/Yesterday/);
+
+    // Sleep for half a second to ensure the filter is set
+    await page.waitForTimeout(500);
+
+    // Clear filters button should appear
+    const clearFiltersButton = page.getByTestId("clear-filters-button");
+    await expect(clearFiltersButton).toBeVisible();
+
+    // Click clear filters
+    await clearFiltersButton.click();
+
+    // Sleep for half a second to ensure the filter is cleared
+    await page.waitForTimeout(500);
+
+    // Date filter should reset to "Created"
+    await expect(dateFilterButton).toHaveText(/Created/);
+
+    // Clear filters button should disappear
+    await expect(clearFiltersButton).not.toBeVisible();
+  });
+
+  test("should preserve date filter after page refresh", async ({ page }) => {
+    const toggleFilters = async () => {
+      const filterToggleButton = page.getByTestId("filter-toggle");
+      await expect(filterToggleButton).toBeVisible();
+      await filterToggleButton.click();
+    };
+
+    await toggleFilters();
+
+    const dateFilterButton = page.getByTestId("date-filter-button");
+    await expect(dateFilterButton).toBeVisible();
+
+    // Set "Last 30 days" filter
+    await dateFilterButton.click();
+    const last30DaysOption = page
+      .locator('[role="menuitemradio"], [role="option"]')
+      .filter({ hasText: "Last 30 days" });
+    await last30DaysOption.click();
+    await expect(dateFilterButton).toHaveText(/Last 30 days/);
+
+    // sleep for 1 second to ensure the filter is set
+    await page.waitForTimeout(1000);
+
+    // Refresh the page
+    await page.reload({ timeout: 15000 });
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
+
+    await toggleFilters();
+
+    // Filter should be preserved
+    const dateFilterButtonAfterRefresh = page.getByTestId("date-filter-button");
+    await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
+
+    // Clear filters button should still be visible
+    const clearFiltersButton = page.locator("button").filter({ hasText: "Clear filters" });
+    await expect(clearFiltersButton).toBeVisible();
   });
 });

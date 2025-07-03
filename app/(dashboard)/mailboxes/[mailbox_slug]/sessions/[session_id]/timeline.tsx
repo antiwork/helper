@@ -3,6 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Toggle } from "@/components/ui/toggle";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 
 export interface Event {
@@ -68,6 +69,7 @@ export function Timeline({ events }: TimelineProps) {
       const parsedJson = JSON.parse(details);
       return <JsonViewer data={parsedJson} />;
     } catch (error) {
+      captureExceptionAndLog(error);
       // If parsing fails, render the original string
       return <div className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap">{details}</div>;
     }

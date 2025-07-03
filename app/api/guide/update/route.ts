@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     parsedBody = updateGuideSchema.parse(body);
   } catch (error) {
+    captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Invalid request body" }, { status: 400 });
   }
 

@@ -14,6 +14,7 @@ import PreviousConversations from "@/components/widget/PreviousConversations";
 import PromptDetailsModal from "@/components/widget/PromptDetailsModal";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useScreenshotStore } from "@/components/widget/widgetState";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { buildThemeCss, type MailboxTheme } from "@/lib/themes";
 import { sendConversationUpdate, sendReadyMessage } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
@@ -32,7 +33,6 @@ const GUMROAD_MAILBOX_SLUG = "gumroad";
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
   const [config, setConfig] = useState<HelperWidgetConfig | null>(null);
-  const [isWhitelabel, setIsWhitelabel] = useState<boolean>(false);
   const [theme, setTheme] = useState<MailboxTheme | null>(null);
   const [defaultTitle, setDefaultTitle] = useState<string | null>(null);
   const [currentURL, setCurrentURL] = useState<string | null>(null);
@@ -112,11 +112,10 @@ export default function Page() {
 
         try {
           const payload = jwtDecode<DecodedPayload>(content.sessionToken);
-          setIsWhitelabel(payload?.isWhitelabel ?? false);
           setTheme(payload?.theme);
           setDefaultTitle(payload?.title ?? null);
         } catch (error) {
-          setIsWhitelabel(false);
+          captureExceptionAndLog(error);
         }
       } else if (action === "OPEN_CONVERSATION") {
         const { conversationSlug } = content;
@@ -165,7 +164,6 @@ export default function Page() {
           config={config}
           onShowPreviousConversations={onShowPreviousConversations}
           onNewConversation={memoizedHandleNewConversation}
-          isAnonymous={isAnonymous}
           title={headerTitle}
         />
         <div className="relative flex-1 overflow-hidden">
@@ -204,7 +202,6 @@ export default function Page() {
                   isNewConversation={isNewConversation}
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}
-                  isAnonymous={isAnonymous}
                   guideEnabled={config.enableGuide ?? false}
                   resumeGuide={resumeGuide}
                 />

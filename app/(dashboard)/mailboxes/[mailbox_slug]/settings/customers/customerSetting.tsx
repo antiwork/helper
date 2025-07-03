@@ -15,12 +15,6 @@ import { api } from "@/trpc/react";
 import { SlackChannels } from "../integrations/slackSetting";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
-type CustomerUpdates = {
-  vipThreshold?: string | null;
-  vipChannelId?: string | null;
-  vipExpectedResponseHours?: number | null;
-};
-
 const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [isEnabled, setIsEnabled] = useState(mailbox.vipThreshold !== null);
   const [threshold, setThreshold] = useState(mailbox.vipThreshold?.toString() ?? "100");

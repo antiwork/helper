@@ -19,6 +19,7 @@ function cleanupExpiredItems() {
           window.localStorage.removeItem(key);
         }
       } catch (error) {
+        captureExceptionAndLog(error);
         window.localStorage.removeItem(key);
       }
     }

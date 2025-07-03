@@ -1,7 +1,5 @@
 import FileSaver from "file-saver";
 import {
-  ArrowLeft,
-  ArrowRight,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
@@ -16,8 +14,6 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useStickToBottom } from "use-stick-to-bottom";
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import {
   ConversationContextProvider,
   useConversationContext,
@@ -27,7 +23,6 @@ import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conve
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/previewModal";
 import {
-  DraftedEmail,
   type AttachedFile,
   type ConversationEvent,
   type Conversation as ConversationType,
@@ -37,7 +32,6 @@ import {
 import { CarouselDirection, createCarousel } from "@/components/carousel";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -58,21 +52,6 @@ export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
 };
 
 const { Carousel, CarouselButton, CarouselContext } = createCarousel<AttachedFile>();
-
-export const useUndoneEmailStore = create<{
-  undoneEmail: DraftedEmail | undefined;
-  setUndoneEmail: (undoneEmail: DraftedEmail | undefined) => void;
-}>()(
-  devtools(
-    (set) => ({
-      undoneEmail: undefined,
-      setUndoneEmail: (undoneEmail) => set({ undoneEmail }),
-    }),
-    {
-      name: "undone-email-store",
-    },
-  ),
-);
 
 const CopyLinkButton = () => {
   const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
@@ -149,19 +128,21 @@ const ScrollToTopButton = ({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <a
+        <button
           className={cn(
             "absolute bottom-4 left-4 transition-all duration-200 h-8 w-8 p-0 rounded-full",
             "flex items-center justify-center",
-            "bg-background border border-border shadow-xs",
+            "bg-background border border-border shadow-xs cursor-pointer",
             "hover:border-primary hover:shadow-md hover:bg-muted",
+            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
             show ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none",
           )}
           onClick={scrollToTop}
           aria-label="Scroll to top"
+          tabIndex={show ? 0 : -1}
         >
           <ArrowUp className="h-4 w-4 text-foreground" />
-        </a>
+        </button>
       </TooltipTrigger>
       <TooltipContent>Scroll to top</TooltipContent>
     </Tooltip>
@@ -217,12 +198,12 @@ const MessageActionsPanel = () => {
 };
 
 const ConversationHeader = ({
-  conversationMetadata,
+  subject,
   isAboveSm,
   sidebarVisible,
   setSidebarVisible,
 }: {
-  conversationMetadata: any;
+  subject: string;
   isAboveSm: boolean;
   sidebarVisible: boolean;
   setSidebarVisible: (visible: boolean) => void;
@@ -258,7 +239,7 @@ const ConversationHeader = ({
       </div>
       <div className="flex-1 min-w-0 flex justify-center">
         <div className="truncate text-base font-semibold text-foreground text-center max-w-full">
-          {conversationMetadata.subject ?? "(no subject)"}
+          {subject ?? "(no subject)"}
         </div>
       </div>
       <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">
@@ -352,6 +333,8 @@ const CarouselPreviewContent = ({
                     onClick={() =>
                       currentFile.presignedUrl && FileSaver.saveAs(currentFile.presignedUrl, currentFile.name)
                     }
+                    aria-label={`Download ${currentFile.name}`}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded p-1 hover:bg-muted transition-colors"
                   >
                     <Download className="text-primary h-5 w-5 shrink-0" />
                     <span className="sr-only">Download</span>
@@ -413,43 +396,6 @@ const ConversationContent = () => {
     .getData(input)
     ?.conversations.find((c) => c.slug === conversationSlug);
 
-  const [emailCopied, setEmailCopied] = useState(false);
-  const copyEmailToClipboard = async () => {
-    const email = conversationListInfo?.emailFrom || conversationInfo?.emailFrom;
-    if (email) {
-      await navigator.clipboard.writeText(email);
-      setEmailCopied(true);
-      setTimeout(() => setEmailCopied(false), 2000);
-    }
-  };
-
-  const conversationMetadata = {
-    emailFrom: (
-      <div className="flex items-center gap-3">
-        <Tooltip open>
-          <TooltipTrigger asChild>
-            <div
-              onClick={copyEmailToClipboard}
-              className="lg:text-base text-sm text-foreground responsive-break-words truncate cursor-pointer hover:text-primary"
-            >
-              {conversationListInfo?.emailFrom || conversationInfo?.emailFrom}
-            </div>
-          </TooltipTrigger>
-          {emailCopied && <TooltipContent side="right">Copied!</TooltipContent>}
-        </Tooltip>
-        {(conversationListInfo?.conversationProvider || conversationInfo?.conversationProvider) === "helpscout" && (
-          <Badge variant="dark">Help Scout</Badge>
-        )}
-        {conversationInfo?.customerMetadata?.isVip && (
-          <Badge variant="bright" className="no-underline">
-            VIP
-          </Badge>
-        )}
-      </div>
-    ),
-    subject: (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)"),
-  };
-
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewFiles, setPreviewFiles] = useState<AttachedFile[]>([]);
 
@@ -494,7 +440,9 @@ const ConversationContent = () => {
                   setPreviewFiles={setPreviewFiles}
                 />
                 <ConversationHeader
-                  conversationMetadata={conversationMetadata}
+                  subject={
+                    (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)")
+                  }
                   isAboveSm={isAboveSm}
                   sidebarVisible={sidebarVisible}
                   setSidebarVisible={setSidebarVisible}
@@ -545,7 +493,7 @@ const ConversationContent = () => {
           setPreviewFiles={setPreviewFiles}
         />
         <ConversationHeader
-          conversationMetadata={conversationMetadata}
+          subject={(conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)")}
           isAboveSm={isAboveSm}
           sidebarVisible={sidebarVisible}
           setSidebarVisible={setSidebarVisible}

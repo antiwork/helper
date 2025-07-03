@@ -39,7 +39,7 @@ describe("generateWeeklyReports", () => {
       },
     });
 
-    const { mailbox: mailboxWithoutSlack } = await userFactory.createRootUser({
+    await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: null,
         slackAlertChannel: null,
