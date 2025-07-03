@@ -55,7 +55,6 @@ export const ConversationSearchBar = ({
     if (val.trim()) {
       saveRecentSearch(val.trim());
     }
-    searchInputRef.current?.focus();
   }, 300);
 
   const debouncedSaveSearch = useDebouncedCallback((val: string) => {
@@ -108,9 +107,9 @@ export const ConversationSearchBar = ({
 
   const handleClearSearch = useCallback(() => {
     setSearch("");
-    setShowRecentSearches(false);
+    setShowRecentSearches(recentSearches.length > 0);
     searchInputRef.current?.focus();
-  }, []);
+  }, [recentSearches.length]);
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
@@ -244,7 +243,6 @@ export const ConversationSearchBar = ({
                 </button>
               )
             }
-            autoFocus
           />
           {showRecentSearches && recentSearches.length > 0 && (
             <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
