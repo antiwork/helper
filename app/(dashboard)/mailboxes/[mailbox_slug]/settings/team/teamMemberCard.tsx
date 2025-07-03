@@ -6,40 +6,25 @@ import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { api } from "@/trpc/react";
+import { ROLE_DISPLAY_NAMES, type TeamMember } from "./teamMemberRow";
 import { getAvatarFallback } from "./util";
 
-export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
-  core: "Core",
-  nonCore: "Non-core",
-  afk: "Away",
-};
-
-export interface TeamMember {
-  id: string;
-  displayName: string;
-  email: string | undefined;
-  role: UserRole;
-  keywords: string[];
-}
-
-type TeamMemberRowProps = {
+type TeamMemberCardProps = {
   member: TeamMember;
   mailboxSlug: string;
-  variant?: "default" | "compact";
 };
 
-const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberRowProps) => {
+const TeamMemberCard = ({ member, mailboxSlug }: TeamMemberCardProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
 
-  // Separate saving indicators for each operation type
   const displayNameSaving = useSavingIndicator();
   const roleSaving = useSavingIndicator();
   const keywordsSaving = useSavingIndicator();
@@ -53,10 +38,8 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
     setDisplayNameInput(member.displayName || "");
   }, [member.keywords, member.role, member.displayName]);
 
-  // Separate mutations for each operation type
   const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
-      // Only update displayName field to avoid race conditions
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((m) =>
@@ -83,7 +66,6 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
 
   const { mutate: updateRole } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
-      // Update both role and keywords since role changes can affect keywords
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((m) =>
@@ -113,7 +95,6 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
 
   const { mutate: updateKeywords } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
-      // Only update keywords field to avoid race conditions
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
         return oldData.map((m) =>
@@ -139,7 +120,6 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
     },
   });
 
-  // Debounced function for keyword updates
   const debouncedUpdateKeywords = useDebouncedCallback((newKeywords: string[]) => {
     keywordsSaving.setState("saving");
     updateKeywords({
@@ -161,8 +141,6 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
 
-    // Clear keywords when changing FROM nonCore to another role
-    // Keep keywords when changing TO nonCore
     const newKeywords = newRole === "nonCore" ? localKeywords : [];
 
     if (newRole !== "nonCore") {
@@ -194,81 +172,42 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
     debouncedUpdateDisplayName(value);
   };
 
-  if (variant === "compact") {
-    return (
-      <TableRow>
-        <TableCell className="min-w-[180px]">
-          <div className="flex items-center gap-2">
-            <Avatar fallback={getAvatarFallback(member)} size="sm" />
-            <span className="truncate text-sm">{member.email || "No email"}</span>
-          </div>
-        </TableCell>
-        <TableCell className="min-w-[160px]">
-          <div className="relative grow">
-            <Input
-              value={displayNameInput}
-              onChange={(e) => handleDisplayNameChange(e.target.value)}
-              placeholder="Display name"
-              className="w-full text-sm h-9"
-            />
-          </div>
-        </TableCell>
-        <TableCell className="w-[140px]">
-          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-full text-sm h-9">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-            </SelectContent>
-          </Select>
-        </TableCell>
-        <TableCell className="min-w-[180px]">
-          <div className="w-full">
-            <div className="relative grow">
-              <Input
-                value={keywordsInput}
-                onChange={(e) => handleKeywordsChange(e.target.value)}
-                placeholder="Keywords"
-                className={role === "nonCore" ? "w-full text-sm h-9" : "invisible w-full text-sm h-9"}
-              />
-            </div>
-          </div>
-        </TableCell>
-        <TableCell className="w-[100px]">
-          <div className="flex items-center gap-1">
+  return (
+    <div className="border rounded-lg p-5 space-y-5 bg-card shadow-sm">
+      {/* Header with avatar and email */}
+      <div className="flex items-center gap-4">
+        <Avatar fallback={getAvatarFallback(member)} size="md" />
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{member.email || "No email"}</p>
+          <div className="flex items-center gap-2 mt-2">
             <SavingIndicator state={displayNameSaving.state} />
             <SavingIndicator state={roleSaving.state} />
             {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
           </div>
-        </TableCell>
-      </TableRow>
-    );
-  }
+        </div>
+      </div>
 
-  return (
-    <TableRow>
-      <TableCell className="w-auto">
-        <div className="flex items-center gap-3">
-          <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate">{member.email || "No email"}</span>
-        </div>
-      </TableCell>
-      <TableCell className="min-w-[200px]">
-        <div className="relative grow">
-          <Input
-            value={displayNameInput}
-            onChange={(e) => handleDisplayNameChange(e.target.value)}
-            placeholder="Enter display name"
-            className="w-full"
-          />
-        </div>
-      </TableCell>
-      <TableCell className="w-[180px]">
+      {/* Name input */}
+      <div className="space-y-3">
+        <Label htmlFor={`name-${member.id}`} className="text-sm font-medium">
+          Display Name
+        </Label>
+        <Input
+          id={`name-${member.id}`}
+          value={displayNameInput}
+          onChange={(e) => handleDisplayNameChange(e.target.value)}
+          placeholder="Enter display name"
+          className="w-full h-11 touch-manipulation"
+        />
+      </div>
+
+      {/* Role selection */}
+      <div className="space-y-3">
+        <Label htmlFor={`role-${member.id}`} className="text-sm font-medium">
+          Support Role
+        </Label>
         <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full h-11 touch-manipulation">
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
@@ -277,28 +216,25 @@ const TeamMemberRow = ({ member, mailboxSlug, variant = "default" }: TeamMemberR
             <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
           </SelectContent>
         </Select>
-      </TableCell>
-      <TableCell className="min-w-[200px]">
-        <div className="w-full">
-          <div className="relative grow">
-            <Input
-              value={keywordsInput}
-              onChange={(e) => handleKeywordsChange(e.target.value)}
-              placeholder="Enter keywords separated by commas"
-              className={role === "nonCore" ? "w-full" : "invisible w-full"}
-            />
-          </div>
+      </div>
+
+      {/* Keywords input - only visible for Non-core members */}
+      {role === "nonCore" && (
+        <div className="space-y-3">
+          <Label htmlFor={`keywords-${member.id}`} className="text-sm font-medium">
+            Auto-assign Keywords
+          </Label>
+          <Input
+            id={`keywords-${member.id}`}
+            value={keywordsInput}
+            onChange={(e) => handleKeywordsChange(e.target.value)}
+            placeholder="Enter keywords separated by commas"
+            className="w-full h-11 touch-manipulation"
+          />
         </div>
-      </TableCell>
-      <TableCell className="w-[120px]">
-        <div className="flex items-center gap-2">
-          <SavingIndicator state={displayNameSaving.state} />
-          <SavingIndicator state={roleSaving.state} />
-          {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
-        </div>
-      </TableCell>
-    </TableRow>
+      )}
+    </div>
   );
 };
 
-export default TeamMemberRow;
+export default TeamMemberCard;

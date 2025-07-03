@@ -16,7 +16,7 @@ type SectionWrapperProps = {
 
 const SectionWrapper = ({ title, description, fullWidth, className, action, children }: SectionWrapperProps) => {
   return (
-    <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row">
+    <section className="flex flex-col gap-4 border-b py-6 lg:py-8 first:pt-4 lg:flex-row">
       <div className="flex w-full flex-col gap-3 lg:max-w-xs">
         <div className="flex w-full flex-col gap-1">
           <h2 className="text-base flex items-center gap-2">{title}</h2>
@@ -24,7 +24,7 @@ const SectionWrapper = ({ title, description, fullWidth, className, action, chil
         </div>
         {action}
       </div>
-      <div className={cn("grow", !fullWidth && "max-w-xl", className)}>{children}</div>
+      <div className={cn("grow", !fullWidth && "max-w-none lg:max-w-xl", className)}>{children}</div>
     </section>
   );
 };

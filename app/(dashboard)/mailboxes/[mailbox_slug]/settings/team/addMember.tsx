@@ -66,7 +66,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
   const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding;
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col lg:flex-row gap-4">
       <div className="relative flex-1">
         <Label className="sr-only" htmlFor="email-input">
           Email Address
@@ -77,14 +77,16 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
           disabled={isAdding}
+          className="h-11 w-full"
         />
         {emailInput && (
           <button
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 touch-manipulation"
             onClick={() => setEmailInput("")}
             disabled={isAdding}
+            aria-label="Clear email address"
           >
-            <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
+            <X className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -98,18 +100,24 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
           value={displayNameInput}
           onChange={(e) => setDisplayNameInput(e.target.value)}
           disabled={isAdding}
+          className="h-11 w-full"
         />
         {displayNameInput && (
           <button
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 touch-manipulation"
             onClick={() => setDisplayNameInput("")}
             disabled={isAdding}
+            aria-label="Clear display name"
           >
-            <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
+            <X className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </button>
         )}
       </div>
-      <Button onClick={inviteMember} disabled={!canAddMember}>
+      <Button
+        onClick={inviteMember}
+        disabled={!canAddMember}
+        className="w-full lg:w-auto h-11 touch-manipulation whitespace-nowrap"
+      >
         {isAdding ? (
           <>Adding...</>
         ) : (

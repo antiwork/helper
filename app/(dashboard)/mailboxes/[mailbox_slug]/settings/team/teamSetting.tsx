@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
+import TeamMemberCard from "./teamMemberCard";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 
 type TeamSettingProps = {
@@ -45,12 +46,13 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
           />
         )}
 
-        <div className="rounded-md border">
+        {/* Desktop Table View (1024px+) */}
+        <div className="hidden lg:block rounded-md border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead className="w-auto">Email</TableHead>
+                <TableHead className="min-w-[200px]">Name</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
@@ -80,6 +82,25 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile/Tablet Card View (< 1024px) */}
+        <div className="lg:hidden space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner size="md" />
+            </div>
+          ) : filteredTeamMembers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchTerm
+                ? `No team members found matching "${searchTerm}"`
+                : "No team members in your organization yet. Use the form above to invite new members."}
+            </div>
+          ) : (
+            filteredTeamMembers.map((member) => (
+              <TeamMemberCard key={member.id} member={member} mailboxSlug={mailboxSlug} />
+            ))
+          )}
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">
