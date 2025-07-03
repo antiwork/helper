@@ -175,7 +175,7 @@ export const ConversationSearchBar = ({
           {allConversationsSelected ? "Select none" : "Select all"}
         </button>
       </div>
-      <div className="flex-1 max-w-[400px] flex items-center gap-2 md:justify-center">
+      <div className="flex-1 w-full max-w-[400px] flex items-center gap-2 md:justify-self-center">
         <Input
           ref={searchInputRef}
           placeholder="Search conversations"
