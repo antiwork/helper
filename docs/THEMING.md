@@ -90,12 +90,13 @@ To update themes using AI, modify the CSS variables in `app/globals.css`:
 ### Example AI Prompt for Theme Changes
 
 ```text
-Update the dark theme in globals.css to use a blue color scheme:
-- Background: dark blue (#0f172a)
-- Foreground: light blue-gray (#cbd5e1)  
-- Primary: bright blue (#3b82f6)
-- Accent: darker blue (#1e40af)
-- Sidebar: navy blue (#1e3a8a)
+Update the dark theme in globals.css to use a blue color scheme with HSL values:
+- Background: hsl(222 84% 5%) - dark blue
+- Foreground: hsl(213 27% 84%) - light blue-gray  
+- Primary: hsl(217 91% 60%) - bright blue
+- Accent: hsl(224 76% 48%) - darker blue
+- Sidebar: hsl(224 76% 48%) - navy blue
+- Ensure all color combinations maintain 4.5:1 contrast ratio for accessibility
 ```
 
 ## Color Guidelines
