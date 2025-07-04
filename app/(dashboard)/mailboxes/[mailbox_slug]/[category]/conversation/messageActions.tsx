@@ -2,6 +2,7 @@ import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
+import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
@@ -16,9 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
-import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
-import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
@@ -26,7 +25,7 @@ import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
-import { useUndoneEmailStore } from "./conversation";
+import { useUndoneEmailStore } from "./useUndoneEmailStore";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
 
@@ -53,7 +52,7 @@ export const useSendDisabled = (message: string | undefined, conversationStatus?
 
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
-  const { data: conversation, mailboxSlug, refetch, updateStatus } = useConversationContext();
+  const { data: conversation, mailboxSlug, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
@@ -139,7 +138,6 @@ export const MessageActions = () => {
     }
   }, [storedMessage]);
 
-  const { user } = useSession() ?? {};
   const [showCommandBar, setShowCommandBar] = useState(false);
   const [showCc, setShowCc] = useState(draftedEmail.cc.length > 0 || draftedEmail.bcc.length > 0);
   const ccRef = useRef<HTMLInputElement>(null);
@@ -374,6 +372,15 @@ export const MessageActions = () => {
               <Button
                 size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
+                onClick={() => updateStatus("closed")}
+                disabled={conversation?.status === "closed"}
+              >
+                Close
+                {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
+              </Button>
+              <Button
+                size={isAboveMd ? "default" : "sm"}
+                variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}
               >
@@ -452,19 +459,7 @@ export const MessageActions = () => {
         enableImageUpload
         enableFileUpload
         actionButtons={actionButtons}
-        signature={
-          hasDisplayName(user) ? (
-            <div className="mt-1 text-muted-foreground">
-              Best,
-              <br />
-              {getFirstName(user)}
-              <div className="text-xs mt-2">
-                Note: This signature will be automatically included in email responses, but not in live chat
-                conversations.
-              </div>
-            </div>
-          ) : null
-        }
+        signature={<EmailSignature />}
         isRecordingSupported={isRecordingSupported}
         isRecording={isRecording}
         startRecording={startRecording}

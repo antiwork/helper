@@ -18,9 +18,10 @@ export const organizationRouter = {
       z.object({
         email: z.string().email(),
         displayName: z.string(),
+        permissions: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await addUser(ctx.user.id, input.email, input.displayName);
+      await addUser(ctx.user.id, input.email, input.displayName, input.permissions);
     }),
 } satisfies TRPCRouterRecord;

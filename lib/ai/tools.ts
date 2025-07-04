@@ -1,5 +1,5 @@
 import { waitUntil } from "@vercel/functions";
-import { CoreMessage, tool, type Tool } from "ai";
+import { tool, type Tool } from "ai";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { triggerEvent } from "@/jobs/trigger";
@@ -13,7 +13,7 @@ import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
-const fetchUserInformation = async (email: string, mailboxSlug: string, reason: string) => {
+const fetchUserInformation = async (email: string, mailboxSlug: string) => {
   try {
     const metadata = await fetchMetadata(email, mailboxSlug);
     return metadata?.prompt;
@@ -66,7 +66,7 @@ const requestHumanSupport = async (
   }
 
   await updateOriginalConversation(conversation.id, {
-    set: { status: "open", assignedToAI: false },
+    set: { status: "open", assignedToAI: false, lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt },
     message: reason,
     type: "request_human_support",
   });
@@ -107,10 +107,7 @@ export const buildTools = async (
 ): Promise<Record<string, Tool>> => {
   const metadataApi = await getMetadataApiByMailbox(mailbox);
 
-  const reasoningMiddleware = async (
-    result: Promise<string | undefined> | string | undefined,
-    messages: CoreMessage[],
-  ) => {
+  const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
     const resultString = await result;
     if (reasoningMiddlewarePrompt && resultString) {
       return `${reasoningMiddlewarePrompt}\n\n${resultString}`;
@@ -124,7 +121,7 @@ export const buildTools = async (
       parameters: z.object({
         query: z.string().describe("query to search the knowledge base"),
       }),
-      execute: ({ query }, { messages }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox), messages),
+      execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox)),
     }),
   };
 
@@ -144,7 +141,7 @@ export const buildTools = async (
       parameters: z.object({
         email: z.string().email().describe("email address to set for the user"),
       }),
-      execute: ({ email }, { messages }) => reasoningMiddleware(setUserEmail(conversationId, email), messages),
+      execute: ({ email }) => reasoningMiddleware(setUserEmail(conversationId, email)),
     });
   }
 
@@ -161,8 +158,8 @@ export const buildTools = async (
           ? z.string().optional()
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
-      execute: ({ reason, email: newEmail }, { messages }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, mailbox, reason, newEmail), messages),
+      execute: ({ reason, email: newEmail }) =>
+        reasoningMiddleware(requestHumanSupport(conversationId, email, mailbox, reason, newEmail)),
     });
   }
 
@@ -172,8 +169,7 @@ export const buildTools = async (
       parameters: z.object({
         reason: z.string().describe("reason for fetching user information"),
       }),
-      execute: ({ reason }, { messages }) =>
-        reasoningMiddleware(fetchUserInformation(email, mailbox.slug, reason), messages),
+      execute: () => reasoningMiddleware(fetchUserInformation(email, mailbox.slug)),
     });
   }
 
@@ -188,10 +184,10 @@ export const buildTools = async (
       tools[slug] = tool({
         description: aiTool.description,
         parameters: aiTool.parameters,
-        execute: async (params, { messages }) => {
+        execute: async (params) => {
           const conversation = assertDefined(await getConversationById(conversationId));
           const result = await callToolApi(conversation, mailboxTool, params);
-          return reasoningMiddleware(JSON.stringify(result), messages);
+          return reasoningMiddleware(JSON.stringify(result));
         },
       });
     }

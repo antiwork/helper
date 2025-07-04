@@ -14,9 +14,7 @@ export class ConversationsPage extends BasePage {
   private readonly selectAllButton = 'button:has-text("Select all")';
   private readonly deselectButton = 'button:has-text("Deselect")';
 
-  // Conversation list selectors (these need to be verified)
-  private readonly conversationsList = "[data-conversation-list]"; // Fallback generic selector
-  private readonly conversationItem = "[data-conversation-item]"; // Fallback generic selector
+  private readonly conversationLinks = 'a[href*="/conversations?id="]';
 
   async navigateToConversations() {
     await this.goto("/mailboxes/gumroad/mine");
@@ -69,6 +67,14 @@ export class ConversationsPage extends BasePage {
   }
 
   async handleSelectAll() {
+    // Check if there are any conversations first
+    const conversationLinks = this.page.locator(this.conversationLinks);
+    const conversationCount = await conversationLinks.count();
+
+    if (conversationCount === 0) {
+      return false; // No conversations, select all should not be available
+    }
+
     const selectAllCount = await this.page.locator(this.selectAllButton).count();
 
     if (selectAllCount > 0) {
@@ -80,6 +86,14 @@ export class ConversationsPage extends BasePage {
   }
 
   async expectSelectAllButtonExists(): Promise<boolean> {
+    // Check if conversations exist first
+    const conversationLinks = this.page.locator(this.conversationLinks);
+    const conversationCount = await conversationLinks.count();
+
+    if (conversationCount === 0) {
+      return false; // No conversations, select all should not exist
+    }
+
     const count = await this.page.locator(this.selectAllButton).count();
     return count > 0;
   }

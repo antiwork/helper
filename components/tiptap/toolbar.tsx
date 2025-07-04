@@ -27,6 +27,7 @@ type ToolbarProps = {
   isRecordingSupported: boolean;
   startRecording: () => void;
   stopRecording: () => void;
+  hasActionButtons: boolean;
 };
 
 const Toolbar = ({
@@ -41,6 +42,7 @@ const Toolbar = ({
   isRecordingSupported,
   startRecording,
   stopRecording,
+  hasActionButtons,
 }: ToolbarProps) => {
   const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
@@ -103,15 +105,6 @@ const Toolbar = ({
     }
   }, [isLinkModalOpen, activeLinkElement]);
 
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const setLink = () => {
     if (!editor) return;
 
@@ -165,6 +158,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`${baseToolbarStyles} ${editor.isActive("bold") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Bold"
           >
             <ToolbarBold />
           </button>
@@ -172,6 +166,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={`${baseToolbarStyles} ${editor.isActive("italic") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Italic"
           >
             <ToolbarItalic />
           </button>
@@ -179,6 +174,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={`${baseToolbarStyles} ${editor.isActive("bulletList") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Bullet list"
           >
             <ToolbarBulletList />
           </button>
@@ -186,6 +182,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={`${baseToolbarStyles} ${editor.isActive("orderedList") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Numbered list"
           >
             <ToolbarOrderedList />
           </button>
@@ -193,6 +190,7 @@ const Toolbar = ({
             type="button"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             className={`${baseToolbarStyles} ${editor.isActive("blockquote") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Blockquote"
           >
             <ToolbarBlockquote />
           </button>
@@ -200,6 +198,7 @@ const Toolbar = ({
             type="button"
             onClick={() => toggleLinkModal(true)}
             className={`${baseToolbarStyles} ${editor.isActive("link") ? "bg-muted hover:bg-muted" : ""}`}
+            aria-label="Link"
           >
             <ToolbarLink />
           </button>
@@ -308,10 +307,11 @@ const Toolbar = ({
       <div
         className={cn(
           isAboveMd
-            ? "flex flex-wrap gap-1 absolute z-10 bottom-16 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
+            ? "flex flex-wrap gap-1 absolute z-10 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
             : "flex flex-1 min-w-0 gap-1",
           open && isAboveMd && "left-3",
           !open && !isAboveMd && "hidden",
+          hasActionButtons ? "bottom-16" : "bottom-5",
         )}
       >
         {toolbarContent}

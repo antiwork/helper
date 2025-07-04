@@ -8,7 +8,6 @@ import {
   ModalView,
   WebClient,
 } from "@slack/web-api";
-import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
@@ -218,7 +217,7 @@ export const getSlackAccessToken = async (code: string) => {
   };
 };
 
-export const listSlackUsers = async (token: string) => {
+const listSlackUsers = async (token: string) => {
   const response = await fetch("https://slack.com/api/users.list", {
     headers: {
       Authorization: `Bearer ${token}`,

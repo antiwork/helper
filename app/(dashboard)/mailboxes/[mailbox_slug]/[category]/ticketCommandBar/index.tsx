@@ -65,6 +65,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedItemId,
     onToggleCc,
     setSelectedTool,
+    onInsertReply,
   });
 
   const previousRepliesGroups = usePreviousRepliesPage({
@@ -101,7 +102,16 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const visibleGroups = currentGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.hidden && item.label.toLowerCase().includes(inputValue.toLowerCase())),
+      items: group.items.filter((item) => {
+        if (item.hidden) return false;
+
+        const searchTerm = inputValue.toLowerCase();
+        const matchesLabel = item.label.toLowerCase().includes(searchTerm);
+        const matchesShortcut = item.shortcut?.toLowerCase().includes(searchTerm);
+        const matchesDescription = item.description?.toLowerCase().includes(searchTerm);
+
+        return matchesLabel || matchesShortcut || matchesDescription;
+      }),
     }))
     .filter((group) => group.items.length > 0);
   const visibleItems = visibleGroups.flatMap((group) => group.items);
@@ -256,7 +266,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
         value={selectedItemId || ""}
         onValueChange={setSelectedItemId}
         className={cn(
-          "rounded-t-none flex-1 flex flex-col overflow-auto [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
+          "rounded-t-none flex-1 flex flex-col overflow-hidden border-t [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
           !open && "hidden",
         )}
       >
@@ -264,9 +274,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           isLoading={isLoadingPreviousReplies}
           page={page}
           groups={visibleGroups}
-          selectedItemId={selectedItemId}
           onSelect={handleSelect}
           onMouseEnter={setSelectedItemId}
+          selectedItemId={selectedItemId}
         />
       </Command>
     </>

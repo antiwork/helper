@@ -2,6 +2,7 @@ import { capitalize } from "lodash-es";
 import { ArrowDownUp, Filter, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +21,7 @@ interface ConversationSearchBarProps {
   defaultSort: string | undefined;
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
+  conversationCount: number;
 }
 
 export const ConversationSearchBar = ({
@@ -29,6 +31,7 @@ export const ConversationSearchBar = ({
   defaultSort,
   showFilters,
   setShowFilters,
+  conversationCount,
 }: ConversationSearchBarProps) => {
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
@@ -53,6 +56,10 @@ export const ConversationSearchBar = ({
   useEffect(() => {
     debouncedSetSearch(search);
   }, [search]);
+
+  useHotkeys("mod+k", () => {
+    searchInputRef.current?.focus();
+  });
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
@@ -134,7 +141,13 @@ export const ConversationSearchBar = ({
                   <span
                     className={cn(
                       "w-2 h-2 rounded-full",
-                      statusOptions.find(({ selected }) => selected)?.value === "open" ? "bg-success" : "bg-muted",
+                      statusOptions.find(({ selected }) => selected)?.value === "open"
+                        ? "bg-success"
+                        : statusOptions.find(({ selected }) => selected)?.value === "closed"
+                          ? "bg-muted-foreground"
+                          : statusOptions.find(({ selected }) => selected)?.value === "spam"
+                            ? "bg-destructive"
+                            : "bg-muted",
                     )}
                   />
                   {statusOptions.find(({ selected }) => selected)?.label}
@@ -152,10 +165,10 @@ export const ConversationSearchBar = ({
         ) : statusOptions[0] ? (
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
-        {statusOptions.length > 0 && (
+        {conversationCount > 0 && (
           <button
-            onClick={toggleAllConversations}
-            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={() => toggleAllConversations()}
+            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"
           >
             {allConversationsSelected ? "Select none" : "Select all"}
           </button>
@@ -172,6 +185,7 @@ export const ConversationSearchBar = ({
           autoFocus
         />
         <Button
+          data-testid="filter-toggle"
           type="button"
           variant="ghost"
           size="sm"
@@ -185,7 +199,7 @@ export const ConversationSearchBar = ({
       <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
         <SelectTrigger
           variant="bare"
-          className="w-auto text-foreground [&>svg]:text-foreground text-sm"
+          className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
           hideArrow="mobileOnly"
         >
           <SelectValue

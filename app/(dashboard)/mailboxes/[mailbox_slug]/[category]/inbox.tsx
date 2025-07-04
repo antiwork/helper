@@ -60,6 +60,12 @@ const Inbox = () => {
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];
 
+  useEffect(() => {
+    if (pageTitle) {
+      document.title = pageTitle;
+    }
+  }, [pageTitle]);
+
   const currentConversationIndex =
     conversationListData?.conversations.findIndex((c) => c.slug === currentConversationSlug) ?? -1;
   const prefetchNextConversations = (prefetchCount: number) => {
@@ -83,7 +89,6 @@ const Inbox = () => {
   if (isMobile) {
     return (
       <div className="flex grow overflow-hidden">
-        {pageTitle ? <title>{pageTitle}</title> : null}
         <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
           <PageHeader title={CATEGORY_LABELS[params.category]} />
           <List />
@@ -100,7 +105,6 @@ const Inbox = () => {
 
   return (
     <div className={cn("relative h-full flex grow overflow-hidden", isStandalone ? "pt-10" : "")}>
-      {pageTitle ? <title>{pageTitle}</title> : null}
       <TabBar />
       {currentConversationSlug ? (
         <Conversation key={currentConversationSlug} />
@@ -114,14 +118,11 @@ const Inbox = () => {
 };
 
 const InboxProvider = ({ children }: { children: ReactNode }) => {
-  const mailboxSlug = useParams<{ mailbox_slug: string }>().mailbox_slug;
   const [conversationSlug] = useQueryState("id");
 
   return (
     <ConversationListContextProvider currentConversationSlug={conversationSlug}>
-      <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug ?? undefined}>
-        {children}
-      </FileUploadProvider>
+      <FileUploadProvider conversationSlug={conversationSlug ?? undefined}>{children}</FileUploadProvider>
     </ConversationListContextProvider>
   );
 };

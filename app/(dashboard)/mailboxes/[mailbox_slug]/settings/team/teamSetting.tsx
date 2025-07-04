@@ -6,6 +6,7 @@ import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
@@ -16,8 +17,10 @@ type TeamSettingProps = {
 };
 
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
-  const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+  const { data, isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+  const teamMembers = Array.isArray(data) ? data : [];
   const [searchTerm, setSearchTerm] = useState("");
+  const session = useSession();
   const utils = api.useUtils();
 
   const filteredTeamMembers = teamMembers.filter((member) => {
@@ -70,6 +73,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead className="w-[120px]">Permissions</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
                 <TableHead>Actions</TableHead>
@@ -79,7 +83,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     <div className="flex justify-center">
                       <LoadingSpinner size="md" />
                     </div>
@@ -95,11 +99,13 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => {
+                  const currentUser = teamMembers.find((m) => m.id === session?.user.id);
                   return (
                     <TeamMemberRow
                       key={member.id}
                       member={member}
                       mailboxSlug={mailboxSlug}
+                      canChangePermissions={currentUser?.permissions === "admin" && member.id !== session?.user.id}
                     />
                   );
                 })
