@@ -87,15 +87,24 @@ To update themes using AI, modify the CSS variables in `app/globals.css`:
 3. **Test the changes** by applying the theme class
 4. **Ensure proper contrast** ratios for accessibility
 
-### Example AI Prompt for Theme Changes
+### Example AI Prompts for Theme Changes
+
+**Design System Compliance:**
 
 ```text
-Update the dark theme in globals.css to use a blue color scheme:
-- Background: dark blue (#0f172a)
-- Foreground: light blue-gray (#cbd5e1)  
-- Primary: bright blue (#3b82f6)
-- Accent: darker blue (#1e40af)
-- Sidebar: navy blue (#1e3a8a)
+Based on docs/THEMING.md, update the :root/.light and .dark theme sections in app/globals.css to comply with the Department of Veterans Affairs Web Design System. Use HSL format with proper contrast ratios: background hsl(0 0% 100%), foreground hsl(0 0% 13%), primary hsl(208 88% 27%), accent hsl(208 100% 97%), sidebar background hsl(208 88% 27%). Ensure 4.5:1 contrast for normal text and test in both light and dark modes. Apply theme class to root element.
+```
+
+**Brand-Specific Theming:**
+
+```text
+Based on docs/THEMING.md, create a new .github-theme class in app/globals.css using HSL format and following all variable categories: background hsl(0 0% 100%), foreground hsl(213 13% 19%), primary hsl(212 92% 45%), accent hsl(210 12% 97%), sidebar background hsl(220 14% 96%). Include all layout, interactive, sidebar, and chart colors. Maintain sufficient contrast ratios and test in both light and dark modes before applying to components.
+```
+
+**Accessibility-First Approach:**
+
+```text
+Based on docs/THEMING.md, add a new .high-contrast class in app/globals.css following the theming architecture. Use HSL format for all variable categories: background hsl(0 0% 0%), foreground hsl(0 0% 100%), primary hsl(200 100% 50%), accent hsl(0 0% 15%), sidebar background hsl(0 0% 5%). Ensure all combinations exceed 7:1 contrast ratio, include proper focus ring colors, and test accessibility for users with visual impairments. Apply class to root element when needed.
 ```
 
 ## Color Guidelines
