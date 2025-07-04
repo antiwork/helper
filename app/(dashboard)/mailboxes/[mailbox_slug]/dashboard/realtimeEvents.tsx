@@ -8,6 +8,7 @@ import { useInView } from "react-intersection-observer";
 import HumanizedTime from "@/components/humanizedTime";
 import { Panel } from "@/components/panel";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
@@ -18,7 +19,7 @@ import { api } from "@/trpc/react";
 const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
   const { ref: loadMoreRef, inView } = useInView();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = api.mailbox.latestEvents.useInfiniteQuery(
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = api.mailbox.latestEvents.useInfiniteQuery(
     { mailboxSlug },
     {
       getNextPageParam: (lastPage) => {
@@ -56,6 +57,33 @@ const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
   });
 
   const allEvents = data?.pages.flat() ?? [];
+
+  const EventSkeleton = () => (
+    <Panel className="p-0">
+      <div className="flex flex-col p-5">
+        <div className="flex gap-3 mb-2 items-center min-w-0">
+          <Skeleton className="h-4 flex-1" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-6 w-20" />
+        </div>
+        <Skeleton className="h-6 w-3/4 mb-6" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 flex-1" />
+        </div>
+      </div>
+    </Panel>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <EventSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -147,9 +175,13 @@ const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
           No conversations yet. They will appear here in real-time.
         </Panel>
       )}
-      <div ref={loadMoreRef} className="col-span-full flex justify-center p-4">
-        {isFetchingNextPage && <div className="text-muted-foreground">Loading more events...</div>}
-      </div>
+      {isFetchingNextPage &&
+        Array.from({ length: 3 }).map((_, i) => (
+          <motion.div key={`skeleton-${i}`} layout>
+            <EventSkeleton />
+          </motion.div>
+        ))}
+      <div ref={loadMoreRef} className="col-span-full flex justify-center p-4"></div>
     </div>
   );
 };
