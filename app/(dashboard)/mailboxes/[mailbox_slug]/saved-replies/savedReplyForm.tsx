@@ -1,24 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
+import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
 type SavedReply = {
@@ -36,6 +29,9 @@ interface SavedReplyFormProps {
 }
 
 export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, onDelete }: SavedReplyFormProps) {
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+  const [initialContentObject, setInitialContentObject] = useState({ content: savedReply?.content || "" });
+
   const form = useForm({
     resolver: zodResolver(
       z.object({
@@ -49,10 +45,35 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
     },
   });
 
+  const handleSegment = useCallback((segment: string) => {
+    if (editorRef.current?.editor) {
+      editorRef.current.editor.commands.insertContent(segment);
+    }
+  }, []);
+
+  const handleError = useCallback((error: string) => {
+    toast({
+      title: "Speech Recognition Error",
+      description: error,
+      variant: "destructive",
+    });
+  }, []);
+
+  const {
+    isSupported: isRecordingSupported,
+    isRecording,
+    startRecording,
+    stopRecording,
+  } = useSpeechRecognition({
+    onSegment: handleSegment,
+    onError: handleError,
+  });
+
   const createSavedReply = api.mailbox.savedReplies.create.useMutation({
     onSuccess: () => {
       onSuccess();
       form.reset();
+      setInitialContentObject({ content: "" });
     },
     onError: (error) => {
       toast({
@@ -105,6 +126,11 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
     }
   };
 
+  const handleEditorUpdate = (content: string, isEmpty: boolean) => {
+    const isContentEmpty = isEmpty || isEmptyContent(content);
+    form.setValue("content", isContentEmpty ? "" : content, { shouldValidate: true });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -125,14 +151,25 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
         <FormField
           control={form.control}
           name="content"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea
+                <TipTapEditor
+                  ref={editorRef}
+                  className="min-h-48 max-h-96"
+                  ariaLabel="Saved reply content editor"
                   placeholder="Enter your saved reply content here..."
-                  className="min-h-32 resize-none"
-                  {...field}
+                  defaultContent={initialContentObject}
+                  editable={true}
+                  onUpdate={handleEditorUpdate}
+                  enableImageUpload={false}
+                  enableFileUpload={false}
+                  isRecordingSupported={isRecordingSupported}
+                  isRecording={isRecording}
+                  startRecording={startRecording}
+                  stopRecording={stopRecording}
+                  mailboxSlug={mailboxSlug}
                 />
               </FormControl>
               <FormMessage />
@@ -142,25 +179,14 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
 
         <div className="flex items-center">
           {savedReply && onDelete ? (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive_outlined" disabled={deleteSavedReply.isPending}>
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete saved reply</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{savedReply.name}"? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmationDialog
+              message={`Are you sure you want to delete ${savedReply.name}? This action cannot be undone.`}
+              onConfirm={handleDelete}
+            >
+              <Button type="button" variant="destructive_outlined" disabled={deleteSavedReply.isPending}>
+                Delete
+              </Button>
+            </ConfirmationDialog>
           ) : null}
 
           <div className="ml-auto flex items-center space-x-2">

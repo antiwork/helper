@@ -5,6 +5,7 @@ import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
@@ -15,8 +16,10 @@ type TeamSettingProps = {
 };
 
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
-  const { data: teamMembers = [], isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+  const { data, isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+  const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
+  const session = useSession();
 
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
@@ -51,6 +54,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead className="w-[120px]">Permissions</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
@@ -59,7 +63,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     <div className="flex justify-center">
                       <LoadingSpinner size="md" />
                     </div>
@@ -67,7 +71,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                     {searchTerm
                       ? `No team members found matching "${searchTerm}"`
                       : "No team members in your organization yet. Use the form above to invite new members."}
@@ -75,7 +79,12 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => (
-                  <TeamMemberRow key={member.id} member={member} mailboxSlug={mailboxSlug} />
+                  <TeamMemberRow
+                    key={member.id}
+                    member={member}
+                    mailboxSlug={mailboxSlug}
+                    canChangePermissions={data?.isAdmin === true && member.id !== session?.user.id}
+                  />
                 ))
               )}
             </TableBody>

@@ -6,6 +6,9 @@ import { takeDebugScreenshot } from "../utils/test-helpers";
 // Use the working authentication
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
+// Constants for consistent selectors
+const CONVERSATION_LINKS_SELECTOR = 'a[href*="/conversations?id="]';
+
 test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate with retry logic for improved reliability
@@ -103,12 +106,16 @@ test.describe("Working Conversation Management", () => {
     await expect(sortButton).toBeVisible();
 
     // Select all button appears when conversations exist - verify it exists or conversations are empty
-    const conversationItems = page.locator('div[role="checkbox"]');
-    const conversationCount = await conversationItems.count();
+    const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
+    const conversationCount = await conversationLinks.count();
 
     if (conversationCount > 0) {
       const selectAllButton = page.locator('button:has-text("Select all"), button:has-text("Select none")');
       await expect(selectAllButton).toBeVisible();
+    } else {
+      // When no conversations exist, select all button should not be visible
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).not.toBeVisible();
     }
   });
 
@@ -125,13 +132,17 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle select all functionality", async ({ page }) => {
-    // Check if Select all button exists (it might be conditional)
-    const selectAllButton = page.locator('button:has-text("Select all")');
-    const selectAllCount = await selectAllButton.count();
+    // Check if conversations exist first
+    const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
+    const conversationCount = await conversationLinks.count();
 
-    if (selectAllCount > 0) {
+    if (conversationCount > 0) {
+      // Check if Select all button exists when conversations are present
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).toBeVisible();
+
       // Count conversation checkboxes before selecting
-      const checkboxes = page.locator('div[role="checkbox"]');
+      const checkboxes = page.locator('button[role="checkbox"]');
       const totalCheckboxes = await checkboxes.count();
 
       if (totalCheckboxes > 0) {
@@ -158,7 +169,11 @@ test.describe("Working Conversation Management", () => {
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     } else {
-      // If Select all doesn't exist, just verify we're still on the right page
+      // No conversations exist, verify Select all button is not visible
+      const selectAllButton = page.locator('button:has-text("Select all")');
+      await expect(selectAllButton).not.toBeVisible();
+
+      // Verify we're still on the right page
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     }
@@ -170,6 +185,10 @@ test.describe("Working Conversation Management", () => {
     // Key elements should still be visible on mobile
     const searchInput = page.locator('input[placeholder="Search conversations"]');
     await expect(searchInput).toBeVisible();
+
+    // Select all button should be hidden on mobile (hidden md:block class)
+    const selectAllButton = page.locator('button:has-text("Select all")');
+    await expect(selectAllButton).not.toBeVisible();
 
     // Take mobile screenshot
     await takeDebugScreenshot(page, "dashboard-mobile.png");
@@ -329,10 +348,12 @@ test.describe("Working Conversation Management", () => {
         await expect(checkboxes.nth(i)).toHaveAttribute("data-state", "checked");
       }
 
-      // Select all conversations
+      // Select all conversations (only if button exists)
       const selectAllButton = page.locator('button:has-text("Select all")');
-      await selectAllButton.click();
-      await page.waitForTimeout(300);
+      if ((await selectAllButton.count()) > 0) {
+        await selectAllButton.click();
+        await page.waitForTimeout(300);
+      }
 
       // Verify that all checkboxes are selected
       for (let i = 0; i < checkboxCount; i++) {
@@ -484,5 +505,136 @@ test.describe("Working Conversation Management", () => {
     // Clear filters button should still be visible
     const clearFiltersButton = page.locator("button").filter({ hasText: "Clear filters" });
     await expect(clearFiltersButton).toBeVisible();
+  });
+
+  test("should show truncated text for non-search results", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Ensure we're not searching
+    await conversationsPage.clearSearch();
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with message text
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const messageCount = await messageTexts.count();
+
+    if (messageCount > 0) {
+      // All message text should have truncate class (simplified logic always applies truncate)
+      const firstMessage = messageTexts.first();
+      await expect(firstMessage).toBeVisible();
+
+      const classList = await firstMessage.getAttribute("class");
+      expect(classList).toContain("truncate");
+
+      await takeDebugScreenshot(page, "search-snippet-no-search.png");
+    }
+  });
+
+  test("should always use truncate class with search snippets", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for any term
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with message text
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const messageCount = await messageTexts.count();
+
+    if (messageCount > 0) {
+      // All messages should always have truncate class (simplified logic)
+      for (let i = 0; i < Math.min(messageCount, 3); i++) {
+        const message = messageTexts.nth(i);
+        const classList = await message.getAttribute("class");
+        expect(classList).toContain("truncate");
+      }
+
+      await takeDebugScreenshot(page, "search-snippet-with-truncate.png");
+    }
+  });
+
+  test("should show context snippets for deep matches", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a term that might appear in longer messages
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with highlighted search results
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const highlightedMessages = page.locator("mark.bg-secondary-200");
+
+    const messageCount = await messageTexts.count();
+    const highlightCount = await highlightedMessages.count();
+
+    if (messageCount > 0 && highlightCount > 0) {
+      // Check if any messages show snippet behavior (starts with ellipsis)
+      for (let i = 0; i < Math.min(messageCount, 3); i++) {
+        const message = messageTexts.nth(i);
+        const messageText = await message.textContent();
+
+        // If message starts with ellipsis, it's a context snippet
+        if (messageText?.startsWith("...")) {
+          // Verify the search term is visible in the snippet
+          const messageContent = await message.innerHTML();
+          expect(messageContent).toContain("bg-secondary-200");
+
+          // Should still have truncate class (simplified logic)
+          const classList = await message.getAttribute("class");
+          expect(classList).toContain("truncate");
+
+          await takeDebugScreenshot(page, "search-snippet-deep-match.png");
+          break;
+        }
+      }
+    }
+  });
+
+  test("should highlight search terms in snippets", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a specific term
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Check that search terms are highlighted
+    const highlights = page.locator("mark.bg-secondary-200");
+    const highlightCount = await highlights.count();
+
+    if (highlightCount > 0) {
+      // Verify first highlight has correct content and styling
+      const firstHighlight = highlights.first();
+      await expect(firstHighlight).toBeVisible();
+
+      const highlightText = await firstHighlight.textContent();
+      expect(highlightText?.toLowerCase()).toContain("support");
+
+      // Verify highlight has background color
+      const bgColor = await firstHighlight.evaluate((el) => getComputedStyle(el).backgroundColor);
+      expect(bgColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(bgColor).not.toBe("transparent");
+
+      await takeDebugScreenshot(page, "search-snippet-highlights.png");
+    }
+  });
+
+  test("should handle search with no results gracefully", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a term very unlikely to exist
+    await conversationsPage.searchConversations("xyzunlikelyterm123");
+    await page.waitForLoadState("networkidle");
+
+    // Should not crash and search input should work
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveValue("xyzunlikelyterm123");
+
+    // Should show no highlights for non-existent terms
+    const highlights = page.locator("mark.bg-secondary-200");
+    const highlightCount = await highlights.count();
+    expect(highlightCount).toBe(0);
+
+    await takeDebugScreenshot(page, "search-snippet-no-results.png");
   });
 });

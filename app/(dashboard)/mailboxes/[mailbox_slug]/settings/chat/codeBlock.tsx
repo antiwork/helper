@@ -1,5 +1,3 @@
-"use client";
-
 import { Highlight } from "prism-react-renderer";
 import CodeCopyButton from "./codeCopyButton";
 
