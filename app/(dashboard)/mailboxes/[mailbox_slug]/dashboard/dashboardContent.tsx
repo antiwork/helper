@@ -50,7 +50,7 @@ export function DashboardContent({ mailboxSlug }: Props) {
           <div className="grid md:grid-cols-3 gap-6">
             <Panel className="h-[800px] md:h-[400px] md:col-span-2">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex flex-col">
+                <div className="flex flex-col h-full">
                   <h4 className="scroll-m-20 mb-2 text-sm font-semibold tracking-tight uppercase">Ticket Status</h4>
                   <StatusByTypeChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
                 </div>
