@@ -41,25 +41,11 @@ export default function ConversationsDialog({
 }: ConversationsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const utils = api.useUtils();
-  const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const [assignMessage, setAssignMessage] = useState<string>("");
 
   const { data: count } = api.mailbox.conversations.count.useQuery({ mailboxSlug, assignee: [assignedToId] });
-
-  const { mutateAsync: reassignAllConversations, isPending: isUpdating } =
-    api.mailbox.conversations.reassignAll.useMutation({
-      onError: (error) => {
-        toast({
-          variant: "destructive",
-          title: "Error updating conversation",
-          description: error.message,
-        });
-      },
-      onSuccess: (data) => {
-        utils.mailbox.conversations.count.invalidate({ mailboxSlug, assignee: [assignedToId] });
-      },
-    });
+  
 
   const handleAssignSelectChange = (assignee: AssigneeOption | null) => {
     setAssignedTo(assignee);
@@ -73,12 +59,6 @@ export default function ConversationsDialog({
       });
       return;
     }
-    reassignAllConversations({
-      mailboxSlug,
-      conversationSlug: "",
-      previousAssigneeId: assignedToId,
-      newAssigneeId: assignedTo.id,
-    });
   };
 
   return (

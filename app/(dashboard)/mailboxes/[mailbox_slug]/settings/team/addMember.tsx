@@ -21,7 +21,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
 
   const utils = api.useUtils();
 
-  const { mutate: addMemberMutation, isPending: isAdding } = api.mailbox.members.addMember.useMutation({
+  const { mutate: addMemberMutation, isPending: isAdding } = api.organization.addMember.useMutation({
     onSuccess: () => {
       toast({
         title: "Team member added",
@@ -59,7 +59,6 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       });
     } else {
       addMemberMutation({
-        mailboxSlug,
         email: emailInput,
         displayName: displayNameInput,
         permissions,

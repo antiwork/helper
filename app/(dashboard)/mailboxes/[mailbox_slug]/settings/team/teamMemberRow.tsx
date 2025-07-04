@@ -42,6 +42,7 @@ type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
   canChangePermissions: boolean;
+  conversatons: any[]
 };
 
 const updateMember = (
@@ -50,10 +51,10 @@ const updateMember = (
   updates: Partial<TeamMember>,
 ) => ({
   ...data,
-  members: data.members.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
+  members: data.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
 });
 
-const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversations }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [permissions, setPermissions] = useState<string>(member.permissions);

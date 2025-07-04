@@ -32,6 +32,10 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     );
   });
 
+  const { data: conversationsList, isFetching: isFetchingConversations } = api.mailbox.conversations.list.useQuery({
+    mailboxSlug,
+  });
+
   const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
     onSuccess: () => {
       toast({
@@ -48,6 +52,16 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       });
     },
   });
+
+   const handleFinalReassignAndDelete = async (id: string) => {
+    try {
+      await utils.mailbox.members.list.invalidate({ mailboxSlug });
+      removeTeamMember({ id, mailboxSlug });
+      toast({ title: "Member removed", variant: "success" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Failed to reassign conversations" });
+    }
+  };
 
   return (
     <SectionWrapper
@@ -99,13 +113,17 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => {
-                  const currentUser = teamMembers.find((m) => m.id === session?.user.id);
+                  const memberConversations = (conversationsList?.conversations ?? []).filter(
+                    (conversation) => conversation.assignedToId === member.id,
+                  );
+
                   return (
                     <TeamMemberRow
                       key={member.id}
                       member={member}
                       mailboxSlug={mailboxSlug}
-                      canChangePermissions={currentUser?.permissions === "admin" && member.id !== session?.user.id}
+                      conversatons={memberConversations}
+                      updateConversation={handleAssignTicket}
                     />
                   );
                 })
