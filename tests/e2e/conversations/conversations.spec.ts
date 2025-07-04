@@ -172,7 +172,7 @@ test.describe("Working Conversation Management", () => {
       // No conversations exist, verify Select all button is not visible
       const selectAllButton = page.locator('button:has-text("Select all")');
       await expect(selectAllButton).not.toBeVisible();
-      
+
       // Verify we're still on the right page
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
@@ -505,5 +505,136 @@ test.describe("Working Conversation Management", () => {
     // Clear filters button should still be visible
     const clearFiltersButton = page.locator("button").filter({ hasText: "Clear filters" });
     await expect(clearFiltersButton).toBeVisible();
+  });
+
+  test("should show truncated text for non-search results", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Ensure we're not searching
+    await conversationsPage.clearSearch();
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with message text
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const messageCount = await messageTexts.count();
+
+    if (messageCount > 0) {
+      // All message text should have truncate class (simplified logic always applies truncate)
+      const firstMessage = messageTexts.first();
+      await expect(firstMessage).toBeVisible();
+
+      const classList = await firstMessage.getAttribute("class");
+      expect(classList).toContain("truncate");
+
+      await takeDebugScreenshot(page, "search-snippet-no-search.png");
+    }
+  });
+
+  test("should always use truncate class with search snippets", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for any term
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with message text
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const messageCount = await messageTexts.count();
+
+    if (messageCount > 0) {
+      // All messages should always have truncate class (simplified logic)
+      for (let i = 0; i < Math.min(messageCount, 3); i++) {
+        const message = messageTexts.nth(i);
+        const classList = await message.getAttribute("class");
+        expect(classList).toContain("truncate");
+      }
+
+      await takeDebugScreenshot(page, "search-snippet-with-truncate.png");
+    }
+  });
+
+  test("should show context snippets for deep matches", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a term that might appear in longer messages
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Look for conversation list items with highlighted search results
+    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
+    const highlightedMessages = page.locator("mark.bg-secondary-200");
+
+    const messageCount = await messageTexts.count();
+    const highlightCount = await highlightedMessages.count();
+
+    if (messageCount > 0 && highlightCount > 0) {
+      // Check if any messages show snippet behavior (starts with ellipsis)
+      for (let i = 0; i < Math.min(messageCount, 3); i++) {
+        const message = messageTexts.nth(i);
+        const messageText = await message.textContent();
+
+        // If message starts with ellipsis, it's a context snippet
+        if (messageText?.startsWith("...")) {
+          // Verify the search term is visible in the snippet
+          const messageContent = await message.innerHTML();
+          expect(messageContent).toContain("bg-secondary-200");
+
+          // Should still have truncate class (simplified logic)
+          const classList = await message.getAttribute("class");
+          expect(classList).toContain("truncate");
+
+          await takeDebugScreenshot(page, "search-snippet-deep-match.png");
+          break;
+        }
+      }
+    }
+  });
+
+  test("should highlight search terms in snippets", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a specific term
+    await conversationsPage.searchConversations("support");
+    await page.waitForLoadState("networkidle");
+
+    // Check that search terms are highlighted
+    const highlights = page.locator("mark.bg-secondary-200");
+    const highlightCount = await highlights.count();
+
+    if (highlightCount > 0) {
+      // Verify first highlight has correct content and styling
+      const firstHighlight = highlights.first();
+      await expect(firstHighlight).toBeVisible();
+
+      const highlightText = await firstHighlight.textContent();
+      expect(highlightText?.toLowerCase()).toContain("support");
+
+      // Verify highlight has background color
+      const bgColor = await firstHighlight.evaluate((el) => getComputedStyle(el).backgroundColor);
+      expect(bgColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(bgColor).not.toBe("transparent");
+
+      await takeDebugScreenshot(page, "search-snippet-highlights.png");
+    }
+  });
+
+  test("should handle search with no results gracefully", async ({ page }) => {
+    const conversationsPage = new ConversationsPage(page);
+
+    // Search for a term very unlikely to exist
+    await conversationsPage.searchConversations("xyzunlikelyterm123");
+    await page.waitForLoadState("networkidle");
+
+    // Should not crash and search input should work
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveValue("xyzunlikelyterm123");
+
+    // Should show no highlights for non-existent terms
+    const highlights = page.locator("mark.bg-secondary-200");
+    const highlightCount = await highlights.count();
+    expect(highlightCount).toBe(0);
+
+    await takeDebugScreenshot(page, "search-snippet-no-results.png");
   });
 });

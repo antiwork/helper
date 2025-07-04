@@ -15,6 +15,7 @@ vi.mock("@/lib/data/user", () => ({
     CORE: "core",
     NON_CORE: "nonCore",
     AFK: "afk",
+    ADMIN: "admin",
   },
   updateUserMailboxData: vi.fn(),
   getUsersWithMailboxAccess: vi.fn(),

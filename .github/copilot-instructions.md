@@ -5,3 +5,4 @@
 - Always design for light and dark mode
 - Always consider mobile and desktop devices (medium and large and extra large)
 - No explanatory comments please
+- When adding new rules, update both .cursorrules and .github/copilot-instructions.md to keep them synchronized

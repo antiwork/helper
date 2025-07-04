@@ -167,7 +167,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
               <FormControl>
                 <TipTapEditor
                   ref={editorRef}
-                  className="min-h-48"
+                  className="min-h-48 max-h-96"
                   ariaLabel="Saved reply content editor"
                   placeholder="Enter your saved reply content here..."
                   defaultContent={initialContentObject}
