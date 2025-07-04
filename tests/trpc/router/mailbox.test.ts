@@ -1,5 +1,4 @@
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
