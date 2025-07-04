@@ -13,8 +13,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
-import { toast } from "../../../../../../components/hooks/use-toast";
-import { Button } from "../../../../../../components/ui/button";
+import { AssigneeOption } from "@/components/assignSelect";
+import { toast } from "@/components/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface DeleteMemberDialogProps {
   children: React.ReactNode;
@@ -23,13 +24,6 @@ interface DeleteMemberDialogProps {
   description?: string;
   conversationIds: string[];
 }
-
-export type AssigneeOption =
-  | {
-      id: string;
-      displayName: string;
-    }
-  | { ai: true };
 
 export default function DeleteMemberDialog({
   children,
@@ -83,7 +77,7 @@ export default function DeleteMemberDialog({
     setAssignedTo(assignee);
   };
 
-  const handleAssignSubmit = () => {
+  const handleAssignSubmit = async () => {
     setLoading(true);
     if (conversationIds.length > 0) {
       if (!assignedTo) {
@@ -95,22 +89,29 @@ export default function DeleteMemberDialog({
         return;
       }
 
-      for (const conversationId of conversationIds || []) {
-        if ("ai" in assignedTo) {
-          updateConversation({
-            mailboxSlug,
-            conversationSlug: conversationId,
-            assignedToAI: true,
-            message: assignMessage,
-          });
+      try {
+        const updatePromises = conversationIds.map(conversationId => {
+          if ("ai" in assignedTo) {
+            return updateConversation({
+              mailboxSlug,
+              conversationSlug: conversationId,
+              assignedToAI: true,
+              message: assignMessage,
+            });
         } else {
-          updateConversation({
-            mailboxSlug,
-            conversationSlug: conversationId,
-            assignedToId: assignedTo.id,
-            message: assignMessage,
-          });
-        }
+            return updateConversation({
+              mailboxSlug,
+              conversationSlug: conversationId,
+              assignedToId: assignedTo.id,
+              message: assignMessage,
+            });
+          }
+        });
+        
+        await Promise.all(updatePromises);
+      } catch (error) {
+        setLoading(false);
+        return;
       }
     }
     removeTeamMember({ id: assignedToId, mailboxSlug });
