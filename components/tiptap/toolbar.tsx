@@ -27,7 +27,6 @@ type ToolbarProps = {
   isRecordingSupported: boolean;
   startRecording: () => void;
   stopRecording: () => void;
-  hasActionButtons: boolean;
 };
 
 const Toolbar = ({
@@ -42,7 +41,6 @@ const Toolbar = ({
   isRecordingSupported,
   startRecording,
   stopRecording,
-  hasActionButtons,
 }: ToolbarProps) => {
   const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
