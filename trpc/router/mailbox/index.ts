@@ -84,16 +84,6 @@ export const mailboxRouter = {
         preferences: z
           .object({
             confetti: z.boolean().optional(),
-            theme: z
-              .object({
-                background: z.string().regex(/^#([0-9a-f]{6})$/i),
-                foreground: z.string().regex(/^#([0-9a-f]{6})$/i),
-                primary: z.string().regex(/^#([0-9a-f]{6})$/i),
-                accent: z.string().regex(/^#([0-9a-f]{6})$/i),
-                sidebarBackground: z.string().regex(/^#([0-9a-f]{6})$/i),
-              })
-              .nullable()
-              .optional(),
             autoRespondEmailToChat: z.enum(["draft", "reply"]).nullable().optional(),
             disableTicketResponseTimeAlerts: z.boolean().optional(),
           })
