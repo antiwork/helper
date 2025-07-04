@@ -1,7 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { withAuth } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -19,7 +19,7 @@ const MessageReactionSchema = z.discriminatedUnion("type", [
     feedback: z.string().nullish(),
   }),
 ]);
-export const POST = withAuth(async ({ request, context: { params } }, { session }) => {
+export const POST = withWidgetAuth(async ({ request, context: { params } }, { session }) => {
   const { id, slug } = await params;
 
   let messageId;

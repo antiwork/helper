@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { messageNotifications, platformCustomers } from "@/db/schema";
-import { corsOptions, corsResponse, withAuth } from "../../utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "../../utils";
 
 const updateNotificationSchema = z.object({
   status: z.enum(["read", "dismissed"]),
@@ -12,7 +12,7 @@ export function OPTIONS() {
   return corsOptions("PATCH");
 }
 
-export const PATCH = withAuth(async ({ request, context: { params } }, { session, mailbox }) => {
+export const PATCH = withWidgetAuth(async ({ request, context: { params } }, { session, mailbox }) => {
   const { id } = await params;
   const notificationId = parseInt(id);
 

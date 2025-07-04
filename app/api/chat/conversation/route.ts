@@ -1,4 +1,4 @@
-import { corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { CHAT_CONVERSATION_SUBJECT, createConversation } from "@/lib/data/conversation";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 
@@ -9,7 +9,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { isPrompt } = await request.json();
   const isVisitor = session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;

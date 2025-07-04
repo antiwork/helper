@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { withAuth } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
@@ -12,7 +12,7 @@ const EventPayloadSchema = z.object({
   }),
 });
 
-export const POST = withAuth(async ({ request, context: { params } }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request, context: { params } }, { session, mailbox }) => {
   const { id, slug } = await params;
   let messageId;
   try {

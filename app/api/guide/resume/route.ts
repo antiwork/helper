@@ -1,4 +1,4 @@
-import { corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";
@@ -8,7 +8,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, { session: { email }, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session: { email }, mailbox }) => {
   const { sessionId } = await request.json();
 
   if (!sessionId || typeof sessionId !== "string") {

@@ -1,5 +1,5 @@
 import { waitUntil } from "@vercel/functions";
-import { corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { generateGuidePlan } from "@/lib/ai/guide";
 import { createConversation, getConversationBySlug } from "@/lib/data/conversation";
@@ -7,7 +7,7 @@ import { createGuideSession, createGuideSessionEvent } from "@/lib/data/guide";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { title, instructions, conversationSlug } = await request.json();
   const platformCustomer = assertDefined(
     await findOrCreatePlatformCustomerByEmail(mailbox.id, assertDefined(session.email)),

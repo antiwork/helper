@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { generateReadPageTool } from "@/lib/ai/readPageTool";
-import { withAuth } from "../utils";
+import { withWidgetAuth } from "../utils";
 
 const requestSchema = z.object({
   pageHTML: z.string(),
   currentURL: z.string(),
 });
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const body = await request.json();
   const result = requestSchema.safeParse(body);
 

@@ -2,7 +2,7 @@ import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
 import { ReadPageToolConfig } from "@helperai/sdk";
-import { corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
@@ -49,7 +49,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
   const conversation = await getConversation(conversationSlug, session, mailbox);
 

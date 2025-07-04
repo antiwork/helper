@@ -1,11 +1,11 @@
 import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations as conversationsTable } from "@/db/schema";
-import { withAuth } from "../../widget/utils";
+import { withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
-export const GET = withAuth(async ({ request }, { session }) => {
+export const GET = withWidgetAuth(async ({ request }, { session }) => {
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
 

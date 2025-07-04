@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
 import { z } from "zod";
-import { withAuth } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../../components/utils/assert";
@@ -72,7 +72,7 @@ Instructions:
 Current date: {{CURRENT_DATE}}
 Current user email: {{USER_EMAIL}}`;
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { message, steps, sessionId } = await request.json();
   const userEmail = session.isAnonymous ? null : session.email || null;
 

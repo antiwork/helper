@@ -1,14 +1,14 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { cache } from "react";
-import { withAuth } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
 
-export const GET = withAuth(async ({ context: { params } }, { session }) => {
+export const GET = withWidgetAuth(async ({ context: { params } }, { session }) => {
   const { slug } = await params;
 
   let baseCondition;

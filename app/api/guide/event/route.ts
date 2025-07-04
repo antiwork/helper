@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { corsOptions, corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
@@ -17,7 +17,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, { mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
   try {
     const body = await request.json();
     const { sessionId, events, metadata, isRecording } = body;

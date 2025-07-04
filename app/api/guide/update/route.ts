@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { corsResponse, withAuth } from "@/app/api/widget/utils";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getGuideSessionByUuid, updateGuideSession, type GuideSession } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
@@ -14,7 +14,7 @@ const updateGuideSchema = z.object({
   ),
 });
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const body = await request.json();
   const result = updateGuideSchema.safeParse(body);
   if (!result.success) {
