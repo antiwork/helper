@@ -87,12 +87,6 @@ export const membersRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.user_metadata.mailboxAccess[ctx.mailbox.id]?.role !== "core") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You do not have permission to remove team members.",
-        });
-      }
 
       if (ctx.user.id === input.id) {
         throw new TRPCError({

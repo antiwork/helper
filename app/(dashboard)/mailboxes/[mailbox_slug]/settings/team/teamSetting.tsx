@@ -122,8 +122,8 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                       key={member.id}
                       member={member}
                       mailboxSlug={mailboxSlug}
-                      conversatons={memberConversations}
-                      updateConversation={handleAssignTicket}
+                      conversationIds={memberConversations.map((c) => c.slug)}
+                      canChangePermissions={true}
                     />
                   );
                 })

@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 import { toast } from "./hooks/use-toast";
@@ -24,6 +23,7 @@ interface ConversationsDialogProps {
   assignedToId: string;
   mailboxSlug: string;
   description?: string;
+  conversationIds: string[];
 }
 
 export type AssigneeOption =
@@ -38,20 +38,54 @@ export default function ConversationsDialog({
   mailboxSlug,
   description,
   assignedToId,
+  conversationIds,
 }: ConversationsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const utils = api.useUtils();
   const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const [assignMessage, setAssignMessage] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
-  const { data: count } = api.mailbox.conversations.count.useQuery({ mailboxSlug, assignee: [assignedToId] });
-  
+   const { mutateAsync: updateConversation, isPending: isUpdating } = api.mailbox.conversations.update.useMutation({
+    onSuccess: () => {
+      utils.mailbox.conversations.list.invalidate({ mailboxSlug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update conversation",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
+      onSuccess: () => {
+        toast({
+          title: "Team member removed",
+          variant: "success",
+        });
+        utils.mailbox.members.list.invalidate({ mailboxSlug });
+        setLoading(false);
+        setAssignedTo(null);
+        setAssignMessage("");
+        setIsOpen(false);
+      },
+      onError: (error) => {
+        toast({
+          title: "Failed to remove member",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
 
   const handleAssignSelectChange = (assignee: AssigneeOption | null) => {
     setAssignedTo(assignee);
   };
 
   const handleAssignSubmit = () => {
+    setLoading(true);
     if (!assignedTo || !("id" in assignedTo)) {
       toast({
         variant: "destructive",
@@ -59,6 +93,16 @@ export default function ConversationsDialog({
       });
       return;
     }
+
+    for (const conversationId of conversationIds || []) {
+      if (assignedTo && "ai" in assignedTo) {
+        updateConversation({ mailboxSlug, conversationSlug: conversationId, assignedToAI: true });
+      }else{
+        updateConversation({ mailboxSlug, conversationSlug: conversationId, assignedToId: assignedTo.id });
+      }
+    }
+
+    removeTeamMember({ id: assignedToId, mailboxSlug });
   };
 
   return (
@@ -73,7 +117,7 @@ export default function ConversationsDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-4">
-          <h4 className="font-medium">Assign conversation {count?.total ? `(${count?.total})` : ""}</h4>
+          <h4 className="font-medium">Assign conversation {conversationIds.length ? `(${conversationIds.length})` : ""}</h4>
 
           <AssignSelect selectedUserId={assignedToId} onChange={handleAssignSelectChange} aiOption />
 

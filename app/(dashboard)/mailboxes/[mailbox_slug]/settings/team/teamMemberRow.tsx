@@ -42,7 +42,7 @@ type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
   canChangePermissions: boolean;
-  conversatons: any[]
+  conversationIds: string[];
 };
 
 const updateMember = (
@@ -54,7 +54,7 @@ const updateMember = (
   members: data.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
 });
 
-const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversations }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversationIds }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [permissions, setPermissions] = useState<string>(member.permissions);
@@ -298,6 +298,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversation
             assignedToId={member.id}
             mailboxSlug={mailboxSlug}
             description="Please reassign the tickets before delete the member"
+            conversationIds={conversationIds}
           >
             <Button variant="ghost" size="sm" iconOnly>
               <Trash className="h-4 w-4" />
