@@ -95,6 +95,8 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     .from(authUsers)
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
+    console.log("Fetched users with mailbox access:", users);
+
   return users.map((user) => {
     const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
@@ -117,6 +119,7 @@ export const updateUserMailboxData = async (
     displayName?: string;
     role?: UserRole;
     keywords?: MailboxAccess["keywords"];
+    permissions?: string;
   },
 ): Promise<UserWithMailboxAccessData> => {
   const supabase = createAdminClient();
@@ -134,6 +137,7 @@ export const updateUserMailboxData = async (
     ...mailboxAccess[mailboxId],
     ...(updates.role && { role: updates.role }),
     ...(updates.keywords && { keywords: updates.keywords }),
+    ...(updates.permissions && { permissions: updates.permissions }),
     updatedAt: new Date().toISOString(),
   };
 
@@ -161,6 +165,7 @@ export const updateUserMailboxData = async (
         role: updates.role || "afk",
         keywords: updates.keywords || [],
       },
+      permissions: updates.permissions,
     })
     .where(eq(userProfiles.id, updatedUser.id))
     .returning();

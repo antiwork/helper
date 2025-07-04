@@ -20,37 +20,26 @@ export const membersRouter = {
         permissions: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input: { userId, displayName, role, keywords, permissions } }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        let user;
-        if (displayName !== undefined || role !== undefined || keywords !== undefined) {
-          user = await updateUserMailboxData(userId, ctx.mailbox.id, {
-            displayName,
-            role,
-            keywords,
+          const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
+            displayName: input.displayName,
+            role: input.role,
+            keywords: input.keywords,
+            permissions: input.permissions,
           });
-        }
 
-        if (permissions !== undefined) {
-          if (!isAdmin(await getProfile(ctx.user.id))) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "You are not authorized to update permissions" });
-          }
-          if (ctx.user.id === userId) {
-            throw new TRPCError({ code: "FORBIDDEN", message: "You cannot update your own permissions" });
-          }
+          console.log("Updated user mailbox data:", user)
 
-          await db.update(userProfiles).set({ permissions }).where(eq(userProfiles.id, userId));
-        }
-
-        return { user, permissions };
+          return { user }
       } catch (error) {
         captureExceptionAndLog(error, {
           extra: {
-            userId,
-            displayName,
-            keywords,
-            role,
-            permissions,
+            userId: input.userId,
+            displayName: input.displayName,
+            keywords: input.keywords,
+            role: input.role,
+            permissions: input.permissions,
             mailboxId: ctx.mailbox.id,
             mailboxSlug: ctx.mailbox.slug,
           },
@@ -67,7 +56,8 @@ export const membersRouter = {
 
   list: mailboxProcedure.query(async ({ ctx }) => {
     try {
-      return await getUsersWithMailboxAccess(ctx.mailbox.id);
+      const members = await getUsersWithMailboxAccess(ctx.mailbox.id);
+      return members;
     } catch (error) {
       captureExceptionAndLog(error, {
         tags: { route: "mailbox.members.list" },

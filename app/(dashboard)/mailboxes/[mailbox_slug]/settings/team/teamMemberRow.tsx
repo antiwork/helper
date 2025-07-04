@@ -146,7 +146,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversation
     onSuccess: (data) => {
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
-        return updateMember(oldData, member, { permissions: data.permissions });
+        return updateMember(oldData, member, { permissions: data.user.permissions });
       });
       permissionsSaving.setState("saved");
     },

@@ -23,6 +23,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const session = useSession();
   const utils = api.useUtils();
 
+  console.log("Team members data:", Array.isArray(data), data);
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
     return (
