@@ -10,13 +10,16 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/hooks/use-toast"
 import { api } from "@/trpc/react"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
 export type CommonIssue = {
   id: number;
   slug: string;
   title: string | null;
-  keywords: string[] | null;
-  description?: string;   // Only keep if description actually exists in your DB, otherwise remove    
+  keywords: string[] | null; 
   createdAt: Date;
   updatedAt: Date;
   mailboxId: number;
@@ -27,33 +30,33 @@ export type CommonIssue = {
 
 interface CommonIssueFormProps {
   commonIssue?: CommonIssue
-  onSuccess: (issue: Omit<CommonIssue, "slug" | "usageCount" | "createdAt">) => void
+  onSuccess: () => void
   onCancel: () => void
   onDelete?: () => void
   mailboxSlug: string
 }
 
 export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, onDelete }: CommonIssueFormProps) {
-  const [title, setTitle] = useState(commonIssue?.title || "")
-  const [keywords, setKeywords] = useState<string[]>(commonIssue?.keywords || [])
   const [newKeyword, setNewKeyword] = useState("")
-  const [description, setDescription] = useState(commonIssue?.description || "")
-  const [isLoading, setIsLoading] = useState(false)
+  const form = useForm({
+    resolver: zodResolver(
+      z.object({
+        title: z.string().min(1, "Title is required"),
+        keywords: z.array(z.string().min(1, "Keyword is required")).min(1),
+      }),
+    ),
+    defaultValues: {
+      title: commonIssue?.title || "",
+      keywords: commonIssue?.keywords || [],
+    },
+  });
 
-  const handleAddKeyword = () => {
-    const trimmedKeyword = newKeyword.trim().toLowerCase()
-    if (trimmedKeyword && !keywords.map((k) => k.toLowerCase()).includes(trimmedKeyword)) {
-      setKeywords([...keywords, newKeyword.trim()])
-      setNewKeyword("")
-    }
-  }
+  const keywords = form.watch("keywords") || [];
 
   const createCommonIssue = api.mailbox.commonIssues.create.useMutation({
       onSuccess: () => {
-        toast({
-          title: "Common issue created successfully",
-          variant: "success",
-        });
+        onSuccess()
+        form.reset()
       },
       onError: (error) => {
         toast({
@@ -64,75 +67,167 @@ export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, 
       },
     })
 
-    const updateCommonIssue = api.mailbox.commonIssues.update.useMutation({
-      onSuccess: () => {
-        toast({
-          title: "Common issue updated successfully",
-          variant: "success",
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: "Failed to update saved reply",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    });
+  const updateCommonIssue = api.mailbox.commonIssues.update.useMutation({
+    onSuccess: () => {
+      onSuccess()
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update saved reply",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleRemoveKeyword = (keywordToRemove: string) => {
-    setKeywords(keywords.filter((keyword) => keyword !== keywordToRemove))
-  }
+  const deleteCommonIssue = api.mailbox.commonIssues.delete.useMutation({
+    onSuccess: () => {
+      toast({ title: "Saved reply deleted successfully", variant: "success" });
+      onDelete?.();
+    },
+    onError: (error) => {
+      toast({ title: "Failed to delete saved reply", description: error.message, variant: "destructive" });
+    },
+  });
 
   const handleKeywordInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      e.preventDefault()
-      handleAddKeyword()
+      e.preventDefault();
+      const trimmed = newKeyword.trim();
+      if (!trimmed) return;
+      if (form.getValues("keywords").includes(trimmed)) return;
+
+      form.setValue("keywords", [...form.getValues("keywords"), trimmed]);
+      setNewKeyword("");
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (data: { title: string, keywords: string[] }) => {
 
-    if (!title.trim()) {
-      toast({ title: "Title is required", variant: "destructive" })
-      return
-    }
-
-    if (keywords.length === 0) {
-      toast({ title: "At least one keyword is required", variant: "destructive" })
-      return
-    }
     const finalData = {
-      title: title.trim(),
-      keywords,
+      title: data.title.trim(),
+      keywords: data.keywords,
       mailboxSlug
     }
-
-    setIsLoading(true)
 
     if(commonIssue) {
       updateCommonIssue.mutate({ slug:commonIssue.slug, ...finalData })
     } else {
       createCommonIssue.mutate(finalData)
     }
-
-    setIsLoading(false)
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!commonIssue || !onDelete) return
-
-    
-
-    setIsLoading(true)
-
+    deleteCommonIssue.mutate({ mailboxSlug, slug: commonIssue.slug })
     onDelete()
-    setIsLoading(false)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Welcome Message" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="space-y-3">
+          <FormField
+            control={form.control}
+            name="keywords"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Keywords</FormLabel>
+                <FormControl>
+                  <div className="flex gap-2">
+                    <Input
+                      id="keywords"
+                      value={newKeyword}
+                      onChange={(e) => setNewKeyword(e.target.value)}
+                      onKeyDown={handleKeywordInputKeyDown}
+                      placeholder="Add a keyword..."
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={()=>{
+                        const trimmed = newKeyword.trim();
+                        if (!trimmed) return;
+                        if (field.value.includes(trimmed)) return;
+
+                        field.onChange([...field.value, trimmed]);
+                        setNewKeyword("");
+                      }}
+                      disabled={!newKeyword.trim()}
+                      className="shrink-0 bg-transparent"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {keywords.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground">
+                {keywords.length} keyword{keywords.length !== 1 ? "s" : ""} added
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {keywords.map((keyword, index) => (
+                  <Badge key={index} className="flex items-center gap-1 text-sm py-1 px-2">
+                    {keyword}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedKeywords = keywords.filter((k) => k !== keyword);
+                        form.setValue("keywords", updatedKeywords);
+                      }}
+                      className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center justify-between pt-4 border-t">
+        <div>
+          {commonIssue && onDelete && (
+            <Button type="button" variant="destructive_outlined" onClick={handleDelete} disabled={deleteCommonIssue.isPending}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button type="button" onClick={onCancel} variant="outlined">
+            Cancel
+          </Button>
+          <Button type="submit">
+            {createCommonIssue.isPending || updateCommonIssue.isPending ? "Saving..." : commonIssue ? "Update" : "Create"}
+          </Button>
+        </div>
+      </div>
+      </form>
+    </Form>
+  )
+}
+
+
+
+{/* <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="title">Title *</Label>
         <Input
@@ -222,6 +317,4 @@ export function CommonIssueForm({ commonIssue, onSuccess,mailboxSlug, onCancel, 
           </Button>
         </div>
       </div>
-    </form>
-  )
-}
+    </form> */}

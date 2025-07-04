@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, Plus, Search, Tag } from "lucide-react"
+import { Plus, Search, SquarePen, Tag } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +18,6 @@ export type CommonIssue = {
   slug: string;
   title: string | null;
   keywords: string[] | null;
-  description?: string;   // Only keep if description actually exists in your DB, otherwise remove
   createdAt: Date;
   updatedAt: Date;
   mailboxId: number;
@@ -34,9 +33,7 @@ export default function CommonIssuesPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [editingCommonIssue, setEditingCommonIssue] = useState<CommonIssue | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
 
-  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
@@ -44,11 +41,10 @@ export default function CommonIssuesPage() {
     return () => clearTimeout(timer)
   }, [searchTerm])
   
-  const { data: commonIssuesList } = api.mailbox.commonIssues.list.useQuery({
+  const { data: commonIssuesList, refetch, isLoading } = api.mailbox.commonIssues.list.useQuery({
     mailboxSlug
   })
 
-  // Filter common issues based on search
   const filteredCommonIssues = commonIssuesList?.filter((issue) => {
     if (!debouncedSearchTerm) return true
     const searchLower = debouncedSearchTerm.toLowerCase()
@@ -58,51 +54,33 @@ export default function CommonIssuesPage() {
     )
   })
 
-  const handleCreateSuccess = (newIssue: Omit<CommonIssue, "slug" | "usageCount" | "createdAt">) => {
+  const handleCreateSuccess = () => {
     setShowCreateDialog(false)
+    refetch()
     toast({ title: "Common issue created successfully" })
   }
 
-  const handleEditSuccess = (updatedIssue: Omit<CommonIssue, "slug" | "usageCount" | "createdAt">) => {
-    if (!editingCommonIssue) return
-
+  const handleEditSuccess = () => {
     setEditingCommonIssue(null)
+    refetch()
     toast({ title: "Common issue updated successfully" })
-  }
-
-  const handleDelete = (slug: string) => {
-    setEditingCommonIssue(null)
-    toast({ title: "Common issue deleted successfully" })
-  }
-
-  const handleCopyKeywords = async (keywords: string[]) => {
-    try {
-      await navigator.clipboard.writeText(keywords.join(", "))
-      toast({ title: "Keywords copied to clipboard" })
-    } catch (_error) {
-      toast({ title: "Failed to copy keywords", variant: "destructive" })
-    }
   }
 
   const hasIssuesOrSearch = (filteredCommonIssues?.length ?? 0) > 0 || searchTerm.length > 0
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-background">
-      {/* Page Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center justify-between px-6">
           <h1 className="text-2xl font-semibold">Common Issues</h1>
           {hasIssuesOrSearch && (
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search common issues..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64 pl-10"
-                />
-              </div>
+              <Input
+                placeholder="Search common issues..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 pl-10"
+              />
               <Button onClick={() => setShowCreateDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New common issue
@@ -139,7 +117,6 @@ export default function CommonIssuesPage() {
               <Card
                 key={commonIssue.slug}
                 className="hover:shadow-md transition-shadow cursor-pointer flex flex-col group"
-                onClick={() => setEditingCommonIssue(commonIssue)}
                 data-testid="common-issue-card"
               >
                 <CardHeader className="pb-3">
@@ -152,14 +129,11 @@ export default function CommonIssuesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleCopyKeywords(commonIssue.keywords ?? [])
-                      }}
-                      data-testid="copy-button"
+                      onClick={() => setEditingCommonIssue(commonIssue)}
+                      data-testid="edit-button"
                       className="opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Copy className="h-4 w-4" data-testid="copy-icon" />
+                      <SquarePen className="h-4 w-4" data-testid="edit-icon" />
                     </Button>
                   </div>
                 </CardHeader>
@@ -203,7 +177,6 @@ export default function CommonIssuesPage() {
         )}
       </div>
 
-      {/* Create Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -216,7 +189,6 @@ export default function CommonIssuesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
       {editingCommonIssue && (
         <Dialog open={!!editingCommonIssue} onOpenChange={() => setEditingCommonIssue(null)}>
           <DialogContent className="max-w-2xl">
@@ -228,7 +200,10 @@ export default function CommonIssuesPage() {
               commonIssue={editingCommonIssue}
               onSuccess={handleEditSuccess}
               onCancel={() => setEditingCommonIssue(null)}
-              onDelete={() => handleDelete(editingCommonIssue.slug)}
+              onDelete={() => {
+                setEditingCommonIssue(null)
+                refetch()
+              }}
               mailboxSlug={mailboxSlug}
             />
           </DialogContent>
