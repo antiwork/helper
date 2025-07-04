@@ -163,7 +163,7 @@ describe("handleGmailWebhookEvent", () => {
 
     it("skips emails that already exist in the conversation", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         conversationProvider: "gmail",
       });
       await conversationMessagesFactory.create(conversation.id, {
@@ -207,9 +207,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toBeUndefined();
     });
 
@@ -230,9 +228,7 @@ describe("handleGmailWebhookEvent", () => {
         ),
       });
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         status: "closed",
       });
@@ -258,9 +254,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         status: "closed",
       });
@@ -298,9 +292,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         emailFrom: "sender@example.com",
         subject: "Test Email",
@@ -352,9 +344,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         emailFrom: "sender@example.com",
         subject: "Test Email",
@@ -388,7 +378,7 @@ describe("handleGmailWebhookEvent", () => {
 
     it("creates an email record for a new email on an existing Gmail thread", async () => {
       const { mailbox } = await setupGmailSupportEmail();
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         conversationProvider: "gmail",
         status: "closed",
       });
@@ -469,9 +459,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         status: "open",
       });
@@ -495,9 +483,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         emailFrom: "helperai123@gmail.com",
         emailFromName: "Helper Support",
@@ -544,9 +530,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         emailFrom: "s.rauf124@gmail.com",
         emailFromName: "Shan Rauf",
@@ -592,14 +576,12 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation).toMatchObject({
         emailFrom: "s.rauf124@gmail.com",
         emailFromName: "Shan Rauf",
         subject:
-          "A completely new conversation: It’s 綺麗!! And it also happens to have a very long subject line because I want to test and make sure that things work even if the subject line is insanely long!!",
+          "A completely new conversation: It's 綺麗!! And it also happens to have a very long subject line because I want to test and make sure that things work even if the subject line is insanely long!!",
         status: "open",
         conversationProvider: "gmail",
       });
@@ -653,9 +635,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
 
       const message = await db.query.conversationMessages.findFirst({
         where: (m, { eq }) => eq(m.conversationId, conversation!.id),
@@ -715,9 +695,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
 
       const message = await db.query.conversationMessages.findFirst({
         where: (m, { eq }) => eq(m.conversationId, conversation!.id),
@@ -777,9 +755,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation?.assignedToId).toBe(staffUser.id);
     });
 
@@ -790,7 +766,7 @@ describe("handleGmailWebhookEvent", () => {
         email: "staff@example.com",
       });
 
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         conversationProvider: "gmail",
         assignedToId: existingAssignee.id,
       });
@@ -846,9 +822,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation?.assignedToId).toBe(firstStaffUser.id);
     });
 
@@ -873,9 +847,7 @@ describe("handleGmailWebhookEvent", () => {
 
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
-      const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
-      });
+      const conversation = await db.query.conversations.findFirst({});
       expect(conversation?.assignedToId).toBeNull();
     });
   });

@@ -11,18 +11,14 @@ export const mailboxesMetadataApi = pgTable(
     url: text().notNull(),
     hmacSecret: text().notNull(),
     isEnabled: boolean().notNull(),
-    mailboxId: bigint({ mode: "number" }).notNull(),
     deletedAt: timestamp({ withTimezone: true }),
   },
-  (table) => [
-    index("mailboxes_metadataapi_created_at_1ee2d2c2").on(table.createdAt),
-    unique("mailboxes_metadataapi_mailbox_id_key").on(table.mailboxId),
-  ],
+  (table) => [index("mailboxes_metadataapi_created_at_1ee2d2c2").on(table.createdAt)],
 ).enableRLS();
 
 export const mailboxesMetadataApiRelations = relations(mailboxesMetadataApi, ({ one }) => ({
   mailbox: one(mailboxes, {
-    fields: [mailboxesMetadataApi.mailboxId],
+    fields: [mailboxesMetadataApi.id],
     references: [mailboxes.id],
   }),
 }));

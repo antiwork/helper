@@ -10,22 +10,13 @@ import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 
-export const getMailboxById = cache(async (id: number): Promise<Mailbox | null> => {
-  const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, id),
-  });
+export const getMailbox = cache(async (): Promise<Mailbox | null> => {
+  const result = await db.query.mailboxes.findFirst({});
   return result ?? null;
 });
 
-export const getMailboxBySlug = cache(async (slug: string): Promise<typeof mailboxes.$inferSelect | null> => {
-  const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, slug),
-  });
-  return result ?? null;
-});
-
-export const resetMailboxPromptUpdatedAt = async (tx: Transaction, mailboxId: number) => {
-  await tx.update(mailboxes).set({ promptUpdatedAt: new Date() }).where(eq(mailboxes.id, mailboxId));
+export const resetMailboxPromptUpdatedAt = async (tx: Transaction) => {
+  await tx.update(mailboxes).set({ promptUpdatedAt: new Date() });
 };
 
 export type Mailbox = typeof mailboxes.$inferSelect;
@@ -45,11 +36,7 @@ const getSlackConnectUrl = (mailboxSlug: string): string | null => {
 
 export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
   const metadataEndpoint = await db.query.mailboxesMetadataApi.findFirst({
-    where: and(
-      eq(mailboxesMetadataApi.mailboxId, mailbox.id),
-      isNull(mailboxesMetadataApi.deletedAt),
-      eq(mailboxesMetadataApi.isEnabled, true),
-    ),
+    where: and(isNull(mailboxesMetadataApi.deletedAt), eq(mailboxesMetadataApi.isEnabled, true)),
     columns: {
       isEnabled: true,
       deletedAt: true,
@@ -85,10 +72,9 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
   };
 };
 
-export const disconnectSlack = async (mailboxId: number): Promise<void> => {
+export const disconnectSlack = async (): Promise<void> => {
   const mailbox = assertDefined(
     await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, mailboxId),
       columns: {
         slackBotToken: true,
       },
@@ -104,34 +90,25 @@ export const disconnectSlack = async (mailboxId: number): Promise<void> => {
     captureExceptionAndLogIfDevelopment(error, { level: "info" });
   }
 
-  await db
-    .update(mailboxes)
-    .set({
-      slackTeamId: null,
-      slackBotUserId: null,
-      slackBotToken: null,
-      slackAlertChannel: null,
-    })
-    .where(eq(mailboxes.id, mailboxId));
+  await db.update(mailboxes).set({
+    slackTeamId: null,
+    slackBotUserId: null,
+    slackBotToken: null,
+    slackAlertChannel: null,
+  });
 };
 
-export const disconnectGitHub = async (mailboxId: number): Promise<void> => {
-  await db
-    .update(mailboxes)
-    .set({
-      githubInstallationId: null,
-      githubRepoOwner: null,
-      githubRepoName: null,
-    })
-    .where(eq(mailboxes.id, mailboxId));
+export const disconnectGitHub = async (): Promise<void> => {
+  await db.update(mailboxes).set({
+    githubInstallationId: null,
+    githubRepoOwner: null,
+    githubRepoName: null,
+  });
 };
 
-export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, repoName: string): Promise<void> => {
-  await db
-    .update(mailboxes)
-    .set({
-      githubRepoOwner: repoOwner,
-      githubRepoName: repoName,
-    })
-    .where(eq(mailboxes.id, mailboxId));
+export const updateGitHubRepo = async (repoOwner: string, repoName: string): Promise<void> => {
+  await db.update(mailboxes).set({
+    githubRepoOwner: repoOwner,
+    githubRepoName: repoName,
+  });
 };

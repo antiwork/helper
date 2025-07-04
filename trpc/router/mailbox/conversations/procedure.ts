@@ -9,7 +9,7 @@ export const conversationProcedure = mailboxProcedure
   .input(z.object({ conversationSlug: z.string() }))
   .use(async ({ ctx, input, next }) => {
     const conversation = await db.query.conversations.findFirst({
-      where: and(eq(conversations.slug, input.conversationSlug), eq(conversations.mailboxId, ctx.mailbox.id)),
+      where: and(eq(conversations.slug, input.conversationSlug)),
     });
 
     if (!conversation) throw new TRPCError({ code: "NOT_FOUND" });

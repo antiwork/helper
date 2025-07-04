@@ -3,8 +3,6 @@
 import {
   BarChart,
   BookOpen,
-  CheckCircle,
-  ChevronDown,
   ChevronLeft,
   Inbox,
   Link as LinkIcon,
@@ -21,13 +19,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -57,14 +48,13 @@ const settingsItems = [
   { label: "Preferences", id: "preferences", icon: SettingsIcon },
 ] as const;
 
-export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
+export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const previousAppUrlRef = useRef<string | null>(null);
-  const { data: mailboxes } = api.mailbox.list.useQuery();
-  const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
-  const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
-  const isSettingsPage = pathname.startsWith(`/mailboxes/${mailboxSlug}/settings`);
+  const { data: mailbox } = api.mailbox.get.useQuery();
+  const { data: openCounts } = api.mailbox.openCount.useQuery();
+  const isSettingsPage = pathname.startsWith(`/settings`);
   const { isMobile, setOpenMobile } = useSidebar();
 
   const handleItemClick = () => {
@@ -86,7 +76,7 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                 asChild
                 className="cursor-pointer"
                 onClick={() => {
-                  const fallback = `/mailboxes/${mailboxSlug}/mine`;
+                  const fallback = `/mine`;
                   router.push(previousAppUrlRef.current || fallback);
                   handleItemClick();
                 }}
@@ -100,38 +90,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
             </SidebarMenuItem>
           </SidebarMenu>
         ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="sidebar"
-                size="sm"
-                className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-              >
-                <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
-                <span className="truncate text-base group-data-[collapsible=icon]:hidden">{currentMailbox?.name}</span>
-                <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="bottom" align="start" className="min-w-[180px]">
-              {mailboxes?.map((mailbox) => (
-                <DropdownMenuItem
-                  key={mailbox.slug}
-                  onClick={() => {
-                    const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
-                    router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
-                    handleItemClick();
-                  }}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Avatar src={undefined} fallback={mailbox.name} size="sm" />
-                  <span className="truncate text-base">{mailbox.name}</span>
-                  <span className="ml-auto">
-                    {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2 w-full h-10 px-2">
+            <Avatar src={undefined} fallback={mailbox?.name || ""} size="sm" />
+            <span className="truncate text-base group-data-[collapsible=icon]:hidden">{mailbox?.name}</span>
+          </div>
         )}
       </SidebarHeader>
 
@@ -144,10 +106,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === `/mailboxes/${mailboxSlug}/settings/${item.id}`}
+                      isActive={pathname === `/settings/${item.id}`}
                       tooltip={item.label}
                     >
-                      <Link href={`/mailboxes/${mailboxSlug}/settings/${item.id}`} onClick={handleItemClick}>
+                      <Link href={`/settings/${item.id}`} onClick={handleItemClick}>
                         <item.icon className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                       </Link>
@@ -163,8 +125,8 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
               <SidebarGroup>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/mine`} tooltip="Mine">
-                      <Link href={`/mailboxes/${mailboxSlug}/mine`} onClick={handleItemClick}>
+                    <SidebarMenuButton asChild isActive={pathname === `/mine`} tooltip="Mine">
+                      <Link href={`/mine`} onClick={handleItemClick}>
                         <User className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Mine</span>
                       </Link>
@@ -174,10 +136,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === `/mailboxes/${mailboxSlug}/assigned`}
+                      isActive={pathname === `/assigned`}
                       tooltip="Assigned"
                     >
-                      <Link href={`/mailboxes/${mailboxSlug}/assigned`} onClick={handleItemClick}>
+                      <Link href={`/assigned`} onClick={handleItemClick}>
                         <Users className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Assigned</span>
                       </Link>
@@ -189,10 +151,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === `/mailboxes/${mailboxSlug}/unassigned`}
+                      isActive={pathname === `/unassigned`}
                       tooltip="Up for grabs"
                     >
-                      <Link href={`/mailboxes/${mailboxSlug}/unassigned`} onClick={handleItemClick}>
+                      <Link href={`/unassigned`} onClick={handleItemClick}>
                         <Ticket className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Up for grabs</span>
                       </Link>
@@ -202,8 +164,8 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                     )}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === `/mailboxes/${mailboxSlug}/all`} tooltip="All">
-                      <Link href={`/mailboxes/${mailboxSlug}/all`} onClick={handleItemClick}>
+                    <SidebarMenuButton asChild isActive={pathname === `/all`} tooltip="All">
+                      <Link href={`/all`} onClick={handleItemClick}>
                         <Inbox className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">All</span>
                       </Link>
@@ -219,10 +181,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === `/mailboxes/${mailboxSlug}/saved-replies`}
+                      isActive={pathname === `/saved-replies`}
                       tooltip="Saved replies"
                     >
-                      <Link href={`/mailboxes/${mailboxSlug}/saved-replies`} onClick={handleItemClick}>
+                      <Link href={`/saved-replies`} onClick={handleItemClick}>
                         <MessageSquareText className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Saved replies</span>
                       </Link>
@@ -237,29 +199,12 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === `/mailboxes/${mailboxSlug}/dashboard`}
+                      isActive={pathname === `/dashboard`}
                       tooltip="Dashboard"
                     >
-                      <Link href={`/mailboxes/${mailboxSlug}/dashboard`} onClick={handleItemClick}>
+                      <Link href={`/dashboard`} onClick={handleItemClick}>
                         <BarChart className="size-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip="Settings"
-                      onClick={() => {
-                        previousAppUrlRef.current = pathname;
-                      }}
-                    >
-                      <Link
-                        href={`/mailboxes/${mailboxSlug}/settings/${settingsItems[0].id}`}
-                        onClick={handleItemClick}
-                      >
-                        <SettingsIcon className="size-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">Settings</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

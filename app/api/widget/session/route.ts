@@ -81,7 +81,6 @@ export async function POST(request: Request) {
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        mailboxId: mailboxRecord.id,
         customerMetadata,
       });
     }

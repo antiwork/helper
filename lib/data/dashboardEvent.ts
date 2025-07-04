@@ -105,10 +105,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
       },
     },
     where: and(
-      inArray(
-        conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-      ),
+      inArray(conversationMessages.conversationId, db.select({ id: conversations.id }).from(conversations)),
       inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
       isNull(conversationMessages.deletedAt),
       before ? lt(conversationMessages.createdAt, before) : undefined,
@@ -140,10 +137,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
         },
       },
       where: and(
-        inArray(
-          conversationMessages.conversationId,
-          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-        ),
+        inArray(conversationMessages.conversationId, db.select({ id: conversations.id }).from(conversations)),
         isNotNull(conversationMessages.reactionType),
         isNotNull(conversationMessages.reactionCreatedAt),
         isNull(conversationMessages.deletedAt),
@@ -155,10 +149,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
     }),
     db.query.conversationEvents.findMany({
       where: and(
-        inArray(
-          conversationEvents.conversationId,
-          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
-        ),
+        inArray(conversationEvents.conversationId, db.select({ id: conversations.id }).from(conversations)),
         eq(conversationEvents.type, "request_human_support"),
         gte(conversationEvents.createdAt, earliestMessageTimestamp),
         before ? lt(conversationEvents.createdAt, before) : undefined,

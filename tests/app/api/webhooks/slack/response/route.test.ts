@@ -50,7 +50,7 @@ describe("POST /api/webhooks/slack/response", () => {
   it("handles VIP message action and returns 200", async () => {
     vi.mocked(verifySlackRequest).mockResolvedValue(true);
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       slackMessageTs: "1234567890.123456",
       slackChannel: "test-channel",

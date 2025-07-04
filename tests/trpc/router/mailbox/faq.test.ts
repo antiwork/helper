@@ -13,14 +13,13 @@ describe("faqsRouter", () => {
   describe("list", () => {
     it("lists FAQs for a mailbox", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { faq } = await faqsFactory.create(mailbox.id);
+      const { faq } = await faqsFactory.create();
       const caller = createCaller(createTestTRPCContext(user));
-      const faqs = await caller.mailbox.faqs.list({ mailboxSlug: mailbox.slug });
+      const faqs = await caller.mailbox.faqs.list();
       expect(faqs).toHaveLength(1);
       expect(faqs[0]).toMatchObject({
         id: faq.id,
         content: faq.content,
-        mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -32,16 +31,14 @@ describe("faqsRouter", () => {
       const { user, mailbox } = await userFactory.createRootUser();
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.faqs.create({
-        mailboxSlug: mailbox.slug,
         content: "Test Content",
       });
 
       const faqRow = await db.query.faqs.findFirst({
-        where: eq(faqs.mailboxId, mailbox.id),
+        where: eq(faqs.content, "Test Content"),
       });
       expect(faqRow).toMatchObject({
         content: "Test Content",
-        mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -54,10 +51,9 @@ describe("faqsRouter", () => {
   describe("update", () => {
     it("updates a FAQ", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { faq } = await faqsFactory.create(mailbox.id);
+      const { faq } = await faqsFactory.create();
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.faqs.update({
-        mailboxSlug: mailbox.slug,
         id: faq.id,
         content: "Updated Content",
       });
@@ -67,7 +63,6 @@ describe("faqsRouter", () => {
       });
       expect(faqRow).toMatchObject({
         content: "Updated Content",
-        mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -80,11 +75,10 @@ describe("faqsRouter", () => {
   describe("delete", () => {
     it("deletes a FAQ", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { faq } = await faqsFactory.create(mailbox.id);
+      const { faq } = await faqsFactory.create();
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.faqs.delete({
         id: faq.id,
-        mailboxSlug: mailbox.slug,
       });
 
       const faqRow = await db.query.faqs.findFirst({
@@ -98,7 +92,6 @@ describe("faqsRouter", () => {
       const caller = createCaller(createTestTRPCContext(user));
       await expect(
         caller.mailbox.faqs.delete({
-          mailboxSlug: mailbox.slug,
           id: 9999, // Non-existent ID
         }),
       ).rejects.toThrow(TRPCError);

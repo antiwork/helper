@@ -12,7 +12,6 @@ import {
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
-import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -39,9 +38,8 @@ const Conversation = dynamic(() => import("./conversation/conversation"), {
 });
 
 const Inbox = () => {
-  const params = useParams<{ mailbox_slug: string; category: Category }>();
+  const params = useParams<{ category: Category }>();
   const isStandalone = useMediaQuery({ query: "(display-mode: standalone)" });
-  const mailboxSlug = params.mailbox_slug;
   const {
     currentConversationSlug,
     conversationListData,
@@ -55,7 +53,7 @@ const Inbox = () => {
 
   const utils = api.useUtils();
   const isMobile = useIsMobile();
-  const { data: currentConversation } = useConversationQuery(mailboxSlug, currentConversationSlug) ?? {};
+  const { data: currentConversation } = useConversationQuery(currentConversationSlug) ?? {};
   const pageTitle = currentConversation
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];
@@ -76,15 +74,13 @@ const Inbox = () => {
     );
     void Promise.all(
       (nextConversations ?? []).map((c) =>
-        utils.mailbox.conversations.get.ensureData({ mailboxSlug, conversationSlug: c.slug }),
+        utils.mailbox.conversations.get.ensureData({ conversationSlug: c.slug }),
       ),
     );
   };
   useEffect(() => {
     if (!isPending) prefetchNextConversations(3);
   }, [isPending, currentConversationSlug]);
-
-  useSaveLatestMailboxSlug(mailboxSlug);
 
   if (isMobile) {
     return (

@@ -21,7 +21,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: mailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: 100,
@@ -51,7 +50,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: mailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: usage.promptTokens,
@@ -81,7 +79,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: placeholderMailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: usage.promptTokens,
@@ -129,7 +126,6 @@ describe("trackAIUsageEvent", () => {
         where: eq(aiUsageEvents.modelName, testCase.model),
       });
       expect(usageEvent).toMatchObject({
-        mailboxId: mailbox.id,
         modelName: testCase.model,
         queryType: "response_generator",
         inputTokensCount: testCase.inputTokens,

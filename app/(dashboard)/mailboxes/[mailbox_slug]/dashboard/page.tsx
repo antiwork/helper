@@ -8,10 +8,13 @@ type PageProps = {
 
 const DashboardPage = async (props: { params: Promise<PageProps> }) => {
   const params = await props.params;
-  const mailboxes = await api.mailbox.list();
-  const currentMailbox = mailboxes.find((m) => m.slug === params.mailbox_slug);
 
-  if (!currentMailbox) {
+  try {
+    const mailbox = await api.mailbox.get();
+    if (!mailbox || mailbox.slug !== params.mailbox_slug) {
+      return redirect("/mailboxes");
+    }
+  } catch {
     return redirect("/mailboxes");
   }
 

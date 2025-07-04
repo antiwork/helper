@@ -11,10 +11,9 @@ import { api } from "@/trpc/react";
 interface FlagAsBadActionProps {
   message: Message;
   conversationSlug: string;
-  mailboxSlug: string;
 }
 
-export const FlagAsBadAction = ({ message, conversationSlug, mailboxSlug }: FlagAsBadActionProps) => {
+export const FlagAsBadAction = ({ message, conversationSlug }: FlagAsBadActionProps) => {
   const [badReplyReason, setBadReplyReason] = useState("");
   const utils = api.useUtils();
   const { mutateAsync: flagAsBad } = api.mailbox.conversations.messages.flagAsBad.useMutation({
@@ -31,10 +30,9 @@ export const FlagAsBadAction = ({ message, conversationSlug, mailboxSlug }: Flag
     flagAsBad({
       id: message.id,
       reason,
-      mailboxSlug,
       conversationSlug,
     });
-    utils.mailbox.conversations.get.setData({ conversationSlug, mailboxSlug }, (data) => {
+    utils.mailbox.conversations.get.setData({ conversationSlug }, (data) => {
       return data
         ? {
             ...data,

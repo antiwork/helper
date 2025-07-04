@@ -28,7 +28,6 @@ export function CustomerFilter({
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   const { data: customers, isFetching } = api.mailbox.customers.list.useQuery({
-    mailboxSlug: params.mailbox_slug,
     search: debouncedSearchTerm,
   });
 

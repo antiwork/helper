@@ -20,7 +20,7 @@ describe("generateConversationSummary", () => {
 
   it("generates a summary for a conversation", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "Hello, I have a question about my order.",
@@ -88,7 +88,7 @@ describe("generateConversationSummary", () => {
 
   it("does not generate a summary for conversations with 2 or fewer messages", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "Test message",
@@ -108,8 +108,8 @@ describe("generateConversationSummary", () => {
 
   it("includes messages from merged conversations in the prompt", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation: mainConversation } = await conversationFactory.create(mailbox.id);
-    const { conversation: mergedConversation } = await conversationFactory.create(mailbox.id);
+    const { conversation: mainConversation } = await conversationFactory.create();
+    const { conversation: mergedConversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(mainConversation.id, {
       role: "user",

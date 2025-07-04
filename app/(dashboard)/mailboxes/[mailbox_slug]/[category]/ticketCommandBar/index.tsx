@@ -28,7 +28,7 @@ type TicketCommandBarProps = {
 };
 
 export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc, inputRef }: TicketCommandBarProps) {
-  const { conversationSlug, mailboxSlug } = useConversationContext();
+  const { conversationSlug } = useConversationContext();
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -41,7 +41,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     refetchOnMount: false,
   });
   const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
-    { mailboxSlug, conversationSlug },
+    { conversationSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
   const { assignTicket } = useAssignTicket();
@@ -50,7 +50,6 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const { data: previousReplies, refetch: refetchPreviousReplies } =
     api.mailbox.conversations.messages.previousReplies.useQuery(
       {
-        mailboxSlug,
         conversationSlug,
       },
       {

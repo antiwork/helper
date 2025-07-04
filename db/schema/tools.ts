@@ -5,8 +5,8 @@ import { withTimestamps } from "../lib/with-timestamps";
 import { mailboxes } from "./mailboxes";
 import { toolApis } from "./toolApis";
 
-type ToolAuthenticationMethod = "none" | "bearer_token";
-type ToolRequestMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type ToolAuthenticationMethod = "none" | "bearer_token";
+export type ToolRequestMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type ToolParameter = {
   name: string;
   description?: string;
@@ -25,7 +25,6 @@ export const tools = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
     description: text().notNull(),
-    mailboxId: bigint({ mode: "number" }).notNull(),
     slug: text().notNull(),
     requestMethod: text().notNull().$type<ToolRequestMethod>(),
     url: text().notNull(),
@@ -38,18 +37,10 @@ export const tools = pgTable(
     availableInChat: boolean().notNull().default(false),
     customerEmailParameter: text(),
   },
-  (table) => [
-    index("tools_mailbox_id_idx").on(table.mailboxId),
-    index("tools_tool_api_id_idx").on(table.toolApiId),
-    uniqueIndex("unique_slug_idx").on(table.slug),
-  ],
+  (table) => [index("tools_tool_api_id_idx").on(table.toolApiId), uniqueIndex("unique_slug_idx").on(table.slug)],
 ).enableRLS();
 
 export const toolsRelations = relations(tools, ({ one }) => ({
-  mailbox: one(mailboxes, {
-    fields: [tools.mailboxId],
-    references: [mailboxes.id],
-  }),
   toolApi: one(toolApis, {
     fields: [tools.toolApiId],
     references: [toolApis.id],

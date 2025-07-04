@@ -20,15 +20,9 @@ type GenerateKnowledgeBankDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   messageId: number;
-  mailboxSlug: string;
 };
 
-export const GenerateKnowledgeBankDialog = ({
-  open,
-  onOpenChange,
-  messageId,
-  mailboxSlug,
-}: GenerateKnowledgeBankDialogProps) => {
+export function GenerateKnowledgeBankDialog({ open, onOpenChange, messageId }: GenerateKnowledgeBankDialogProps) {
   const [editedContent, setEditedContent] = useState<string>("");
   const [suggestionReason, setSuggestionReason] = useState<string>("");
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -39,7 +33,6 @@ export const GenerateKnowledgeBankDialog = ({
 
   // Get the original entry content if we're updating
   const { data: existingEntries } = api.mailbox.faqs.list.useQuery(
-    { mailboxSlug },
     { enabled: open && updateEntryId !== null },
   );
 
@@ -123,7 +116,6 @@ export const GenerateKnowledgeBankDialog = ({
   useEffect(() => {
     if (open && messageId && !hasGenerated && !generateSuggestionMutation.isPending) {
       generateSuggestionMutation.mutate({
-        mailboxSlug,
         messageId,
       });
     }
@@ -151,13 +143,11 @@ export const GenerateKnowledgeBankDialog = ({
 
     if (updateEntryId) {
       updateKnowledgeMutation.mutate({
-        mailboxSlug,
         id: updateEntryId,
         content: editedContent,
       });
     } else {
       createKnowledgeMutation.mutate({
-        mailboxSlug,
         content: editedContent,
       });
     }
@@ -247,4 +237,4 @@ export const GenerateKnowledgeBankDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+}

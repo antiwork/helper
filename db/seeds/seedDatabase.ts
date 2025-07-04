@@ -76,24 +76,13 @@ export const seedDatabase = async () => {
 
     await createSettingsPageRecords(mailbox);
 
-    const { mailbox: mailbox2 } = await mailboxFactory.create({
-      name: "Flexile",
-      slug: "flexile",
-    });
-
-    const { mailbox: mailbox3 } = await mailboxFactory.create({
-      name: "Helper",
-      slug: "helper",
-    });
-
-    await generateSeedsFromFixtures(mailbox.id);
-    await generateSeedsFromFixtures(mailbox2.id);
-    await generateSeedsFromFixtures(mailbox3.id);
+    // Only seed for the single mailbox
+    await generateSeedsFromFixtures();
     const conversationRecords = await db.select().from(conversations);
     for (const conversation of conversationRecords) {
       if (conversation.emailFrom) {
         try {
-          await platformCustomerFactory.create(mailbox.id, { email: conversation.emailFrom });
+          await platformCustomerFactory.create({ email: conversation.emailFrom });
         } catch (error) {
           console.error("Seed process create platform customer factory failed:", error);
         }
@@ -182,39 +171,28 @@ type MessageDetail = {
   status: "queueing" | "sent" | "failed" | "draft" | "discarded" | null;
 };
 
-type Fixtures = Record<
-  string, // mailboxId
-  Record<
-    string, // conversationId
-    {
-      messages: MessageDetail[];
-      conversation: ConversationDetail;
-    }
-  >
->;
+type Fixture = {
+  messages: MessageDetail[];
+  conversation: ConversationDetail;
+};
+
+type Fixtures = Record<string, Fixture>;
 
 const fixturesPath = path.join(dirname(fileURLToPath(import.meta.url)), "fixtures");
-const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
+const fixtureData: Fixtures = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
   const content = JSON.parse(fs.readFileSync(path.join(fixturesPath, file), "utf8")) as Fixtures;
-  const [mailboxId, conversations] = Object.entries(content)[0]!;
-  return {
-    ...acc,
-    [mailboxId]: {
-      ...(acc[mailboxId] ?? {}),
-      ...conversations,
-    },
-  };
+  return { ...acc, ...content };
 }, {});
 
-const generateSeedsFromFixtures = async (mailboxId: number) => {
-  const fixtures = Object.entries(assertDefined(fixtureData[mailboxId]));
+const generateSeedsFromFixtures = async () => {
+  const fixtures = Object.entries(fixtureData);
 
   await Promise.all(
     fixtures
       .sort(([keyA], [keyB]) => parseInt(keyA) - parseInt(keyB))
       .map(async ([, fixture], fixtureIndex) => {
         const lastUserEmailCreatedAt = subHours(new Date(), (fixtures.length - fixtureIndex) * 8);
-        const { conversation } = await conversationFactory.create(mailboxId, {
+        const { conversation } = await conversationFactory.create({
           ...fixture.conversation,
           lastUserEmailCreatedAt,
           closedAt: fixture.conversation.isClosed ? addHours(lastUserEmailCreatedAt, 8) : null,
@@ -251,7 +229,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   const gumroadDevToken = "36a9bb0b88ad771ead2ada56a9be84e4";
 
   await toolsFactory.create({
-    mailboxId: mailbox.id,
     name: "Send reset password",
     description: "Send reset password email to the user",
     slug: "reset_password",
@@ -270,7 +247,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   });
 
   await toolsFactory.create({
-    mailboxId: mailbox.id,
     name: "Resend last receipt",
     description: "Resend the last receipt email to the user",
     slug: "resend_last_receipt",
@@ -288,18 +264,17 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
     authenticationToken: gumroadDevToken,
   });
 
-  await faqsFactory.create(mailbox.id, {
+  await faqsFactory.create({
     content: "1. You are a helpful customer support assistant.",
   });
 
-  await faqsFactory.create(mailbox.id, {
+  await faqsFactory.create({
     content: "Deleting your account can be done from Settings > Account > Delete Account.",
   });
 
   await db
     .insert(mailboxesMetadataApi)
     .values({
-      mailboxId: mailbox.id,
       url: faker.internet.url(),
       isEnabled: true,
       hmacSecret: crypto.randomUUID().replace(/-/g, ""),

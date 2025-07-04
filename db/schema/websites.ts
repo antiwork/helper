@@ -16,16 +16,11 @@ export const websites = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    mailboxId: bigint({ mode: "number" }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     url: text("url").notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => [
-    index("websites_created_at_idx").on(table.createdAt),
-    index("websites_mailbox_id_idx").on(table.mailboxId),
-    index("websites_url_idx").on(table.url),
-  ],
+  (table) => [index("websites_created_at_idx").on(table.createdAt), index("websites_url_idx").on(table.url)],
 ).enableRLS();
 
 export const websitePages = pgTable(
@@ -73,10 +68,6 @@ export const websiteCrawls = pgTable(
 ).enableRLS();
 
 export const websitesRelations = relations(websites, ({ one, many }) => ({
-  mailbox: one(mailboxes, {
-    fields: [websites.mailboxId],
-    references: [mailboxes.id],
-  }),
   pages: many(websitePages),
   crawls: many(websiteCrawls),
 }));

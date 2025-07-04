@@ -66,7 +66,7 @@ describe("disconnectSlack", () => {
       },
     });
 
-    await disconnectSlack(mailbox.id);
+    await disconnectSlack();
 
     expect(uninstallSlackApp).toHaveBeenCalledWith("xoxb-12345");
 
@@ -96,7 +96,7 @@ describe("disconnectSlack", () => {
       new Error("Failed to uninstall Slack app: App not installed in workspace"),
     );
 
-    await disconnectSlack(mailbox.id);
+    await disconnectSlack();
 
     expect(uninstallSlackApp).toHaveBeenCalledWith("xoxb-12345");
 
@@ -122,7 +122,7 @@ describe("disconnectSlack", () => {
       },
     });
 
-    await disconnectSlack(mailbox.id);
+    await disconnectSlack();
 
     expect(uninstallSlackApp).not.toHaveBeenCalled();
   });

@@ -8,7 +8,6 @@ import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 type AutoCloseReport = {
   totalProcessed: number;
   mailboxReports: {
-    mailboxId: number;
     mailboxName: string;
     inactiveConversations: { id: number; slug: string }[];
     conversationsClosed: number;
@@ -18,7 +17,6 @@ type AutoCloseReport = {
 };
 
 type MailboxAutoCloseReport = {
-  mailboxId: number;
   mailboxName: string;
   inactiveConversations: { id: number; slug: string }[];
   conversationsClosed: number;
@@ -32,44 +30,26 @@ export async function closeInactiveConversations(): Promise<AutoCloseReport> {
     status: "",
   };
 
-  const enabledMailboxes = await db.query.mailboxes.findMany({
+  const mailbox = await db.query.mailboxes.findFirst({
     where: eq(mailboxes.autoCloseEnabled, true),
-    columns: {
-      id: true,
-      name: true,
-    },
   });
 
-  if (enabledMailboxes.length === 0) {
-    report.status = "No mailboxes with auto-close enabled found";
+  if (!mailbox) {
+    report.status = "No mailbox with auto-close enabled found";
     return report;
   }
-  for (const mailbox of enabledMailboxes) {
-    await triggerEvent("conversations/auto-close.process-mailbox", { mailboxId: mailbox.id });
-  }
 
-  report.status = `Scheduled auto-close check for ${enabledMailboxes.length} mailboxes`;
+  const mailboxReport = await closeInactiveConversationsForMailbox(mailbox);
+  report.mailboxReports.push(mailboxReport);
+  report.totalProcessed = 1;
+  report.status = `Processed auto-close for mailbox: ${mailbox.name}`;
   return report;
 }
 
-export async function closeInactiveConversationsForMailbox({
-  mailboxId,
-}: {
-  mailboxId: number;
-}): Promise<MailboxAutoCloseReport> {
-  const mailbox = assertDefinedOrRaiseNonRetriableError(
-    await db.query.mailboxes.findFirst({
-      where: and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true)),
-      columns: {
-        id: true,
-        name: true,
-        autoCloseDaysOfInactivity: true,
-      },
-    }),
-  );
-
+export async function closeInactiveConversationsForMailbox(
+  mailbox: typeof mailboxes.$inferSelect,
+): Promise<MailboxAutoCloseReport> {
   const mailboxReport: MailboxAutoCloseReport = {
-    mailboxId: mailbox.id,
     mailboxName: mailbox.name,
     inactiveConversations: [],
     conversationsClosed: 0,
@@ -84,11 +64,7 @@ export async function closeInactiveConversationsForMailbox({
   cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
 
   const conversationsToClose = await db.query.conversations.findMany({
-    where: and(
-      eq(conversations.mailboxId, mailbox.id),
-      eq(conversations.status, "open"),
-      lt(conversations.lastUserEmailCreatedAt, cutoffDate),
-    ),
+    where: and(eq(conversations.status, "open"), lt(conversations.lastUserEmailCreatedAt, cutoffDate)),
     columns: {
       id: true,
       slug: true,

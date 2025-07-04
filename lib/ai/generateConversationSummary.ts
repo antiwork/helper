@@ -33,9 +33,7 @@ export const generateConversationSummary = async (
   conversation: typeof conversations.$inferSelect,
   { force }: { force?: boolean } = {},
 ) => {
-  const mailbox = assertDefinedOrRaiseNonRetriableError(
-    await db.query.mailboxes.findFirst({ where: eq(mailboxes.id, conversation.mailboxId) }),
-  );
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await db.query.mailboxes.findFirst({}));
 
   const emails = await findOriginalAndMergedMessages(conversation.id, (condition) =>
     db.query.conversationMessages.findMany({

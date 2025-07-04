@@ -42,15 +42,14 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
       savingIndicator.setState("error");
       toast({
-        title: "Error updating theme",
+        title: "Error updating preferences",
         description: error.message,
-        variant: "destructive",
       });
     },
   });
@@ -59,7 +58,6 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     if (!isEnabled && !mailbox.preferences?.theme) return;
     savingIndicator.setState("saving");
     update({
-      mailboxSlug: mailbox.slug,
       preferences: { theme: isEnabled ? mapValues(theme, (value) => `#${normalizeHex(value)}`) : null },
     });
   }, 500);

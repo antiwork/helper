@@ -54,7 +54,7 @@ export const addUser = async (
   if (error) throw error;
 };
 
-export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
+export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
   const users = await db
     .select({
       id: authUsers.id,
@@ -68,7 +68,7 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
   return users.map((user) => {
-    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
+    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[0] ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
 
     return {
@@ -84,7 +84,6 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
 
 export const updateUserMailboxData = async (
   userId: string,
-  mailboxId: number,
   updates: {
     displayName?: string;
     role?: UserRole;
@@ -103,7 +102,7 @@ export const updateUserMailboxData = async (
 
   // Only update the fields that were provided, keep the rest
   const updatedMailboxData = {
-    ...mailboxAccess[mailboxId],
+    ...mailboxAccess[0],
     ...(updates.role && { role: updates.role }),
     ...(updates.keywords && { keywords: updates.keywords }),
     updatedAt: new Date().toISOString(),
@@ -118,7 +117,7 @@ export const updateUserMailboxData = async (
       ...(updates.displayName && { display_name: updates.displayName }),
       mailboxAccess: {
         ...mailboxAccess,
-        [mailboxId]: updatedMailboxData,
+        [0]: updatedMailboxData,
       },
     },
   });

@@ -27,7 +27,7 @@ interface ChatRequestBody {
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload, mailbox: Mailbox) => {
-  const conversation = await getConversationBySlugAndMailbox(conversationSlug, mailbox.id);
+  const conversation = await getConversationBySlugAndMailbox(conversationSlug);
 
   if (!conversation) {
     throw new Error("Conversation not found");

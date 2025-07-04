@@ -40,7 +40,6 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
       .onConflictDoNothing()
       .returning();
 
-    // message will be null if we've already handled an event for this message due to the onConflictDoNothing
     message = createdMessage;
   }
 
@@ -48,26 +47,11 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     return;
   }
 
-  const mailbox = mailboxInfo.mailboxes.find(({ id }) => id === agentThread.mailboxId) ?? mailboxInfo.currentMailbox;
+  // Single-tenant: always use the first mailbox
+  const mailbox = mailboxInfo.currentMailbox ?? mailboxInfo.mailboxes[0];
   if (!mailbox) {
     await askWhichMailbox(event, mailboxInfo.mailboxes);
     return;
-  }
-
-  const mentionedMailbox = event.text ? findMentionedMailbox(event.text, mailboxInfo.mailboxes, mailbox) : null;
-
-  if (!agentThread.mailboxId || mentionedMailbox) {
-    const mailboxToUse = mentionedMailbox || mailbox;
-    await db.update(agentThreads).set({ mailboxId: mailboxToUse.id }).where(eq(agentThreads.id, agentThread.id));
-
-    if (mentionedMailbox && mailboxInfo.mailboxes.length > 1) {
-      await postMailboxSwitchMessage(
-        new WebClient(assertDefined(mailboxToUse.slackBotToken)),
-        event.channel,
-        event.thread_ts ?? event.ts,
-        mailboxToUse.name,
-      );
-    }
   }
 
   const client = new WebClient(assertDefined(mailbox.slackBotToken));

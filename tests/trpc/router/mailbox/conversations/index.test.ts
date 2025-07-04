@@ -43,13 +43,13 @@ describe("conversationsRouter", () => {
         slackBotToken: "slackBotToken",
         slackAlertChannel: "slackAlertChannel",
       });
-      const { conversation } = await conversationFactory.create(mailbox.id);
-      const { conversation: assignedConversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create();
+      const { conversation: assignedConversation } = await conversationFactory.create({
         assignedToId: user.id,
       });
 
       const caller = createCaller(createTestTRPCContext(user));
-      expect(await caller.mailbox.conversations.list({ ...defaultParams, mailboxSlug: mailbox.slug })).toMatchObject({
+      expect(await caller.mailbox.conversations.list({ ...defaultParams })).toMatchObject({
         conversations: expect.arrayContaining([
           expect.objectContaining({ slug: conversation.slug }),
           expect.objectContaining({ slug: assignedConversation.slug }),
@@ -59,7 +59,6 @@ describe("conversationsRouter", () => {
       expect(
         await caller.mailbox.conversations.list({
           ...defaultParams,
-          mailboxSlug: mailbox.slug,
           category: "mine",
         }),
       ).toMatchObject({
@@ -72,30 +71,30 @@ describe("conversationsRouter", () => {
     it("sorts by platformCustomers.value with nulls last", async () => {
       const { user } = await userFactory.createRootUser();
       const { mailbox } = await mailboxFactory.create();
-      await mailboxMetadataApiFactory.create(mailbox.id);
+      await mailboxMetadataApiFactory.create();
 
-      await conversationFactory.create(mailbox.id, {
+      await conversationFactory.create({
         emailFrom: "high@example.com",
       });
-      await conversationFactory.create(mailbox.id, {
+      await conversationFactory.create({
         emailFrom: "low@example.com",
       });
-      await conversationFactory.create(mailbox.id, {
+      await conversationFactory.create({
         emailFrom: "no-value@example.com",
       });
 
-      await platformCustomerFactory.create(mailbox.id, {
+      await platformCustomerFactory.create({
         email: "high@example.com",
         value: "1000",
       });
-      await platformCustomerFactory.create(mailbox.id, {
+      await platformCustomerFactory.create({
         email: "low@example.com",
         value: "500",
       });
       // No platformCustomer for no-value@example.com
 
       const caller = createCaller(createTestTRPCContext(user));
-      const result = await caller.mailbox.conversations.list({ ...defaultParams, mailboxSlug: mailbox.slug });
+      const result = await caller.mailbox.conversations.list({ ...defaultParams });
 
       expect(result.conversations.map((c) => c.emailFrom)).toEqual([
         "high@example.com",
@@ -109,11 +108,11 @@ describe("conversationsRouter", () => {
     it("returns the total number of conversations", async () => {
       const { user } = await userFactory.createRootUser();
       const { mailbox } = await mailboxFactory.create();
-      await conversationFactory.create(mailbox.id);
-      await conversationFactory.create(mailbox.id);
+      await conversationFactory.create();
+      await conversationFactory.create();
 
       const caller = createCaller(createTestTRPCContext(user));
-      const result = await caller.mailbox.conversations.count({ ...defaultParams, mailboxSlug: mailbox.slug });
+      const result = await caller.mailbox.conversations.count({ ...defaultParams });
 
       expect(result.total).toBe(2);
     });
@@ -122,11 +121,10 @@ describe("conversationsRouter", () => {
   describe("update", () => {
     it("updates an existing conversation", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
 
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.update({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
         status: "closed",
       });
@@ -143,7 +141,6 @@ describe("conversationsRouter", () => {
       expect(updatedConversation!.closedAt).toBeInstanceOf(Date);
 
       await caller.mailbox.conversations.update({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
         assignedToId: user.id,
       });
@@ -165,11 +162,10 @@ describe("conversationsRouter", () => {
 
     it("updates status without setting closedAt or calling triggerEvent when not closed", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
 
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.update({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
         status: "spam",
       });
@@ -191,8 +187,8 @@ describe("conversationsRouter", () => {
 
   describe("undo", () => {
     it("undoes the provided email", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { user } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create({
         status: "closed",
       });
       const { message } = await conversationMessagesFactory.createEnqueued(conversation.id);
@@ -200,7 +196,6 @@ describe("conversationsRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.undo({
-        mailboxSlug: mailbox.slug,
         conversationSlug: conversation.slug,
         emailId: message.id,
       });

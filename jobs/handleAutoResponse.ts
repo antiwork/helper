@@ -6,6 +6,7 @@ import { checkTokenCountAndSummarizeIfNeeded, generateDraftResponse, respondWith
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata } from "@/lib/data/retrieval";
@@ -15,23 +16,19 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
     .findFirst({
       where: eq(conversationMessages.id, messageId),
       with: {
-        conversation: {
-          with: {
-            mailbox: true,
-          },
-        },
+        conversation: true,
       },
     })
     .then(assertDefined);
+
+  const mailbox = assertDefined(await getMailbox());
 
   if (message.conversation.status === "spam") return { message: "Skipped - conversation is spam" };
   if (message.role === "staff") return { message: "Skipped - message is from staff" };
 
   await ensureCleanedUpText(message);
 
-  const customerMetadata = message.emailFrom
-    ? await fetchMetadata(message.emailFrom, message.conversation.mailbox.slug)
-    : null;
+  const customerMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom, mailbox.slug) : null;
   if (customerMetadata) {
     await db
       .update(conversationMessages)
@@ -41,7 +38,6 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
     if (message.emailFrom) {
       await upsertPlatformCustomer({
         email: message.emailFrom,
-        mailboxId: message.conversation.mailboxId,
         customerMetadata: customerMetadata.metadata,
       });
     }
@@ -49,8 +45,8 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
 
   if (!message.conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
-  if (message.conversation.mailbox.preferences?.autoRespondEmailToChat === "draft") {
-    const aiDraft = await generateDraftResponse(message.conversation.id, message.conversation.mailbox);
+  if (mailbox.preferences?.autoRespondEmailToChat === "draft") {
+    const aiDraft = await generateDraftResponse(message.conversation.id, mailbox);
     return { message: "Draft response generated", draftId: aiDraft.id };
   }
 
@@ -64,7 +60,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
 
   const response = await respondWithAI({
     conversation: message.conversation,
-    mailbox: message.conversation.mailbox,
+    mailbox,
     userEmail: message.emailFrom,
     message: {
       id: message.id.toString(),

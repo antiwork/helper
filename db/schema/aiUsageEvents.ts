@@ -1,7 +1,6 @@
 import { relations } from "drizzle-orm";
 import { bigint, index, integer, numeric, pgTable, varchar } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
-import { mailboxes } from "./mailboxes";
 
 export const aiUsageEvents = pgTable(
   "mailboxes_aiusageevent",
@@ -31,11 +30,9 @@ export const aiUsageEvents = pgTable(
     outputTokensCount: integer().notNull(),
     cachedTokensCount: integer().notNull().default(0),
     cost: numeric({ precision: 12, scale: 7 }).notNull(),
-    mailboxId: bigint({ mode: "number" }),
   },
   (table) => [
     index("mailboxes_aiusageevent_created_at_74823d57").on(table.createdAt.asc().nullsLast()),
-    index("mailboxes_aiusageevent_mailbox_id_a4908f79").on(table.mailboxId.asc().nullsLast()),
     index("mailboxes_aiusageevent_model_name_84b8ca7a").on(table.modelName.asc().nullsLast()),
     // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
     index("mailboxes_aiusageevent_model_name_84b8ca7a_like").on(table.modelName.asc().nullsLast()),
@@ -45,9 +42,4 @@ export const aiUsageEvents = pgTable(
   ],
 ).enableRLS();
 
-export const aiUsageEventsRelations = relations(aiUsageEvents, ({ one }) => ({
-  mailbox: one(mailboxes, {
-    fields: [aiUsageEvents.mailboxId],
-    references: [mailboxes.id],
-  }),
-}));
+// No mailbox relation needed for single-tenant

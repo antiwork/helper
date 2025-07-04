@@ -9,11 +9,9 @@ import { ToolItem } from "./toolItem";
 export const MessageThread = ({
   conversation,
   onPreviewAttachment,
-  mailboxSlug,
 }: {
   conversation: ConversationWithNewMessages;
   onPreviewAttachment: (message: Message, index: number) => void;
-  mailboxSlug: string;
 }) => {
   return (
     <div className="flex h-full flex-col">
@@ -37,7 +35,6 @@ export const MessageThread = ({
             <MessageItem
               key={`${message.type}-${message.id}`}
               message={message}
-              mailboxSlug={mailboxSlug}
               conversation={conversation}
               onPreviewAttachment={
                 message.type === "message" && message.files.length

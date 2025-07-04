@@ -6,11 +6,13 @@ import { conversationMessages, conversations, platformCustomers } from "@/db/sch
 import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
 import { getActionButtons, OPEN_ATTACHMENT_COLOR, RESOLVED_ATTACHMENT_COLOR } from "@/lib/slack/shared";
 
 export const updateVipMessageOnClose = async (conversationId: number, byUserId: string | null) => {
+  const mailbox = await getMailbox();
   const vipMessages = await db.query.conversationMessages.findMany({
     where: and(
       eq(conversationMessages.conversationId, conversationId),
@@ -18,7 +20,7 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
       not(isNull(conversationMessages.slackMessageTs)),
     ),
     orderBy: [desc(conversationMessages.createdAt)],
-    with: { conversation: { with: { mailbox: true } } },
+    with: { conversation: true },
   });
 
   if (vipMessages.length === 0) return;
@@ -29,15 +31,15 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
   });
 
   for (const vipMessage of vipMessages) {
-    if (vipMessage.slackMessageTs && vipMessage.conversation.mailbox.slackBotToken) {
+    if (vipMessage.slackMessageTs && mailbox?.slackBotToken) {
       const response = responses.find((r) => r.responseToId === vipMessage.id);
       const cleanedUpText = response ? await ensureCleanedUpText(response) : "";
       await updateVipMessageInSlack({
-        conversation: vipMessage.conversation,
+        conversation: { ...vipMessage.conversation, mailbox },
         originalMessage: vipMessage.cleanedUpText ?? "",
         replyMessage: cleanedUpText,
-        slackBotToken: vipMessage.conversation.mailbox.slackBotToken,
-        slackChannel: vipMessage.conversation.mailbox.vipChannelId!,
+        slackBotToken: mailbox.slackBotToken,
+        slackChannel: mailbox.vipChannelId!,
         slackMessageTs: vipMessage.slackMessageTs,
         user: byUserId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, byUserId) }) : null,
         closed: true,
@@ -181,7 +183,7 @@ export const updateVipMessageInSlack = async ({
   }
 
   const emailFrom = conversation.emailFrom ?? "Unknown";
-  const platformCustomer = await getPlatformCustomer(conversation.mailboxId, emailFrom);
+  const platformCustomer = await getPlatformCustomer(emailFrom);
   const customerLinks = platformCustomer?.links
     ? Object.entries(platformCustomer.links).map(([key, value]) => `<${value}|${key}>`)
     : [];

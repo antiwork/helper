@@ -184,7 +184,6 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
     return `Valid gmail support email record not found for ${data.emailAddress}`;
   }
   Sentry.setContext("gmailSupportEmail info", {
-    mailboxId: mailbox.id,
     gmailSupportEmailId: gmailSupportEmail.id,
     gmailSupportEmailHistoryId: gmailSupportEmail.historyId,
     dataEmailAddress: data.emailAddress,
@@ -285,7 +284,6 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         return await db
           .insert(conversations)
           .values({
-            mailboxId: mailbox.id,
             emailFrom: parsedEmailFrom.address,
             emailFromName: parsedEmailFrom.name,
             subject: parsedEmail.subject,

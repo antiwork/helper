@@ -27,7 +27,7 @@ const GitHubRepositories = ({
   const [isLoading, setIsLoading] = useState(true);
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
     },
     onError: (error) => {
       toast({
@@ -41,11 +41,7 @@ const GitHubRepositories = ({
     const fetchRepositories = async () => {
       try {
         setIsLoading(true);
-        setRepositories(
-          await utils.client.mailbox.github.repositories.query({
-            mailboxSlug: mailbox.slug,
-          }),
-        );
+        setRepositories(await utils.client.mailbox.github.repositories.query());
       } catch (error) {
         captureExceptionAndLog(error);
         toast({
@@ -66,7 +62,7 @@ const GitHubRepositories = ({
 
   const handleRepoChange = (fullName: string) => {
     const [repoOwner, repoName] = fullName.split("/");
-    update({ mailboxSlug: mailbox.slug, githubRepoOwner: repoOwner, githubRepoName: repoName });
+    update({ githubRepoOwner: repoOwner, githubRepoName: repoName });
   };
 
   return (
@@ -113,7 +109,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
 
   const onDisconnectGitHub = async () => {
     try {
-      await disconnectGitHub({ mailboxSlug: mailbox.slug });
+      await disconnectGitHub();
       setGitHubConnected(false);
       toast({
         title: "GitHub disconnected successfully",

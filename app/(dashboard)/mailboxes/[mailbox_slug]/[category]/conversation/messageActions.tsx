@@ -52,14 +52,12 @@ export const useSendDisabled = (message: string | undefined, conversationStatus?
 
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
-  const { data: conversation, mailboxSlug, updateStatus } = useConversationContext();
+  const { data: conversation, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
 
-  const { data: mailboxPreferences } = api.mailbox.get.useQuery({
-    mailboxSlug,
-  });
+  const { data: mailboxPreferences } = api.mailbox.get.useQuery();
 
   const triggerMailboxConfetti = () => {
     if (!mailboxPreferences?.preferences?.confetti) return;
@@ -69,7 +67,6 @@ export const MessageActions = () => {
   const replyMutation = api.mailbox.conversations.messages.reply.useMutation({
     onSuccess: async (_, variables) => {
       await utils.mailbox.conversations.get.invalidate({
-        mailboxSlug,
         conversationSlug: variables.conversationSlug,
       });
     },
@@ -239,7 +236,6 @@ export const MessageActions = () => {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
       const { id: emailId } = await replyMutation.mutateAsync({
-        mailboxSlug,
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
@@ -271,7 +267,6 @@ export const MessageActions = () => {
         try {
           // Use direct update to avoid redundant toast since we're already showing "Replied and closed"
           await utils.client.mailbox.conversations.update.mutate({
-            mailboxSlug,
             conversationSlug,
             status: "closed",
           });
@@ -321,7 +316,6 @@ export const MessageActions = () => {
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
-                    mailboxSlug,
                     conversationSlug,
                     emailId,
                   });
@@ -337,7 +331,7 @@ export const MessageActions = () => {
                     title: "Failed to unsend email",
                   });
                 } finally {
-                  utils.mailbox.conversations.get.invalidate({ mailboxSlug, conversationSlug });
+                  utils.mailbox.conversations.get.invalidate({ conversationSlug });
                   navigateToConversation(conversation.slug);
                 }
               }}
@@ -472,7 +466,6 @@ export const MessageActions = () => {
           open={showKnowledgeBankDialog}
           onOpenChange={setShowKnowledgeBankDialog}
           messageId={lastSentMessageId}
-          mailboxSlug={mailboxSlug}
         />
       )}
     </div>

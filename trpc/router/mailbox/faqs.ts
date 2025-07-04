@@ -19,12 +19,10 @@ export const faqsRouter = {
         enabled: faqs.enabled,
         suggested: faqs.suggested,
         suggestedReplacementForId: faqs.suggestedReplacementForId,
-        mailboxId: faqs.mailboxId,
         createdAt: faqs.createdAt,
         updatedAt: faqs.updatedAt,
       })
       .from(faqs)
-      .where(eq(faqs.mailboxId, ctx.mailbox.id))
       .orderBy(asc(faqs.content));
   }),
   create: mailboxProcedure
@@ -35,13 +33,9 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       return await db.transaction(async (tx) => {
-        const faq = await tx
-          .insert(faqs)
-          .values({ mailboxId: ctx.mailbox.id, content: input.content })
-          .returning()
-          .then(takeUniqueOrThrow);
+        const faq = await tx.insert(faqs).values({ content: input.content }).returning().then(takeUniqueOrThrow);
 
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+        await resetMailboxPromptUpdatedAt(tx);
 
         await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
@@ -61,7 +55,7 @@ export const faqsRouter = {
         const faq = await tx
           .update(faqs)
           .set({ content: input.content, enabled: input.enabled, suggested: false })
-          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .where(eq(faqs.id, input.id))
           .returning()
           .then(takeUniqueOrThrow);
 
@@ -72,7 +66,7 @@ export const faqsRouter = {
           });
         }
 
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+        await resetMailboxPromptUpdatedAt(tx);
 
         await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
@@ -81,17 +75,13 @@ export const faqsRouter = {
     }),
   delete: mailboxProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
     return await db.transaction(async (tx) => {
-      const [faq] = await tx
-        .select()
-        .from(faqs)
-        .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
-        .limit(1);
+      const [faq] = await tx.select().from(faqs).where(eq(faqs.id, input.id)).limit(1);
       if (!faq) {
         throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
       }
 
       await tx.delete(faqs).where(eq(faqs.id, faq.id));
-      await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+      await resetMailboxPromptUpdatedAt(tx);
     });
   }),
   accept: mailboxProcedure
@@ -103,10 +93,7 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const knowledge = await db.query.faqs.findFirst({
-        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
-        with: {
-          mailbox: true,
-        },
+        where: and(eq(faqs.id, input.id)),
       });
 
       if (!knowledge) {
@@ -124,10 +111,7 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const knowledge = await db.query.faqs.findFirst({
-        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
-        with: {
-          mailbox: true,
-        },
+        where: and(eq(faqs.id, input.id)),
       });
 
       if (!knowledge) {
@@ -146,19 +130,11 @@ export const faqsRouter = {
       const message = await db.query.conversationMessages.findFirst({
         where: and(eq(conversationMessages.id, input.messageId), eq(conversationMessages.role, "staff")),
         with: {
-          conversation: {
-            with: {
-              mailbox: true,
-            },
-          },
+          conversation: true,
         },
       });
 
-      if (message?.conversation.mailboxId !== ctx.mailbox.id) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Message not found in this mailbox" });
-      }
-
-      const messageContent = message.body || message.cleanedUpText || "";
+      const messageContent = message?.body || message?.cleanedUpText || "";
       if (!messageContent.trim()) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Message content is empty" });
       }

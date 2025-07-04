@@ -15,15 +15,14 @@ export default async function InboxLayout({
   params: Promise<{ mailbox_slug: string }>;
 }) {
   try {
-    const mailboxSlug = (await params).mailbox_slug;
-    const { preferences } = await api.mailbox.get({ mailboxSlug });
+    const { preferences } = await api.mailbox.get();
 
     return (
-      <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
+      <HelperProvider host={env.AUTH_URL} mailboxSlug="default" showToggleButton>
         <SidebarProvider>
           <InboxClientLayout theme={preferences?.theme}>
             <div className="flex h-svh w-full">
-              <AppSidebar mailboxSlug={mailboxSlug} />
+              <AppSidebar />
               <main className="flex-1 min-w-0">{children}</main>
             </div>
           </InboxClientLayout>

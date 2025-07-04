@@ -51,7 +51,7 @@ describe("getNewGmailThreads", () => {
       data: { threads: mockThreads },
     } as any);
 
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
     });
     await conversationMessagesFactory.create(conversation.id, {

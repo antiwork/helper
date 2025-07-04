@@ -15,39 +15,18 @@ const formatDateRange = (start: Date, end: Date) => {
 };
 
 export async function generateWeeklyReports() {
-  const mailboxesList = await db.query.mailboxes.findMany({
-    columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
-  });
-
-  if (!mailboxesList.length) return;
-
-  for (const mailbox of mailboxesList) {
-    await triggerEvent("reports/weekly", { mailboxId: mailbox.id });
-  }
+  const mailbox = await db.query.mailboxes.findFirst({});
+  if (!mailbox) return;
+  await generateMailboxWeeklyReport(mailbox);
 }
 
-export const generateMailboxWeeklyReport = async ({ mailboxId }: { mailboxId: number }) => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, mailboxId),
-  });
-  if (!mailbox) {
-    return;
-  }
-
-  // drizzle doesn't appear to do any type narrowing, even though we've filtered for non-null values
-  // @see https://github.com/drizzle-team/drizzle-orm/issues/2956
-  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-    return;
-  }
-
-  const result = await generateMailboxReport({
+export const generateMailboxWeeklyReport = async (mailbox: typeof mailboxes.$inferSelect) => {
+  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) return;
+  return await generateMailboxReport({
     mailbox,
     slackBotToken: mailbox.slackBotToken,
     slackAlertChannel: mailbox.slackAlertChannel,
   });
-
-  return result;
 };
 
 export async function generateMailboxReport({

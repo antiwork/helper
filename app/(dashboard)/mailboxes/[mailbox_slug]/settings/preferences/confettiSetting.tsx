@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 import { triggerConfetti } from "@/components/confetti";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
@@ -16,7 +17,7 @@ const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
@@ -31,12 +32,17 @@ const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   const handleSwitchChange = (checked: boolean) => {
     setConfettiEnabled(checked);
     savingIndicator.setState("saving");
-    update({ mailboxSlug: mailbox.slug, preferences: { confetti: checked } });
+    update({ preferences: { confetti: checked } });
   };
 
   const handleTestConfetti = () => {
     triggerConfetti();
   };
+
+  const save = useDebouncedCallback(() => {
+    savingIndicator.setState("saving");
+    update({ preferences: { confetti: confettiEnabled } });
+  }, 500);
 
   return (
     <div className="relative">

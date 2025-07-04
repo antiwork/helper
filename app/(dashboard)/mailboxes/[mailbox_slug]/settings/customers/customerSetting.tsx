@@ -24,13 +24,13 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
 
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
       savingIndicator.setState("error");
       toast({
-        title: "Error updating VIP settings",
+        title: "Error updating customer settings",
         description: error.message,
       });
     },
@@ -38,20 +38,17 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
 
   const save = useDebouncedCallback(() => {
     savingIndicator.setState("saving");
-    if (isEnabled) {
-      update({
-        mailboxSlug: mailbox.slug,
-        vipThreshold: Number(threshold),
-        vipExpectedResponseHours: responseHours ? Number(responseHours) : null,
-      });
-    } else {
-      update({
-        mailboxSlug: mailbox.slug,
-        vipThreshold: null,
-        vipChannelId: null,
-        vipExpectedResponseHours: null,
-      });
-    }
+    update({
+      vipThreshold: isEnabled ? Number(threshold) : null,
+      vipExpectedResponseHours: responseHours ? Number(responseHours) : null,
+    });
+  }, 500);
+
+  const saveChannel = useDebouncedCallback((vipChannelId: string | null) => {
+    savingIndicator.setState("saving");
+    update({
+      vipChannelId: vipChannelId,
+    });
   }, 500);
 
   useOnChange(() => {
@@ -128,7 +125,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                       id="vipChannel"
                       selectedChannelId={mailbox.vipChannelId ?? undefined}
                       mailbox={mailbox}
-                      onChange={(vipChannelId) => update({ mailboxSlug: mailbox.slug, vipChannelId })}
+                      onChange={(vipChannelId) => saveChannel(vipChannelId)}
                     />
                   ) : (
                     <Alert>

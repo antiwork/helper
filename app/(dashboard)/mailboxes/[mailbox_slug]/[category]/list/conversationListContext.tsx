@@ -11,7 +11,6 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 
 type ConversationListContextType = {
-  mailboxSlug: string;
   conversationListData: RouterOutputs["mailbox"]["conversations"]["list"] | null;
   isPending: boolean;
   isFetchingNextPage: boolean;
@@ -103,7 +102,7 @@ export const ConversationListContextProvider = ({
       };
     });
     if (!input.status || input.status[0] === "open") {
-      utils.mailbox.openCount.setData({ mailboxSlug: input.mailboxSlug }, (data) => {
+      utils.mailbox.openCount.setData(undefined, (data) => {
         if (!data) return data;
         return {
           ...data,
@@ -135,7 +134,7 @@ export const ConversationListContextProvider = ({
       assignedToAI: boolean;
     };
   }>(
-    conversationsListChannelId(input.mailboxSlug),
+    conversationsListChannelId(),
     "conversation.statusChanged",
     ({ data: { id, status, assignedToId, previousValues } }) => {
       // Currently this just removes and decrements the count; ideally we should also insert and increment the count when added to the current category
@@ -159,7 +158,6 @@ export const ConversationListContextProvider = ({
 
   const value = useMemo(
     () => ({
-      mailboxSlug: input.mailboxSlug,
       conversationListData: lastPage
         ? {
             conversations,
@@ -183,7 +181,7 @@ export const ConversationListContextProvider = ({
       removeConversationKeepActive,
       navigateToConversation: setId,
     }),
-    [input.mailboxSlug, currentConversationSlug, conversations, lastPage, isPending, isFetchingNextPage, hasNextPage],
+    [currentConversationSlug, conversations, lastPage, isPending, isFetchingNextPage, hasNextPage],
   );
 
   return <ConversationListContext.Provider value={value}>{children}</ConversationListContext.Provider>;

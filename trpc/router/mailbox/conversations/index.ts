@@ -89,7 +89,7 @@ export const conversationsRouter = {
 
   bySlug: mailboxProcedure.input(z.object({ slugs: z.array(z.string()) })).query(async ({ input, ctx }) => {
     const list = await db.query.conversations.findMany({
-      where: and(eq(conversations.mailboxId, ctx.mailbox.id), inArray(conversations.slug, input.slugs)),
+      where: and(inArray(conversations.slug, input.slugs)),
     });
     return await Promise.all(list.map((c) => serializeConversationWithMessages(ctx.mailbox, c)));
   }),
@@ -120,7 +120,6 @@ export const conversationsRouter = {
       const { id: conversationId } = await db
         .insert(conversations)
         .values({
-          mailboxId: ctx.mailbox.id,
           slug: conversation.conversation_slug,
           subject: conversation.subject,
           emailFrom: conversation.to_email_address,
@@ -183,7 +182,6 @@ export const conversationsRouter = {
       }
 
       await triggerEvent("conversations/bulk-update", {
-        mailboxId: ctx.mailbox.id,
         userId: ctx.user.id,
         conversationFilter: input.conversationFilter,
         status: input.status,
@@ -225,7 +223,7 @@ export const conversationsRouter = {
         conversation: true,
       },
     });
-    if (!message || message.conversation.mailboxId !== ctx.mailbox.id || !message.conversation.mergedIntoId) {
+    if (!message || !message.conversation.mergedIntoId) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
     }
     const conversation = await db
@@ -279,30 +277,15 @@ export const conversationsRouter = {
     const [conversation, assignedToMe, vipOverdue] = await Promise.all([
       db.query.conversations.findFirst({
         columns: { id: true },
-        where: and(eq(conversations.mailboxId, ctx.mailbox.id)),
       }),
-      db.$count(
-        conversations,
-        and(
-          eq(conversations.mailboxId, ctx.mailbox.id),
-          eq(conversations.assignedToId, ctx.user.id),
-          eq(conversations.status, "open"),
-        ),
-      ),
+      db.$count(conversations, and(eq(conversations.assignedToId, ctx.user.id), eq(conversations.status, "open"))),
       ctx.mailbox.vipThreshold && ctx.mailbox.vipExpectedResponseHours
         ? db
             .select({ count: count() })
             .from(conversations)
-            .leftJoin(
-              platformCustomers,
-              and(
-                eq(conversations.mailboxId, platformCustomers.mailboxId),
-                eq(conversations.emailFrom, platformCustomers.email),
-              ),
-            )
+            .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
             .where(
               and(
-                eq(conversations.mailboxId, ctx.mailbox.id),
                 eq(conversations.status, "open"),
                 lt(
                   conversations.lastUserEmailCreatedAt,

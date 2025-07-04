@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       const newConversation = await createConversation(
         {
           emailFrom: email,
-          mailboxId: mailbox.id,
           subject: "Contact Form Submission",
           status: "open",
           source: "form",

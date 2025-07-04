@@ -21,7 +21,7 @@ describe("fileUploader", () => {
       const { file: file3 } = await fileFactory.create(null);
 
       const { mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
       const { message } = await conversationMessagesFactory.create(conversation.id);
 
       await finishFileUpload({ fileSlugs: [file1.slug, file2.slug], messageId: message.id });

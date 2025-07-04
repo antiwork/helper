@@ -38,12 +38,8 @@ export const excludeExistingGmailThreads = async (
     .selectDistinct({ gmailThreadId: conversationMessages.gmailThreadId })
     .from(conversationMessages)
     .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-    .innerJoin(mailboxes, eq(mailboxes.id, conversations.mailboxId))
     .where(
-      and(
-        eq(mailboxes.gmailSupportEmailId, gmailSupportEmailId),
-        inArray(conversationMessages.gmailThreadId, gmailThreadIds),
-      ),
+      and(eq(gmailSupportEmails.id, gmailSupportEmailId), inArray(conversationMessages.gmailThreadId, gmailThreadIds)),
     );
   const existingThreads = new Set(
     existingEmails.flatMap((email) => (email.gmailThreadId ? [email.gmailThreadId] : [])),
@@ -98,16 +94,9 @@ export const processGmailThreadWithClient = async (
     parseEmailAddress(firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "from")?.value ?? ""),
   );
   const subject = firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "subject")?.value ?? "";
-  const mailbox = await db.query.mailboxes
-    .findFirst({
-      where: eq(mailboxes.gmailSupportEmailId, gmailSupportEmail.id),
-      columns: { id: true },
-    })
-    .then(assertDefinedOrRaiseNonRetriableError);
   const conversation = await db
     .insert(conversations)
     .values({
-      mailboxId: mailbox.id,
       emailFrom: parsedEmailFrom.address,
       emailFromName: parsedEmailFrom.name,
       subject,

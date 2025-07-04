@@ -35,16 +35,14 @@ const chartConfig = {
 };
 
 interface StatusByTypeChartProps {
-  mailboxSlug: string;
   timeRange: TimeRange;
   customDate?: DateRange;
 }
 
-export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: StatusByTypeChartProps) {
+export function StatusByTypeChart({ timeRange, customDate }: StatusByTypeChartProps) {
   const { startDate, endDate } = useMemo(() => timeRangeToQuery(timeRange, customDate), [timeRange, customDate]);
 
   const { data, isLoading } = api.mailbox.conversations.messages.statusByTypeCount.useQuery({
-    mailboxSlug,
     startDate,
     endDate,
   });

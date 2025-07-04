@@ -51,7 +51,6 @@ export const searchConversations = async (
 
   // Filters on conversations and messages that we can pass to searchEmailsByKeywords
   let where: Record<string, SQL> = {
-    mailboxId: eq(conversations.mailboxId, mailbox.id),
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToId, filters.assignee) } : {}),
@@ -107,7 +106,7 @@ export const searchConversations = async (
       : {}),
   };
 
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id, Object.values(where)) : [];
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
 
   // Additional filters we can't pass to searchEmailsByKeywords
   where = {
@@ -152,13 +151,7 @@ export const searchConversations = async (
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
       })
       .from(conversations)
-      .leftJoin(
-        platformCustomers,
-        and(
-          eq(conversations.mailboxId, platformCustomers.mailboxId),
-          eq(conversations.emailFrom, platformCustomers.email),
-        ),
-      )
+      .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
       .leftJoin(
         sql`LATERAL (
           SELECT ${conversationMessages.cleanedUpText} as cleaned_up_text
@@ -203,13 +196,7 @@ export const countSearchResults = async (where: Record<string, SQL>) => {
   const [total] = await db
     .select({ count: count() })
     .from(conversations)
-    .leftJoin(
-      platformCustomers,
-      and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
-        eq(conversations.emailFrom, platformCustomers.email),
-      ),
-    )
+    .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
     .where(and(...Object.values(where)));
 
   return total?.count ?? 0;
@@ -219,13 +206,7 @@ export const getSearchResultIds = async (where: Record<string, SQL>) => {
   const results = await db
     .select({ id: conversations.id })
     .from(conversations)
-    .leftJoin(
-      platformCustomers,
-      and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
-        eq(conversations.emailFrom, platformCustomers.email),
-      ),
-    )
+    .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
     .where(and(...Object.values(where)));
 
   return results.map((result) => result.id);

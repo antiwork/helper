@@ -33,7 +33,6 @@ export const ConversationListItem = ({
   onToggleSelect,
 }: ConversationListItemProps) => {
   const listItemRef = useRef<HTMLAnchorElement>(null);
-  const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
   const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
 
@@ -85,7 +84,7 @@ export const ConversationListItem = ({
           <a
             ref={listItemRef}
             className="flex-1 min-w-0"
-            href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
+            href={`/mailboxes/${conversation.slug}/conversations?id=${conversation.slug}`}
             onClick={(e) => {
               if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
                 e.preventDefault();

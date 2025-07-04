@@ -33,7 +33,7 @@ describe("encryptedField", () => {
     expect(rawDbValues.rows[0]?.accessToken).not.toBe(testAccessToken);
 
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const messageBody =
       "Of course! I'm here to help. Could you please provide more details about the issue or question you have? The more information you can provide, the better I'll be able to assist you.";
     const { message } = await conversationMessagesFactory.create(conversation.id, {
@@ -51,7 +51,6 @@ describe("nativeEncryptedField", () => {
     const { tool } = await toolsFactory.create({
       name: "Test Tool",
       authenticationToken: testAuthToken,
-      mailboxId: mailbox.id,
     });
 
     const fetchedTool = await db.query.tools.findFirst({

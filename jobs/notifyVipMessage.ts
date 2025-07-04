@@ -7,6 +7,8 @@ import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { postVipMessageToSlack, updateVipMessageInSlack } from "@/lib/slack/vipNotifications";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
+// mailbox is not a relation, so fetch it separately
+
 type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelect & {
   conversation: typeof conversations.$inferSelect & {
     mailbox: typeof mailboxes.$inferSelect;
@@ -18,29 +20,24 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
     await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, messageId),
       with: {
-        conversation: {
-          with: {
-            mailbox: true,
-          },
-        },
+        conversation: true,
       },
     }),
   );
 
-  if (message.conversation.mergedIntoId) {
-    const mergedConversation = assertDefinedOrRaiseNonRetriableError(
+  let conversation = message.conversation;
+  if (conversation.mergedIntoId) {
+    conversation = assertDefinedOrRaiseNonRetriableError(
       await db.query.conversations.findFirst({
-        where: eq(conversations.id, message.conversation.mergedIntoId),
-        with: {
-          mailbox: true,
-        },
+        where: eq(conversations.id, conversation.mergedIntoId),
       }),
     );
-
-    return { ...message, conversation: mergedConversation };
   }
 
-  return message;
+  // fetch mailbox separately
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await db.query.mailboxes.findFirst({}));
+
+  return { ...message, conversation: { ...conversation, mailbox } };
 }
 
 async function handleVipSlackMessage(message: MessageWithConversationAndMailbox) {
@@ -54,7 +51,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
     return "Not posted, anonymous conversation";
   }
 
-  const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom);
+  const platformCustomer = await getPlatformCustomer(conversation.emailFrom);
 
   // Early return if not VIP or Slack config missing
   if (!platformCustomer?.isVip) return "Not posted, not a VIP customer";

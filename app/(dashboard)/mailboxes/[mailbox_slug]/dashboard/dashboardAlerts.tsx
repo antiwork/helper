@@ -35,8 +35,8 @@ const DashboardAlert = ({
   );
 };
 
-export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
-  const { data, isLoading } = api.mailbox.conversations.alertCounts.useQuery({ mailboxSlug });
+export const DashboardAlerts = () => {
+  const { data, isLoading } = api.mailbox.conversations.alertCounts.useQuery();
 
   if (isLoading)
     return (
@@ -53,7 +53,7 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
         key="assigned"
         icon={<User className="h-5 w-5" />}
         variant="danger"
-        href={`/mailboxes/${mailboxSlug}/mine`}
+        href={`/mine`}
       >
         {data.assignedToMe} open {data.assignedToMe === 1 ? "ticket is" : "tickets are"}{" "}
         <strong>assigned to you</strong>
@@ -64,7 +64,7 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
         key="vip"
         icon={<Star className="h-5 w-5" />}
         variant="warning"
-        href={`/mailboxes/${mailboxSlug}/conversations`}
+        href={`/conversations`}
       >
         <strong>
           {data.vipOverdue} {data.vipOverdue === 1 ? "VIP has" : "VIPs have"} been waiting

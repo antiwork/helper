@@ -9,7 +9,6 @@ import { api } from "@/trpc/react";
 
 type ConversationContextType = {
   conversationSlug: string;
-  mailboxSlug: string;
   data: RouterOutputs["mailbox"]["conversations"]["get"] | null;
   isPending: boolean;
   error: { message: string } | null;
@@ -21,10 +20,9 @@ type ConversationContextType = {
 
 const ConversationContext = createContext<ConversationContextType | null>(null);
 
-export function useConversationQuery(mailboxSlug: string, conversationSlug: string | null) {
+export function useConversationQuery(conversationSlug: string | null) {
   const result = api.mailbox.conversations.get.useQuery(
     {
-      mailboxSlug,
       conversationSlug: conversationSlug ?? "",
     },
     {
@@ -36,7 +34,7 @@ export function useConversationQuery(mailboxSlug: string, conversationSlug: stri
 }
 
 export const ConversationContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const { mailboxSlug, currentConversationSlug, removeConversation, navigateToConversation } =
+  const { currentConversationSlug, removeConversation, navigateToConversation } =
     useConversationListContext();
   const conversationSlug = assertDefined(
     currentConversationSlug,
@@ -47,20 +45,18 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
     isPending,
     error,
     refetch,
-  } = assertDefined(useConversationQuery(mailboxSlug, currentConversationSlug));
+  } = assertDefined(useConversationQuery(currentConversationSlug));
 
   const utils = api.useUtils();
   const { mutateAsync: updateConversation, isPending: isUpdating } = api.mailbox.conversations.update.useMutation({
     onMutate: (variables) => {
       const previousData = utils.mailbox.conversations.get.getData({
-        mailboxSlug,
         conversationSlug: variables.conversationSlug,
       });
 
       if (previousData && variables.status) {
         utils.mailbox.conversations.get.setData(
           {
-            mailboxSlug,
             conversationSlug: variables.conversationSlug,
           },
           { ...previousData, status: variables.status },
@@ -73,7 +69,6 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
       if (context?.previousData) {
         utils.mailbox.conversations.get.setData(
           {
-            mailboxSlug,
             conversationSlug: variables.conversationSlug,
           },
           context.previousData,
@@ -88,14 +83,13 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
     },
     onSuccess: (_data, variables) => {
       utils.mailbox.conversations.get.invalidate({
-        mailboxSlug,
         conversationSlug: variables.conversationSlug,
       });
     },
   });
 
   const update = async (inputs: Partial<RouterInputs["mailbox"]["conversations"]["update"]>) => {
-    await updateConversation({ mailboxSlug, conversationSlug, ...inputs });
+    await updateConversation({ conversationSlug, ...inputs });
   };
 
   const updateStatus = useCallback(
@@ -155,7 +149,6 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
     <ConversationContext.Provider
       value={{
         conversationSlug,
-        mailboxSlug,
         data,
         isPending,
         error,

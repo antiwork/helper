@@ -4,11 +4,9 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { useSidebar } from "@/components/ui/sidebar";
 
-type Props = {
-  mailboxSlug: string;
-};
+type Props = {};
 
-export function AppSidebarOpen({ mailboxSlug }: Props) {
+export function AppSidebarOpen({}: Props) {
   const { setOpenMobile } = useSidebar();
 
   return (
@@ -20,7 +18,7 @@ export function AppSidebarOpen({ mailboxSlug }: Props) {
         setOpenMobile(true);
       }}
     >
-      <Avatar src={undefined} fallback={mailboxSlug.toUpperCase().slice(0, 2)} />
+      <Avatar src={undefined} fallback={"MB"} />
       <span className="sr-only">Toggle Sidebar</span>
     </Link>
   );

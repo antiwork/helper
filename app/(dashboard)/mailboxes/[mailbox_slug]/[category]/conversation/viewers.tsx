@@ -3,11 +3,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { conversationChannelId } from "@/lib/realtime/channels";
 import { useRealtimePresence } from "@/lib/realtime/hooks";
 
-type Props = {
-  mailboxSlug: string;
-  conversationSlug: string;
-};
-
 const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: string }[] }) => (
   <div className="flex flex-col gap-2 py-2">
     {viewers.map((viewer, index) => (
@@ -19,8 +14,8 @@ const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: strin
   </div>
 );
 
-const Viewers = ({ conversationSlug, mailboxSlug }: Props) => {
-  const { users: viewers } = useRealtimePresence(conversationChannelId(mailboxSlug, conversationSlug));
+const Viewers = ({ conversationSlug }: { conversationSlug: string }) => {
+  const { users: viewers } = useRealtimePresence(conversationChannelId(conversationSlug));
 
   if (viewers.length === 0) {
     return null;

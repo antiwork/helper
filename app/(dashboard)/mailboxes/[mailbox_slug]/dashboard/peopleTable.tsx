@@ -8,18 +8,17 @@ import { api } from "@/trpc/react";
 import { type TimeRange } from "./dashboardContent";
 
 type Props = {
-  mailboxSlug: string;
   timeRange: TimeRange;
   customDate?: DateRange;
 };
 
 type Member = RouterOutputs["mailbox"]["members"]["stats"][number];
 
-export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
+export const PeopleTable = ({ timeRange, customDate }: Props) => {
   const statsInput =
     timeRange === "custom"
-      ? { mailboxSlug, period: "24h" as const, customStartDate: customDate?.from, customEndDate: customDate?.to }
-      : { mailboxSlug, period: timeRange };
+      ? { period: "24h" as const, customStartDate: customDate?.from, customEndDate: customDate?.to }
+      : { period: timeRange };
 
   const { data: members, isLoading } = api.mailbox.members.stats.useQuery(statsInput, {
     enabled: timeRange !== "custom" || !!(customDate?.from && customDate?.to),

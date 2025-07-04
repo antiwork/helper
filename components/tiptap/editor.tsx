@@ -42,7 +42,6 @@ type TipTapEditorProps = {
   isRecording: boolean;
   startRecording: () => void;
   stopRecording: () => void;
-  mailboxSlug?: string;
 };
 
 declare module "@tiptap/core" {
@@ -98,18 +97,10 @@ const TipTapEditor = ({
   isRecording,
   startRecording,
   stopRecording,
-  mailboxSlug: propMailboxSlug,
   ref,
 }: TipTapEditorPropsWithRef) => {
-  // Try to get mailboxSlug from context, fallback to prop
-  const context = useConversationListContextSafe();
-  const contextMailboxSlug = context?.mailboxSlug || null;
-
-  const mailboxSlug = propMailboxSlug || contextMailboxSlug;
-
   const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery(
-    { mailboxSlug: mailboxSlug ?? "" },
-    { enabled: !!mailboxSlug },
+    { enabled: true },
   );
   const { isAboveMd } = useBreakpoint("md");
   const [isMacOS, setIsMacOS] = useState(false);

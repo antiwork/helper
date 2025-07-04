@@ -38,7 +38,7 @@ describe("handleSlackAction", () => {
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -72,7 +72,7 @@ describe("handleSlackAction", () => {
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -97,7 +97,7 @@ describe("handleSlackAction", () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -131,7 +131,7 @@ describe("handleSlackAction", () => {
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -172,7 +172,7 @@ describe("handleSlackAction", () => {
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -213,7 +213,7 @@ describe("handleSlackAction", () => {
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,

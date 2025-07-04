@@ -30,27 +30,18 @@ describe("generateWeeklyReports", () => {
     vi.clearAllMocks();
   });
 
-  it("sends weekly report events for mailboxes with Slack configured", async () => {
-    const { mailbox: mailboxWithSlack } = await userFactory.createRootUser({
+  it("triggers weekly report only if mailbox is configured for Slack", async () => {
+    const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
         slackAlertChannel: "channel-id",
       },
     });
 
-    await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: null,
-        slackAlertChannel: null,
-      },
-    });
-
     await generateWeeklyReports();
 
     expect(jobsMock.triggerEvent).toHaveBeenCalledTimes(1);
-    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {
-      mailboxId: mailboxWithSlack.id,
-    });
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {});
   });
 });
 

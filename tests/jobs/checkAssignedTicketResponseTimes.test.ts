@@ -32,7 +32,7 @@ describe("checkAssignedTicketResponseTimes", () => {
     });
 
     const overdueDate = subDays(now, 2);
-    await conversationFactory.create(mailbox.id, {
+    await conversationFactory.create({
       assignedToId: user.id,
       lastUserEmailCreatedAt: overdueDate,
       status: "open",
@@ -70,7 +70,7 @@ describe("checkAssignedTicketResponseTimes", () => {
     });
 
     const recentDate = subHours(now, 12); // Only 12 hours ago, under the 24 hour threshold
-    await conversationFactory.create(mailbox.id, {
+    await conversationFactory.create({
       assignedToId: user.id,
       lastUserEmailCreatedAt: recentDate,
       status: "open",
@@ -95,7 +95,7 @@ describe("checkAssignedTicketResponseTimes", () => {
     });
 
     const overdueDate = subDays(now, 2);
-    await conversationFactory.create(mailbox.id, {
+    await conversationFactory.create({
       assignedToId: user.id,
       lastUserEmailCreatedAt: overdueDate,
       status: "open",

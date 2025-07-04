@@ -34,7 +34,7 @@ describe("cleanupDanglingFiles", () => {
     const { file: recentFile } = await fileFactory.create(null, { createdAt: today });
 
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { file: associatedFile } = await fileFactory.create(message.id, { createdAt: twoDaysAgo });
 

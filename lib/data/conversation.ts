@@ -17,7 +17,7 @@ import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
 import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
-import { getMailboxById } from "./mailbox";
+import { getMailbox } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
@@ -137,7 +137,7 @@ export const updateConversation = async (
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
-        const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
+        const mailbox = assertDefined(await getMailbox());
         const events = [
           publishToRealtime({
             channel: conversationChannelId(mailbox.slug, updatedConversation.slug),
@@ -218,9 +218,7 @@ export const serializeConversationWithMessages = async (
   mailbox: typeof mailboxes.$inferSelect,
   conversation: typeof conversations.$inferSelect,
 ) => {
-  const platformCustomer = conversation.emailFrom
-    ? await getPlatformCustomer(mailbox.id, conversation.emailFrom)
-    : null;
+  const platformCustomer = conversation.emailFrom ? await getPlatformCustomer(conversation.emailFrom) : null;
 
   const mergedInto = conversation.mergedIntoId
     ? await db.query.conversations.findFirst({
@@ -262,17 +260,15 @@ export const getConversationById = cache(async (id: number): Promise<typeof conv
 
 export const getConversationBySlugAndMailbox = async (
   slug: string,
-  mailboxId: number,
 ): Promise<typeof conversations.$inferSelect | null> => {
   const result = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.mailboxId, mailboxId)),
+    where: and(eq(conversations.slug, slug)),
   });
   return result ?? null;
 };
 
 export const getNonSupportParticipants = async (conversation: Conversation): Promise<string[]> => {
   const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, conversation.mailboxId),
     with: { gmailSupportEmail: { columns: { email: true } } },
   });
   if (!mailbox) throw new Error("Mailbox not found");
@@ -316,9 +312,12 @@ export const getRelatedConversations = async (
 ): Promise<Conversation[]> => {
   const conversationWithMailbox = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
-    with: { mailbox: true },
+    with: {},
   });
   if (!conversationWithMailbox) return [];
+
+  const mailbox = await db.query.mailboxes.findFirst({});
+  if (!mailbox) return [];
 
   const lastUserMessage = await getLastUserMessage(conversationWithMailbox.id);
   if (!lastUserMessage) return [];
@@ -328,17 +327,16 @@ export const getRelatedConversations = async (
   if (!subject && !body) return [];
 
   const keywords = await emailKeywordsExtractor({
-    mailbox: conversationWithMailbox.mailbox,
+    mailbox,
     subject,
     body,
   });
   if (!keywords.length) return [];
 
-  const messageIds = await searchEmailsByKeywords(keywords.join(" "), conversationWithMailbox.mailbox.id);
+  const messageIds = await searchEmailsByKeywords(keywords.join(" "));
 
   const relatedConversations = await db.query.conversations.findMany({
     where: and(
-      eq(conversations.mailboxId, conversationWithMailbox.mailboxId),
       not(eq(conversations.id, conversationId)),
       inArray(
         conversations.id,

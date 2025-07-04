@@ -16,6 +16,6 @@ export const slackRouter = {
     return channels.flatMap((channel) => (channel.id && channel.name ? [{ id: channel.id, name: channel.name }] : []));
   }),
   disconnect: mailboxProcedure.mutation(async ({ ctx }) => {
-    await disconnectSlack(ctx.mailbox.id);
+    await disconnectSlack();
   }),
 };

@@ -204,7 +204,7 @@ export const generateAgentResponse = async (
         showStatus(`Checking ticket...`, { toolName: "getTicket", parameters: { id } });
         const conversation = await findConversation(id, mailbox);
         if (!conversation) return { error: "Ticket not found" };
-        const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
+        const platformCustomer = await getPlatformCustomer(conversation.emailFrom ?? "");
         return formatConversation(conversation, mailbox, platformCustomer);
       },
     }),
@@ -431,7 +431,7 @@ const findConversation = async (id: string | number, mailbox: Mailbox) => {
   const conversation = /^\d+$/.test(id.toString())
     ? await getConversationById(Number(id))
     : await getConversationBySlug(id.toString());
-  if (!conversation || conversation.mailboxId !== mailbox.id) return null;
+  if (!conversation) return null;
   return conversation;
 };
 

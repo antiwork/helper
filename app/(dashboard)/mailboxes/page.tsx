@@ -12,10 +12,10 @@ const Page = async () => {
   if (error) captureExceptionAndLog(error);
   if (!user) return redirect("/login");
 
-  const mailboxes = await api.mailbox.list();
-  if (mailboxes.find(({ slug }) => slug === user.user_metadata.lastMailboxSlug))
-    return redirect(`/mailboxes/${user.user_metadata.lastMailboxSlug}/mine`);
-  else if (mailboxes[0]) return redirect(`/mailboxes/${mailboxes[0].slug}/mine`);
+  const mailbox = await api.mailbox.get();
+  if (mailbox) {
+    return redirect(`/mailboxes/${mailbox.slug}/mine`);
+  }
   return redirect("/login");
 };
 

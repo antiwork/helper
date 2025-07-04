@@ -39,7 +39,6 @@ export const toolsRouter = {
             orderBy: [desc(toolsTable.enabled), asc(toolsTable.id)],
           },
         },
-        where: eq(toolApis.mailboxId, mailbox.id),
       });
 
       return apis.map((api) => ({
@@ -100,7 +99,6 @@ export const toolsRouter = {
           .insert(toolApis)
           .values({
             name: input.name,
-            mailboxId: mailbox.id,
             baseUrl: input.url,
             schema: input.schema,
             authenticationToken: input.apiKey,
@@ -109,7 +107,6 @@ export const toolsRouter = {
           .then(takeUniqueOrThrow);
 
         await importToolsFromSpec({
-          mailboxId: mailbox.id,
           toolApiId: toolApi.id,
           openApiSpec,
           apiKey: input.apiKey,
@@ -140,7 +137,7 @@ export const toolsRouter = {
       const { toolId, settings } = input;
 
       const tool = await db.query.tools.findFirst({
-        where: and(eq(toolsTable.id, toolId), eq(toolsTable.mailboxId, mailbox.id)),
+        where: and(eq(toolsTable.id, toolId)),
       });
 
       if (!tool) throw new TRPCError({ code: "NOT_FOUND", message: "Tool not found" });
@@ -169,8 +166,8 @@ export const toolsRouter = {
       const { apiId } = input;
 
       await db.transaction(async (tx) => {
-        await tx.delete(toolsTable).where(and(eq(toolsTable.toolApiId, apiId), eq(toolsTable.mailboxId, mailbox.id)));
-        await tx.delete(toolApis).where(and(eq(toolApis.id, apiId), eq(toolApis.mailboxId, mailbox.id)));
+        await tx.delete(toolsTable).where(and(eq(toolsTable.toolApiId, apiId)));
+        await tx.delete(toolApis).where(and(eq(toolApis.id, apiId)));
       });
 
       return { success: true };
@@ -185,7 +182,7 @@ export const toolsRouter = {
     )
     .mutation(async ({ ctx: { mailbox }, input: { apiId, schema } }) => {
       const api = await db.query.toolApis.findFirst({
-        where: and(eq(toolApis.id, apiId), eq(toolApis.mailboxId, mailbox.id)),
+        where: eq(toolApis.id, apiId),
       });
 
       if (!api) throw new TRPCError({ code: "NOT_FOUND", message: "API not found" });
@@ -195,7 +192,6 @@ export const toolsRouter = {
         const openApiSpec = api.baseUrl ? await fetchOpenApiSpec(api.baseUrl, api.authenticationToken) : schema;
 
         await importToolsFromSpec({
-          mailboxId: mailbox.id,
           toolApiId: api.id,
           openApiSpec: assertDefined(openApiSpec),
           apiKey: api.authenticationToken ?? "",

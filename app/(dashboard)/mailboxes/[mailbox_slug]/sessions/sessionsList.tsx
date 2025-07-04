@@ -23,14 +23,13 @@ interface SessionsListProps {
 export default function SessionsList({ mailbox, limit }: SessionsListProps) {
   const router = useRouter();
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, error } =
+  const { data, isPending, isFetchingNextPage, fetchNextPage, hasNextPage } =
     api.mailbox.getSessionsPaginated.useInfiniteQuery(
       {
-        mailboxSlug: mailbox.slug,
-        limit,
+        limit: 10,
       },
       {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? null,
       },
     );
 

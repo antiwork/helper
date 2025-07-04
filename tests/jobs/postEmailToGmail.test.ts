@@ -39,7 +39,7 @@ vi.mock("@/lib/gmail/lib", () => ({
 const setupConversationForGmailSending = async () => {
   const { mailbox } = await userFactory.createRootUser();
 
-  const { conversation } = await conversationFactory.create(mailbox.id, {
+  const { conversation } = await conversationFactory.create({
     conversationProvider: "gmail",
     status: "closed",
     subject: "Conversation subject",

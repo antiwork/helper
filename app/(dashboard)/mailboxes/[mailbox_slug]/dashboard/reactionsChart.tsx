@@ -19,11 +19,9 @@ import { generateTimePeriods, type TimePeriod } from "./generateTimePeriods";
 export type Period = "hourly" | "daily" | "monthly";
 
 export function ReactionsChart({
-  mailboxSlug,
   timeRange,
   customDate,
 }: {
-  mailboxSlug: string;
   timeRange: TimeRange;
   customDate?: DateRange;
 }) {
@@ -39,7 +37,6 @@ export function ReactionsChart({
   } | null>(null);
 
   const { data, isLoading } = api.mailbox.conversations.messages.reactionCount.useQuery({
-    mailboxSlug,
     startDate,
     endDate,
     period,
@@ -47,7 +44,6 @@ export function ReactionsChart({
 
   const { data: selectedConversations, isLoading: isLoadingConversations } = api.mailbox.conversations.list.useQuery(
     {
-      mailboxSlug,
       createdAfter: selectedBar ? selectedBar.startTime.toISOString() : startDate.toISOString(),
       createdBefore: selectedBar ? selectedBar.endTime.toISOString() : endDate.toISOString(),
       reactionType: selectedBar?.reactionType ?? "thumbs-up",
@@ -125,7 +121,6 @@ export function ReactionsChart({
       <ConversationsModal
         open={!!selectedBar}
         onOpenChange={(open) => !open && setSelectedBar(null)}
-        mailboxSlug={mailboxSlug}
         title={`${selectedBar?.reactionType === "thumbs-up" ? "Positive" : "Negative"} Reactions - ${selectedBar?.label}`}
         conversations={selectedConversations?.conversations ?? []}
         isLoading={isLoadingConversations}

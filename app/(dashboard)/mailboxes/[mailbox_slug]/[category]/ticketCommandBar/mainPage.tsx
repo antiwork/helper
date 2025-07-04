@@ -37,7 +37,7 @@ export const useMainPage = ({
   setSelectedTool,
   onInsertReply,
 }: MainPageProps): CommandGroup[] => {
-  const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
+  const { data: conversation, updateStatus } = useConversationContext();
   const utils = api.useUtils();
 
   const dismissToastRef = useRef<() => void>(() => {});
@@ -51,7 +51,7 @@ export const useMainPage = ({
     onSuccess: (draft) => {
       dismissToastRef.current?.();
       if (draft) {
-        utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
+        utils.mailbox.conversations.get.setData({ conversationSlug: conversation?.slug }, (data) =>
           data ? { ...data, draft } : data,
         );
       } else {
@@ -71,23 +71,18 @@ export const useMainPage = ({
   });
 
   const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
-    { mailboxSlug, conversationSlug },
-    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
+    { conversationSlug: conversation?.slug },
+    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversation?.slug },
   );
 
   const { data: savedReplies } = api.mailbox.savedReplies.list.useQuery(
-    { mailboxSlug, onlyActive: true },
+    { onlyActive: true },
     { refetchOnWindowFocus: false, refetchOnMount: true },
   );
 
   const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
 
-  const { data: mailbox } = api.mailbox.get.useQuery(
-    { mailboxSlug },
-    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!mailboxSlug },
-  );
-
-  const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
+  const isGitHubConnected = conversation?.githubConnected && conversation.githubRepoOwner && conversation.githubRepoName;
 
   useKeyboardShortcut("n", (e) => {
     e.preventDefault();
@@ -108,7 +103,7 @@ export const useMainPage = ({
 
         // Track usage separately - don't fail the insertion if tracking fails
         incrementSavedReplyUsage(
-          { slug: savedReply.slug, mailboxSlug },
+          { slug: savedReply.slug },
           {
             onError: (error) => {
               // Log tracking error but don't show to user since content was inserted successfully
@@ -212,7 +207,7 @@ export const useMainPage = ({
             icon: SparklesIcon,
             onSelect: () => {
               if (conversation?.slug) {
-                generateDraft({ mailboxSlug, conversationSlug: conversation.slug });
+                generateDraft({ conversationSlug: conversation.slug });
               }
               onOpenChange(false);
             },

@@ -28,7 +28,7 @@ export const POST = async (request: Request) => {
         where: eq(mailboxes.slackTeamId, data.team_id) && eq(mailboxes.slackBotUserId, userId),
       });
 
-      if (mailbox) await disconnectSlack(mailbox.id);
+      if (mailbox) await disconnectSlack();
     }
     return new Response(null, { status: 200 });
   }

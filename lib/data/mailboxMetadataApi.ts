@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
 import { DataError } from "./dataError";
-import { getMailboxBySlug } from "./mailbox";
+import { getMailbox } from "./mailbox";
 
 export const METADATA_API_HMAC_SECRET_PREFIX = "hlpr_";
 
@@ -12,18 +12,12 @@ export const getMetadataApiByMailbox = async (mailbox: typeof mailboxes.$inferSe
   const metadataApi = await db
     .select()
     .from(mailboxesMetadataApi)
-    .where(
-      and(
-        eq(mailboxesMetadataApi.mailboxId, mailbox.id),
-        eq(mailboxesMetadataApi.isEnabled, true),
-        isNull(mailboxesMetadataApi.deletedAt),
-      ),
-    );
+    .where(and(eq(mailboxesMetadataApi.isEnabled, true), isNull(mailboxesMetadataApi.deletedAt)));
   return metadataApi[0] ?? null;
 };
 
 export const getMetadataApiByMailboxSlug = async (mailboxSlug: string) => {
-  const mailbox = await getMailboxBySlug(mailboxSlug);
+  const mailbox = await getMailbox();
   if (!mailbox) {
     throw new Error("Mailbox not found");
   }
@@ -43,7 +37,6 @@ export const createMailboxMetadataApi = async (mailboxSlug: string, params: { ur
 
   const hmacSecret = `${METADATA_API_HMAC_SECRET_PREFIX}${crypto.randomUUID().replace(/-/g, "")}`;
   await db.insert(mailboxesMetadataApi).values({
-    mailboxId: mailbox.id,
     url,
     hmacSecret,
     isEnabled: true,
