@@ -1,9 +1,7 @@
 "use client";
 
-import { Mail } from "lucide-react";
 import { useState } from "react";
 import { AssignSelect } from "@/components/assignSelect";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -88,7 +86,7 @@ export default function ConversationsDialog({
   const handleAssignSubmit = () => {
     setLoading(true);
     if (conversationIds.length > 0) {
-      if (!assignedTo || !("id" in assignedTo)) {
+      if (!assignedTo) {
         toast({
           variant: "destructive",
           title: "Please select a valid assignee",
@@ -98,7 +96,7 @@ export default function ConversationsDialog({
       }
 
       for (const conversationId of conversationIds || []) {
-        if (assignedTo && "ai" in assignedTo) {
+        if ( "ai" in assignedTo) {
           updateConversation({
             mailboxSlug,
             conversationSlug: conversationId,
