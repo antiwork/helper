@@ -2,7 +2,9 @@ import { Send } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
+import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -72,8 +74,8 @@ export const List = () => {
     }
   };
 
-  const toggleAllConversations = () => {
-    setAllConversationsSelected((prev) => !prev);
+  const toggleAllConversations = (forceValue?: boolean) => {
+    setAllConversationsSelected((prev) => forceValue ?? !prev);
     clearSelectedConversations();
   };
 
@@ -128,6 +130,16 @@ export const List = () => {
     observer.observe(currentRef);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useHotkeys("mod+a", () => toggleAllConversations(true), {
+    enableOnFormTags: false,
+    preventDefault: true,
+  });
+
+  // Clear selections when status filter changes
+  useEffect(() => {
+    toggleAllConversations(false);
+  }, [searchParams.status, clearSelectedConversations]);
 
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
@@ -190,6 +202,8 @@ export const List = () => {
     });
   });
 
+  const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+
   return (
     <div className="flex flex-col w-full h-full">
       <div className="px-3 md:px-6 py-2 md:py-4 shrink-0 border-b border-border">
@@ -201,6 +215,7 @@ export const List = () => {
             defaultSort={defaultSort}
             showFilters={showFilters}
             setShowFilters={setShowFilters}
+            conversationCount={conversations.length}
           />
           {(allConversationsSelected || selectedConversations.length > 0) && (
             <div className="flex items-center justify-between gap-4">
@@ -218,33 +233,45 @@ export const List = () => {
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
                   {searchParams.status === "closed" ? (
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("open")}
-                      disabled={isBulkUpdating}
+                    <ConfirmationDialog
+                      message={`Are you sure you want to reopen ${selectedCount} conversation${
+                        selectedCount === 1 ? "" : "s"
+                      }?`}
+                      onConfirm={() => handleBulkUpdate("open")}
+                      confirmLabel="Yes, reopen"
+                      confirmVariant="bright"
                     >
-                      Reopen
-                    </Button>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        Reopen
+                      </Button>
+                    </ConfirmationDialog>
                   ) : (
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("closed")}
-                      disabled={isBulkUpdating}
+                    <ConfirmationDialog
+                      message={`Are you sure you want to close ${selectedCount} conversation${
+                        selectedCount === 1 ? "" : "s"
+                      }?`}
+                      onConfirm={() => handleBulkUpdate("closed")}
+                      confirmLabel="Yes, close"
+                      confirmVariant="bright"
                     >
-                      Close
-                    </Button>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        Close
+                      </Button>
+                    </ConfirmationDialog>
                   )}
                   {searchParams.status !== "spam" && (
-                    <Button
-                      variant="link"
-                      className="h-auto"
-                      onClick={() => handleBulkUpdate("spam")}
-                      disabled={isBulkUpdating}
+                    <ConfirmationDialog
+                      message={`Are you sure you want to mark ${selectedCount} conversation${
+                        selectedCount === 1 ? "" : "s"
+                      } as spam?`}
+                      onConfirm={() => handleBulkUpdate("spam")}
+                      confirmLabel="Yes, mark as spam"
+                      confirmVariant="bright"
                     >
-                      Mark as spam
-                    </Button>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        Mark as spam
+                      </Button>
+                    </ConfirmationDialog>
                   )}
                 </div>
               </div>
@@ -309,7 +336,7 @@ const NewConversationModal = () => {
         <Button
           variant="default"
           iconOnly
-          className="absolute bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
+          className="fixed z-50 bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
         >
           <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
         </Button>

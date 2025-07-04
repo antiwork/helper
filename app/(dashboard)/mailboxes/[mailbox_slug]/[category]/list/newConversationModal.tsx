@@ -173,6 +173,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
         />
         <TipTapEditor
           ref={editorRef}
+          className="max-h-[400px] overflow-y-auto no-scrollbar"
           ariaLabel="Message"
           placeholder="Type your message here..."
           defaultContent={messageMemoized}
@@ -281,7 +282,7 @@ const CcAndBccInfo = ({
 };
 
 const Wrapper = ({ mailboxSlug, conversationSlug, onSubmit }: Props) => (
-  <FileUploadProvider mailboxSlug={mailboxSlug} conversationSlug={conversationSlug}>
+  <FileUploadProvider conversationSlug={conversationSlug}>
     <NewConversationModal mailboxSlug={mailboxSlug} conversationSlug={conversationSlug} onSubmit={onSubmit} />
   </FileUploadProvider>
 );

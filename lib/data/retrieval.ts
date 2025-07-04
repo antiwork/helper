@@ -13,7 +13,6 @@ import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
 const MAX_SIMILAR_CONVERSATIONS = 3;
-const MAX_SIMILAR_KNOWLEDGE_ITEMS = 10;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
 export const findSimilarConversations = async (

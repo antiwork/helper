@@ -1,8 +1,11 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema/userProfiles";
 import { getMemberStats } from "@/lib/data/stats";
-import { getUsersWithMailboxAccess, updateUserMailboxData } from "@/lib/data/user";
+import { getProfile, getUsersWithMailboxAccess, isAdmin, updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 
@@ -14,23 +17,41 @@ export const membersRouter = {
         displayName: z.string().optional(),
         role: z.enum(["core", "nonCore", "afk"]).optional(),
         keywords: z.array(z.string()).optional(),
+        permissions: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input: { userId, displayName, role, keywords, permissions } }) => {
       try {
-        const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
-          displayName: input.displayName,
-          role: input.role,
-          keywords: input.keywords,
-        });
+        let user;
+        if (displayName !== undefined || role !== undefined || keywords !== undefined) {
+          user = await updateUserMailboxData(userId, ctx.mailbox.id, {
+            displayName,
+            role,
+            keywords,
+          });
+        }
 
-        return user;
+        if (permissions !== undefined) {
+          if (!isAdmin(await getProfile(ctx.user.id))) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "You are not authorized to update permissions" });
+          }
+          if (ctx.user.id === userId) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "You cannot update your own permissions" });
+          }
+
+          await db.update(userProfiles).set({ permissions }).where(eq(userProfiles.id, userId));
+        }
+
+        return { user, permissions };
       } catch (error) {
         captureExceptionAndLog(error, {
           extra: {
-            userId: input.userId,
+            userId,
+            displayName,
+            keywords,
+            role,
+            permissions,
             mailboxId: ctx.mailbox.id,
-            role: input.role,
             mailboxSlug: ctx.mailbox.slug,
           },
         });
@@ -45,18 +66,10 @@ export const membersRouter = {
     }),
 
   list: mailboxProcedure.query(async ({ ctx }) => {
-    try {
-      return await getUsersWithMailboxAccess(ctx.mailbox.id);
-    } catch (error) {
-      captureExceptionAndLog(error, {
-        tags: { route: "mailbox.members.list" },
-        extra: {
-          mailboxId: ctx.mailbox.id,
-          mailboxSlug: ctx.mailbox.slug,
-        },
-      });
-      return [];
-    }
+    return {
+      members: await getUsersWithMailboxAccess(ctx.mailbox.id),
+      isAdmin: isAdmin(await getProfile(ctx.user.id)),
+    };
   }),
 
   stats: mailboxProcedure

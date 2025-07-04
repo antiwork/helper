@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
-import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { MailboxTheme } from "@/lib/themes";
 
@@ -17,21 +16,6 @@ export type WidgetSessionPayload = {
   theme?: MailboxTheme;
   title?: string;
   anonymousSessionId?: string;
-};
-
-const getMailboxJwtSecret = async (mailboxSlug: string): Promise<string> => {
-  const mailboxRecord = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, mailboxSlug),
-    columns: {
-      widgetHMACSecret: true,
-    },
-  });
-
-  if (!mailboxRecord?.widgetHMACSecret) {
-    throw new Error(`Mailbox ${mailboxSlug} not found or missing widgetHMACSecret`);
-  }
-
-  return mailboxRecord.widgetHMACSecret;
 };
 
 export function createWidgetSession(
