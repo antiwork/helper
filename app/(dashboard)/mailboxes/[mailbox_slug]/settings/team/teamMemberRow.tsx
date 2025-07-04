@@ -41,7 +41,7 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
-  canChangePermissions: boolean;
+  isAdmin: boolean;
   conversationIds: string[];
 };
 
@@ -51,10 +51,10 @@ const updateMember = (
   updates: Partial<TeamMember>,
 ) => ({
   ...data,
-  members: data.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
+  members: data.members.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
 });
 
-const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversationIds }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [permissions, setPermissions] = useState<string>(member.permissions);
@@ -248,15 +248,19 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversation
         </div>
       </TableCell>
       <TableCell>
-        <Input
-          value={displayNameInput}
-          onChange={(e) => handleDisplayNameChange(e.target.value)}
-          placeholder="Enter display name"
-          className="w-full max-w-sm"
-        />
+        {isAdmin || member.id === currentUser?.id ? (
+          <Input
+            value={displayNameInput}
+            onChange={(e) => handleDisplayNameChange(e.target.value)}
+            placeholder="Enter display name"
+            className="w-full max-w-sm"
+          />
+        ) : (
+          <span>{member.displayName || "No display name"}</span>
+        )}
       </TableCell>
       <TableCell>
-        {canChangePermissions ? (
+        {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Permissions" />
@@ -271,33 +275,47 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions, conversation
         )}
       </TableCell>
       <TableCell>
-        <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-            <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-            <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-          </SelectContent>
-        </Select>
+        {isAdmin ? (
+          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
+        )}
       </TableCell>
       <TableCell>
-        <div className="w-[200px]">
-          <Input
-            value={keywordsInput}
-            onChange={(e) => handleKeywordsChange(e.target.value)}
-            placeholder="Enter keywords separated by commas"
-            className={role === "nonCore" ? "" : "invisible"}
-          />
-        </div>
+        {isAdmin ? (
+          <div className="w-[200px]">
+            <Input
+              value={keywordsInput}
+              onChange={(e) => handleKeywordsChange(e.target.value)}
+              placeholder="Enter keywords separated by commas"
+              className={role === "nonCore" ? "" : "invisible"}
+            />
+          </div>
+        ) : (
+          <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
+            {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
+          </span>
+        )}
       </TableCell>
       <TableCell>
-        {currentUser?.id !== member.id && (
+        {currentUser?.id !== member.id && isAdmin && (
           <ConversationsDialog
             assignedToId={member.id}
             mailboxSlug={mailboxSlug}
-            description="Please reassign the tickets before delete the member"
+            description={
+              conversationIds.length > 0
+                ? `You are about to remove ${member.displayName.toUpperCase()}. This member currently has ${conversationIds.length} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                : `There is no conversation assigned to ${member.displayName.toUpperCase()}. Are you sure you want to delete this member?`
+            }
             conversationIds={conversationIds}
           >
             <Button variant="ghost" size="sm" iconOnly>

@@ -18,12 +18,11 @@ type TeamSettingProps = {
 
 const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const { data, isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
-  const teamMembers = Array.isArray(data) ? data : [];
+  const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
-  const session = useSession();
   const utils = api.useUtils();
+  const { data: permissionsData } = api.mailbox.members.getPermissions.useQuery({ mailboxSlug });
 
-  console.log("Team members data:", Array.isArray(data), data);
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
     return (
@@ -33,36 +32,9 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     );
   });
 
-  const { data: conversationsList, isFetching: isFetchingConversations } = api.mailbox.conversations.list.useQuery({
+  const { data: conversationsList } = api.mailbox.conversations.list.useQuery({
     mailboxSlug,
   });
-
-  const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Team member removed",
-        variant: "success",
-      });
-      utils.mailbox.members.list.invalidate({ mailboxSlug });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to remove member",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-   const handleFinalReassignAndDelete = async (id: string) => {
-    try {
-      await utils.mailbox.members.list.invalidate({ mailboxSlug });
-      removeTeamMember({ id, mailboxSlug });
-      toast({ title: "Member removed", variant: "success" });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Failed to reassign conversations" });
-    }
-  };
 
   return (
     <SectionWrapper
@@ -71,7 +43,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       fullWidth
     >
       <div className="w-full space-y-6">
-        <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
+        {permissionsData?.isAdmin && <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />}
 
         {teamMembers.length > 0 && (
           <Input
@@ -98,7 +70,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex justify-center">
                       <LoadingSpinner size="md" />
                     </div>
@@ -106,7 +78,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                     {searchTerm
                       ? `No team members found matching "${searchTerm}"`
                       : "No team members in your organization yet. Use the form above to invite new members."}
@@ -124,7 +96,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                       member={member}
                       mailboxSlug={mailboxSlug}
                       conversationIds={memberConversations.map((c) => c.slug)}
-                      canChangePermissions={true}
+                      isAdmin={permissionsData?.isAdmin ?? false}
                     />
                   );
                 })

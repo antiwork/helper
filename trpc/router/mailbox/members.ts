@@ -1,9 +1,6 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { subHours } from "date-fns";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/db/client";
-import { userProfiles } from "@/db/schema/userProfiles";
 import { getMemberStats } from "@/lib/data/stats";
 import { banUser, getProfile, getUsersWithMailboxAccess, isAdmin, updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -22,16 +19,13 @@ export const membersRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       try {
-          const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
-            displayName: input.displayName,
-            role: input.role,
-            keywords: input.keywords,
-            permissions: input.permissions,
-          });
-
-          console.log("Updated user mailbox data:", user)
-
-          return { user }
+        const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
+          displayName: input.displayName,
+          role: input.role,
+          keywords: input.keywords,
+          permissions: input.permissions,
+        });
+        return { user };
       } catch (error) {
         captureExceptionAndLog(error, {
           extra: {
@@ -55,19 +49,10 @@ export const membersRouter = {
     }),
 
   list: mailboxProcedure.query(async ({ ctx }) => {
-    try {
-      const members = await getUsersWithMailboxAccess(ctx.mailbox.id);
-      return members;
-    } catch (error) {
-      captureExceptionAndLog(error, {
-        tags: { route: "mailbox.members.list" },
-        extra: {
-          mailboxId: ctx.mailbox.id,
-          mailboxSlug: ctx.mailbox.slug,
-        },
-      });
-      return [];
-    }
+    return {
+      members: await getUsersWithMailboxAccess(ctx.mailbox.id),
+      isAdmin: isAdmin(await getProfile(ctx.user.id)),
+    };
   }),
 
   delete: mailboxProcedure
@@ -77,7 +62,6 @@ export const membersRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-
       if (ctx.user.id === input.id) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -124,4 +108,18 @@ export const membersRouter = {
       const endDate = input.customEndDate || now;
       return await getMemberStats(ctx.mailbox, { startDate, endDate });
     }),
+  getPermissions: mailboxProcedure.query(async ({ ctx }) => {
+    const user = await getProfile(ctx.user.id);
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+    return {
+      permissions: user.permissions,
+      isAdmin: isAdmin(user),
+      displayName: user.displayName,
+    };
+  }),
 } satisfies TRPCRouterRecord;

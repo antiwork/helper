@@ -95,8 +95,6 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     .from(authUsers)
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
-    console.log("Fetched users with mailbox access:", users);
-
   return users.map((user) => {
     const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
