@@ -5,7 +5,7 @@ import { withAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
-export const GET = withAuth(async ({ request }, { session, mailbox }) => {
+export const GET = withAuth(async ({ request }, { session }) => {
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
 

@@ -50,7 +50,7 @@ export function OPTIONS() {
 }
 
 export const POST = withAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled, isToolResult }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
   const conversation = await getConversation(conversationSlug, session, mailbox);
 
   const userEmail = session.isAnonymous ? null : session.email || null;

@@ -16,7 +16,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withAuth(async ({ request }, { mailbox }) => {
   const body = await request.json();
   const result = requestSchema.safeParse(body);
 
