@@ -1,6 +1,7 @@
 import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversations, conversationMessages as emails } from "@/db/schema";
+import { conversations, conversationMessages as emails, userProfiles, userMailboxAccess } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
@@ -19,7 +20,19 @@ export type MemberStats = {
 }[];
 
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
-  const allUsers = await db.query.authUsers.findMany();
+  
+  const allUsers = await db
+    .select({
+      id: authUsers.id,
+      email: authUsers.email,
+      user_metadata: authUsers.user_metadata,
+      displayName: userProfiles.displayName,
+      mailboxRole: userMailboxAccess.role,
+    })
+    .from(authUsers)
+    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .leftJoin(userMailboxAccess, and(eq(userMailboxAccess.userId, authUsers.id), eq(userMailboxAccess.mailboxId, mailbox.id)));
+
   const memberIds = allUsers.map((user) => user.id);
 
   const dateConditions = [];
@@ -54,8 +67,14 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   return allUsers
     .map((user) => {
-      const mailboxAccess = user.user_metadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
-      const mailboxRole = mailboxAccess?.[mailbox.id.toString()]?.role || UserRoles.AFK;
+      
+      let mailboxRole: UserRole = UserRoles.AFK;
+      if (user.mailboxRole) {
+        mailboxRole = user.mailboxRole;
+      } else {
+        const mailboxAccess = user.user_metadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
+        mailboxRole = mailboxAccess?.[mailbox.id.toString()]?.role || UserRoles.AFK;
+      }
 
       return {
         id: user.id,

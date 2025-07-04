@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema/userProfiles";
+import { userMailboxAccess } from "@/db/schema/userMailboxAccess";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -43,15 +44,26 @@ export const addUser = async (
   permission?: string,
 ) => {
   const supabase = createAdminClient();
-  const { error } = await supabase.auth.admin.createUser({
+  const { data: userData, error } = await supabase.auth.admin.createUser({
     email: emailAddress,
-    user_metadata: {
-      inviter_user_id: inviterUserId,
-      display_name: displayName,
-      permissions: permission ?? "member",
-    },
   });
   if (error) throw error;
+  
+  if (userData.user) {
+    await db.insert(userProfiles).values({
+      id: userData.user.id,
+      displayName: displayName,
+      permissions: permission ?? "member",
+      inviterUserId,
+    }).onConflictDoUpdate({
+      target: userProfiles.id,
+      set: {
+        displayName: displayName,
+        permissions: permission ?? "member",
+        inviterUserId,
+      },
+    });
+  }
 };
 
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
@@ -62,21 +74,24 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
       rawMetadata: authUsers.user_metadata,
       displayName: userProfiles.displayName,
       permissions: userProfiles.permissions,
-      access: userProfiles.access,
+      mailboxRole: userMailboxAccess.role,
+      mailboxKeywords: userMailboxAccess.keywords,
     })
     .from(authUsers)
-    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
+    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .leftJoin(userMailboxAccess, and(eq(userMailboxAccess.userId, authUsers.id), eq(userMailboxAccess.mailboxId, mailboxId)));
 
   return users.map((user) => {
-    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
+    const role = user.mailboxRole ?? user.rawMetadata?.mailboxAccess?.[mailboxId]?.role ?? "afk";
+    const keywords = user.mailboxKeywords ?? user.rawMetadata?.mailboxAccess?.[mailboxId]?.keywords ?? [];
     const permissions = user.permissions ?? "member";
 
     return {
       id: user.id,
       displayName: user.displayName || user.rawMetadata?.display_name || "",
       email: user.email ?? undefined,
-      role: access.role,
-      keywords: access?.keywords ?? [],
+      role: role as UserRole,
+      keywords: keywords,
       permissions,
     };
   });
@@ -97,8 +112,9 @@ export const updateUserMailboxData = async (
     error,
   } = await supabase.auth.admin.getUserById(userId);
   if (error) throw error;
+  if (!user) throw new Error("User not found");
 
-  const userMetadata = user?.user_metadata || {};
+  const userMetadata = user.user_metadata || {};
   const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
 
   // Only update the fields that were provided, keep the rest
@@ -125,25 +141,46 @@ export const updateUserMailboxData = async (
   if (updateError) throw updateError;
   if (!updatedUser) throw new Error("Failed to update user");
 
-  const [updatedProfile] = await db
-    .update(userProfiles)
-    .set({
-      displayName: updates.displayName,
-      access: {
-        role: updates.role || "afk",
-        keywords: updates.keywords || [],
-      },
-    })
+  let profile;
+  if (updates.displayName) {
+    [profile] = await db.update(userProfiles)
+    .set({ displayName: updates.displayName })
     .where(eq(userProfiles.id, updatedUser.id))
     .returning();
+  } else {
+    profile = await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, updatedUser.id) });
+  }
+
+  if (updates.role || updates.keywords) {
+    await db
+      .insert(userMailboxAccess)
+      .values({
+        userId: updatedUser.id,
+        mailboxId,
+        role: updates.role || "afk",
+        keywords: updates.keywords || [],
+      })
+      .onConflictDoUpdate({
+        target: [userMailboxAccess.userId, userMailboxAccess.mailboxId],
+        set: {
+          ...(updates.role && { role: updates.role }),
+          ...(updates.keywords && { keywords: updates.keywords }),
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  const mailboxAccessRow = await db.query.userMailboxAccess.findFirst({
+    where: and(eq(userMailboxAccess.userId, updatedUser.id), eq(userMailboxAccess.mailboxId, mailboxId)),
+  });
 
   return {
     id: updatedUser.id,
     displayName: getFullName(updatedUser),
     email: updatedUser.email ?? undefined,
-    role: updatedProfile?.access?.role || "afk",
-    keywords: updatedProfile?.access?.keywords || [],
-    permissions: updatedProfile?.permissions ?? "",
+    role: mailboxAccessRow?.role || "afk",
+    keywords: mailboxAccessRow?.keywords || [],
+    permissions: profile?.permissions ?? "member",
   };
 };
 

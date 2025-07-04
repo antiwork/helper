@@ -19,4 +19,5 @@ export * from "./agentMessages";
 export * from "./cache";
 export * from "./jobRuns";
 export * from "./userProfiles";
+export * from "./userMailboxAccess";
 export * from "./savedReplies";
