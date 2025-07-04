@@ -41,7 +41,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }) || [];
 
   const filteredMembers = sortedMembers.filter((member) =>
-    member.displayName.toLowerCase().includes(searchTerm.toLowerCase())
+    member.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const aiItem = {
@@ -57,9 +57,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     ...filteredMembers,
   ];
 
-  const initialSelected = aiOptionSelected
-    ? aiItem
-    : sortedMembers.find((m) => m.id === selectedUserId) || null;
+  const initialSelected = aiOptionSelected ? aiItem : sortedMembers.find((m) => m.id === selectedUserId) || null;
 
   const currentSelected = localSelected ?? initialSelected;
 
@@ -92,7 +90,8 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
         if (highlightedIndex !== -1) {
           e.preventDefault();
           const selectedItem = allItems[highlightedIndex];
-          if (selectedItem) selectOption(selectedItem.id === null ? null : selectedItem.id === "ai" ? { ai: true } : selectedItem);
+          if (selectedItem)
+            selectOption(selectedItem.id === null ? null : selectedItem.id === "ai" ? { ai: true } : selectedItem);
         }
         break;
       case "Escape":
@@ -124,9 +123,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
               {allItems.map((item, index) => (
                 <CommandItem
                   key={item.id ?? "anyone"}
-                  onSelect={() =>
-                    selectOption(item.id === null ? null : item.id === "ai" ? { ai: true } : item)
-                  }
+                  onSelect={() => selectOption(item.id === null ? null : item.id === "ai" ? { ai: true } : item)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   data-highlighted={highlightedIndex === index}
                   className={highlightedIndex === index ? "bg-accent text-accent-foreground" : ""}

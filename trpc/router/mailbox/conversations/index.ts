@@ -199,7 +199,7 @@ export const conversationsRouter = {
       z.object({
         previousAssigneeId: z.string().nonempty(),
         newAssigneeId: z.string().nonempty(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const [prevAssignee, newAssignee] = await Promise.all([
@@ -218,7 +218,7 @@ export const conversationsRouter = {
       const { list } = await searchConversations(
         ctx.mailbox,
         { ...searchSchema.parse({}), assignee: [input.previousAssigneeId] },
-        ctx.user.id
+        ctx.user.id,
       );
       console.log("listinside", list);
 
@@ -226,7 +226,7 @@ export const conversationsRouter = {
 
       for (const conversation of conversationsToUpdate.results) {
         await updateConversation(conversation.id, {
-          set: { assignedToId: input.newAssigneeId,}
+          set: { assignedToId: input.newAssigneeId },
         });
       }
     }),

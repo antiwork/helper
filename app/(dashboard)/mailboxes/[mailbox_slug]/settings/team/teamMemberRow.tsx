@@ -292,17 +292,18 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
         </div>
       </TableCell>
       <TableCell>
-        {currentUser?.id !== member.id &&
-            <ConversationsDialog
-              assignedToId={member.id}
-              mailboxSlug={mailboxSlug}
-              description="Please reassign the tickets before delete the member"
-            >
-              <Button variant="ghost" size="sm" iconOnly>
-                <Trash className="h-4 w-4" />
-                <span className="sr-only">Delete</span>
-              </Button>
-            </ConversationsDialog>}
+        {currentUser?.id !== member.id && (
+          <ConversationsDialog
+            assignedToId={member.id}
+            mailboxSlug={mailboxSlug}
+            description="Please reassign the tickets before delete the member"
+          >
+            <Button variant="ghost" size="sm" iconOnly>
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </ConversationsDialog>
+        )}
       </TableCell>
       <TableCell className="w-[120px]">
         <div className="flex items-center gap-2">

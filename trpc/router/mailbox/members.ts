@@ -5,7 +5,7 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema/userProfiles";
 import { getMemberStats } from "@/lib/data/stats";
-import { getProfile, banUser, getUsersWithMailboxAccess, isAdmin, updateUserMailboxData } from "@/lib/data/user";
+import { banUser, getProfile, getUsersWithMailboxAccess, isAdmin, updateUserMailboxData } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 

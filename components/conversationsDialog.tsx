@@ -12,12 +12,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "./ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "./hooks/use-toast";
 import { api } from "@/trpc/react";
+import { toast } from "./hooks/use-toast";
+import { Button } from "./ui/button";
 
 interface ConversationsDialogProps {
   children: React.ReactNode;
@@ -33,12 +33,11 @@ export type AssigneeOption =
     }
   | { ai: true };
 
-
 export default function ConversationsDialog({
   children,
   mailboxSlug,
   description,
-  assignedToId
+  assignedToId,
 }: ConversationsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const utils = api.useUtils();
@@ -48,18 +47,19 @@ export default function ConversationsDialog({
 
   const { data: count } = api.mailbox.conversations.count.useQuery({ mailboxSlug, assignee: [assignedToId] });
 
-  const { mutateAsync: reassignAllConversations, isPending: isUpdating } = api.mailbox.conversations.reassignAll.useMutation({
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Error updating conversation",
-        description: error.message,
-      });
-    },
-    onSuccess: (data) => {
-      utils.mailbox.conversations.count.invalidate({ mailboxSlug, assignee: [assignedToId] });
-    }
-  });
+  const { mutateAsync: reassignAllConversations, isPending: isUpdating } =
+    api.mailbox.conversations.reassignAll.useMutation({
+      onError: (error) => {
+        toast({
+          variant: "destructive",
+          title: "Error updating conversation",
+          description: error.message,
+        });
+      },
+      onSuccess: (data) => {
+        utils.mailbox.conversations.count.invalidate({ mailboxSlug, assignee: [assignedToId] });
+      },
+    });
 
   const handleAssignSelectChange = (assignee: AssigneeOption | null) => {
     setAssignedTo(assignee);
@@ -75,12 +75,11 @@ export default function ConversationsDialog({
     }
     reassignAllConversations({
       mailboxSlug,
-      conversationSlug: "", 
+      conversationSlug: "",
       previousAssigneeId: assignedToId,
       newAssigneeId: assignedTo.id,
     });
   };
-
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -96,11 +95,7 @@ export default function ConversationsDialog({
         <div className="flex flex-col space-y-4">
           <h4 className="font-medium">Assign conversation {count?.total ? `(${count?.total})` : ""}</h4>
 
-          <AssignSelect
-            selectedUserId={assignedToId}
-            onChange={handleAssignSelectChange}
-            aiOption
-          />
+          <AssignSelect selectedUserId={assignedToId} onChange={handleAssignSelectChange} aiOption />
 
           <div className="grid gap-1">
             <Label htmlFor="assignMessage">Message</Label>

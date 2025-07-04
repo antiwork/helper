@@ -32,22 +32,22 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     );
   });
 
-    const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
-      onSuccess: () => {
-        toast({
-          title: "Team member removed",
-          variant: "success",
-        });
-        utils.mailbox.members.list.invalidate({ mailboxSlug });
-      },
-      onError: (error) => {
-        toast({
-          title: "Failed to remove member",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    });
+  const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
+    onSuccess: () => {
+      toast({
+        title: "Team member removed",
+        variant: "success",
+      });
+      utils.mailbox.members.list.invalidate({ mailboxSlug });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to remove member",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <SectionWrapper
