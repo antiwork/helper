@@ -6,7 +6,6 @@ import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { MailboxTheme } from "@/lib/themes";
 
 export type WidgetSessionPayload = {
   email?: string;
@@ -14,7 +13,6 @@ export type WidgetSessionPayload = {
   showWidget: boolean;
   isAnonymous: boolean;
   isWhitelabel: boolean;
-  theme?: MailboxTheme;
   title?: string;
   anonymousSessionId?: string;
 };
@@ -35,7 +33,7 @@ const getMailboxJwtSecret = async (mailboxSlug: string): Promise<string> => {
 };
 
 export function createWidgetSession(
-  mailbox: Pick<Mailbox, "slug" | "widgetHMACSecret" | "isWhitelabel" | "preferences" | "name">,
+  mailbox: Pick<Mailbox, "slug" | "widgetHMACSecret" | "isWhitelabel" | "name">,
   {
     email,
     showWidget,
@@ -62,7 +60,6 @@ export function createWidgetSession(
       showWidget,
       mailboxSlug: mailbox.slug,
       isWhitelabel: mailbox.isWhitelabel ?? false,
-      theme: mailbox.preferences?.theme,
       title: mailbox.name,
       isAnonymous,
       anonymousSessionId: isAnonymous ? (anonymousSessionId ?? crypto.randomUUID()) : undefined,
