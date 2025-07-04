@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
@@ -157,7 +157,7 @@ const getNextTeamMember = async (
 
 export const autoAssignConversation = async ({ conversationId }: { conversationId: number }) => {
   const conversation = assertDefinedOrRaiseNonRetriableError(
-    await db.query.conversations.findFirst({ where: eq(conversations.id, conversationId) }),
+    await db.query.conversations.findFirst({ where: eq(conversations.id, conversationId), with: { messages: true } }),
   );
 
   if (conversation.assignedToId) {

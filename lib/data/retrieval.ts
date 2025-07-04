@@ -9,7 +9,7 @@ import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, timestamp } from "../metadataApiClient";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
-import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
+import { getMetadataApi } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
 const MAX_SIMILAR_CONVERSATIONS = 3;
@@ -148,7 +148,7 @@ export const fetchPromptRetrievalData = async (
 };
 
 export const fetchMetadata = async (email: string, mailboxSlug: string) => {
-  const { metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+  const { metadataApi } = await getMetadataApi();
   if (!metadataApi) return null;
 
   try {
