@@ -135,3 +135,7 @@ export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, rep
     })
     .where(eq(mailboxes.id, mailboxId));
 };
+
+export const getAllMailboxes = async () => {
+  return db.query.mailboxes.findMany();
+};
