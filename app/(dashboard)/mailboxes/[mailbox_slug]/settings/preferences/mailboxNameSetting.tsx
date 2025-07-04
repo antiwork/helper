@@ -19,7 +19,6 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
-      utils.mailbox.list.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
