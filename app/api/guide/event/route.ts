@@ -17,7 +17,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withAuth(async ({ request }, auth: { session; mailbox }) => {
+export const POST = withAuth(async ({ request }, { mailbox }) => {
   try {
     const body = await request.json();
     const { sessionId, events, metadata, isRecording } = body;
