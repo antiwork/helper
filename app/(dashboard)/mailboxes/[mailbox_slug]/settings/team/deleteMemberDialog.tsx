@@ -13,10 +13,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
-import { toast } from "./hooks/use-toast";
-import { Button } from "./ui/button";
+import { toast } from "../../../../../../components/hooks/use-toast";
+import { Button } from "../../../../../../components/ui/button";
 
-interface ConversationsDialogProps {
+interface DeleteMemberDialogProps {
   children: React.ReactNode;
   assignedToId: string;
   mailboxSlug: string;
@@ -31,20 +31,20 @@ export type AssigneeOption =
     }
   | { ai: true };
 
-export default function ConversationsDialog({
+export default function DeleteMemberDialog({
   children,
   mailboxSlug,
   description,
   assignedToId,
   conversationIds,
-}: ConversationsDialogProps) {
+}: DeleteMemberDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const utils = api.useUtils();
   const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const [assignMessage, setAssignMessage] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const { mutateAsync: updateConversation, isPending: isUpdating } = api.mailbox.conversations.update.useMutation({
+  const { mutateAsync: updateConversation } = api.mailbox.conversations.update.useMutation({
     onError: (error) => {
       setLoading(false);
       toast({
@@ -55,7 +55,7 @@ export default function ConversationsDialog({
     },
   });
 
-  const { mutate: removeTeamMember, isPending: isRemoving } = api.mailbox.members.delete.useMutation({
+  const { mutate: removeTeamMember } = api.mailbox.members.delete.useMutation({
     onSuccess: () => {
       toast({
         title: "Team member removed",
@@ -96,7 +96,7 @@ export default function ConversationsDialog({
       }
 
       for (const conversationId of conversationIds || []) {
-        if ( "ai" in assignedTo) {
+        if ("ai" in assignedTo) {
           updateConversation({
             mailboxSlug,
             conversationSlug: conversationId,

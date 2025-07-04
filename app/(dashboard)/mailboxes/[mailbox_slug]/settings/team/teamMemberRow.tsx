@@ -2,8 +2,6 @@
 
 import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ConfirmationDialog } from "@/components/confirmationDialog";
-import ConversationsDialog from "@/components/conversationsDialog";
 import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
@@ -17,6 +15,7 @@ import { useSession } from "@/components/useSession";
 import { type UserRole } from "@/lib/data/user";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import DeleteMemberDialog from "./deleteMemberDialog";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
@@ -308,7 +307,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
       </TableCell>
       <TableCell>
         {currentUser?.id !== member.id && isAdmin && (
-          <ConversationsDialog
+          <DeleteMemberDialog
             assignedToId={member.id}
             mailboxSlug={mailboxSlug}
             description={
@@ -322,7 +321,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
               <Trash className="h-4 w-4" />
               <span className="sr-only">Delete</span>
             </Button>
-          </ConversationsDialog>
+          </DeleteMemberDialog>
         )}
       </TableCell>
       <TableCell className="w-[120px]">
