@@ -10,16 +10,9 @@ import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 
-export const getMailboxById = cache(async (id: number): Promise<Mailbox | null> => {
+export const getMailbox = cache(async (): Promise<typeof mailboxes.$inferSelect | null> => {
   const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, id),
-  });
-  return result ?? null;
-});
-
-export const getMailboxBySlug = cache(async (slug: string): Promise<typeof mailboxes.$inferSelect | null> => {
-  const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, slug),
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
   return result ?? null;
 });

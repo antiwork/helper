@@ -1,11 +1,11 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
-import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
+import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -157,24 +157,14 @@ const getNextTeamMember = async (
 
 export const autoAssignConversation = async ({ conversationId }: { conversationId: number }) => {
   const conversation = assertDefinedOrRaiseNonRetriableError(
-    await db.query.conversations.findFirst({
-      where: eq(conversations.id, conversationId),
-      with: {
-        messages: {
-          columns: {
-            id: true,
-            role: true,
-            cleanedUpText: true,
-          },
-        },
-      },
-    }),
+    await db.query.conversations.findFirst({ where: eq(conversations.id, conversationId) }),
   );
 
-  if (conversation.assignedToId) return { message: "Skipped: already assigned" };
-  if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
+  if (conversation.assignedToId) {
+    return { message: "Conversation is already assigned" };
+  }
 
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
   const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
 
   const activeTeamMembers = teamMembers.filter(
