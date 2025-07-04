@@ -62,6 +62,15 @@ export const membersRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const userProfile = await getProfile(ctx.user.id);
+
+      if (isAdmin(userProfile) === false) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You do not have permission to remove team members.",
+        });
+      }
+
       if (ctx.user.id === input.id) {
         throw new TRPCError({
           code: "BAD_REQUEST",
