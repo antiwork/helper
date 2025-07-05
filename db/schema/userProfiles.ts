@@ -10,7 +10,7 @@ export const userProfiles = pgTable("user_profiles", {
     .references(() => authUsers.id, { onDelete: "cascade" }),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
-  inviterUserId: uuid().references(() => authUsers.id).default(""),
+  inviterUserId: uuid().references(() => authUsers.id),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp()
     .defaultNow()

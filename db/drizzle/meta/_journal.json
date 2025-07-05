@@ -729,6 +729,13 @@
       "when": 1751585212184,
       "tag": "0103_backfill_user_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1751678605566,
+      "tag": "0104_create_user_mailbox_access",
+      "breakpoints": true
     }
   ]
 }
