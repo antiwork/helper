@@ -30,7 +30,7 @@ export const getMetadataApi = async () => {
   return { mailbox, metadataApi: await getMetadataApiByMailbox(mailbox) };
 };
 
-export const createMailboxMetadataApi = async (mailboxSlug: string, params: { url: string }): Promise<void> => {
+export const createMailboxMetadataApi = async (params: { url: string }): Promise<void> => {
   const { mailbox, metadataApi } = await getMetadataApi();
   if (metadataApi) {
     throw new DataError("Mailbox already has a metadata endpoint");
@@ -50,7 +50,7 @@ export const createMailboxMetadataApi = async (mailboxSlug: string, params: { ur
   });
 };
 
-export const deleteMailboxMetadataApiByMailboxSlug = async (mailboxSlug: string): Promise<void> => {
+export const deleteMailboxMetadataApi = async (): Promise<void> => {
   const { metadataApi } = await getMetadataApi();
   if (!metadataApi) {
     throw new DataError("Mailbox does not have a metadata endpoint");
@@ -59,7 +59,7 @@ export const deleteMailboxMetadataApiByMailboxSlug = async (mailboxSlug: string)
   await db.delete(mailboxesMetadataApi).where(eq(mailboxesMetadataApi.id, metadataApi.id));
 };
 
-export const testMailboxMetadataApiURL = async (mailboxSlug: string) => {
+export const testMailboxMetadataApiURL = async () => {
   const { metadataApi } = await getMetadataApi();
   if (!metadataApi) {
     throw new DataError("Mailbox does not have a metadata endpoint");

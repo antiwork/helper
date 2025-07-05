@@ -5,9 +5,7 @@ import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { getMailbox } from "@/lib/data/mailbox";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { getSlackAccessToken } from "@/lib/slack/client";
-import { SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {

@@ -147,7 +147,7 @@ export const fetchPromptRetrievalData = async (
   };
 };
 
-export const fetchMetadata = async (email: string, mailboxSlug: string) => {
+export const fetchMetadata = async (email: string) => {
   const { metadataApi } = await getMetadataApi();
   if (!metadataApi) return null;
 

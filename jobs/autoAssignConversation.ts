@@ -157,7 +157,17 @@ const getNextTeamMember = async (
 
 export const autoAssignConversation = async ({ conversationId }: { conversationId: number }) => {
   const conversation = assertDefinedOrRaiseNonRetriableError(
-    await db.query.conversations.findFirst({ where: eq(conversations.id, conversationId), with: { messages: true } }),
+    await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversationId),
+      with: {
+        messages: {
+          columns: {
+            role: true,
+            cleanedUpText: true,
+          },
+        },
+      },
+    }),
   );
 
   if (conversation.assignedToId) {

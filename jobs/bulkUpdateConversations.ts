@@ -12,12 +12,10 @@ export const bulkUpdateConversations = async ({
   conversationFilter,
   status,
   userId,
-  mailboxId,
 }: {
   conversationFilter: number[] | z.infer<typeof searchSchema>;
   status: "open" | "closed" | "spam";
   userId: string;
-  mailboxId: number;
 }) => {
   const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
