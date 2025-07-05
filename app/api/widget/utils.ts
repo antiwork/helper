@@ -73,13 +73,13 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   return { success: true, session, mailbox };
 }
 
-type AuthenticatedHandler = (
-  inner: { request: Request; context: { params: Promise<{ id: string; slug: string }> } },
+type AuthenticatedHandler<Params extends object> = (
+  inner: { request: Request; context: { params: Promise<Params> } },
   auth: { session: WidgetSessionPayload; mailbox: Mailbox },
 ) => Promise<Response>;
 
-export function withWidgetAuth(handler: AuthenticatedHandler) {
-  return async (request: Request, context: { params: Promise<{ id: string; slug: string }> }) => {
+export function withWidgetAuth<Params = object>(handler: AuthenticatedHandler<Params>) {
+  return async (request: Request, context: { params: Promise<Params> }) => {
     if (request.method === "OPTIONS") {
       return new NextResponse(null, { status: 204, headers: corsHeaders });
     }

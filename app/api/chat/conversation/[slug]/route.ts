@@ -8,7 +8,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
 
-export const GET = withWidgetAuth(async ({ context: { params } }, { session }) => {
+export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params } }, { session }) => {
   const { slug } = await params;
 
   let baseCondition;

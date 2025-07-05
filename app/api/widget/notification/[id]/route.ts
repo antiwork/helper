@@ -12,7 +12,7 @@ export function OPTIONS() {
   return corsOptions("PATCH");
 }
 
-export const PATCH = withWidgetAuth(async ({ request, context: { params } }, { session, mailbox }) => {
+export const PATCH = withWidgetAuth<{ id: string }>(async ({ request, context: { params } }, { session, mailbox }) => {
   const { id } = await params;
   const notificationId = parseInt(id);
 

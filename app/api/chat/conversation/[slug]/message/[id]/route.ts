@@ -19,90 +19,92 @@ const MessageReactionSchema = z.discriminatedUnion("type", [
     feedback: z.string().nullish(),
   }),
 ]);
-export const POST = withWidgetAuth(async ({ request, context: { params } }, { session }) => {
-  const { id, slug } = await params;
+export const POST = withWidgetAuth<{ id: string; slug: string }>(
+  async ({ request, context: { params } }, { session }) => {
+    const { id, slug } = await params;
 
-  let messageId;
-  try {
-    const parsedId = z.coerce.bigint().parse(id);
-    messageId = Number(parsedId);
-  } catch {
-    return Response.json({ error: "Invalid message ID" }, { status: 400 });
-  }
+    let messageId;
+    try {
+      const parsedId = z.coerce.bigint().parse(id);
+      messageId = Number(parsedId);
+    } catch {
+      return Response.json({ error: "Invalid message ID" }, { status: 400 });
+    }
 
-  const message = await db
-    .select({
-      reactionType: conversationMessages.reactionType,
-      reactionFeedback: conversationMessages.reactionFeedback,
-      metadata: conversationMessages.metadata,
-      conversation: {
-        emailFrom: conversations.emailFrom,
-      },
-    })
-    .from(conversationMessages)
-    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-    .where(and(eq(conversationMessages.id, messageId), eq(conversations.slug, slug)))
-    .limit(1)
-    .then(takeUniqueOrThrow);
+    const message = await db
+      .select({
+        reactionType: conversationMessages.reactionType,
+        reactionFeedback: conversationMessages.reactionFeedback,
+        metadata: conversationMessages.metadata,
+        conversation: {
+          emailFrom: conversations.emailFrom,
+        },
+      })
+      .from(conversationMessages)
+      .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
+      .where(and(eq(conversationMessages.id, messageId), eq(conversations.slug, slug)))
+      .limit(1)
+      .then(takeUniqueOrThrow);
 
-  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
-    return Response.json({ error: "Message not found" }, { status: 404 });
-  }
+    if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
+      return Response.json({ error: "Message not found" }, { status: 404 });
+    }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-  const reactionResult = MessageReactionSchema.safeParse({
-    ...body,
-    messageId,
-  });
+    const reactionResult = MessageReactionSchema.safeParse({
+      ...body,
+      messageId,
+    });
 
-  if (!reactionResult.success) {
-    return Response.json({ error: "Invalid reaction" }, { status: 400 });
-  }
+    if (!reactionResult.success) {
+      return Response.json({ error: "Invalid reaction" }, { status: 400 });
+    }
 
-  const reaction = reactionResult.data;
+    const reaction = reactionResult.data;
 
-  if (message.reactionType === "thumbs-down" && reaction.type === "thumbs-down" && message.reactionFeedback == null) {
+    if (message.reactionType === "thumbs-down" && reaction.type === "thumbs-down" && message.reactionFeedback == null) {
+      await db
+        .update(conversationMessages)
+        .set({
+          reactionFeedback: reaction.feedback,
+          reactionCreatedAt: new Date(),
+        })
+        .where(eq(conversationMessages.id, messageId));
+      waitUntil(publishEvent(messageId));
+      return Response.json({ reaction });
+    }
+
+    if (message.reactionType === reaction.type) {
+      await db
+        .update(conversationMessages)
+        .set({
+          reactionType: null,
+          reactionFeedback: null,
+          reactionCreatedAt: null,
+        })
+        .where(eq(conversationMessages.id, messageId));
+      return Response.json({ reaction: null });
+    }
+
     await db
       .update(conversationMessages)
       .set({
-        reactionFeedback: reaction.feedback,
+        reactionType: reaction.type,
+        reactionFeedback: reaction.type === "thumbs-down" ? reaction.feedback : null,
         reactionCreatedAt: new Date(),
       })
       .where(eq(conversationMessages.id, messageId));
     waitUntil(publishEvent(messageId));
+
     return Response.json({ reaction });
-  }
-
-  if (message.reactionType === reaction.type) {
-    await db
-      .update(conversationMessages)
-      .set({
-        reactionType: null,
-        reactionFeedback: null,
-        reactionCreatedAt: null,
-      })
-      .where(eq(conversationMessages.id, messageId));
-    return Response.json({ reaction: null });
-  }
-
-  await db
-    .update(conversationMessages)
-    .set({
-      reactionType: reaction.type,
-      reactionFeedback: reaction.type === "thumbs-down" ? reaction.feedback : null,
-      reactionCreatedAt: new Date(),
-    })
-    .where(eq(conversationMessages.id, messageId));
-  waitUntil(publishEvent(messageId));
-
-  return Response.json({ reaction });
-});
+  },
+);
 
 const publishEvent = async (messageId: number) => {
   const message = assertDefined(
