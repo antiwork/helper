@@ -120,9 +120,14 @@ export const List = () => {
             void utils.mailbox.conversations.count.invalidate();
 
             if (updatedImmediately) {
+              const ticketsText = allConversationsSelected
+                ? "All matching tickets"
+                : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
+
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
+
               toast({
-                title: `${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`,
+                title: `${ticketsText} ${actionText}`,
               });
             } else {
               toast({ title: "Starting update, refresh to see status." });
@@ -289,7 +294,9 @@ export const List = () => {
     });
   });
 
-  const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+  const conversationsText = allConversationsSelected
+    ? "all matching conversations"
+    : `${selectedConversations.length} conversation${selectedConversations.length === 1 ? "" : "s"}`;
 
   return (
     <div className="flex flex-col w-full h-full">
@@ -321,9 +328,7 @@ export const List = () => {
                 <div className="flex items-center gap-2">
                   {searchParams.status === "closed" ? (
                     <ConfirmationDialog
-                      message={`Are you sure you want to reopen ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      }?`}
+                      message={`Are you sure you want to reopen ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("open")}
                       confirmLabel="Yes, reopen"
                     >
@@ -333,9 +338,7 @@ export const List = () => {
                     </ConfirmationDialog>
                   ) : (
                     <ConfirmationDialog
-                      message={`Are you sure you want to close ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      }?`}
+                      message={`Are you sure you want to close ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("closed")}
                       confirmLabel="Yes, close"
                     >
@@ -346,9 +349,7 @@ export const List = () => {
                   )}
                   {searchParams.status !== "spam" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to mark ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      } as spam?`}
+                      message={`Are you sure you want to mark ${conversationsText} as spam?`}
                       onConfirm={() => handleBulkUpdate("spam")}
                       confirmLabel="Yes, mark as spam"
                     >
