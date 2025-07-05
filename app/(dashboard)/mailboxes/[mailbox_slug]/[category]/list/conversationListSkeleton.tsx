@@ -9,7 +9,7 @@ const ConversationListItemSkeleton = () => {
           <div className="w-5 flex items-center">
             <Skeleton className="h-4 w-4 mt-1" />
           </div>
-          
+
           {/* Main content */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-col gap-2">
@@ -28,7 +28,7 @@ const ConversationListItemSkeleton = () => {
                   <Skeleton className="h-4 w-20" />
                 </div>
               </div>
-              
+
               {/* Content rows */}
               <div className="flex flex-col gap-2">
                 {/* Subject line */}

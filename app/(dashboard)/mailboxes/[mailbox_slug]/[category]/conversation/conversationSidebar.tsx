@@ -148,9 +148,7 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
             <CopyToClipboard
               text={conversation.emailFrom ?? ""}
               onCopy={(_, success) =>
-                success
-                  ? showSuccessToast("Copied!")
-                  : showErrorToast("Failed to copy to clipboard")
+                success ? showSuccessToast("Copied!") : showErrorToast("Failed to copy to clipboard")
               }
             >
               <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2 min-w-0">

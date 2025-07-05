@@ -96,15 +96,11 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
 
     const cc = parseEmailList(newConversationInfo.cc);
     if (!cc.success)
-      return showErrorToast(
-        `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
-      );
+      return showErrorToast(`Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`);
 
     const bcc = parseEmailList(newConversationInfo.bcc);
     if (!bcc.success)
-      return showErrorToast(
-        `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
-      );
+      return showErrorToast(`Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`);
 
     const parsedNewConversationInfo: RouterInputs["mailbox"]["conversations"]["create"]["conversation"] = {
       conversation_slug: conversationSlug,

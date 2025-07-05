@@ -185,7 +185,16 @@ export const ConversationListContextProvider = ({
       removeConversationKeepActive,
       navigateToConversation: setId,
     }),
-    [input.mailboxSlug, currentConversationSlug, conversations, lastPage, isPending, isFetching, isFetchingNextPage, hasNextPage],
+    [
+      input.mailboxSlug,
+      currentConversationSlug,
+      conversations,
+      lastPage,
+      isPending,
+      isFetching,
+      isFetchingNextPage,
+      hasNextPage,
+    ],
   );
 
   return <ConversationListContext.Provider value={value}>{children}</ConversationListContext.Provider>;
