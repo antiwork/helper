@@ -30,7 +30,7 @@ const searchKnowledgeBase = async (query: string, mailbox: Mailbox) => {
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string, unused_mailboxId: number, mailboxSlug: string) => {
+const updateCustomerMetadata = async (email: string, unused_mailboxId: number) => {
   try {
     const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
     if (customerMetadata) {
@@ -72,7 +72,7 @@ const requestHumanSupport = async (
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email, conversation.unused_mailboxId, mailbox.slug));
+    waitUntil(updateCustomerMetadata(email, conversation.unused_mailboxId));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
