@@ -102,30 +102,31 @@ export const ConversationSearchBar = ({
     return statuses;
   }, [status, searchParams]);
 
-  const sortOptions = useMemo(
-    () => [
-      ...(defaultSort === "highest_value"
+  const sortOptions = useMemo(() => {
+    const options = [
+      ...(defaultSort === "highest_value" && !searchParams.search
         ? [
             {
               value: `highest_value` as const,
               label: `Highest Value`,
-              selected: searchParams.sort ? searchParams.sort == "highest_value" : true,
             },
           ]
         : []),
       {
         value: `oldest` as const,
         label: `Oldest`,
-        selected: searchParams.sort ? searchParams.sort === "oldest" : defaultSort === "oldest",
       },
       {
         value: `newest` as const,
         label: `Newest`,
-        selected: searchParams.sort == "newest",
       },
-    ],
-    [defaultSort, searchParams],
-  );
+    ];
+
+    return options.map((option) => ({
+      ...option,
+      selected: (searchParams.sort || defaultSort) === option.value,
+    }));
+  }, [defaultSort, searchParams]);
 
   return (
     <div className="flex items-center justify-between gap-2 md:gap-6 py-1">
@@ -196,7 +197,20 @@ export const ConversationSearchBar = ({
           {activeFilterCount > 0 && <span className="text-xs ml-1">({activeFilterCount})</span>}
         </Button>
       </div>
-      <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
+      <Select 
+        value={(() => {
+          const selectedOption = sortOptions.find(({ selected }) => selected);
+          const currentSort = searchParams.sort || defaultSort;
+
+          // If highest_value is selected but not in visible options, use empty string
+          if (!selectedOption && currentSort === "highest_value") {
+            return "";
+          }
+
+          return selectedOption?.value || "";
+        })()}
+        onValueChange={handleSortChange}
+      >
         <SelectTrigger
           variant="bare"
           className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
@@ -211,7 +225,19 @@ export const ConversationSearchBar = ({
             }
           >
             <ArrowDownUp className="h-4 w-4 md:hidden" />
-            <span className="hidden md:block">{sortOptions.find(({ selected }) => selected)?.label}</span>
+            <span className="hidden md:block">
+              {(() => {
+                const selectedOption = sortOptions.find(({ selected }) => selected);
+                const currentSort = searchParams.sort || defaultSort;
+
+                // If highest_value is selected but not in visible options (during search)
+                if (!selectedOption && currentSort === "highest_value") {
+                  return "Highest Value";
+                }
+
+                return selectedOption?.label;
+              })()}
+            </span>
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
