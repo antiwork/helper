@@ -98,19 +98,22 @@ export default function DeleteMemberDialog({
               assignedToAI: true,
               message: assignMessage,
             });
-          } else {
-            return updateConversation({
-              mailboxSlug,
-              conversationSlug: conversationId,
-              assignedToId: assignedTo.id,
-              message: assignMessage,
-            });
           }
+          return updateConversation({
+            mailboxSlug,
+            conversationSlug: conversationId,
+            assignedToId: assignedTo.id,
+            message: assignMessage,
+          });
         });
 
         await Promise.all(updatePromises);
       } catch (error) {
         setLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Failed to reassign conversations"
+        });
         return;
       }
     }
