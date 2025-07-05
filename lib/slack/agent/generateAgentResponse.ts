@@ -202,7 +202,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ id }) => {
         showStatus(`Checking ticket...`, { toolName: "getTicket", parameters: { id } });
-        const conversation = await findConversation(id, mailbox);
+        const conversation = await findConversation(id);
         if (!conversation) return { error: "Ticket not found" };
         const platformCustomer = await getPlatformCustomer(conversation.emailFrom ?? "");
         return formatConversation(conversation, mailbox, platformCustomer);
@@ -220,7 +220,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ id }) => {
         showStatus(`Reading ticket...`, { toolName: "getTicketMessages", parameters: { id } });
-        const conversation = await findConversation(id, mailbox);
+        const conversation = await findConversation(id);
         if (!conversation) return { error: "Ticket not found" };
         const messages = await db.query.conversationMessages.findMany({
           where: and(
@@ -313,8 +313,8 @@ export const generateAgentResponse = async (
         showStatus(`Searching knowledge base...`, { toolName: "searchKnowledgeBase", parameters: { query } });
         try {
           const [websitePages, knowledgeBank] = await Promise.all([
-            findSimilarWebsitePages(query, mailbox),
-            findEnabledKnowledgeBankEntries(mailbox),
+            findSimilarWebsitePages(query),
+            findEnabledKnowledgeBankEntries(),
           ]);
           if (websitePages.length === 0 && knowledgeBank.length === 0) {
             return { message: "No relevant website pages found for this query" };
@@ -341,7 +341,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ ticketId }) => {
         showStatus(`Sending reply...`, { toolName: "sendReply", parameters: { ticketId } });
-        const conversation = await findConversation(ticketId, mailbox);
+        const conversation = await findConversation(ticketId);
         if (!conversation) return { error: "Ticket not found" };
         await createReply({
           conversationId: conversation.id,
@@ -427,7 +427,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
   };
 };
 
-const findConversation = async (id: string | number, mailbox: Mailbox) => {
+const findConversation = async (id: string | number) => {
   const conversation = /^\d+$/.test(id.toString())
     ? await getConversationById(Number(id))
     : await getConversationBySlug(id.toString());

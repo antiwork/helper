@@ -31,7 +31,7 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
   if (isWeekend(now)) return { success: true, skipped: "weekend" };
 
   const mailbox = await getMailbox();
-  if (!mailbox || !mailbox.slackBotToken || !mailbox.slackAlertChannel) return;
+  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
 
   const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
@@ -63,7 +63,7 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
 
     if (!overdueAssignedConversations.length) return { success: true, skipped: "no_overdue" };
 
-    const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken!);
+    const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken);
 
     const blocks: KnownBlock[] = [
       {
@@ -91,8 +91,8 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
       },
     ];
 
-    await postSlackMessage(mailbox.slackBotToken!, {
-      channel: mailbox.slackAlertChannel!,
+    await postSlackMessage(mailbox.slackBotToken, {
+      channel: mailbox.slackAlertChannel,
       text: `Assigned Ticket Response Time Alert for ${mailbox.name}`,
       blocks,
     });

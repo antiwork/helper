@@ -21,12 +21,7 @@ export async function POST(request: Request) {
   }
 
   const { pageHTML, currentURL } = result.data;
-  const readPageTool = await generateReadPageTool(
-    pageHTML,
-    auth.mailbox.id,
-    currentURL,
-    auth.session.email ?? "anonymous",
-  );
+  const readPageTool = await generateReadPageTool(pageHTML, currentURL, auth.session.email ?? "anonymous");
 
   return Response.json({ readPageTool });
 }

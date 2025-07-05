@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return corsResponse({ error: authResult.error }, { status: 401 }, "PATCH");
   }
 
-  const { session, mailbox } = authResult;
+  const { session } = authResult;
 
   if (!session.email) {
     return corsResponse({ error: "Not authorized - Anonymous session" }, { status: 401 }, "PATCH");

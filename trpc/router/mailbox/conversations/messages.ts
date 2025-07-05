@@ -20,7 +20,6 @@ export const messagesRouter = {
 
     const similarConversations = await findSimilarConversations(
       assertDefined(conversation.embedding),
-      ctx.mailbox,
       5,
       conversation.slug,
     );
@@ -134,7 +133,7 @@ export const messagesRouter = {
         period: z.enum(["hourly", "daily", "monthly"]),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const groupByFormat = (() => {
         switch (input.period) {
           case "hourly":
@@ -176,7 +175,7 @@ export const messagesRouter = {
         endDate: z.date().optional(),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const createdAtFilter = input.endDate
         ? and(gte(conversations.createdAt, input.startDate), lte(conversations.createdAt, input.endDate))
         : gte(conversations.createdAt, input.startDate);

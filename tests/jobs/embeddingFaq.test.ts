@@ -1,5 +1,4 @@
 import { faqsFactory } from "@tests/support/factories/faqs";
-import { userFactory } from "@tests/support/factories/users";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
@@ -17,7 +16,6 @@ describe("embeddingFaq", () => {
   });
 
   it("generates and stores embedding for a FAQ", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { faq } = await faqsFactory.create({
       content: "Test Body",
       embedding: null,
@@ -44,7 +42,6 @@ describe("embeddingFaq", () => {
   });
 
   it("handles errors during embedding generation", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { faq } = await faqsFactory.create();
 
     vi.mocked(generateEmbedding).mockRejectedValue(new Error("Embedding generation failed"));

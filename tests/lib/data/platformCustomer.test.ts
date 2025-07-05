@@ -7,7 +7,7 @@ describe("getPlatformCustomer", () => {
   const mockEmail = "test@example.com";
 
   it("returns platformCustomer if found for the given email", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const { platformCustomer } = await platformCustomerFactory.create({ email: mockEmail });
 
     const result = await getPlatformCustomer(mockEmail);

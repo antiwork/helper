@@ -18,7 +18,7 @@ import { db } from "@/db/client";
 import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
-import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi } from "../schema";
+import { conversationMessages, conversations, mailboxesMetadataApi } from "../schema";
 
 const getTables = async () => {
   const result = await db.execute(sql`
@@ -49,7 +49,7 @@ const checkIfAllTablesAreEmpty = async () => {
 export const seedDatabase = async () => {
   if (await checkIfAllTablesAreEmpty()) {
     console.log("All tables are empty. Starting seed process...");
-    const { mailbox } = await mailboxFactory.create({
+    await mailboxFactory.create({
       name: "Gumroad",
       slug: "gumroad",
       promptUpdatedAt: addDays(new Date(), 1),
@@ -74,7 +74,7 @@ export const seedDatabase = async () => {
       ),
     );
 
-    await createSettingsPageRecords(mailbox);
+    await createSettingsPageRecords();
 
     await generateSeedsFromFixtures();
     const conversationRecords = await db.select().from(conversations);
@@ -236,7 +236,7 @@ const generateSeedsFromFixtures = async () => {
   );
 };
 
-const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect) => {
+const createSettingsPageRecords = async () => {
   const gumroadDevToken = "36a9bb0b88ad771ead2ada56a9be84e4";
 
   await toolsFactory.create({

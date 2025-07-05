@@ -375,7 +375,6 @@ describe("getMessages", () => {
 
 describe("ensureCleanedUpText", () => {
   it("returns existing cleanedUpText if already present", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<p>Original content</p>",
@@ -388,7 +387,6 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("generates and stores cleanedUpText if not present", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<p>Hello</p><p>World</p>",
@@ -404,7 +402,6 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("handles empty body", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "",
@@ -417,7 +414,6 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("removes HTML tags and extra whitespace", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<div>  Hello  </div><br><br><p>  World  </p>",
@@ -430,7 +426,6 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("removes invisible tags", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<p>Hello</p><script>alert('test');</script><style>.test{color:red;}</style><p>World</p>",
@@ -450,7 +445,7 @@ describe("createReply", () => {
     const time = new Date("2023-01-01 01:00:00");
     vi.setSystemTime(time);
 
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ status: "open" });
 
     const messageId = await createReply({ conversationId: conversation.id, message: "Test message", user });
@@ -478,7 +473,7 @@ describe("createReply", () => {
   });
 
   it("creates a reply without closing the conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ status: "open" });
 
     const result = await createReply({
@@ -499,7 +494,7 @@ describe("createReply", () => {
   });
 
   it("creates a reply with CC and BCC recipients", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const result = await createReply({
@@ -519,7 +514,7 @@ describe("createReply", () => {
   });
 
   it("creates a reply with Slack information", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const result = await createReply({
@@ -541,7 +536,7 @@ describe("createReply", () => {
   });
 
   it("assigns the conversation to the user when replying to an unassigned conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ assignedToId: null });
 
     await createReply({
@@ -555,7 +550,7 @@ describe("createReply", () => {
   });
 
   it("does not change assignment when replying to an already assigned conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { user: otherUser } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ assignedToId: otherUser.id });
 
@@ -570,7 +565,7 @@ describe("createReply", () => {
   });
 
   it("handles reply without user (no assignment)", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ assignedToId: null });
 
     await createReply({
@@ -584,7 +579,7 @@ describe("createReply", () => {
   });
 
   it("handles file uploads", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { file } = await fileFactory.create(null, { isInline: true });
 
@@ -602,7 +597,7 @@ describe("createReply", () => {
   });
 
   it("marks message as perfect if it matches the last AI draft", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
@@ -625,7 +620,7 @@ describe("createReply", () => {
   });
 
   it("discards AI-generated drafts after creating a reply", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
@@ -654,7 +649,7 @@ describe("createReply", () => {
 
 describe("createConversationMessage", () => {
   it("creates a conversation message", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const message = await createConversationMessage({
@@ -687,7 +682,7 @@ describe("createConversationMessage", () => {
     const time = new Date("2023-01-01 01:00:00");
     vi.setSystemTime(time);
 
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const message = await createConversationMessage({
@@ -716,7 +711,6 @@ describe("createConversationMessage", () => {
 
 describe("getConversationMessageById", () => {
   it("finds a conversation message", async () => {
-    const { mailbox } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id);
 

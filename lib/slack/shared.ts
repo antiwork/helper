@@ -99,9 +99,9 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
     }
 
     if (action === "assign") {
-      await openAssignModal(message, conversation, payload.trigger_id);
+      await openAssignModal(message, payload.trigger_id);
     } else if (action === "respond_in_slack") {
-      await openRespondModal(message, conversation, payload.trigger_id);
+      await openRespondModal(message, payload.trigger_id);
     } else if (action === "close") {
       await db.transaction(async (tx) => {
         await updateConversation(
@@ -163,11 +163,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
   }
 };
 
-const openAssignModal = async (
-  message: SlackMessage,
-  conversation: typeof conversations.$inferSelect,
-  triggerId: string,
-) => {
+const openAssignModal = async (message: SlackMessage, triggerId: string) => {
   const mailbox = await getMailbox();
   if (!mailbox?.slackBotToken) {
     throw new Error("Mailbox not linked to Slack");
@@ -215,11 +211,7 @@ const openAssignModal = async (
   });
 };
 
-const openRespondModal = async (
-  message: SlackMessage,
-  conversation: typeof conversations.$inferSelect,
-  triggerId: string,
-) => {
+const openRespondModal = async (message: SlackMessage, triggerId: string) => {
   const mailbox = await getMailbox();
   if (!mailbox?.slackBotToken) {
     throw new Error("Mailbox not linked to Slack");

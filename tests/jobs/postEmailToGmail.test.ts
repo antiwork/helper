@@ -82,7 +82,7 @@ const assertMarkFailed = async (emailId: number) => {
 describe("postEmailToGmail", () => {
   describe("on success", () => {
     it("properly posts to Gmail", async () => {
-      const { conversation, mailbox } = await setupConversationForGmailSending();
+      const { conversation } = await setupConversationForGmailSending();
 
       const { message } = await conversationMessagesFactory.createEnqueued(conversation.id, {
         body: "Content",
@@ -146,7 +146,7 @@ describe("postEmailToGmail", () => {
     });
 
     it("includes the correct threadId for reply emails", async () => {
-      const { conversation, mailbox } = await setupConversationForGmailSending();
+      const { conversation } = await setupConversationForGmailSending();
       await conversationMessagesFactory.create(conversation.id, {
         body: "User email that initiated the conversation",
         role: "user",

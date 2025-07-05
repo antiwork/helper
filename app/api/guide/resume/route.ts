@@ -21,7 +21,6 @@ export async function POST(request: Request) {
   }
 
   const {
-    mailbox,
     session: { email },
   } = authResult;
 

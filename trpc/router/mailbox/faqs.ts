@@ -11,7 +11,7 @@ import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { mailboxProcedure } from "./procedure";
 
 export const faqsRouter = {
-  list: mailboxProcedure.query(async ({ ctx }) => {
+  list: mailboxProcedure.query(async ({}) => {
     return await db
       .select({
         id: faqs.id,
@@ -31,7 +31,7 @@ export const faqsRouter = {
         content: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       return await db.transaction(async (tx) => {
         const faq = await tx.insert(faqs).values({ content: input.content }).returning().then(takeUniqueOrThrow);
 
@@ -50,7 +50,7 @@ export const faqsRouter = {
         enabled: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       return await db.transaction(async (tx) => {
         const faq = await tx
           .update(faqs)
@@ -73,7 +73,7 @@ export const faqsRouter = {
         return faq;
       });
     }),
-  delete: mailboxProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+  delete: mailboxProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
     return await db.transaction(async (tx) => {
       const [faq] = await tx
         .select()

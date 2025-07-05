@@ -4,9 +4,8 @@ import { db, Transaction } from "@/db/client";
 import { tools as toolsTable } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
 import { parseToolsFromOpenAPISpec } from "@/lib/tools/openApiParser";
-import type { Mailbox } from "./mailbox";
 
-export const getMailboxToolsForChat = async (mailbox: Mailbox, tx: Transaction | typeof db = db): Promise<Tool[]> => {
+export const getMailboxToolsForChat = async (tx: Transaction | typeof db = db): Promise<Tool[]> => {
   return await tx.query.tools.findMany({
     where: and(eq(toolsTable.enabled, true), eq(toolsTable.availableInChat, true)),
   });

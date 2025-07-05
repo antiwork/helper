@@ -1,7 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { toolsFactory } from "@tests/support/factories/tools";
-import { userFactory } from "@tests/support/factories/users";
 import { generateText } from "ai";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -31,7 +30,6 @@ describe("apiTools", () => {
 
   describe("buildAITools", () => {
     it("builds AI tools from tool definitions", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { tool } = await toolsFactory.create({
         parameters: [
           { name: "param1", type: "string", required: true, in: "body" },
@@ -47,7 +45,6 @@ describe("apiTools", () => {
     });
 
     it("handles customerEmailParameter correctly", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { tool } = await toolsFactory.create({
         customerEmailParameter: "customer_email",
         parameters: [
@@ -75,7 +72,6 @@ describe("apiTools", () => {
 
   describe("callToolApi", () => {
     it("calls API with correct parameters and headers", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         requestMethod: "POST",
@@ -106,7 +102,6 @@ describe("apiTools", () => {
     });
 
     it("handles API errors", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({});
 
@@ -126,7 +121,6 @@ describe("apiTools", () => {
     });
 
     it("handles fetch errors", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({});
 
@@ -139,7 +133,6 @@ describe("apiTools", () => {
     });
 
     it("throws ToolApiError for missing required parameters", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         parameters: [{ name: "required_param", type: "string", required: true, in: "body" }],
@@ -149,7 +142,6 @@ describe("apiTools", () => {
     });
 
     it("throws ToolApiError for invalid parameter types", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         parameters: [{ name: "required_param", type: "string", required: true, in: "body" }],
@@ -158,7 +150,6 @@ describe("apiTools", () => {
     });
 
     it("includes query parameters in the URL", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         requestMethod: "GET",
@@ -183,7 +174,6 @@ describe("apiTools", () => {
     });
 
     it("replaces path parameters in the URL", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         requestMethod: "GET",
@@ -211,7 +201,6 @@ describe("apiTools", () => {
     });
 
     it("properly sets content-type header when not provided", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         requestMethod: "POST",
@@ -238,7 +227,6 @@ describe("apiTools", () => {
     });
 
     it("respects custom headers from tool configuration", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         requestMethod: "GET",
@@ -262,7 +250,6 @@ describe("apiTools", () => {
     });
 
     it("creates tool event with response data", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const { tool } = await toolsFactory.create({
         requestMethod: "POST",
@@ -302,7 +289,6 @@ describe("apiTools", () => {
 
   describe("generateSuggestedActions", () => {
     it("generates available tools based on conversation context", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       await conversationMessagesFactory.create(conversation.id, {
         role: "user",
@@ -318,7 +304,7 @@ describe("apiTools", () => {
         toolCalls: [{ toolName: "test-tool", args: { param1: "value1" } }],
       } as any);
 
-      const result = await generateSuggestedActions(conversation, mailbox, [tool]);
+      const result = await generateSuggestedActions(conversation, [tool]);
 
       expect(result).toHaveLength(1);
       expect(result[0]?.type).toBe("tool");
@@ -327,7 +313,6 @@ describe("apiTools", () => {
     });
 
     it("includes metadata in tool generation when available", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
       const metadata = {
         metadata: {
@@ -357,7 +342,7 @@ describe("apiTools", () => {
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
       });
 
-      await generateSuggestedActions(conversation, mailbox, [tool]);
+      await generateSuggestedActions(conversation, [tool]);
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -367,7 +352,6 @@ describe("apiTools", () => {
     });
 
     it("includes relevant messages in conversation context", async () => {
-      const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
 
       // Create test messages
@@ -396,7 +380,7 @@ describe("apiTools", () => {
         slug: "test-tool",
       });
 
-      await generateSuggestedActions(conversation, mailbox, [tool]);
+      await generateSuggestedActions(conversation, [tool]);
 
       // Should include first message and last 3 messages when token limit allows
       expect(generateText).toHaveBeenCalledWith(

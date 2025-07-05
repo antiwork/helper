@@ -7,7 +7,7 @@ import { getPastConversationsPrompt } from "@/lib/data/retrieval";
 
 describe("getPastConversationsPrompt", () => {
   it("returns past conversations based on similarity", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const query = "How do I reset my password?";
 
     // Mock the generateEmbedding function
@@ -39,7 +39,7 @@ describe("getPastConversationsPrompt", () => {
       });
     }
 
-    const result = await getPastConversationsPrompt(query, mailbox);
+    const result = await getPastConversationsPrompt(query);
 
     expect(result).toContain("Your goal is to provide helpful and accurate responses");
     expect(result).toContain("Past conversations:");
@@ -51,13 +51,13 @@ describe("getPastConversationsPrompt", () => {
   });
 
   it("returns null when no similar conversations exist", async () => {
-    const { mailbox } = await userFactory.createRootUser();
+    await userFactory.createRootUser();
     const query = "This is a unique query with no similar conversations";
 
     const mockEmbedding = Array.from(new Float32Array(1536).fill(0.1));
     vi.spyOn(aiModule, "generateEmbedding").mockResolvedValue(mockEmbedding);
 
-    const result = await getPastConversationsPrompt(query, mailbox);
+    const result = await getPastConversationsPrompt(query);
 
     expect(result).toBe(null);
   });

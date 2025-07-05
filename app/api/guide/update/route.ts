@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return corsResponse({ error: authResult.error }, { status: 401 });
   }
 
-  const { mailbox, session } = authResult;
+  const { session } = authResult;
 
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);

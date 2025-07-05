@@ -223,7 +223,7 @@ export const conversationsRouter = {
         conversation: true,
       },
     });
-    if (!message || !message.conversation.mergedIntoId) {
+    if (!message?.conversation.mergedIntoId) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
     }
     const conversation = await db
@@ -253,7 +253,6 @@ export const conversationsRouter = {
 
     const similarConversations = await findSimilarConversations(
       assertDefined(conversation.embeddingText),
-      ctx.mailbox,
       5,
       conversation.slug,
     );

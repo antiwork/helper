@@ -56,7 +56,7 @@ describe("handleAutoResponse", () => {
   });
 
   it("sends an auto-response when autoRespondEmailToChat is not 'draft'", async () => {
-    const { mailbox } = await mailboxFactory.create({ preferences: { autoRespondEmailToChat: "reply" } });
+    await mailboxFactory.create({ preferences: { autoRespondEmailToChat: "reply" } });
     const { conversation } = await conversationFactory.create({ assignedToAI: true });
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -77,7 +77,6 @@ describe("handleAutoResponse", () => {
   it("fetches and stores customer metadata and upsert platform customer if emailFrom is present", async () => {
     const mockMetadata = { metadata: { key: "value" } };
     vi.mocked(retrieval.fetchMetadata).mockResolvedValue(mockMetadata as any);
-    const { mailbox } = await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ assignedToAI: true });
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -99,7 +98,6 @@ describe("handleAutoResponse", () => {
   });
 
   it("skips if conversation is spam", async () => {
-    const { mailbox } = await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ status: "spam" });
     const { message } = await conversationMessagesFactory.create(conversation.id);
 
@@ -120,7 +118,7 @@ describe("handleAutoResponse", () => {
   });
 
   it("skips if not assigned to AI", async () => {
-    const { mailbox } = await mailboxFactory.create();
+    await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ assignedToAI: false });
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
 
@@ -131,7 +129,7 @@ describe("handleAutoResponse", () => {
   });
 
   it("skips if email text is empty after cleaning", async () => {
-    const { mailbox } = await mailboxFactory.create();
+    await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ assignedToAI: true, subject: "" });
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",

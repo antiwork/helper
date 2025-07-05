@@ -31,7 +31,7 @@ describe("generateWeeklyReports", () => {
   });
 
   it("sends weekly report events for mailboxes with Slack configured", async () => {
-    const { mailbox: mailboxWithSlack } = await userFactory.createRootUser({
+    await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
         slackAlertChannel: "channel-id",

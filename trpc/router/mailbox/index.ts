@@ -100,7 +100,7 @@ export const mailboxRouter = {
         cursor: z.number().nullish(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { limit, cursor } = input;
       const page = cursor || 1;
 

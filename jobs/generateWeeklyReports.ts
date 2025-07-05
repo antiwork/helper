@@ -15,7 +15,7 @@ const formatDateRange = (start: Date, end: Date) => {
 
 export async function generateWeeklyReports() {
   const mailbox = await getMailbox();
-  if (!mailbox || !mailbox.slackBotToken || !mailbox.slackAlertChannel) return;
+  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
 
   await triggerEvent("reports/weekly", {});
 }

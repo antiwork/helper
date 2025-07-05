@@ -17,9 +17,7 @@ export async function generateDailyReports() {
 
   if (!mailboxesList.length) return;
 
-  for (const mailbox of mailboxesList) {
-    await triggerEvent("reports/daily", {});
-  }
+  await triggerEvent("reports/daily", {});
 }
 
 export async function generateMailboxDailyReport() {

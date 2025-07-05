@@ -167,7 +167,6 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("skips emails that already exist in the conversation", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
       const { conversation } = await conversationFactory.create({
         conversationProvider: "gmail",
       });
@@ -193,7 +192,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("does not process emails sent from the mailbox", async () => {
-      const { gmailSupportEmail, mailbox } = await setupGmailSupportEmail();
+      const { gmailSupportEmail } = await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -217,7 +216,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("does not generate a response for ignored Gmail categories", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
       mockHistories([
         {
           message: {
@@ -240,8 +239,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("does not generate a response for transactional emails", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
-
+      await setupGmailSupportEmail();
       mockHistories([
         {
           message: {
@@ -278,8 +276,7 @@ describe("handleGmailWebhookEvent", () => {
 
   describe("happy paths", () => {
     it("creates a conversation and email record for the first email in a Gmail thread", async () => {
-      const { gmailSupportEmail, mailbox } = await setupGmailSupportEmail();
-
+      const { gmailSupportEmail } = await setupGmailSupportEmail();
       mockHistories([
         {
           message: {
@@ -330,7 +327,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("creates a conversation and email record even if the email is not the first in the Gmail thread", async () => {
-      const { gmailSupportEmail, mailbox } = await setupGmailSupportEmail();
+      const { gmailSupportEmail } = await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -382,7 +379,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("creates an email record for a new email on an existing Gmail thread", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
       const { conversation } = await conversationFactory.create({
         conversationProvider: "gmail",
         status: "closed",
@@ -443,7 +440,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("keeps conversation open when email is from a staff user (first message)", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
       const staffUser = await userFactory.createUser();
 
       // Mock a history with only one message to simulate a first message
@@ -473,7 +470,7 @@ describe("handleGmailWebhookEvent", () => {
 
   describe("complex cases", () => {
     it("handles when the mailbox is CC'ed onto a Gmail thread", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -520,7 +517,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("handles when there are multiple 'To' email addresses", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -566,7 +563,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("handles an email with attachments", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -625,7 +622,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("handles a weird attachment", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -685,7 +682,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("handles a weird email 'From'", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
 
       mockHistories([
         {
@@ -737,7 +734,7 @@ describe("handleGmailWebhookEvent", () => {
 
   describe("auto-assigning on CC", () => {
     it("assigns conversation to staff member when they are CCed", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
       const staffUser = await userFactory.createUser({
         email: "staff@example.com",
       });
@@ -765,7 +762,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("does not assign conversation if already assigned", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
       const existingAssignee = await userFactory.createUser();
       await userFactory.createUser({
         email: "staff@example.com",
@@ -801,7 +798,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("assigns to first staff member when multiple staff are CCed", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
       const firstStaffUser = await userFactory.createUser({
         email: "staff1@example.com",
       });
@@ -832,7 +829,7 @@ describe("handleGmailWebhookEvent", () => {
     });
 
     it("does not assign if no staff members are CCed", async () => {
-      const { mailbox } = await setupGmailSupportEmail();
+      await setupGmailSupportEmail();
 
       mockHistories([
         {

@@ -144,7 +144,7 @@ const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
   promptInfo: Omit<PromptInfo, "availableTools">;
 }> => {
-  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
+  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(query, null);
 
   const systemPrompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(

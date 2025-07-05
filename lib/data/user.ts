@@ -98,7 +98,6 @@ export const updateUserMailboxData = async (
   if (error) throw error;
 
   const userMetadata = user?.user_metadata || {};
-  const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
 
   // Only update the fields that were provided, keep the rest
   const updatedMailboxData = {
