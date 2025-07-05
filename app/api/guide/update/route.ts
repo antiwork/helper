@@ -15,15 +15,15 @@ const updateGuideSchema = z.object({
 });
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const body = await request.json();
-  const result = updateGuideSchema.safeParse(body);
-  if (!result.success) {
-    return corsResponse({ error: "Invalid request body" }, { status: 400 });
-  }
-
-  const { sessionId, steps } = result.data;
-
   try {
+    const body = await request.json();
+    const result = updateGuideSchema.safeParse(body);
+    if (!result.success) {
+      return corsResponse({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const { sessionId, steps } = result.data;
+
     const guideSession = await getGuideSessionByUuid(sessionId);
 
     if (!guideSession) {
