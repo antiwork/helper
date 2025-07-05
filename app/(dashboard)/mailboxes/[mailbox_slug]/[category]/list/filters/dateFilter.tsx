@@ -161,11 +161,7 @@ export function DateFilter({
   };
 
   const handleShortcut = (presetValue: DatePresetValue) => {
-    const activeElement = document.activeElement;
-    const isFocusInDropdown =
-      dropdownRef.current?.contains(activeElement) || activeElement?.closest('[data-testid="date-filter-button"]');
-
-    if (!isFocusInDropdown || !isOpen) return;
+    if (!isOpen) return;
 
     handlePresetChange(presetValue);
     if (presetValue !== "custom") {
