@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { ConversationListSkeleton } from "@/components/skeletons/ConversationListSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,6 +14,7 @@ import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { ConversationFilters, useConversationFilters } from "./conversationFilters";
@@ -45,11 +45,8 @@ export const List = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Failed to update conversations",
-      });
+    onError: (error) => {
+      showErrorToast("Failed to update conversations", error);
     },
   });
 
@@ -114,12 +111,9 @@ export const List = () => {
                 : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
 
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-
-              toast({
-                title: `${ticketsText} ${actionText}`,
-              });
+              showSuccessToast(`${ticketsText} ${actionText}`);
             } else {
-              toast({ title: "Starting update, refresh to see status." });
+              showSuccessToast("Starting update, refresh to see status.");
             }
           },
         },

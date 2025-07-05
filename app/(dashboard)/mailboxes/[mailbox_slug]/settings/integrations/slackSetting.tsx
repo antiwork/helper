@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useRunOnce } from "@/components/useRunOnce";
 import useShowToastForSlackConnectStatus from "@/components/useShowToastForSlackConnectStatus";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { showErrorToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -98,10 +99,7 @@ export const SlackChannels = ({
             setAlertChannelName("");
           }
           if (!isValid) {
-            toast({
-              title: "Channel not found",
-              variant: "destructive",
-            });
+            showErrorToast("Channel not found");
           }
         }}
       />
@@ -124,10 +122,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
       utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
     },
     onError: (error) => {
-      toast({
-        title: "Error updating Slack settings",
-        description: error.message,
-      });
+      showErrorToast("Failed to update Slack settings", error);
     },
   });
   useShowToastForSlackConnectStatus();

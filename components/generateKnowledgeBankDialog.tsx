@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 type GenerateKnowledgeBankDialogProps = {
@@ -65,49 +66,31 @@ export const GenerateKnowledgeBankDialog = ({
       }
     },
     onError: (error) => {
-      toast({
-        title: "Error generating suggestion",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to generate suggestion", error);
     },
   });
 
   const createKnowledgeMutation = api.mailbox.faqs.create.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Knowledge bank entry created!",
-        variant: "success",
-      });
+      showSuccessToast("Knowledge bank entry created!");
       utils.mailbox.faqs.list.invalidate();
       onOpenChange(false);
       resetState();
     },
     onError: (error) => {
-      toast({
-        title: "Error creating knowledge entry",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to create knowledge entry", error);
     },
   });
 
   const updateKnowledgeMutation = api.mailbox.faqs.update.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Knowledge bank entry updated!",
-        variant: "success",
-      });
+      showSuccessToast("Knowledge bank entry updated!");
       utils.mailbox.faqs.list.invalidate();
       onOpenChange(false);
       resetState();
     },
     onError: (error) => {
-      toast({
-        title: "Error updating knowledge entry",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to update knowledge entry", error);
     },
   });
 
@@ -141,11 +124,7 @@ export const GenerateKnowledgeBankDialog = ({
 
   const handleSave = () => {
     if (!editedContent.trim()) {
-      toast({
-        title: "Content required",
-        description: "Please enter content for the knowledge bank entry",
-        variant: "destructive",
-      });
+      showErrorToast("Content required", "Please enter content for the knowledge bank entry");
       return;
     }
 
