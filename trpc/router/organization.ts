@@ -1,4 +1,4 @@
-import { type TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { addUser } from "@/lib/data/user";
@@ -6,12 +6,16 @@ import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {
   getMembers: protectedProcedure.query(async () => {
-    const users = await db.query.authUsers.findMany();
-    return users.map((user) => ({
-      id: user.id,
-      displayName: user.user_metadata?.display_name ?? user.email ?? user.id,
-      email: user.email,
-    }));
+    const users = await db.query.userProfiles.findMany();
+    return users
+      .filter((user) => user.deletedAt === null)
+      .map((user) => ({
+        id: user.id,
+        displayName: user.displayName || "",
+        email: user.email || "",
+        permissions: user.permissions,
+        access: user.access || { role: "afk", keywords: [] },
+      }));
   }),
   addMember: protectedProcedure
     .input(

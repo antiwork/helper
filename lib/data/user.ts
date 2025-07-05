@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
@@ -54,6 +55,40 @@ export const addUser = async (
   if (error) throw error;
 };
 
+export const banUser = async (userId: string) => {
+  const supabase = createAdminClient();
+
+  const bannedUntil = new Date();
+  bannedUntil.setFullYear(bannedUntil.getFullYear() + 50);
+
+  const {
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.admin.getUserById(userId);
+  if (getUserError) throw getUserError;
+
+  const existingAppMetadata = user?.app_metadata || {};
+
+  const { error } = await supabase.auth.admin.updateUserById(userId, {
+    app_metadata: {
+      ...existingAppMetadata,
+      banned: true,
+      banned_until: bannedUntil.toISOString(),
+    },
+  });
+
+  await db
+    .update(userProfiles)
+    .set({
+      deletedAt: new Date(),
+    })
+    .where(eq(userProfiles.id, userId));
+
+  if (error) {
+    throw error;
+  }
+};
+
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
   const users = await db
     .select({
@@ -63,23 +98,26 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
       displayName: userProfiles.displayName,
       permissions: userProfiles.permissions,
       access: userProfiles.access,
+      deletedAt: userProfiles.deletedAt,
     })
     .from(authUsers)
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
-  return users.map((user) => {
-    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
-    const permissions = user.permissions ?? "member";
+  return users
+    .filter((user) => user.deletedAt === null)
+    .map((user) => {
+      const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
+      const permissions = user.permissions ?? "member";
 
-    return {
-      id: user.id,
-      displayName: user.displayName || user.rawMetadata?.display_name || "",
-      email: user.email ?? undefined,
-      role: access.role,
-      keywords: access?.keywords ?? [],
-      permissions,
-    };
-  });
+      return {
+        id: user.id,
+        displayName: user.displayName || user.rawMetadata?.display_name || "",
+        email: user.email ?? undefined,
+        role: access.role,
+        keywords: access?.keywords ?? [],
+        permissions,
+      };
+    });
 };
 
 export const updateUserMailboxData = async (
@@ -89,6 +127,7 @@ export const updateUserMailboxData = async (
     displayName?: string;
     role?: UserRole;
     keywords?: MailboxAccess["keywords"];
+    permissions?: string;
   },
 ): Promise<UserWithMailboxAccessData> => {
   const supabase = createAdminClient();
@@ -133,6 +172,7 @@ export const updateUserMailboxData = async (
         role: updates.role || "afk",
         keywords: updates.keywords || [],
       },
+      permissions: updates.permissions,
     })
     .where(eq(userProfiles.id, updatedUser.id))
     .returning();

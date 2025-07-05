@@ -194,6 +194,7 @@ export const conversationsRouter = {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
+
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
     const email = await db.query.conversationMessages.findFirst({
       where: and(

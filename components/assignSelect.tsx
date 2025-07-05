@@ -25,6 +25,8 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [localSelected, setLocalSelected] = useState<AssigneeOption | null | undefined>(undefined);
+
   const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
@@ -37,6 +39,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
       if (b.id === user?.id) return 1;
       return a.displayName.localeCompare(b.displayName);
     }) || [];
+
   const filteredMembers = sortedMembers.filter((member) =>
     member.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
@@ -54,13 +57,16 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     ...filteredMembers,
   ];
 
-  const selectedMember = aiOptionSelected ? aiItem : sortedMembers.find((m) => m.id === selectedUserId);
+  const initialSelected = aiOptionSelected ? aiItem : sortedMembers.find((m) => m.id === selectedUserId) || null;
+
+  const currentSelected = localSelected ?? initialSelected;
 
   useEffect(() => {
     setHighlightedIndex(0);
   }, [open, searchTerm]);
 
   const selectOption = (option: AssigneeOption | null) => {
+    setLocalSelected(option);
     onChange(option);
     setOpen(false);
   };
@@ -84,7 +90,8 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
         if (highlightedIndex !== -1) {
           e.preventDefault();
           const selectedItem = allItems[highlightedIndex];
-          if (selectedItem) selectOption(selectedItem.id === null ? null : selectedItem);
+          if (selectedItem)
+            selectOption(selectedItem.id === null ? null : selectedItem.id === "ai" ? { ai: true } : selectedItem);
         }
         break;
       case "Escape":
@@ -93,7 +100,11 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }
   };
 
-  const selectedDisplayName = selectedMember?.displayName || "Anyone";
+  const selectedDisplayName = currentSelected
+    ? "ai" in currentSelected
+      ? aiItem.displayName
+      : currentSelected.displayName
+    : "Anyone";
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -118,7 +129,15 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                   className={highlightedIndex === index ? "bg-accent text-accent-foreground" : ""}
                   title={item.displayName + (item.id === user?.id ? " (You)" : "")}
                 >
-                  <Check className={`mr-2 h-4 w-4 ${selectedMember?.id === item.id ? "opacity-100" : "opacity-0"}`} />
+                  <Check
+                    className={`mr-2 h-4 w-4 ${
+                      currentSelected &&
+                      (("ai" in currentSelected && item.id === "ai") ||
+                        ("id" in currentSelected && currentSelected.id === item.id))
+                        ? "opacity-100"
+                        : "opacity-0"
+                    }`}
+                  />
                   <span className="flex items-center gap-1 min-w-0">
                     {item.id === "ai" ? <Bot className="h-4 w-4 flex-shrink-0" /> : null}
                     <span className="flex-1 min-w-0 truncate">

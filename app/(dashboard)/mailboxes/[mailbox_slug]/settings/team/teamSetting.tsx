@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,7 +20,8 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const { data, isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
   const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
-  const session = useSession();
+  const utils = api.useUtils();
+  const { data: permissionsData } = api.mailbox.members.getPermissions.useQuery({ mailboxSlug });
 
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
@@ -30,6 +32,10 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
     );
   });
 
+  const { data: conversationsList } = api.mailbox.conversations.list.useQuery({
+    mailboxSlug,
+  });
+
   return (
     <SectionWrapper
       title="Manage Team Members"
@@ -37,7 +43,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       fullWidth
     >
       <div className="w-full space-y-6">
-        <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />
+        {permissionsData?.isAdmin && <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />}
 
         {teamMembers.length > 0 && (
           <Input
@@ -57,13 +63,14 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 <TableHead className="w-[120px]">Permissions</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
+                <TableHead>Actions</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex justify-center">
                       <LoadingSpinner size="md" />
                     </div>
@@ -71,21 +78,28 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                     {searchTerm
                       ? `No team members found matching "${searchTerm}"`
                       : "No team members in your organization yet. Use the form above to invite new members."}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTeamMembers.map((member) => (
-                  <TeamMemberRow
-                    key={member.id}
-                    member={member}
-                    mailboxSlug={mailboxSlug}
-                    canChangePermissions={data?.isAdmin === true && member.id !== session?.user.id}
-                  />
-                ))
+                filteredTeamMembers.map((member) => {
+                  const memberConversations = (conversationsList?.conversations ?? []).filter(
+                    (conversation) => conversation.assignedToId === member.id,
+                  );
+
+                  return (
+                    <TeamMemberRow
+                      key={member.id}
+                      member={member}
+                      mailboxSlug={mailboxSlug}
+                      conversationIds={memberConversations.map((c) => c.slug)}
+                      isAdmin={permissionsData?.isAdmin ?? false}
+                    />
+                  );
+                })
               )}
             </TableBody>
           </Table>
