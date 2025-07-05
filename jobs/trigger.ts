@@ -45,6 +45,16 @@ const events = {
     }),
     jobs: ["bulkUpdateConversations"],
   },
+  "conversations/bulk-assign": {
+    data: z.object({
+      mailboxId: z.number(),
+      userId: z.string(),
+      conversationFilter: z.union([z.array(z.number()), searchSchema]),
+      assignedToId: z.string().nullable(),
+      assignedToAI: z.boolean().optional(),
+    }),
+    jobs: ["bulkAssignConversations"],
+  },
   "conversations/update-suggested-actions": {
     data: z.object({
       conversationId: z.number(),

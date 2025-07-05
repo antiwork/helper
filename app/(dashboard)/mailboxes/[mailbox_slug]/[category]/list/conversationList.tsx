@@ -16,6 +16,7 @@ import { useSelected } from "@/components/useSelected";
 import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateSlug } from "@/lib/shared/slug";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -78,7 +79,6 @@ export const List = () => {
 
   const toggleConversation = (id: number, isSelected: boolean, shiftKey: boolean) => {
     if (allConversationsSelected) {
-      // If all conversations are selected, toggle the selected conversation
       setAllConversationsSelected(false);
       setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
     } else {
@@ -126,14 +126,23 @@ export const List = () => {
     }
   };
 
-  const handleBulkAssign = () => {
+  const handleBulkAssign = async () => {
     if (!assignedTo) return;
-    
+
     setIsBulkUpdating(true);
-    
-    // Fix "Select All" scope - use search input for paginated results
+
     const conversationFilter = allConversationsSelected ? input : selectedConversations;
-    const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+    let selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+
+    if (allConversationsSelected) {
+      try {
+        const countResult = await utils.mailbox.conversations.count.fetch(input);
+        selectedCount = countResult.total;
+      } catch (error) {
+        captureExceptionAndLog(error);
+      }
+    }
+
     const assignedToId = "id" in assignedTo ? assignedTo.id : null;
     const assignedToAI = "ai" in assignedTo;
 
@@ -155,9 +164,9 @@ export const List = () => {
 
           if (updatedImmediately) {
             const displayName = assignedTo && "displayName" in assignedTo ? assignedTo.displayName : null;
-            const assignText = assignedToAI 
-              ? "assigned to Helper agent" 
-              : assignedToId 
+            const assignText = assignedToAI
+              ? "assigned to Helper agent"
+              : assignedToId
                 ? `assigned to ${displayName || "user"}`
                 : "unassigned";
             toast({
@@ -170,8 +179,8 @@ export const List = () => {
         onError: () => {
           setIsBulkUpdating(false);
           toast({ title: "Failed to assign conversations", variant: "destructive" });
-        }
-      }
+        },
+      },
     );
   };
 
@@ -197,7 +206,6 @@ export const List = () => {
     preventDefault: true,
   });
 
-  // Clear selections when status filter changes
   useEffect(() => {
     toggleAllConversations(false);
   }, [searchParams.status, clearSelectedConversations]);
@@ -239,7 +247,6 @@ export const List = () => {
           newConversations.unshift({ ...newConversation, isNew: true });
           break;
         case "oldest":
-          // Only add to first page if no other pages exist
           if (data.pages.length === 1) {
             newConversations.push({ ...newConversation, isNew: true });
           }
@@ -343,18 +350,16 @@ export const List = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4">
                       <div className="flex flex-col space-y-4">
-                        <h4 className="font-medium">Assign {selectedCount} conversation{selectedCount === 1 ? "" : "s"}</h4>
+                        <h4 className="font-medium">
+                          Assign {selectedCount} conversation{selectedCount === 1 ? "" : "s"}
+                        </h4>
                         <AssignSelect
                           selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
                           onChange={setAssignedTo}
                           aiOption
                           aiOptionSelected={!!(assignedTo && "ai" in assignedTo)}
                         />
-                        <Button 
-                          className="w-full" 
-                          onClick={handleBulkAssign}
-                          disabled={!assignedTo || isBulkUpdating}
-                        >
+                        <Button className="w-full" onClick={handleBulkAssign} disabled={!assignedTo || isBulkUpdating}>
                           Assign
                         </Button>
                       </div>
