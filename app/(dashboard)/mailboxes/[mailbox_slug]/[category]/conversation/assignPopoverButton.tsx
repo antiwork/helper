@@ -79,12 +79,15 @@ export const AssignPopoverButton = ({
               "flex items-center gap-1 hover:underline min-w-0 w-full text-left",
               !currentAssignee && !assignedToAI && "text-muted-foreground",
             )}
-            title={currentAssignee
-                    ? currentAssignee.displayName?.trim()
-                      ? currentAssignee.displayName
-                        : currentAssignee.email
-                      : assignedToAI ? "Helper agent" : "Unassigned"
-                    }
+            title={
+              currentAssignee
+                ? currentAssignee.displayName?.trim()
+                  ? currentAssignee.displayName
+                  : currentAssignee.email
+                : assignedToAI
+                  ? "Helper agent"
+                  : "Unassigned"
+            }
           >
             {assignedToAI ? (
               <>
@@ -98,8 +101,8 @@ export const AssignPopoverButton = ({
                   {currentAssignee
                     ? currentAssignee.displayName?.trim()
                       ? currentAssignee.displayName
-                        : currentAssignee.email
-                      : "Unassigned"}
+                      : currentAssignee.email
+                    : "Unassigned"}
                 </span>
               </>
             )}

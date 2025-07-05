@@ -82,7 +82,7 @@ export const banUser = async (userId: string) => {
     .set({
       deletedAt: new Date(),
     })
-    .where(eq(userProfiles.id, userId))
+    .where(eq(userProfiles.id, userId));
 
   if (error) {
     throw error;
@@ -106,18 +106,18 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
   return users
     .filter((user) => user.deletedAt === null)
     .map((user) => {
-    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
-    const permissions = user.permissions ?? "member";
+      const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
+      const permissions = user.permissions ?? "member";
 
-    return {
-      id: user.id,
-      displayName: user.displayName || user.rawMetadata?.display_name || "",
-      email: user.email ?? undefined,
-      role: access.role,
-      keywords: access?.keywords ?? [],
-      permissions,
-    };
-  });
+      return {
+        id: user.id,
+        displayName: user.displayName || user.rawMetadata?.display_name || "",
+        email: user.email ?? undefined,
+        role: access.role,
+        keywords: access?.keywords ?? [],
+        permissions,
+      };
+    });
 };
 
 export const updateUserMailboxData = async (

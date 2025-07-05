@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AssignSelect } from "@/components/assignSelect";
+import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
+import { toast } from "@/components/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +15,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
-import { AssigneeOption } from "@/components/assignSelect";
-import { toast } from "@/components/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 
 interface DeleteMemberDialogProps {
   children: React.ReactNode;
@@ -91,7 +90,7 @@ export default function DeleteMemberDialog({
       }
 
       try {
-        const updatePromises = conversationIds.map(conversationId => {
+        const updatePromises = conversationIds.map((conversationId) => {
           if ("ai" in assignedTo) {
             return updateConversation({
               mailboxSlug,
@@ -99,7 +98,7 @@ export default function DeleteMemberDialog({
               assignedToAI: true,
               message: assignMessage,
             });
-        } else {
+          } else {
             return updateConversation({
               mailboxSlug,
               conversationSlug: conversationId,
@@ -108,7 +107,7 @@ export default function DeleteMemberDialog({
             });
           }
         });
-        
+
         await Promise.all(updatePromises);
       } catch (error) {
         setLoading(false);
