@@ -468,7 +468,7 @@ const TipTapEditor = ({
           </BubbleMenu>
         )}
       </div>
-      <div className="flex w-full justify-between md:justify-start">
+      <div className="flex w-full justify-between md:justify-start relative">
         <div className="w-full md:w-auto">
           <Toolbar
             {...{
@@ -484,7 +484,6 @@ const TipTapEditor = ({
               isRecordingSupported,
               startRecording,
               stopRecording,
-              hasActionButtons: showActionButtons,
             }}
           />
         </div>

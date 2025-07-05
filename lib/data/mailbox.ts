@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
@@ -135,3 +135,9 @@ export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, rep
     })
     .where(eq(mailboxes.id, mailboxId));
 };
+
+export const getAllMailboxes = cache(async (): Promise<Mailbox[]> => {
+  return await db.query.mailboxes.findMany({
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+  });
+});
