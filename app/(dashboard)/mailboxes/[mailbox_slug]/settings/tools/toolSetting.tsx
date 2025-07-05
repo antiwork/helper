@@ -2,13 +2,13 @@
 
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ToolsListSkeleton } from "@/components/skeletons/ToolsListSkeleton";
 import { Button } from "@/components/ui/button";
 import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import ApiCard from "./apiCard";
 import ApiForm from "./apiForm";
+import { ToolsListSkeleton } from "./toolListSkeleton";
 
 type ToolSettingProps = {
   mailboxSlug: string;
@@ -48,7 +48,7 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
           {showApiForm && <ApiForm mailboxSlug={mailboxSlug} onCancel={() => setShowApiForm(false)} />}
 
           {apisLoading || (apisFetching && apis.length === 0) ? (
-            <ToolsListSkeleton count={2} />
+            <ToolsListSkeleton count={1} />
           ) : (
             apis.map((api) => <ApiCard key={api.id} api={api} mailboxSlug={mailboxSlug} />)
           )}

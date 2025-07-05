@@ -5,7 +5,6 @@ import { Calendar, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import { SessionsListSkeleton } from "@/components/skeletons/SessionsListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { GuideSession } from "@/lib/data/guide";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import { SessionsListSkeleton } from "./sessionsListSkeleton";
 
 type MailboxData = RouterOutputs["mailbox"]["get"];
 

@@ -4,8 +4,8 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
-import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import Conversation from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversation";
+import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
 import {
   ConversationListContextProvider,
@@ -28,7 +28,6 @@ const CATEGORY_LABELS = {
 } as const;
 
 type Category = keyof typeof CATEGORY_LABELS;
-
 
 const Inbox = () => {
   const params = useParams<{ mailbox_slug: string; category: Category }>();
