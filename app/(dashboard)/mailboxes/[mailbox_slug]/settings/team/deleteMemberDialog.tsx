@@ -56,6 +56,7 @@ export default function DeleteMemberDialog({
         variant: "success",
       });
       utils.mailbox.members.list.invalidate({ mailboxSlug });
+      utils.mailbox.conversations.list.invalidate({ mailboxSlug });
       setLoading(false);
       setAssignedTo(null);
       setAssignMessage("");

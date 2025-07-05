@@ -80,6 +80,7 @@ export const membersRouter = {
 
       try {
         await banUser(input.id);
+        return { success: true };
       } catch (error) {
         captureExceptionAndLog(error, {
           tags: { route: "mailbox.members.delete" },

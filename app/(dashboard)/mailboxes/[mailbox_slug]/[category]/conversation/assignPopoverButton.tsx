@@ -79,7 +79,12 @@ export const AssignPopoverButton = ({
               "flex items-center gap-1 hover:underline min-w-0 w-full text-left",
               !currentAssignee && !assignedToAI && "text-muted-foreground",
             )}
-            title={currentAssignee ? currentAssignee.displayName : assignedToAI ? "Helper agent" : "Unassigned"}
+            title={currentAssignee
+                    ? currentAssignee.displayName?.trim()
+                      ? currentAssignee.displayName
+                        : currentAssignee.email
+                      : assignedToAI ? "Helper agent" : "Unassigned"
+                    }
           >
             {assignedToAI ? (
               <>
@@ -89,7 +94,13 @@ export const AssignPopoverButton = ({
             ) : (
               <>
                 <User className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate min-w-0">{currentAssignee ? currentAssignee.displayName : "Unassigned"}</span>
+                <span className="truncate min-w-0">
+                  {currentAssignee
+                    ? currentAssignee.displayName?.trim()
+                      ? currentAssignee.displayName
+                        : currentAssignee.email
+                      : "Unassigned"}
+                </span>
               </>
             )}
           </button>

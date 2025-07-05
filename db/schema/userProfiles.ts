@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { authUsers } from "../supabaseSchema/auth";
 
@@ -9,8 +9,10 @@ export const userProfiles = pgTable("user_profiles", {
   id: uuid()
     .primaryKey()
     .references(() => authUsers.id, { onDelete: "cascade" }),
+  email: text(),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp()
     .defaultNow()

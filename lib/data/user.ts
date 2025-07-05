@@ -77,6 +77,13 @@ export const banUser = async (userId: string) => {
     },
   });
 
+  await db
+    .update(userProfiles)
+    .set({
+      deletedAt: new Date(),
+    })
+    .where(eq(userProfiles.id, userId))
+
   if (error) {
     throw error;
   }
@@ -91,11 +98,14 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
       displayName: userProfiles.displayName,
       permissions: userProfiles.permissions,
       access: userProfiles.access,
+      deletedAt: userProfiles.deletedAt,
     })
     .from(authUsers)
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
-  return users.map((user) => {
+  return users
+    .filter((user) => user.deletedAt === null)
+    .map((user) => {
     const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
 
