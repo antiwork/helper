@@ -92,11 +92,10 @@ Focus on understanding the customer's underlying needs rather than just surface-
 
 const getNextCoreTeamMemberInRotation = async (
   coreTeamMembers: UserWithMailboxAccessData[],
-  unused_mailboxId: number,
 ): Promise<UserWithMailboxAccessData | null> => {
   if (coreTeamMembers.length === 0) return null;
 
-  const cache = cacheFor<number>(`${CACHE_ROUND_ROBIN_KEY_PREFIX}:${unused_mailboxId}`);
+  const cache = cacheFor<number>(CACHE_ROUND_ROBIN_KEY_PREFIX);
 
   const lastAssignedIndex = (await cache.get()) ?? 0;
   const nextIndex = (lastAssignedIndex + 1) % coreTeamMembers.length;
@@ -151,7 +150,7 @@ const getNextTeamMember = async (
 
   const coreMembers = getCoreTeamMembers(teamMembers);
   return {
-    member: await getNextCoreTeamMemberInRotation(coreMembers, mailbox.id),
+    member: await getNextCoreTeamMemberInRotation(coreMembers),
   };
 };
 
@@ -175,7 +174,7 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
   }
 
   const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
-  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
+  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess());
 
   const activeTeamMembers = teamMembers.filter(
     (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,

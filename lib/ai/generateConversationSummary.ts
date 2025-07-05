@@ -8,6 +8,7 @@ import { runAIObjectQuery } from "@/lib/ai";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
 import { cleanUpTextForAI } from "@/lib/ai/core";
 import { findOriginalAndMergedMessages } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 
 const constructMessagesForConversationSummary = (
   emails: Pick<typeof conversationMessages.$inferSelect, "role" | "cleanedUpText" | "metadata">[],
@@ -33,9 +34,8 @@ export const generateConversationSummary = async (
   conversation: typeof conversations.$inferSelect,
   { force }: { force?: boolean } = {},
 ) => {
-  const mailbox = assertDefinedOrRaiseNonRetriableError(
-    await db.query.mailboxes.findFirst({ where: eq(mailboxes.id, conversation.unused_mailboxId) }),
-  );
+  const mailbox = await getMailbox();
+  if (!mailbox) throw new Error("Mailbox not found");
 
   const emails = await findOriginalAndMergedMessages(conversation.id, (condition) =>
     db.query.conversationMessages.findMany({

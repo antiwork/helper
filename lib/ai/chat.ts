@@ -559,7 +559,7 @@ export const respondWithAI = async ({
   });
 
   let platformCustomer = null;
-  if (userEmail) platformCustomer = await getPlatformCustomer(mailbox.id, userEmail);
+  if (userEmail) platformCustomer = await getPlatformCustomer(userEmail);
 
   const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;

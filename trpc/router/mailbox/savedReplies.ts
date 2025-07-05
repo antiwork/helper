@@ -26,7 +26,7 @@ export const savedRepliesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const conditions = [eq(savedReplies.unused_mailboxId, ctx.mailbox.id)];
+      const conditions = [];
 
       if (input.onlyActive) {
         conditions.push(eq(savedReplies.isActive, true));
@@ -68,7 +68,7 @@ export const savedRepliesRouter = {
 
   get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ ctx, input }) => {
     const savedReply = await db.query.savedReplies.findFirst({
-      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.unused_mailboxId, ctx.mailbox.id)),
+      where: and(eq(savedReplies.slug, input.slug)),
     });
 
     if (!savedReply) {
@@ -94,7 +94,6 @@ export const savedRepliesRouter = {
         .values({
           ...input,
           content: sanitizeContent(input.content),
-          unused_mailboxId: ctx.mailbox.id,
           createdByUserId: ctx.user.id,
         })
         .returning()
@@ -114,7 +113,7 @@ export const savedRepliesRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const existingSavedReply = await db.query.savedReplies.findFirst({
-        where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.unused_mailboxId, ctx.mailbox.id)),
+        where: and(eq(savedReplies.slug, input.slug)),
       });
 
       if (!existingSavedReply) {
@@ -136,7 +135,7 @@ export const savedRepliesRouter = {
       const updatedSavedReply = await db
         .update(savedReplies)
         .set(sanitizedUpdateData)
-        .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.unused_mailboxId, ctx.mailbox.id)))
+        .where(eq(savedReplies.slug, input.slug))
         .returning()
         .then(takeUniqueOrThrow);
 
@@ -145,7 +144,7 @@ export const savedRepliesRouter = {
 
   delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
     const existingSavedReply = await db.query.savedReplies.findFirst({
-      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.unused_mailboxId, ctx.mailbox.id)),
+      where: eq(savedReplies.slug, input.slug),
     });
 
     if (!existingSavedReply) {
@@ -155,9 +154,7 @@ export const savedRepliesRouter = {
       });
     }
 
-    await db
-      .delete(savedReplies)
-      .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.unused_mailboxId, ctx.mailbox.id)));
+    await db.delete(savedReplies).where(eq(savedReplies.slug, input.slug));
 
     return { success: true };
   }),
@@ -167,11 +164,7 @@ export const savedRepliesRouter = {
     .mutation(async ({ ctx, input }) => {
       // Verify saved reply exists and is active before incrementing
       const savedReply = await db.query.savedReplies.findFirst({
-        where: and(
-          eq(savedReplies.slug, input.slug),
-          eq(savedReplies.unused_mailboxId, ctx.mailbox.id),
-          eq(savedReplies.isActive, true),
-        ),
+        where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.isActive, true)),
       });
 
       if (!savedReply) {
@@ -187,7 +180,7 @@ export const savedRepliesRouter = {
           usageCount: sql`${savedReplies.usageCount} + 1`,
           updatedAt: new Date(),
         })
-        .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.unused_mailboxId, ctx.mailbox.id)));
+        .where(eq(savedReplies.slug, input.slug));
 
       return { success: true };
     }),

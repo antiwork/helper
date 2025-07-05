@@ -218,9 +218,7 @@ export const serializeConversationWithMessages = async (
   mailbox: typeof mailboxes.$inferSelect,
   conversation: typeof conversations.$inferSelect,
 ) => {
-  const platformCustomer = conversation.emailFrom
-    ? await getPlatformCustomer(mailbox.id, conversation.emailFrom)
-    : null;
+  const platformCustomer = conversation.emailFrom ? await getPlatformCustomer(conversation.emailFrom) : null;
 
   const mergedInto = conversation.mergedIntoId
     ? await db.query.conversations.findFirst({
@@ -262,17 +260,15 @@ export const getConversationById = cache(async (id: number): Promise<typeof conv
 
 export const getConversationBySlugAndMailbox = async (
   slug: string,
-  unused_mailboxId: number,
 ): Promise<typeof conversations.$inferSelect | null> => {
   const result = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.unused_mailboxId, unused_mailboxId)),
+    where: eq(conversations.slug, slug),
   });
   return result ?? null;
 };
 
 export const getNonSupportParticipants = async (conversation: Conversation): Promise<string[]> => {
   const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, conversation.unused_mailboxId),
     with: { gmailSupportEmail: { columns: { email: true } } },
   });
   if (!mailbox) throw new Error("Mailbox not found");
@@ -314,9 +310,10 @@ export const getRelatedConversations = async (
     whereMessages?: SQLWrapper;
   },
 ): Promise<Conversation[]> => {
+  const mailbox = await getMailbox();
+  if (!mailbox) return [];
   const conversationWithMailbox = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
-    with: { mailbox: true },
   });
   if (!conversationWithMailbox) return [];
 
@@ -328,17 +325,16 @@ export const getRelatedConversations = async (
   if (!subject && !body) return [];
 
   const keywords = await emailKeywordsExtractor({
-    mailbox: conversationWithMailbox.mailbox,
+    mailbox: mailbox,
     subject,
     body,
   });
   if (!keywords.length) return [];
 
-  const messageIds = await searchEmailsByKeywords(keywords.join(" "), conversationWithMailbox.mailbox.id);
+  const messageIds = await searchEmailsByKeywords(keywords.join(" "), mailbox.id);
 
   const relatedConversations = await db.query.conversations.findMany({
     where: and(
-      eq(conversations.unused_mailboxId, conversationWithMailbox.unused_mailboxId),
       not(eq(conversations.id, conversationId)),
       inArray(
         conversations.id,

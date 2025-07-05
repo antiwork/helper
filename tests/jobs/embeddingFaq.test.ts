@@ -18,7 +18,7 @@ describe("embeddingFaq", () => {
 
   it("generates and stores embedding for a FAQ", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { faq } = await faqsFactory.create(mailbox.id, {
+    const { faq } = await faqsFactory.create({
       content: "Test Body",
       embedding: null,
     });
@@ -45,7 +45,7 @@ describe("embeddingFaq", () => {
 
   it("handles errors during embedding generation", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { faq } = await faqsFactory.create(mailbox.id);
+    const { faq } = await faqsFactory.create();
 
     vi.mocked(generateEmbedding).mockRejectedValue(new Error("Embedding generation failed"));
 

@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { status } = updateNotificationSchema.parse(body);
 
   const platformCustomer = await db.query.platformCustomers.findFirst({
-    where: and(eq(platformCustomers.email, session.email), eq(platformCustomers.unused_mailboxId, mailbox.id)),
+    where: eq(platformCustomers.email, session.email),
   });
 
   if (!platformCustomer) {

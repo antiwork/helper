@@ -18,13 +18,10 @@ export const determineVipStatus = (customerValue: string | number | null, vipThr
   return Number(customerValue) / 100 >= vipThreshold;
 };
 
-export const getPlatformCustomer = async (
-  unused_mailboxId: number,
-  email: string,
-): Promise<PlatformCustomer | null> => {
+export const getPlatformCustomer = async (email: string): Promise<PlatformCustomer | null> => {
   const [customer, mailbox] = await Promise.all([
     db.query.platformCustomers.findFirst({
-      where: and(eq(platformCustomers.email, email), eq(platformCustomers.unused_mailboxId, unused_mailboxId)),
+      where: and(eq(platformCustomers.email, email)),
     }),
     getMailbox(),
   ]);
@@ -39,11 +36,9 @@ export const getPlatformCustomer = async (
 
 export const upsertPlatformCustomer = async ({
   email,
-  unused_mailboxId,
   customerMetadata,
 }: {
   email: string;
-  unused_mailboxId: number;
   customerMetadata: CustomerMetadata;
 }) => {
   if (!customerMetadata) return;
@@ -60,7 +55,6 @@ export const upsertPlatformCustomer = async ({
     .insert(platformCustomers)
     .values({
       email,
-      unused_mailboxId,
       ...data,
     })
     .onConflictDoUpdate({
@@ -69,11 +63,8 @@ export const upsertPlatformCustomer = async ({
     });
 };
 
-export const findOrCreatePlatformCustomerByEmail = async (
-  unused_mailboxId: number,
-  email: string,
-): Promise<PlatformCustomer | null> => {
-  const existingCustomer = await getPlatformCustomer(unused_mailboxId, email);
+export const findOrCreatePlatformCustomerByEmail = async (email: string): Promise<PlatformCustomer | null> => {
+  const existingCustomer = await getPlatformCustomer(email);
   if (existingCustomer) return existingCustomer;
 
   const [result, mailbox] = await Promise.all([
@@ -81,7 +72,6 @@ export const findOrCreatePlatformCustomerByEmail = async (
       .insert(platformCustomers)
       .values({
         email,
-        unused_mailboxId,
       })
       .returning(),
     getMailbox(),

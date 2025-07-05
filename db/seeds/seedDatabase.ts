@@ -76,24 +76,12 @@ export const seedDatabase = async () => {
 
     await createSettingsPageRecords(mailbox);
 
-    const { mailbox: mailbox2 } = await mailboxFactory.create({
-      name: "Flexile",
-      slug: "flexile",
-    });
-
-    const { mailbox: mailbox3 } = await mailboxFactory.create({
-      name: "Helper",
-      slug: "helper",
-    });
-
-    await generateSeedsFromFixtures(mailbox.id);
-    await generateSeedsFromFixtures(mailbox2.id);
-    await generateSeedsFromFixtures(mailbox3.id);
+    await generateSeedsFromFixtures();
     const conversationRecords = await db.select().from(conversations);
     for (const conversation of conversationRecords) {
       if (conversation.emailFrom) {
         try {
-          await platformCustomerFactory.create(mailbox.id, { email: conversation.emailFrom });
+          await platformCustomerFactory.create({ email: conversation.emailFrom });
         } catch (error) {
           console.error("Seed process create platform customer factory failed:", error);
         }
@@ -183,7 +171,7 @@ type MessageDetail = {
 };
 
 type Fixtures = Record<
-  string, // unused_mailboxId
+  string, // fixtureId
   Record<
     string, // conversationId
     {
@@ -196,25 +184,26 @@ type Fixtures = Record<
 const fixturesPath = path.join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
   const content = JSON.parse(fs.readFileSync(path.join(fixturesPath, file), "utf8")) as Fixtures;
-  const [unused_mailboxId, conversations] = Object.entries(content)[0]!;
+  const [fixtureId, conversations] = Object.entries(content)[0]!;
   return {
     ...acc,
-    [unused_mailboxId]: {
-      ...(acc[unused_mailboxId] ?? {}),
+    [fixtureId]: {
+      ...(acc[fixtureId] ?? {}),
       ...conversations,
     },
   };
 }, {});
 
-const generateSeedsFromFixtures = async (unused_mailboxId: number) => {
-  const fixtures = Object.entries(assertDefined(fixtureData[unused_mailboxId]));
+const generateSeedsFromFixtures = async () => {
+  // Since we're single-tenant, just use the first fixture data
+  const fixtures = Object.entries(assertDefined(Object.values(fixtureData)[0]));
 
   await Promise.all(
     fixtures
       .sort(([keyA], [keyB]) => parseInt(keyA) - parseInt(keyB))
       .map(async ([, fixture], fixtureIndex) => {
         const lastUserEmailCreatedAt = subHours(new Date(), (fixtures.length - fixtureIndex) * 8);
-        const { conversation } = await conversationFactory.create(unused_mailboxId, {
+        const { conversation } = await conversationFactory.create({
           ...fixture.conversation,
           lastUserEmailCreatedAt,
           closedAt: fixture.conversation.isClosed ? addHours(lastUserEmailCreatedAt, 8) : null,
@@ -251,7 +240,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   const gumroadDevToken = "36a9bb0b88ad771ead2ada56a9be84e4";
 
   await toolsFactory.create({
-    unused_mailboxId: mailbox.id,
     name: "Send reset password",
     description: "Send reset password email to the user",
     slug: "reset_password",
@@ -270,7 +258,6 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   });
 
   await toolsFactory.create({
-    unused_mailboxId: mailbox.id,
     name: "Resend last receipt",
     description: "Resend the last receipt email to the user",
     slug: "resend_last_receipt",
@@ -288,18 +275,17 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
     authenticationToken: gumroadDevToken,
   });
 
-  await faqsFactory.create(mailbox.id, {
+  await faqsFactory.create({
     content: "1. You are a helpful customer support assistant.",
   });
 
-  await faqsFactory.create(mailbox.id, {
+  await faqsFactory.create({
     content: "Deleting your account can be done from Settings > Account > Delete Account.",
   });
 
   await db
     .insert(mailboxesMetadataApi)
     .values({
-      unused_mailboxId: mailbox.id,
       url: faker.internet.url(),
       isEnabled: true,
       hmacSecret: crypto.randomUUID().replace(/-/g, ""),

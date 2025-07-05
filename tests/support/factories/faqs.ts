@@ -4,10 +4,9 @@ import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
 
 export const faqsFactory = {
-  create: async (unused_mailboxId: number, overrides: Partial<typeof faqs.$inferInsert> = {}) => {
+  create: async (overrides: Partial<typeof faqs.$inferInsert> = {}) => {
     const defaultValues = {
       content: faker.lorem.paragraph(),
-      unused_mailboxId,
     };
 
     const values = { ...defaultValues, ...overrides };

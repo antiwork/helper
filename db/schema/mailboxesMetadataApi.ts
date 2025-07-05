@@ -1,6 +1,4 @@
-import { relations } from "drizzle-orm";
-import { bigint, boolean, index, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
-import { mailboxes } from "@/db/schema/mailboxes";
+import { bigint, boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 
 export const mailboxesMetadataApi = pgTable(
@@ -11,18 +9,7 @@ export const mailboxesMetadataApi = pgTable(
     url: text().notNull(),
     hmacSecret: text().notNull(),
     isEnabled: boolean().notNull(),
-    unused_mailboxId: bigint({ mode: "number" }).notNull(),
     deletedAt: timestamp({ withTimezone: true }),
   },
-  (table) => [
-    index("mailboxes_metadataapi_created_at_1ee2d2c2").on(table.createdAt),
-    unique("mailboxes_metadataapi_mailbox_id_key").on(table.unused_mailboxId),
-  ],
+  (table) => [index("mailboxes_metadataapi_created_at_1ee2d2c2").on(table.createdAt)],
 ).enableRLS();
-
-export const mailboxesMetadataApiRelations = relations(mailboxesMetadataApi, ({ one }) => ({
-  mailbox: one(mailboxes, {
-    fields: [mailboxesMetadataApi.unused_mailboxId],
-    references: [mailboxes.id],
-  }),
-}));

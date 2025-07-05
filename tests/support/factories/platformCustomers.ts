@@ -4,11 +4,10 @@ import { db } from "@/db/client";
 import { platformCustomers } from "@/db/schema";
 
 export const platformCustomerFactory = {
-  create: async (unused_mailboxId: number, overrides: Partial<typeof platformCustomers.$inferInsert> = {}) => {
+  create: async (overrides: Partial<typeof platformCustomers.$inferInsert> = {}) => {
     const platformCustomer = await db
       .insert(platformCustomers)
       .values({
-        unused_mailboxId,
         email: faker.internet.email(),
         name: faker.person.fullName(),
         value: faker.number.float({ min: 0, max: 10000 }).toString(),

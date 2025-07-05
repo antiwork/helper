@@ -1,11 +1,10 @@
 import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { and, eq, isNotNull } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
-import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { TIME_ZONE } from "@/jobs/generateDailyReports";
 import { triggerEvent } from "@/jobs/trigger";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
 import { UserRoles } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
@@ -15,22 +14,14 @@ const formatDateRange = (start: Date, end: Date) => {
 };
 
 export async function generateWeeklyReports() {
-  const mailboxesList = await db.query.mailboxes.findMany({
-    columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
-  });
+  const mailbox = await getMailbox();
+  if (!mailbox || !mailbox.slackBotToken || !mailbox.slackAlertChannel) return;
 
-  if (!mailboxesList.length) return;
-
-  for (const mailbox of mailboxesList) {
-    await triggerEvent("reports/weekly", { unused_mailboxId: mailbox.id });
-  }
+  await triggerEvent("reports/weekly", {});
 }
 
-export const generateMailboxWeeklyReport = async ({ unused_mailboxId }: { unused_mailboxId: number }) => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, unused_mailboxId),
-  });
+export const generateMailboxWeeklyReport = async () => {
+  const mailbox = await getMailbox();
   if (!mailbox) {
     return;
   }

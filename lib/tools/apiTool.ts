@@ -127,7 +127,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   let metadataPrompt = "";
   const metadataApi = await getMetadataApiByMailbox(mailbox);
   if (conversation.emailFrom && metadataApi) {
-    const metadata = await fetchMetadata(conversation.emailFrom, mailbox.slug);
+    const metadata = await fetchMetadata(conversation.emailFrom);
     metadataPrompt = metadata ? `Metadata: ${JSON.stringify(metadata, null, 2)}` : "";
   }
 

@@ -51,8 +51,8 @@ const defaultParams = {
 describe("conversationsRouter", () => {
   describe("list", () => {
     it("returns conversations", async () => {
-      const { conversation } = await conversationFactory.create(mailbox.id);
-      const { conversation: assignedConversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create();
+      const { conversation: assignedConversation } = await conversationFactory.create({
         assignedToId: user.id,
       });
       const caller = createCaller(createTestTRPCContext(user));
@@ -76,21 +76,21 @@ describe("conversationsRouter", () => {
     });
 
     it("sorts by platformCustomers.value with nulls last", async () => {
-      await mailboxMetadataApiFactory.create(mailbox.id);
-      await conversationFactory.create(mailbox.id, {
+      await mailboxMetadataApiFactory.create();
+      await conversationFactory.create({
         emailFrom: "high@example.com",
       });
-      await conversationFactory.create(mailbox.id, {
+      await conversationFactory.create({
         emailFrom: "low@example.com",
       });
-      await conversationFactory.create(mailbox.id, {
+      await conversationFactory.create({
         emailFrom: "no-value@example.com",
       });
-      await platformCustomerFactory.create(mailbox.id, {
+      await platformCustomerFactory.create({
         email: "high@example.com",
         value: "1000",
       });
-      await platformCustomerFactory.create(mailbox.id, {
+      await platformCustomerFactory.create({
         email: "low@example.com",
         value: "500",
       });
@@ -107,8 +107,8 @@ describe("conversationsRouter", () => {
 
   describe("count", () => {
     it("returns the total number of conversations", async () => {
-      await conversationFactory.create(mailbox.id);
-      await conversationFactory.create(mailbox.id);
+      await conversationFactory.create();
+      await conversationFactory.create();
       const caller = createCaller(createTestTRPCContext(user));
       const result = await caller.mailbox.conversations.count({ ...defaultParams, mailboxSlug: mailbox.slug });
       expect(result.total).toBe(2);
@@ -117,7 +117,7 @@ describe("conversationsRouter", () => {
 
   describe("update", () => {
     it("updates an existing conversation", async () => {
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
 
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.update({
@@ -159,7 +159,7 @@ describe("conversationsRouter", () => {
     });
 
     it("updates status without setting closedAt or calling triggerEvent when not closed", async () => {
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
 
       const caller = createCaller(createTestTRPCContext(user));
       await caller.mailbox.conversations.update({
@@ -185,7 +185,7 @@ describe("conversationsRouter", () => {
 
   describe("undo", () => {
     it("undoes the provided email", async () => {
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         status: "closed",
       });
       const { message } = await conversationMessagesFactory.createEnqueued(conversation.id);

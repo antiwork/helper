@@ -37,14 +37,7 @@ export const excludeExistingGmailThreads = async (
   const existingEmails = await db
     .selectDistinct({ gmailThreadId: conversationMessages.gmailThreadId })
     .from(conversationMessages)
-    .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-    .innerJoin(mailboxes, eq(mailboxes.id, conversations.unused_mailboxId))
-    .where(
-      and(
-        eq(mailboxes.gmailSupportEmailId, gmailSupportEmailId),
-        inArray(conversationMessages.gmailThreadId, gmailThreadIds),
-      ),
-    );
+    .where(inArray(conversationMessages.gmailThreadId, gmailThreadIds));
   const existingThreads = new Set(
     existingEmails.flatMap((email) => (email.gmailThreadId ? [email.gmailThreadId] : [])),
   );
@@ -107,7 +100,6 @@ export const processGmailThreadWithClient = async (
   const conversation = await db
     .insert(conversations)
     .values({
-      unused_mailboxId: mailbox.id,
       emailFrom: parsedEmailFrom.address,
       emailFromName: parsedEmailFrom.name,
       subject,
