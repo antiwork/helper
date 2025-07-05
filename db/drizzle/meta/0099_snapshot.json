@@ -1,5 +1,5 @@
 {
-  "id": "7951b40a-fea5-42b8-b181-ffa9c894f58a",
+  "id": "f1baa0de-48f4-4b6e-b2ea-afecf1905f62",
   "prevId": "ebcc2c4b-268d-48fa-8f5a-45e081f30b95",
   "version": "7",
   "dialect": "postgresql",
@@ -3858,19 +3858,46 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
+        },
         "saved_replies_slug_mailbox_unique": {
           "name": "saved_replies_slug_mailbox_unique",
           "columns": [
-            "slug",
-            "mailbox_id"
-          ]
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "mailbox_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
+      "foreignKeys": {
+        "saved_replies_mailbox_id_mailboxes_mailbox_id_fk": {
+          "name": "saved_replies_mailbox_id_mailboxes_mailbox_id_fk",
+          "tableFrom": "saved_replies",
+          "tableTo": "mailboxes_mailbox",
+          "columnsFrom": [
+            "mailbox_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": true

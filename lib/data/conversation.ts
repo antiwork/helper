@@ -17,7 +17,7 @@ import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
 import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
-import { getMailboxById } from "./mailbox";
+import { getMailbox } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
@@ -33,8 +33,6 @@ type NewConversation = Omit<typeof conversations.$inferInsert, OptionalConversat
 export type Conversation = typeof conversations.$inferSelect;
 
 export const CHAT_CONVERSATION_SUBJECT = "Chat";
-
-const MAX_RELATED_CONVERSATIONS_COUNT = 3;
 
 export const createConversation = async (
   conversation: NewConversation,
@@ -139,7 +137,7 @@ export const updateConversation = async (
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
-        const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
+        const mailbox = assertDefined(await getMailbox());
         const events = [
           publishToRealtime({
             channel: conversationChannelId(mailbox.slug, updatedConversation.slug),

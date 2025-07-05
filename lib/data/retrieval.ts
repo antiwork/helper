@@ -9,11 +9,10 @@ import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, timestamp } from "../metadataApiClient";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
-import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
+import { getMetadataApi } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
 const MAX_SIMILAR_CONVERSATIONS = 3;
-const MAX_SIMILAR_KNOWLEDGE_ITEMS = 10;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
 export const findSimilarConversations = async (
@@ -148,8 +147,8 @@ export const fetchPromptRetrievalData = async (
   };
 };
 
-export const fetchMetadata = async (email: string, mailboxSlug: string) => {
-  const { metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+export const fetchMetadata = async (email: string) => {
+  const { metadataApi } = await getMetadataApi();
   if (!metadataApi) return null;
 
   try {

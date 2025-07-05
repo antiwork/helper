@@ -5,6 +5,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { websiteCrawls, websitePages, websites } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../components/utils/assert";
 import { mailboxProcedure } from "./procedure";
 
@@ -18,6 +19,7 @@ const fetchPageTitle = async (url: string): Promise<string> => {
     const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     return titleMatch?.[1] ? titleMatch[1].trim() : new URL(url).hostname;
   } catch (error) {
+    captureExceptionAndLog(error);
     return new URL(url).hostname;
   }
 };

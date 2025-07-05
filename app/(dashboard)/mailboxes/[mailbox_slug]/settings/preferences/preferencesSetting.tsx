@@ -1,5 +1,3 @@
-"use client";
-
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouterOutputs } from "@/trpc";
 import ConfettiSetting from "./confettiSetting";

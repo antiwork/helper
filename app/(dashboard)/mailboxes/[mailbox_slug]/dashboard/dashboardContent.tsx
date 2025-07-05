@@ -16,12 +16,11 @@ export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
 
 type Props = {
   mailboxSlug: string;
-  currentMailbox: { name: string; slug: string };
 };
 
 const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false });
 
-export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
+export function DashboardContent({ mailboxSlug }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<DateRange>();
   const isMobile = useIsMobile();
@@ -51,7 +50,7 @@ export function DashboardContent({ mailboxSlug, currentMailbox }: Props) {
           <div className="grid md:grid-cols-3 gap-6">
             <Panel className="h-[800px] md:h-[400px] md:col-span-2">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="flex flex-col">
+                <div className="flex flex-col h-full">
                   <h4 className="scroll-m-20 mb-2 text-sm font-semibold tracking-tight uppercase">Ticket Status</h4>
                   <StatusByTypeChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
                 </div>

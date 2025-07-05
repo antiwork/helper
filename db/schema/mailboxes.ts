@@ -5,10 +5,6 @@ import { faqs } from "./faqs";
 import { gmailSupportEmails } from "./gmailSupportEmails";
 import { mailboxesMetadataApi } from "./mailboxesMetadataApi";
 
-type OnboardingMetadata = {
-  completed: boolean;
-};
-
 export const mailboxes = pgTable(
   "mailboxes_mailbox",
   {
@@ -35,6 +31,7 @@ export const mailboxes = pgTable(
     isWhitelabel: boolean().notNull().default(false),
     autoCloseEnabled: boolean().notNull().default(false),
     autoCloseDaysOfInactivity: integer().notNull().default(14),
+    chatIntegrationUsed: boolean().notNull().default(false),
     preferences: jsonb()
       .$type<{
         confetti?: boolean;
