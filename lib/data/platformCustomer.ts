@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { platformCustomers } from "@/db/schema";
-import { getMailboxById } from "./mailbox";
+import { getMailbox } from "./mailbox";
 
 type CustomerMetadata = {
   name?: string | null;
@@ -23,7 +23,7 @@ export const getPlatformCustomer = async (mailboxId: number, email: string): Pro
     db.query.platformCustomers.findFirst({
       where: and(eq(platformCustomers.email, email), eq(platformCustomers.mailboxId, mailboxId)),
     }),
-    getMailboxById(mailboxId),
+    getMailbox(),
   ]);
 
   if (!customer) return null;
@@ -81,7 +81,7 @@ export const findOrCreatePlatformCustomerByEmail = async (
         mailboxId,
       })
       .returning(),
-    getMailboxById(mailboxId),
+    getMailbox(),
   ]);
 
   const customer = result[0];

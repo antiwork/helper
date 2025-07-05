@@ -157,6 +157,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
         />
         <TipTapEditor
           ref={editorRef}
+          className="max-h-[400px] overflow-y-auto no-scrollbar"
           ariaLabel="Message"
           placeholder="Type your message here..."
           defaultContent={messageMemoized}

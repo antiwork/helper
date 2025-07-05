@@ -8,17 +8,6 @@ import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[cate
 import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -155,7 +144,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
               <FormControl>
                 <TipTapEditor
                   ref={editorRef}
-                  className="min-h-48"
+                  className="min-h-48 max-h-96"
                   ariaLabel="Saved reply content editor"
                   placeholder="Enter your saved reply content here..."
                   defaultContent={initialContentObject}
@@ -177,25 +166,14 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
 
         <div className="flex items-center">
           {savedReply && onDelete ? (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive_outlined" disabled={deleteSavedReply.isPending}>
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete saved reply</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete "{savedReply.name}"? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmationDialog
+              message={`Are you sure you want to delete ${savedReply.name}? This action cannot be undone.`}
+              onConfirm={handleDelete}
+            >
+              <Button type="button" variant="destructive_outlined" disabled={deleteSavedReply.isPending}>
+                Delete
+              </Button>
+            </ConfirmationDialog>
           ) : null}
 
           <div className="ml-auto flex items-center space-x-2">

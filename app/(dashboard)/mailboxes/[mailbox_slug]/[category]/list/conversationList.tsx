@@ -79,8 +79,11 @@ export const List = () => {
   const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
-      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
-      const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+      const conversationFilter = allConversationsSelected
+        ? conversations.length <= 25 && !hasNextPage
+          ? conversations.map((c) => c.id)
+          : input
+        : selectedConversations;
 
       bulkUpdate(
         {
@@ -96,6 +99,10 @@ export const List = () => {
             void utils.mailbox.conversations.count.invalidate();
 
             if (updatedImmediately) {
+              const ticketsText = allConversationsSelected
+                ? "All matching tickets"
+                : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
+
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
               showSuccessToast(`${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`);
             } else {
@@ -197,7 +204,9 @@ export const List = () => {
     });
   });
 
-  const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+  const conversationsText = allConversationsSelected
+    ? "all matching conversations"
+    : `${selectedConversations.length} conversation${selectedConversations.length === 1 ? "" : "s"}`;
 
   return (
     <div className="flex flex-col w-full h-full">
@@ -227,11 +236,9 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  {searchParams.status === "closed" ? (
+                  {searchParams.status !== "open" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to reopen ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      }?`}
+                      message={`Are you sure you want to reopen ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("open")}
                       confirmLabel="Yes, reopen"
                       confirmVariant="bright"
@@ -240,11 +247,10 @@ export const List = () => {
                         Reopen
                       </Button>
                     </ConfirmationDialog>
-                  ) : (
+                  )}
+                  {searchParams.status !== "closed" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to close ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      }?`}
+                      message={`Are you sure you want to close ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("closed")}
                       confirmLabel="Yes, close"
                       confirmVariant="bright"
@@ -256,9 +262,7 @@ export const List = () => {
                   )}
                   {searchParams.status !== "spam" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to mark ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      } as spam?`}
+                      message={`Are you sure you want to mark ${conversationsText} as spam?`}
                       onConfirm={() => handleBulkUpdate("spam")}
                       confirmLabel="Yes, mark as spam"
                       confirmVariant="bright"

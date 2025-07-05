@@ -117,6 +117,7 @@ export const userRouter = {
         email: input.email,
         user_metadata: {
           display_name: input.displayName,
+          permissions: "admin",
         },
         email_confirm: true,
       });
