@@ -6,7 +6,6 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
@@ -175,20 +174,79 @@ export const conversationsRouter = {
     .mutation(async ({ input, ctx }) => {
       const { conversationFilter, status } = input;
 
-      if (Array.isArray(conversationFilter) && conversationFilter.length < 25) {
+      if (Array.isArray(conversationFilter)) {
         for (const conversationId of conversationFilter) {
           await updateConversation(conversationId, { set: { status }, byUserId: ctx.user.id });
         }
         return { updatedImmediately: true };
       }
+      // Handle search criteria by finding matching conversations
+      const { where } = await searchConversations(ctx.mailbox, conversationFilter, ctx.user.id);
+      const results = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .leftJoin(
+          platformCustomers,
+          and(
+            eq(conversations.mailboxId, platformCustomers.mailboxId),
+            eq(conversations.emailFrom, platformCustomers.email),
+          ),
+        )
+        .where(and(...Object.values(where)));
 
-      await triggerEvent("conversations/bulk-update", {
-        mailboxId: ctx.mailbox.id,
-        userId: ctx.user.id,
-        conversationFilter: input.conversationFilter,
-        status: input.status,
-      });
-      return { updatedImmediately: false };
+      for (const conversation of results) {
+        await updateConversation(conversation.id, { set: { status }, byUserId: ctx.user.id });
+      }
+      return { updatedImmediately: true };
+    }),
+  bulkAssign: mailboxProcedure
+    .input(
+      z.object({
+        conversationFilter: z.union([z.array(z.number()), searchSchema]),
+        assignedToId: z.string().nullable(),
+        assignedToAI: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { conversationFilter, assignedToId, assignedToAI } = input;
+
+      if (assignedToId) {
+        const assignee = await db.query.authUsers.findFirst({
+          where: eq(authUsers.id, assignedToId),
+        });
+        if (!assignee) throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      if (Array.isArray(conversationFilter)) {
+        for (const conversationId of conversationFilter) {
+          await updateConversation(conversationId, {
+            set: { assignedToId, assignedToAI },
+            byUserId: ctx.user.id,
+          });
+        }
+        return { updatedImmediately: true };
+      }
+      // Handle search criteria by finding matching conversations
+      const { where } = await searchConversations(ctx.mailbox, conversationFilter, ctx.user.id);
+      const results = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .leftJoin(
+          platformCustomers,
+          and(
+            eq(conversations.mailboxId, platformCustomers.mailboxId),
+            eq(conversations.emailFrom, platformCustomers.email),
+          ),
+        )
+        .where(and(...Object.values(where)));
+
+      for (const conversation of results) {
+        await updateConversation(conversation.id, {
+          set: { assignedToId, assignedToAI },
+          byUserId: ctx.user.id,
+        });
+      }
+      return { updatedImmediately: true };
     }),
   generateDraft: conversationProcedure.mutation(async ({ ctx }) => {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
