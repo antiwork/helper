@@ -196,3 +196,5 @@ export const useConversationListContext = () =>
     useContext(ConversationListContext),
     "useConversationContext must be used within a ConversationContextProvider",
   );
+
+export const useConversationListContextSafe = () => useContext(ConversationListContext);

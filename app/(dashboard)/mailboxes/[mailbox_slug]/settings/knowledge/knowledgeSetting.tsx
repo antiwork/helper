@@ -1,5 +1,3 @@
-"use client";
-
 import KnowledgeBankSetting from "./knowledgeBankSetting";
 import WebsiteCrawlSetting from "./websiteCrawlSetting";
 

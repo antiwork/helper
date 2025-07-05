@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
@@ -10,16 +10,9 @@ import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 
-export const getMailboxById = cache(async (id: number): Promise<Mailbox | null> => {
+export const getMailbox = cache(async (): Promise<typeof mailboxes.$inferSelect | null> => {
   const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, id),
-  });
-  return result ?? null;
-});
-
-export const getMailboxBySlug = cache(async (slug: string): Promise<typeof mailboxes.$inferSelect | null> => {
-  const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, slug),
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
   return result ?? null;
 });
@@ -135,3 +128,9 @@ export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, rep
     })
     .where(eq(mailboxes.id, mailboxId));
 };
+
+export const getAllMailboxes = cache(async (): Promise<Mailbox[]> => {
+  return await db.query.mailboxes.findMany({
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+  });
+});

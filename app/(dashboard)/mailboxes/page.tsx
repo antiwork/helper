@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
+import { getAllMailboxes } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
-import { api } from "@/trpc/server";
 
 const Page = async () => {
   const supabase = await createClient();
@@ -12,10 +12,11 @@ const Page = async () => {
   if (error) captureExceptionAndLog(error);
   if (!user) return redirect("/login");
 
-  const mailboxes = await api.mailbox.list();
-  if (mailboxes.find(({ slug }) => slug === user.user_metadata.lastMailboxSlug))
-    return redirect(`/mailboxes/${user.user_metadata.lastMailboxSlug}/mine`);
-  else if (mailboxes[0]) return redirect(`/mailboxes/${mailboxes[0].slug}/mine`);
+  const mailboxes = await getAllMailboxes();
+  if (mailboxes.length > 0) {
+    return redirect(`/mailboxes/${mailboxes[0]?.slug}/mine`);
+  }
+
   return redirect("/login");
 };
 

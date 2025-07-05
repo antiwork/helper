@@ -34,6 +34,9 @@ const calculateCurrentTime = (time: Date, now: Date, formatter: Formatter) => {
   if (duration.months && duration.months > 0) return formatter.months(duration.months);
   if (duration.days && duration.days > 0) {
     const hours = duration.hours || 0;
+    if (hours > 0 && formatter === formatters.long) {
+      return `${duration.days} ${duration.days === 1 ? "day" : "days"} ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    }
     return `${formatter.days(duration.days)}${hours > 0 ? ` ${formatter.hours(hours)}` : ""}`;
   }
   if (duration.hours && duration.hours > 0) return formatter.hours(duration.hours);

@@ -23,7 +23,7 @@ export const useConversationsListInput = () => {
 
   const input = {
     mailboxSlug: params.mailbox_slug,
-    status: searchParams.status ? [searchParams.status] : null,
+    status: searchParams.status ? [searchParams.status] : ["open"],
     sort: searchParams.sort,
     category: params.category,
     search: searchParams.search ?? null,

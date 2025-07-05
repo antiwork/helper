@@ -4,4 +4,4 @@
 - Don't modify config files or package.json unless explicitly told to do so
 - Always design for light and dark mode
 - Always consider mobile and desktop devices (medium and large and extra large)
-- DO NOT ADD COMMENTS
+- No explanatory comments please

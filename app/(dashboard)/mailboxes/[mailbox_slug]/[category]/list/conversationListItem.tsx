@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/components/utils/currency";
+import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -47,9 +48,17 @@ export const ConversationListItem = ({
   }, [conversation, isActive]);
 
   let highlightedSubject = escape(conversation.subject);
-  let highlightedBody = escape(conversation.matchedMessageText ?? conversation.recentMessageText ?? "");
+  let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
+
+  if (searchTerms.length > 0 && conversation.matchedMessageText) {
+    bodyText = createSearchSnippet(bodyText, searchTerms);
+  }
+
+  let highlightedBody = escape(bodyText);
+
   if (searchTerms.length > 0) {
     highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
+
     if (conversation.matchedMessageText) {
       highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
@@ -139,7 +148,7 @@ export const ConversationListItem = ({
                 />
                 {highlightedBody && (
                   <p
-                    className="text-muted-foreground truncate max-w-4xl text-xs md:text-sm"
+                    className="text-muted-foreground max-w-4xl text-xs md:text-sm truncate"
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}
