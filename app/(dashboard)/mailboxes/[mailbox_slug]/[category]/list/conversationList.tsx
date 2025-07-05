@@ -1,17 +1,20 @@
-import { Send } from "lucide-react";
+import { Send, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
+import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSelected } from "@/components/useSelected";
 import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateSlug } from "@/lib/shared/slug";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -34,12 +37,22 @@ export const List = () => {
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [showAssignPopover, setShowAssignPopover] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: () => {
       toast({
         variant: "destructive",
         title: "Failed to update conversations",
+      });
+    },
+  });
+  const { mutate: bulkAssign } = api.mailbox.conversations.bulkAssign.useMutation({
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to assign conversations",
       });
     },
   });
@@ -72,8 +85,8 @@ export const List = () => {
     }
   };
 
-  const toggleAllConversations = () => {
-    setAllConversationsSelected((prev) => !prev);
+  const toggleAllConversations = (forceValue?: boolean) => {
+    setAllConversationsSelected((prev) => forceValue ?? !prev);
     clearSelectedConversations();
   };
 
@@ -112,6 +125,64 @@ export const List = () => {
     }
   };
 
+  const handleBulkAssign = async () => {
+    if (!assignedTo) return;
+
+    setIsBulkUpdating(true);
+
+    const conversationFilter = allConversationsSelected ? input : selectedConversations;
+    let selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+
+    if (allConversationsSelected) {
+      try {
+        const countResult = await utils.mailbox.conversations.count.fetch(input);
+        selectedCount = countResult.total;
+      } catch (error) {
+        captureExceptionAndLog(error);
+      }
+    }
+
+    const assignedToId = "id" in assignedTo ? assignedTo.id : null;
+    const assignedToAI = "ai" in assignedTo;
+
+    bulkAssign(
+      {
+        conversationFilter,
+        assignedToId,
+        assignedToAI,
+        mailboxSlug: input.mailboxSlug,
+      },
+      {
+        onSuccess: ({ updatedImmediately }) => {
+          setIsBulkUpdating(false);
+          setAllConversationsSelected(false);
+          clearSelectedConversations();
+          setShowAssignPopover(false);
+          setAssignedTo(null);
+          void utils.mailbox.conversations.list.invalidate();
+
+          if (updatedImmediately) {
+            const displayName = assignedTo && "displayName" in assignedTo ? assignedTo.displayName : null;
+            const assignText = assignedToAI
+              ? "assigned to Helper agent"
+              : assignedToId
+                ? `assigned to ${displayName || "user"}`
+                : "unassigned";
+            toast({
+              title: `${selectedCount} conversation${selectedCount === 1 ? "" : "s"} ${assignText}`,
+            });
+          } else {
+            toast({ title: "Starting assignment, refresh to see status." });
+          }
+        },
+        onError: () => {
+          setIsBulkUpdating(false);
+          toast({ title: "Failed to assign conversations", variant: "destructive" });
+        },
+      },
+    );
+  };
+
   useEffect(() => {
     const currentRef = loadMoreRef.current;
     if (!currentRef || !hasNextPage) return;
@@ -128,6 +199,10 @@ export const List = () => {
     observer.observe(currentRef);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    toggleAllConversations(false);
+  }, [searchParams.status, clearSelectedConversations]);
 
   useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
@@ -246,6 +321,30 @@ export const List = () => {
                       Mark as spam
                     </Button>
                   )}
+                  <Popover open={showAssignPopover} onOpenChange={setShowAssignPopover}>
+                    <PopoverTrigger asChild>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        <User className="h-4 w-4 mr-1" />
+                        Assign
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4">
+                      <div className="flex flex-col space-y-4">
+                        <h4 className="font-medium">
+                          Assign {allConversationsSelected ? "all" : selectedConversations.length} conversation{(allConversationsSelected || selectedConversations.length) === 1 ? "" : "s"}
+                        </h4>
+                        <AssignSelect
+                          selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
+                          onChange={setAssignedTo}
+                          aiOption
+                          aiOptionSelected={!!(assignedTo && "ai" in assignedTo)}
+                        />
+                        <Button className="w-full" onClick={handleBulkAssign} disabled={!assignedTo || isBulkUpdating}>
+                          Assign
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
