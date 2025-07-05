@@ -27,48 +27,58 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
-        <Table>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-4 w-[120px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[60px]" />
-                </TableCell>
+      <div className="flex flex-col w-full h-full">
+        <div className="flex-1 min-h-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</TableHead>
+                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">Replies</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="px-0 py-3">
+                    <Skeleton className="h-4 w-[120px]" />
+                  </TableCell>
+                  <TableCell className="px-0 py-3 text-right">
+                    <Skeleton className="h-4 w-[60px] ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col w-full h-full">
       {members?.length ? (
-        <div className="max-h-[350px] md:max-h-[300px] overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-background">
               <TableRow>
-                <TableHead className="px-0">Name</TableHead>
-                <TableHead className="px-0">Replies</TableHead>
+                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</TableHead>
+                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">Replies</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {members.map((member: Member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="px-0">{member.displayName}</TableCell>
-                  <TableCell className="px-0">{member.replyCount}</TableCell>
+                <TableRow key={member.id} className="hover:bg-muted/50 transition-colors">
+                  <TableCell className="px-0 py-3 font-medium">{member.displayName}</TableCell>
+                  <TableCell className="px-0 py-3 text-right font-mono text-sm">{member.replyCount.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       ) : (
-        <div>No data available.</div>
+        <div className="flex items-center justify-center flex-1 text-muted-foreground">
+          No data available.
+        </div>
       )}
     </div>
   );
