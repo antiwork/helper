@@ -23,13 +23,13 @@ export async function generateWeeklyReports() {
   if (!mailboxesList.length) return;
 
   for (const mailbox of mailboxesList) {
-    await triggerEvent("reports/weekly", { mailboxId: mailbox.id });
+    await triggerEvent("reports/weekly", { unused_mailboxId: mailbox.id });
   }
 }
 
-export const generateMailboxWeeklyReport = async ({ mailboxId }: { mailboxId: number }) => {
+export const generateMailboxWeeklyReport = async ({ unused_mailboxId }: { unused_mailboxId: number }) => {
   const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, mailboxId),
+    where: eq(mailboxes.id, unused_mailboxId),
   });
   if (!mailbox) {
     return;

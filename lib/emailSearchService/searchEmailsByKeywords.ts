@@ -8,7 +8,7 @@ const MAX_SEARCH_RESULTS = 1000;
 
 export async function searchEmailsByKeywords(
   keywords: string,
-  mailboxId: number,
+  unused_mailboxId: number,
   filters: SQL[] = [],
   orderBy: SQL[] = [desc(conversationMessages.id)],
 ) {
@@ -23,7 +23,7 @@ export async function searchEmailsByKeywords(
     .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
     .where(
       and(
-        eq(conversations.mailboxId, mailboxId),
+        eq(conversations.unused_mailboxId, unused_mailboxId),
         sql`string_to_array(search_index, ' ') @> string_to_array(${searchIndex}, ' ')`,
         ...filters,
       ),

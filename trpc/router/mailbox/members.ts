@@ -51,7 +51,7 @@ export const membersRouter = {
             keywords,
             role,
             permissions,
-            mailboxId: ctx.mailbox.id,
+            unused_mailboxId: ctx.mailbox.id,
             mailboxSlug: ctx.mailbox.slug,
           },
         });

@@ -32,7 +32,7 @@ export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
       }),
     );
 
-    if (guideSession.mailboxId !== mailbox.id) {
+    if (guideSession.unused_mailboxId !== authResult.mailbox.id) {
       return corsResponse({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -43,7 +43,7 @@ export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
             guideSessionId: guideSession.id,
             type: event.type,
             data: event,
-            mailboxId: guideSession.mailboxId,
+            unused_mailboxId: guideSession.unused_mailboxId,
             timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
             metadata: metadata || {},
           }),
@@ -65,7 +65,7 @@ export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
             type: eventData.type,
             data: eventData.data,
             timestamp: eventData.timestamp,
-            mailboxId: guideSession.mailboxId,
+            unused_mailboxId: guideSession.unused_mailboxId,
           });
         }),
       );

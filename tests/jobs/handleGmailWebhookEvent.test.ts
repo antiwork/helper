@@ -208,7 +208,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toBeUndefined();
     });
@@ -231,7 +231,7 @@ describe("handleGmailWebhookEvent", () => {
       });
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         status: "closed",
@@ -259,7 +259,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         status: "closed",
@@ -299,7 +299,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         emailFrom: "sender@example.com",
@@ -353,7 +353,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         emailFrom: "sender@example.com",
@@ -470,7 +470,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         status: "open",
@@ -496,7 +496,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         emailFrom: "helperai123@gmail.com",
@@ -545,7 +545,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         emailFrom: "s.rauf124@gmail.com",
@@ -593,7 +593,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation).toMatchObject({
         emailFrom: "s.rauf124@gmail.com",
@@ -654,7 +654,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
 
       const message = await db.query.conversationMessages.findFirst({
@@ -716,7 +716,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
 
       const message = await db.query.conversationMessages.findFirst({
@@ -778,7 +778,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation?.assignedToId).toBe(staffUser.id);
     });
@@ -847,7 +847,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation?.assignedToId).toBe(firstStaffUser.id);
     });
@@ -874,7 +874,7 @@ describe("handleGmailWebhookEvent", () => {
       await handleGmailWebhookEvent({ body: MOCK_BODY, headers: mockHeaders() });
 
       const conversation = await db.query.conversations.findFirst({
-        where: (c, { eq }) => eq(c.mailboxId, mailbox.id),
+        where: (c, { eq }) => eq(c.unused_mailboxId, mailbox.id),
       });
       expect(conversation?.assignedToId).toBeNull();
     });

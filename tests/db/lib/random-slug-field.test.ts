@@ -10,7 +10,7 @@ describe("randomSlugField", () => {
     const conversation = await db
       .insert(conversations)
       .values({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
       })
       .returning()
       .then(takeUniqueOrThrow);

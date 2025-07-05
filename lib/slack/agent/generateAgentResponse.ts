@@ -431,7 +431,7 @@ const findConversation = async (id: string | number, mailbox: Mailbox) => {
   const conversation = /^\d+$/.test(id.toString())
     ? await getConversationById(Number(id))
     : await getConversationBySlug(id.toString());
-  if (!conversation || conversation.mailboxId !== mailbox.id) return null;
+  if (!conversation || conversation.unused_mailboxId !== mailbox.id) return null;
   return conversation;
 };
 

@@ -28,7 +28,7 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
       conversation: {
         id: conversations.id,
         emailFrom: conversations.emailFrom,
-        mailboxId: conversations.mailboxId,
+        unused_mailboxId: conversations.unused_mailboxId,
       },
     })
     .from(conversationMessages)
@@ -39,8 +39,8 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
 
   if (
     !message ||
-    (message.conversation.emailFrom && message.conversation.emailFrom !== session.email) ||
-    message.conversation.mailboxId !== mailbox.id
+    (message.conversation.emailFrom && message.conversation.emailFrom !== authResult.session.email) ||
+    message.conversation.unused_mailboxId !== authResult.mailbox.id
   ) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }

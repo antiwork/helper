@@ -17,8 +17,8 @@ export const getMailbox = cache(async (): Promise<typeof mailboxes.$inferSelect 
   return result ?? null;
 });
 
-export const resetMailboxPromptUpdatedAt = async (tx: Transaction, mailboxId: number) => {
-  await tx.update(mailboxes).set({ promptUpdatedAt: new Date() }).where(eq(mailboxes.id, mailboxId));
+export const resetMailboxPromptUpdatedAt = async (tx: Transaction, unused_mailboxId: number) => {
+  await tx.update(mailboxes).set({ promptUpdatedAt: new Date() }).where(eq(mailboxes.id, unused_mailboxId));
 };
 
 export type Mailbox = typeof mailboxes.$inferSelect;
@@ -39,7 +39,7 @@ const getSlackConnectUrl = (mailboxSlug: string): string | null => {
 export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
   const metadataEndpoint = await db.query.mailboxesMetadataApi.findFirst({
     where: and(
-      eq(mailboxesMetadataApi.mailboxId, mailbox.id),
+      eq(mailboxesMetadataApi.unused_mailboxId, mailbox.id),
       isNull(mailboxesMetadataApi.deletedAt),
       eq(mailboxesMetadataApi.isEnabled, true),
     ),

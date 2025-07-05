@@ -52,7 +52,7 @@ export const checkAssignedTicketResponseTimes = async () => {
         .from(conversations)
         .where(
           and(
-            eq(conversations.mailboxId, mailbox.id),
+            eq(conversations.unused_mailboxId, mailbox.id),
             isNotNull(conversations.assignedToId),
             isNull(conversations.mergedIntoId),
             eq(conversations.status, "open"),

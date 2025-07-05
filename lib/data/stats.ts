@@ -39,7 +39,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
     .innerJoin(conversations, eq(emails.conversationId, conversations.id))
     .where(
       and(
-        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.unused_mailboxId, mailbox.id),
         eq(emails.role, "staff"),
         sql`${emails.userId} IN ${memberIds}`,
         ...dateConditions,

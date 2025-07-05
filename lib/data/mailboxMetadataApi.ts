@@ -14,7 +14,7 @@ export const getMetadataApiByMailbox = async (mailbox: typeof mailboxes.$inferSe
     .from(mailboxesMetadataApi)
     .where(
       and(
-        eq(mailboxesMetadataApi.mailboxId, mailbox.id),
+        eq(mailboxesMetadataApi.unused_mailboxId, mailbox.id),
         eq(mailboxesMetadataApi.isEnabled, true),
         isNull(mailboxesMetadataApi.deletedAt),
       ),
@@ -43,7 +43,7 @@ export const createMailboxMetadataApi = async (params: { url: string }): Promise
 
   const hmacSecret = `${METADATA_API_HMAC_SECRET_PREFIX}${crypto.randomUUID().replace(/-/g, "")}`;
   await db.insert(mailboxesMetadataApi).values({
-    mailboxId: mailbox.id,
+    unused_mailboxId: mailbox.id,
     url,
     hmacSecret,
     isEnabled: true,

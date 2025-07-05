@@ -5,13 +5,13 @@ import { conversationMessages, conversations } from "@/db/schema";
 import { generateSlug } from "@/lib/shared/slug";
 
 export const conversationFactory = {
-  create: async (mailboxId: number, overrides: Partial<typeof conversations.$inferInsert> = {}) => {
+  create: async (unused_mailboxId: number, overrides: Partial<typeof conversations.$inferInsert> = {}) => {
     const subject = overrides.subject || faker.lorem.sentence();
 
     const [conversation] = await db
       .insert(conversations)
       .values({
-        mailboxId,
+        unused_mailboxId,
         emailFrom: faker.internet.email(),
         emailFromName: faker.person.fullName(),
         subject,

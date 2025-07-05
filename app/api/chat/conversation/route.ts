@@ -25,8 +25,8 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   }
 
   const newConversation = await createConversation({
-    emailFrom: isVisitor || !session.email ? null : session.email,
-    mailboxId: mailbox.id,
+    emailFrom: isVisitor || !authResult.session.email ? null : authResult.session.email,
+    unused_mailboxId: authResult.mailbox.id,
     subject: CHAT_CONVERSATION_SUBJECT,
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",

@@ -94,7 +94,7 @@ describe("handleAutoResponse", () => {
     expect(updatedMessage?.metadata).toEqual(mockMetadata);
     expect(platformCustomer.upsertPlatformCustomer).toHaveBeenCalledWith({
       email: "customer@example.com",
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       customerMetadata: mockMetadata.metadata,
     });
   });

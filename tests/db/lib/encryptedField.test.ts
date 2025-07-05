@@ -51,7 +51,7 @@ describe("nativeEncryptedField", () => {
     const { tool } = await toolsFactory.create({
       name: "Test Tool",
       authenticationToken: testAuthToken,
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
     });
 
     const fetchedTool = await db.query.tools.findFirst({

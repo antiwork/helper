@@ -262,17 +262,17 @@ export const getConversationById = cache(async (id: number): Promise<typeof conv
 
 export const getConversationBySlugAndMailbox = async (
   slug: string,
-  mailboxId: number,
+  unused_mailboxId: number,
 ): Promise<typeof conversations.$inferSelect | null> => {
   const result = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.mailboxId, mailboxId)),
+    where: and(eq(conversations.slug, slug), eq(conversations.unused_mailboxId, unused_mailboxId)),
   });
   return result ?? null;
 };
 
 export const getNonSupportParticipants = async (conversation: Conversation): Promise<string[]> => {
   const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, conversation.mailboxId),
+    where: eq(mailboxes.id, conversation.unused_mailboxId),
     with: { gmailSupportEmail: { columns: { email: true } } },
   });
   if (!mailbox) throw new Error("Mailbox not found");
@@ -338,7 +338,7 @@ export const getRelatedConversations = async (
 
   const relatedConversations = await db.query.conversations.findMany({
     where: and(
-      eq(conversations.mailboxId, conversationWithMailbox.mailboxId),
+      eq(conversations.unused_mailboxId, conversationWithMailbox.unused_mailboxId),
       not(eq(conversations.id, conversationId)),
       inArray(
         conversations.id,

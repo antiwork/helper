@@ -29,7 +29,9 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
 
   await ensureCleanedUpText(message);
 
-  const customerMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom) : null;
+  const customerMetadata = message.emailFrom
+    ? await fetchMetadata(message.emailFrom)
+    : null;
   if (customerMetadata) {
     await db
       .update(conversationMessages)
@@ -39,7 +41,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
     if (message.emailFrom) {
       await upsertPlatformCustomer({
         email: message.emailFrom,
-        mailboxId: message.conversation.mailboxId,
+        unused_mailboxId: message.conversation.unused_mailboxId,
         customerMetadata: customerMetadata.metadata,
       });
     }

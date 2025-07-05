@@ -33,7 +33,7 @@ describe("apiTools", () => {
     it("builds AI tools from tool definitions", async () => {
       const { mailbox } = await userFactory.createRootUser();
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         parameters: [
           { name: "param1", type: "string", required: true, in: "body" },
           { name: "param2", type: "number", required: false, in: "query" },
@@ -50,7 +50,7 @@ describe("apiTools", () => {
     it("handles customerEmailParameter correctly", async () => {
       const { mailbox } = await userFactory.createRootUser();
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         customerEmailParameter: "customer_email",
         parameters: [
           { name: "customer_email", type: "string", required: true, in: "body" },
@@ -80,7 +80,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         requestMethod: "POST",
         url: "https://api.example.com/test",
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
@@ -112,7 +112,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
       });
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -134,7 +134,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
       });
 
       global.fetch = vi.fn().mockRejectedValueOnce(new Error("Network error"));
@@ -149,7 +149,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         parameters: [{ name: "required_param", type: "string", required: true, in: "body" }],
       });
 
@@ -160,7 +160,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         parameters: [{ name: "required_param", type: "string", required: true, in: "body" }],
       });
       await expect(callToolApi(conversation, tool, { required_param: 123 })).rejects.toThrow(ToolApiError);
@@ -170,7 +170,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         requestMethod: "GET",
         url: "https://api.example.com/test",
         parameters: [{ name: "param1", type: "string", required: true, in: "query" }],
@@ -196,7 +196,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         requestMethod: "GET",
         url: "https://api.example.com/test/{param1}/show",
         parameters: [
@@ -225,7 +225,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         requestMethod: "POST",
         url: "https://api.example.com/test",
         headers: {},
@@ -253,7 +253,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         requestMethod: "GET",
         url: "https://api.example.com/test",
         headers: {
@@ -278,7 +278,7 @@ describe("apiTools", () => {
       const { mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         requestMethod: "POST",
         url: "https://api.example.com/test",
       });
@@ -325,7 +325,7 @@ describe("apiTools", () => {
 
       vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         slug: "test-tool",
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
       });
@@ -355,7 +355,7 @@ describe("apiTools", () => {
 
       vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce({
         id: 1,
-        mailboxId: 1,
+        unused_mailboxId: 1,
         url: "test",
         isEnabled: true,
         hmacSecret: "test",
@@ -369,7 +369,7 @@ describe("apiTools", () => {
       } as any);
 
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         slug: "test-tool",
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
       });
@@ -410,7 +410,7 @@ describe("apiTools", () => {
       } as any);
 
       const { tool } = await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         slug: "test-tool",
       });
 

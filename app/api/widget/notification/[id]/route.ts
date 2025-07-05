@@ -24,7 +24,7 @@ export const PATCH = withWidgetAuth<{ id: string }>(async ({ request, context: {
   const { status } = updateNotificationSchema.parse(body);
 
   const platformCustomer = await db.query.platformCustomers.findFirst({
-    where: and(eq(platformCustomers.email, session.email), eq(platformCustomers.mailboxId, mailbox.id)),
+    where: and(eq(platformCustomers.email, session.email), eq(platformCustomers.unused_mailboxId, mailbox.id)),
   });
 
   if (!platformCustomer) {

@@ -15,7 +15,7 @@ export const customersRouter = {
     .query(async ({ ctx, input }) => {
       return await db.query.platformCustomers.findMany({
         where: and(
-          eq(platformCustomers.mailboxId, ctx.mailbox.id),
+          eq(platformCustomers.unused_mailboxId, ctx.mailbox.id),
           ...(input.search ? [ilike(platformCustomers.email, `%${input.search}%`)] : []),
         ),
         columns: {

@@ -24,7 +24,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
       const conversation = await createConversation({
         emailFrom: session.email,
         isPrompt: false,
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         source: "chat",
         assignedToAI: true,
         status: "closed",
@@ -39,7 +39,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
       platformCustomerId: platformCustomer.id,
       title: result.title,
       instructions,
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       conversationId: assertDefined(conversationId),
       steps: result.next_steps.map((description) => ({ description, completed: false })),
     });
@@ -48,7 +48,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
       createGuideSessionEvent({
         guideSessionId: guideSession.id,
         type: "session_started",
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         data: {
           steps: result.next_steps,
           state_analysis: result.state_analysis,

@@ -166,7 +166,7 @@ export const messagesRouter = {
             dateFilter,
             isNotNull(conversationMessages.reactionType),
             isNull(conversationMessages.deletedAt),
-            eq(conversations.mailboxId, ctx.mailbox.id),
+            eq(conversations.unused_mailboxId, ctx.mailbox.id),
           ),
         )
         .groupBy(sql`period`, conversationMessages.reactionType);
@@ -192,7 +192,7 @@ export const messagesRouter = {
         db
           .$count(
             conversations,
-            and(eq(conversations.mailboxId, ctx.mailbox.id), eq(conversations.status, "open"), createdAtFilter),
+            and(eq(conversations.unused_mailboxId, ctx.mailbox.id), eq(conversations.status, "open"), createdAtFilter),
           )
           .then((count) => ({ type: "open", count })),
 
@@ -200,7 +200,7 @@ export const messagesRouter = {
           .$count(
             conversations,
             and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
+              eq(conversations.unused_mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               createdAtFilter,
               exists(
@@ -238,7 +238,7 @@ export const messagesRouter = {
           .$count(
             conversations,
             and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
+              eq(conversations.unused_mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               createdAtFilter,
               exists(

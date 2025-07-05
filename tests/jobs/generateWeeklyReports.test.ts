@@ -49,7 +49,7 @@ describe("generateWeeklyReports", () => {
 
     expect(jobsMock.triggerEvent).toHaveBeenCalledTimes(1);
     expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {
-      mailboxId: mailboxWithSlack.id,
+      unused_mailboxId: mailboxWithSlack.id,
     });
   });
 });

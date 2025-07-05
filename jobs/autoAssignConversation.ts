@@ -92,11 +92,11 @@ Focus on understanding the customer's underlying needs rather than just surface-
 
 const getNextCoreTeamMemberInRotation = async (
   coreTeamMembers: UserWithMailboxAccessData[],
-  mailboxId: number,
+  unused_mailboxId: number,
 ): Promise<UserWithMailboxAccessData | null> => {
   if (coreTeamMembers.length === 0) return null;
 
-  const cache = cacheFor<number>(`${CACHE_ROUND_ROBIN_KEY_PREFIX}:${mailboxId}`);
+  const cache = cacheFor<number>(`${CACHE_ROUND_ROBIN_KEY_PREFIX}:${unused_mailboxId}`);
 
   const lastAssignedIndex = (await cache.get()) ?? 0;
   const nextIndex = (lastAssignedIndex + 1) % coreTeamMembers.length;

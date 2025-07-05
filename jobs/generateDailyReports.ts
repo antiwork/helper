@@ -17,13 +17,13 @@ export async function generateDailyReports() {
   if (!mailboxesList.length) return;
 
   for (const mailbox of mailboxesList) {
-    await triggerEvent("reports/daily", { mailboxId: mailbox.id });
+    await triggerEvent("reports/daily", { unused_mailboxId: mailbox.id });
   }
 }
 
-export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: number }) {
+export async function generateMailboxDailyReport({ unused_mailboxId }: { unused_mailboxId: number }) {
   const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, mailboxId),
+    where: eq(mailboxes.id, unused_mailboxId),
   });
   if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
 
@@ -43,7 +43,11 @@ export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: num
 
   const openTicketCount = await db.$count(
     conversations,
-    and(eq(conversations.mailboxId, mailbox.id), eq(conversations.status, "open"), isNull(conversations.mergedIntoId)),
+    and(
+      eq(conversations.unused_mailboxId, mailbox.id),
+      eq(conversations.status, "open"),
+      isNull(conversations.mergedIntoId),
+    ),
   );
 
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
@@ -56,7 +60,7 @@ export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: num
     .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
     .where(
       and(
-        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.unused_mailboxId, mailbox.id),
         eq(conversationMessages.role, "staff"),
         gt(conversationMessages.createdAt, startTime),
         lt(conversationMessages.createdAt, endTime),
@@ -73,13 +77,13 @@ export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: num
     .leftJoin(
       platformCustomers,
       and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.unused_mailboxId, platformCustomers.unused_mailboxId),
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
     .where(
       and(
-        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.unused_mailboxId, mailbox.id),
         eq(conversations.status, "open"),
         isNull(conversations.mergedIntoId),
         gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0),
@@ -98,13 +102,13 @@ export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: num
     .leftJoin(
       platformCustomers,
       and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.unused_mailboxId, platformCustomers.unused_mailboxId),
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
     .where(
       and(
-        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.unused_mailboxId, mailbox.id),
         eq(conversationMessages.role, "staff"),
         gt(conversationMessages.createdAt, startTime),
         lt(conversationMessages.createdAt, endTime),
@@ -136,7 +140,7 @@ export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: num
     .innerJoin(userMessages, and(eq(conversationMessages.responseToId, userMessages.id), eq(userMessages.role, "user")))
     .where(
       and(
-        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.unused_mailboxId, mailbox.id),
         eq(conversationMessages.role, "staff"),
         gt(conversationMessages.createdAt, startTime),
         lt(conversationMessages.createdAt, endTime),
@@ -163,7 +167,7 @@ export async function generateMailboxDailyReport({ mailboxId }: { mailboxId: num
       )
       .where(
         and(
-          eq(conversations.mailboxId, mailbox.id),
+          eq(conversations.unused_mailboxId, mailbox.id),
           eq(conversationMessages.role, "staff"),
           gt(conversationMessages.createdAt, startTime),
           lt(conversationMessages.createdAt, endTime),

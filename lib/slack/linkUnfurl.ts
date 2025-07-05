@@ -59,7 +59,7 @@ export async function handleSlackUnfurl(event: LinkSharedEvent) {
             ? db.query.platformCustomers.findFirst({
                 where: and(
                   eq(platformCustomers.email, convo.emailFrom),
-                  eq(platformCustomers.mailboxId, convo.mailboxId),
+                  eq(platformCustomers.unused_mailboxId, convo.unused_mailboxId),
                 ),
               })
             : null,
