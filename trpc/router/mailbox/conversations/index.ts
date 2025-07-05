@@ -175,7 +175,7 @@ export const conversationsRouter = {
     .mutation(async ({ input, ctx }) => {
       const { conversationFilter, status } = input;
 
-      if (Array.isArray(conversationFilter) && conversationFilter.length < 25) {
+      if (Array.isArray(conversationFilter) && conversationFilter.length <= 25) {
         for (const conversationId of conversationFilter) {
           await updateConversation(conversationId, { set: { status }, byUserId: ctx.user.id });
         }
