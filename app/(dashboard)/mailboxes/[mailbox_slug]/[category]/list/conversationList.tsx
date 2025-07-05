@@ -91,20 +91,10 @@ export const List = () => {
     clearSelectedConversations();
   };
 
-  const handleBulkUpdate = async (status: "open" | "closed" | "spam") => {
+  const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
       const conversationFilter = allConversationsSelected ? input : selectedConversations;
-      let selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
-
-      if (allConversationsSelected) {
-        try {
-          const countResult = await utils.mailbox.conversations.count.fetch(input);
-          selectedCount = countResult.total;
-        } catch (error) {
-          captureExceptionAndLog(error);
-        }
-      }
 
       bulkUpdate(
         {
@@ -146,17 +136,22 @@ export const List = () => {
     setIsBulkUpdating(true);
 
     const conversationFilter = allConversationsSelected ? input : selectedConversations;
-    let selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
 
-    if (allConversationsSelected) {
-      try {
-        const countResult = await utils.mailbox.conversations.count.fetch(input);
-        selectedCount = countResult.total;
-      } catch (error) {
-        captureExceptionAndLog(error);
+    // Calculate the actual count of conversations being assigned
+    const getSelectedCount = async () => {
+      if (allConversationsSelected) {
+        try {
+          const countResult = await utils.mailbox.conversations.count.fetch(input);
+          return countResult.total;
+        } catch (error) {
+          captureExceptionAndLog(error);
+          return conversations.length;
+        }
       }
-    }
+      return selectedConversations.length;
+    };
 
+    const selectedCount = await getSelectedCount();
     const assignedToId = "id" in assignedTo ? assignedTo.id : null;
     const assignedToAI = "ai" in assignedTo;
 
@@ -326,7 +321,7 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  {searchParams.status === "closed" ? (
+                  {searchParams.status === "closed" || searchParams.status === "spam" ? (
                     <ConfirmationDialog
                       message={`Are you sure you want to reopen ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("open")}
@@ -367,10 +362,7 @@ export const List = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4">
                       <div className="flex flex-col space-y-4">
-                        <h4 className="font-medium">
-                          Assign {selectedCount} conversation
-                          {selectedCount === 1 ? "" : "s"}
-                        </h4>
+                        <h4 className="font-medium">Assign {conversationsText}</h4>
                         <AssignSelect
                           selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
                           onChange={setAssignedTo}
