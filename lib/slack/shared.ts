@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
+import { userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { getFullName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
 import { createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
@@ -171,6 +171,17 @@ const openAssignModal = async (
   },
   triggerId: string,
 ) => {
+  const usersWithProfiles = await db
+    .select({
+      id: authUsers.id,
+      email: authUsers.email,
+      user_metadata: authUsers.user_metadata,
+      displayName: userProfiles.displayName,
+    })
+    .from(authUsers)
+    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .limit(100);
+
   await openSlackModal({
     token: assertDefined(conversation.mailbox.slackBotToken),
     triggerId,
@@ -188,12 +199,15 @@ const openAssignModal = async (
             type: "static_select",
             action_id: "user",
             placeholder: { type: "plain_text", text: "Select a user" },
-            options: (await db.query.authUsers.findMany({ limit: 100 })).map((member) => ({
+            options: usersWithProfiles.map((user) => ({
               text: {
                 type: "plain_text",
-                text: getFullName(member),
+                text: user.displayName?.trim() || 
+                      (user.user_metadata?.display_name?.trim()) || 
+                      user.email || 
+                      user.id,
               },
-              value: member.id,
+              value: user.id,
             })),
           },
         },
