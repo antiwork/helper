@@ -82,7 +82,15 @@ export const List = () => {
   const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
-      const conversationFilter = allConversationsSelected ? input : selectedConversations;
+      // If all conversations are selected:
+      //   - If there are 25 or fewer conversations and there is no next page, use the selected conversation IDs
+      //   - Otherwise, use the search filters for the backend to match the conversations
+      // If not, use the selected conversation IDs
+      const conversationFilter = allConversationsSelected
+        ? conversations.length <= 25 && !hasNextPage
+          ? conversations.map((c) => c.id)
+          : input
+        : selectedConversations;
 
       bulkUpdate(
         {
