@@ -18,13 +18,35 @@ export const membersRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, {
-          displayName: input.displayName,
-          role: input.role,
-          keywords: input.keywords,
-          permissions: input.permissions,
+      const userProfile = await getProfile(ctx.user.id);
+      if (!userProfile) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User profile not found",
         });
+      }
+      const isCurrentUserAdmin = isAdmin(userProfile);
+
+      if (!isCurrentUserAdmin && ctx.user.id !== input.userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You can only update your own display name.",
+        });
+      }
+
+      const updatePayload: Record<string, any> = {};
+
+      if (isCurrentUserAdmin) {
+        updatePayload.displayName = input.displayName;
+        updatePayload.role = input.role;
+        updatePayload.keywords = input.keywords;
+        updatePayload.permissions = input.permissions;
+      } else {
+        updatePayload.displayName = input.displayName;
+      }
+
+      try {
+        const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, updatePayload);
         return { user };
       } catch (error) {
         captureExceptionAndLog(error, {
@@ -38,9 +60,7 @@ export const membersRouter = {
             mailboxSlug: ctx.mailbox.slug,
           },
         });
-        if (error instanceof TRPCError) {
-          throw error;
-        }
+        if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update team member",

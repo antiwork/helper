@@ -145,7 +145,6 @@ export const updateUserMailboxData = async (
     ...mailboxAccess[mailboxId],
     ...(updates.role && { role: updates.role }),
     ...(updates.keywords && { keywords: updates.keywords }),
-    ...(updates.permissions && { permissions: updates.permissions }),
     updatedAt: new Date().toISOString(),
   };
 
