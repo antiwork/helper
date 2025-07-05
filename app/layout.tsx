@@ -1,7 +1,6 @@
 import "@/app/globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
-import { ThemeProvider } from "@/components/themeProvider";
 
 export const metadata: Metadata = {
   title: "Helper",
@@ -18,11 +17,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full">
-      <body className="h-full antialiased text-foreground bg-background" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
+    <html lang="en" className="h-full">
+      <body className="h-full antialiased text-foreground bg-background">
+        {children}
         <Analytics />
       </body>
     </html>
