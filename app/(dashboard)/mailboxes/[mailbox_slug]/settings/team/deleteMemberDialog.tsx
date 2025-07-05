@@ -112,7 +112,7 @@ export default function DeleteMemberDialog({
         setLoading(false);
         toast({
           variant: "destructive",
-          title: "Failed to reassign conversations"
+          title: "Failed to reassign conversations",
         });
         return;
       }
