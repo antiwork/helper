@@ -14,6 +14,7 @@ import {
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -159,33 +160,29 @@ export function DateFilter({
     onSelect(range?.from.toISOString() ?? null, range?.to.toISOString() ?? null);
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
+  const handleShortcut = (presetValue: DatePresetValue) => {
+    const activeElement = document.activeElement;
+    const isFocusInDropdown =
+      dropdownRef.current?.contains(activeElement) || activeElement?.closest('[data-testid="date-filter-button"]');
 
-    const handleKeyPress = (e: KeyboardEvent) => {
-      const activeElement = document.activeElement;
+    if (!isFocusInDropdown || !isOpen) return;
 
-      const isFocusInDropdown =
-        dropdownRef.current?.contains(activeElement) || activeElement?.closest('[data-testid="date-filter-button"]');
+    handlePresetChange(presetValue);
+    if (presetValue !== "custom") {
+      setIsOpen(false);
+    }
+  };
 
-      if (!isFocusInDropdown) return;
-
-      const key = e.key.toUpperCase();
-      const preset = DATE_PRESETS.find((p) => p.shortcut === key);
-
-      if (preset) {
-        e.preventDefault();
-        e.stopPropagation();
-        handlePresetChange(preset.value);
-        if (preset.value !== "custom") {
-          setIsOpen(false);
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyPress);
-    return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [isOpen, handlePresetChange]);
+  useHotkeys("a", () => handleShortcut("allTime"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("t", () => handleShortcut("today"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("y", () => handleShortcut("yesterday"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("7", () => handleShortcut("last7days"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("1", () => handleShortcut("last14days"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("3", () => handleShortcut("last30days"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("m", () => handleShortcut("thisMonth"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("q", () => handleShortcut("lastQuarter"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("r", () => handleShortcut("thisYear"), { enabled: isOpen, enableOnFormTags: true });
+  useHotkeys("c", () => handleShortcut("custom"), { enabled: isOpen, enableOnFormTags: true });
 
   const buttonLabel = useMemo(() => {
     if (selectedPreset === "allTime") return "Created";
