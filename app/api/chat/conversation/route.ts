@@ -37,8 +37,8 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     anonymousSessionId: session.isAnonymous ? session.anonymousSessionId : undefined,
   });
 
-  if (!authResult.mailbox.chatIntegrationUsed) {
-    await db.update(mailboxes).set({ chatIntegrationUsed: true }).where(eq(mailboxes.id, authResult.mailbox.id));
+  if (!mailbox.chatIntegrationUsed) {
+    await db.update(mailboxes).set({ chatIntegrationUsed: true }).where(eq(mailboxes.id, mailbox.id));
   }
 
   return corsResponse({ conversationSlug: newConversation.slug });
