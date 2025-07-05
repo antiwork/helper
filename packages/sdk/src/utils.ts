@@ -17,12 +17,6 @@ export type HelperWidgetConfig = {
   experimentalReadPage?: boolean;
   showToggleButton?: boolean;
   enableGuide?: boolean;
-  theme?: {
-    background: string;
-    foreground: string;
-    primary: string;
-    accent: string;
-  };
   viewportWidth?: number;
 };
 

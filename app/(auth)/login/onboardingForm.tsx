@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,7 +17,6 @@ export function OnboardingForm({ className, ...props }: React.ComponentPropsWith
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { theme, systemTheme } = useTheme();
 
   const onboardMutation = api.user.onboard.useMutation({
     onSuccess: async (data) => {
@@ -57,7 +55,7 @@ export function OnboardingForm({ className, ...props }: React.ComponentPropsWith
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col items-center gap-3">
         <Image
-          src={theme === "dark" || systemTheme === "dark" ? "/logo-white.svg" : "/logo.svg"}
+          src="/logo.svg"
           alt="Helper"
           width="110"
           height="32"

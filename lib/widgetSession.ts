@@ -5,15 +5,12 @@ import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { MailboxTheme } from "@/lib/themes";
-
 export type WidgetSessionPayload = {
   email?: string;
   mailboxSlug: string;
   showWidget: boolean;
   isAnonymous: boolean;
   isWhitelabel: boolean;
-  theme?: MailboxTheme;
   title?: string;
   anonymousSessionId?: string;
 };
@@ -46,7 +43,6 @@ export function createWidgetSession(
       showWidget,
       mailboxSlug: mailbox.slug,
       isWhitelabel: mailbox.isWhitelabel ?? false,
-      theme: mailbox.preferences?.theme,
       title: mailbox.name,
       isAnonymous,
       anonymousSessionId: isAnonymous ? (anonymousSessionId ?? crypto.randomUUID()) : undefined,
