@@ -12,7 +12,7 @@ export const updateSuggestedActions = async ({ conversationId }: { conversationI
   const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
   const mailboxTools = await db.query.tools.findMany({
-    where: and(eq(tools.unused_mailboxId, mailbox.id), eq(tools.enabled, true)),
+    where: eq(tools.enabled, true),
   });
   const suggestedActions = await generateSuggestedActions(conversation, mailbox, mailboxTools);
 

@@ -24,7 +24,6 @@ describe("getPastConversationsPrompt", () => {
     for (const conv of testConversations) {
       await db.insert(conversations).values({
         id: conv.id,
-        unused_mailboxId: mailbox.id,
         embedding: mockEmbedding,
         conversationProvider: "gmail",
       });

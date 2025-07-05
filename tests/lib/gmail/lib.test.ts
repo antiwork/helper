@@ -27,7 +27,7 @@ describe("convertEmailToRaw", () => {
     vi.setSystemTime(time);
 
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: "Conversation subject",
     });
@@ -65,7 +65,7 @@ describe("convertEmailToRaw", () => {
     vi.setSystemTime(time);
 
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: null,
     });
@@ -103,7 +103,7 @@ describe("convertEmailToRaw", () => {
 
     const { mailbox } = await userFactory.createRootUser();
 
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: null,
     });
@@ -152,7 +152,7 @@ describe("convertEmailToRaw", () => {
     );
 
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: "With attachments",
     });

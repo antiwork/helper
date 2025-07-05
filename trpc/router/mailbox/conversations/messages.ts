@@ -161,14 +161,7 @@ export const messagesRouter = {
         })
         .from(conversationMessages)
         .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-        .where(
-          and(
-            dateFilter,
-            isNotNull(conversationMessages.reactionType),
-            isNull(conversationMessages.deletedAt),
-            eq(conversations.unused_mailboxId, ctx.mailbox.id),
-          ),
-        )
+        .where(and(dateFilter, isNotNull(conversationMessages.reactionType), isNull(conversationMessages.deletedAt)))
         .groupBy(sql`period`, conversationMessages.reactionType);
 
       return data.map(({ count, ...rest }) => ({
@@ -190,17 +183,13 @@ export const messagesRouter = {
 
       const results = await Promise.all([
         db
-          .$count(
-            conversations,
-            and(eq(conversations.unused_mailboxId, ctx.mailbox.id), eq(conversations.status, "open"), createdAtFilter),
-          )
+          .$count(conversations, and(eq(conversations.status, "open"), createdAtFilter))
           .then((count) => ({ type: "open", count })),
 
         db
           .$count(
             conversations,
             and(
-              eq(conversations.unused_mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               createdAtFilter,
               exists(
@@ -238,7 +227,6 @@ export const messagesRouter = {
           .$count(
             conversations,
             and(
-              eq(conversations.unused_mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               createdAtFilter,
               exists(

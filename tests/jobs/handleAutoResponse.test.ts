@@ -43,7 +43,7 @@ describe("handleAutoResponse", () => {
 
   it("generates a draft response when autoRespondEmailToChat is 'draft'", async () => {
     const { mailbox } = await mailboxFactory.create({ preferences: { autoRespondEmailToChat: "draft" } });
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: true });
+    const { conversation } = await conversationFactory.create({ assignedToAI: true });
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
 
     const result = await handleAutoResponse({ messageId: message.id });
@@ -57,7 +57,7 @@ describe("handleAutoResponse", () => {
 
   it("sends an auto-response when autoRespondEmailToChat is not 'draft'", async () => {
     const { mailbox } = await mailboxFactory.create({ preferences: { autoRespondEmailToChat: "reply" } });
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: true });
+    const { conversation } = await conversationFactory.create({ assignedToAI: true });
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       body: "Test email body",
@@ -78,7 +78,7 @@ describe("handleAutoResponse", () => {
     const mockMetadata = { metadata: { key: "value" } };
     vi.mocked(retrieval.fetchMetadata).mockResolvedValue(mockMetadata as any);
     const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: true });
+    const { conversation } = await conversationFactory.create({ assignedToAI: true });
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       emailFrom: "customer@example.com",
@@ -94,14 +94,13 @@ describe("handleAutoResponse", () => {
     expect(updatedMessage?.metadata).toEqual(mockMetadata);
     expect(platformCustomer.upsertPlatformCustomer).toHaveBeenCalledWith({
       email: "customer@example.com",
-      unused_mailboxId: mailbox.id,
       customerMetadata: mockMetadata.metadata,
     });
   });
 
   it("skips if conversation is spam", async () => {
     const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "spam" });
+    const { conversation } = await conversationFactory.create({ status: "spam" });
     const { message } = await conversationMessagesFactory.create(conversation.id);
 
     const result = await handleAutoResponse({ messageId: message.id });
@@ -111,8 +110,7 @@ describe("handleAutoResponse", () => {
   });
 
   it("skips if message is from staff", async () => {
-    const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "staff" });
 
     const result = await handleAutoResponse({ messageId: message.id });
@@ -123,7 +121,7 @@ describe("handleAutoResponse", () => {
 
   it("skips if not assigned to AI", async () => {
     const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: false });
+    const { conversation } = await conversationFactory.create({ assignedToAI: false });
     const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
 
     const result = await handleAutoResponse({ messageId: message.id });
@@ -134,7 +132,7 @@ describe("handleAutoResponse", () => {
 
   it("skips if email text is empty after cleaning", async () => {
     const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToAI: true, subject: "" });
+    const { conversation } = await conversationFactory.create({ assignedToAI: true, subject: "" });
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       body: "  ",

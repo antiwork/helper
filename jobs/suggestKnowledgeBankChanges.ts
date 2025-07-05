@@ -1,10 +1,11 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { generateKnowledgeBankSuggestion } from "@/lib/ai/knowledgeBankSuggestions";
+import { getMailbox } from "@/lib/data/mailbox";
 import { postSlackMessage } from "@/lib/slack/client";
 import { getSuggestedEditButtons } from "@/lib/slack/shared";
 
@@ -20,20 +21,21 @@ export const suggestKnowledgeBankChanges = async ({
       where: eq(conversationMessages.id, messageId),
       with: {
         conversation: {
-          with: {
-            mailbox: true,
-          },
+          with: {},
         },
       },
     }),
   );
 
-  const mailbox = message.conversation.mailbox;
+  const mailbox = await getMailbox();
+  if (!mailbox) {
+    throw new Error("No mailbox found");
+  }
   const messageContent = message.body || message.cleanedUpText || "";
   const flagReason = reason || "No reason provided";
 
   const existingSuggestions = await db.query.faqs.findMany({
-    where: and(eq(faqs.suggested, true), eq(faqs.unused_mailboxId, mailbox.id)),
+    where: eq(faqs.suggested, true),
   });
 
   const suggestion = await generateKnowledgeBankSuggestion(mailbox, {
@@ -47,7 +49,6 @@ export const suggestKnowledgeBankChanges = async ({
       .insert(faqs)
       .values({
         content: suggestion.content || "",
-        unused_mailboxId: mailbox.id,
         suggested: true,
         enabled: false,
         messageId: message.id,
@@ -75,7 +76,6 @@ export const suggestKnowledgeBankChanges = async ({
         .insert(faqs)
         .values({
           content: suggestion.content || "",
-          unused_mailboxId: mailbox.id,
           suggested: true,
           enabled: false,
           suggestedReplacementForId: suggestion.action === "update_entry" ? suggestion.entryId : null,

@@ -30,7 +30,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
       return corsResponse({ error: "Guide session not found" }, { status: 404 });
     }
 
-    if (guideSession.unused_mailboxId !== mailbox.id || session.email !== guideSession.platformCustomer.email) {
+    if (session.email !== guideSession.platformCustomer.email) {
       return corsResponse({ error: "Unauthorized" }, { status: 403 });
     }
 

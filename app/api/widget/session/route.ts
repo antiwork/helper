@@ -81,12 +81,11 @@ export async function POST(request: Request) {
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        unused_mailboxId: mailboxRecord.id,
         customerMetadata,
       });
     }
 
-    platformCustomer = await getPlatformCustomer(mailboxRecord.id, email);
+    platformCustomer = await getPlatformCustomer(email);
 
     showWidget =
       mailboxRecord.widgetDisplayMode === "always" ||

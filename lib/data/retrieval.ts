@@ -27,7 +27,7 @@ export const findSimilarConversations = async (
     : await generateEmbedding(queryInput, "query-find-past-conversations");
   const similarity = sql<number>`1 - (${cosineDistance(conversations.embedding, queryEmbedding)})`;
 
-  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.unused_mailboxId} = ${mailbox.id} AND ${eq(conversations.isPrompt, false)}`;
+  let where = sql`${gt(similarity, similarityThreshold)} AND ${eq(conversations.isPrompt, false)}`;
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
   }
@@ -74,7 +74,7 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
 
 export const findEnabledKnowledgeBankEntries = async (mailbox: Mailbox) =>
   await db.query.faqs.findMany({
-    where: and(eq(faqs.unused_mailboxId, mailbox.id), eq(faqs.enabled, true)),
+    where: eq(faqs.enabled, true),
     columns: {
       id: true,
       content: true,
@@ -99,14 +99,7 @@ export const findSimilarWebsitePages = async (
       similarity: similarity.as("similarity"),
     })
     .from(websitePages)
-    .innerJoin(
-      websites,
-      and(
-        eq(websites.id, websitePages.websiteId),
-        isNull(websites.deletedAt),
-        eq(websites.unused_mailboxId, mailbox.id),
-      ),
-    )
+    .innerJoin(websites, and(eq(websites.id, websitePages.websiteId), isNull(websites.deletedAt)))
     .where(and(gt(similarity, similarityThreshold), isNull(websitePages.deletedAt)))
     .orderBy(desc(similarity))
     .limit(limit);

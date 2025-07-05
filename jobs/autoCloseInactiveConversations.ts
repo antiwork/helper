@@ -8,7 +8,6 @@ import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 type AutoCloseReport = {
   totalProcessed: number;
   mailboxReports: {
-    unused_mailboxId: number;
     mailboxName: string;
     inactiveConversations: { id: number; slug: string }[];
     conversationsClosed: number;
@@ -18,7 +17,6 @@ type AutoCloseReport = {
 };
 
 type MailboxAutoCloseReport = {
-  unused_mailboxId: number;
   mailboxName: string;
   inactiveConversations: { id: number; slug: string }[];
   conversationsClosed: number;
@@ -45,21 +43,17 @@ export async function closeInactiveConversations(): Promise<AutoCloseReport> {
     return report;
   }
   for (const mailbox of enabledMailboxes) {
-    await triggerEvent("conversations/auto-close.process-mailbox", { unused_mailboxId: mailbox.id });
+    await triggerEvent("conversations/auto-close.process-mailbox", {});
   }
 
   report.status = `Scheduled auto-close check for ${enabledMailboxes.length} mailboxes`;
   return report;
 }
 
-export async function closeInactiveConversationsForMailbox({
-  unused_mailboxId,
-}: {
-  unused_mailboxId: number;
-}): Promise<MailboxAutoCloseReport> {
+export async function closeInactiveConversationsForMailbox(): Promise<MailboxAutoCloseReport> {
   const mailbox = assertDefinedOrRaiseNonRetriableError(
     await db.query.mailboxes.findFirst({
-      where: and(eq(mailboxes.id, unused_mailboxId), eq(mailboxes.autoCloseEnabled, true)),
+      where: eq(mailboxes.autoCloseEnabled, true),
       columns: {
         id: true,
         name: true,
@@ -69,7 +63,6 @@ export async function closeInactiveConversationsForMailbox({
   );
 
   const mailboxReport: MailboxAutoCloseReport = {
-    unused_mailboxId: mailbox.id,
     mailboxName: mailbox.name,
     inactiveConversations: [],
     conversationsClosed: 0,
@@ -84,11 +77,7 @@ export async function closeInactiveConversationsForMailbox({
   cutoffDate.setDate(cutoffDate.getDate() - daysOfInactivity);
 
   const conversationsToClose = await db.query.conversations.findMany({
-    where: and(
-      eq(conversations.unused_mailboxId, mailbox.id),
-      eq(conversations.status, "open"),
-      lt(conversations.lastUserEmailCreatedAt, cutoffDate),
-    ),
+    where: and(eq(conversations.status, "open"), lt(conversations.lastUserEmailCreatedAt, cutoffDate)),
     columns: {
       id: true,
       slug: true,

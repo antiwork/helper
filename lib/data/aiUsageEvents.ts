@@ -48,7 +48,6 @@ export const trackAIUsageEvent = async ({
   const totalCost = cachedInputCost + inputCost + outputCost;
 
   await db.insert(aiUsageEvents).values({
-    unused_mailboxId: mailbox.id,
     modelName: model,
     queryType,
     inputTokensCount,

@@ -7,13 +7,7 @@ import { conversations } from "@/db/schema";
 describe("randomSlugField", () => {
   it("auto-sets the specified column with a random slug", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const conversation = await db
-      .insert(conversations)
-      .values({
-        unused_mailboxId: mailbox.id,
-      })
-      .returning()
-      .then(takeUniqueOrThrow);
+    const conversation = await db.insert(conversations).values({}).returning().then(takeUniqueOrThrow);
 
     expect(typeof conversation.slug).toBe("string");
     expect(conversation.slug.length).toEqual(32);

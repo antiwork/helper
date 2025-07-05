@@ -8,11 +8,7 @@ import type { Mailbox } from "./mailbox";
 
 export const getMailboxToolsForChat = async (mailbox: Mailbox, tx: Transaction | typeof db = db): Promise<Tool[]> => {
   return await tx.query.tools.findMany({
-    where: and(
-      eq(toolsTable.unused_mailboxId, mailbox.id),
-      eq(toolsTable.enabled, true),
-      eq(toolsTable.availableInChat, true),
-    ),
+    where: and(eq(toolsTable.enabled, true), eq(toolsTable.availableInChat, true)),
   });
 };
 
@@ -33,12 +29,10 @@ export const fetchOpenApiSpec = async (url: string, apiKey: string | null): Prom
 };
 
 export const importToolsFromSpec = async ({
-  unused_mailboxId,
   toolApiId,
   openApiSpec,
   apiKey,
 }: {
-  unused_mailboxId: number;
   toolApiId: number;
   openApiSpec: string;
   apiKey: string;
@@ -69,7 +63,6 @@ export const importToolsFromSpec = async ({
     await db.insert(toolsTable).values(
       toolsToInsert.map((tool) => ({
         ...tool,
-        unused_mailboxId,
         toolApiId,
       })),
     );

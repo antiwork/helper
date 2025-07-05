@@ -48,9 +48,7 @@ describe("generateWeeklyReports", () => {
     await generateWeeklyReports();
 
     expect(jobsMock.triggerEvent).toHaveBeenCalledTimes(1);
-    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {
-      unused_mailboxId: mailboxWithSlack.id,
-    });
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {});
   });
 });
 

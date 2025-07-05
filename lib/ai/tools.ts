@@ -30,19 +30,18 @@ const searchKnowledgeBase = async (query: string, mailbox: Mailbox) => {
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string, unused_mailboxId: number) => {
+const updateCustomerMetadata = async (email: string) => {
   try {
     const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        unused_mailboxId,
         customerMetadata,
       });
     }
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
-      extra: { email, unused_mailboxId },
+      extra: { email },
     });
   }
 };
@@ -72,7 +71,7 @@ const requestHumanSupport = async (
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email, conversation.unused_mailboxId));
+    waitUntil(updateCustomerMetadata(email));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
