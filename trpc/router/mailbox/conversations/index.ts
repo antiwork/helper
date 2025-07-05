@@ -35,7 +35,7 @@ export const conversationsRouter = {
       defaultSort: metadataEnabled ? ("highest_value" as const) : ("newest" as const),
       onboardingState: {
         hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
-        hasWidgetHost: !!ctx.mailbox.widgetHost,
+        hasWidgetHost: !!ctx.mailbox.chatIntegrationUsed,
         hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       },
       assignedToIds: input.assignee ?? null,

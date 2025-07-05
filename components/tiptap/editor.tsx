@@ -484,7 +484,6 @@ const TipTapEditor = ({
               isRecordingSupported,
               startRecording,
               stopRecording,
-              hasActionButtons: showActionButtons,
             }}
           />
         </div>

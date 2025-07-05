@@ -29,6 +29,8 @@ export const searchSchema = z.object({
     .enum(["thumbs-up", "thumbs-down"])
     .optional()
     .describe("Filter by whether the user gave a positive or negative reaction to the ticket"),
+  reactionAfter: z.string().datetime().optional().describe("Filter tickets with reactions created after this date"),
+  reactionBefore: z.string().datetime().optional().describe("Filter tickets with reactions created before this date"),
   events: z
     .array(z.enum(["request_human_support", "resolved_by_ai"]))
     .optional()

@@ -49,8 +49,8 @@ export function ReactionsChart({
   const { data: selectedConversations, isLoading: isLoadingConversations } = api.mailbox.conversations.list.useQuery(
     {
       mailboxSlug,
-      createdAfter: selectedBar ? selectedBar.startTime.toISOString() : startDate.toISOString(),
-      createdBefore: selectedBar ? selectedBar.endTime.toISOString() : endDate.toISOString(),
+      reactionAfter: selectedBar ? selectedBar.startTime.toISOString() : startDate.toISOString(),
+      reactionBefore: selectedBar ? selectedBar.endTime.toISOString() : endDate.toISOString(),
       reactionType: selectedBar?.reactionType ?? "thumbs-up",
     },
     { enabled: !!selectedBar },
