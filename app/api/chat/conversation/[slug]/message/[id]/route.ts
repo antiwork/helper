@@ -7,6 +7,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { createReactionEventPayload } from "@/lib/data/dashboardEvent";
+import { getMailbox } from "@/lib/data/mailbox";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
@@ -119,7 +120,6 @@ const publishEvent = async (messageId: number) => {
           columns: { subject: true, emailFrom: true, slug: true },
           with: {
             platformCustomer: { columns: { value: true } },
-            mailbox: true,
           },
         },
       },
@@ -127,9 +127,14 @@ const publishEvent = async (messageId: number) => {
     }),
   );
 
+  const mailbox = await getMailbox();
+  if (!mailbox) {
+    throw new Error("Mailbox not found");
+  }
+
   await publishToRealtime({
-    channel: dashboardChannelId(message.conversation.mailbox.slug),
+    channel: dashboardChannelId(mailbox.slug),
     event: "event",
-    data: createReactionEventPayload(message, message.conversation.mailbox),
+    data: createReactionEventPayload(message, mailbox),
   });
 };

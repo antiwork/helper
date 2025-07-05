@@ -42,9 +42,8 @@ export async function closeInactiveConversations(): Promise<AutoCloseReport> {
     report.status = "No mailboxes with auto-close enabled found";
     return report;
   }
-  for (const mailbox of enabledMailboxes) {
-    await triggerEvent("conversations/auto-close.process-mailbox", {});
-  }
+
+  await triggerEvent("conversations/auto-close.process-mailbox", {});
 
   report.status = `Scheduled auto-close check for ${enabledMailboxes.length} mailboxes`;
   return report;

@@ -63,8 +63,8 @@ describe("filesRouter", () => {
     });
 
     it("uses private bucket for non-inline files", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { user } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create();
       const ctx = createTestTRPCContext(user);
       const caller = createCaller(ctx);
 

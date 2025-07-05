@@ -25,7 +25,7 @@ const fetchPageTitle = async (url: string): Promise<string> => {
 };
 
 export const websitesRouter = {
-  list: mailboxProcedure.query(async ({ ctx }) => {
+  list: mailboxProcedure.query(async () => {
     const websitesList = await db.query.websites.findMany({
       where: isNull(websites.deletedAt),
       orderBy: [asc(websites.createdAt)],
@@ -65,7 +65,7 @@ export const websitesRouter = {
         name: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const urlWithProtocol = /^https?:\/\//i.test(input.url) ? input.url : `https://${input.url}`;
 
       const name = input.name || (await fetchPageTitle(urlWithProtocol));
@@ -109,7 +109,7 @@ export const websitesRouter = {
         websiteId: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const now = new Date();
 
       await db
@@ -137,7 +137,7 @@ export const websitesRouter = {
         websiteId: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const website = assertDefined(
         await db.query.websites.findFirst({
           where: eq(websites.id, input.websiteId),
@@ -173,7 +173,7 @@ export const websitesRouter = {
       return crawl;
     }),
 
-  pages: mailboxProcedure.query(async ({ ctx }) => {
+  pages: mailboxProcedure.query(async () => {
     const pages = await db
       .select({
         url: websitePages.url,

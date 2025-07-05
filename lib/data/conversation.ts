@@ -5,7 +5,7 @@ import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, gmailSupportEmails, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
@@ -173,7 +173,7 @@ export const updateConversation = async (
         captureExceptionAndLog(error);
       }
     };
-    publishEvents();
+    await publishEvents();
   }
   return updatedConversation ?? null;
 };
@@ -268,10 +268,15 @@ export const getConversationBySlugAndMailbox = async (
 };
 
 export const getNonSupportParticipants = async (conversation: Conversation): Promise<string[]> => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    with: { gmailSupportEmail: { columns: { email: true } } },
-  });
+  const mailbox = await getMailbox();
   if (!mailbox) throw new Error("Mailbox not found");
+
+  const gmailSupportEmail = mailbox.gmailSupportEmailId
+    ? await db.query.gmailSupportEmails.findFirst({
+        where: eq(gmailSupportEmails.id, mailbox.gmailSupportEmailId),
+        columns: { email: true },
+      })
+    : null;
 
   const messages = await db.query.conversationMessages.findMany({
     where: and(eq(conversationMessages.conversationId, conversation.id), isNull(conversationMessages.deletedAt)),
@@ -290,7 +295,7 @@ export const getNonSupportParticipants = async (conversation: Conversation): Pro
   }
 
   if (conversation.emailFrom) participants.delete(conversation.emailFrom.toLowerCase());
-  if (mailbox.gmailSupportEmail) participants.delete(mailbox.gmailSupportEmail.email.toLowerCase());
+  if (gmailSupportEmail) participants.delete(gmailSupportEmail.email.toLowerCase());
 
   return Array.from(participants);
 };
@@ -325,13 +330,13 @@ export const getRelatedConversations = async (
   if (!subject && !body) return [];
 
   const keywords = await emailKeywordsExtractor({
-    mailbox: mailbox,
+    mailbox,
     subject,
     body,
   });
   if (!keywords.length) return [];
 
-  const messageIds = await searchEmailsByKeywords(keywords.join(" "), mailbox.id);
+  const messageIds = await searchEmailsByKeywords(keywords.join(" "));
 
   const relatedConversations = await db.query.conversations.findMany({
     where: and(

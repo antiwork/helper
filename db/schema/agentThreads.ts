@@ -14,6 +14,6 @@ export const agentThreads = pgTable(
   (table) => [index("agent_threads_slack_channel_thread_ts_idx").on(table.slackChannel, table.threadTs)],
 ).enableRLS();
 
-export const agentThreadsRelations = relations(agentThreads, ({ one, many }) => ({
+export const agentThreadsRelations = relations(agentThreads, ({ many }) => ({
   messages: many(agentMessages),
 }));

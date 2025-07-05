@@ -24,6 +24,14 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
 
     const { sessionId, steps } = result.data;
 
+  const authResult = await authenticateWidget(request);
+  if (!authResult.success) {
+    return corsResponse({ error: authResult.error }, { status: 401 });
+  }
+
+  const { session } = authResult;
+
+  try {
     const guideSession = await getGuideSessionByUuid(sessionId);
 
     if (!guideSession) {

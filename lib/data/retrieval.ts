@@ -5,7 +5,6 @@ import { conversations } from "@/db/schema/conversations";
 import { websitePages, websites } from "@/db/schema/websites";
 import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
-import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, timestamp } from "../metadataApiClient";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
@@ -17,7 +16,6 @@ const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
 export const findSimilarConversations = async (
   queryInput: string | number[],
-  mailbox: Mailbox,
   limit: number = MAX_SIMILAR_CONVERSATIONS,
   excludeConversationSlug?: string,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
@@ -46,8 +44,8 @@ export const findSimilarConversations = async (
   return similarConversations;
 };
 
-export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox) => {
-  const similarConversations = await findSimilarConversations(query, mailbox);
+export const getPastConversationsPrompt = async (query: string) => {
+  const similarConversations = await findSimilarConversations(query);
   if (!similarConversations) return null;
 
   const pastConversations = await Promise.all(
@@ -72,7 +70,7 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   return conversationPrompt;
 };
 
-export const findEnabledKnowledgeBankEntries = async (mailbox: Mailbox) =>
+export const findEnabledKnowledgeBankEntries = async () =>
   await db.query.faqs.findMany({
     where: eq(faqs.enabled, true),
     columns: {
@@ -84,7 +82,6 @@ export const findEnabledKnowledgeBankEntries = async (mailbox: Mailbox) =>
 
 export const findSimilarWebsitePages = async (
   query: string,
-  mailbox: Mailbox,
   limit: number = MAX_SIMILAR_WEBSITE_PAGES,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
 ) => {
@@ -127,12 +124,11 @@ export type PromptRetrievalData = {
 };
 
 export const fetchPromptRetrievalData = async (
-  mailbox: Mailbox,
   query: string,
   metadata: object | null,
 ): Promise<PromptRetrievalData> => {
-  const knowledgeBank = await findEnabledKnowledgeBankEntries(mailbox);
-  const websitePages = await findSimilarWebsitePages(query, mailbox);
+  const knowledgeBank = await findEnabledKnowledgeBankEntries();
+  const websitePages = await findSimilarWebsitePages(query);
 
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;
 

@@ -11,9 +11,7 @@ import type { ToolFormatted } from "@/types/tools";
 import { mailboxProcedure } from "./procedure";
 
 export const toolsRouter = {
-  list: mailboxProcedure.query(async ({ ctx }) => {
-    const mailbox = ctx.mailbox;
-
+  list: mailboxProcedure.query(async () => {
     try {
       const apis = await db.query.toolApis.findMany({
         columns: {
@@ -75,9 +73,7 @@ export const toolsRouter = {
         name: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const { mailbox } = ctx;
-
+    .mutation(async ({ input }) => {
       if (!input.url && !input.schema) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -132,8 +128,7 @@ export const toolsRouter = {
         }),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const { mailbox } = ctx;
+    .mutation(async ({ input }) => {
       const { toolId, settings } = input;
 
       const tool = await db.query.tools.findFirst({
@@ -161,8 +156,7 @@ export const toolsRouter = {
         apiId: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const { mailbox } = ctx;
+    .mutation(async ({ input }) => {
       const { apiId } = input;
 
       await db.transaction(async (tx) => {
@@ -180,7 +174,7 @@ export const toolsRouter = {
         schema: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx: { mailbox }, input: { apiId, schema } }) => {
+    .mutation(async ({ input: { apiId, schema } }) => {
       const api = await db.query.toolApis.findFirst({
         where: eq(toolApis.id, apiId),
       });

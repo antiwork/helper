@@ -48,4 +48,6 @@ afterAll(() => {
   vi.resetAllMocks();
 });
 
-beforeEach(async () => await truncateDb());
+beforeEach(async () => {
+  await truncateDb();
+});

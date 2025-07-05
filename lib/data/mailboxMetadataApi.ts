@@ -1,14 +1,14 @@
 import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
+import { mailboxesMetadataApi } from "@/db/schema";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
 import { DataError } from "./dataError";
 import { getMailbox } from "./mailbox";
 
 export const METADATA_API_HMAC_SECRET_PREFIX = "hlpr_";
 
-export const getMetadataApiByMailbox = async (mailbox: typeof mailboxes.$inferSelect) => {
+export const getMetadataApiByMailbox = async () => {
   const metadataApi = await db
     .select()
     .from(mailboxesMetadataApi)
@@ -21,11 +21,11 @@ export const getMetadataApi = async () => {
   if (!mailbox) {
     throw new Error("Mailbox not found");
   }
-  return { mailbox, metadataApi: await getMetadataApiByMailbox(mailbox) };
+  return { metadataApi: await getMetadataApiByMailbox() };
 };
 
 export const createMailboxMetadataApi = async (params: { url: string }): Promise<void> => {
-  const { mailbox, metadataApi } = await getMetadataApi();
+  const { metadataApi } = await getMetadataApi();
   if (metadataApi) {
     throw new DataError("Mailbox already has a metadata endpoint");
   }

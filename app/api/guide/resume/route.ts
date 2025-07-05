@@ -15,6 +15,15 @@ export const POST = withWidgetAuth(async ({ request }, { session: { email }, mai
     return corsResponse({ error: "Missing or invalid sessionId" }, { status: 400 });
   }
 
+  const authResult = await authenticateWidget(request);
+  if (!authResult.success) {
+    return corsResponse({ error: authResult.error }, { status: 401 });
+  }
+
+  const {
+    session: { email },
+  } = authResult;
+
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);
 

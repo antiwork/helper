@@ -15,7 +15,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     return corsResponse({ error: authResult.error }, { status: 401 });
   }
 
-  const { mailbox, session } = authResult;
+  const { session } = authResult;
 
   const platformCustomer = assertDefined(await findOrCreatePlatformCustomerByEmail(assertDefined(session.email)));
 

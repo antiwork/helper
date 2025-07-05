@@ -9,7 +9,7 @@ import { conversationProcedure } from "./procedure";
 
 export const toolsRouter = {
   list: conversationProcedure.query(async ({ ctx }) => {
-    const { conversation, mailbox } = ctx;
+    const { conversation } = ctx;
 
     const mailboxTools = await db.query.tools.findMany({
       where: eq(tools.enabled, true),

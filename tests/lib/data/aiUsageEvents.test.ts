@@ -1,3 +1,4 @@
+import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -60,8 +61,7 @@ describe("trackAIUsageEvent", () => {
   });
 
   it("uses placeholder mailbox when mailbox is not provided", async () => {
-    const { mailbox: placeholderMailbox } = await userFactory.createRootUser();
-
+    await mailboxFactory.create();
     const model = "gpt-4o-mini";
     const queryType = "response_generator";
     const usage = {

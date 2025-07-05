@@ -11,7 +11,6 @@ import {
   generateConversationSubject,
   getConversationBySlugAndMailbox,
 } from "@/lib/data/conversation";
-import { type Mailbox } from "@/lib/data/mailbox";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 
@@ -26,8 +25,8 @@ interface ChatRequestBody {
   isToolResult?: boolean;
 }
 
-const getConversation = async (conversationSlug: string, session: WidgetSessionPayload, mailbox: Mailbox) => {
-  const conversation = await getConversationBySlugAndMailbox(conversationSlug, mailbox.id);
+const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
+  const conversation = await getConversationBySlugAndMailbox(conversationSlug);
 
   if (!conversation) {
     throw new Error("Conversation not found");
@@ -51,7 +50,14 @@ export function OPTIONS() {
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
-  const conversation = await getConversation(conversationSlug, session, mailbox);
+
+  const authResult = await authenticateWidget(request);
+  if (!authResult.success) {
+    return corsResponse({ error: authResult.error }, { status: 401 });
+  }
+
+  const { session, mailbox } = authResult;
+  const conversation = await getConversation(conversationSlug, session);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
   const screenshotData = message.experimental_attachments?.[0]?.url;

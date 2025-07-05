@@ -23,7 +23,7 @@ describe("checkAssignedTicketResponseTimes", () => {
   });
 
   it("sends a Slack alert for overdue assigned tickets", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
         slackAlertChannel: "channel-id",
@@ -61,7 +61,7 @@ describe("checkAssignedTicketResponseTimes", () => {
   });
 
   it("does not send a Slack alert for non-overdue assigned tickets", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
         slackAlertChannel: "channel-id",
@@ -84,7 +84,7 @@ describe("checkAssignedTicketResponseTimes", () => {
   });
 
   it("does not send a Slack alert when notifications are disabled", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       mailboxOverrides: {
         slackBotToken: "valid-token",
         slackAlertChannel: "channel-id",

@@ -15,7 +15,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   }
 
   const { pageHTML, currentURL } = result.data;
-  const readPageTool = await generateReadPageTool(pageHTML, mailbox.id, currentURL, session.email ?? "anonymous");
+  const readPageTool = await generateReadPageTool(pageHTML, currentURL, auth.session.email ?? "anonymous");
 
   return Response.json({ readPageTool });
 });

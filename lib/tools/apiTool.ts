@@ -11,7 +11,6 @@ import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
 import { cleanUpTextForAI, GPT_4O_MINI_MODEL, isWithinTokenLimit } from "../ai/core";
 import type { Conversation } from "../data/conversation";
-import type { Mailbox } from "../data/mailbox";
 
 export class ToolApiError extends Error {
   constructor(
@@ -114,7 +113,7 @@ export const callToolApi = async (
   };
 };
 
-export const generateSuggestedActions = async (conversation: Conversation, mailbox: Mailbox, mailboxTools: Tool[]) => {
+export const generateSuggestedActions = async (conversation: Conversation, mailboxTools: Tool[]) => {
   const messages: ConversationMessage[] = await db.query.conversationMessages.findMany({
     where: and(
       eq(conversationMessages.conversationId, conversation.id),
@@ -125,7 +124,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   });
 
   let metadataPrompt = "";
-  const metadataApi = await getMetadataApiByMailbox(mailbox);
+  const metadataApi = await getMetadataApiByMailbox();
   if (conversation.emailFrom && metadataApi) {
     const metadata = await fetchMetadata(conversation.emailFrom);
     metadataPrompt = metadata ? `Metadata: ${JSON.stringify(metadata, null, 2)}` : "";
@@ -143,7 +142,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   ${metadataPrompt}`;
 
   const similarPrompt = conversation.embeddingText
-    ? await buildSimilarConversationActionsPrompt(conversation.embeddingText, mailbox)
+    ? await buildSimilarConversationActionsPrompt(conversation.embeddingText)
     : "";
 
   if (isWithinTokenLimit(prompt + similarPrompt, true)) {
@@ -310,8 +309,8 @@ const validateParameters = (tool: Tool, params: Record<string, any>) => {
   }
 };
 
-const buildSimilarConversationActionsPrompt = async (embeddingText: string, mailbox: Mailbox): Promise<string> => {
-  const similarConversations = (await findSimilarConversations(embeddingText, mailbox, 10)) || [];
+const buildSimilarConversationActionsPrompt = async (embeddingText: string): Promise<string> => {
+  const similarConversations = (await findSimilarConversations(embeddingText, 10)) || [];
 
   if (similarConversations.length === 0) {
     return "";

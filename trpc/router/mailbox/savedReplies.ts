@@ -66,7 +66,7 @@ export const savedRepliesRouter = {
       }));
     }),
 
-  get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ ctx, input }) => {
+  get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ input }) => {
     const savedReply = await db.query.savedReplies.findFirst({
       where: and(eq(savedReplies.slug, input.slug)),
     });
@@ -111,7 +111,7 @@ export const savedRepliesRouter = {
         isActive: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const existingSavedReply = await db.query.savedReplies.findFirst({
         where: and(eq(savedReplies.slug, input.slug)),
       });
@@ -142,7 +142,7 @@ export const savedRepliesRouter = {
       return updatedSavedReply;
     }),
 
-  delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
+  delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ input }) => {
     const existingSavedReply = await db.query.savedReplies.findFirst({
       where: eq(savedReplies.slug, input.slug),
     });
@@ -159,29 +159,27 @@ export const savedRepliesRouter = {
     return { success: true };
   }),
 
-  incrementUsage: mailboxProcedure
-    .input(z.object({ slug: z.string().min(1).max(50) }))
-    .mutation(async ({ ctx, input }) => {
-      // Verify saved reply exists and is active before incrementing
-      const savedReply = await db.query.savedReplies.findFirst({
-        where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.isActive, true)),
+  incrementUsage: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).mutation(async ({ input }) => {
+    // Verify saved reply exists and is active before incrementing
+    const savedReply = await db.query.savedReplies.findFirst({
+      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.isActive, true)),
+    });
+
+    if (!savedReply) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Saved reply not found or access denied",
       });
+    }
 
-      if (!savedReply) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Saved reply not found or access denied",
-        });
-      }
+    await db
+      .update(savedReplies)
+      .set({
+        usageCount: sql`${savedReplies.usageCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(savedReplies.slug, input.slug));
 
-      await db
-        .update(savedReplies)
-        .set({
-          usageCount: sql`${savedReplies.usageCount} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(savedReplies.slug, input.slug));
-
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 } satisfies TRPCRouterRecord;

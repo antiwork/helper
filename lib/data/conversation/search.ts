@@ -114,7 +114,7 @@ export const searchConversations = async (
       : {}),
   };
 
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id, Object.values(where)) : [];
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
 
   // Additional filters we can't pass to searchEmailsByKeywords
   where = {
@@ -146,7 +146,7 @@ export const searchConversations = async (
       ? conversations.closedAt
       : conversations.lastUserEmailCreatedAt;
   const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
-  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox(mailbox));
+  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox());
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
