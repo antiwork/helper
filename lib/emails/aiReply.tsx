@@ -23,6 +23,10 @@ const AIReplyEmail = ({ content }: Props) => (
       <Text style={{ fontSize: "0.875rem", opacity: 0.6 }}>
         This response was created by our AI support agent. Need human support? Let us know in your reply.
       </Text>
+      <Text style={{ fontSize: "0.875rem", opacity: 0.6, marginTop: "1rem" }}>
+        Note: Replies to this email are not automatically monitored. For continued support, please visit our support
+        portal.
+      </Text>
       <Hr style={{ margin: "0 0 1.5rem 0", width: "4rem" }} />
       <Text style={{ fontSize: "0.75rem", lineHeight: "22px", marginTop: "0.75rem", marginBottom: "1.5rem" }}>
         <span style={{ opacity: 0.6 }}>Powered by</span>

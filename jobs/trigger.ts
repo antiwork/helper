@@ -28,7 +28,7 @@ const events = {
     data: z.object({
       messageId: z.number(),
     }),
-    jobs: ["postEmailToGmail"],
+    jobs: ["sendEmail"],
   },
   "conversations/auto-response.create": {
     data: z.object({
