@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getGuideSessionByUuid, updateGuideSession, type GuideSession } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
@@ -14,26 +14,16 @@ const updateGuideSchema = z.object({
   ),
 });
 
-export async function POST(request: Request) {
-  let parsedBody;
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   try {
     const body = await request.json();
-    parsedBody = updateGuideSchema.parse(body);
-  } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
-    return corsResponse({ error: "Invalid request body" }, { status: 400 });
-  }
+    const result = updateGuideSchema.safeParse(body);
+    if (!result.success) {
+      return corsResponse({ error: "Invalid request body" }, { status: 400 });
+    }
 
-  const { sessionId, steps } = parsedBody;
+    const { sessionId, steps } = result.data;
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { mailbox, session } = authResult;
-
-  try {
     const guideSession = await getGuideSessionByUuid(sessionId);
 
     if (!guideSession) {
@@ -66,4 +56,4 @@ export async function POST(request: Request) {
     captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Failed to update guide session" }, { status: 500 });
   }
-}
+});

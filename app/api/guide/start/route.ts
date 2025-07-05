@@ -1,5 +1,5 @@
 import { waitUntil } from "@vercel/functions";
-import { authenticateWidget, corsResponse } from "@/app/api/widget/utils";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { generateGuidePlan } from "@/lib/ai/guide";
 import { createConversation, getConversationBySlug } from "@/lib/data/conversation";
@@ -7,16 +7,8 @@ import { createGuideSession, createGuideSessionEvent } from "@/lib/data/guide";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
-export async function POST(request: Request) {
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { title, instructions, conversationSlug } = await request.json();
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { mailbox, session } = authResult;
-
   const platformCustomer = assertDefined(
     await findOrCreatePlatformCustomerByEmail(mailbox.id, assertDefined(session.email)),
   );
@@ -76,4 +68,4 @@ export async function POST(request: Request) {
     captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Failed to create guide session" }, { status: 500 });
   }
-}
+});
