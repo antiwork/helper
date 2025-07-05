@@ -9,8 +9,10 @@ export const userProfiles = pgTable("user_profiles", {
   id: uuid()
     .primaryKey()
     .references(() => authUsers.id, { onDelete: "cascade" }),
+  email: text().notNull(),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
+  lastMailboxSlug: text("last_mailbox_slug"),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp()
     .defaultNow()

@@ -57,23 +57,21 @@ export const addUser = async (
 export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
   const users = await db
     .select({
-      id: authUsers.id,
-      email: authUsers.email,
-      rawMetadata: authUsers.user_metadata,
+      id: userProfiles.id,
+      email: userProfiles.email,
       displayName: userProfiles.displayName,
       permissions: userProfiles.permissions,
       access: userProfiles.access,
     })
-    .from(authUsers)
-    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
+  .from(userProfiles);
 
   return users.map((user) => {
-    const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
+    const access = user.access ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
 
     return {
       id: user.id,
-      displayName: user.displayName || user.rawMetadata?.display_name || "",
+      displayName: user.displayName || "",
       email: user.email ?? undefined,
       role: access.role,
       keywords: access?.keywords ?? [],
@@ -91,40 +89,6 @@ export const updateUserMailboxData = async (
     keywords?: MailboxAccess["keywords"];
   },
 ): Promise<UserWithMailboxAccessData> => {
-  const supabase = createAdminClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.admin.getUserById(userId);
-  if (error) throw error;
-
-  const userMetadata = user?.user_metadata || {};
-  const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
-
-  // Only update the fields that were provided, keep the rest
-  const updatedMailboxData = {
-    ...mailboxAccess[mailboxId],
-    ...(updates.role && { role: updates.role }),
-    ...(updates.keywords && { keywords: updates.keywords }),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const {
-    data: { user: updatedUser },
-    error: updateError,
-  } = await supabase.auth.admin.updateUserById(userId, {
-    user_metadata: {
-      ...userMetadata,
-      ...(updates.displayName && { display_name: updates.displayName }),
-      mailboxAccess: {
-        ...mailboxAccess,
-        [mailboxId]: updatedMailboxData,
-      },
-    },
-  });
-  if (updateError) throw updateError;
-  if (!updatedUser) throw new Error("Failed to update user");
-
   const [updatedProfile] = await db
     .update(userProfiles)
     .set({
@@ -134,13 +98,13 @@ export const updateUserMailboxData = async (
         keywords: updates.keywords || [],
       },
     })
-    .where(eq(userProfiles.id, updatedUser.id))
+    .where(eq(userProfiles.id, userId))
     .returning();
 
   return {
-    id: updatedUser.id,
-    displayName: getFullName(updatedUser),
-    email: updatedUser.email ?? undefined,
+    id: updatedProfile?.id ?? userId,
+    displayName: updatedProfile?.displayName ?? "",
+    email: updatedProfile?.email ?? undefined,
     role: updatedProfile?.access?.role || "afk",
     keywords: updatedProfile?.access?.keywords || [],
     permissions: updatedProfile?.permissions ?? "",

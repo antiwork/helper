@@ -37,7 +37,7 @@ export const checkAssignedTicketResponseTimes = async () => {
 
   const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
-  const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
+  const usersById = Object.fromEntries((await db.query.userProfiles.findMany()).map((user) => [user.id, user]));
 
   for (const mailbox of mailboxesList) {
     if (mailbox.preferences?.disableTicketResponseTimeAlerts) continue;
@@ -82,7 +82,7 @@ export const checkAssignedTicketResponseTimes = async () => {
                 const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
                 const mention = slackUserId
                   ? `<@${slackUserId}>`
-                  : assignee?.user_metadata?.display_name || assignee?.email || "Unknown";
+                  : assignee?.displayName || assignee?.email || "Unknown";
                 const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
                 return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
               }),

@@ -19,7 +19,7 @@ export type MemberStats = {
 }[];
 
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
-  const allUsers = await db.query.authUsers.findMany();
+  const allUsers = await db.query.userProfiles.findMany();
   const memberIds = allUsers.map((user) => user.id);
 
   const dateConditions = [];
@@ -54,15 +54,13 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   return allUsers
     .map((user) => {
-      const mailboxAccess = user.user_metadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
-      const mailboxRole = mailboxAccess?.[mailbox.id.toString()]?.role || UserRoles.AFK;
 
       return {
         id: user.id,
         email: user.email ?? undefined,
-        displayName: getFullName(user),
+        displayName: user.displayName || null,
         replyCount: replyCounts[user.id] || 0,
-        role: mailboxRole,
+        role: user.access?.role ?? "afk",
       };
     })
     .sort((a, b) => b.replyCount - a.replyCount);
