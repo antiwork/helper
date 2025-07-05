@@ -15,7 +15,7 @@ import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
 const fetchUserInformation = async (email: string, mailboxSlug: string) => {
   try {
-    const metadata = await fetchMetadata(email, mailboxSlug);
+    const metadata = await fetchMetadata(email);
     return metadata?.prompt;
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
@@ -30,9 +30,9 @@ const searchKnowledgeBase = async (query: string, mailbox: Mailbox) => {
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string, mailboxId: number, mailboxSlug: string) => {
+const updateCustomerMetadata = async (email: string, mailboxId: number) => {
   try {
-    const customerMetadata = (await fetchMetadata(email, mailboxSlug))?.metadata ?? null;
+    const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
@@ -72,7 +72,7 @@ const requestHumanSupport = async (
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email, conversation.mailboxId, mailbox.slug));
+    waitUntil(updateCustomerMetadata(email, conversation.mailboxId));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {

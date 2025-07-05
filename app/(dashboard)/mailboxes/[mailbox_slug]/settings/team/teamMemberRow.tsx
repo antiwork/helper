@@ -10,6 +10,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
 import { showErrorToast } from "@/lib/utils/toast";
+import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
@@ -132,11 +133,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     },
     onError: (error) => {
       permissionsSaving.setState("error");
-      toast({
-        title: "Failed to update permissions",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to update permissions", error);
       setPermissions(member.permissions);
     },
   });

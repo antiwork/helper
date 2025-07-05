@@ -104,7 +104,7 @@ export const List = () => {
                 : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
 
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-              showSuccessToast(`${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`);
+              showSuccessToast(`${ticketsText} ${actionText}`);
             } else {
               showSuccessToast("Starting update, refresh to see status.");
             }
