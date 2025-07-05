@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return corsResponse({ error: authResult.error }, { status: 401 });
   }
 
-  const { mailbox, session } = authResult;
+  const { session } = authResult;
 
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return corsResponse({ error: "Guide session not found" }, { status: 404 });
     }
 
-    if (guideSession.mailboxId !== mailbox.id || session.email !== guideSession.platformCustomer.email) {
+    if (session.email !== guideSession.platformCustomer.email) {
       return corsResponse({ error: "Unauthorized" }, { status: 403 });
     }
 

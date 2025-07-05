@@ -7,20 +7,15 @@ describe("getPlatformCustomer", () => {
   const mockEmail = "test@example.com";
 
   it("returns platformCustomer if found for the given email", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { platformCustomer } = await platformCustomerFactory.create(mailbox.id, { email: mockEmail });
+    await userFactory.createRootUser();
+    const { platformCustomer } = await platformCustomerFactory.create({ email: mockEmail });
 
-    const result = await getPlatformCustomer(mailbox.id, mockEmail);
+    const result = await getPlatformCustomer(mockEmail);
     expect(result).toEqual({ ...platformCustomer, isVip: false });
   });
 
-  it("does not return a platformCustomer for a different mailbox", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    await platformCustomerFactory.create(mailbox.id, { email: mockEmail });
-
-    const { mailbox: mailbox2 } = await userFactory.createRootUser();
-
-    const result = await getPlatformCustomer(mailbox2.id, mockEmail);
+  it("returns null when platformCustomer is not found", async () => {
+    const result = await getPlatformCustomer("nonexistent@example.com");
     expect(result).toEqual(null);
   });
 });

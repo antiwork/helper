@@ -25,7 +25,7 @@ describe("toolsRouter", () => {
   describe("list", () => {
     it("returns available tools for a conversation", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         suggestedActions: [
           {
             type: "tool",
@@ -38,7 +38,6 @@ describe("toolsRouter", () => {
       });
 
       await toolsFactory.create({
-        mailboxId: mailbox.id,
         slug: "test-tool",
         name: "Test Tool",
         description: "A test tool",
@@ -70,9 +69,8 @@ describe("toolsRouter", () => {
   describe("run", () => {
     it("executes a tool, stores the result, and triggers draft refresh", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
       await toolsFactory.create({
-        mailboxId: mailbox.id,
         slug: "test-tool",
       });
 
@@ -99,7 +97,7 @@ describe("toolsRouter", () => {
 
     it("throws NOT_FOUND when tool does not exist", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
 
       const caller = createCaller(createTestTRPCContext(user));
       await expect(
@@ -114,9 +112,8 @@ describe("toolsRouter", () => {
 
     it("throws BAD_REQUEST when tool execution fails", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
       await toolsFactory.create({
-        mailboxId: mailbox.id,
         slug: "failing-tool",
       });
 

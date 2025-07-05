@@ -1,7 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
-import { userFactory } from "@tests/support/factories/users";
 import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
@@ -20,8 +19,7 @@ describe("fileUploader", () => {
       const { file: file2 } = await fileFactory.create(null, { isInline: false });
       const { file: file3 } = await fileFactory.create(null);
 
-      const { mailbox } = await userFactory.createRootUser();
-      const { conversation } = await conversationFactory.create(mailbox.id);
+      const { conversation } = await conversationFactory.create();
       const { message } = await conversationMessagesFactory.create(conversation.id);
 
       await finishFileUpload({ fileSlugs: [file1.slug, file2.slug], messageId: message.id });

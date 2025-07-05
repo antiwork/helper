@@ -26,8 +26,8 @@ describe("convertEmailToRaw", () => {
     const time = new Date("2023-01-01");
     vi.setSystemTime(time);
 
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: "Conversation subject",
     });
@@ -63,9 +63,7 @@ describe("convertEmailToRaw", () => {
   it("properly converts an email with cc/bcc info, a null subject, and an HTML body", async () => {
     const time = new Date("2023-01-01");
     vi.setSystemTime(time);
-
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: null,
     });
@@ -101,9 +99,7 @@ describe("convertEmailToRaw", () => {
     const time = new Date("2023-01-01");
     vi.setSystemTime(time);
 
-    const { mailbox } = await userFactory.createRootUser();
-
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: null,
     });
@@ -150,9 +146,7 @@ describe("convertEmailToRaw", () => {
     vi.mocked(downloadFile).mockResolvedValue(
       new Uint8Array(mockFileContent.buffer, mockFileContent.byteOffset, mockFileContent.byteLength),
     );
-
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       conversationProvider: "gmail",
       subject: "With attachments",
     });

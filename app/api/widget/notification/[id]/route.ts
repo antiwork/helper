@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return corsResponse({ error: authResult.error }, { status: 401 }, "PATCH");
   }
 
-  const { session, mailbox } = authResult;
+  const { session } = authResult;
 
   if (!session.email) {
     return corsResponse({ error: "Not authorized - Anonymous session" }, { status: 401 }, "PATCH");
@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { status } = updateNotificationSchema.parse(body);
 
   const platformCustomer = await db.query.platformCustomers.findFirst({
-    where: and(eq(platformCustomers.email, session.email), eq(platformCustomers.mailboxId, mailbox.id)),
+    where: eq(platformCustomers.email, session.email),
   });
 
   if (!platformCustomer) {

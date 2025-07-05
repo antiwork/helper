@@ -5,7 +5,7 @@ import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, gmailSupportEmails, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
@@ -173,7 +173,7 @@ export const updateConversation = async (
         captureExceptionAndLog(error);
       }
     };
-    publishEvents();
+    await publishEvents();
   }
   return updatedConversation ?? null;
 };
@@ -218,9 +218,7 @@ export const serializeConversationWithMessages = async (
   mailbox: typeof mailboxes.$inferSelect,
   conversation: typeof conversations.$inferSelect,
 ) => {
-  const platformCustomer = conversation.emailFrom
-    ? await getPlatformCustomer(mailbox.id, conversation.emailFrom)
-    : null;
+  const platformCustomer = conversation.emailFrom ? await getPlatformCustomer(conversation.emailFrom) : null;
 
   const mergedInto = conversation.mergedIntoId
     ? await db.query.conversations.findFirst({
@@ -262,20 +260,23 @@ export const getConversationById = cache(async (id: number): Promise<typeof conv
 
 export const getConversationBySlugAndMailbox = async (
   slug: string,
-  mailboxId: number,
 ): Promise<typeof conversations.$inferSelect | null> => {
   const result = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.mailboxId, mailboxId)),
+    where: eq(conversations.slug, slug),
   });
   return result ?? null;
 };
 
 export const getNonSupportParticipants = async (conversation: Conversation): Promise<string[]> => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, conversation.mailboxId),
-    with: { gmailSupportEmail: { columns: { email: true } } },
-  });
+  const mailbox = await getMailbox();
   if (!mailbox) throw new Error("Mailbox not found");
+
+  const gmailSupportEmail = mailbox.gmailSupportEmailId
+    ? await db.query.gmailSupportEmails.findFirst({
+        where: eq(gmailSupportEmails.id, mailbox.gmailSupportEmailId),
+        columns: { email: true },
+      })
+    : null;
 
   const messages = await db.query.conversationMessages.findMany({
     where: and(eq(conversationMessages.conversationId, conversation.id), isNull(conversationMessages.deletedAt)),
@@ -294,7 +295,7 @@ export const getNonSupportParticipants = async (conversation: Conversation): Pro
   }
 
   if (conversation.emailFrom) participants.delete(conversation.emailFrom.toLowerCase());
-  if (mailbox.gmailSupportEmail) participants.delete(mailbox.gmailSupportEmail.email.toLowerCase());
+  if (gmailSupportEmail) participants.delete(gmailSupportEmail.email.toLowerCase());
 
   return Array.from(participants);
 };
@@ -314,9 +315,10 @@ export const getRelatedConversations = async (
     whereMessages?: SQLWrapper;
   },
 ): Promise<Conversation[]> => {
+  const mailbox = await getMailbox();
+  if (!mailbox) return [];
   const conversationWithMailbox = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
-    with: { mailbox: true },
   });
   if (!conversationWithMailbox) return [];
 
@@ -328,17 +330,16 @@ export const getRelatedConversations = async (
   if (!subject && !body) return [];
 
   const keywords = await emailKeywordsExtractor({
-    mailbox: conversationWithMailbox.mailbox,
+    mailbox,
     subject,
     body,
   });
   if (!keywords.length) return [];
 
-  const messageIds = await searchEmailsByKeywords(keywords.join(" "), conversationWithMailbox.mailbox.id);
+  const messageIds = await searchEmailsByKeywords(keywords.join(" "));
 
   const relatedConversations = await db.query.conversations.findMany({
     where: and(
-      eq(conversations.mailboxId, conversationWithMailbox.mailboxId),
       not(eq(conversations.id, conversationId)),
       inArray(
         conversations.id,

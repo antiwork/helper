@@ -38,7 +38,6 @@ const events = {
   },
   "conversations/bulk-update": {
     data: z.object({
-      mailboxId: z.number(),
       userId: z.string(),
       conversationFilter: z.union([z.array(z.number()), searchSchema]),
       status: z.enum(["open", "closed", "spam"]),
@@ -79,15 +78,11 @@ const events = {
     jobs: ["importGmailThreads"],
   },
   "reports/weekly": {
-    data: z.object({
-      mailboxId: z.number(),
-    }),
+    data: z.object({}),
     jobs: ["generateMailboxWeeklyReport"],
   },
   "reports/daily": {
-    data: z.object({
-      mailboxId: z.number(),
-    }),
+    data: z.object({}),
     jobs: ["generateMailboxDailyReport"],
   },
   "websites/crawl.create": {
@@ -112,15 +107,11 @@ const events = {
     jobs: ["suggestKnowledgeBankChanges"],
   },
   "conversations/auto-close.check": {
-    data: z.object({
-      mailboxId: z.number().optional(),
-    }),
+    data: z.object({}),
     jobs: ["closeInactiveConversations"],
   },
   "conversations/auto-close.process-mailbox": {
-    data: z.object({
-      mailboxId: z.number(),
-    }),
+    data: z.object({}),
     jobs: ["closeInactiveConversationsForMailbox"],
   },
   "conversations/human-support-requested": {

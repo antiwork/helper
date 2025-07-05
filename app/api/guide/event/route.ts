@@ -37,10 +37,6 @@ export async function POST(request: Request) {
       }),
     );
 
-    if (guideSession.mailboxId !== authResult.mailbox.id) {
-      return corsResponse({ error: "Unauthorized" }, { status: 401 });
-    }
-
     if (isRecording) {
       await Promise.all(
         events.map((event: any) =>
@@ -48,7 +44,6 @@ export async function POST(request: Request) {
             guideSessionId: guideSession.id,
             type: event.type,
             data: event,
-            mailboxId: guideSession.mailboxId,
             timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
             metadata: metadata || {},
           }),
@@ -70,7 +65,6 @@ export async function POST(request: Request) {
             type: eventData.type,
             data: eventData.data,
             timestamp: eventData.timestamp,
-            mailboxId: guideSession.mailboxId,
           });
         }),
       );

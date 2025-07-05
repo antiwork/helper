@@ -30,7 +30,6 @@ export const checkVipResponseTimes = async () => {
       .innerJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
       .where(
         and(
-          eq(conversations.mailboxId, mailbox.id),
           isNull(conversations.assignedToId),
           isNull(conversations.mergedIntoId),
           eq(conversations.status, "open"),

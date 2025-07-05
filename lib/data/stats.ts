@@ -37,14 +37,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
     })
     .from(emails)
     .innerJoin(conversations, eq(emails.conversationId, conversations.id))
-    .where(
-      and(
-        eq(conversations.mailboxId, mailbox.id),
-        eq(emails.role, "staff"),
-        sql`${emails.userId} IN ${memberIds}`,
-        ...dateConditions,
-      ),
-    )
+    .where(and(eq(emails.role, "staff"), sql`${emails.userId} IN ${memberIds}`, ...dateConditions))
     .groupBy(emails.userId);
 
   const replyCounts = result.reduce<Record<string, number>>((acc, member) => {

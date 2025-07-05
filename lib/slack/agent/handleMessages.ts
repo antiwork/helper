@@ -48,7 +48,7 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     return;
   }
 
-  const mailbox = mailboxInfo.mailboxes.find(({ id }) => id === agentThread.mailboxId) ?? mailboxInfo.currentMailbox;
+  const mailbox = mailboxInfo.currentMailbox;
   if (!mailbox) {
     await askWhichMailbox(event, mailboxInfo.mailboxes);
     return;
@@ -56,9 +56,8 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
 
   const mentionedMailbox = event.text ? findMentionedMailbox(event.text, mailboxInfo.mailboxes, mailbox) : null;
 
-  if (!agentThread.mailboxId || mentionedMailbox) {
+  if (!mailbox || mentionedMailbox) {
     const mailboxToUse = mentionedMailbox || mailbox;
-    await db.update(agentThreads).set({ mailboxId: mailboxToUse.id }).where(eq(agentThreads.id, agentThread.id));
 
     if (mentionedMailbox && mailboxInfo.mailboxes.length > 1) {
       await postMailboxSwitchMessage(

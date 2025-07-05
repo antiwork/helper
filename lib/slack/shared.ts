@@ -7,6 +7,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
 import { createReply, getLastAiGeneratedDraft } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 import { addNote } from "@/lib/data/note";
 import { findUserViaSlack } from "@/lib/data/user";
 import { openSlackModal, postSlackMessage } from "@/lib/slack/client";
@@ -75,21 +76,21 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
   const conversation = assertDefined(
     await db.query.conversations.findFirst({
       where: eq(conversations.id, message.conversationId),
-      with: { mailbox: true },
     }),
   );
 
-  if (!conversation.mailbox.slackBotToken) {
+  const mailbox = await getMailbox();
+  if (!mailbox?.slackBotToken) {
     // The user has unlinked the Slack app so we can't do anything
     return;
   }
 
   if (payload.actions) {
     const action = payload.actions[0].action_id;
-    const user = await findUserViaSlack(conversation.mailbox.slackBotToken, payload.user.id);
+    const user = await findUserViaSlack(mailbox.slackBotToken, payload.user.id);
 
     if (!user) {
-      await postSlackMessage(conversation.mailbox.slackBotToken, {
+      await postSlackMessage(mailbox.slackBotToken, {
         ephemeralUserId: payload.user.id,
         channel: message.slackChannel,
         text: "_Helper user not found, please make sure your Slack email matches your Helper email._",
@@ -98,9 +99,9 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
     }
 
     if (action === "assign") {
-      await openAssignModal(message, conversation, payload.trigger_id);
+      await openAssignModal(message, payload.trigger_id);
     } else if (action === "respond_in_slack") {
-      await openRespondModal(message, conversation, payload.trigger_id);
+      await openRespondModal(message, payload.trigger_id);
     } else if (action === "close") {
       await db.transaction(async (tx) => {
         await updateConversation(
@@ -111,7 +112,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
       });
     }
   } else if (payload.type === "view_submission") {
-    const user = await findUserViaSlack(conversation.mailbox.slackBotToken, payload.user.id);
+    const user = await findUserViaSlack(mailbox.slackBotToken, payload.user.id);
 
     if (payload.view.callback_id === "assign_conversation") {
       const selectedUserId = payload.view.state.values.assign_to.user.selected_option.value;
@@ -162,17 +163,14 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
   }
 };
 
-const openAssignModal = async (
-  message: SlackMessage,
-  conversation: typeof conversations.$inferSelect & {
-    mailbox: {
-      slackBotToken: string | null;
-    };
-  },
-  triggerId: string,
-) => {
+const openAssignModal = async (message: SlackMessage, triggerId: string) => {
+  const mailbox = await getMailbox();
+  if (!mailbox?.slackBotToken) {
+    throw new Error("Mailbox not linked to Slack");
+  }
+
   await openSlackModal({
-    token: assertDefined(conversation.mailbox.slackBotToken),
+    token: assertDefined(mailbox.slackBotToken),
     triggerId,
     title: "Assign Conversation",
     view: {
@@ -213,14 +211,15 @@ const openAssignModal = async (
   });
 };
 
-const openRespondModal = async (
-  message: SlackMessage,
-  conversation: typeof conversations.$inferSelect & { mailbox: { slackBotToken: string | null } },
-  triggerId: string,
-) => {
+const openRespondModal = async (message: SlackMessage, triggerId: string) => {
+  const mailbox = await getMailbox();
+  if (!mailbox?.slackBotToken) {
+    throw new Error("Mailbox not linked to Slack");
+  }
+
   const draft = await getLastAiGeneratedDraft(message.conversationId);
   await openSlackModal({
-    token: assertDefined(conversation.mailbox.slackBotToken),
+    token: assertDefined(mailbox.slackBotToken),
     triggerId,
     title: "Reply",
     view: {

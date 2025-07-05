@@ -34,7 +34,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       conversation: {
         id: conversations.id,
         emailFrom: conversations.emailFrom,
-        mailboxId: conversations.mailboxId,
       },
     })
     .from(conversationMessages)
@@ -43,11 +42,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (
-    !message ||
-    (message.conversation.emailFrom && message.conversation.emailFrom !== authResult.session.email) ||
-    message.conversation.mailboxId !== authResult.mailbox.id
-  ) {
+  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== authResult.session.email)) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 

@@ -9,10 +9,10 @@ import { conversationProcedure } from "./procedure";
 
 export const toolsRouter = {
   list: conversationProcedure.query(async ({ ctx }) => {
-    const { conversation, mailbox } = ctx;
+    const { conversation } = ctx;
 
     const mailboxTools = await db.query.tools.findMany({
-      where: and(eq(tools.mailboxId, mailbox.id), eq(tools.enabled, true)),
+      where: eq(tools.enabled, true),
     });
 
     const suggested = (conversation.suggestedActions ?? []).map((action) => {
@@ -65,7 +65,7 @@ export const toolsRouter = {
       const conversation = ctx.conversation;
 
       const tool = await db.query.tools.findFirst({
-        where: and(eq(tools.slug, toolSlug), eq(tools.mailboxId, conversation.mailboxId), eq(tools.enabled, true)),
+        where: and(eq(tools.slug, toolSlug), eq(tools.enabled, true)),
       });
 
       if (!tool) {

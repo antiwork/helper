@@ -39,7 +39,7 @@ vi.mock("@/lib/gmail/lib", () => ({
 const setupConversationForGmailSending = async () => {
   const { mailbox } = await userFactory.createRootUser();
 
-  const { conversation } = await conversationFactory.create(mailbox.id, {
+  const { conversation } = await conversationFactory.create({
     conversationProvider: "gmail",
     status: "closed",
     subject: "Conversation subject",
@@ -82,7 +82,7 @@ const assertMarkFailed = async (emailId: number) => {
 describe("postEmailToGmail", () => {
   describe("on success", () => {
     it("properly posts to Gmail", async () => {
-      const { conversation, mailbox } = await setupConversationForGmailSending();
+      const { conversation } = await setupConversationForGmailSending();
 
       const { message } = await conversationMessagesFactory.createEnqueued(conversation.id, {
         body: "Content",
@@ -118,17 +118,10 @@ describe("postEmailToGmail", () => {
       expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
       expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
-          ...message,
+          body: message.body,
           conversation: expect.objectContaining({
-            ...conversation,
+            id: conversation.id,
             emailFrom: "to@example.com",
-            mailbox: {
-              id: mailbox.id,
-              name: mailbox.name,
-              widgetHost: mailbox.widgetHost,
-              slug: mailbox.slug,
-              gmailSupportEmail: mailbox.gmailSupportEmail,
-            },
           }),
           files: expect.arrayContaining([
             expect.objectContaining({ id: file1.id }),
@@ -153,7 +146,7 @@ describe("postEmailToGmail", () => {
     });
 
     it("includes the correct threadId for reply emails", async () => {
-      const { conversation, mailbox } = await setupConversationForGmailSending();
+      const { conversation } = await setupConversationForGmailSending();
       await conversationMessagesFactory.create(conversation.id, {
         body: "User email that initiated the conversation",
         role: "user",
@@ -171,17 +164,10 @@ describe("postEmailToGmail", () => {
       expect(convertConversationMessageToRaw).toHaveBeenCalledTimes(1);
       expect(convertConversationMessageToRaw).toHaveBeenCalledWith(
         expect.objectContaining({
-          ...message,
+          body: message.body,
           conversation: expect.objectContaining({
-            ...conversation,
+            id: conversation.id,
             emailFrom: "to@example.com",
-            mailbox: {
-              id: mailbox.id,
-              name: mailbox.name,
-              widgetHost: mailbox.widgetHost,
-              slug: mailbox.slug,
-              gmailSupportEmail: mailbox.gmailSupportEmail,
-            },
           }),
           files: [],
         }),

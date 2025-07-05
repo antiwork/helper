@@ -1,11 +1,11 @@
 import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
+import { conversationEvents, conversationMessages } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
 import { loadPreviousMessages } from "@/lib/ai/chat";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
-import { Mailbox } from "@/lib/data/mailbox";
+import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 
 const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was addressed.
 
@@ -73,13 +73,6 @@ export const checkConversationResolution = async ({
   const skipReason = await skipCheck(conversationId, messageId);
   if (skipReason) return { skipped: true, reason: skipReason };
 
-  const conversation = assertDefined(
-    await db.query.conversations.findFirst({
-      where: eq(conversations.id, conversationId),
-      with: { mailbox: true },
-    }),
-  );
-
   const lastReaction = (
     await db.query.conversationMessages.findFirst({
       where: and(
@@ -102,7 +95,8 @@ export const checkConversationResolution = async ({
     return { isResolved: false, reason: "Negative reaction" };
   }
 
-  const { isResolved, reason } = await checkAIBasedResolution(conversationId, conversation.mailbox);
+  const mailbox = assertDefined(await getMailbox());
+  const { isResolved, reason } = await checkAIBasedResolution(conversationId, mailbox);
 
   if (isResolved) {
     await db.insert(conversationEvents).values({

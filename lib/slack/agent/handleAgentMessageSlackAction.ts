@@ -4,20 +4,19 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
+import { getMailbox } from "@/lib/data/mailbox";
 import { postThinkingMessage } from "@/lib/slack/agent/handleMessages";
 
 export const handleAgentMessageSlackAction = async (agentMessage: typeof agentMessages.$inferSelect, payload: any) => {
   const agentThread = assertDefined(
     await db.query.agentThreads.findFirst({
       where: eq(agentThreads.id, agentMessage.agentThreadId),
-      with: {
-        mailbox: true,
-      },
     }),
   );
 
-  const mailbox = assertDefined(agentThread.mailbox);
-  const client = new WebClient(assertDefined(mailbox.slackBotToken));
+  const mailbox = await getMailbox();
+  if (!mailbox?.slackBotToken) throw new Error("Mailbox not found or not linked to Slack");
+  const client = new WebClient(mailbox.slackBotToken);
 
   if (payload.actions?.[0]?.action_id === "cancel") {
     await client.chat.postMessage({

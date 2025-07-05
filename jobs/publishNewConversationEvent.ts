@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { serializeMessage } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
+import { getMailbox } from "@/lib/data/mailbox";
 import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
@@ -13,17 +14,19 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
       conversation: {
         with: {
           platformCustomer: true,
-          mailbox: true,
         },
       },
     },
   });
   const published = [];
+  const mailbox = await getMailbox();
+  if (!mailbox) return `No mailbox found, cannot publish events.`;
+
   if (message && message?.role !== "ai_assistant") {
     await publishToRealtime({
-      channel: conversationChannelId(message.conversation.mailbox.slug, message.conversation.slug),
+      channel: conversationChannelId(mailbox.slug, message.conversation.slug),
       event: "conversation.message",
-      data: await serializeMessage(message, message.conversation.id, message.conversation.mailbox),
+      data: await serializeMessage(message, message.conversation.id, mailbox),
       trim: (data, amount) => ({
         ...data,
         body: data.body && amount < data.body.length ? data.body.slice(0, data.body.length - amount) : null,
@@ -33,7 +36,7 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
   }
   if (message?.role === "user" && message.conversation.status === "open") {
     await publishToRealtime({
-      channel: conversationsListChannelId(message.conversation.mailbox.slug),
+      channel: conversationsListChannelId(mailbox.slug),
       event: "conversation.new",
       data: message.conversation,
     });
@@ -41,9 +44,9 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
   }
   if (message) {
     await publishToRealtime({
-      channel: dashboardChannelId(message.conversation.mailbox.slug),
+      channel: dashboardChannelId(mailbox.slug),
       event: "event",
-      data: createMessageEventPayload(message, message.conversation.mailbox),
+      data: createMessageEventPayload(message, mailbox),
     });
     published.push("realtime.event");
   }
