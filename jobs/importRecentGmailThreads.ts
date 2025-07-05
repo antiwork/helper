@@ -38,7 +38,7 @@ export const excludeExistingGmailThreads = async (
     .selectDistinct({ gmailThreadId: conversationMessages.gmailThreadId })
     .from(conversationMessages)
     .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-    .innerJoin(mailboxes, eq(mailboxes.id, conversations.mailboxId))
+    .innerJoin(mailboxes, eq(mailboxes.id, conversations.unused_mailboxId))
     .where(
       and(
         eq(mailboxes.gmailSupportEmailId, gmailSupportEmailId),
@@ -107,7 +107,7 @@ export const processGmailThreadWithClient = async (
   const conversation = await db
     .insert(conversations)
     .values({
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       emailFrom: parsedEmailFrom.address,
       emailFromName: parsedEmailFrom.name,
       subject,

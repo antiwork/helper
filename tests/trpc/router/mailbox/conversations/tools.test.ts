@@ -38,7 +38,7 @@ describe("toolsRouter", () => {
       });
 
       await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         slug: "test-tool",
         name: "Test Tool",
         description: "A test tool",
@@ -72,7 +72,7 @@ describe("toolsRouter", () => {
       const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         slug: "test-tool",
       });
 
@@ -116,7 +116,7 @@ describe("toolsRouter", () => {
       const { user, mailbox } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create(mailbox.id);
       await toolsFactory.create({
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         slug: "failing-tool",
       });
 

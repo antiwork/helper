@@ -29,14 +29,14 @@ export const getAverageResponseTime = async (
     .leftJoin(
       platformCustomers,
       and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.unused_mailboxId, platformCustomers.unused_mailboxId),
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
     .where(
       and(
         ...Object.values(where ?? {}),
-        eq(conversations.mailboxId, mailbox.id),
+        eq(conversations.unused_mailboxId, mailbox.id),
         eq(conversationMessages.role, "staff"),
         gte(conversationMessages.createdAt, new Date(startDate)),
         lte(conversationMessages.createdAt, new Date(endDate)),

@@ -19,12 +19,12 @@ export const faqsRouter = {
         enabled: faqs.enabled,
         suggested: faqs.suggested,
         suggestedReplacementForId: faqs.suggestedReplacementForId,
-        mailboxId: faqs.mailboxId,
+        unused_mailboxId: faqs.unused_mailboxId,
         createdAt: faqs.createdAt,
         updatedAt: faqs.updatedAt,
       })
       .from(faqs)
-      .where(eq(faqs.mailboxId, ctx.mailbox.id))
+      .where(eq(faqs.unused_mailboxId, ctx.mailbox.id))
       .orderBy(asc(faqs.content));
   }),
   create: mailboxProcedure
@@ -37,7 +37,7 @@ export const faqsRouter = {
       return await db.transaction(async (tx) => {
         const faq = await tx
           .insert(faqs)
-          .values({ mailboxId: ctx.mailbox.id, content: input.content })
+          .values({ unused_mailboxId: ctx.mailbox.id, content: input.content })
           .returning()
           .then(takeUniqueOrThrow);
 
@@ -61,7 +61,7 @@ export const faqsRouter = {
         const faq = await tx
           .update(faqs)
           .set({ content: input.content, enabled: input.enabled, suggested: false })
-          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .where(and(eq(faqs.id, input.id), eq(faqs.unused_mailboxId, ctx.mailbox.id)))
           .returning()
           .then(takeUniqueOrThrow);
 
@@ -84,7 +84,7 @@ export const faqsRouter = {
       const [faq] = await tx
         .select()
         .from(faqs)
-        .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+        .where(and(eq(faqs.id, input.id), eq(faqs.unused_mailboxId, ctx.mailbox.id)))
         .limit(1);
       if (!faq) {
         throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
@@ -103,7 +103,7 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const knowledge = await db.query.faqs.findFirst({
-        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
+        where: and(eq(faqs.id, input.id), eq(faqs.unused_mailboxId, ctx.mailbox.id)),
         with: {
           mailbox: true,
         },
@@ -124,7 +124,7 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const knowledge = await db.query.faqs.findFirst({
-        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
+        where: and(eq(faqs.id, input.id), eq(faqs.unused_mailboxId, ctx.mailbox.id)),
         with: {
           mailbox: true,
         },
@@ -154,7 +154,7 @@ export const faqsRouter = {
         },
       });
 
-      if (message?.conversation.mailboxId !== ctx.mailbox.id) {
+      if (message?.conversation.unused_mailboxId !== ctx.mailbox.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Message not found in this mailbox" });
       }
 

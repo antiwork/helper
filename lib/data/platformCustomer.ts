@@ -18,10 +18,13 @@ export const determineVipStatus = (customerValue: string | number | null, vipThr
   return Number(customerValue) / 100 >= vipThreshold;
 };
 
-export const getPlatformCustomer = async (mailboxId: number, email: string): Promise<PlatformCustomer | null> => {
+export const getPlatformCustomer = async (
+  unused_mailboxId: number,
+  email: string,
+): Promise<PlatformCustomer | null> => {
   const [customer, mailbox] = await Promise.all([
     db.query.platformCustomers.findFirst({
-      where: and(eq(platformCustomers.email, email), eq(platformCustomers.mailboxId, mailboxId)),
+      where: and(eq(platformCustomers.email, email), eq(platformCustomers.unused_mailboxId, unused_mailboxId)),
     }),
     getMailbox(),
   ]);
@@ -36,11 +39,11 @@ export const getPlatformCustomer = async (mailboxId: number, email: string): Pro
 
 export const upsertPlatformCustomer = async ({
   email,
-  mailboxId,
+  unused_mailboxId,
   customerMetadata,
 }: {
   email: string;
-  mailboxId: number;
+  unused_mailboxId: number;
   customerMetadata: CustomerMetadata;
 }) => {
   if (!customerMetadata) return;
@@ -57,7 +60,7 @@ export const upsertPlatformCustomer = async ({
     .insert(platformCustomers)
     .values({
       email,
-      mailboxId,
+      unused_mailboxId,
       ...data,
     })
     .onConflictDoUpdate({
@@ -67,10 +70,10 @@ export const upsertPlatformCustomer = async ({
 };
 
 export const findOrCreatePlatformCustomerByEmail = async (
-  mailboxId: number,
+  unused_mailboxId: number,
   email: string,
 ): Promise<PlatformCustomer | null> => {
-  const existingCustomer = await getPlatformCustomer(mailboxId, email);
+  const existingCustomer = await getPlatformCustomer(unused_mailboxId, email);
   if (existingCustomer) return existingCustomer;
 
   const [result, mailbox] = await Promise.all([
@@ -78,7 +81,7 @@ export const findOrCreatePlatformCustomerByEmail = async (
       .insert(platformCustomers)
       .values({
         email,
-        mailboxId,
+        unused_mailboxId,
       })
       .returning(),
     getMailbox(),

@@ -20,7 +20,7 @@ describe("faqsRouter", () => {
       expect(faqs[0]).toMatchObject({
         id: faq.id,
         content: faq.content,
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -37,11 +37,11 @@ describe("faqsRouter", () => {
       });
 
       const faqRow = await db.query.faqs.findFirst({
-        where: eq(faqs.mailboxId, mailbox.id),
+        where: eq(faqs.unused_mailboxId, mailbox.id),
       });
       expect(faqRow).toMatchObject({
         content: "Test Content",
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -67,7 +67,7 @@ describe("faqsRouter", () => {
       });
       expect(faqRow).toMatchObject({
         content: "Updated Content",
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });

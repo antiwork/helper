@@ -53,7 +53,7 @@ export const searchConversations = async (
 
   // Filters on conversations and messages that we can pass to searchEmailsByKeywords
   let where: Record<string, SQL> = {
-    mailboxId: eq(conversations.mailboxId, mailbox.id),
+    unused_mailboxId: eq(conversations.unused_mailboxId, mailbox.id),
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToId, filters.assignee) } : {}),
@@ -163,7 +163,7 @@ export const searchConversations = async (
       .leftJoin(
         platformCustomers,
         and(
-          eq(conversations.mailboxId, platformCustomers.mailboxId),
+          eq(conversations.unused_mailboxId, platformCustomers.unused_mailboxId),
           eq(conversations.emailFrom, platformCustomers.email),
         ),
       )
@@ -214,7 +214,7 @@ export const countSearchResults = async (where: Record<string, SQL>) => {
     .leftJoin(
       platformCustomers,
       and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.unused_mailboxId, platformCustomers.unused_mailboxId),
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )
@@ -230,7 +230,7 @@ export const getSearchResultIds = async (where: Record<string, SQL>) => {
     .leftJoin(
       platformCustomers,
       and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
+        eq(conversations.unused_mailboxId, platformCustomers.unused_mailboxId),
         eq(conversations.emailFrom, platformCustomers.email),
       ),
     )

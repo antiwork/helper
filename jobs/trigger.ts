@@ -38,7 +38,7 @@ const events = {
   },
   "conversations/bulk-update": {
     data: z.object({
-      mailboxId: z.number(),
+      unused_mailboxId: z.number(),
       userId: z.string(),
       conversationFilter: z.union([z.array(z.number()), searchSchema]),
       status: z.enum(["open", "closed", "spam"]),
@@ -80,13 +80,13 @@ const events = {
   },
   "reports/weekly": {
     data: z.object({
-      mailboxId: z.number(),
+      unused_mailboxId: z.number(),
     }),
     jobs: ["generateMailboxWeeklyReport"],
   },
   "reports/daily": {
     data: z.object({
-      mailboxId: z.number(),
+      unused_mailboxId: z.number(),
     }),
     jobs: ["generateMailboxDailyReport"],
   },
@@ -113,13 +113,13 @@ const events = {
   },
   "conversations/auto-close.check": {
     data: z.object({
-      mailboxId: z.number().optional(),
+      unused_mailboxId: z.number().optional(),
     }),
     jobs: ["closeInactiveConversations"],
   },
   "conversations/auto-close.process-mailbox": {
     data: z.object({
-      mailboxId: z.number(),
+      unused_mailboxId: z.number(),
     }),
     jobs: ["closeInactiveConversationsForMailbox"],
   },

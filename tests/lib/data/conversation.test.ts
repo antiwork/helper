@@ -53,7 +53,7 @@ describe("createConversation", () => {
     const { mailbox } = await userFactory.createRootUser();
 
     const conversation = await createConversation({
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       subject: "Test Conversation",
       status: "open",
       slug: "test-conversation",
@@ -62,7 +62,7 @@ describe("createConversation", () => {
     });
 
     expect(conversation).toHaveProperty("id");
-    expect(conversation.mailboxId).toBe(mailbox.id);
+    expect(conversation.unused_mailboxId).toBe(mailbox.id);
     expect(conversation.subject).toBe("Test Conversation");
     expect(conversation.status).toBe("open");
     expect(conversation.slug).toBe("test-conversation");
@@ -217,7 +217,7 @@ describe("getConversationBySlugAndMailbox", () => {
     expect(result).not.toBeNull();
     expect(result?.id).toBe(conversation.id);
     expect(result?.slug).toBe("test-slug-mailbox");
-    expect(result?.mailboxId).toBe(mailbox.id);
+    expect(result?.unused_mailboxId).toBe(mailbox.id);
   });
 
   it("returns null if conversation not found", async () => {

@@ -42,7 +42,7 @@ const convertHtmlToMarkdown = async (html: string, currentURL: string): Promise<
 
 export const generateReadPageTool = async (
   pageHTML: string,
-  mailboxId: number,
+  unused_mailboxId: number,
   currentURL: string,
   email: string,
 ): Promise<{ toolName: string; toolDescription: string; pageContent: string } | null> => {
@@ -63,7 +63,7 @@ export const generateReadPageTool = async (
 
   const mailbox = assertDefined(
     await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, mailboxId),
+      where: eq(mailboxes.id, unused_mailboxId),
     }),
     "Mailbox not found",
   );

@@ -107,7 +107,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
     where: and(
       inArray(
         conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
+        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.unused_mailboxId, mailbox.id)),
       ),
       inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
       isNull(conversationMessages.deletedAt),
@@ -142,7 +142,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
       where: and(
         inArray(
           conversationMessages.conversationId,
-          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
+          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.unused_mailboxId, mailbox.id)),
         ),
         isNotNull(conversationMessages.reactionType),
         isNotNull(conversationMessages.reactionCreatedAt),
@@ -157,7 +157,7 @@ export const getLatestEvents = async (mailbox: Mailbox, before?: Date) => {
       where: and(
         inArray(
           conversationEvents.conversationId,
-          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mailboxId, mailbox.id)),
+          db.select({ id: conversations.id }).from(conversations).where(eq(conversations.unused_mailboxId, mailbox.id)),
         ),
         eq(conversationEvents.type, "request_human_support"),
         gte(conversationEvents.createdAt, earliestMessageTimestamp),

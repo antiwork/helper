@@ -87,14 +87,14 @@ describe("handleAutoResponse", () => {
 
     await handleAutoResponse({ messageId: message.id });
 
-    expect(retrieval.fetchMetadata).toHaveBeenCalledWith("customer@example.com", mailbox.slug);
+    expect(retrieval.fetchMetadata).toHaveBeenCalledWith("customer@example.com");
     const updatedMessage = await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, message.id),
     });
     expect(updatedMessage?.metadata).toEqual(mockMetadata);
     expect(platformCustomer.upsertPlatformCustomer).toHaveBeenCalledWith({
       email: "customer@example.com",
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       customerMetadata: mockMetadata.metadata,
     });
   });

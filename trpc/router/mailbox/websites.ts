@@ -27,7 +27,7 @@ const fetchPageTitle = async (url: string): Promise<string> => {
 export const websitesRouter = {
   list: mailboxProcedure.query(async ({ ctx }) => {
     const websitesList = await db.query.websites.findMany({
-      where: and(eq(websites.mailboxId, ctx.mailbox.id), isNull(websites.deletedAt)),
+      where: and(eq(websites.unused_mailboxId, ctx.mailbox.id), isNull(websites.deletedAt)),
       orderBy: [asc(websites.createdAt)],
       with: {
         crawls: {
@@ -73,7 +73,7 @@ export const websitesRouter = {
       const website = await db
         .insert(websites)
         .values({
-          mailboxId: ctx.mailbox.id,
+          unused_mailboxId: ctx.mailbox.id,
           name,
           url: urlWithProtocol,
           createdAt: new Date(),
@@ -127,7 +127,7 @@ export const websitesRouter = {
           deletedAt: now,
           updatedAt: now,
         })
-        .where(and(eq(websites.id, input.websiteId), eq(websites.mailboxId, ctx.mailbox.id)));
+        .where(and(eq(websites.id, input.websiteId), eq(websites.unused_mailboxId, ctx.mailbox.id)));
 
       return { success: true };
     }),
@@ -141,7 +141,7 @@ export const websitesRouter = {
     .mutation(async ({ ctx, input }) => {
       const website = assertDefined(
         await db.query.websites.findFirst({
-          where: and(eq(websites.id, input.websiteId), eq(websites.mailboxId, ctx.mailbox.id)),
+          where: and(eq(websites.id, input.websiteId), eq(websites.unused_mailboxId, ctx.mailbox.id)),
         }),
       );
 
@@ -182,7 +182,9 @@ export const websitesRouter = {
       })
       .from(websitePages)
       .innerJoin(websites, eq(websites.id, websitePages.websiteId))
-      .where(and(eq(websites.mailboxId, ctx.mailbox.id), isNull(websites.deletedAt), isNull(websitePages.deletedAt)))
+      .where(
+        and(eq(websites.unused_mailboxId, ctx.mailbox.id), isNull(websites.deletedAt), isNull(websitePages.deletedAt)),
+      )
       .orderBy(asc(websitePages.pageTitle));
 
     return pages;

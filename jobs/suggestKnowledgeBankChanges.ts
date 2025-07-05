@@ -33,7 +33,7 @@ export const suggestKnowledgeBankChanges = async ({
   const flagReason = reason || "No reason provided";
 
   const existingSuggestions = await db.query.faqs.findMany({
-    where: and(eq(faqs.suggested, true), eq(faqs.mailboxId, mailbox.id)),
+    where: and(eq(faqs.suggested, true), eq(faqs.unused_mailboxId, mailbox.id)),
   });
 
   const suggestion = await generateKnowledgeBankSuggestion(mailbox, {
@@ -47,7 +47,7 @@ export const suggestKnowledgeBankChanges = async ({
       .insert(faqs)
       .values({
         content: suggestion.content || "",
-        mailboxId: mailbox.id,
+        unused_mailboxId: mailbox.id,
         suggested: true,
         enabled: false,
         messageId: message.id,
@@ -75,7 +75,7 @@ export const suggestKnowledgeBankChanges = async ({
         .insert(faqs)
         .values({
           content: suggestion.content || "",
-          mailboxId: mailbox.id,
+          unused_mailboxId: mailbox.id,
           suggested: true,
           enabled: false,
           suggestedReplacementForId: suggestion.action === "update_entry" ? suggestion.entryId : null,

@@ -8,7 +8,7 @@ import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 type AutoCloseReport = {
   totalProcessed: number;
   mailboxReports: {
-    mailboxId: number;
+    unused_mailboxId: number;
     mailboxName: string;
     inactiveConversations: { id: number; slug: string }[];
     conversationsClosed: number;
@@ -18,7 +18,7 @@ type AutoCloseReport = {
 };
 
 type MailboxAutoCloseReport = {
-  mailboxId: number;
+  unused_mailboxId: number;
   mailboxName: string;
   inactiveConversations: { id: number; slug: string }[];
   conversationsClosed: number;
@@ -45,7 +45,7 @@ export async function closeInactiveConversations(): Promise<AutoCloseReport> {
     return report;
   }
   for (const mailbox of enabledMailboxes) {
-    await triggerEvent("conversations/auto-close.process-mailbox", { mailboxId: mailbox.id });
+    await triggerEvent("conversations/auto-close.process-mailbox", { unused_mailboxId: mailbox.id });
   }
 
   report.status = `Scheduled auto-close check for ${enabledMailboxes.length} mailboxes`;
@@ -53,13 +53,13 @@ export async function closeInactiveConversations(): Promise<AutoCloseReport> {
 }
 
 export async function closeInactiveConversationsForMailbox({
-  mailboxId,
+  unused_mailboxId,
 }: {
-  mailboxId: number;
+  unused_mailboxId: number;
 }): Promise<MailboxAutoCloseReport> {
   const mailbox = assertDefinedOrRaiseNonRetriableError(
     await db.query.mailboxes.findFirst({
-      where: and(eq(mailboxes.id, mailboxId), eq(mailboxes.autoCloseEnabled, true)),
+      where: and(eq(mailboxes.id, unused_mailboxId), eq(mailboxes.autoCloseEnabled, true)),
       columns: {
         id: true,
         name: true,
@@ -69,7 +69,7 @@ export async function closeInactiveConversationsForMailbox({
   );
 
   const mailboxReport: MailboxAutoCloseReport = {
-    mailboxId: mailbox.id,
+    unused_mailboxId: mailbox.id,
     mailboxName: mailbox.name,
     inactiveConversations: [],
     conversationsClosed: 0,
@@ -85,7 +85,7 @@ export async function closeInactiveConversationsForMailbox({
 
   const conversationsToClose = await db.query.conversations.findMany({
     where: and(
-      eq(conversations.mailboxId, mailbox.id),
+      eq(conversations.unused_mailboxId, mailbox.id),
       eq(conversations.status, "open"),
       lt(conversations.lastUserEmailCreatedAt, cutoffDate),
     ),

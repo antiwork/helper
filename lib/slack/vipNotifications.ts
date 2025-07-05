@@ -181,7 +181,7 @@ export const updateVipMessageInSlack = async ({
   }
 
   const emailFrom = conversation.emailFrom ?? "Unknown";
-  const platformCustomer = await getPlatformCustomer(conversation.mailboxId, emailFrom);
+  const platformCustomer = await getPlatformCustomer(conversation.unused_mailboxId, emailFrom);
   const customerLinks = platformCustomer?.links
     ? Object.entries(platformCustomer.links).map(([key, value]) => `<${value}|${key}>`)
     : [];

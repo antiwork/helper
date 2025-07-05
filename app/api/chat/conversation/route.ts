@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   const newConversation = await createConversation({
     emailFrom: isVisitor || !authResult.session.email ? null : authResult.session.email,
-    mailboxId: authResult.mailbox.id,
+    unused_mailboxId: authResult.mailbox.id,
     subject: CHAT_CONVERSATION_SUBJECT,
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",

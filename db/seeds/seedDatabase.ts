@@ -183,7 +183,7 @@ type MessageDetail = {
 };
 
 type Fixtures = Record<
-  string, // mailboxId
+  string, // unused_mailboxId
   Record<
     string, // conversationId
     {
@@ -196,25 +196,25 @@ type Fixtures = Record<
 const fixturesPath = path.join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
   const content = JSON.parse(fs.readFileSync(path.join(fixturesPath, file), "utf8")) as Fixtures;
-  const [mailboxId, conversations] = Object.entries(content)[0]!;
+  const [unused_mailboxId, conversations] = Object.entries(content)[0]!;
   return {
     ...acc,
-    [mailboxId]: {
-      ...(acc[mailboxId] ?? {}),
+    [unused_mailboxId]: {
+      ...(acc[unused_mailboxId] ?? {}),
       ...conversations,
     },
   };
 }, {});
 
-const generateSeedsFromFixtures = async (mailboxId: number) => {
-  const fixtures = Object.entries(assertDefined(fixtureData[mailboxId]));
+const generateSeedsFromFixtures = async (unused_mailboxId: number) => {
+  const fixtures = Object.entries(assertDefined(fixtureData[unused_mailboxId]));
 
   await Promise.all(
     fixtures
       .sort(([keyA], [keyB]) => parseInt(keyA) - parseInt(keyB))
       .map(async ([, fixture], fixtureIndex) => {
         const lastUserEmailCreatedAt = subHours(new Date(), (fixtures.length - fixtureIndex) * 8);
-        const { conversation } = await conversationFactory.create(mailboxId, {
+        const { conversation } = await conversationFactory.create(unused_mailboxId, {
           ...fixture.conversation,
           lastUserEmailCreatedAt,
           closedAt: fixture.conversation.isClosed ? addHours(lastUserEmailCreatedAt, 8) : null,
@@ -251,7 +251,7 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   const gumroadDevToken = "36a9bb0b88ad771ead2ada56a9be84e4";
 
   await toolsFactory.create({
-    mailboxId: mailbox.id,
+    unused_mailboxId: mailbox.id,
     name: "Send reset password",
     description: "Send reset password email to the user",
     slug: "reset_password",
@@ -270,7 +270,7 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   });
 
   await toolsFactory.create({
-    mailboxId: mailbox.id,
+    unused_mailboxId: mailbox.id,
     name: "Resend last receipt",
     description: "Resend the last receipt email to the user",
     slug: "resend_last_receipt",
@@ -299,7 +299,7 @@ const createSettingsPageRecords = async (mailbox: typeof mailboxes.$inferSelect)
   await db
     .insert(mailboxesMetadataApi)
     .values({
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       url: faker.internet.url(),
       isEnabled: true,
       hmacSecret: crypto.randomUUID().replace(/-/g, ""),

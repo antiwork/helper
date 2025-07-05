@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       }),
     );
 
-    if (guideSession.mailboxId !== authResult.mailbox.id) {
+    if (guideSession.unused_mailboxId !== authResult.mailbox.id) {
       return corsResponse({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
             guideSessionId: guideSession.id,
             type: event.type,
             data: event,
-            mailboxId: guideSession.mailboxId,
+            unused_mailboxId: guideSession.unused_mailboxId,
             timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
             metadata: metadata || {},
           }),
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
             type: eventData.type,
             data: eventData.data,
             timestamp: eventData.timestamp,
-            mailboxId: guideSession.mailboxId,
+            unused_mailboxId: guideSession.unused_mailboxId,
           });
         }),
       );
