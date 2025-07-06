@@ -20,6 +20,7 @@ import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";
@@ -160,11 +161,7 @@ export const MessageActions = () => {
   }, []);
 
   const handleError = useCallback((error: string) => {
-    toast({
-      title: "Speech Recognition Error",
-      description: error,
-      variant: "destructive",
-    });
+    showErrorToast("Failed to recognize speech", error);
   }, []);
 
   const {
@@ -220,17 +217,13 @@ export const MessageActions = () => {
     try {
       const cc = parseEmailList(draftedEmail.cc);
       if (!cc.success)
-        return toast({
-          variant: "destructive",
-          title: `Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`,
-        });
+        return showErrorToast(`Invalid CC email address: ${cc.error.issues.map((issue) => issue.message).join(", ")}`);
 
       const bcc = parseEmailList(draftedEmail.bcc);
       if (!bcc.success)
-        return toast({
-          variant: "destructive",
-          title: `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
-        });
+        return showErrorToast(
+          `Invalid BCC email address: ${bcc.error.issues.map((issue) => issue.message).join(", ")}`,
+        );
 
       const conversationSlug = conversation.slug;
 
@@ -280,11 +273,10 @@ export const MessageActions = () => {
           if (!assign) shouldTriggerConfetti = true;
         } catch (error) {
           captureExceptionAndLog(error);
-          toast({
-            variant: "destructive",
-            title: "Message sent but failed to close conversation",
-            description: "The message was sent successfully, but there was an error closing the conversation.",
-          });
+          showErrorToast(
+            "Failed to close conversation",
+            "The message was sent successfully, but there was an error closing the conversation.",
+          );
         }
       }
 
@@ -326,16 +318,10 @@ export const MessageActions = () => {
                     emailId,
                   });
                   setUndoneEmail(originalDraftedEmail);
-                  toast({
-                    title: "Message unsent",
-                    variant: "success",
-                  });
+                  showSuccessToast("Message unsent");
                 } catch (e) {
                   captureExceptionAndLog(e);
-                  toast({
-                    variant: "destructive",
-                    title: "Failed to unsend email",
-                  });
+                  showErrorToast("Failed to unsend email", e);
                 } finally {
                   utils.mailbox.conversations.get.invalidate({ mailboxSlug, conversationSlug });
                   navigateToConversation(conversation.slug);
