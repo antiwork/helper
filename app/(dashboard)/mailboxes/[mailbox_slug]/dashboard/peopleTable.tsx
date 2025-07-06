@@ -30,12 +30,6 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
       <div className="flex flex-col w-full h-full">
         <div className="flex-1 min-h-0">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</TableHead>
-                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">Replies</TableHead>
-              </TableRow>
-            </TableHeader>
             <TableBody>
               {Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
