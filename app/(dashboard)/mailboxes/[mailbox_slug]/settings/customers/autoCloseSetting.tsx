@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -27,10 +27,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      toast({
-        title: "Error updating auto-close settings",
-        description: error.message,
-      });
+      showErrorToast("Failed to update auto-close settings", error);
     },
   });
 
@@ -49,17 +46,10 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
 
   const { mutate: runAutoClose, isPending: isAutoClosePending } = api.mailbox.autoClose.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Auto-close triggered",
-        description: "The auto-close job has been triggered successfully.",
-      });
+      showSuccessToast("Auto-close triggered");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to run auto-close", error);
     },
   });
 

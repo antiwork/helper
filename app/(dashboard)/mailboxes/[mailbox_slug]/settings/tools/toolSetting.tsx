@@ -2,12 +2,13 @@
 
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import ApiCard from "./apiCard";
 import ApiForm from "./apiForm";
+import { ToolsListSkeleton } from "./toolListSkeleton";
 
 type ToolSettingProps = {
   mailboxSlug: string;
@@ -15,14 +16,16 @@ type ToolSettingProps = {
 
 const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
   const [showApiForm, setShowApiForm] = useState(false);
-  const { data: apis = [], isLoading: apisLoading, error } = api.mailbox.tools.list.useQuery({ mailboxSlug });
+  const {
+    data: apis = [],
+    isLoading: apisLoading,
+    isFetching: apisFetching,
+    error,
+  } = api.mailbox.tools.list.useQuery({ mailboxSlug });
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error fetching APIs",
-        variant: "destructive",
-      });
+      showErrorToast("Failed to fetch APIs", error);
     }
   }, [error]);
 
@@ -44,18 +47,8 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
         <div className="space-y-6">
           {showApiForm && <ApiForm mailboxSlug={mailboxSlug} onCancel={() => setShowApiForm(false)} />}
 
-          {apisLoading ? (
-            <>
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-4">
-                  <div className="h-5 w-8 rounded bg-secondary animate-skeleton" />
-                  <div className="grow space-y-2">
-                    <div className="h-4 w-32 rounded bg-secondary animate-skeleton" />
-                    <div className="h-4 w-48 rounded bg-secondary animate-skeleton" />
-                  </div>
-                </div>
-              ))}
-            </>
+          {apisLoading || (apisFetching && apis.length === 0) ? (
+            <ToolsListSkeleton count={1} />
           ) : (
             apis.map((api) => <ApiCard key={api.id} api={api} mailboxSlug={mailboxSlug} />)
           )}

@@ -87,7 +87,7 @@ describe("handleAutoResponse", () => {
 
     await handleAutoResponse({ messageId: message.id });
 
-    expect(retrieval.fetchMetadata).toHaveBeenCalledWith("customer@example.com", mailbox.slug);
+    expect(retrieval.fetchMetadata).toHaveBeenCalledWith("customer@example.com");
     const updatedMessage = await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, message.id),
     });
