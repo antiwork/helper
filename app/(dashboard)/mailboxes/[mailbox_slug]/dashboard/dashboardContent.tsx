@@ -8,6 +8,7 @@ import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashb
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { PageHeader } from "@/components/pageHeader";
 import { Panel } from "@/components/panel";
+import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { DashboardAlerts } from "./dashboardAlerts";
 import { StatusByTypeChart } from "./statusByTypeChart";
 import { TimeRangeSelector } from "./timeRangeSelector";
@@ -24,6 +25,8 @@ export function DashboardContent({ mailboxSlug }: Props) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<DateRange>();
   const isMobile = useIsMobile();
+
+  useDocumentTitle("Dashboard");
 
   return (
     <div className="flex flex-col h-full">
