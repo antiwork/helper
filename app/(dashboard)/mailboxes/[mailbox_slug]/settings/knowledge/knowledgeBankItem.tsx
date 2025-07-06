@@ -2,7 +2,7 @@ import { truncate } from "lodash-es";
 import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { toast } from "sooner";
+import { toast } from "sonner";
 import type { FAQ } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Badge } from "@/components/ui/badge";

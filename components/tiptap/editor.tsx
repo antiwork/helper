@@ -8,7 +8,7 @@ import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tipta
 import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
-import { toast } from "sooner";
+import { toast } from "sonner";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { useConversationListContextSafe } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
