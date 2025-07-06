@@ -4,6 +4,7 @@ import { toast } from "@/components/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterInputs, RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
@@ -80,11 +81,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
         );
       }
 
-      toast({
-        variant: "destructive",
-        title: "Error updating conversation",
-        description: error.message,
-      });
+      showErrorToast("Failed to update conversation", error);
     },
     onSuccess: (_data, variables) => {
       utils.mailbox.conversations.get.invalidate({
@@ -105,17 +102,11 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
       await update({ status });
 
       if (status === "open") {
-        toast({
-          title: "Conversation reopened",
-          variant: "success",
-        });
+        showSuccessToast("Conversation reopened");
       } else {
         removeConversation();
         if (status === "closed") {
-          toast({
-            title: "Conversation closed",
-            variant: "success",
-          });
+          showSuccessToast("Conversation closed");
         }
       }
 
@@ -130,15 +121,10 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
                 try {
                   await update({ status: undoStatus });
                   navigateToConversation(conversationSlug);
-                  toast({
-                    title: "No longer marked as spam",
-                  });
+                  showSuccessToast("No longer marked as spam");
                 } catch (e) {
                   captureExceptionAndThrowIfDevelopment(e);
-                  toast({
-                    variant: "destructive",
-                    title: "Failed to undo",
-                  });
+                  showErrorToast("Failed to undo action");
                 }
               }}
             >
