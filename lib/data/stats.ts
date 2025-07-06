@@ -1,7 +1,6 @@
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversations, conversationMessages as emails } from "@/db/schema";
-import { getFullName } from "@/lib/auth/authUtils";
+import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
 import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
 
@@ -19,7 +18,9 @@ export type MemberStats = {
 }[];
 
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
-  const allUsers = await db.query.userProfiles.findMany();
+  const allUsers = await db.query.userProfiles.findMany({
+    where: isNull(userProfiles.deletedAt),
+  });
   const memberIds = allUsers.map((user) => user.id);
 
   const dateConditions = [];
