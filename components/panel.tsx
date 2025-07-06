@@ -16,7 +16,9 @@ export const Panel = ({
       className,
     )}
   >
-    {title && <h4 className="scroll-m-20 mb-4 text-sm font-semibold tracking-tight uppercase text-foreground">{title}</h4>}
+    {title && (
+      <h4 className="scroll-m-20 mb-4 text-sm font-semibold tracking-tight uppercase text-foreground">{title}</h4>
+    )}
     <div className="flex-1 min-h-0">{children}</div>
   </div>
 );

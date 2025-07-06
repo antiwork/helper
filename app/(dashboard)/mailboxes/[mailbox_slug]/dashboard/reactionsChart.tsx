@@ -99,18 +99,17 @@ export function ReactionsChart({
       <div className="relative flex-1 min-h-0">
         <ChartContainer config={chartConfig} className="w-full h-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={Object.values(chartData)} stackOffset="sign" barGap={16} margin={{ top: 20, right: 10, left: 10, bottom: 40 }}>
-              <XAxis 
-                dataKey="label" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 12 }}
-                height={60}
-              />
-              <YAxis 
-                width={40} 
-                domain={["dataMin", "dataMax"]} 
-                axisLine={false} 
+            <BarChart
+              data={Object.values(chartData)}
+              stackOffset="sign"
+              barGap={16}
+              margin={{ top: 20, right: 10, left: 10, bottom: 40 }}
+            >
+              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} height={60} />
+              <YAxis
+                width={40}
+                domain={["dataMin", "dataMax"]}
+                axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12 }}
               />
@@ -119,10 +118,7 @@ export function ReactionsChart({
                 position={{ y: 0 }}
                 content={<ChartTooltipContent valueFormatter={(value) => Math.abs(value).toLocaleString()} />}
               />
-              <ChartLegend 
-                content={<ChartLegendContent />} 
-                wrapperStyle={{ paddingTop: '8px' }}
-              />
+              <ChartLegend content={<ChartLegendContent />} wrapperStyle={{ paddingTop: "8px" }} />
               <Bar
                 stackId="feedback"
                 dataKey="positive"

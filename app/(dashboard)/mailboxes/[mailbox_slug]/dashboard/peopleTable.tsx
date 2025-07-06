@@ -55,24 +55,28 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
           <Table>
             <TableHeader className="sticky top-0 bg-background">
               <TableRow>
-                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</TableHead>
-                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">Replies</TableHead>
+                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Name
+                </TableHead>
+                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">
+                  Replies
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {members.map((member: Member) => (
                 <TableRow key={member.id} className="hover:bg-muted/50 transition-colors">
                   <TableCell className="px-0 py-3 font-medium">{member.displayName}</TableCell>
-                  <TableCell className="px-0 py-3 text-right font-mono text-sm">{member.replyCount.toLocaleString()}</TableCell>
+                  <TableCell className="px-0 py-3 text-right font-mono text-sm">
+                    {member.replyCount.toLocaleString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       ) : (
-        <div className="flex items-center justify-center flex-1 text-muted-foreground">
-          No data available.
-        </div>
+        <div className="flex items-center justify-center flex-1 text-muted-foreground">No data available.</div>
       )}
     </div>
   );

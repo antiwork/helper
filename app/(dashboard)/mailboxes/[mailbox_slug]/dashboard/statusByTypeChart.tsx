@@ -120,11 +120,11 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
                   }}
                 />
               </Pie>
-              <ChartLegend 
-                content={<ChartLegendContent />} 
-                verticalAlign="bottom" 
-                className="text-xs mt-2" 
-                wrapperStyle={{ paddingTop: '8px' }}
+              <ChartLegend
+                content={<ChartLegendContent />}
+                verticalAlign="bottom"
+                className="text-xs mt-2"
+                wrapperStyle={{ paddingTop: "8px" }}
               />
             </PieChart>
           </ResponsiveContainer>
