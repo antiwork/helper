@@ -21,7 +21,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
   const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
   const utils = api.useUtils();
-  const { data: permissionsData } = api.mailbox.members.getPermissions.useQuery({ mailboxSlug });
+  const { data: permissionsData } = api.user.getPermissions.useQuery();
 
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();

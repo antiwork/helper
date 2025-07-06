@@ -13,15 +13,17 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 import { publicProcedure } from "../trpc";
 import { userProfiles } from "@/db/schema";
+import { getProfile, isAdmin } from "@/lib/data/user";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
-    const user = await db.query.userProfiles.findFirst({
-      where: and(
-        eq(userProfiles.email, input.email),
-        isNull(userProfiles.deletedAt)
-      ),
-    });
+    const user = await db
+      .select({ id: authUsers.id, email: authUsers.email, deletedAt: userProfiles.deletedAt })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(eq(authUsers.email, input.email))
+      .then(takeUniqueOrThrow);
     
     if (!user || user.deletedAt) {
       const [_, emailDomain] = input.email.split("@");
@@ -159,4 +161,25 @@ export const userRouter = {
         otp: linkData.properties.email_otp,
       };
     }),
+
+  getPermissions: publicProcedure.query(async ({ ctx }) => {
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "User not authenticated",
+    });
+  }
+  const user = await getProfile(ctx.user.id);
+  if (!user) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "User not found",
+    });
+  }
+  return {
+    permissions: user.permissions,
+    isAdmin: isAdmin(user),
+    displayName: user.displayName,
+  };
+}),
 } satisfies TRPCRouterRecord;

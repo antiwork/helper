@@ -138,18 +138,4 @@ export const membersRouter = {
       const endDate = input.customEndDate || now;
       return await getMemberStats(ctx.mailbox, { startDate, endDate });
     }),
-  getPermissions: mailboxProcedure.query(async ({ ctx }) => {
-    const user = await getProfile(ctx.user.id);
-    if (!user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-    return {
-      permissions: user.permissions,
-      isAdmin: isAdmin(user),
-      displayName: user.displayName,
-    };
-  }),
 } satisfies TRPCRouterRecord;
