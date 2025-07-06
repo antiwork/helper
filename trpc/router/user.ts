@@ -1,5 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
@@ -17,9 +17,13 @@ import { userProfiles } from "@/db/schema";
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
     const user = await db.query.userProfiles.findFirst({
-      where: eq(userProfiles.email, input.email),
+      where: and(
+        eq(userProfiles.email, input.email),
+        isNull(userProfiles.deletedAt)
+      ),
     });
-    if (!user) {
+    
+    if (!user || user.deletedAt) {
       const [_, emailDomain] = input.email.split("@");
       if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
         return { signupPossible: true };
