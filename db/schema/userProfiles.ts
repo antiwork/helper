@@ -12,6 +12,7 @@ export const userProfiles = pgTable("user_profiles", {
   email: text().notNull(),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
+  deletedAt: timestamp("deleted_at"),
   lastMailboxSlug: text("last_mailbox_slug"),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp()
