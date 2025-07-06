@@ -3,9 +3,10 @@
 import { BookOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useScroll } from "../../../components/hooks/useWindowEvent";
 
 type MarketingHeaderProps = {
   bgColor?: string;
@@ -14,14 +15,9 @@ type MarketingHeaderProps = {
 export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  useScroll((scrollY) => {
+    setIsScrolled(scrollY > 10);
+  });
 
   return (
     <TooltipProvider delayDuration={0}>

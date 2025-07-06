@@ -295,7 +295,7 @@ class HelperWidget {
     this.setupMutationObserver();
 
     let resizeTimeout: NodeJS.Timeout;
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         const isSmallScreen = window.innerWidth < 640;
@@ -314,7 +314,8 @@ class HelperWidget {
           },
         });
       }, 100);
-    });
+    };
+    window.addEventListener("resize", handleResize);
 
     window.addEventListener("message", async (event: MessageEvent) => {
       // Handle messages from our iframe

@@ -339,8 +339,9 @@ export function domElements(
         label.style.left = `${newLabelLeft}px`;
       };
 
+      const handleResize = () => updatePositions();
       window.addEventListener("scroll", updatePositions);
-      window.addEventListener("resize", updatePositions);
+      window.addEventListener("resize", handleResize);
 
       return index + 1;
     } finally {
