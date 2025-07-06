@@ -2,7 +2,7 @@
 
 import { DateRange } from "react-day-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { type RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { type TimeRange } from "./dashboardContent";
@@ -53,16 +53,6 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
       {members?.length ? (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <Table>
-            <TableHeader className="sticky top-0 bg-background">
-              <TableRow>
-                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Name
-                </TableHead>
-                <TableHead className="px-0 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right">
-                  Replies
-                </TableHead>
-              </TableRow>
-            </TableHeader>
             <TableBody>
               {members.map((member: Member) => (
                 <TableRow key={member.id} className="hover:bg-muted/50 transition-colors">
