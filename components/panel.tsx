@@ -12,7 +12,7 @@ export const Panel = ({
 }) => (
   <div
     className={cn(
-      "flex-1 border flex flex-col p-6 overflow-hidden rounded-lg bg-white dark:bg-muted text-bright-foreground dark:text-muted-foreground shadow-sm",
+      "flex-1 border flex flex-col p-6 overflow-hidden rounded-lg bg-white dark:bg-muted text-bright-foreground dark:text-muted-foreground",
       className,
     )}
   >
