@@ -1,11 +1,11 @@
 import { Frown } from "lucide-react";
 import { useState } from "react";
 import type { Message } from "@/app/types/global";
-import { toast } from "@/components/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 interface FlagAsBadActionProps {
@@ -19,11 +19,7 @@ export const FlagAsBadAction = ({ message, conversationSlug, mailboxSlug }: Flag
   const utils = api.useUtils();
   const { mutateAsync: flagAsBad } = api.mailbox.conversations.messages.flagAsBad.useMutation({
     onError: (error) => {
-      toast({
-        title: "Error flagging message as bad",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to flag message as bad", error);
     },
   });
 

@@ -2,12 +2,12 @@
 
 import { Settings } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import type { ToolFormatted } from "@/types/tools";
 
@@ -25,7 +25,7 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
       );
     },
     onError: (error) => {
-      toast({ variant: "destructive", title: "Error updating tool", description: error.message });
+      showErrorToast("Failed to update tool", error);
     },
   });
 

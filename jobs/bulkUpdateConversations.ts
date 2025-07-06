@@ -5,25 +5,24 @@ import { conversations } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
 import { searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import { getMailboxById } from "@/lib/data/mailbox";
+import { getMailbox } from "@/lib/data/mailbox";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 export const bulkUpdateConversations = async ({
   conversationFilter,
   status,
   userId,
-  mailboxId,
 }: {
   conversationFilter: number[] | z.infer<typeof searchSchema>;
   status: "open" | "closed" | "spam";
   userId: string;
-  mailboxId: number;
 }) => {
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
+
   let where;
   if (Array.isArray(conversationFilter)) {
     where = inArray(conversations.id, conversationFilter);
   } else {
-    const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(mailboxId));
     const { where: searchWhere } = await searchConversations(mailbox, conversationFilter, "");
     where = and(...Object.values(searchWhere), ne(conversations.status, status));
   }

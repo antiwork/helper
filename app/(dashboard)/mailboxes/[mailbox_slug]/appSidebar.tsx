@@ -3,8 +3,6 @@
 import {
   BarChart,
   BookOpen,
-  CheckCircle,
-  ChevronDown,
   ChevronLeft,
   Inbox,
   Link as LinkIcon,
@@ -21,13 +19,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
 import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -61,9 +52,8 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const previousAppUrlRef = useRef<string | null>(null);
-  const { data: mailboxes } = api.mailbox.list.useQuery();
   const { data: openCounts } = api.mailbox.openCount.useQuery({ mailboxSlug });
-  const currentMailbox = mailboxes?.find((m) => m.slug === mailboxSlug);
+  const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
   const isSettingsPage = pathname.startsWith(`/mailboxes/${mailboxSlug}/settings`);
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -100,38 +90,10 @@ export function AppSidebar({ mailboxSlug }: { mailboxSlug: string }) {
             </SidebarMenuItem>
           </SidebarMenu>
         ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="sidebar"
-                size="sm"
-                className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-              >
-                <Avatar src={undefined} fallback={currentMailbox?.name || ""} size="sm" />
-                <span className="truncate text-base group-data-[collapsible=icon]:hidden">{currentMailbox?.name}</span>
-                <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="bottom" align="start" className="min-w-[180px]">
-              {mailboxes?.map((mailbox) => (
-                <DropdownMenuItem
-                  key={mailbox.slug}
-                  onClick={() => {
-                    const currentView = /\/mailboxes\/[^/]+\/([^/]+)/.exec(pathname)?.[1] || "conversations";
-                    router.push(`/mailboxes/${mailbox.slug}/${currentView}`);
-                    handleItemClick();
-                  }}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Avatar src={undefined} fallback={mailbox.name} size="sm" />
-                  <span className="truncate text-base">{mailbox.name}</span>
-                  <span className="ml-auto">
-                    {mailbox.slug === currentMailbox?.slug && <CheckCircle className="text-foreground w-4 h-4" />}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2 w-full h-10 px-2 rounded-lg">
+            <Avatar src={undefined} fallback={mailbox?.name || "G"} size="sm" />
+            <span className="truncate text-base group-data-[collapsible=icon]:hidden">{mailbox?.name}</span>
+          </div>
         )}
       </SidebarHeader>
 

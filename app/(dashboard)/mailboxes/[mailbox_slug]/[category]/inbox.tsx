@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
+import Conversation from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversation";
 import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
 import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
 import {
@@ -15,7 +15,6 @@ import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ta
 import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
-import LoadingSpinner from "@/components/loadingSpinner";
 import { PageHeader } from "@/components/pageHeader";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
@@ -29,14 +28,6 @@ const CATEGORY_LABELS = {
 } as const;
 
 type Category = keyof typeof CATEGORY_LABELS;
-
-const Conversation = dynamic(() => import("./conversation/conversation"), {
-  loading: () => (
-    <div className="h-full w-full rounded-md flex items-center justify-center">
-      <LoadingSpinner size="lg" />
-    </div>
-  ),
-});
 
 const Inbox = () => {
   const params = useParams<{ mailbox_slug: string; category: Category }>();
@@ -133,6 +124,4 @@ const Wrapper = () => (
   </InboxProvider>
 );
 
-export default dynamic(() => Promise.resolve(Wrapper), {
-  ssr: false,
-});
+export default Wrapper;

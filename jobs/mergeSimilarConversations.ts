@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
-import { getMailboxById } from "@/lib/data/mailbox";
+import { getMailbox } from "@/lib/data/mailbox";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 export const mergeSimilarConversations = async ({ messageId }: { messageId: number }) => {
@@ -37,7 +37,7 @@ export const mergeSimilarConversations = async ({ messageId }: { messageId: numb
     return { message: "Skipped: not the first message" };
   }
 
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
   const otherConversations = await db.query.conversations.findMany({
     where: and(

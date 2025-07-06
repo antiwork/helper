@@ -27,7 +27,6 @@ type ToolbarProps = {
   isRecordingSupported: boolean;
   startRecording: () => void;
   stopRecording: () => void;
-  hasActionButtons: boolean;
 };
 
 const Toolbar = ({
@@ -42,7 +41,6 @@ const Toolbar = ({
   isRecordingSupported,
   startRecording,
   stopRecording,
-  hasActionButtons,
 }: ToolbarProps) => {
   const { isAboveMd } = useBreakpoint("md");
   const [isLinkModalOpen, setLinkModalOpen] = useState(false);
@@ -307,11 +305,10 @@ const Toolbar = ({
       <div
         className={cn(
           isAboveMd
-            ? "flex flex-wrap gap-1 absolute z-10 mb-2 right-3 rounded-t border rounded-sm bg-background p-1"
+            ? "flex flex-wrap gap-1 absolute z-10 right-3 rounded-t border rounded-sm bg-background p-1 translate-y-[-100%] mb-4"
             : "flex flex-1 min-w-0 gap-1",
           open && isAboveMd && "left-3",
           !open && !isAboveMd && "hidden",
-          hasActionButtons ? "bottom-16" : "bottom-5",
         )}
       >
         {toolbarContent}

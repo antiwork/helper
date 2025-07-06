@@ -1,17 +1,15 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 type SavedReply = {
@@ -52,11 +50,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
   }, []);
 
   const handleError = useCallback((error: string) => {
-    toast({
-      title: "Speech Recognition Error",
-      description: error,
-      variant: "destructive",
-    });
+    showErrorToast("Speech Recognition Error", error);
   }, []);
 
   const {
@@ -76,11 +70,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
       setInitialContentObject({ content: "" });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to create saved reply",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to create saved reply", error);
     },
   });
 
@@ -89,21 +79,17 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
       onSuccess();
     },
     onError: (error) => {
-      toast({
-        title: "Failed to update saved reply",
-        description: error.message,
-        variant: "destructive",
-      });
+      showErrorToast("Failed to update saved reply", error);
     },
   });
 
   const deleteSavedReply = api.mailbox.savedReplies.delete.useMutation({
     onSuccess: () => {
-      toast({ title: "Saved reply deleted successfully", variant: "success" });
+      showSuccessToast("Saved reply deleted successfully");
       onDelete?.();
     },
     onError: (error) => {
-      toast({ title: "Failed to delete saved reply", description: error.message, variant: "destructive" });
+      showErrorToast("Failed to delete saved reply", error);
     },
   });
 

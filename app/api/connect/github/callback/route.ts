@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { getMailboxBySlug } from "@/lib/data/mailbox";
+import { getMailbox } from "@/lib/data/mailbox";
 import { listRepositories } from "@/lib/github/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
@@ -16,9 +16,8 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(`${getBaseUrl()}/login`);
-  if (typeof user.user_metadata.lastMailboxSlug !== "string") return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
 
-  const mailbox = await getMailboxBySlug(user.user_metadata.lastMailboxSlug);
+  const mailbox = await getMailbox();
   if (!mailbox) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
 
   const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);

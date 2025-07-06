@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { toast } from "@/components/hooks/use-toast";
-import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,11 +13,13 @@ import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
+import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { ConversationFilters, useConversationFilters } from "./conversationFilters";
 import { useConversationListContext } from "./conversationListContext";
 import { ConversationListItem } from "./conversationListItem";
+import { ConversationListSkeleton } from "./conversationListSkeleton";
 import { ConversationSearchBar } from "./conversationSearchBar";
 import { NoConversations } from "./emptyState";
 import NewConversationModalContent from "./newConversationModal";
@@ -29,8 +29,15 @@ type ListItem = ConversationItem & { isNew?: boolean };
 export const List = () => {
   const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
-  const { conversationListData, navigateToConversation, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useConversationListContext();
+  const {
+    conversationListData,
+    navigateToConversation,
+    isPending,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useConversationListContext();
 
   const [showFilters, setShowFilters] = useState(false);
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
@@ -38,11 +45,8 @@ export const List = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Failed to update conversations",
-      });
+    onError: (error) => {
+      showErrorToast("Failed to update conversations", error);
     },
   });
 
@@ -82,8 +86,11 @@ export const List = () => {
   const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
-      const conversationFilter = allConversationsSelected ? conversations.map((c) => c.id) : selectedConversations;
-      const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+      const conversationFilter = allConversationsSelected
+        ? conversations.length <= 25 && !hasNextPage
+          ? conversations.map((c) => c.id)
+          : input
+        : selectedConversations;
 
       bulkUpdate(
         {
@@ -99,12 +106,14 @@ export const List = () => {
             void utils.mailbox.conversations.count.invalidate();
 
             if (updatedImmediately) {
+              const ticketsText = allConversationsSelected
+                ? "All matching tickets"
+                : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
+
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-              toast({
-                title: `${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`,
-              });
+              showSuccessToast(`${ticketsText} ${actionText}`);
             } else {
-              toast({ title: "Starting update, refresh to see status." });
+              showSuccessToast("Starting update, refresh to see status.");
             }
           },
         },
@@ -202,7 +211,9 @@ export const List = () => {
     });
   });
 
-  const selectedCount = allConversationsSelected ? conversations.length : selectedConversations.length;
+  const conversationsText = allConversationsSelected
+    ? "all matching conversations"
+    : `${selectedConversations.length} conversation${selectedConversations.length === 1 ? "" : "s"}`;
 
   return (
     <div className="flex flex-col w-full h-full">
@@ -232,11 +243,9 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  {searchParams.status === "closed" ? (
+                  {searchParams.status !== "open" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to reopen ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      }?`}
+                      message={`Are you sure you want to reopen ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("open")}
                       confirmLabel="Yes, reopen"
                       confirmVariant="bright"
@@ -245,11 +254,10 @@ export const List = () => {
                         Reopen
                       </Button>
                     </ConfirmationDialog>
-                  ) : (
+                  )}
+                  {searchParams.status !== "closed" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to close ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      }?`}
+                      message={`Are you sure you want to close ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("closed")}
                       confirmLabel="Yes, close"
                       confirmVariant="bright"
@@ -261,9 +269,7 @@ export const List = () => {
                   )}
                   {searchParams.status !== "spam" && (
                     <ConfirmationDialog
-                      message={`Are you sure you want to mark ${selectedCount} conversation${
-                        selectedCount === 1 ? "" : "s"
-                      } as spam?`}
+                      message={`Are you sure you want to mark ${conversationsText} as spam?`}
                       onConfirm={() => handleBulkUpdate("spam")}
                       confirmLabel="Yes, mark as spam"
                       confirmVariant="bright"
@@ -287,9 +293,9 @@ export const List = () => {
           )}
         </div>
       </div>
-      {isPending ? (
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner size="lg" />
+      {isPending || (isFetching && conversations.length === 0) ? (
+        <div className="flex-1 px-4">
+          <ConversationListSkeleton count={8} />
         </div>
       ) : conversations.length === 0 ? (
         <NoConversations filtered={activeFilterCount > 0 || !!input.search} />
@@ -308,7 +314,7 @@ export const List = () => {
           <div ref={loadMoreRef} />
           {isFetchingNextPage && (
             <div className="flex justify-center py-4">
-              <LoadingSpinner size="md" />
+              <ConversationListSkeleton count={3} />
             </div>
           )}
         </div>
