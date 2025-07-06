@@ -12,11 +12,12 @@ import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 import { publicProcedure } from "../trpc";
+import { userProfiles } from "@/db/schema";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
-    const user = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, input.email),
+    const user = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.email, input.email),
     });
     if (!user) {
       const [_, emailDomain] = input.email.split("@");
@@ -84,13 +85,19 @@ export const userRouter = {
     )
     .mutation(async ({ input }) => {
       const supabase = createAdminClient();
-      const { error } = await supabase.auth.admin.createUser({
+      const { data, error } = await supabase.auth.admin.createUser({
         email: input.email,
         user_metadata: {
           display_name: input.displayName,
         },
       });
       if (error) throw error;
+
+      await db
+      .update(userProfiles)
+      .set({ email: input.email })
+      .where(eq(userProfiles.id, data.user.id));
+
       return { success: true };
     }),
   onboard: publicProcedure

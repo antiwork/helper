@@ -44,7 +44,7 @@ export const addUser = async (
   permission?: string,
 ) => {
   const supabase = createAdminClient();
-  const { error } = await supabase.auth.admin.createUser({
+  const { data,error } = await supabase.auth.admin.createUser({
     email: emailAddress,
     user_metadata: {
       inviter_user_id: inviterUserId,
@@ -53,6 +53,9 @@ export const addUser = async (
     },
   });
   if (error) throw error;
+  await db.update(userProfiles).set({
+    email: emailAddress,
+  }).where(eq(userProfiles.id, data.user.id));
 };
 
 export const banUser = async (userId: string) => {
