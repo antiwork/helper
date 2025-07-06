@@ -1,5 +1,6 @@
 import { isNull, relations } from "drizzle-orm";
 import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
+import { mailboxes } from "@/db/schema/mailboxes";
 import { encryptedField } from "../lib/encryptedField";
 import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
@@ -15,6 +16,7 @@ export const conversations = pgTable(
     emailFrom: text(),
     subject: encryptedField("encrypted_subject"),
     status: text().$type<"open" | "closed" | "spam">(),
+    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
     emailFromName: text(),
     slug: randomSlugField("slug"),
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
@@ -54,6 +56,7 @@ export const conversations = pgTable(
     // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
     index("conversations_conversation_email_from_aab3d292_like").on(table.emailFrom),
     index("conversations_conversation_last_user_email_created_at_fc6b89db").on(table.lastUserEmailCreatedAt),
+    index("conversations_conversation_mailbox_id_7fb25662").on(table.unused_mailboxId),
     // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
     index("conversations_conversation_slug_9924e9b1_like").on(table.slug),
     index("embedding_vector_index").using("hnsw", table.embedding.asc().nullsLast().op("vector_cosine_ops")),
@@ -67,6 +70,10 @@ export const conversations = pgTable(
 ).enableRLS();
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  mailbox: one(mailboxes, {
+    fields: [conversations.unused_mailboxId],
+    references: [mailboxes.id],
+  }),
   messages: many(conversationMessages),
   platformCustomer: one(platformCustomers, {
     fields: [conversations.emailFrom],

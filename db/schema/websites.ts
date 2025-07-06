@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { bigint, index, jsonb, pgTable, text, timestamp, varchar, vector } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
+import { mailboxes } from "./mailboxes";
 
 export interface CrawlMetadata {
   crawlIdentifier?: string;
@@ -15,11 +16,16 @@ export const websites = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
+    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
     name: varchar("name", { length: 255 }).notNull(),
     url: text("url").notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => [index("websites_created_at_idx").on(table.createdAt), index("websites_url_idx").on(table.url)],
+  (table) => [
+    index("websites_created_at_idx").on(table.createdAt),
+    index("websites_mailbox_id_idx").on(table.unused_mailboxId),
+    index("websites_url_idx").on(table.url),
+  ],
 ).enableRLS();
 
 export const websitePages = pgTable(
@@ -66,7 +72,11 @@ export const websiteCrawls = pgTable(
   ],
 ).enableRLS();
 
-export const websitesRelations = relations(websites, ({ many }) => ({
+export const websitesRelations = relations(websites, ({ one, many }) => ({
+  mailbox: one(mailboxes, {
+    fields: [websites.unused_mailboxId],
+    references: [mailboxes.id],
+  }),
   pages: many(websitePages),
   crawls: many(websiteCrawls),
 }));
