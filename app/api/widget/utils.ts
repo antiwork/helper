@@ -78,7 +78,7 @@ type AuthenticatedHandler<Params extends object> = (
   auth: { session: WidgetSessionPayload; mailbox: Mailbox },
 ) => Promise<Response>;
 
-export function withWidgetAuth<Params = object>(handler: AuthenticatedHandler<Params>) {
+export function withWidgetAuth<Params extends object = object>(handler: AuthenticatedHandler<Params>) {
   return async (request: Request, context: { params: Promise<Params> }) => {
     if (request.method === "OPTIONS") {
       return new NextResponse(null, { status: 204, headers: corsHeaders });
