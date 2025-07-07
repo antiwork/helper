@@ -24,7 +24,7 @@ export const userRouter = {
       .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
       .where(eq(authUsers.email, input.email))
       .then(takeUniqueOrThrow);
-    
+
     if (!user || user.deletedAt) {
       const [_, emailDomain] = input.email.split("@");
       if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
