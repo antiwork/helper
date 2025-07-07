@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { authenticateWidget, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getGuideSessionByUuid, updateGuideSession, type GuideSession } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
@@ -14,7 +14,7 @@ const updateGuideSchema = z.object({
   ),
 });
 
-export const POST = withWidgetAuth(async ({ request }) => {
+export const POST = withWidgetAuth(async ({ request }, { session }) => {
   try {
     const body = await request.json();
     const result = updateGuideSchema.safeParse(body);
@@ -24,13 +24,6 @@ export const POST = withWidgetAuth(async ({ request }) => {
 
     const { sessionId, steps } = result.data;
 
-    const authResult = await authenticateWidget(request);
-    if (!authResult.success) {
-      return corsResponse({ error: authResult.error }, { status: 401 });
-    }
-
-    const { session: authenticatedSession } = authResult;
-
     try {
       const guideSession = await getGuideSessionByUuid(sessionId);
 
@@ -38,7 +31,7 @@ export const POST = withWidgetAuth(async ({ request }) => {
         return corsResponse({ error: "Guide session not found" }, { status: 404 });
       }
 
-      if (authenticatedSession.email !== guideSession.platformCustomer.email) {
+      if (session.email !== guideSession.platformCustomer.email) {
         return corsResponse({ error: "Unauthorized" }, { status: 403 });
       }
 
