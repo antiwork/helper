@@ -14,6 +14,7 @@ import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
 
@@ -49,6 +50,49 @@ export default function Conversation({
   const [isEscalated, setIsEscalated] = useState(false);
   const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
+  
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const [agentTypingTimeout, setAgentTypingTimeout] = useState<NodeJS.Timeout>();
+
+  useRealtimeEvent(
+    conversationSlug ? `conversation-${conversationSlug}` : '',
+    'agent-typing',
+    () => {
+      if (!conversationSlug) return;
+      
+      setIsAgentTyping(true);
+      
+      if (agentTypingTimeout) {
+        clearTimeout(agentTypingTimeout);
+      }
+      
+      const timeout = setTimeout(() => {
+        setIsAgentTyping(false);
+      }, 10000);
+      
+      setAgentTypingTimeout(timeout);
+    }
+  );
+
+  useRealtimeEvent(
+    conversationSlug ? `conversation-${conversationSlug}` : '',
+    'agent-reply',
+    (event) => {
+      if (!conversationSlug) return;
+      
+      const staffMessage = {
+        id: `staff_${Date.now()}`,
+        role: 'assistant' as const,
+        content: event.data.message,
+        createdAt: new Date(event.data.timestamp),
+        reactionType: null,
+        reactionFeedback: null,
+        reactionCreatedAt: null,
+      };
+      
+      setMessages((prev) => [...prev, staffMessage]);
+    }
+  );
 
   useEffect(() => {
     if (conversationSlug) {
@@ -249,6 +293,14 @@ export default function Conversation({
     setIsProvidingDetails(false);
   }, [lastAIMessage]);
 
+  useEffect(() => {
+    return () => {
+      if (agentTypingTimeout) {
+        clearTimeout(agentTypingTimeout);
+      }
+    };
+  }, [agentTypingTimeout]);
+
   const handleTalkToTeamClick = () => {
     setIsEscalated(true);
     append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
@@ -277,6 +329,16 @@ export default function Conversation({
         resumeGuide={resumeGuide}
         status={status}
       />
+      {isAgentTyping && (
+        <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+          Support agent is typing...
+        </div>
+      )}
       <AnimatePresence>
         <SupportButtons
           conversationSlug={conversationSlug}

@@ -19,6 +19,7 @@ import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
 import { cn } from "@/lib/utils";
 import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
@@ -57,6 +58,21 @@ export const MessageActions = () => {
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
+  
+  const broadcastEvent = useBroadcastRealtimeEvent();
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+
+  const handleTypingEvent = useCallback((conversationSlug: string) => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      broadcastEvent(`conversation-${conversationSlug}`, 'agent-typing', {
+        timestamp: Date.now()
+      });
+    }, 8000);
+  }, [broadcastEvent]);
 
   const { data: mailboxPreferences } = api.mailbox.get.useQuery({
     mailboxSlug,
@@ -243,6 +259,11 @@ export const MessageActions = () => {
         responseToId: lastUserMessage?.id ?? null,
       });
 
+      broadcastEvent(`conversation-${conversationSlug}`, 'agent-reply', {
+        message: draftedEmail.message,
+        timestamp: Date.now()
+      });
+
       // Clear the draft immediately after message is sent successfully
       setDraftedEmail((prev) => ({ ...prev, message: "", files: [], modified: false }));
       setInitialMessageObject({ content: "" });
@@ -394,7 +415,19 @@ export const MessageActions = () => {
   const updateDraftedEmail = (changes: Partial<DraftedEmail>) => {
     setDraftedEmail((email) => ({ ...email, ...changes, modified: true }));
     setStoredMessage(changes.message);
+    
+    if (changes.message && conversation?.slug) {
+      handleTypingEvent(conversation.slug);
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleInsertReply = (content: string) => {
     setDraftedEmail((prev) => ({

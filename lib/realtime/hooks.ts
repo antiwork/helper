@@ -56,6 +56,19 @@ export const useRealtimeEventOnce: typeof useRealtimeEvent = (channel, event, ca
   });
 };
 
+export const broadcastRealtimeEvent = (channel: string, event: string, data: any) => {
+  const serializedData = SuperJSON.stringify(data);
+  return supabase.channel(channel).send({
+    type: 'broadcast',
+    event,
+    payload: { data: serializedData }
+  });
+};
+
+export const useBroadcastRealtimeEvent = () => {
+  return broadcastRealtimeEvent;
+};
+
 export const useRealtimePresence = (roomName: string) => {
   const { user } = useSession() ?? {};
   const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
