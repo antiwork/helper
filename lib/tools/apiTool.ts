@@ -206,7 +206,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
         return { type: "assign", userId: args.userId };
       default:
         const parameters = args as Record<string, any>;
-        if (aiTools[toolName]?.customerEmailParameter) {
+        if (aiTools[toolName]?.customerEmailParameter && conversation.emailFrom) {
           parameters[aiTools[toolName].customerEmailParameter] = conversation.emailFrom;
         }
         return { type: "tool", slug: toolName, parameters };
@@ -283,8 +283,15 @@ const buildParameterSchema = (
   return z.object(
     (tool.parameters || []).reduce<Record<string, z.ZodType>>((acc, param) => {
       if (useEmailParameter && param.name === tool.customerEmailParameter) {
-        const schema = z.string().describe(param.description || param.name);
-        acc[param.name] = email ? schema.default(email) : schema;
+        // If there's an email parameter, it should always be required in anonymous chat even if it's optional in the API.
+        // In authenticated chat we'll substitute the value with the user's email later, the description is a hint to get better AI responses.
+        acc[param.name] = email
+          ? z
+              .string()
+              .describe(
+                `The current customer's email: "${email}". This tool cannot be called with emails of other customers.`,
+              )
+          : z.string().describe(param.description || param.name);
         return acc;
       }
       const zodType = (z[param.type as keyof typeof z] as any)().describe(param.description || param.name);

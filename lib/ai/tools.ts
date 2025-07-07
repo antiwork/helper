@@ -184,6 +184,9 @@ export const buildTools = async (
         description: aiTool.description,
         parameters: aiTool.parameters,
         execute: async (params) => {
+          if (aiTool.customerEmailParameter && email) {
+            params[aiTool.customerEmailParameter] = email;
+          }
           const conversation = assertDefined(await getConversationById(conversationId));
           const result = await callToolApi(conversation, mailboxTool, params);
           return reasoningMiddleware(JSON.stringify(result));
