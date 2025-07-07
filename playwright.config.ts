@@ -60,8 +60,8 @@ export default defineConfig({
   /* TODO: Consider using a separate test database to avoid data conflicts
    * and allow for more reliable test data setup/teardown */
   webServer: {
-    command: "pnpm dev",
-    url: "https://helperai.dev",
+    command: "pnpm dev:test",
+    url: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3010",
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 120 * 1000, // 2 minutes for server startup
