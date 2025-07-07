@@ -45,8 +45,8 @@ export const List = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
-    onError: () => {
-      toast.error("Failed to update conversations");
+    onError: (err) => {
+      toast.error("Failed to update conversations", { description: err.message });
     },
   });
 
