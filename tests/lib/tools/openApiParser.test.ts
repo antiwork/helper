@@ -95,6 +95,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
       {
         name: "Create product",
@@ -109,6 +110,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
       {
         name: "Update a product",
@@ -123,6 +125,7 @@ describe("parseToolsFromOpenAPISpec", () => {
             type: "number",
             in: "path",
             required: true,
+            description: undefined,
           },
         ],
         authenticationMethod: "bearer_token",
@@ -130,6 +133,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
       {
         name: "Delete product",
@@ -144,6 +148,7 @@ describe("parseToolsFromOpenAPISpec", () => {
             type: "number",
             in: "path",
             required: true,
+            description: undefined,
           },
         ],
         authenticationMethod: "bearer_token",
@@ -151,6 +156,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
     ]);
   });
@@ -198,6 +204,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
     ]);
   });
@@ -262,6 +269,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
     ]);
   });
@@ -379,18 +387,21 @@ describe("parseToolsFromOpenAPISpec", () => {
             type: "string",
             in: "body",
             required: true,
+            description: undefined,
           },
           {
             name: "price",
             type: "number",
             in: "body",
             required: true,
+            description: undefined,
           },
           {
             name: "description",
             type: "string",
             in: "body",
             required: false,
+            description: undefined,
           },
         ],
         authenticationMethod: "bearer_token",
@@ -398,6 +409,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
+        unused_mailboxId: null,
       },
     ]);
   });
