@@ -74,7 +74,6 @@ export const seedDatabase = async () => {
         await db
           .update(userProfiles)
           .set({
-            email,
             permissions: "admin",
           })
           .where(eq(userProfiles.id, user.id));

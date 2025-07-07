@@ -9,7 +9,6 @@ export const userProfiles = pgTable("user_profiles", {
   id: uuid()
     .primaryKey()
     .references(() => authUsers.id, { onDelete: "cascade" }),
-  email: text(),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
   deletedAt: timestamp("deleted_at"),

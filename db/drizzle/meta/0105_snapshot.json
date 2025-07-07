@@ -1,5 +1,5 @@
 {
-  "id": "bd78047f-3e8c-4e68-bc1d-e65a553f55a4",
+  "id": "47688f43-df07-4165-9eb6-87dbea79b095",
   "prevId": "66387109-1306-47c8-b75d-bafc14c8f5b0",
   "version": "7",
   "dialect": "postgresql",
@@ -3773,12 +3773,6 @@
           "type": "uuid",
           "primaryKey": true,
           "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         },
         "display_name": {
           "name": "display_name",

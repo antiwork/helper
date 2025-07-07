@@ -99,8 +99,6 @@ export const userRouter = {
       });
       if (error) throw error;
 
-      await db.update(userProfiles).set({ email: input.email }).where(eq(userProfiles.id, data.user.id));
-
       return { success: true };
     }),
   onboard: publicProcedure

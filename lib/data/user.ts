@@ -53,12 +53,6 @@ export const addUser = async (
     },
   });
   if (error) throw error;
-  await db
-    .update(userProfiles)
-    .set({
-      email: emailAddress,
-    })
-    .where(eq(userProfiles.id, data.user.id));
 };
 
 export const banUser = async (userId: string) => {
