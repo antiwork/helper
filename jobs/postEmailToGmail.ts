@@ -29,21 +29,18 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
     ),
     with: {
       files: true,
+      conversation: true,
     },
   });
   if (!email) {
-    // The email was likely undone
     return null;
   }
 
-  // Fetch conversation and mailbox separately
-  const conversation = await db.query.conversations.findFirst({
-    where: eq(conversations.id, email.conversationId),
-  });
+  const conversation = email.conversation;
   if (!conversation) {
     return await markFailed(emailId, email.conversationId, "Conversation not found.");
   }
-  // Fetch mailbox using single-tenant helper
+
   const mailbox = await getMailbox();
   const gmailSupportEmail = mailbox?.gmailSupportEmailId
     ? await db.query.gmailSupportEmails.findFirst({
