@@ -31,17 +31,6 @@ else
     echo "✅ .env.test.local found"
 fi
 
-# Function to check if port is available
-check_port() {
-    local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-        echo "⚠️ Port $port is already in use. Finding and stopping conflicting processes..."
-        lsof -Pi :$port -sTCP:LISTEN
-        return 1
-    fi
-    return 0
-}
-
 # Check for existing Supabase containers and clean them up if found
 echo "🔍 Checking for existing Supabase containers..."
 EXISTING_CONTAINERS=$(docker ps -a -q --filter "label=com.supabase.cli.project" 2>/dev/null || true)
