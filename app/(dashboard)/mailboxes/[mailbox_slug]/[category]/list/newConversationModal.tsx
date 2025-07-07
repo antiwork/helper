@@ -82,7 +82,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     },
     onError: (e) => {
       captureExceptionAndLog(e);
-      toast.error("Failed to create conversation");
+      toast.error("Failed to create conversation", { description: e instanceof Error ? e.message : "Unknown error" });
     },
     onSettled: () => {
       setSending(false);

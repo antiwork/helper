@@ -31,7 +31,7 @@ export const useAssignTicket = () => {
         })),
       };
     });
-    toast(
+    toast.success(
       assignedToAI
         ? "Assigned to Helper agent"
         : assignedTo

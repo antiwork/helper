@@ -316,7 +316,9 @@ export const MessageActions = () => {
                   toast.success("Message unsent");
                 } catch (e) {
                   captureExceptionAndLog(e);
-                  toast.error("Failed to unsend email");
+                  toast.error("Failed to unsend email", {
+                    description: e instanceof Error ? e.message : "Unknown error",
+                  });
                 } finally {
                   utils.mailbox.conversations.get.invalidate({ mailboxSlug, conversationSlug });
                   navigateToConversation(conversation.slug);
