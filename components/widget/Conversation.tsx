@@ -52,7 +52,7 @@ export default function Conversation({
   const { setIsNewConversation } = useWidgetView();
   
   const [isAgentTyping, setIsAgentTyping] = useState(false);
-  const [agentTypingTimeout, setAgentTypingTimeout] = useState<NodeJS.Timeout>();
+  const [agentTypingTimeout, setAgentTypingTimeout] = useState<NodeJS.Timeout | undefined>(undefined);
 
   useRealtimeEvent(
     conversationSlug ? `conversation-${conversationSlug}` : '',

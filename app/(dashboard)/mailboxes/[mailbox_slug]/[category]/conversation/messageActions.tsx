@@ -60,7 +60,7 @@ export const MessageActions = () => {
   const { isAboveMd } = useBreakpoint("md");
   
   const broadcastEvent = useBroadcastRealtimeEvent();
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const handleTypingEvent = useCallback((conversationSlug: string) => {
     if (typingTimeoutRef.current) {
