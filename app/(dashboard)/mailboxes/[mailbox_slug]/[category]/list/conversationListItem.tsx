@@ -1,14 +1,18 @@
 import { escape } from "lodash-es";
-import { Bot, User } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Archive, Bot, CornerUpLeft, ShieldAlert, User, UserPlus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem as ConversationListItemType } from "@/app/types/global";
+import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
+import { useToast } from "@/components/hooks/use-toast";
 import HumanizedTime from "@/components/humanizedTime";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ToastAction } from "@/components/ui/toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/components/utils/currency";
-import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -36,6 +40,128 @@ export const ConversationListItem = ({
   const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
   const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
+  const { toast } = useToast();
+  const utils = api.useUtils();
+  const [showAssignPopover, setShowAssignPopover] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
+
+  const { mutate: updateStatus, isPending: isUpdating } = api.mailbox.conversations.update.useMutation();
+  const { mutate: updateAssignment, isPending: isAssigning } = api.mailbox.conversations.update.useMutation();
+
+  const handleUpdateStatus = (e: React.MouseEvent, newStatus: "open" | "closed" | "spam") => {
+    e.stopPropagation();
+    const previousStatus = conversation.status;
+
+    updateStatus(
+      {
+        mailboxSlug,
+        conversationSlug: conversation.slug,
+        status: newStatus,
+      },
+      {
+        onSuccess: (_, { status }) => {
+          void utils.mailbox.conversations.list.invalidate();
+          void utils.mailbox.conversations.count.invalidate();
+
+          if (status === "spam") {
+            toast({
+              title: "Marked as spam",
+              action: (
+                <ToastAction
+                  altText="Undo"
+                  onClick={() => {
+                    updateStatus(
+                      {
+                        mailboxSlug,
+                        conversationSlug: conversation.slug,
+                        status: previousStatus ?? "open",
+                      },
+                      {
+                        onSuccess: () => {
+                          void utils.mailbox.conversations.list.invalidate();
+                          void utils.mailbox.conversations.count.invalidate();
+                          toast({
+                            title: "No longer marked as spam",
+                          });
+                        },
+                        onError: () => {
+                          toast({
+                            title: "Failed to undo spam",
+                            variant: "destructive",
+                          });
+                        },
+                      },
+                    );
+                  }}
+                >
+                  Undo
+                </ToastAction>
+              ),
+            });
+          } else {
+            let title = "";
+            if (status === "open") {
+              title = "Conversation reopened";
+            } else if (status === "closed") {
+              title = "Conversation closed";
+            }
+            if (title) {
+              toast({
+                title,
+                variant: "success",
+              });
+            }
+          }
+        },
+        onError: () => {
+          const actionText = newStatus === "open" ? "reopen" : newStatus === "closed" ? "close" : "mark as spam";
+          toast({
+            title: `Failed to ${actionText} conversation`,
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  const handleAssign = () => {
+    if (!assignedTo) return;
+
+    const assignedToId = "id" in assignedTo ? assignedTo.id : null;
+    const assignedToAI = "ai" in assignedTo;
+
+    updateAssignment(
+      {
+        mailboxSlug,
+        conversationSlug: conversation.slug,
+        assignedToId,
+        assignedToAI,
+      },
+      {
+        onSuccess: () => {
+          void utils.mailbox.conversations.list.invalidate();
+          setShowAssignPopover(false);
+          setAssignedTo(null);
+          const displayName = assignedTo && "displayName" in assignedTo ? assignedTo.displayName : null;
+          const assignText = assignedToAI
+            ? "assigned to Helper agent"
+            : assignedToId
+              ? `assigned to ${displayName || "user"}`
+              : "unassigned";
+          toast({
+            title: `Conversation ${assignText}`,
+            variant: "success",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Failed to assign conversation",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -48,27 +174,99 @@ export const ConversationListItem = ({
   }, [conversation, isActive]);
 
   let highlightedSubject = escape(conversation.subject);
-  let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
-
-  if (searchTerms.length > 0 && conversation.matchedMessageText) {
-    bodyText = createSearchSnippet(bodyText, searchTerms);
-  }
-
-  let highlightedBody = escape(bodyText);
-
+  let highlightedBody = escape(conversation.matchedMessageText ?? conversation.recentMessageText ?? "");
   if (searchTerms.length > 0) {
     highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
-
     if (conversation.matchedMessageText) {
       highlightedBody = highlightKeywords(highlightedBody, searchTerms);
     }
   }
 
+  const actionButtons: Record<"close" | "spam" | "reopen" | "assign", React.ReactNode> = {
+    close: (
+      <TooltipProvider key="close" delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={(e) => handleUpdateStatus(e, "closed")}
+              disabled={isUpdating}
+              className="rounded-md p-1 hover:bg-muted"
+            >
+              <Archive className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Close</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
+    spam: (
+      <TooltipProvider key="spam" delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={(e) => handleUpdateStatus(e, "spam")}
+              disabled={isUpdating}
+              className="rounded-md p-1 hover:bg-muted"
+            >
+              <ShieldAlert className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Mark as spam</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
+    reopen: (
+      <TooltipProvider key="reopen" delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={(e) => handleUpdateStatus(e, "open")}
+              disabled={isUpdating}
+              className="rounded-md p-1 hover:bg-muted"
+            >
+              <CornerUpLeft className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Reopen</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
+    assign: (
+      <Popover key="assign" open={showAssignPopover} onOpenChange={setShowAssignPopover}>
+        <PopoverTrigger asChild>
+          <button onClick={(e) => e.stopPropagation()} disabled={isAssigning} className="rounded-md p-1 hover:bg-muted">
+            <UserPlus className="h-4 w-4" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 p-4" side="top">
+          <div className="flex flex-col space-y-4">
+            <h4 className="font-medium">Assign conversation</h4>
+            <AssignSelect
+              selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
+              onChange={setAssignedTo}
+              aiOption
+              aiOptionSelected={!!(assignedTo && "ai" in assignedTo)}
+            />
+            <Button className="w-full" onClick={handleAssign} disabled={!assignedTo || isAssigning} size="sm">
+              Assign
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    ),
+  };
+
   return (
-    <div className="px-1 md:px-2">
+    <div className="group relative border-b border-border px-1 md:px-2">
       <div
         className={cn(
-          "flex w-full cursor-pointer flex-col  transition-colors border-b border-border py-3 md:py-4",
+          "flex w-full cursor-pointer flex-col  transition-colors py-3 md:py-4",
           isActive
             ? "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
             : "hover:bg-gray-50 dark:hover:bg-white/[0.02]",
@@ -148,7 +346,7 @@ export const ConversationListItem = ({
                 />
                 {highlightedBody && (
                   <p
-                    className="text-muted-foreground max-w-4xl text-xs md:text-sm truncate"
+                    className="text-muted-foreground truncate max-w-4xl text-xs md:text-sm"
                     dangerouslySetInnerHTML={{ __html: highlightedBody }}
                   />
                 )}
@@ -156,6 +354,12 @@ export const ConversationListItem = ({
             </div>
           </a>
         </div>
+      </div>
+      <div className="flex items-center justify-end gap-2 p-2 md:absolute md:right-4 md:bottom-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 md:rounded-md md:border md:bg-background md:p-1">
+        {(conversation.status === "closed" || conversation.status === "spam") && actionButtons.reopen}
+        {conversation.status !== "closed" && actionButtons.close}
+        {conversation.status !== "spam" && actionButtons.spam}
+        {actionButtons.assign}
       </div>
     </div>
   );

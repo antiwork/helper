@@ -1,17 +1,20 @@
-import { Send } from "lucide-react";
+import { Send, User } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
+import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSelected } from "@/components/useSelected";
 import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateSlug } from "@/lib/shared/slug";
 import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
@@ -43,10 +46,20 @@ export const List = () => {
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [showAssignPopover, setShowAssignPopover] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: (error) => {
       showErrorToast("Failed to update conversations", error);
+    },
+  });
+  const { mutate: bulkAssign } = api.mailbox.conversations.bulkAssign.useMutation({
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Failed to assign conversations",
+      });
     },
   });
 
@@ -70,7 +83,6 @@ export const List = () => {
 
   const toggleConversation = (id: number, isSelected: boolean, shiftKey: boolean) => {
     if (allConversationsSelected) {
-      // If all conversations are selected, toggle the selected conversation
       setAllConversationsSelected(false);
       setSelectedConversations(conversations.flatMap((c) => (c.id === id ? [] : [c.id])));
     } else {
@@ -86,11 +98,7 @@ export const List = () => {
   const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
-      const conversationFilter = allConversationsSelected
-        ? conversations.length <= 25 && !hasNextPage
-          ? conversations.map((c) => c.id)
-          : input
-        : selectedConversations;
+      const conversationFilter = allConversationsSelected ? input : selectedConversations;
 
       bulkUpdate(
         {
@@ -123,6 +131,76 @@ export const List = () => {
     }
   };
 
+  const handleBulkAssign = async () => {
+    if (!assignedTo) return;
+
+    setIsBulkUpdating(true);
+
+    const conversationFilter = allConversationsSelected ? input : selectedConversations;
+
+    // Calculate the actual count of conversations being assigned
+    const getSelectedCount = async () => {
+      if (allConversationsSelected) {
+        try {
+          const countResult = await utils.mailbox.conversations.count.fetch(input);
+          return countResult.total;
+        } catch (error) {
+          captureExceptionAndLog(error);
+          return conversations.length;
+        }
+      }
+      return selectedConversations.length;
+    };
+
+    const selectedCount = await getSelectedCount();
+    const assignedToId = "id" in assignedTo ? assignedTo.id : null;
+    const assignedToAI = "ai" in assignedTo;
+
+    bulkAssign(
+      {
+        conversationFilter,
+        assignedToId,
+        assignedToAI,
+        mailboxSlug: input.mailboxSlug,
+      },
+      {
+        onSuccess: ({ updatedImmediately }) => {
+          setIsBulkUpdating(false);
+          setAllConversationsSelected(false);
+          clearSelectedConversations();
+          setShowAssignPopover(false);
+          setAssignedTo(null);
+          void utils.mailbox.conversations.list.invalidate();
+
+          if (updatedImmediately) {
+            const displayName = assignedTo && "displayName" in assignedTo ? assignedTo.displayName : null;
+            const assignText = assignedToAI
+              ? "assigned to Helper agent"
+              : assignedToId
+                ? `assigned to ${displayName || "user"}`
+                : "unassigned";
+            toast({
+              title: `${selectedCount} conversation${selectedCount === 1 ? "" : "s"} ${assignText}`,
+            });
+          } else {
+            toast({
+              title: `Starting assignment of ${selectedCount} conversation${
+                selectedCount === 1 ? "" : "s"
+              }, refresh to see status.`,
+            });
+          }
+        },
+        onError: () => {
+          setIsBulkUpdating(false);
+          toast({
+            title: "Failed to assign conversations",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
   useEffect(() => {
     const currentRef = loadMoreRef.current;
     if (!currentRef || !hasNextPage) return;
@@ -145,7 +223,6 @@ export const List = () => {
     preventDefault: true,
   });
 
-  // Clear selections when status filter changes
   useEffect(() => {
     toggleAllConversations(false);
   }, [searchParams.status, clearSelectedConversations]);
@@ -187,7 +264,6 @@ export const List = () => {
           newConversations.unshift({ ...newConversation, isNew: true });
           break;
         case "oldest":
-          // Only add to first page if no other pages exist
           if (data.pages.length === 1) {
             newConversations.push({ ...newConversation, isNew: true });
           }
@@ -200,7 +276,10 @@ export const List = () => {
                   (c) => (c.platformCustomer?.value ?? 0) < (newConversation.platformCustomer?.value ?? 0),
                 );
           if (indexToInsert < 0) return data;
-          newConversations.splice(indexToInsert, 0, { ...newConversation, isNew: true });
+          newConversations.splice(indexToInsert, 0, {
+            ...newConversation,
+            isNew: true,
+          });
           break;
       }
 
@@ -243,24 +322,21 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  {searchParams.status !== "open" && (
+                  {searchParams.status === "closed" || searchParams.status === "spam" ? (
                     <ConfirmationDialog
                       message={`Are you sure you want to reopen ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("open")}
                       confirmLabel="Yes, reopen"
-                      confirmVariant="bright"
                     >
                       <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
                         Reopen
                       </Button>
                     </ConfirmationDialog>
-                  )}
-                  {searchParams.status !== "closed" && (
+                  ) : (
                     <ConfirmationDialog
                       message={`Are you sure you want to close ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("closed")}
                       confirmLabel="Yes, close"
-                      confirmVariant="bright"
                     >
                       <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
                         Close
@@ -272,13 +348,34 @@ export const List = () => {
                       message={`Are you sure you want to mark ${conversationsText} as spam?`}
                       onConfirm={() => handleBulkUpdate("spam")}
                       confirmLabel="Yes, mark as spam"
-                      confirmVariant="bright"
                     >
                       <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
                         Mark as spam
                       </Button>
                     </ConfirmationDialog>
                   )}
+                  <Popover open={showAssignPopover} onOpenChange={setShowAssignPopover}>
+                    <PopoverTrigger asChild>
+                      <Button variant="link" className="h-auto" disabled={isBulkUpdating}>
+                        <User className="h-4 w-4 mr-1" />
+                        Assign
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4">
+                      <div className="flex flex-col space-y-4">
+                        <h4 className="font-medium">Assign {conversationsText}</h4>
+                        <AssignSelect
+                          selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : null}
+                          onChange={setAssignedTo}
+                          aiOption
+                          aiOptionSelected={!!(assignedTo && "ai" in assignedTo)}
+                        />
+                        <Button className="w-full" onClick={handleBulkAssign} disabled={!assignedTo || isBulkUpdating}>
+                          Assign
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
