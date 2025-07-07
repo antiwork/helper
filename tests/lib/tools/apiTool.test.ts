@@ -67,14 +67,14 @@ describe("apiTools", () => {
       expect(schema).toBeDefined();
 
       const parsedWithDefaults = schema!.parse({});
-      expect(parsedWithDefaults.customer_email).toBe(testEmail);
+      expect(parsedWithDefaults.customer_email).toBe(undefined);
 
       const parsedWithoutEmail = schema!.parse({ other_param: "test" });
-      expect(parsedWithoutEmail.customer_email).toBe(testEmail);
+      expect(parsedWithoutEmail.customer_email).toBe(undefined);
       expect(parsedWithoutEmail.other_param).toBe("test");
 
-      const { error } = schema!.safeParse({ customer_email: "other@example.com" });
-      expect(error.issues[0].message).toBe(`Invalid literal value, expected "${testEmail}"`);
+      const parsedWithOtherEmail = schema!.parse({ customer_email: "other@example.com" });
+      expect(parsedWithOtherEmail.customer_email).toBe(undefined); // Doesn't allow you to override the email
     });
   });
 
