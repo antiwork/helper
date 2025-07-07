@@ -18,8 +18,8 @@ import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
-import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
 import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
+import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
@@ -418,7 +418,6 @@ export const MessageActions = () => {
     setDraftedEmail((email) => ({ ...email, ...changes, modified: true }));
     setStoredMessage(changes.message);
   };
-
 
   const handleInsertReply = (content: string) => {
     setDraftedEmail((prev) => ({
