@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { useConversationContext } from "../conversation/conversationContext";
 

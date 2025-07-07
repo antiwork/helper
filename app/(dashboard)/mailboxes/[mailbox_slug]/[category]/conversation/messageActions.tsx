@@ -19,7 +19,6 @@ import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";

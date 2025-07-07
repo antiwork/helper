@@ -10,7 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { useRunOnce } from "@/components/useRunOnce";
 import useShowToastForSlackConnectStatus from "@/components/useShowToastForSlackConnectStatus";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { showErrorToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -40,7 +39,7 @@ export const SlackChannels = ({
           }),
         );
       } catch (e) {
-        Sentry.captureException(e);
+        captureExceptionAndLog(e);
         toast.error("Error fetching available channels");
       }
     };

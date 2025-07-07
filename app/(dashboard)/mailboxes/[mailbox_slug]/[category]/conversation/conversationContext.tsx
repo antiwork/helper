@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterInputs, RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 

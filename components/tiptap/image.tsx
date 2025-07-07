@@ -3,7 +3,6 @@ import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tip
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRunOnce } from "@/components/useRunOnce";
-import { showErrorToast } from "@/lib/utils/toast";
 
 export const imageFileTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/heic"];
 

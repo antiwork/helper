@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 type KnowledgeEditFormProps = {

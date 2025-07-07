@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { type UserRole } from "@/lib/data/user";
-import { showErrorToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
@@ -134,7 +133,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     },
     onError: (error) => {
       permissionsSaving.setState("error");
-      showErrorToast("Failed to update permissions", error);
+      toast.error("Failed to update permissions", { description: error.message });
       setPermissions(member.permissions);
     },
   });

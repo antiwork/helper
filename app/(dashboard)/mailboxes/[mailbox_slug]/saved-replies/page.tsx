@@ -3,6 +3,7 @@
 import { Copy, Plus, Search } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { PageHeader } from "@/components/pageHeader";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { stripHtmlTags } from "@/components/utils/html";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SavedReplyForm } from "./savedReplyForm";
@@ -49,22 +49,22 @@ export default function SavedRepliesPage() {
   const handleCreateSuccess = () => {
     setShowCreateDialog(false);
     refetch();
-    showSuccessToast("Saved reply created successfully");
+    toast.success("Saved reply created successfully");
   };
 
   const handleEditSuccess = () => {
     setEditingSavedReply(null);
     refetch();
-    showSuccessToast("Saved reply updated successfully");
+    toast.success("Saved reply updated successfully");
   };
 
   const handleCopySavedReply = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
-      showSuccessToast("Saved reply copied to clipboard");
+      toast.success("Saved reply copied to clipboard");
     } catch (error) {
       captureExceptionAndLog(error);
-      showErrorToast("Failed to copy saved reply");
+      toast.error("Failed to copy saved reply");
     }
   };
 

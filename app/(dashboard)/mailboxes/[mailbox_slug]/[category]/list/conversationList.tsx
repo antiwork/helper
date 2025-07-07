@@ -14,7 +14,6 @@ import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { ConversationFilters, useConversationFilters } from "./conversationFilters";
@@ -112,9 +111,9 @@ export const List = () => {
                 : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
 
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-              toast(`${selectedCount} ticket${selectedCount === 1 ? "" : "s"} ${actionText}`);
+              toast.success(`${ticketsText} ${actionText}`);
             } else {
-              toast("Starting update, refresh to see status.");
+              toast.success("Starting update, refresh to see status.");
             }
           },
         },

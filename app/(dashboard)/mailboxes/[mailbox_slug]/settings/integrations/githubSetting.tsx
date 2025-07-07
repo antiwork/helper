@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRunOnce } from "@/components/useRunOnce";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
@@ -47,7 +46,7 @@ const GitHubRepositories = ({
           }),
         );
       } catch (e) {
-        Sentry.captureException(e);
+        captureExceptionAndLog(e);
         toast.error("Error fetching available repositories");
       } finally {
         setIsLoading(false);

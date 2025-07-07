@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import type { ToolFormatted } from "@/types/tools";
 

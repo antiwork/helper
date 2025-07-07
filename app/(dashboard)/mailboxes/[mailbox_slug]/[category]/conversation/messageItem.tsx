@@ -26,7 +26,6 @@ import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
 
