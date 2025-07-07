@@ -72,6 +72,9 @@ describe("apiTools", () => {
       const parsedWithoutEmail = schema!.parse({ other_param: "test" });
       expect(parsedWithoutEmail.customer_email).toBe(testEmail);
       expect(parsedWithoutEmail.other_param).toBe("test");
+
+      const { error } = schema!.safeParse({ customer_email: "other@example.com" });
+      expect(error.issues[0].message).toBe(`Invalid literal value, expected "${testEmail}"`);
     });
   });
 
