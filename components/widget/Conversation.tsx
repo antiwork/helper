@@ -14,6 +14,7 @@ import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
+import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
@@ -54,7 +55,7 @@ export default function Conversation({
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const [agentTypingTimeout, setAgentTypingTimeout] = useState<NodeJS.Timeout | undefined>(undefined);
 
-  useRealtimeEvent(conversationSlug ? `conversation-${conversationSlug}` : "", "agent-typing", () => {
+  useRealtimeEvent(conversationSlug ? conversationRealtimeChannelId(conversationSlug) : "", "agent-typing", () => {
     if (!conversationSlug) return;
 
     setIsAgentTyping(true);
@@ -70,7 +71,7 @@ export default function Conversation({
     setAgentTypingTimeout(timeout);
   });
 
-  useRealtimeEvent(conversationSlug ? `conversation-${conversationSlug}` : "", "agent-reply", (event) => {
+  useRealtimeEvent(conversationSlug ? conversationRealtimeChannelId(conversationSlug) : "", "agent-reply", (event) => {
     if (!conversationSlug) return;
 
     const staffMessage = {

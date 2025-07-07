@@ -19,6 +19,7 @@ import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
+import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
@@ -60,19 +61,17 @@ export const MessageActions = () => {
   const { isAboveMd } = useBreakpoint("md");
 
   const broadcastEvent = useBroadcastRealtimeEvent();
-  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const lastTypingBroadcastRef = useRef<number>(0);
 
   const handleTypingEvent = useCallback(
     (conversationSlug: string) => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-
-      typingTimeoutRef.current = setTimeout(() => {
-        broadcastEvent(`conversation-${conversationSlug}`, "agent-typing", {
-          timestamp: Date.now(),
+      const now = Date.now();
+      if (now - lastTypingBroadcastRef.current >= 8000) {
+        broadcastEvent(conversationRealtimeChannelId(conversationSlug), "agent-typing", {
+          timestamp: now,
         });
-      }, 8000);
+        lastTypingBroadcastRef.current = now;
+      }
     },
     [broadcastEvent],
   );
@@ -262,7 +261,7 @@ export const MessageActions = () => {
         responseToId: lastUserMessage?.id ?? null,
       });
 
-      broadcastEvent(`conversation-${conversationSlug}`, "agent-reply", {
+      broadcastEvent(conversationRealtimeChannelId(conversationSlug), "agent-reply", {
         message: draftedEmail.message,
         timestamp: Date.now(),
       });
@@ -418,19 +417,8 @@ export const MessageActions = () => {
   const updateDraftedEmail = (changes: Partial<DraftedEmail>) => {
     setDraftedEmail((email) => ({ ...email, ...changes, modified: true }));
     setStoredMessage(changes.message);
-
-    if (changes.message && conversation?.slug) {
-      handleTypingEvent(conversation.slug);
-    }
   };
 
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleInsertReply = (content: string) => {
     setDraftedEmail((prev) => ({
@@ -474,7 +462,12 @@ export const MessageActions = () => {
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
-        onUpdate={(message, isEmpty) => updateDraftedEmail({ message: isEmpty ? "" : message })}
+        onUpdate={(message, isEmpty) => {
+          updateDraftedEmail({ message: isEmpty ? "" : message });
+          if (!isEmpty && conversation?.slug) {
+            handleTypingEvent(conversation.slug);
+          }
+        }}
         onModEnter={() => !sendDisabled && handleSend({ assign: false })}
         onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
         onSlashKey={() => commandInputRef.current?.focus()}
