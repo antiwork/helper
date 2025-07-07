@@ -95,7 +95,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                       key={member.id}
                       member={member}
                       mailboxSlug={mailboxSlug}
-                      conversationIds={memberConversations.map((c) => c.slug)}
+                      conversationIds={memberConversations.map((c) => c.id)}
                       isAdmin={permissionsData?.isAdmin ?? false}
                     />
                   );

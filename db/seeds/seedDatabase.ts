@@ -79,7 +79,7 @@ export const seedDatabase = async () => {
           })
           .where(eq(userProfiles.id, user.id));
         return user;
-      })
+      }),
     );
 
     await createSettingsPageRecords(mailbox);

@@ -18,10 +18,10 @@ import { api } from "@/trpc/react";
 
 interface DeleteMemberDialogProps {
   children: React.ReactNode;
-  assignedToId: string;
+  assignedToId: { id: string; displayName: string };
   mailboxSlug: string;
   description?: string;
-  conversationIds: string[];
+  conversationIds: number[];
 }
 
 export default function DeleteMemberDialog({
@@ -33,11 +33,11 @@ export default function DeleteMemberDialog({
 }: DeleteMemberDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const utils = api.useUtils();
-  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
+  const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(assignedToId);
   const [assignMessage, setAssignMessage] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const { mutateAsync: updateConversation } = api.mailbox.conversations.update.useMutation({
+  const { mutateAsync: updateBulkConversation } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: (error) => {
       setLoading(false);
       toast({
@@ -50,26 +50,8 @@ export default function DeleteMemberDialog({
 
   const { mutate: removeTeamMember } = api.mailbox.members.delete.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Team member removed",
-        variant: "success",
-      });
       utils.mailbox.members.list.invalidate({ mailboxSlug });
       utils.mailbox.conversations.list.invalidate({ mailboxSlug });
-      setLoading(false);
-      setAssignedTo(null);
-      setAssignMessage("");
-      setIsOpen(false);
-    },
-    onError: (error) => {
-      setLoading(false);
-      setAssignedTo(null);
-      setAssignMessage("");
-      toast({
-        title: "Failed to remove member",
-        description: error.message,
-        variant: "destructive",
-      });
     },
   });
 
@@ -90,24 +72,67 @@ export default function DeleteMemberDialog({
       }
 
       try {
-        const updatePromises = conversationIds.map((conversationId) => {
-          if ("ai" in assignedTo) {
-            return updateConversation({
+        if ("ai" in assignedTo) {
+          return await updateBulkConversation(
+            {
               mailboxSlug,
-              conversationSlug: conversationId,
+              conversationFilter: conversationIds,
               assignedToAI: true,
+              assignedToId: undefined,
+              prevAssigneeId: assignedToId.id,
               message: assignMessage,
-            });
-          }
-          return updateConversation({
+            },
+            {
+              onSuccess: async ({ updatedImmediately }) => {
+                await removeTeamMember({ id: assignedToId.id, mailboxSlug });
+                if (updatedImmediately) {
+                  toast({
+                    title: "Member removed from the Team",
+                    variant: "success",
+                  });
+                } else {
+                  toast({
+                    title: "Member will be removed from the Team",
+                    description: "Please refresh the page to see the changes",
+                    variant: "success",
+                  });
+                }
+              },
+            },
+          );
+        }
+        return await updateBulkConversation(
+          {
             mailboxSlug,
-            conversationSlug: conversationId,
+            conversationFilter: conversationIds,
             assignedToId: assignedTo.id,
+            prevAssigneeId: assignedToId.id,
             message: assignMessage,
-          });
-        });
-
-        await Promise.all(updatePromises);
+            assignedToAI: false,
+          },
+          {
+            onSuccess: async ({ updatedImmediately }) => {
+              await removeTeamMember({ id: assignedToId.id, mailboxSlug });
+              if (updatedImmediately) {
+                toast({
+                  title: "Member removed from the Team",
+                  variant: "success",
+                });
+              } else {
+                toast({
+                  title: "Member will be removed from the Team",
+                  description: "Please refresh the page to see the changes",
+                  variant: "success",
+                });
+              }
+              utils.mailbox.members.invalidate();
+              setLoading(false);
+              setAssignedTo(null);
+              setAssignMessage("");
+              setIsOpen(false);
+            },
+          },
+        );
       } catch (error) {
         setLoading(false);
         toast({
@@ -117,7 +142,7 @@ export default function DeleteMemberDialog({
         return;
       }
     }
-    removeTeamMember({ id: assignedToId, mailboxSlug });
+    removeTeamMember({ id: assignedToId.id, mailboxSlug });
   };
 
   return (
@@ -133,7 +158,11 @@ export default function DeleteMemberDialog({
             <h4 className="font-medium">
               Reassign {conversationIds.length ? `(${conversationIds.length})` : ""} tickets to
             </h4>
-            <AssignSelect selectedUserId={assignedToId} onChange={handleAssignSelectChange} aiOption />
+            <AssignSelect
+              selectedUserId={assignedTo && "id" in assignedTo ? assignedTo.id : undefined}
+              onChange={handleAssignSelectChange}
+              aiOption
+            />
             <div className="grid gap-1">
               <Label htmlFor="assignMessage">Message</Label>
               <Textarea

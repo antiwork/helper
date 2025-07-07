@@ -2,19 +2,19 @@ import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { z } from "zod";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
+import { getProfile, isAdmin } from "@/lib/data/user";
 import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 import { publicProcedure } from "../trpc";
-import { userProfiles } from "@/db/schema";
-import { getProfile, isAdmin } from "@/lib/data/user";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
@@ -99,10 +99,7 @@ export const userRouter = {
       });
       if (error) throw error;
 
-      await db
-      .update(userProfiles)
-      .set({ email: input.email })
-      .where(eq(userProfiles.id, data.user.id));
+      await db.update(userProfiles).set({ email: input.email }).where(eq(userProfiles.id, data.user.id));
 
       return { success: true };
     }),
@@ -163,23 +160,23 @@ export const userRouter = {
     }),
 
   getPermissions: publicProcedure.query(async ({ ctx }) => {
-  if (!ctx.user) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "User not authenticated",
-    });
-  }
-  const user = await getProfile(ctx.user.id);
-  if (!user) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "User not found",
-    });
-  }
-  return {
-    permissions: user.permissions,
-    isAdmin: isAdmin(user),
-    displayName: user.displayName,
-  };
-}),
+    if (!ctx.user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User not authenticated",
+      });
+    }
+    const user = await getProfile(ctx.user.id);
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+    return {
+      permissions: user.permissions,
+      isAdmin: isAdmin(user),
+      displayName: user.displayName,
+    };
+  }),
 } satisfies TRPCRouterRecord;

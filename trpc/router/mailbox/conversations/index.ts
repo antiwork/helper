@@ -157,7 +157,7 @@ export const conversationsRouter = {
 
       await updateConversation(ctx.conversation.id, {
         set: {
-          status: input.status,
+          ...(input.status !== undefined ? { status: input.status } : {}),
           assignedToId: input.assignedToId,
           assignedToAI: input.assignedToAI,
         },
@@ -169,15 +169,40 @@ export const conversationsRouter = {
     .input(
       z.object({
         conversationFilter: z.union([z.array(z.number()), searchSchema]),
-        status: z.enum(["open", "closed", "spam"]),
+        status: z.enum(["open", "closed", "spam"]).optional(),
+        assignedToId: z.string().optional(),
+        prevAssigneeId: z.string().optional(),
+        message: z.string().optional(),
+        assignedToAI: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { conversationFilter, status } = input;
+      const { conversationFilter, status, assignedToId, message, assignedToAI, prevAssigneeId } = input;
+
+      let filterInput;
+      if (Array.isArray(conversationFilter)) {
+        const assignee = prevAssigneeId ? [prevAssigneeId as string] : [];
+        filterInput = {
+          limit: 25,
+          assignee,
+          status: input.status !== undefined ? [input.status] : undefined,
+        };
+      } else {
+        const assignee = prevAssigneeId ? [prevAssigneeId as string] : [];
+        filterInput = {
+          ...conversationFilter,
+          assignee,
+          status: input.status !== undefined ? [input.status] : conversationFilter.status,
+        };
+      }
 
       if (Array.isArray(conversationFilter) && conversationFilter.length <= 25) {
         for (const conversationId of conversationFilter) {
-          await updateConversation(conversationId, { set: { status }, byUserId: ctx.user.id });
+          await updateConversation(conversationId, {
+            set: { status, assignedToId, assignedToAI },
+            byUserId: ctx.user.id,
+            message,
+          });
         }
         return { updatedImmediately: true };
       }
@@ -187,6 +212,10 @@ export const conversationsRouter = {
         userId: ctx.user.id,
         conversationFilter: input.conversationFilter,
         status: input.status,
+        assignedToId: input.assignedToId,
+        prevAssigneeId: input.prevAssigneeId,
+        message: input.message,
+        assignedToAI: input.assignedToAI,
       });
       return { updatedImmediately: false };
     }),

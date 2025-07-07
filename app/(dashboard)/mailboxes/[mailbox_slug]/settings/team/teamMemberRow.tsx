@@ -41,7 +41,7 @@ type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
   isAdmin: boolean;
-  conversationIds: string[];
+  conversationIds: number[];
 };
 
 const updateMember = (
@@ -292,7 +292,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
       <TableCell>
         {currentUser?.id !== member.id && isAdmin && (
           <DeleteMemberDialog
-            assignedToId={member.id}
+            assignedToId={{ id: member.id, displayName: member.displayName }}
             mailboxSlug={mailboxSlug}
             description={
               conversationIds.length > 0

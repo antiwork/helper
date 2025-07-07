@@ -1,21 +1,34 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
+import { eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { addUser } from "@/lib/data/user";
 import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {
   getMembers: protectedProcedure.query(async () => {
-    const users = await db.query.userProfiles.findMany();
-    return users
-      .filter((user) => user.deletedAt === null)
-      .map((user) => ({
-        id: user.id,
-        displayName: user.displayName || "",
-        email: user.email || "",
-        permissions: user.permissions,
-        access: user.access || { role: "afk", keywords: [] },
-      }));
+    const users = await db
+      .select({
+        id: authUsers.id,
+        email: authUsers.email,
+        displayName: userProfiles.displayName,
+        permissions: userProfiles.permissions,
+        access: userProfiles.access,
+        deletedAt: userProfiles.deletedAt,
+      })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(isNull(userProfiles.deletedAt));
+
+    return users.map((user) => ({
+      id: user.id,
+      displayName: user.displayName || "",
+      email: user.email || "",
+      permissions: user.permissions,
+      access: user.access || { role: "afk", keywords: [] },
+    }));
   }),
   addMember: protectedProcedure
     .input(
