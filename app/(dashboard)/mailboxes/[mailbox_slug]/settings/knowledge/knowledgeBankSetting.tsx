@@ -44,8 +44,8 @@ const KnowledgeBankSetting = () => {
       setShowNewFaqForm(false);
       setNewFaqContent("");
     },
-    onError: () => {
-      toast.error("Error creating knowledge");
+    onError: (error) => {
+      toast.error("Error creating knowledge", { description: error.message });
     },
   });
 
@@ -54,8 +54,8 @@ const KnowledgeBankSetting = () => {
       toast.success("Knowledge deleted!");
       utils.mailbox.faqs.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: () => {
-      toast.error("Error deleting knowledge");
+    onError: (error) => {
+      toast.error("Error deleting knowledge", { description: error.message });
     },
   });
 

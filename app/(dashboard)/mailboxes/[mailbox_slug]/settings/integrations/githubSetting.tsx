@@ -107,6 +107,7 @@ const GitHubSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }
       setGitHubConnected(false);
       toast.success("GitHub disconnected successfully");
     } catch (e) {
+      captureExceptionAndLog(e);
       toast.error("Error disconnecting GitHub");
     }
   };

@@ -129,6 +129,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
       setSlackConnected(false);
       toast.success("Slack app uninstalled from your workspace");
     } catch (e) {
+      captureExceptionAndLog(e);
       toast.error("Error disconnecting Slack");
     }
   };

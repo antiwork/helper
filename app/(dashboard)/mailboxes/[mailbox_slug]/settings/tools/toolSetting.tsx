@@ -25,7 +25,9 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
 
   useEffect(() => {
     if (error) {
-      toast.error("Error fetching APIs");
+      toast.error("Error fetching APIs", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   }, [error]);
 

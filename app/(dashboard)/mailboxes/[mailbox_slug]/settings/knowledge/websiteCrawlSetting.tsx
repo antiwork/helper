@@ -40,8 +40,8 @@ const WebsiteCrawlSetting = () => {
       setShowAddWebsite(false);
       setNewWebsite({ name: "", url: "" });
     },
-    onError: () => {
-      toast.error("Error adding website", { description: "Please try again later." });
+    onError: (error) => {
+      toast.error("Error adding website", { description: error.message });
     },
   });
 
@@ -50,8 +50,8 @@ const WebsiteCrawlSetting = () => {
       toast.success("Website deleted!");
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: () => {
-      toast.error("Error deleting website", { description: "Please try again later." });
+    onError: (error) => {
+      toast.error("Error deleting website", { description: error.message });
     },
   });
 
@@ -62,8 +62,8 @@ const WebsiteCrawlSetting = () => {
       });
       utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
     },
-    onError: () => {
-      toast.error("Error starting website scan", { description: "Please try again later." });
+    onError: (error) => {
+      toast.error("Error starting website scan", { description: error.message });
     },
   });
 
