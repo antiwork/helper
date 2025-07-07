@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
+import { authenticateWidget, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getGuideSessionByUuid, updateGuideSession, type GuideSession } from "@/lib/data/guide";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
@@ -14,7 +14,7 @@ const updateGuideSchema = z.object({
   ),
 });
 
-export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }) => {
   try {
     const body = await request.json();
     const result = updateGuideSchema.safeParse(body);
@@ -24,42 +24,46 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
 
     const { sessionId, steps } = result.data;
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { session } = authResult;
-
-  try {
-    const guideSession = await getGuideSessionByUuid(sessionId);
-
-    if (!guideSession) {
-      return corsResponse({ error: "Guide session not found" }, { status: 404 });
+    const authResult = await authenticateWidget(request);
+    if (!authResult.success) {
+      return corsResponse({ error: authResult.error }, { status: 401 });
     }
 
-    if (session.email !== guideSession.platformCustomer.email) {
-      return corsResponse({ error: "Unauthorized" }, { status: 403 });
+    const { session: authenticatedSession } = authResult;
+
+    try {
+      const guideSession = await getGuideSessionByUuid(sessionId);
+
+      if (!guideSession) {
+        return corsResponse({ error: "Guide session not found" }, { status: 404 });
+      }
+
+      if (authenticatedSession.email !== guideSession.platformCustomer.email) {
+        return corsResponse({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      const updatedSession = await updateGuideSession(guideSession.id, {
+        set: { steps: steps as GuideSession["steps"] },
+      });
+
+      if (!updatedSession) {
+        throw new Error("Failed to update guide session");
+      }
+
+      const conversationId = assertDefined(updatedSession.conversationId);
+
+      return corsResponse({
+        sessionId: updatedSession.uuid,
+        title: updatedSession.title,
+        instructions: updatedSession.instructions,
+        steps: updatedSession.steps,
+        status: updatedSession.status,
+        conversationId,
+      });
+    } catch (error) {
+      captureExceptionAndLogIfDevelopment(error);
+      return corsResponse({ error: "Failed to update guide session" }, { status: 500 });
     }
-
-    const updatedSession = await updateGuideSession(guideSession.id, {
-      set: { steps: steps as GuideSession["steps"] },
-    });
-
-    if (!updatedSession) {
-      throw new Error("Failed to update guide session");
-    }
-
-    const conversationId = assertDefined(updatedSession.conversationId);
-
-    return corsResponse({
-      sessionId: updatedSession.uuid,
-      title: updatedSession.title,
-      instructions: updatedSession.instructions,
-      steps: updatedSession.steps,
-      status: updatedSession.status,
-      conversationId,
-    });
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Failed to update guide session" }, { status: 500 });

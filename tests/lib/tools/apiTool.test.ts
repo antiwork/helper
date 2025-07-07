@@ -331,6 +331,7 @@ describe("apiTools", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
+        unused_mailboxId: null,
       });
       vi.mocked(fetchMetadata).mockResolvedValueOnce(metadata);
       vi.mocked(generateText).mockResolvedValueOnce({

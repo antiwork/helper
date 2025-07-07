@@ -12,16 +12,9 @@ export function OPTIONS() {
   return corsOptions("PATCH");
 }
 
-export const PATCH = withWidgetAuth<{ id: string }>(async ({ request, context: { params } }, { session, mailbox }) => {
+export const PATCH = withWidgetAuth<{ id: string }>(async ({ request, context: { params } }, { session }) => {
   const { id } = await params;
   const notificationId = parseInt(id);
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 }, "PATCH");
-  }
-
-  const { session } = authResult;
 
   if (!session.email) {
     return corsResponse({ error: "Not authorized - Anonymous session" }, { status: 401 }, "PATCH");

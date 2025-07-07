@@ -7,15 +7,8 @@ import { createGuideSession, createGuideSessionEvent } from "@/lib/data/guide";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 
-export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }, { session }) => {
   const { title, instructions, conversationSlug } = await request.json();
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { session } = authResult;
 
   const platformCustomer = assertDefined(await findOrCreatePlatformCustomerByEmail(assertDefined(session.email)));
 

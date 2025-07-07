@@ -17,15 +17,15 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   const isVisitor = session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
 
-  if (isVisitor && authResult.session.email) {
-    const platformCustomer = await getPlatformCustomer(authResult.session.email);
+  if (isVisitor && session.email) {
+    const platformCustomer = await getPlatformCustomer(session.email);
     if (platformCustomer?.isVip && !isPrompt) {
       status = VIP_INITIAL_STATUS;
     }
   }
 
   const newConversation = await createConversation({
-    emailFrom: isVisitor || !authResult.session.email ? null : authResult.session.email,
+    emailFrom: isVisitor || !session.email ? null : session.email,
     subject: CHAT_CONVERSATION_SUBJECT,
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",

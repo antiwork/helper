@@ -117,6 +117,7 @@ const createTool = (
   enabled: true,
   availableInChat: false,
   customerEmailParameter: null,
+  unused_mailboxId: null,
 });
 
 export async function parseToolsFromOpenAPISpec(spec: string, apiToken: string): Promise<Tool[]> {

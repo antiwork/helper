@@ -52,6 +52,7 @@ export const toolsRouter = {
                 .pop()!
                 .replace(/^\/+|\/+$/g, ""),
               toolApiId: api.id,
+              unused_mailboxId: null,
             }) satisfies ToolFormatted,
         ),
       }));

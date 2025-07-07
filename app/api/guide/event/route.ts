@@ -17,7 +17,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
+export const POST = withWidgetAuth(async ({ request }) => {
   try {
     const body = await request.json();
     const { sessionId, events, metadata, isRecording } = body;
