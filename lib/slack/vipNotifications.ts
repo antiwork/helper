@@ -6,6 +6,7 @@ import { conversationMessages, conversations, platformCustomers } from "@/db/sch
 import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
 import { getActionButtons, OPEN_ATTACHMENT_COLOR, RESOLVED_ATTACHMENT_COLOR } from "@/lib/slack/shared";
@@ -29,7 +30,7 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
   });
 
   for (const vipMessage of vipMessages) {
-    const mailbox = await db.query.mailboxes.findFirst({ where: eq(conversations.id, vipMessage.conversation.id) });
+    const mailbox = await getMailbox();
     if (vipMessage.slackMessageTs && mailbox?.slackBotToken) {
       const response = responses.find((r) => r.responseToId === vipMessage.id);
       const cleanedUpText = response ? await ensureCleanedUpText(response) : "";
