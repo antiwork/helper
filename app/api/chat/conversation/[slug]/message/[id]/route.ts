@@ -127,10 +127,7 @@ const publishEvent = async (messageId: number) => {
     }),
   );
 
-  const mailbox = await getMailbox();
-  if (!mailbox) {
-    throw new Error("Mailbox not found");
-  }
+  const mailbox = assertDefined(await getMailbox());
 
   await publishToRealtime({
     channel: dashboardChannelId(mailbox.slug),

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
@@ -27,10 +28,7 @@ export const suggestKnowledgeBankChanges = async ({
     }),
   );
 
-  const mailbox = await getMailbox();
-  if (!mailbox) {
-    throw new Error("No mailbox found");
-  }
+  const mailbox = assertDefined(await getMailbox());
   const messageContent = message.body || message.cleanedUpText || "";
   const flagReason = reason || "No reason provided";
 

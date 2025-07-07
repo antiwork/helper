@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { z } from "zod";
+import { assertDefined } from "@/components/utils/assert";
 import { cacheFor } from "@/lib/cache";
 import { getMailbox } from "@/lib/data/mailbox";
 import { env } from "@/lib/env";
@@ -57,8 +58,7 @@ export const generateReadPageTool = async (
 
   const markdown = await convertHtmlToMarkdown(pageHTML, currentURL);
 
-  const mailbox = await getMailbox();
-  if (!mailbox) throw new Error("Mailbox not found");
+  const mailbox = assertDefined(await getMailbox());
 
   if (!markdown) {
     return null;
