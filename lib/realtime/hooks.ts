@@ -59,9 +59,9 @@ export const useRealtimeEventOnce: typeof useRealtimeEvent = (channel, event, ca
 export const broadcastRealtimeEvent = (channel: string, event: string, data: any) => {
   const serializedData = SuperJSON.stringify(data);
   return supabase.channel(channel).send({
-    type: 'broadcast',
+    type: "broadcast",
     event,
-    payload: { data: serializedData }
+    payload: { data: serializedData },
   });
 };
 
