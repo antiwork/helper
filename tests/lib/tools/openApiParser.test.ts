@@ -95,7 +95,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
       {
         name: "Create product",
@@ -110,7 +110,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
       {
         name: "Update a product",
@@ -133,7 +133,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
       {
         name: "Delete product",
@@ -156,7 +156,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
     ]);
   });
@@ -204,7 +204,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
     ]);
   });
@@ -269,7 +269,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
     ]);
   });
@@ -409,7 +409,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         enabled: true,
         availableInChat: false,
         customerEmailParameter: null,
-        unused_mailboxId: null,
+        unused_mailboxId: 0,
       },
     ]);
   });
