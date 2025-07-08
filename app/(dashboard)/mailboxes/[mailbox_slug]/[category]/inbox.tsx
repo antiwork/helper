@@ -74,7 +74,6 @@ const Inbox = () => {
     if (!isPending) prefetchNextConversations(3);
   }, [isPending, currentConversationSlug]);
 
-
   if (isMobile) {
     return (
       <div className="flex grow overflow-hidden">

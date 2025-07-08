@@ -55,7 +55,6 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   return allUsers
     .map((user) => {
-
       return {
         id: user.id,
         email: user.email ?? undefined,

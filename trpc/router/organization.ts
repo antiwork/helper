@@ -1,22 +1,22 @@
 import { type TRPCRouterRecord } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { addUser } from "@/lib/data/user";
 import { protectedProcedure } from "../trpc";
-import { userProfiles } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { authUsers } from "@/db/supabaseSchema/auth";
 
 export const organizationRouter = {
   getMembers: protectedProcedure.query(async () => {
     const users = await db
-    .select({
-      id: userProfiles.id,
-      displayName: userProfiles.displayName,
-      email: authUsers.email,
-    })
-    .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+      .select({
+        id: userProfiles.id,
+        displayName: userProfiles.displayName,
+        email: authUsers.email,
+      })
+      .from(userProfiles)
+      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
     return users.map((user) => ({
       id: user.id,

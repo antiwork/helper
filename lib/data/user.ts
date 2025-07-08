@@ -98,7 +98,7 @@ export const updateUserMailboxData = async (
         keywords: updates.keywords || [],
       },
     })
-    .where(eq(userProfiles.id, userId))
+    .where(eq(userProfiles.id, userId));
 
   const [updatedProfile] = await db
     .select({
@@ -111,7 +111,6 @@ export const updateUserMailboxData = async (
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
     .where(eq(userProfiles.id, userId));
-
 
   return {
     id: updatedProfile?.id ?? userId,

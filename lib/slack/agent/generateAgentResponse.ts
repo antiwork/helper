@@ -5,6 +5,7 @@ import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { runAIQuery } from "@/lib/ai";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
@@ -19,7 +20,6 @@ import { getMemberStats } from "@/lib/data/stats";
 import { findUserViaSlack } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { CLOSED_BY_AGENT_MESSAGE, MARKED_AS_SPAM_BY_AGENT_MESSAGE, REOPENED_BY_AGENT_MESSAGE } from "../constants";
-import { authUsers } from "@/db/supabaseSchema/auth";
 
 const searchToolSchema = searchSchema.omit({
   category: true,
@@ -118,13 +118,14 @@ export const generateAgentResponse = async (
       parameters: z.object({}),
       execute: async () => {
         showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
-        const members = await db.select({
-          id: userProfiles.id,
-          displayName: userProfiles.displayName,
-          email: authUsers.email,
-        })
-        .from(userProfiles)
-        .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+        const members = await db
+          .select({
+            id: userProfiles.id,
+            displayName: userProfiles.displayName,
+            email: authUsers.email,
+          })
+          .from(userProfiles)
+          .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
         return members.map((member) => ({
           id: member.id,
@@ -245,13 +246,14 @@ export const generateAgentResponse = async (
             role: true,
           },
         });
-        const members = await db.select({
-          id: userProfiles.id,
-          displayName: userProfiles.displayName,
-          email: authUsers.email,
-        })
-        .from(userProfiles)
-        .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+        const members = await db
+          .select({
+            id: userProfiles.id,
+            displayName: userProfiles.displayName,
+            email: authUsers.email,
+          })
+          .from(userProfiles)
+          .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
         return messages.map((message) => ({
           id: message.id,
@@ -261,7 +263,9 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : members.find((member) => member.id === message.userId)?.displayName ?? members.find((member) => member.id === message.userId)?.email ?? "Unknown",
+              : (members.find((member) => member.id === message.userId)?.displayName ??
+                members.find((member) => member.id === message.userId)?.email ??
+                "Unknown"),
           userId: message.userId,
         }));
       },
