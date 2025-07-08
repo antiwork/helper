@@ -201,7 +201,7 @@ const openAssignModal = async (
             ).map((member) => ({
               text: {
                 type: "plain_text",
-                text: member.displayName ?? member.email ?? member.id,
+                text: getFullName(member.displayName, member.email),
               },
               value: member.id,
             })),

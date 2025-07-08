@@ -4,7 +4,7 @@ import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 export const EmailSignature = () => {
   const { user } = useSession() ?? {};
 
-  if (!hasDisplayName(user)) {
+  if (!hasDisplayName(user?.user_metadata?.display_name)) {
     return null;
   }
 
@@ -12,7 +12,7 @@ export const EmailSignature = () => {
     <div className="mt-1 text-muted-foreground">
       Best,
       <br />
-      {getFirstName(user)}
+      {getFirstName(user.user_metadata?.display_name, user.email)}
       <div className="text-xs mt-2">
         Note: This signature will be automatically included in email responses, but not in live chat conversations.
       </div>

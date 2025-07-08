@@ -1,16 +1,34 @@
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 
 export const hasDisplayName = (
-  user: DbOrAuthUser | null | undefined,
-): user is DbOrAuthUser & { user_metadata: { display_name: string } } => {
-  return typeof user?.user_metadata?.display_name === "string";
+  displayName?: string | null,
+): displayName is string => {
+  return typeof displayName === "string";
 };
 
-export const getFullName = (user: DbOrAuthUser) => {
-  if (hasDisplayName(user)) return user.user_metadata.display_name.trim();
-  return user.email ?? user.id;
+export const getFullName = (
+  displayName?: string | null,
+  email?: string | null,
+): string => {
+  if (displayName?.trim()) return displayName.trim();
+
+  if (email) {
+    const [username] = email.split("@");
+    if (username) {
+      return username
+        .split(/[._-]/)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+    }
+  }
+  return "Unknown";
 };
 
-export const getFirstName = (user: DbOrAuthUser) => {
-  return getFullName(user).split(" ")[0];
+export const getFirstName = (
+  displayName?: string | null,
+  email?: string | null,
+): string => {
+  const fullName = getFullName(displayName, email);
+  const firstName = fullName.split(" ")[0];
+  return firstName || "Unknown";
 };

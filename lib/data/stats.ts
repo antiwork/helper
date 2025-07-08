@@ -1,9 +1,11 @@
 import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
-import { authUsers } from "@/db/supabaseSchema/auth";
+import { getFullName } from "@/lib/auth/authUtils";
 import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
+import { authUsers } from "@/db/supabaseSchema/auth";
+import { access } from "fs";
 
 type DateRange = {
   startDate?: Date;
@@ -21,13 +23,14 @@ export type MemberStats = {
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
   const allUsers = await db
     .select({
-      id: authUsers.id,
-      displayName: userProfiles.displayName,
+      id: userProfiles.id,
       email: authUsers.email,
+      displayName: userProfiles.displayName,
       access: userProfiles.access,
     })
     .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(isNull(userProfiles.deletedAt));
 
   const memberIds = allUsers.map((user) => user.id);
 
@@ -66,9 +69,9 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
       return {
         id: user.id,
         email: user.email ?? undefined,
-        displayName: user.displayName || null,
+        displayName: getFullName(user.displayName, user.email),
         replyCount: replyCounts[user.id] || 0,
-        role: user.access?.role ?? "afk",
+        role: user.access?.role || UserRoles.AFK,
       };
     })
     .sort((a, b) => b.replyCount - a.replyCount);

@@ -3,11 +3,12 @@ import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files } from "@/db/schema";
+import { conversationMessages, conversations, files, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { downloadFile } from "@/lib/data/files";
 import AIReplyEmail from "@/lib/emails/aiReply";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 
 export const convertConversationMessageToRaw = async (
   email: typeof conversationMessages.$inferSelect & {
@@ -45,11 +46,18 @@ export const convertConversationMessageToRaw = async (
     text = await render(reactEmail, { plainText: true });
   } else {
     html = email.body ?? undefined;
-    const user = email.userId
-      ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.userId) })
-      : undefined;
-    if (html && hasDisplayName(user)) {
-      html += `<p>Best,<br />${getFirstName(user)}</p>`;
+    const [user] = email.userId
+      ? await db.select({
+          id: userProfiles.id,
+          displayName: userProfiles.displayName,
+          email: authUsers.email,
+        })
+        .from(userProfiles)
+        .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+        .where(and(eq(userProfiles.id, email.userId), isNull(userProfiles.deletedAt))) : [];
+
+    if (html && hasDisplayName(user?.displayName)) {
+      html += `<p>Best,<br />${getFirstName(user.displayName, user.email)}</p>`;
     }
     text = html ? htmlToText(html) : undefined;
   }

@@ -129,7 +129,7 @@ export const generateAgentResponse = async (
 
         return members.map((member) => ({
           id: member.id,
-          name: member.displayName ?? (member.email ? member.email.split("@")[0] : "Unknown") ?? "Unknown",
+          name: getFullName(member?.displayName, member.email),
           email: member.email,
         }));
       },
@@ -263,9 +263,7 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : (members.find((member) => member.id === message.userId)?.displayName ??
-                members.find((member) => member.id === message.userId)?.email ??
-                "Unknown"),
+              : getFullName(members.find((member) => member.id === message.userId)!.displayName, members.find((member) => member.id === message.userId)!.email),
           userId: message.userId,
         }));
       },
@@ -399,7 +397,7 @@ export const generateAgentResponse = async (
 
   const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
   const userPrompt = user
-    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
+    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user.user_metadata?.display_name, user.email)}\nCurrent user email: ${user.email}`
     : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
 
   const result = await runAIQuery({
