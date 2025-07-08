@@ -9,14 +9,12 @@ begin
     id,
     display_name,
     permissions,
-    email,
     access,
     created_at,
     updated_at
   )
   values (
     new.id,
-    new.email,
     new.raw_user_meta_data ->> 'display_name',
     coalesce(new.raw_user_meta_data ->> 'permissions', 'member'),
     jsonb_build_object(
