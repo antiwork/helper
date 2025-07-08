@@ -80,7 +80,7 @@ const assignBasedOnCc = async (
       })
       .from(userProfiles)
       .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-      .where(eq(authUsers.email, ccAddress))
+      .where(and(eq(authUsers.email, ccAddress), isNull(userProfiles.deletedAt)))
       .then(takeUniqueOrThrow);
 
     if (ccStaffUser) {

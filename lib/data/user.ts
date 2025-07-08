@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema/userProfiles";
@@ -64,7 +64,8 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
       access: userProfiles.access,
     })
     .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(isNull(userProfiles.deletedAt));
 
   return users.map((user) => {
     const access = user.access ?? { role: "afk", keywords: [] };
@@ -112,7 +113,7 @@ export const updateUserMailboxData = async (
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(eq(userProfiles.id, userId));
+    .where(and(eq(userProfiles.id, userId), eq(isNull(userProfiles.deletedAt), true)))
 
   return {
     id: updatedProfile?.id ?? userId,
