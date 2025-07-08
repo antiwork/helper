@@ -1,10 +1,10 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { gmail_v1 } from "googleapis";
 import { htmlToText } from "html-to-text";
 import { simpleParser } from "mailparser";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, gmailSupportEmails, mailboxes } from "@/db/schema";
+import { conversationMessages, conversations, gmailSupportEmails } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
@@ -29,22 +29,12 @@ export const importRecentGmailThreads = async ({ gmailSupportEmailId }: { gmailS
   return results;
 };
 
-export const excludeExistingGmailThreads = async (
-  gmailSupportEmailId: number,
-  gmailThreads: gmail_v1.Schema$Thread[],
-) => {
+export const excludeExistingGmailThreads = async (gmailThreads: gmail_v1.Schema$Thread[]) => {
   const gmailThreadIds = gmailThreads.map((thread) => assertDefinedOrRaiseNonRetriableError(thread.id));
   const existingEmails = await db
     .selectDistinct({ gmailThreadId: conversationMessages.gmailThreadId })
     .from(conversationMessages)
-    .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-    .innerJoin(mailboxes, eq(mailboxes.id, conversations.mailboxId))
-    .where(
-      and(
-        eq(mailboxes.gmailSupportEmailId, gmailSupportEmailId),
-        inArray(conversationMessages.gmailThreadId, gmailThreadIds),
-      ),
-    );
+    .where(inArray(conversationMessages.gmailThreadId, gmailThreadIds));
   const existingThreads = new Set(
     existingEmails.flatMap((email) => (email.gmailThreadId ? [email.gmailThreadId] : [])),
   );
@@ -61,7 +51,7 @@ export const getNewGmailThreads = async (gmailSupportEmailId: number) => {
   const response = await getLast10GmailThreads(client);
   assertSuccessResponseOrThrow(response);
   const threads = response.data.threads ?? [];
-  return excludeExistingGmailThreads(gmailSupportEmailId, threads);
+  return excludeExistingGmailThreads(threads);
 };
 
 export const processGmailThread = async (
@@ -98,16 +88,9 @@ export const processGmailThreadWithClient = async (
     parseEmailAddress(firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "from")?.value ?? ""),
   );
   const subject = firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "subject")?.value ?? "";
-  const mailbox = await db.query.mailboxes
-    .findFirst({
-      where: eq(mailboxes.gmailSupportEmailId, gmailSupportEmail.id),
-      columns: { id: true },
-    })
-    .then(assertDefinedOrRaiseNonRetriableError);
   const conversation = await db
     .insert(conversations)
     .values({
-      mailboxId: mailbox.id,
       emailFrom: parsedEmailFrom.address,
       emailFromName: parsedEmailFrom.name,
       subject,

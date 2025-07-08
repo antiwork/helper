@@ -3,6 +3,7 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
 import { generateSlug } from "@/lib/shared/slug";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { ConversationFilters, useConversationFilters } from "./conversationFilters";
@@ -45,8 +45,8 @@ export const List = () => {
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
-    onError: (error) => {
-      showErrorToast("Failed to update conversations", error);
+    onError: (err) => {
+      toast.error("Failed to update conversations", { description: err.message });
     },
   });
 
@@ -111,9 +111,9 @@ export const List = () => {
                 : `${selectedConversations.length} ticket${selectedConversations.length === 1 ? "" : "s"}`;
 
               const actionText = status === "open" ? "reopened" : status === "closed" ? "closed" : "marked as spam";
-              showSuccessToast(`${ticketsText} ${actionText}`);
+              toast.success(`${ticketsText} ${actionText}`);
             } else {
-              showSuccessToast("Starting update, refresh to see status.");
+              toast.success("Starting update, refresh to see status.");
             }
           },
         },

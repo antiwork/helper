@@ -1,6 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { userFactory } from "@tests/support/factories/users";
+import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
@@ -19,8 +19,8 @@ describe("generateConversationSummary", () => {
   });
 
   it("generates a summary for a conversation", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "Hello, I have a question about my order.",
@@ -74,7 +74,6 @@ describe("generateConversationSummary", () => {
     ];
 
     expect(runAIObjectQuery).toHaveBeenCalledWith({
-      mailbox,
       queryType: "conversation_summary",
       functionId: "generate-conversation-summary",
       system: expect.stringMatching(/summarize all the messages/),
@@ -83,12 +82,13 @@ describe("generateConversationSummary", () => {
       shortenPromptBy: {
         truncateMessages: true,
       },
+      mailbox: expect.any(Object),
     });
   });
 
   it("does not generate a summary for conversations with 2 or fewer messages", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
       cleanedUpText: "Test message",
@@ -107,9 +107,9 @@ describe("generateConversationSummary", () => {
   });
 
   it("includes messages from merged conversations in the prompt", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation: mainConversation } = await conversationFactory.create(mailbox.id);
-    const { conversation: mergedConversation } = await conversationFactory.create(mailbox.id);
+    await mailboxFactory.create();
+    const { conversation: mainConversation } = await conversationFactory.create();
+    const { conversation: mergedConversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(mainConversation.id, {
       role: "user",
@@ -172,7 +172,6 @@ describe("generateConversationSummary", () => {
     ];
 
     expect(runAIObjectQuery).toHaveBeenCalledWith({
-      mailbox,
       queryType: "conversation_summary",
       functionId: "generate-conversation-summary",
       system: expect.stringMatching(/summarize all the messages/),
@@ -181,6 +180,7 @@ describe("generateConversationSummary", () => {
       shortenPromptBy: {
         truncateMessages: true,
       },
+      mailbox: expect.any(Object),
     });
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -29,8 +29,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      toast({
-        title: "Error updating VIP settings",
+      toast.error("Error updating VIP settings", {
         description: error.message,
       });
     },

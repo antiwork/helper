@@ -2,6 +2,7 @@ import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
@@ -51,7 +52,8 @@ export const POST = async (request: Request) => {
     (event.type === "message" &&
       (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo)))))
   ) {
-    waitUntil(handleSlackErrors(handleMessage(event, mailboxInfo)));
+    const currentMailbox = assertDefined(mailboxInfo.currentMailbox, "No current mailbox found");
+    waitUntil(handleSlackErrors(handleMessage(event, currentMailbox)));
     return new Response("Success!", { status: 200 });
   }
 

@@ -1,12 +1,13 @@
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { authenticateWidget } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { createReactionEventPayload } from "@/lib/data/dashboardEvent";
+import { getMailbox } from "@/lib/data/mailbox";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
@@ -19,14 +20,9 @@ const MessageReactionSchema = z.discriminatedUnion("type", [
     feedback: z.string().nullish(),
   }),
 ]);
-
-export async function POST(request: Request, { params }: { params: Promise<{ id: string; slug: string }> }) {
+type Params = { id: string; slug: string };
+export const POST = withWidgetAuth<Params>(async ({ request, context: { params } }, { session }) => {
   const { id, slug } = await params;
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return Response.json({ error: authResult.error }, { status: 401 });
-  }
 
   let messageId;
   try {
@@ -51,7 +47,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== authResult.session.email)) {
+  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 
@@ -108,7 +104,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   waitUntil(publishEvent(messageId));
 
   return Response.json({ reaction });
-}
+});
 
 const publishEvent = async (messageId: number) => {
   const message = assertDefined(
@@ -124,7 +120,6 @@ const publishEvent = async (messageId: number) => {
           columns: { subject: true, emailFrom: true, slug: true },
           with: {
             platformCustomer: { columns: { value: true } },
-            mailbox: true,
           },
         },
       },
@@ -132,9 +127,11 @@ const publishEvent = async (messageId: number) => {
     }),
   );
 
+  const mailbox = assertDefined(await getMailbox());
+
   await publishToRealtime({
-    channel: dashboardChannelId(message.conversation.mailbox.slug),
+    channel: dashboardChannelId(mailbox.slug),
     event: "event",
-    data: createReactionEventPayload(message, message.conversation.mailbox),
+    data: createReactionEventPayload(message, mailbox),
   });
 };

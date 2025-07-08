@@ -21,6 +21,11 @@ beforeAll(() => {
   // Used implicitly by the Vercel AI SDK
   vi.stubEnv("OPENAI_API_KEY", "test-openai-api-key");
 
+  // Supabase environment variables
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54321");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
+
   // Allow testing server-only modules
   vi.mock("server-only", () => {
     return {};
@@ -40,4 +45,6 @@ afterAll(() => {
   vi.resetAllMocks();
 });
 
-beforeEach(async () => await truncateDb());
+beforeEach(async () => {
+  await truncateDb();
+});

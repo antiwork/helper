@@ -2,9 +2,9 @@
 
 import { ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { getBaseUrl, getMarketingSiteUrl } from "@/components/constants";
-import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -63,8 +63,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     },
     onError: (error) => {
       chatVisibilitySaving.setState("error");
-      toast({
-        title: "Error updating chat visibility settings",
+      toast.error("Error updating chat visibility settings", {
         description: error.message,
       });
     },
@@ -77,8 +76,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     },
     onError: (error) => {
       hostUrlSaving.setState("error");
-      toast({
-        title: "Error updating host URL",
+      toast.error("Error updating host URL", {
         description: error.message,
       });
     },
@@ -91,8 +89,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     },
     onError: (error) => {
       emailResponseSaving.setState("error");
-      toast({
-        title: "Error updating email response settings",
+      toast.error("Error updating email response settings", {
         description: error.message,
       });
     },

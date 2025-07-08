@@ -1,7 +1,9 @@
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
+import { Mailbox } from "@/lib/data/mailbox";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
@@ -69,4 +71,31 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   }
 
   return { success: true, session, mailbox };
+}
+
+type AuthenticatedHandler<Params extends object> = (
+  inner: { request: Request; context: { params: Promise<Params> } },
+  auth: { session: WidgetSessionPayload; mailbox: Mailbox },
+) => Promise<Response>;
+
+export function withWidgetAuth<Params extends object = object>(handler: AuthenticatedHandler<Params>) {
+  return async (request: Request, context: { params: Promise<Params> }) => {
+    if (request.method === "OPTIONS") {
+      return new NextResponse(null, { status: 204, headers: corsHeaders });
+    }
+
+    const authResult = await authenticateWidget(request);
+
+    if (!authResult.success) {
+      return new NextResponse(JSON.stringify({ error: authResult.error }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    return handler({ request, context }, { session: authResult.session, mailbox: authResult.mailbox });
+  };
 }

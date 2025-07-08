@@ -1,24 +1,19 @@
 import { and, asc, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations as conversationsTable } from "@/db/schema";
-import { authenticateWidget } from "../../widget/utils";
+import { withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
-export async function GET(req: Request) {
-  const authResult = await authenticateWidget(req);
-  if (!authResult.success) {
-    return Response.json({ error: authResult.error }, { status: 401 });
-  }
-
-  const url = new URL(req.url);
+export const GET = withWidgetAuth(async ({ request }, { session }) => {
+  const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
 
   let baseCondition;
-  if (authResult.session.isAnonymous && authResult.session.anonymousSessionId) {
-    baseCondition = eq(conversationsTable.anonymousSessionId, authResult.session.anonymousSessionId);
-  } else if (authResult.session.email) {
-    baseCondition = eq(conversationsTable.emailFrom, authResult.session.email);
+  if (session.isAnonymous && session.anonymousSessionId) {
+    baseCondition = eq(conversationsTable.anonymousSessionId, session.anonymousSessionId);
+  } else if (session.email) {
+    baseCondition = eq(conversationsTable.emailFrom, session.email);
   } else {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
@@ -50,4 +45,4 @@ export async function GET(req: Request) {
     conversations,
     nextCursor,
   });
-}
+});

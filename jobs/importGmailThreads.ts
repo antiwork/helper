@@ -55,7 +55,7 @@ export const processGmailThreads = async (gmailSupportEmailId: number, weekStart
   if (result.data.nextPageToken) {
     captureExceptionAndLogIfDevelopment(new Error("Pagination not supported by this function"));
   }
-  const threads = await excludeExistingGmailThreads(gmailSupportEmailId, result.data.threads ?? []);
+  const threads = await excludeExistingGmailThreads(result.data.threads ?? []);
 
   for (const threadChunk of chunk(threads, GMAIL_THREAD_CONCURRENCY_LIMIT)) {
     await Promise.all(

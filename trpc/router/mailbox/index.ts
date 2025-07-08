@@ -27,14 +27,7 @@ export const mailboxRouter = {
       const result = await db
         .select({ count: count() })
         .from(conversations)
-        .where(
-          and(
-            eq(conversations.mailboxId, ctx.mailbox.id),
-            eq(conversations.status, "open"),
-            isNull(conversations.mergedIntoId),
-            where,
-          ),
-        );
+        .where(and(eq(conversations.status, "open"), isNull(conversations.mergedIntoId), where));
       return result[0]?.count ?? 0;
     };
 
@@ -97,12 +90,11 @@ export const mailboxRouter = {
         cursor: z.number().nullish(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { limit, cursor } = input;
-      const { id: mailboxId } = ctx.mailbox;
       const page = cursor || 1;
 
-      const result = await getGuideSessionsForMailbox(mailboxId, page, limit);
+      const result = await getGuideSessionsForMailbox(page, limit);
       const sessions = Array.isArray(result?.sessions) ? result.sessions : [];
       const totalCount = result?.totalCount ?? 0;
 
@@ -133,9 +125,7 @@ export const mailboxRouter = {
       });
     }
 
-    await triggerEvent("conversations/auto-close.check", {
-      mailboxId: ctx.mailbox.id,
-    });
+    await triggerEvent("conversations/auto-close.check", {});
 
     return {
       success: true,

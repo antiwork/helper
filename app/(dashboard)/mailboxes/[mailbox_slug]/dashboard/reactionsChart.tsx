@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
-import { Bar, BarChart, ReferenceLine, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import ConversationsModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversationsModal";
 import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
 import LoadingSpinner from "@/components/loadingSpinner";
@@ -95,37 +95,52 @@ export function ReactionsChart({
   };
 
   return (
-    <>
-      <ChartContainer config={chartConfig} className="h-[300px] w-full min-w-0">
-        <BarChart data={Object.values(chartData)} stackOffset="sign" barGap={16}>
-          <XAxis dataKey="label" axisLine={false} tickLine={false} />
-          <YAxis width={20} domain={["dataMin", "dataMax"]} axisLine={false} tickLine={false} />
-          <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
-          <ChartTooltip
-            position={{ y: 0 }}
-            content={<ChartTooltipContent valueFormatter={(value) => Math.abs(value).toLocaleString()} />}
-          />
-          <ChartLegend content={<ChartLegendContent />} />
-          <Bar
-            stackId="feedback"
-            dataKey="positive"
-            fill="var(--color-positive)"
-            maxBarSize={32}
-            radius={[4, 4, 0, 0]}
-            onClick={(data) => handleBarClick(data, "positive")}
-            className="cursor-pointer hover:opacity-90 transition-opacity duration-100"
-          />
-          <Bar
-            stackId="feedback"
-            dataKey="negative"
-            fill="var(--color-negative)"
-            maxBarSize={32}
-            radius={[4, 4, 0, 0]}
-            onClick={(data) => handleBarClick(data, "negative")}
-            className="cursor-pointer hover:opacity-90 transition-opacity duration-100"
-          />
-        </BarChart>
-      </ChartContainer>
+    <div className="flex flex-col w-full h-full">
+      <div className="relative flex-1 min-h-0">
+        <ChartContainer config={chartConfig} className="w-full h-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={Object.values(chartData)}
+              stackOffset="sign"
+              barGap={16}
+              margin={{ top: 20, right: 10, left: 10, bottom: 40 }}
+            >
+              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} height={60} />
+              <YAxis
+                width={40}
+                domain={["dataMin", "dataMax"]}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
+              <ChartTooltip
+                position={{ y: 0 }}
+                content={<ChartTooltipContent valueFormatter={(value) => Math.abs(value).toLocaleString()} />}
+              />
+              <ChartLegend content={<ChartLegendContent />} wrapperStyle={{ paddingTop: "8px" }} />
+              <Bar
+                stackId="feedback"
+                dataKey="positive"
+                fill="var(--color-positive)"
+                maxBarSize={32}
+                radius={[4, 4, 0, 0]}
+                onClick={(data) => handleBarClick(data, "positive")}
+                className="cursor-pointer hover:opacity-90 transition-opacity duration-100"
+              />
+              <Bar
+                stackId="feedback"
+                dataKey="negative"
+                fill="var(--color-negative)"
+                maxBarSize={32}
+                radius={[4, 4, 0, 0]}
+                onClick={(data) => handleBarClick(data, "negative")}
+                className="cursor-pointer hover:opacity-90 transition-opacity duration-100"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </div>
 
       <ConversationsModal
         open={!!selectedBar}
@@ -135,6 +150,6 @@ export function ReactionsChart({
         conversations={selectedConversations?.conversations ?? []}
         isLoading={isLoadingConversations}
       />
-    </>
+    </div>
   );
 }

@@ -1,16 +1,15 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, mailboxes } from "@/db/schema";
+import { conversationMessages, conversations } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { postVipMessageToSlack, updateVipMessageInSlack } from "@/lib/slack/vipNotifications";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelect & {
-  conversation: typeof conversations.$inferSelect & {
-    mailbox: typeof mailboxes.$inferSelect;
-  };
+  conversation: typeof conversations.$inferSelect;
 };
 
 async function fetchConversationMessage(messageId: number): Promise<MessageWithConversationAndMailbox> {
@@ -18,11 +17,7 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
     await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, messageId),
       with: {
-        conversation: {
-          with: {
-            mailbox: true,
-          },
-        },
+        conversation: {},
       },
     }),
   );
@@ -31,9 +26,6 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
     const mergedConversation = assertDefinedOrRaiseNonRetriableError(
       await db.query.conversations.findFirst({
         where: eq(conversations.id, message.conversation.mergedIntoId),
-        with: {
-          mailbox: true,
-        },
       }),
     );
 
@@ -45,7 +37,7 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
 
 async function handleVipSlackMessage(message: MessageWithConversationAndMailbox) {
   const conversation = assertDefinedOrRaiseNonRetriableError(message.conversation);
-  const { mailbox } = conversation;
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
   if (conversation.isPrompt) {
     return "Not posted, prompt conversation";
@@ -54,7 +46,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
     return "Not posted, anonymous conversation";
   }
 
-  const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom);
+  const platformCustomer = await getPlatformCustomer(conversation.emailFrom);
 
   // Early return if not VIP or Slack config missing
   if (!platformCustomer?.isVip) return "Not posted, not a VIP customer";
@@ -74,6 +66,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
 
       await updateVipMessageInSlack({
         conversation,
+        mailbox,
         originalMessage: originalCleanedUpText,
         replyMessage: replyCleanedUpText,
         slackBotToken: mailbox.slackBotToken,
@@ -95,6 +88,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
 
   const slackMessageTs = await postVipMessageToSlack({
     conversation,
+    mailbox,
     message: cleanedUpText,
     platformCustomer,
     slackBotToken: mailbox.slackBotToken,
