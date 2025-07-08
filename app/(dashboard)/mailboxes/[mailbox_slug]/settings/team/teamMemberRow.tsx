@@ -41,7 +41,6 @@ type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
   isAdmin: boolean;
-  conversationIds: number[];
 };
 
 const updateMember = (
@@ -53,7 +52,7 @@ const updateMember = (
   members: data.members.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
 });
 
-const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [permissions, setPermissions] = useState<string>(member.permissions);
@@ -76,6 +75,11 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
     setLocalKeywords(member.keywords);
     setDisplayNameInput(member.displayName || "");
   }, [member.keywords, member.role, member.permissions, member.displayName]);
+
+  const { data: count } = api.mailbox.conversations.count.useQuery({
+    mailboxSlug,
+    assignee: [member.id],
+  });
 
   // Separate mutations for each operation type
   const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
@@ -295,11 +299,11 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
             assignedToId={{ id: member.id, displayName: member.displayName }}
             mailboxSlug={mailboxSlug}
             description={
-              conversationIds.length > 0
-                ? `You are about to remove ${member.displayName.toUpperCase()}. This member currently has ${conversationIds.length} conversations assigned to them. Please reassign the tickets before deleting the member.`
+              count?.total && count?.total > 0
+                ? `You are about to remove ${member.displayName.toUpperCase()}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
                 : `There is no conversation assigned to ${member.displayName.toUpperCase()}. Are you sure you want to delete this member?`
             }
-            conversationIds={conversationIds}
+            count={count?.total || 0}
           >
             <Button variant="ghost" size="sm" iconOnly>
               <Trash className="h-4 w-4" />

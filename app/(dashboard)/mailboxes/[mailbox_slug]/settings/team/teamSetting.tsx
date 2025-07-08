@@ -2,7 +2,6 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,10 +29,6 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       member.displayName?.toLowerCase().includes(searchString) ||
       member.keywords.some((keyword) => keyword.toLowerCase().includes(searchString))
     );
-  });
-
-  const { data: conversationsList } = api.mailbox.conversations.list.useQuery({
-    mailboxSlug,
   });
 
   return (
@@ -86,16 +81,11 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => {
-                  const memberConversations = (conversationsList?.conversations ?? []).filter(
-                    (conversation) => conversation.assignedToId === member.id,
-                  );
-
                   return (
                     <TeamMemberRow
                       key={member.id}
                       member={member}
                       mailboxSlug={mailboxSlug}
-                      conversationIds={memberConversations.map((c) => c.id)}
                       isAdmin={permissionsData?.isAdmin ?? false}
                     />
                   );

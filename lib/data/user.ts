@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema/userProfiles";
@@ -69,14 +69,13 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
     .select({
       id: authUsers.id,
       email: authUsers.email,
-      rawMetadata: authUsers.user_metadata,
       displayName: userProfiles.displayName,
       permissions: userProfiles.permissions,
       access: userProfiles.access,
-      deletedAt: userProfiles.deletedAt,
     })
     .from(authUsers)
-    .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
+    .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .where(isNull(userProfiles.deletedAt));
 
   return users.map((user) => {
     const access = user.access ?? { role: "afk", keywords: [] };
@@ -84,7 +83,7 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
 
     return {
       id: user.id,
-      displayName: user.displayName || user.rawMetadata?.display_name || "",
+      displayName: user.displayName ?? "",
       email: user.email ?? undefined,
       role: access.role,
       keywords: access?.keywords ?? [],

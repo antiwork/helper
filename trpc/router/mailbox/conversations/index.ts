@@ -200,6 +200,51 @@ export const conversationsRouter = {
       });
       return { updatedImmediately: false };
     }),
+  reAssignAll: mailboxProcedure
+    .input(
+      z.object({
+        conversationFilter: searchSchema,
+        assignedToId: z.string().optional(),
+        prevAssigneeId: z.string().optional(),
+        message: z.string().optional(),
+        assignedToAI: z.boolean().optional(),
+        count: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { assignedToId, message, assignedToAI, prevAssigneeId, count } = input;
+      let where;
+      if (prevAssigneeId !== undefined) {
+        where = eq(conversations.assignedToId, prevAssigneeId);
+      } else {
+        where = isNull(conversations.assignedToId);
+      }
+      if (count && count <= 25) {
+        const conversationIds = await db.query.conversations.findMany({
+          columns: { id: true },
+          where,
+        });
+        for (const conversation of conversationIds) {
+          await updateConversation(conversation.id, {
+            set: { assignedToId, assignedToAI },
+            byUserId: ctx.user.id,
+            message,
+          });
+        }
+        return { updatedImmediately: true };
+      }
+
+      await triggerEvent("conversations/bulk-update", {
+        userId: ctx.user.id,
+        conversationFilter: input.conversationFilter,
+        status: undefined,
+        assignedToId: input.assignedToId,
+        prevAssigneeId: input.prevAssigneeId,
+        message: input.message,
+        assignedToAI: input.assignedToAI,
+      });
+      return { updatedImmediately: false };
+    }),
   generateDraft: conversationProcedure.mutation(async ({ ctx }) => {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
