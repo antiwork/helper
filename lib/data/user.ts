@@ -113,7 +113,7 @@ export const updateUserMailboxData = async (
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(and(eq(userProfiles.id, userId), eq(isNull(userProfiles.deletedAt), true)))
+    .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)))
 
   return {
     id: updatedProfile?.id ?? userId,

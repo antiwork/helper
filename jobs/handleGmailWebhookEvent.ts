@@ -72,7 +72,7 @@ const assignBasedOnCc = async (
   );
 
   for (const ccAddress of ccAddresses) {
-    const ccStaffUser = await db
+    const [ccStaffUser] = await db
       .select({
         id: authUsers.id,
         displayName: userProfiles.displayName,
@@ -81,7 +81,6 @@ const assignBasedOnCc = async (
       .from(userProfiles)
       .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
       .where(and(eq(authUsers.email, ccAddress), isNull(userProfiles.deletedAt)))
-      .then(takeUniqueOrThrow);
 
     if (ccStaffUser) {
       await updateConversation(conversationId, {
