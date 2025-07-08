@@ -9,8 +9,8 @@ describe("addNote", () => {
   });
 
   it("creates a note for a conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     const note = await addNote({
       conversationId: conversation.id,
@@ -33,8 +33,8 @@ describe("addNote", () => {
   });
 
   it("creates a note without a user", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     const note = await addNote({
       conversationId: conversation.id,

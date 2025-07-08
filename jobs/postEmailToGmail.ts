@@ -1,6 +1,7 @@
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
+import { conversationMessages, conversations, gmailSupportEmails } from "@/db/schema";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -27,37 +28,31 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
       isNull(conversationMessages.deletedAt),
     ),
     with: {
-      conversation: {
-        with: {
-          mailbox: {
-            columns: {
-              id: true,
-              slug: true,
-              name: true,
-              widgetHost: true,
-            },
-            with: {
-              gmailSupportEmail: true,
-            },
-          },
-        },
-      },
       files: true,
+      conversation: true,
     },
   });
   if (!email) {
-    // The email was likely undone
     return null;
   }
 
-  try {
-    if (!email.conversation.emailFrom) {
-      return await markFailed(emailId, email.conversationId, "The conversation emailFrom is missing.");
-    }
-    if (!email.conversation.mailbox.gmailSupportEmail) {
-      return await markFailed(emailId, email.conversationId, "The mailbox does not have a connected Gmail account.");
-    }
+  const conversation = email.conversation;
+  if (!conversation) {
+    return await markFailed(emailId, email.conversationId, "Conversation not found.");
+  }
 
+  const mailbox = await getMailbox();
+  const gmailSupportEmail = mailbox?.gmailSupportEmailId
+    ? await db.query.gmailSupportEmails.findFirst({
+        where: eq(gmailSupportEmails.id, mailbox.gmailSupportEmailId),
+      })
+    : null;
+
+  if (!gmailSupportEmail) {
+    return await markFailed(emailId, email.conversationId, "The mailbox does not have a connected Gmail account.");
+  }
+
+  try {
     const pastThreadEmail = await db.query.conversationMessages.findFirst({
       where: and(
         eq(conversationMessages.conversationId, email.conversationId),
@@ -67,11 +62,18 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
       orderBy: desc(conversationMessages.createdAt),
     });
 
-    const gmailService = getGmailService(email.conversation.mailbox.gmailSupportEmail);
-    const gmailSupportEmailAddress = email.conversation.mailbox.gmailSupportEmail.email;
+    const gmailService = getGmailService(gmailSupportEmail);
+    const gmailSupportEmailAddress = gmailSupportEmail.email;
+    if (!gmailSupportEmailAddress) {
+      return await markFailed(emailId, email.conversationId, "The Gmail support email address is missing.");
+    }
+
+    if (!conversation.emailFrom) {
+      return await markFailed(emailId, email.conversationId, "The conversation emailFrom is missing.");
+    }
 
     const rawEmail = await convertConversationMessageToRaw(
-      { ...email, conversation: { ...email.conversation, emailFrom: email.conversation.emailFrom } },
+      { ...email, conversation: { ...conversation, emailFrom: conversation.emailFrom } },
       gmailSupportEmailAddress,
     );
     const response = await sendGmailEmail(gmailService, rawEmail, pastThreadEmail?.gmailThreadId ?? null);

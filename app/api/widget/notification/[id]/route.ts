@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { messageNotifications, platformCustomers } from "@/db/schema";
-import { authenticateWidget, corsOptions, corsResponse } from "../../utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "../../utils";
 
 const updateNotificationSchema = z.object({
   status: z.enum(["read", "dismissed"]),
@@ -12,16 +12,9 @@ export function OPTIONS() {
   return corsOptions("PATCH");
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withWidgetAuth<{ id: string }>(async ({ request, context: { params } }, { session }) => {
   const { id } = await params;
   const notificationId = parseInt(id);
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 }, "PATCH");
-  }
-
-  const { session, mailbox } = authResult;
 
   if (!session.email) {
     return corsResponse({ error: "Not authorized - Anonymous session" }, { status: 401 }, "PATCH");
@@ -31,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { status } = updateNotificationSchema.parse(body);
 
   const platformCustomer = await db.query.platformCustomers.findFirst({
-    where: and(eq(platformCustomers.email, session.email), eq(platformCustomers.mailboxId, mailbox.id)),
+    where: eq(platformCustomers.email, session.email),
   });
 
   if (!platformCustomer) {
@@ -54,4 +47,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   return corsResponse({ success: true }, { status: 200 }, "PATCH");
-}
+});

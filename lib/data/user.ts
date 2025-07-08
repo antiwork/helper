@@ -54,7 +54,7 @@ export const addUser = async (
   if (error) throw error;
 };
 
-export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
+export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
   const users = await db
     .select({
       id: userProfiles.id,
@@ -83,7 +83,6 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
 
 export const updateUserMailboxData = async (
   userId: string,
-  mailboxId: number,
   updates: {
     displayName?: string;
     role?: UserRole;

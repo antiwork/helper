@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { triggerConfetti } from "@/components/confetti";
-import { toast } from "@/components/hooks/use-toast";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,7 @@ const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      toast({
-        title: "Error updating preferences",
-        description: error.message,
-      });
+      toast.error("Error updating preferences", { description: error.message });
     },
   });
 

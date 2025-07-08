@@ -1,3 +1,4 @@
+import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -21,7 +22,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: mailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: 100,
@@ -51,7 +51,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: mailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: usage.promptTokens,
@@ -62,8 +61,7 @@ describe("trackAIUsageEvent", () => {
   });
 
   it("uses placeholder mailbox when mailbox is not provided", async () => {
-    const { mailbox: placeholderMailbox } = await userFactory.createRootUser();
-
+    await mailboxFactory.create();
     const model = "gpt-4o-mini";
     const queryType = "response_generator";
     const usage = {
@@ -81,7 +79,6 @@ describe("trackAIUsageEvent", () => {
 
     const usageEvent = await db.query.aiUsageEvents.findFirst();
     expect(usageEvent).toMatchObject({
-      mailboxId: placeholderMailbox.id,
       modelName: model,
       queryType,
       inputTokensCount: usage.promptTokens,
@@ -129,7 +126,6 @@ describe("trackAIUsageEvent", () => {
         where: eq(aiUsageEvents.modelName, testCase.model),
       });
       expect(usageEvent).toMatchObject({
-        mailboxId: mailbox.id,
         modelName: testCase.model,
         queryType: "response_generator",
         inputTokensCount: testCase.inputTokens,

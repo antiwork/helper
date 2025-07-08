@@ -15,6 +15,7 @@ import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ta
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { PageHeader } from "@/components/pageHeader";
+import { useDocumentTitle } from "@/components/useDocumentTitle";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -50,11 +51,7 @@ const Inbox = () => {
     ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
     : CATEGORY_LABELS[params.category];
 
-  useEffect(() => {
-    if (pageTitle) {
-      document.title = pageTitle;
-    }
-  }, [pageTitle]);
+  useDocumentTitle(pageTitle);
 
   const currentConversationIndex =
     conversationListData?.conversations.findIndex((c) => c.slug === currentConversationSlug) ?? -1;

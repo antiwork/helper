@@ -1,11 +1,9 @@
 import { createHash } from "crypto";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
+import { assertDefined } from "@/components/utils/assert";
 import { cacheFor } from "@/lib/cache";
+import { getMailbox } from "@/lib/data/mailbox";
 import { env } from "@/lib/env";
-import { assertDefined } from "../../components/utils/assert";
 import { runAIObjectQuery } from "./index";
 
 const toolConfigSchema = z.object({
@@ -42,7 +40,6 @@ const convertHtmlToMarkdown = async (html: string, currentURL: string): Promise<
 
 export const generateReadPageTool = async (
   pageHTML: string,
-  mailboxId: number,
   currentURL: string,
   email: string,
 ): Promise<{ toolName: string; toolDescription: string; pageContent: string } | null> => {
@@ -61,12 +58,7 @@ export const generateReadPageTool = async (
 
   const markdown = await convertHtmlToMarkdown(pageHTML, currentURL);
 
-  const mailbox = assertDefined(
-    await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.id, mailboxId),
-    }),
-    "Mailbox not found",
-  );
+  const mailbox = assertDefined(await getMailbox());
 
   if (!markdown) {
     return null;

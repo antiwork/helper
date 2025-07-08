@@ -7,12 +7,12 @@ import { TextSelection } from "@tiptap/pm/state";
 import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
-import { ReactNode, Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { toast } from "sonner";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { useConversationListContextSafe } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
 import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
@@ -282,18 +282,10 @@ const TipTapEditor = ({
 
   const { unsavedFiles, onUpload, onRetry } = useFileUpload();
   const retryNonImageUpload = (file: File) =>
-    onRetry(file).upload.catch((message: string | null) =>
-      toast({
-        title: message ?? `Failed to upload ${file.name}`,
-        variant: "destructive",
-      }),
-    );
+    onRetry(file).upload.catch((message: string | null) => toast.error(message ?? `Failed to upload ${file.name}`));
   const insertFileAttachment = (file: File) =>
     onUpload(file, { inline: false }).upload.catch((message: string | null) =>
-      toast({
-        title: message ?? `Failed to upload ${file.name}`,
-        variant: "destructive",
-      }),
+      toast.error(message ?? `Failed to upload ${file.name}`),
     );
   const insertInlineImage = (file: File) => {
     if (!editorRef.current) return;

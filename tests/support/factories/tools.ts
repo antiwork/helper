@@ -6,8 +6,8 @@ import { tools } from "@/db/schema";
 type Tool = typeof tools.$inferInsert;
 
 export const toolsFactory = {
-  create: async (overrides: Partial<Omit<Tool, "mailboxId">> & { mailboxId: number }) => {
-    const defaultTool: Omit<Tool, "mailboxId"> = {
+  create: async (overrides: Partial<Tool>) => {
+    const defaultTool: Tool = {
       name: faker.company.name(),
       description: faker.lorem.sentence(),
       slug: faker.helpers.slugify(faker.company.name().toLowerCase()),

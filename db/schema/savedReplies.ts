@@ -12,7 +12,7 @@ export const savedReplies = pgTable(
     slug: randomSlugField("slug"),
     name: varchar({ length: 100 }).notNull(),
     content: text().notNull(),
-    mailboxId: bigint({ mode: "number" })
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
       .notNull()
       .references(() => mailboxes.id, { onDelete: "cascade" }),
     createdByUserId: text("created_by_user_id"),
@@ -20,16 +20,16 @@ export const savedReplies = pgTable(
     usageCount: integer().notNull().default(0),
   },
   (table) => [
-    index("saved_replies_mailbox_id_idx").on(table.mailboxId),
+    index("saved_replies_mailbox_id_idx").on(table.unused_mailboxId),
     index("saved_replies_created_by_user_idx").on(table.createdByUserId),
     index("saved_replies_slug_idx").on(table.slug),
-    uniqueIndex("saved_replies_slug_mailbox_unique").on(table.slug, table.mailboxId),
+    uniqueIndex("saved_replies_slug_mailbox_unique").on(table.slug, table.unused_mailboxId),
   ],
 ).enableRLS();
 
 export const savedRepliesRelations = relations(savedReplies, ({ one }) => ({
   mailbox: one(mailboxes, {
-    fields: [savedReplies.mailboxId],
+    fields: [savedReplies.unused_mailboxId],
     references: [mailboxes.id],
   }),
 }));

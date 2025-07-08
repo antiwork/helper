@@ -26,7 +26,7 @@ export const savedRepliesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const conditions = [eq(savedReplies.mailboxId, ctx.mailbox.id)];
+      const conditions = [];
 
       if (input.onlyActive) {
         conditions.push(eq(savedReplies.isActive, true));
@@ -66,9 +66,9 @@ export const savedRepliesRouter = {
       }));
     }),
 
-  get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ ctx, input }) => {
+  get: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).query(async ({ input }) => {
     const savedReply = await db.query.savedReplies.findFirst({
-      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)),
+      where: and(eq(savedReplies.slug, input.slug)),
     });
 
     if (!savedReply) {
@@ -94,8 +94,8 @@ export const savedRepliesRouter = {
         .values({
           ...input,
           content: sanitizeContent(input.content),
-          mailboxId: ctx.mailbox.id,
           createdByUserId: ctx.user.id,
+          unused_mailboxId: ctx.mailbox.id,
         })
         .returning()
         .then(takeUniqueOrThrow);
@@ -112,9 +112,9 @@ export const savedRepliesRouter = {
         isActive: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const existingSavedReply = await db.query.savedReplies.findFirst({
-        where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)),
+        where: and(eq(savedReplies.slug, input.slug)),
       });
 
       if (!existingSavedReply) {
@@ -136,16 +136,16 @@ export const savedRepliesRouter = {
       const updatedSavedReply = await db
         .update(savedReplies)
         .set(sanitizedUpdateData)
-        .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)))
+        .where(eq(savedReplies.slug, input.slug))
         .returning()
         .then(takeUniqueOrThrow);
 
       return updatedSavedReply;
     }),
 
-  delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
+  delete: mailboxProcedure.input(z.object({ slug: z.string().min(1) })).mutation(async ({ input }) => {
     const existingSavedReply = await db.query.savedReplies.findFirst({
-      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)),
+      where: eq(savedReplies.slug, input.slug),
     });
 
     if (!existingSavedReply) {
@@ -155,40 +155,32 @@ export const savedRepliesRouter = {
       });
     }
 
-    await db
-      .delete(savedReplies)
-      .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)));
+    await db.delete(savedReplies).where(eq(savedReplies.slug, input.slug));
 
     return { success: true };
   }),
 
-  incrementUsage: mailboxProcedure
-    .input(z.object({ slug: z.string().min(1).max(50) }))
-    .mutation(async ({ ctx, input }) => {
-      // Verify saved reply exists and is active before incrementing
-      const savedReply = await db.query.savedReplies.findFirst({
-        where: and(
-          eq(savedReplies.slug, input.slug),
-          eq(savedReplies.mailboxId, ctx.mailbox.id),
-          eq(savedReplies.isActive, true),
-        ),
+  incrementUsage: mailboxProcedure.input(z.object({ slug: z.string().min(1).max(50) })).mutation(async ({ input }) => {
+    // Verify saved reply exists and is active before incrementing
+    const savedReply = await db.query.savedReplies.findFirst({
+      where: and(eq(savedReplies.slug, input.slug), eq(savedReplies.isActive, true)),
+    });
+
+    if (!savedReply) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Saved reply not found or access denied",
       });
+    }
 
-      if (!savedReply) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Saved reply not found or access denied",
-        });
-      }
+    await db
+      .update(savedReplies)
+      .set({
+        usageCount: sql`${savedReplies.usageCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(savedReplies.slug, input.slug));
 
-      await db
-        .update(savedReplies)
-        .set({
-          usageCount: sql`${savedReplies.usageCount} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(savedReplies.slug, input.slug), eq(savedReplies.mailboxId, ctx.mailbox.id)));
-
-      return { success: true };
-    }),
+    return { success: true };
+  }),
 } satisfies TRPCRouterRecord;

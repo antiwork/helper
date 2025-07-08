@@ -2,7 +2,6 @@ import { conversationMessagesFactory } from "@tests/support/factories/conversati
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
 import { toolsFactory } from "@tests/support/factories/tools";
-import { userFactory } from "@tests/support/factories/users";
 import { getTableName, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
@@ -32,8 +31,7 @@ describe("encryptedField", () => {
     expect(rawDbValues.rows[0]?.email).toBe("test@example.com");
     expect(rawDbValues.rows[0]?.accessToken).not.toBe(testAccessToken);
 
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const messageBody =
       "Of course! I'm here to help. Could you please provide more details about the issue or question you have? The more information you can provide, the better I'll be able to assist you.";
     const { message } = await conversationMessagesFactory.create(conversation.id, {
@@ -47,11 +45,9 @@ describe("encryptedField", () => {
 describe("nativeEncryptedField", () => {
   it("properly encrypts and decrypts", async () => {
     const testAuthToken = "testAuthToken123";
-    const { mailbox } = await userFactory.createRootUser();
     const { tool } = await toolsFactory.create({
       name: "Test Tool",
       authenticationToken: testAuthToken,
-      mailboxId: mailbox.id,
     });
 
     const fetchedTool = await db.query.tools.findFirst({

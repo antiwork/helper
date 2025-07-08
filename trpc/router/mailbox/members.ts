@@ -24,7 +24,7 @@ export const membersRouter = {
       try {
         let user;
         if (displayName !== undefined || role !== undefined || keywords !== undefined) {
-          user = await updateUserMailboxData(userId, ctx.mailbox.id, {
+          user = await updateUserMailboxData(userId, {
             displayName,
             role,
             keywords,
@@ -51,7 +51,6 @@ export const membersRouter = {
             keywords,
             role,
             permissions,
-            mailboxId: ctx.mailbox.id,
             mailboxSlug: ctx.mailbox.slug,
           },
         });
@@ -67,7 +66,7 @@ export const membersRouter = {
 
   list: mailboxProcedure.query(async ({ ctx }) => {
     return {
-      members: await getUsersWithMailboxAccess(ctx.mailbox.id),
+      members: await getUsersWithMailboxAccess(),
       isAdmin: isAdmin(await getProfile(ctx.user.id)),
     };
   }),
