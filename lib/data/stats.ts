@@ -1,6 +1,7 @@
 import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
 
@@ -18,9 +19,16 @@ export type MemberStats = {
 }[];
 
 export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
-  const allUsers = await db.query.userProfiles.findMany({
-    where: isNull(userProfiles.deletedAt),
-  });
+  const allUsers = await db
+    .select({
+      id: authUsers.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+      access: userProfiles.access,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+
   const memberIds = allUsers.map((user) => user.id);
 
   const dateConditions = [];
