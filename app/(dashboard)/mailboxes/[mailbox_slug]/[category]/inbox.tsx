@@ -12,7 +12,6 @@ import {
   useConversationListContext,
 } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
-import { useSaveLatestMailboxSlug } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/useSaveLatestMailboxSlug";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { PageHeader } from "@/components/pageHeader";
@@ -75,7 +74,6 @@ const Inbox = () => {
     if (!isPending) prefetchNextConversations(3);
   }, [isPending, currentConversationSlug]);
 
-  useSaveLatestMailboxSlug(mailboxSlug);
 
   if (isMobile) {
     return (

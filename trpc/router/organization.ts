@@ -5,10 +5,19 @@ import { addUser } from "@/lib/data/user";
 import { protectedProcedure } from "../trpc";
 import { userProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { authUsers } from "@/db/supabaseSchema/auth";
 
 export const organizationRouter = {
   getMembers: protectedProcedure.query(async () => {
-    const users = await db.query.userProfiles.findMany();
+    const users = await db
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+
     return users.map((user) => ({
       id: user.id,
       displayName: user?.displayName ?? user.email ?? user.id,
@@ -25,13 +34,5 @@ export const organizationRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       await addUser(ctx.user.id, input.email, input.displayName, input.permissions);
-    }),
-    updateLastMailboxSlug: protectedProcedure
-    .input(z.object({ mailboxSlug: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      await db
-        .update(userProfiles)
-        .set({ lastMailboxSlug: input.mailboxSlug })
-        .where(eq(userProfiles.id, ctx.user.id));
     }),
 } satisfies TRPCRouterRecord;

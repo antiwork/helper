@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { ParsedMailbox } from "email-addresses";
 import { GaxiosResponse } from "gaxios";
 import { OAuth2Client } from "google-auth-library";
@@ -10,7 +10,7 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
+import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes, userProfiles } from "@/db/schema";
 import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
@@ -72,9 +72,15 @@ const assignBasedOnCc = async (
   );
 
   for (const ccAddress of ccAddresses) {
-    const ccStaffUser = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, ccAddress),
-    });
+    const ccStaffUser = await db.select({
+        id: authUsers.id,
+        displayName: userProfiles.displayName,
+        email: authUsers.email,
+      })
+      .from(userProfiles)
+      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+      .where(eq(authUsers.email, ccAddress))
+.then(takeUniqueOrThrow);
     if (ccStaffUser) {
       await updateConversation(conversationId, {
         set: { assignedToId: ccStaffUser.id, assignedToAI: false },

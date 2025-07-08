@@ -3,8 +3,9 @@ import { intervalToDuration, isWeekend } from "date-fns";
 import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
-import { conversations, mailboxes } from "@/db/schema";
+import { conversations, mailboxes, userProfiles } from "@/db/schema";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
+import { authUsers } from "@/db/supabaseSchema/auth";
 
 export function formatDuration(start: Date): string {
   const duration = intervalToDuration({ start, end: new Date() });
@@ -37,7 +38,18 @@ export const checkAssignedTicketResponseTimes = async () => {
 
   const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
-  const usersById = Object.fromEntries((await db.query.userProfiles.findMany()).map((user) => [user.id, user]));
+  const users = await db
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+      permissions: userProfiles.permissions,
+      access: userProfiles.access,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+
+  const usersById = Object.fromEntries(users.map((user) => [user.id, user]));
 
   for (const mailbox of mailboxesList) {
     if (mailbox.preferences?.disableTicketResponseTimeAlerts) continue;

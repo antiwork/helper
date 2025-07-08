@@ -3,7 +3,6 @@ import { cache } from "react";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
 
@@ -58,12 +57,13 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
   const users = await db
     .select({
       id: userProfiles.id,
-      email: userProfiles.email,
+      email: authUsers.email,
       displayName: userProfiles.displayName,
       permissions: userProfiles.permissions,
       access: userProfiles.access,
     })
-  .from(userProfiles);
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
   return users.map((user) => {
     const access = user.access ?? { role: "afk", keywords: [] };
@@ -89,7 +89,7 @@ export const updateUserMailboxData = async (
     keywords?: MailboxAccess["keywords"];
   },
 ): Promise<UserWithMailboxAccessData> => {
-  const [updatedProfile] = await db
+  await db
     .update(userProfiles)
     .set({
       displayName: updates.displayName,
@@ -99,7 +99,19 @@ export const updateUserMailboxData = async (
       },
     })
     .where(eq(userProfiles.id, userId))
-    .returning();
+
+  const [updatedProfile] = await db
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+      permissions: userProfiles.permissions,
+      access: userProfiles.access,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(eq(userProfiles.id, userId));
+
 
   return {
     id: updatedProfile?.id ?? userId,
