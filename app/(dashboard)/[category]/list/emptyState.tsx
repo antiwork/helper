@@ -1,9 +1,9 @@
 import { ArrowRight, Check, Circle } from "lucide-react";
 import Link from "next/link";
-import { HandHello } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/handHello";
-import { InboxZero } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/icons/inboxZero";
-import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/shared/queries";
+import { HandHello } from "@/app/(dashboard)/[category]/icons/handHello";
+import { InboxZero } from "@/app/(dashboard)/[category]/icons/inboxZero";
+import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
+import { useConversationsListInput } from "@/app/(dashboard)/[category]/shared/queries";
 import { cn } from "@/lib/utils";
 
 export const NoConversations = ({ filtered }: { filtered?: boolean }) => {

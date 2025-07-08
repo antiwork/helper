@@ -1,4 +1,4 @@
-import Inbox from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/inbox";
+import Inbox from "@/app/(dashboard)/[category]/inbox";
 
 const Page = () => <Inbox />;
 

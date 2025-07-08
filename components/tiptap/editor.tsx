@@ -10,7 +10,7 @@ import partition from "lodash/partition";
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import { toast } from "sonner";
 import UAParser from "ua-parser-js";
-import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { isEmptyContent } from "@/app/(dashboard)/[category]/conversation/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";

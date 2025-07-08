@@ -1,6 +1,6 @@
 import { HelpCircle, MessagesSquare } from "lucide-react";
-import { EventItem } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/eventItem";
-import MessageItem from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageItem";
+import { EventItem } from "@/app/(dashboard)/[category]/conversation/eventItem";
+import MessageItem from "@/app/(dashboard)/[category]/conversation/messageItem";
 import type { Message } from "@/app/types/global";
 import { ToolMetadata } from "@/db/schema";
 import { ConversationWithNewMessages } from "./conversation";

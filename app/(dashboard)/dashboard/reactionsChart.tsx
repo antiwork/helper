@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { Bar, BarChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import ConversationsModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversationsModal";
-import { timeRangeToQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/timeRangeSelector";
+import ConversationsModal from "@/app/(dashboard)/[category]/conversationsModal";
+import { timeRangeToQuery } from "@/app/(dashboard)/dashboard/timeRangeSelector";
 import LoadingSpinner from "@/components/loadingSpinner";
 import {
   ChartContainer,

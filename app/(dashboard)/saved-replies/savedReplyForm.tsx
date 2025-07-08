@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
+import { isEmptyContent } from "@/app/(dashboard)/[category]/conversation/messageActions";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";

@@ -1,7 +1,7 @@
 import { toast } from "sonner";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
-import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import { useConversationsListInput } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/shared/queries";
+import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
+import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
+import { useConversationsListInput } from "@/app/(dashboard)/[category]/shared/queries";
 import { api } from "@/trpc/react";
 
 export const useAssignTicket = () => {

@@ -4,14 +4,14 @@ import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
-import Conversation from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversation";
-import { useConversationQuery } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
-import { List } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationList";
+import Conversation from "@/app/(dashboard)/[category]/conversation/conversation";
+import { useConversationQuery } from "@/app/(dashboard)/[category]/conversation/conversationContext";
+import { List } from "@/app/(dashboard)/[category]/list/conversationList";
 import {
   ConversationListContextProvider,
   useConversationListContext,
-} from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import { TabBar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
+} from "@/app/(dashboard)/[category]/list/conversationListContext";
+import { TabBar } from "@/app/(dashboard)/[category]/tabBar";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { PageHeader } from "@/components/pageHeader";

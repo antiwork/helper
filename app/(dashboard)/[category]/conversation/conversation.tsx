@@ -17,11 +17,11 @@ import { useStickToBottom } from "use-stick-to-bottom";
 import {
   ConversationContextProvider,
   useConversationContext,
-} from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
-import { MessageThread } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageThread";
-import Viewers from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/viewers";
-import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
-import PreviewModal from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/previewModal";
+} from "@/app/(dashboard)/[category]/conversation/conversationContext";
+import { MessageThread } from "@/app/(dashboard)/[category]/conversation/messageThread";
+import Viewers from "@/app/(dashboard)/[category]/conversation/viewers";
+import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
+import PreviewModal from "@/app/(dashboard)/[category]/previewModal";
 import {
   type AttachedFile,
   type ConversationEvent,

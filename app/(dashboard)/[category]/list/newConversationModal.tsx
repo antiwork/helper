@@ -4,8 +4,8 @@ import { toast } from "sonner";
 import {
   FAILED_ATTACHMENTS_TOOLTIP_MESSAGE,
   useSendDisabled,
-} from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
-import { EmailSignature } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/emailSignature";
+} from "@/app/(dashboard)/[category]/conversation/messageActions";
+import { EmailSignature } from "@/app/(dashboard)/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { FileUploadProvider, useFileUpload } from "@/components/fileUploadContext";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";

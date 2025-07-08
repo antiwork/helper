@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
-import SlackSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/slack.svg";
+import SlackSvg from "@/app/(dashboard)/icons/slack.svg";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import { useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
-import { Tool } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/ticketCommandBar/toolForm";
+import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
+import { Tool } from "@/app/(dashboard)/[category]/ticketCommandBar/toolForm";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";

@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import { PeopleTable } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/peopleTable";
-import { ReactionsChart } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/dashboard/reactionsChart";
+import { PeopleTable } from "@/app/(dashboard)/dashboard/peopleTable";
+import { ReactionsChart } from "@/app/(dashboard)/dashboard/reactionsChart";
 import { useIsMobile } from "@/components/hooks/use-mobile";
 import { PageHeader } from "@/components/pageHeader";
 import { Panel } from "@/components/panel";

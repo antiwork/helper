@@ -2,7 +2,7 @@ import { useRouter } from "next/navigation";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
-import GitHubSvg from "@/app/(dashboard)/mailboxes/[mailbox_slug]/icons/github.svg";
+import GitHubSvg from "@/app/(dashboard)/icons/github.svg";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
