@@ -2,13 +2,13 @@
 
 import { mapValues } from "lodash-es";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { normalizeHex } from "@/lib/themes";
-import { showErrorToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SwitchSectionWrapper } from "../sectionWrapper";
@@ -47,7 +47,7 @@ const ThemeSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      showErrorToast("Failed to update theme", error);
+      toast.error("Error updating theme", { description: error.message });
     },
   });
 

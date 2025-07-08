@@ -68,7 +68,7 @@ export const banUser = async (userId: string) => {
   }
 };
 
-export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
+export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
   const users = await db
     .select({
       id: authUsers.id,
@@ -82,11 +82,9 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
     .from(authUsers)
     .leftJoin(userProfiles, eq(authUsers.id, userProfiles.id));
 
-  return users
-    .filter((user) => user.deletedAt === null)
-    .map((user) => {
-      const access = user.access ?? user.rawMetadata?.mailboxAccess?.[mailboxId] ?? { role: "afk", keywords: [] };
-      const permissions = user.permissions ?? "member";
+  return users.map((user) => {
+    const access = user.access ?? { role: "afk", keywords: [] };
+    const permissions = user.permissions ?? "member";
 
       return {
         id: user.id,
@@ -101,7 +99,6 @@ export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<User
 
 export const updateUserMailboxData = async (
   userId: string,
-  mailboxId: number,
   updates: {
     displayName?: string;
     role?: UserRole;
@@ -117,11 +114,9 @@ export const updateUserMailboxData = async (
   if (error) throw error;
 
   const userMetadata = user?.user_metadata || {};
-  const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
 
   // Only update the fields that were provided, keep the rest
   const updatedMailboxData = {
-    ...mailboxAccess[mailboxId],
     ...(updates.role && { role: updates.role }),
     ...(updates.keywords && { keywords: updates.keywords }),
     updatedAt: new Date().toISOString(),
@@ -134,10 +129,7 @@ export const updateUserMailboxData = async (
     user_metadata: {
       ...userMetadata,
       ...(updates.displayName && { display_name: updates.displayName }),
-      mailboxAccess: {
-        ...mailboxAccess,
-        [mailboxId]: updatedMailboxData,
-      },
+      mailboxAccess: updatedMailboxData,
     },
   });
   if (updateError) throw updateError;

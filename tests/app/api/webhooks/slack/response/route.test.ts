@@ -1,6 +1,5 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { userFactory } from "@tests/support/factories/users";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/webhooks/slack/response/route";
 import { verifySlackRequest } from "@/lib/slack/client";
@@ -49,8 +48,7 @@ describe("POST /api/webhooks/slack/response", () => {
 
   it("handles VIP message action and returns 200", async () => {
     vi.mocked(verifySlackRequest).mockResolvedValue(true);
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       slackMessageTs: "1234567890.123456",
       slackChannel: "test-channel",

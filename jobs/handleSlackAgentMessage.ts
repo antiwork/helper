@@ -5,6 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
+import { getMailbox } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { generateAgentResponse } from "@/lib/slack/agent/generateAgentResponse";
 import { getThreadMessages } from "@/lib/slack/agent/getThreadMessages";
@@ -23,12 +24,9 @@ export const handleSlackAgentMessage = async ({
   const agentThread = assertDefinedOrRaiseNonRetriableError(
     await db.query.agentThreads.findFirst({
       where: eq(agentThreads.id, agentThreadId),
-      with: {
-        mailbox: true,
-      },
     }),
   );
-  const mailbox = assertDefined(agentThread.mailbox);
+  const mailbox = assertDefined(await getMailbox());
 
   const messages = await getThreadMessages(
     assertDefined(mailbox.slackBotToken),

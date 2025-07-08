@@ -21,11 +21,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { showErrorToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
 
@@ -196,7 +196,7 @@ const MessageItem = ({
     },
     onError: (e) => {
       captureExceptionAndLog(e);
-      showErrorToast("Failed to split conversation", e);
+      toast.error("Failed to split conversation", { description: e.message });
     },
   });
 

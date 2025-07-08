@@ -3,6 +3,7 @@
 import { Copy, Plus, Search } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { PageHeader } from "@/components/pageHeader";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { stripHtmlTags } from "@/components/utils/html";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { SavedReplyForm } from "./savedReplyForm";
@@ -27,6 +28,8 @@ export default function SavedRepliesPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSavedReply, setEditingSavedReply] = useState<SavedReply | null>(null);
+
+  useDocumentTitle("Saved replies");
 
   // Debounce search term to avoid losing focus on every keystroke
   useEffect(() => {
@@ -49,22 +52,22 @@ export default function SavedRepliesPage() {
   const handleCreateSuccess = () => {
     setShowCreateDialog(false);
     refetch();
-    showSuccessToast("Saved reply created successfully");
+    toast.success("Saved reply created successfully");
   };
 
   const handleEditSuccess = () => {
     setEditingSavedReply(null);
     refetch();
-    showSuccessToast("Saved reply updated successfully");
+    toast.success("Saved reply updated successfully");
   };
 
   const handleCopySavedReply = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
-      showSuccessToast("Saved reply copied to clipboard");
+      toast.success("Saved reply copied to clipboard");
     } catch (error) {
       captureExceptionAndLog(error);
-      showErrorToast("Failed to copy saved reply");
+      toast.error("Failed to copy saved reply");
     }
   };
 

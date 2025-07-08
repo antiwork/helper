@@ -2,6 +2,7 @@
 
 import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
@@ -12,7 +13,6 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useSession } from "@/components/useSession";
 import { type UserRole } from "@/lib/data/user";
-import { showErrorToast } from "@/lib/utils/toast";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import DeleteMemberDialog from "./deleteMemberDialog";
@@ -89,7 +89,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
     },
     onError: (error) => {
       displayNameSaving.setState("error");
-      showErrorToast("Failed to update display name", error);
+      toast.error("Failed to update display name", { description: error.message });
       setDisplayNameInput(member.displayName || "");
     },
   });
@@ -105,7 +105,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
     },
     onError: (error) => {
       roleSaving.setState("error");
-      showErrorToast("Failed to update role", error);
+      toast.error("Failed to update role", { description: error.message });
       setRole(member.role);
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
@@ -123,7 +123,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
     },
     onError: (error) => {
       keywordsSaving.setState("error");
-      showErrorToast("Failed to update keywords", error);
+      toast.error("Failed to update keywords", { description: error.message });
       setKeywordsInput(member.keywords.join(", "));
       setLocalKeywords(member.keywords);
     },
@@ -139,7 +139,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin, conversationIds }: TeamMe
     },
     onError: (error) => {
       permissionsSaving.setState("error");
-      showErrorToast("Failed to update permissions", error);
+      toast.error("Failed to update permissions", { description: error.message });
       setPermissions(member.permissions);
     },
   });

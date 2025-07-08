@@ -46,7 +46,7 @@ export const membersRouter = {
       }
 
       try {
-        const user = await updateUserMailboxData(input.userId, ctx.mailbox.id, updatePayload);
+        const user = await updateUserMailboxData(input.userId, updatePayload);
         return { user };
       } catch (error) {
         captureExceptionAndLog(error, {
@@ -70,7 +70,7 @@ export const membersRouter = {
 
   list: mailboxProcedure.query(async ({ ctx }) => {
     return {
-      members: await getUsersWithMailboxAccess(ctx.mailbox.id),
+      members: await getUsersWithMailboxAccess(),
       isAdmin: isAdmin(await getProfile(ctx.user.id)),
     };
   }),

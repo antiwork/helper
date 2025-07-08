@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,11 +40,7 @@ export default function DeleteMemberDialog({
   const { mutateAsync: updateBulkConversation } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: (error) => {
       setLoading(false);
-      toast({
-        title: "Failed to update conversation",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Failed to update conversation", { description: error.message });
     },
   });
 
@@ -69,10 +65,7 @@ export default function DeleteMemberDialog({
     };
     if (conversationIds.length > 0) {
       if (!assignedTo) {
-        toast({
-          variant: "destructive",
-          title: "Please select a valid assignee",
-        });
+        toast.error("Please select a valid assignee");
         setLoading(false);
         return;
       }
@@ -82,10 +75,7 @@ export default function DeleteMemberDialog({
             await removeTeamMemberAsync({ id: assignedToId.id, mailboxSlug });
             return true;
           } catch (error) {
-            toast({
-              title: "Failed to remove member",
-              variant: "destructive",
-            })
+            toast.error("Failed to remove member");
             return false;
           }
         };
@@ -112,26 +102,16 @@ export default function DeleteMemberDialog({
                 const removed = await handleRemoveMember();
                 if (removed) {
                   if (updatedImmediately) {
-                    toast({
-                      title: "Member removed from the Team",
-                      variant: "success",
-                    })
+                    toast.success("Member removed from the Team")
                   } else {
-                    toast({
-                      title: "Member will be removed from the Team",
-                      description: "Please refresh the page to see the changes",
-                      variant: "success",
-                    })
+                    toast.success("Member will be removed from the Team", { description: "Please refresh the page to see the changes" })
                   }
                   utils.mailbox.members.invalidate();
                   cleanup();
                 }
               },
               onError: (error) => {
-                toast({
-                  title: "Failed to reassign conversations",
-                  variant: "destructive",
-                })
+                toast.error("Failed to reassign conversations")
                 setLoading(false);
               },
             },
@@ -152,26 +132,16 @@ export default function DeleteMemberDialog({
               const removed = await handleRemoveMember();
               if (removed) {
                 if (updatedImmediately) {
-                  toast({
-                    variant: "success",
-                    title: "Member removed from the Team",
-                  })
+                  toast.success("Member removed from the Team")
                 } else {
-                  toast({
-                    variant: "success",
-                    title: "Member will be removed from the Team",
-                    description: "Please refresh the page to see the changes",
-                  })
+                  toast.success("Member will be removed from the Team", { description: "Please refresh the page to see the changes" })
                 }
                 utils.mailbox.members.invalidate();
                 cleanup();
               }
             },
             onError: (error) => {
-              toast({
-                title: "Error while removing member",
-                variant: "destructive"
-              })
+              toast.error("Error while removing member")
               setLoading(false);
             },
           },
@@ -189,18 +159,11 @@ export default function DeleteMemberDialog({
           onError: reject,
         });
       });
-      toast({
-        variant: "success",
-        title: "Member removed from the Team",
-      });
+      toast.success("Member removed from the Team")
       utils.mailbox.members.invalidate();
       cleanup();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to remove member",
-
-      })
+      toast.error("Failed to remove member")
       setLoading(false);
     }
   };

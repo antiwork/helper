@@ -2,6 +2,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { agentMessages, conversationMessages, faqs } from "@/db/schema";
 import { handleKnowledgeBankSlackAction } from "@/lib/data/knowledge";
+import { getMailbox } from "@/lib/data/mailbox";
 import { handleAgentMessageSlackAction } from "@/lib/slack/agent/handleAgentMessageSlackAction";
 import { verifySlackRequest } from "@/lib/slack/client";
 import { handleMessageSlackAction } from "@/lib/slack/shared";
@@ -35,11 +36,7 @@ export const POST = async (request: Request) => {
   const message = await db.query.conversationMessages.findFirst({
     where: eq(conversationMessages.slackMessageTs, messageTs),
     with: {
-      conversation: {
-        with: {
-          mailbox: true,
-        },
-      },
+      conversation: true,
     },
   });
   if (message?.conversation) {
@@ -56,13 +53,13 @@ export const POST = async (request: Request) => {
 
   const knowledge = await db.query.faqs.findFirst({
     where: eq(faqs.slackMessageTs, messageTs),
-    with: {
-      mailbox: true,
-    },
   });
 
   if (knowledge) {
-    await handleKnowledgeBankSlackAction(knowledge, knowledge.mailbox, payload);
+    const mailbox = await getMailbox();
+    if (mailbox) {
+      await handleKnowledgeBankSlackAction(knowledge, mailbox, payload);
+    }
     return new Response(null, { status: 200 });
   }
 

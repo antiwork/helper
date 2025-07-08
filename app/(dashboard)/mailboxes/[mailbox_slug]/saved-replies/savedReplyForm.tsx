@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
@@ -9,7 +10,6 @@ import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { showErrorToast, showSuccessToast } from "@/lib/utils/toast";
 import { api } from "@/trpc/react";
 
 type SavedReply = {
@@ -50,7 +50,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
   }, []);
 
   const handleError = useCallback((error: string) => {
-    showErrorToast("Speech Recognition Error", error);
+    toast.error("Speech Recognition Error", { description: error });
   }, []);
 
   const {
@@ -70,7 +70,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
       setInitialContentObject({ content: "" });
     },
     onError: (error) => {
-      showErrorToast("Failed to create saved reply", error);
+      toast.error("Failed to create saved reply", { description: error.message });
     },
   });
 
@@ -79,17 +79,17 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
       onSuccess();
     },
     onError: (error) => {
-      showErrorToast("Failed to update saved reply", error);
+      toast.error("Failed to update saved reply", { description: error.message });
     },
   });
 
   const deleteSavedReply = api.mailbox.savedReplies.delete.useMutation({
     onSuccess: () => {
-      showSuccessToast("Saved reply deleted successfully");
+      toast.success("Saved reply deleted successfully");
       onDelete?.();
     },
     onError: (error) => {
-      showErrorToast("Failed to delete saved reply", error);
+      toast.error("Failed to delete saved reply", { description: error.message });
     },
   });
 

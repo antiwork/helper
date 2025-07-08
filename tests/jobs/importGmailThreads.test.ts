@@ -106,7 +106,7 @@ describe("processGmailThreads", () => {
     const weekStartDate = new Date("2023-05-01T00:00:00.000Z");
     const endDate = new Date("2023-05-10T00:00:00.000Z");
 
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, { gmailThreadId: "existing-thread" });
 
     const mockThreads = [
