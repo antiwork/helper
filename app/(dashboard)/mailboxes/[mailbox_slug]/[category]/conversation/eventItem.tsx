@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
-import { api } from "@/trpc/react";
+import { useMembers } from "@/components/useMembers";
 
 const eventDescriptions = {
   resolved_by_ai: "AI resolution",
@@ -36,15 +36,7 @@ const statusIcons = {
 export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
-  const {
-    data: orgMembers,
-    isLoading: isLoadingMembers,
-    error: membersError,
-  } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: orgMembers, isLoading: isLoadingMembers, error: membersError } = useMembers();
 
   const getUserDisplayName = (userId: string | null | undefined): string | null => {
     if (!userId) return null;

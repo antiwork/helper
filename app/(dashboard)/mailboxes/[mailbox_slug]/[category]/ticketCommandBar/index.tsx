@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Command } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -35,11 +36,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
   const pageRef = useRef<string>("main");
   const { user: currentUser } = useSession() ?? {};
-  const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: orgMembers } = useMembers();
   const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
     { mailboxSlug, conversationSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },

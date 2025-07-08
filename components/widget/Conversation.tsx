@@ -90,6 +90,7 @@ export default function Conversation({
           reactionType: null,
           reactionFeedback: null,
           reactionCreatedAt: null,
+          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
         },
       ]);
     },

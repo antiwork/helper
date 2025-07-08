@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
 import { useAssignTicket } from "./useAssignTicket";
 
 export const AssignPopoverButton = ({
@@ -23,11 +23,7 @@ export const AssignPopoverButton = ({
 }) => {
   const { assignTicket } = useAssignTicket();
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const { data: orgMembers = [] } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: orgMembers = [] } = useMembers();
   const { user: currentUser } = useSession() ?? {};
 
   const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToId) ?? null;

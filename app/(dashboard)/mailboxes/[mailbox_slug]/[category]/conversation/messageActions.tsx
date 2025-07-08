@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useMembers } from "@/components/useMembers";
+import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
 import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
@@ -59,6 +61,8 @@ export const MessageActions = () => {
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
+  const { data: orgMembers } = useMembers();
+  const { user: currentUser } = useSession() ?? {};
 
   const broadcastEvent = useBroadcastRealtimeEvent();
   const lastTypingBroadcastRef = useRef<number>(0);
@@ -262,6 +266,7 @@ export const MessageActions = () => {
       });
 
       broadcastEvent(conversationRealtimeChannelId(conversationSlug), "agent-reply", {
+        agentName: orgMembers?.find((m) => m.id === currentUser?.id)?.displayName?.split(" ")[0],
         message: draftedEmail.message,
         timestamp: Date.now(),
       });
