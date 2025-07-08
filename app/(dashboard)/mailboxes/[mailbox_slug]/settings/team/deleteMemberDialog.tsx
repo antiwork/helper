@@ -61,6 +61,12 @@ export default function DeleteMemberDialog({
 
   const handleAssignSubmit = async () => {
     setLoading(true);
+    const cleanup = () => {
+      setLoading(false);
+      setAssignedTo(null);
+      setAssignMessage("");
+      setIsOpen(false);
+    };
     if (conversationIds.length > 0) {
       if (!assignedTo) {
         toast({
@@ -70,10 +76,29 @@ export default function DeleteMemberDialog({
         setLoading(false);
         return;
       }
-
       try {
+        const handleRemoveMember = async () => {
+          try {
+            await removeTeamMemberAsync({ id: assignedToId.id, mailboxSlug });
+            return true;
+          } catch (error) {
+            toast({
+              title: "Failed to remove member",
+              variant: "destructive",
+            })
+            return false;
+          }
+        };
+        const removeTeamMemberAsync = (params: { id: string; mailboxSlug: string }) =>
+          new Promise((resolve, reject) => {
+            removeTeamMember(params, {
+              onSuccess: resolve,
+              onError: reject,
+            });
+        });
+        
         if ("ai" in assignedTo) {
-          return await updateBulkConversation(
+          await updateBulkConversation(
             {
               mailboxSlug,
               conversationFilter: conversationIds,
@@ -84,24 +109,36 @@ export default function DeleteMemberDialog({
             },
             {
               onSuccess: async ({ updatedImmediately }) => {
-                await removeTeamMember({ id: assignedToId.id, mailboxSlug });
-                if (updatedImmediately) {
-                  toast({
-                    title: "Member removed from the Team",
-                    variant: "success",
-                  });
-                } else {
-                  toast({
-                    title: "Member will be removed from the Team",
-                    description: "Please refresh the page to see the changes",
-                    variant: "success",
-                  });
+                const removed = await handleRemoveMember();
+                if (removed) {
+                  if (updatedImmediately) {
+                    toast({
+                      title: "Member removed from the Team",
+                      variant: "success",
+                    })
+                  } else {
+                    toast({
+                      title: "Member will be removed from the Team",
+                      description: "Please refresh the page to see the changes",
+                      variant: "success",
+                    })
+                  }
+                  utils.mailbox.members.invalidate();
+                  cleanup();
                 }
+              },
+              onError: (error) => {
+                toast({
+                  title: "Failed to reassign conversations",
+                  variant: "destructive",
+                })
+                setLoading(false);
               },
             },
           );
+          return;
         }
-        return await updateBulkConversation(
+        await updateBulkConversation(
           {
             mailboxSlug,
             conversationFilter: conversationIds,
@@ -112,37 +149,59 @@ export default function DeleteMemberDialog({
           },
           {
             onSuccess: async ({ updatedImmediately }) => {
-              await removeTeamMember({ id: assignedToId.id, mailboxSlug });
-              if (updatedImmediately) {
-                toast({
-                  title: "Member removed from the Team",
-                  variant: "success",
-                });
-              } else {
-                toast({
-                  title: "Member will be removed from the Team",
-                  description: "Please refresh the page to see the changes",
-                  variant: "success",
-                });
+              const removed = await handleRemoveMember();
+              if (removed) {
+                if (updatedImmediately) {
+                  toast({
+                    variant: "success",
+                    title: "Member removed from the Team",
+                  })
+                } else {
+                  toast({
+                    variant: "success",
+                    title: "Member will be removed from the Team",
+                    description: "Please refresh the page to see the changes",
+                  })
+                }
+                utils.mailbox.members.invalidate();
+                cleanup();
               }
-              utils.mailbox.members.invalidate();
+            },
+            onError: (error) => {
+              toast({
+                
+              })
               setLoading(false);
-              setAssignedTo(null);
-              setAssignMessage("");
-              setIsOpen(false);
             },
           },
         );
       } catch (error) {
         setLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Failed to reassign conversations",
-        });
-        return;
       }
+      return;
     }
-    removeTeamMember({ id: assignedToId.id, mailboxSlug });
+    // No conversations to reassign, just remove member
+    try {
+      await new Promise((resolve, reject) => {
+        removeTeamMember({ id: assignedToId.id, mailboxSlug }, {
+          onSuccess: resolve,
+          onError: reject,
+        });
+      });
+      toast({
+        variant: "success",
+        title: "Member removed from the Team",
+      });
+      utils.mailbox.members.invalidate();
+      cleanup();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to remove member",
+
+      })
+      setLoading(false);
+    }
   };
 
   return (

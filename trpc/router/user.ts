@@ -18,14 +18,13 @@ import { publicProcedure } from "../trpc";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
-    const user = await db
+    const [user] = await db
       .select({ id: authUsers.id, email: authUsers.email, deletedAt: userProfiles.deletedAt })
       .from(authUsers)
       .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
-      .where(eq(authUsers.email, input.email))
-      .then(takeUniqueOrThrow);
+      .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)))
 
-    if (!user || user.deletedAt) {
+    if (!user) {
       const [_, emailDomain] = input.email.split("@");
       if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
         return { signupPossible: true };

@@ -37,11 +37,7 @@ export const bulkUpdateConversations = async ({
       filters.push(ne(conversations.status, status));
     }
     if (prevAssigneeId !== undefined) {
-      if (prevAssigneeId === null) {
-        filters.push(isNull(conversations.assignedToId));
-      } else {
-        filters.push(eq(conversations.assignedToId, prevAssigneeId));
-      }
+      filters.push(eq(conversations.assignedToId, prevAssigneeId));
     }
     where = and(...filters);
   }
