@@ -56,16 +56,12 @@ export const addUser = async (
 };
 
 export const banUser = async (userId: string) => {
-  try {
-    await db
-      .update(userProfiles)
-      .set({
-        deletedAt: new Date(),
-      })
-      .where(eq(userProfiles.id, userId));
-  } catch (error) {
-    throw error;
-  }
+  await db
+    .update(userProfiles)
+    .set({
+      deletedAt: new Date(),
+    })
+    .where(eq(userProfiles.id, userId));
 };
 
 export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
@@ -86,15 +82,15 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
     const access = user.access ?? { role: "afk", keywords: [] };
     const permissions = user.permissions ?? "member";
 
-      return {
-        id: user.id,
-        displayName: user.displayName || user.rawMetadata?.display_name || "",
-        email: user.email ?? undefined,
-        role: access.role,
-        keywords: access?.keywords ?? [],
-        permissions,
-      };
-    });
+    return {
+      id: user.id,
+      displayName: user.displayName || user.rawMetadata?.display_name || "",
+      email: user.email ?? undefined,
+      role: access.role,
+      keywords: access?.keywords ?? [],
+      permissions,
+    };
+  });
 };
 
 export const updateUserMailboxData = async (

@@ -22,7 +22,7 @@ export const userRouter = {
       .select({ id: authUsers.id, email: authUsers.email, deletedAt: userProfiles.deletedAt })
       .from(authUsers)
       .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
-      .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)))
+      .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)));
 
     if (!user) {
       const [_, emailDomain] = input.email.split("@");
