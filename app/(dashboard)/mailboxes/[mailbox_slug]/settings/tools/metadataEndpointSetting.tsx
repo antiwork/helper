@@ -61,6 +61,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       router.refresh();
       toast.success("Metadata endpoint added!");
     } catch (e) {
+      captureExceptionAndLog(e);
       toast.error("Error adding metadata endpoint");
     } finally {
       setIsLoading(false);
@@ -79,6 +80,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       router.refresh();
       toast.success("Metadata endpoint removed!");
     } catch (e) {
+      captureExceptionAndLog(e);
       toast.error("Error removing metadata endpoint");
     } finally {
       setIsLoading(false);
@@ -97,6 +99,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
       toast.success("Test request succeeded!");
       setTestRequestStatus("success");
     } catch (e) {
+      captureExceptionAndLog(e);
       toast.error("Error sending test request");
       setTestRequestStatus("error");
     } finally {
