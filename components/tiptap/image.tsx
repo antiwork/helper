@@ -30,7 +30,7 @@ const ImageNodeView = ({ node, editor, getPos, updateAttributes, deleteNode }: N
             });
           } catch {}
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           toast.error("Failed to upload image", {
             description: error instanceof Error ? error.message : "Unknown error",
           });

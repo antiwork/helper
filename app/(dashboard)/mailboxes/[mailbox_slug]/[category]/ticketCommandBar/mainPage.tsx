@@ -116,9 +116,7 @@ export const useMainPage = ({
             error,
           },
         });
-        toast({
-          variant: "destructive",
-          title: "Failed to insert saved reply",
+        toast.error("Failed to insert saved reply", {
           description: "Could not insert the saved reply content. Please try again.",
         });
       }
