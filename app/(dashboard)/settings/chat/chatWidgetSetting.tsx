@@ -3,7 +3,7 @@
 import { ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useShowChatWidget } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
+import { useShowChatWidget } from "@/app/(dashboard)/clientLayout";
 import { getBaseUrl, getMarketingSiteUrl } from "@/components/constants";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";

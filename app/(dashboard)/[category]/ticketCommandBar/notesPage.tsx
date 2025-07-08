@@ -1,7 +1,7 @@
 import { Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
+import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { FileUploadProvider, UploadStatus, useFileUpload } from "@/components/fileUploadContext";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Button } from "@/components/ui/button";

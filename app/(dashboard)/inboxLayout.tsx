@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { redirect } from "next/navigation";
 import { HelperProvider } from "@helperai/react";
-import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSidebar";
-import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
+import { AppSidebar } from "@/app/(dashboard)/appSidebar";
+import InboxClientLayout from "@/app/(dashboard)/clientLayout";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { env } from "@/lib/env";
 

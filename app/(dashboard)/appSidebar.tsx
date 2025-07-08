@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
-import { AccountDropdown } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/accountDropdown";
+import { AccountDropdown } from "@/app/(dashboard)/accountDropdown";
 import { Avatar } from "@/components/ui/avatar";
 import {
   Sidebar,

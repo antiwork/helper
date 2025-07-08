@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext } from "react";
 import { toast } from "sonner";
-import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
+import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { assertDefined } from "@/components/utils/assert";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { RouterInputs, RouterOutputs } from "@/trpc";

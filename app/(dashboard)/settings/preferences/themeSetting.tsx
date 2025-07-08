@@ -3,7 +3,7 @@
 import { mapValues } from "lodash-es";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useInboxTheme } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
+import { useInboxTheme } from "@/app/(dashboard)/clientLayout";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
