@@ -177,24 +177,7 @@ export const conversationsRouter = {
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { conversationFilter, status, assignedToId, message, assignedToAI, prevAssigneeId } = input;
-
-      let filterInput;
-      if (Array.isArray(conversationFilter)) {
-        const assignee = prevAssigneeId ? [prevAssigneeId as string] : [];
-        filterInput = {
-          limit: 25,
-          assignee,
-          status: input.status !== undefined ? [input.status] : undefined,
-        };
-      } else {
-        const assignee = prevAssigneeId ? [prevAssigneeId as string] : [];
-        filterInput = {
-          ...conversationFilter,
-          assignee,
-          status: input.status !== undefined ? [input.status] : conversationFilter.status,
-        };
-      }
+      const { conversationFilter, status, assignedToId, message, assignedToAI } = input;
 
       if (Array.isArray(conversationFilter) && conversationFilter.length <= 25) {
         for (const conversationId of conversationFilter) {
