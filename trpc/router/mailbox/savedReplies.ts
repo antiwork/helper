@@ -95,6 +95,7 @@ export const savedRepliesRouter = {
           ...input,
           content: sanitizeContent(input.content),
           createdByUserId: ctx.user.id,
+          unused_mailboxId: ctx.mailbox.id,
         })
         .returning()
         .then(takeUniqueOrThrow);

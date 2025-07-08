@@ -10,7 +10,9 @@ export const faqs = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     content: text("reply").notNull(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     embedding: vector({ dimensions: 1536 }),
     enabled: boolean().notNull().default(true),
     suggested: boolean().notNull().default(false),

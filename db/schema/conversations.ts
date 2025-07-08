@@ -16,7 +16,9 @@ export const conversations = pgTable(
     emailFrom: text(),
     subject: encryptedField("encrypted_subject"),
     status: text().$type<"open" | "closed" | "spam">(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     emailFromName: text(),
     slug: randomSlugField("slug"),
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),

@@ -8,7 +8,9 @@ export const platformCustomers = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     email: varchar({ length: 255 }).notNull(),
     name: varchar(),
     value: numeric({ precision: 12, scale: 2 }),

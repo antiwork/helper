@@ -31,7 +31,7 @@ export const aiUsageEvents = pgTable(
     outputTokensCount: integer().notNull(),
     cachedTokensCount: integer().notNull().default(0),
     cost: numeric({ precision: 12, scale: 7 }).notNull(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" }).$defaultFn(() => 0),
   },
   (table) => [
     index("mailboxes_aiusageevent_created_at_74823d57").on(table.createdAt.asc().nullsLast()),

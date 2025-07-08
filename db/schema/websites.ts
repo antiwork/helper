@@ -16,7 +16,9 @@ export const websites = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     name: varchar("name", { length: 255 }).notNull(),
     url: text("url").notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

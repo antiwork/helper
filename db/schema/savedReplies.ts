@@ -12,7 +12,9 @@ export const savedReplies = pgTable(
     slug: randomSlugField("slug"),
     name: varchar({ length: 100 }).notNull(),
     content: text().notNull(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .references(() => mailboxes.id, { onDelete: "cascade" }),
     createdByUserId: text("created_by_user_id"),
     isActive: boolean().notNull().default(true),
     usageCount: integer().notNull().default(0),

@@ -25,7 +25,9 @@ export const tools = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
     description: text().notNull(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     slug: text().notNull(),
     requestMethod: text().notNull().$type<ToolRequestMethod>(),
     url: text().notNull(),

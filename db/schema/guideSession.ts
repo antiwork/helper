@@ -43,7 +43,9 @@ export const guideSessions = pgTable(
     instructions: text(),
     steps: jsonb().default([]).$type<GuideSessionStep[]>(),
     metadata: jsonb().default({}),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
   },
   (table) => [
     index("guide_sessions_created_at_idx").on(table.createdAt),
@@ -63,7 +65,9 @@ export const guideSessionEvents = pgTable(
     type: guideSessionEventTypeEnum("type").notNull(),
     data: jsonb().default({}),
     timestamp: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
   },
   (table) => [
     index("guide_session_events_timestamp_idx").on(table.timestamp),
@@ -82,7 +86,9 @@ export const guideSessionReplays = pgTable(
     data: text().notNull(),
     timestamp: timestamp({ withTimezone: true, mode: "date" }).notNull().defaultNow(),
     metadata: jsonb().default({}),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
   },
   (table) => [
     index("guide_session_replays_guide_session_id_idx").on(table.guideSessionId),

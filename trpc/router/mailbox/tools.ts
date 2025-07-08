@@ -11,7 +11,7 @@ import type { ToolFormatted } from "@/types/tools";
 import { mailboxProcedure } from "./procedure";
 
 export const toolsRouter = {
-  list: mailboxProcedure.query(async () => {
+  list: mailboxProcedure.query(async ({ ctx }) => {
     try {
       const apis = await db.query.toolApis.findMany({
         columns: {
@@ -52,7 +52,7 @@ export const toolsRouter = {
                 .pop()!
                 .replace(/^\/+|\/+$/g, ""),
               toolApiId: api.id,
-              unused_mailboxId: null,
+              unused_mailboxId: ctx.mailbox.id,
             }) satisfies ToolFormatted,
         ),
       }));

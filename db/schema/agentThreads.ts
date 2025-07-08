@@ -9,7 +9,7 @@ export const agentThreads = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" }).$defaultFn(() => 0),
     slackChannel: text().notNull(),
     threadTs: text().notNull(),
   },

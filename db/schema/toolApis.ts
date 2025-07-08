@@ -11,7 +11,9 @@ const toolApis = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
-    unused_mailboxId: bigint({ mode: "number" }).$defaultFn(() => 0),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     baseUrl: text(),
     schema: text(),
     authenticationToken: encryptedField(),

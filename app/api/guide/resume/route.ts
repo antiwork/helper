@@ -1,4 +1,4 @@
-import { authenticateWidget, corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";
@@ -8,21 +8,12 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export const POST = withWidgetAuth(async ({ request }) => {
+export const POST = withWidgetAuth(async ({ request }, { session: { email } }) => {
   const { sessionId } = await request.json();
 
   if (!sessionId || typeof sessionId !== "string") {
     return corsResponse({ error: "Missing or invalid sessionId" }, { status: 400 });
   }
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const {
-    session: { email },
-  } = authResult;
 
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);
