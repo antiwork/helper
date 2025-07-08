@@ -48,7 +48,7 @@ fi
 
 # Start Supabase services
 echo "🔄 Starting Supabase services..."
-pnpm run with-test-env pnpm supabase start -x vector
+pnpm run with-test-env pnpm supabase start
 CLEANUP_NEEDED=true
 
 # Additional wait for Auth service to be fully ready
