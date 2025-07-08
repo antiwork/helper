@@ -169,7 +169,8 @@ export default function DeleteMemberDialog({
             },
             onError: (error) => {
               toast({
-                
+                title: "Error while removing member",
+                variant: "destructive"
               })
               setLoading(false);
             },
