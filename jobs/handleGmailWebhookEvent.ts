@@ -82,6 +82,7 @@ const assignBasedOnCc = async (
       .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
       .where(eq(authUsers.email, ccAddress))
       .then(takeUniqueOrThrow);
+
     if (ccStaffUser) {
       await updateConversation(conversationId, {
         set: { assignedToId: ccStaffUser.id, assignedToAI: false },

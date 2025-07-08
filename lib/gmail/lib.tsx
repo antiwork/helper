@@ -2,7 +2,6 @@ import { render } from "@react-email/render";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";

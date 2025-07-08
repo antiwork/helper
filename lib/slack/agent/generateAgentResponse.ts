@@ -125,7 +125,8 @@ export const generateAgentResponse = async (
             email: authUsers.email,
           })
           .from(userProfiles)
-          .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+          .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+          .where(isNull(userProfiles.deletedAt));
 
         return members.map((member) => ({
           id: member.id,

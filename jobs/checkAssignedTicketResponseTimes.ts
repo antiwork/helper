@@ -45,7 +45,8 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
       access: userProfiles.access,
     })
     .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(isNull(userProfiles.deletedAt));
 
   const usersById = Object.fromEntries(users.map((user) => [user.id, user]));
 
@@ -77,29 +78,27 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
 
     const slackUsersByEmail = await getSlackUsersByEmail(mailbox.slackBotToken);
 
-      const blocks: KnownBlock[] = [
-        {
-          type: "section" as const,
-          text: {
-            type: "mrkdwn",
-            text: [
-              `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
-              ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
-                const subject = conversation.subject;
-                const assignee = usersById[conversation.assignedToId!];
-                const assigneeEmail = assignee?.email;
-                const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
-                const mention = slackUserId
-                  ? `<@${slackUserId}>`
-                  : assignee?.displayName || assignee?.email || "Unknown";
-                const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-                return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
-              }),
-              ...(overdueAssignedConversations.length > 10
-                ? [`(and ${overdueAssignedConversations.length - 10} more)`]
-                : []),
-            ].join("\n"),
-          },
+    const blocks: KnownBlock[] = [
+      {
+        type: "section" as const,
+        text: {
+          type: "mrkdwn",
+          text: [
+            `🚨 *${overdueAssignedConversations.length} assigned tickets have been waiting over 24 hours without a response*\n`,
+            ...overdueAssignedConversations.slice(0, 10).map((conversation) => {
+              const subject = conversation.subject;
+              const assignee = usersById[conversation.assignedToId!];
+              const assigneeEmail = assignee?.email;
+              const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
+              const mention = slackUserId ? `<@${slackUserId}>` : assignee?.displayName || assignee?.email || "Unknown";
+              const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
+              return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
+            }),
+            ...(overdueAssignedConversations.length > 10
+              ? [`(and ${overdueAssignedConversations.length - 10} more)`]
+              : []),
+          ].join("\n"),
+        },
       },
     ];
 

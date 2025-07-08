@@ -1,7 +1,6 @@
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { cache } from "react";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata, userProfiles } from "@/db/schema";
@@ -118,7 +117,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 });
 
 const getUserAnnotation = cache(async (userId: string) => {
-  const user = await db
+  const [user] = await db
     .select({
       id: userProfiles.id,
       displayName: userProfiles.displayName,
@@ -126,8 +125,7 @@ const getUserAnnotation = cache(async (userId: string) => {
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)))
-    .then(takeUniqueOrThrow);
+    .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)));
 
   return user
     ? [{ user: { name: hasDisplayName(user.displayName) ? getFirstName(user.displayName, user.email) : undefined } }]
