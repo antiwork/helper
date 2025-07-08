@@ -32,7 +32,12 @@ export const approveSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user ? getFullName(user.user_metadata?.display_name, user.email) : null);
+    const blocks = suggestionResolvedBlocks(
+      knowledge,
+      mailbox.slug,
+      "approved",
+      user ? getFullName(user.user_metadata?.display_name, user.email) : null,
+    );
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -54,7 +59,12 @@ export const rejectSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user ? getFullName(user.user_metadata?.display_name, user.email) : null);
+    const blocks = suggestionResolvedBlocks(
+      knowledge,
+      mailbox.slug,
+      "rejected",
+      user ? getFullName(user.user_metadata?.display_name, user.email) : null,
+    );
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,

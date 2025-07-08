@@ -263,8 +263,10 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : getFullName(members.find((member) => member.id === message.userId)!.displayName, members.find((member) => member.id === message.userId)!.email),
-          userId: message.userId,
+              : (() => {
+                  const member = members.find((m) => m.id === message.userId)!;
+                  return getFullName(member.displayName, member.email);
+                })(),
         }));
       },
     }),

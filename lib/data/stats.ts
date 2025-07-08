@@ -1,11 +1,10 @@
 import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
-import { authUsers } from "@/db/supabaseSchema/auth";
-import { access } from "fs";
 
 type DateRange = {
   startDate?: Date;

@@ -4,8 +4,8 @@ import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getSlackUser } from "../slack/client";
 import { getFullName } from "../auth/authUtils";
+import { getSlackUser } from "../slack/client";
 
 export const UserRoles = {
   CORE: "core",
@@ -90,7 +90,7 @@ export const updateUserMailboxData = async (
     keywords?: MailboxAccess["keywords"];
   },
 ): Promise<UserWithMailboxAccessData> => {
-    await db
+  await db
     .update(userProfiles)
     .set({
       displayName: updates.displayName,
@@ -99,21 +99,21 @@ export const updateUserMailboxData = async (
         keywords: updates.keywords || [],
       },
     })
-    .where(eq(userProfiles.id, userId))
+    .where(eq(userProfiles.id, userId));
 
   const [updatedProfile] = await db
-  .select({
-    id: userProfiles.id,
-    displayName: userProfiles.displayName,
-    access: userProfiles.access,
-    permissions: userProfiles.permissions,
-    createdAt: userProfiles.createdAt,
-    updatedAt: userProfiles.updatedAt,
-    email: authUsers.email,
-  })
-  .from(userProfiles)
-  .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-  .where(eq(userProfiles.id, userId))
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      access: userProfiles.access,
+      permissions: userProfiles.permissions,
+      createdAt: userProfiles.createdAt,
+      updatedAt: userProfiles.updatedAt,
+      email: authUsers.email,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(eq(userProfiles.id, userId));
 
   return {
     id: updatedProfile?.id ?? userId,

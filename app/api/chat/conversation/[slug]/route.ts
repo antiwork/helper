@@ -2,12 +2,12 @@ import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { cache } from "react";
 import { authenticateWidget } from "@/app/api/widget/utils";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -123,15 +123,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 }
 
 const getUserAnnotation = cache(async (userId: string) => {
-  const user = await db.select({
-    id: userProfiles.id,
-    displayName: userProfiles.displayName,
-    email: authUsers.email,
-  })
-  .from(userProfiles)
-  .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-  .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)))
-  .then(takeUniqueOrThrow);
+  const user = await db
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)))
+    .then(takeUniqueOrThrow);
 
-  return user ? [{ user: { name: hasDisplayName(user.displayName) ? getFirstName(user.displayName, user.email) : undefined } }] : undefined;
+  return user
+    ? [{ user: { name: hasDisplayName(user.displayName) ? getFirstName(user.displayName, user.email) : undefined } }]
+    : undefined;
 });
