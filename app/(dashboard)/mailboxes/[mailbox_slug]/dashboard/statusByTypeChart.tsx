@@ -70,10 +70,10 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
   const totalTickets = chartData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <div className="flex flex-col w-full h-full min-h-[300px]">
-      <div className="relative flex-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <ChartContainer className="mx-auto aspect-square max-h-[400px]" config={chartConfig}>
+    <div className="flex flex-col w-full h-full">
+      <div className="relative flex-1 min-h-0">
+        <ChartContainer className="w-full h-full" config={chartConfig}>
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <ChartTooltip
                 cursor={false}
@@ -91,8 +91,8 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={85}
+                innerRadius="30%"
+                outerRadius="70%"
                 startAngle={90}
                 endAngle={450}
               >
@@ -108,10 +108,10 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                       return (
                         <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                          <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
+                          <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-2xl font-bold">
                             {totalTickets.toLocaleString()}
                           </tspan>
-                          <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
+                          <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-muted-foreground text-sm">
                             Total
                           </tspan>
                         </text>
@@ -120,10 +120,15 @@ export function StatusByTypeChart({ mailboxSlug, timeRange, customDate }: Status
                   }}
                 />
               </Pie>
-              <ChartLegend content={<ChartLegendContent />} verticalAlign="bottom" className="text-xs" />
+              <ChartLegend
+                content={<ChartLegendContent />}
+                verticalAlign="bottom"
+                className="text-xs mt-2"
+                wrapperStyle={{ paddingTop: "8px" }}
+              />
             </PieChart>
-          </ChartContainer>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </ChartContainer>
       </div>
     </div>
   );

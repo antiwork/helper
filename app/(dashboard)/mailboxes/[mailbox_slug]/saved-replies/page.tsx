@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { stripHtmlTags } from "@/components/utils/html";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterOutputs } from "@/trpc";
@@ -27,6 +28,8 @@ export default function SavedRepliesPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSavedReply, setEditingSavedReply] = useState<SavedReply | null>(null);
+
+  useDocumentTitle("Saved replies");
 
   // Debounce search term to avoid losing focus on every keystroke
   useEffect(() => {

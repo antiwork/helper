@@ -9,19 +9,19 @@ export const agentThreads = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    mailboxId: bigint({ mode: "number" }),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" }).$defaultFn(() => 0),
     slackChannel: text().notNull(),
     threadTs: text().notNull(),
   },
   (table) => [
-    index("agent_threads_mailbox_id_idx").on(table.mailboxId),
+    index("agent_threads_mailbox_id_idx").on(table.unused_mailboxId),
     index("agent_threads_slack_channel_thread_ts_idx").on(table.slackChannel, table.threadTs),
   ],
 ).enableRLS();
 
 export const agentThreadsRelations = relations(agentThreads, ({ one, many }) => ({
   mailbox: one(mailboxes, {
-    fields: [agentThreads.mailboxId],
+    fields: [agentThreads.unused_mailboxId],
     references: [mailboxes.id],
   }),
   messages: many(agentMessages),

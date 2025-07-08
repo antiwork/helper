@@ -25,24 +25,23 @@ const fetchUserInformation = async (email: string, mailboxSlug: string) => {
   }
 };
 
-const searchKnowledgeBase = async (query: string, mailbox: Mailbox) => {
-  const documents = await getPastConversationsPrompt(query, mailbox);
+const searchKnowledgeBase = async (query: string) => {
+  const documents = await getPastConversationsPrompt(query);
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string, mailboxId: number) => {
+const updateCustomerMetadata = async (email: string) => {
   try {
     const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        mailboxId,
         customerMetadata,
       });
     }
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
-      extra: { email, mailboxId },
+      extra: { email },
     });
   }
 };
@@ -72,7 +71,7 @@ const requestHumanSupport = async (
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email, conversation.mailboxId));
+    waitUntil(updateCustomerMetadata(email));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
@@ -105,7 +104,7 @@ export const buildTools = async (
   includeMailboxTools = true,
   reasoningMiddlewarePrompt?: string,
 ): Promise<Record<string, Tool>> => {
-  const metadataApi = await getMetadataApiByMailbox(mailbox);
+  const metadataApi = await getMetadataApiByMailbox();
 
   const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
     const resultString = await result;
@@ -121,7 +120,7 @@ export const buildTools = async (
       parameters: z.object({
         query: z.string().describe("query to search the knowledge base"),
       }),
-      execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox)),
+      execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query)),
     }),
   };
 
@@ -174,7 +173,7 @@ export const buildTools = async (
   }
 
   if (includeMailboxTools) {
-    const mailboxTools = await getMailboxToolsForChat(mailbox);
+    const mailboxTools = await getMailboxToolsForChat();
     const aiTools = buildAITools(mailboxTools, email);
 
     for (const [slug, aiTool] of Object.entries(aiTools)) {
@@ -185,6 +184,9 @@ export const buildTools = async (
         description: aiTool.description,
         parameters: aiTool.parameters,
         execute: async (params) => {
+          if (aiTool.customerEmailParameter && email) {
+            params[aiTool.customerEmailParameter] = email;
+          }
           const conversation = assertDefined(await getConversationById(conversationId));
           const result = await callToolApi(conversation, mailboxTool, params);
           return reasoningMiddleware(JSON.stringify(result));

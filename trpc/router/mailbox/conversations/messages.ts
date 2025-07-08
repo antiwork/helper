@@ -20,7 +20,6 @@ export const messagesRouter = {
 
     const similarConversations = await findSimilarConversations(
       assertDefined(conversation.embedding),
-      ctx.mailbox,
       5,
       conversation.slug,
     );
@@ -134,7 +133,7 @@ export const messagesRouter = {
         period: z.enum(["hourly", "daily", "monthly"]),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const groupByFormat = (() => {
         switch (input.period) {
           case "hourly":
@@ -161,14 +160,7 @@ export const messagesRouter = {
         })
         .from(conversationMessages)
         .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-        .where(
-          and(
-            dateFilter,
-            isNotNull(conversationMessages.reactionType),
-            isNull(conversationMessages.deletedAt),
-            eq(conversations.mailboxId, ctx.mailbox.id),
-          ),
-        )
+        .where(and(dateFilter, isNotNull(conversationMessages.reactionType), isNull(conversationMessages.deletedAt)))
         .groupBy(sql`period`, conversationMessages.reactionType);
 
       return data.map(({ count, ...rest }) => ({
@@ -183,24 +175,20 @@ export const messagesRouter = {
         endDate: z.date().optional(),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const createdAtFilter = input.endDate
         ? and(gte(conversations.createdAt, input.startDate), lte(conversations.createdAt, input.endDate))
         : gte(conversations.createdAt, input.startDate);
 
       const results = await Promise.all([
         db
-          .$count(
-            conversations,
-            and(eq(conversations.mailboxId, ctx.mailbox.id), eq(conversations.status, "open"), createdAtFilter),
-          )
+          .$count(conversations, and(eq(conversations.status, "open"), createdAtFilter))
           .then((count) => ({ type: "open", count })),
 
         db
           .$count(
             conversations,
             and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               createdAtFilter,
               exists(
@@ -238,7 +226,6 @@ export const messagesRouter = {
           .$count(
             conversations,
             and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
               createdAtFilter,
               exists(

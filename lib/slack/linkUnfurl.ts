@@ -31,7 +31,6 @@ export async function handleSlackUnfurl(event: LinkSharedEvent) {
       if (slug) {
         convo = await db.query.conversations.findFirst({
           where: eq(conversations.slug, slug),
-          with: { mailbox: true },
         });
       }
     } catch (dbError) {
@@ -57,10 +56,7 @@ export async function handleSlackUnfurl(event: LinkSharedEvent) {
           }),
           convo.emailFrom
             ? db.query.platformCustomers.findFirst({
-                where: and(
-                  eq(platformCustomers.email, convo.emailFrom),
-                  eq(platformCustomers.mailboxId, convo.mailboxId),
-                ),
+                where: and(eq(platformCustomers.email, convo.emailFrom)),
               })
             : null,
         ]);

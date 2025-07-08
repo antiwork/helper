@@ -9,15 +9,15 @@ describe("searchConversations", () => {
     it("should filter conversations by positive reactions within date range", async () => {
       const { mailbox } = await userFactory.createRootUser();
 
-      const { conversation: conversation1 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation1 } = await conversationFactory.create({
         subject: "Conversation with positive reaction",
       });
 
-      const { conversation: conversation2 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation2 } = await conversationFactory.create({
         subject: "Conversation with negative reaction",
       });
 
-      const { conversation: conversation3 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation3 } = await conversationFactory.create({
         subject: "Conversation with no reactions",
       });
 
@@ -60,11 +60,11 @@ describe("searchConversations", () => {
     it("should filter conversations by negative reactions within date range", async () => {
       const { mailbox } = await userFactory.createRootUser();
 
-      const { conversation: conversation1 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation1 } = await conversationFactory.create({
         subject: "Conversation with positive reaction",
       });
 
-      const { conversation: conversation2 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation2 } = await conversationFactory.create({
         subject: "Conversation with negative reaction",
       });
 
@@ -102,7 +102,7 @@ describe("searchConversations", () => {
     it("should return empty results when no reactions exist in date range", async () => {
       const { mailbox } = await userFactory.createRootUser();
 
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         subject: "Conversation with reaction outside date range",
       });
 
@@ -128,11 +128,11 @@ describe("searchConversations", () => {
     it("should filter by reactionAfter only", async () => {
       const { mailbox } = await userFactory.createRootUser();
 
-      const { conversation: conversation1 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation1 } = await conversationFactory.create({
         subject: "Old reaction",
       });
 
-      const { conversation: conversation2 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation2 } = await conversationFactory.create({
         subject: "New reaction",
       });
 
@@ -165,11 +165,11 @@ describe("searchConversations", () => {
     it("should filter by reactionBefore only", async () => {
       const { mailbox } = await userFactory.createRootUser();
 
-      const { conversation: conversation1 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation1 } = await conversationFactory.create({
         subject: "Old reaction",
       });
 
-      const { conversation: conversation2 } = await conversationFactory.create(mailbox.id, {
+      const { conversation: conversation2 } = await conversationFactory.create({
         subject: "New reaction",
       });
 
@@ -203,7 +203,7 @@ describe("searchConversations", () => {
     it("should ignore deleted messages when filtering reactions", async () => {
       const { mailbox } = await userFactory.createRootUser();
 
-      const { conversation } = await conversationFactory.create(mailbox.id, {
+      const { conversation } = await conversationFactory.create({
         subject: "Conversation with deleted reaction",
       });
 

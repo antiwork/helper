@@ -2,7 +2,7 @@
 
 import { DateRange } from "react-day-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { type RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import { type TimeRange } from "./dashboardContent";
@@ -27,48 +27,46 @@ export const PeopleTable = ({ mailboxSlug, timeRange, customDate }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
-        <Table>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell>
-                  <Skeleton className="h-4 w-[120px]" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-[60px]" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="flex flex-col w-full h-full">
+        <div className="flex-1 min-h-0">
+          <Table>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="px-0 py-3">
+                    <Skeleton className="h-4 w-[120px]" />
+                  </TableCell>
+                  <TableCell className="px-0 py-3 text-right">
+                    <Skeleton className="h-4 w-[60px] ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col w-full h-full">
       {members?.length ? (
-        <div className="max-h-[350px] md:max-h-[300px] overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-0">Name</TableHead>
-                <TableHead className="px-0">Replies</TableHead>
-              </TableRow>
-            </TableHeader>
             <TableBody>
               {members.map((member: Member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="px-0">{member.displayName}</TableCell>
-                  <TableCell className="px-0">{member.replyCount}</TableCell>
+                <TableRow key={member.id} className="hover:bg-muted/50 transition-colors">
+                  <TableCell className="px-0 py-3 font-medium">{member.displayName}</TableCell>
+                  <TableCell className="px-0 py-3 text-right font-mono text-sm">
+                    {member.replyCount.toLocaleString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       ) : (
-        <div>No data available.</div>
+        <div className="flex items-center justify-center flex-1 text-muted-foreground">No data available.</div>
       )}
     </div>
   );

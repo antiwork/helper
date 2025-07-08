@@ -6,6 +6,7 @@ import { conversationMessages, conversations, platformCustomers } from "@/db/sch
 import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
 import { getActionButtons, OPEN_ATTACHMENT_COLOR, RESOLVED_ATTACHMENT_COLOR } from "@/lib/slack/shared";
@@ -18,7 +19,7 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
       not(isNull(conversationMessages.slackMessageTs)),
     ),
     orderBy: [desc(conversationMessages.createdAt)],
-    with: { conversation: { with: { mailbox: true } } },
+    with: { conversation: true },
   });
 
   if (vipMessages.length === 0) return;
@@ -29,15 +30,17 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
   });
 
   for (const vipMessage of vipMessages) {
-    if (vipMessage.slackMessageTs && vipMessage.conversation.mailbox.slackBotToken) {
+    const mailbox = await getMailbox();
+    if (vipMessage.slackMessageTs && mailbox?.slackBotToken) {
       const response = responses.find((r) => r.responseToId === vipMessage.id);
       const cleanedUpText = response ? await ensureCleanedUpText(response) : "";
       await updateVipMessageInSlack({
         conversation: vipMessage.conversation,
+        mailbox,
         originalMessage: vipMessage.cleanedUpText ?? "",
         replyMessage: cleanedUpText,
-        slackBotToken: vipMessage.conversation.mailbox.slackBotToken,
-        slackChannel: vipMessage.conversation.mailbox.vipChannelId!,
+        slackBotToken: mailbox.slackBotToken,
+        slackChannel: mailbox.vipChannelId!,
         slackMessageTs: vipMessage.slackMessageTs,
         user: byUserId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, byUserId) }) : null,
         closed: true,
@@ -48,16 +51,14 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
 
 const createMessageBlocks = ({
   conversation,
+  mailbox,
   messages,
   customerLinks = [],
   closed = false,
   text,
 }: {
-  conversation: typeof conversations.$inferSelect & {
-    mailbox: {
-      slug: string;
-    };
-  };
+  conversation: typeof conversations.$inferSelect;
+  mailbox: { slug: string };
   messages: { type: "original" | "reply"; body: string }[];
   customerLinks: string[];
   closed?: boolean;
@@ -83,7 +84,7 @@ const createMessageBlocks = ({
       text: {
         type: "mrkdwn",
         text: [
-          `<${getBaseUrl()}/mailboxes/${conversation.mailbox.slug}/conversations?id=${conversation.slug}|View in Helper>`,
+          `<${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|View in Helper>`,
           ...customerLinks,
         ].join(" · "),
       },
@@ -108,16 +109,14 @@ const createMessageBlocks = ({
 
 export const postVipMessageToSlack = async ({
   conversation,
+  mailbox,
   message,
   platformCustomer,
   slackBotToken,
   slackChannel,
 }: {
-  conversation: typeof conversations.$inferSelect & {
-    mailbox: {
-      slug: string;
-    };
-  };
+  conversation: typeof conversations.$inferSelect;
+  mailbox: { slug: string };
   message: string;
   platformCustomer: typeof platformCustomers.$inferSelect & { isVip: boolean };
   slackBotToken: string;
@@ -131,6 +130,7 @@ export const postVipMessageToSlack = async ({
 
   const attachments = createMessageBlocks({
     conversation,
+    mailbox,
     messages: [{ type: "original", body: message }],
     customerLinks,
     closed: false,
@@ -146,6 +146,7 @@ export const postVipMessageToSlack = async ({
 
 export const updateVipMessageInSlack = async ({
   conversation,
+  mailbox,
   originalMessage,
   replyMessage,
   slackBotToken,
@@ -155,11 +156,8 @@ export const updateVipMessageInSlack = async ({
   email,
   closed,
 }: {
-  conversation: typeof conversations.$inferSelect & {
-    mailbox: {
-      slug: string;
-    };
-  };
+  conversation: typeof conversations.$inferSelect;
+  mailbox: { slug: string };
   originalMessage: string;
   replyMessage: string;
   slackBotToken: string;
@@ -181,7 +179,7 @@ export const updateVipMessageInSlack = async ({
   }
 
   const emailFrom = conversation.emailFrom ?? "Unknown";
-  const platformCustomer = await getPlatformCustomer(conversation.mailboxId, emailFrom);
+  const platformCustomer = await getPlatformCustomer(emailFrom);
   const customerLinks = platformCustomer?.links
     ? Object.entries(platformCustomer.links).map(([key, value]) => `<${value}|${key}>`)
     : [];
@@ -190,6 +188,7 @@ export const updateVipMessageInSlack = async ({
   const heading = `_New message from VIP customer *${customerName}*_`;
   const attachments = createMessageBlocks({
     conversation,
+    mailbox,
     messages: [
       { type: "original", body: originalMessage },
       { type: "reply", body: replyMessage },

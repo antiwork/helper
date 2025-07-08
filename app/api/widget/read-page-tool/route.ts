@@ -1,18 +1,12 @@
 import { z } from "zod";
 import { generateReadPageTool } from "@/lib/ai/readPageTool";
-import { authenticateWidget } from "../utils";
+import { withWidgetAuth } from "../utils";
 
 const requestSchema = z.object({
   pageHTML: z.string(),
   currentURL: z.string(),
 });
-
-export async function POST(request: Request) {
-  const auth = await authenticateWidget(request);
-  if (!auth.success) {
-    return Response.json({ error: auth.error }, { status: 401 });
-  }
-
+export const POST = withWidgetAuth(async ({ request }, { session }) => {
   const body = await request.json();
   const result = requestSchema.safeParse(body);
 
@@ -21,12 +15,7 @@ export async function POST(request: Request) {
   }
 
   const { pageHTML, currentURL } = result.data;
-  const readPageTool = await generateReadPageTool(
-    pageHTML,
-    auth.mailbox.id,
-    currentURL,
-    auth.session.email ?? "anonymous",
-  );
+  const readPageTool = await generateReadPageTool(pageHTML, currentURL, session.email ?? "anonymous");
 
   return Response.json({ readPageTool });
-}
+});

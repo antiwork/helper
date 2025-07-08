@@ -1,5 +1,5 @@
 import { TRPCRouterRecord } from "@trpc/server";
-import { and, asc, eq, ilike } from "drizzle-orm";
+import { and, asc, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { platformCustomers } from "@/db/schema";
@@ -12,12 +12,9 @@ export const customersRouter = {
         search: z.string().optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       return await db.query.platformCustomers.findMany({
-        where: and(
-          eq(platformCustomers.mailboxId, ctx.mailbox.id),
-          ...(input.search ? [ilike(platformCustomers.email, `%${input.search}%`)] : []),
-        ),
+        where: and(...(input.search ? [ilike(platformCustomers.email, `%${input.search}%`)] : [])),
         columns: {
           id: true,
           email: true,

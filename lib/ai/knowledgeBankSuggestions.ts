@@ -22,7 +22,7 @@ export const generateKnowledgeBankSuggestion = async (
   mailbox: typeof mailboxes.$inferSelect,
   context: SuggestionContext,
 ): Promise<KnowledgeBankSuggestion> => {
-  const similarFAQs = await findEnabledKnowledgeBankEntries(mailbox);
+  const similarFAQs = await findEnabledKnowledgeBankEntries();
 
   const baseSystemPrompt = `
 You are analyzing content to determine if it should lead to changes in a knowledge bank.
