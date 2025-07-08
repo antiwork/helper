@@ -14,7 +14,7 @@ import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
-import { useRealtimeEvent } from "@/lib/realtime/hooks";
+import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
@@ -53,39 +53,47 @@ export default function Conversation({
   const { setIsNewConversation } = useWidgetView();
 
   const [isAgentTyping, setIsAgentTyping] = useState(false);
-  const [agentTypingTimeout, setAgentTypingTimeout] = useState<NodeJS.Timeout | undefined>(undefined);
+  const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  useRealtimeEvent(conversationSlug ? conversationRealtimeChannelId(conversationSlug) : "", "agent-typing", () => {
-    if (!conversationSlug) return;
+  useRealtimeEvent(
+    conversationSlug ? conversationRealtimeChannelId(conversationSlug) : DISABLED,
+    "agent-typing",
+    () => {
+      if (!conversationSlug) return;
 
-    setIsAgentTyping(true);
+      setIsAgentTyping(true);
 
-    if (agentTypingTimeout) {
-      clearTimeout(agentTypingTimeout);
-    }
+      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
+      agentTypingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 10000);
+    },
+  );
 
-    const timeout = setTimeout(() => {
-      setIsAgentTyping(false);
-    }, 10000);
-
-    setAgentTypingTimeout(timeout);
-  });
-
-  useRealtimeEvent(conversationSlug ? conversationRealtimeChannelId(conversationSlug) : "", "agent-reply", (event) => {
-    if (!conversationSlug) return;
-
-    const staffMessage = {
-      id: `staff_${Date.now()}`,
-      role: "assistant" as const,
-      content: event.data.message,
-      createdAt: new Date(event.data.timestamp),
-      reactionType: null,
-      reactionFeedback: null,
-      reactionCreatedAt: null,
+  useEffect(() => {
+    return () => {
+      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
     };
+  }, []);
 
-    setMessages((prev) => [...prev, staffMessage]);
-  });
+  useRealtimeEvent(
+    conversationSlug ? conversationRealtimeChannelId(conversationSlug) : DISABLED,
+    "agent-reply",
+    (event) => {
+      if (!conversationSlug) return;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `staff_${Date.now()}`,
+          role: "assistant",
+          content: event.data.message,
+          createdAt: new Date(event.data.timestamp),
+          reactionType: null,
+          reactionFeedback: null,
+          reactionCreatedAt: null,
+        },
+      ]);
+    },
+  );
 
   useEffect(() => {
     if (conversationSlug) {
@@ -285,14 +293,6 @@ export default function Conversation({
   useEffect(() => {
     setIsProvidingDetails(false);
   }, [lastAIMessage]);
-
-  useEffect(() => {
-    return () => {
-      if (agentTypingTimeout) {
-        clearTimeout(agentTypingTimeout);
-      }
-    };
-  }, [agentTypingTimeout]);
 
   const handleTalkToTeamClick = () => {
     setIsEscalated(true);

@@ -11,15 +11,19 @@ import { createClient } from "@/lib/supabase/client";
 
 const supabase = createClient();
 
+export const DISABLED = Symbol("DISABLED");
+
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 export const useRealtimeEvent = <Data = any>(
-  channel: string,
+  channel: string | typeof DISABLED,
   event: string,
   callback: (message: { id: string; data: Data }) => void,
 ) => {
   const callbackRef = useRefToLatest(callback);
 
   useEffect(() => {
+    if (channel === DISABLED) return;
+
     const listener = supabase.channel(channel).on("broadcast", { event }, (payload) => {
       if (!payload.data) {
         Sentry.captureMessage("No data in realtime event", {
