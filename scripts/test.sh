@@ -66,7 +66,8 @@ pnpm run with-test-env drizzle-kit migrate --config ./db/drizzle.config.ts
 echo "🌱 Seeding the database..."
 pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
 
-echo "🔧 Playwright will automatically start the dev server when running tests..."
+echo "📦 Build packages.."
+pnpm run-on-packages build
 
 # Setup Playwright
 echo "🎭 Setting up Playwright..."
