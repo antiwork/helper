@@ -114,7 +114,6 @@ export default function DeleteMemberDialog({
     } catch (error) {
       setLoading(false);
       toast.error("Something went wrong");
-      console.error(error);
     }
   };
 
