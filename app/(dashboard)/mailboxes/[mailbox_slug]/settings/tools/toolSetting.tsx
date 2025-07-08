@@ -10,18 +10,14 @@ import ApiCard from "./apiCard";
 import ApiForm from "./apiForm";
 import { ToolsListSkeleton } from "./toolListSkeleton";
 
-type ToolSettingProps = {
-  mailboxSlug: string;
-};
-
-const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
+const ToolSetting = () => {
   const [showApiForm, setShowApiForm] = useState(false);
   const {
     data: apis = [],
     isLoading: apisLoading,
     isFetching: apisFetching,
     error,
-  } = api.mailbox.tools.list.useQuery({ mailboxSlug });
+  } = api.mailbox.tools.list.useQuery();
 
   useEffect(() => {
     if (error) {
@@ -47,12 +43,12 @@ const ToolSetting = ({ mailboxSlug }: ToolSettingProps) => {
         )}
 
         <div className="space-y-6">
-          {showApiForm && <ApiForm mailboxSlug={mailboxSlug} onCancel={() => setShowApiForm(false)} />}
+          {showApiForm && <ApiForm onCancel={() => setShowApiForm(false)} />}
 
           {apisLoading || (apisFetching && apis.length === 0) ? (
             <ToolsListSkeleton count={1} />
           ) : (
-            apis.map((api) => <ApiCard key={api.id} api={api} mailboxSlug={mailboxSlug} />)
+            apis.map((api) => <ApiCard key={api.id} api={api} />)
           )}
         </div>
       </div>

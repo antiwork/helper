@@ -2,7 +2,7 @@
 
 import cx from "classnames";
 import { ExternalLink, PlusCircle } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { MetadataEndpoint } from "@/app/types/global";
@@ -21,9 +21,7 @@ type MetadataEndpointSettingProps = {
 };
 
 const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingProps) => {
-  const params = useParams();
   const router = useRouter();
-  const mailboxSlug = params.mailbox_slug as string;
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [newUrl, setNewUrl] = useState(metadataEndpoint?.url || "");
@@ -31,10 +29,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
 
   const { mutateAsync: createEndpointMutation } = api.mailbox.metadataEndpoint.create.useMutation();
   const { mutateAsync: deleteEndpointMutation } = api.mailbox.metadataEndpoint.delete.useMutation();
-  const { refetch: testEndpointQuery } = api.mailbox.metadataEndpoint.test.useQuery(
-    { mailboxSlug },
-    { enabled: false },
-  );
+  const { refetch: testEndpointQuery } = api.mailbox.metadataEndpoint.test.useQuery(undefined, { enabled: false });
 
   const testRequestTexts = {
     idle: "Send test request to URL",
@@ -53,7 +48,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
 
     setIsLoading(true);
     try {
-      const result = await createEndpointMutation({ mailboxSlug, url: newUrl });
+      const result = await createEndpointMutation({ url: newUrl });
       if (result?.error) {
         toast.error(result.error);
         return;
@@ -71,7 +66,7 @@ const MetadataEndpointSetting = ({ metadataEndpoint }: MetadataEndpointSettingPr
   const removeEndpoint = async () => {
     setIsLoading(true);
     try {
-      const result = await deleteEndpointMutation({ mailboxSlug });
+      const result = await deleteEndpointMutation();
       if (result?.error) {
         toast.error(result.error);
         return;

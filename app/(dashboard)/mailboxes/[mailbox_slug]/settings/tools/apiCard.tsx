@@ -13,13 +13,7 @@ import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import ToolListItem from "./toolListItem";
 
-const ApiCard = ({
-  api: apiData,
-  mailboxSlug,
-}: {
-  api: RouterOutputs["mailbox"]["tools"]["list"][number];
-  mailboxSlug: string;
-}) => {
+const ApiCard = ({ api: apiData }: { api: RouterOutputs["mailbox"]["tools"]["list"][number] }) => {
   const utils = api.useUtils();
   const [isRefreshed, setIsRefreshed] = useState(false);
   const [isSchemaPopoverOpen, setIsSchemaPopoverOpen] = useState(false);
@@ -48,7 +42,7 @@ const ApiCard = ({
   });
 
   const handleSchemaSubmit = () => {
-    refreshApi({ mailboxSlug, apiId: apiData.id, schema });
+    refreshApi({ apiId: apiData.id, schema });
   };
 
   const refreshButton = (ariaAttributes: React.AriaAttributes) => (
@@ -108,7 +102,7 @@ const ApiCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => refreshApi({ mailboxSlug, apiId: apiData.id })}
+                onClick={() => refreshApi({ apiId: apiData.id })}
                 disabled={isRefreshing}
               >
                 {isRefreshed ? (
@@ -122,7 +116,7 @@ const ApiCard = ({
             <ConfirmationDialog
               message="Are you sure you want to delete this API?"
               onConfirm={() => {
-                deleteApi({ mailboxSlug, apiId: apiData.id });
+                deleteApi({ apiId: apiData.id });
               }}
               confirmLabel="Yes, delete"
             >
@@ -136,7 +130,7 @@ const ApiCard = ({
       <CardContent>
         <div className="divide-y divide-border">
           {apiData.tools.map((tool) => (
-            <ToolListItem key={tool.id} tool={tool} mailboxSlug={mailboxSlug} />
+            <ToolListItem key={tool.id} tool={tool} />
           ))}
         </div>
       </CardContent>

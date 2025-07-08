@@ -12,7 +12,6 @@ export const metadataEndpointRouter = {
   create: mailboxProcedure
     .input(
       z.object({
-        mailboxSlug: z.string().optional(),
         url: z.string().url(),
       }),
     )

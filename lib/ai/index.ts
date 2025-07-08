@@ -52,9 +52,7 @@ export const runAIQuery = async ({
         tools,
         functionId,
         shortenPromptBy,
-        metadata: {
-          mailboxSlug: mailbox.slug,
-        },
+        metadata: {},
       }),
     { mailbox, queryType, model },
   );

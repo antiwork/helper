@@ -22,7 +22,7 @@ import ToolSetting from "../tools/toolSetting";
 
 export default function TabsPage() {
   const params = useParams<{ mailbox_slug: string; tab: string }>();
-  const { data: mailbox, error } = api.mailbox.get.useQuery({ mailboxSlug: params.mailbox_slug });
+  const { data: mailbox, error } = api.mailbox.get.useQuery();
   useDocumentTitle("Settings");
 
   if (error) return <Alert variant="destructive">Error loading mailbox: {error.message}</Alert>;
@@ -39,7 +39,7 @@ export default function TabsPage() {
       label: "Team",
       id: "team",
       icon: Users,
-      content: <TeamSetting mailboxSlug={mailbox.slug} />,
+      content: <TeamSetting />,
     },
     {
       label: "Customers",
@@ -64,7 +64,7 @@ export default function TabsPage() {
       icon: Link,
       content: (
         <>
-          <ToolSetting mailboxSlug={mailbox.slug} />
+          <ToolSetting />
           <MetadataEndpointSetting metadataEndpoint={mailbox.metadataEndpoint} />
           <SlackSetting mailbox={mailbox} />
           <GitHubSetting mailbox={mailbox} />

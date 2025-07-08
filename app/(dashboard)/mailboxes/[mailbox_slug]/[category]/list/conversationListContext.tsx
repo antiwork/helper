@@ -11,7 +11,6 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 
 type ConversationListContextType = {
-  mailboxSlug: string;
   conversationListData: RouterOutputs["mailbox"]["conversations"]["list"] | null;
   isPending: boolean;
   isFetching: boolean;
@@ -85,9 +84,7 @@ export const ConversationListContextProvider = ({
   const router = useRouter();
   const utils = api.useUtils();
   const debouncedInvalidate = useDebouncedCallback(() => {
-    // Updates the left sidebar counts immediately
     router.refresh();
-
     utils.mailbox.conversations.list.invalidate();
     utils.mailbox.openCount.invalidate();
   }, 1000);
@@ -104,7 +101,7 @@ export const ConversationListContextProvider = ({
       };
     });
     if (!input.status || input.status[0] === "open") {
-      utils.mailbox.openCount.setData({ mailboxSlug: input.mailboxSlug }, (data) => {
+      utils.mailbox.openCount.setData(undefined, (data) => {
         if (!data) return data;
         return {
           ...data,
@@ -136,18 +133,15 @@ export const ConversationListContextProvider = ({
       assignedToAI: boolean;
     };
   }>(
-    conversationsListChannelId(input.mailboxSlug),
+    conversationsListChannelId(),
     "conversation.statusChanged",
     ({ data: { id, status, assignedToId, previousValues } }) => {
-      // Currently this just removes and decrements the count; ideally we should also insert and increment the count when added to the current category
-      // Check the conversation used to be in the current category
       const selectedStatus = input.status?.[0] ?? "open";
       if (previousValues.status !== selectedStatus) return;
       if (input.category === "assigned" && previousValues.assignedToId === null) return;
       if (input.category === "unassigned" && previousValues.assignedToId !== null) return;
       if (input.category === "mine" && previousValues.assignedToId !== data?.pages[0]?.assignedToIds?.[0]) return;
 
-      // Check the conversation is no longer in the current category
       if (
         status !== selectedStatus ||
         (input.category === "assigned" && assignedToId === null) ||
@@ -160,7 +154,6 @@ export const ConversationListContextProvider = ({
 
   const value = useMemo(
     () => ({
-      mailboxSlug: input.mailboxSlug,
       conversationListData: lastPage
         ? {
             conversations,
@@ -185,16 +178,7 @@ export const ConversationListContextProvider = ({
       removeConversationKeepActive,
       navigateToConversation: setId,
     }),
-    [
-      input.mailboxSlug,
-      currentConversationSlug,
-      conversations,
-      lastPage,
-      isPending,
-      isFetching,
-      isFetchingNextPage,
-      hasNextPage,
-    ],
+    [currentConversationSlug, conversations, lastPage, isPending, isFetching, isFetchingNextPage, hasNextPage],
   );
 
   return <ConversationListContext.Provider value={value}>{children}</ConversationListContext.Provider>;
@@ -205,5 +189,3 @@ export const useConversationListContext = () =>
     useContext(ConversationListContext),
     "useConversationContext must be used within a ConversationContextProvider",
   );
-
-export const useConversationListContextSafe = () => useContext(ConversationListContext);

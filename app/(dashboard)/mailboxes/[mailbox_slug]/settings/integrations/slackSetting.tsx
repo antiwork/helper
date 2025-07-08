@@ -17,7 +17,6 @@ import SectionWrapper from "../sectionWrapper";
 export const SlackChannels = ({
   id,
   selectedChannelId,
-  mailbox,
   onChange,
 }: {
   id: string;
@@ -33,11 +32,7 @@ export const SlackChannels = ({
   useRunOnce(() => {
     const fetchChannels = async () => {
       try {
-        setChannels(
-          await utils.client.mailbox.slack.channels.query({
-            mailboxSlug: mailbox.slug,
-          }),
-        );
+        setChannels(await utils.client.mailbox.slack.channels.query());
       } catch (e) {
         captureExceptionAndLog(e);
         toast.error("Error fetching available channels");
@@ -115,7 +110,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
   const utils = api.useUtils();
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
     },
     onError: (error) => {
       toast.error("Error updating Slack settings", { description: error.message });
@@ -125,7 +120,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
 
   const onDisconnectSlack = async () => {
     try {
-      await disconnectSlack({ mailboxSlug: mailbox.slug });
+      await disconnectSlack();
       setSlackConnected(false);
       toast.success("Slack app uninstalled from your workspace");
     } catch (e) {
@@ -147,7 +142,7 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
               id={channelUID}
               selectedChannelId={mailbox.slackAlertChannel ?? undefined}
               mailbox={mailbox}
-              onChange={(slackAlertChannel) => update({ mailboxSlug: mailbox.slug, slackAlertChannel })}
+              onChange={(slackAlertChannel) => update({ slackAlertChannel })}
             />
             <p className="mt-2 text-sm text-muted-foreground">
               Daily reports and notifications will be sent to this channel.
@@ -165,7 +160,6 @@ const SlackSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] })
               checked={!mailbox.preferences?.disableTicketResponseTimeAlerts}
               onCheckedChange={(checked) =>
                 update({
-                  mailboxSlug: mailbox.slug,
                   preferences: { disableTicketResponseTimeAlerts: !checked },
                 })
               }

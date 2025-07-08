@@ -15,13 +15,8 @@ import { TimeRangeSelector } from "./timeRangeSelector";
 
 export type TimeRange = "24h" | "custom" | "7d" | "30d" | "1y";
 
-type Props = {
-  mailboxSlug: string;
-};
-
 const RealtimeEvents = dynamic(() => import("./realtimeEvents"), { ssr: false });
-
-export function DashboardContent({ mailboxSlug }: Props) {
+export function DashboardContent() {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [customDate, setCustomDate] = useState<DateRange>();
   const isMobile = useIsMobile();
@@ -32,7 +27,7 @@ export function DashboardContent({ mailboxSlug }: Props) {
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto min-h-0">
         {isMobile && <PageHeader title="Dashboard" variant="mahogany" />}
-        <DashboardAlerts mailboxSlug={mailboxSlug} />
+        <DashboardAlerts />
 
         <div className="p-4 flex flex-col gap-4 bg-sidebar">
           <div className="flex justify-between items-center">
@@ -47,7 +42,6 @@ export function DashboardContent({ mailboxSlug }: Props) {
               }}
               customDate={customDate}
               onCustomDateChange={(date) => setCustomDate(date)}
-              mailboxSlug={mailboxSlug}
             />
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -56,24 +50,24 @@ export function DashboardContent({ mailboxSlug }: Props) {
                 <div className="flex flex-col min-h-0">
                   <h4 className="scroll-m-20 mb-4 text-sm font-semibold tracking-tight uppercase">Ticket Status</h4>
                   <div className="flex-1 min-h-0">
-                    <StatusByTypeChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
+                    <StatusByTypeChart timeRange={timeRange} customDate={customDate} />
                   </div>
                 </div>
                 <div className="flex flex-col min-h-0">
                   <h4 className="scroll-m-20 mb-4 text-sm font-semibold tracking-tight uppercase">Replies by Agent</h4>
                   <div className="flex-1 min-h-0">
-                    <PeopleTable mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
+                    <PeopleTable timeRange={timeRange} customDate={customDate} />
                   </div>
                 </div>
               </div>
             </Panel>
             <Panel title="Reactions" className="h-[450px] md:-order-1">
-              <ReactionsChart mailboxSlug={mailboxSlug} timeRange={timeRange} customDate={customDate} />
+              <ReactionsChart timeRange={timeRange} customDate={customDate} />
             </Panel>
           </div>
 
           <h3 className="mt-6 scroll-m-20 text-3xl text-white tracking-tight">What's happening?</h3>
-          <RealtimeEvents mailboxSlug={mailboxSlug} />
+          <RealtimeEvents />
         </div>
       </div>
     </div>

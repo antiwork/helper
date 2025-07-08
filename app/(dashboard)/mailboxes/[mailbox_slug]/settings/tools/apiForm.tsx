@@ -10,10 +10,9 @@ import { api } from "@/trpc/react";
 
 type ApiFormProps = {
   onCancel: () => void;
-  mailboxSlug: string;
 };
 
-const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
+const ApiForm = ({ onCancel }: ApiFormProps) => {
   const [isUrlInput, setIsUrlInput] = useState(true);
   const [apiUrl, setApiUrl] = useState("");
   const [apiSchema, setApiSchema] = useState("");
@@ -25,7 +24,7 @@ const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
   const importMutation = api.mailbox.tools.import.useMutation({
     onSuccess: () => {
       toast.success("API imported successfully");
-      utils.mailbox.tools.list.invalidate({ mailboxSlug });
+      utils.mailbox.tools.list.invalidate();
       onCancel();
     },
     onError: (error) => {
@@ -49,7 +48,6 @@ const ApiForm = ({ onCancel, mailboxSlug }: ApiFormProps) => {
     }
 
     await importMutation.mutateAsync({
-      mailboxSlug,
       url: isUrlInput ? apiUrl : undefined,
       schema: !isUrlInput ? apiSchema : undefined,
       apiKey,

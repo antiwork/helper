@@ -58,7 +58,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const utils = api.useUtils();
   const { mutate: updateChatVisibility } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       chatVisibilitySaving.setState("saved");
     },
     onError: (error) => {
@@ -71,7 +71,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
 
   const { mutate: updateHostUrl } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       hostUrlSaving.setState("saved");
     },
     onError: (error) => {
@@ -84,7 +84,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
 
   const { mutate: updateEmailResponse } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       emailResponseSaving.setState("saved");
     },
     onError: (error) => {
@@ -98,7 +98,6 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const saveChatVisibility = useDebouncedCallback(() => {
     chatVisibilitySaving.setState("saving");
     updateChatVisibility({
-      mailboxSlug: mailbox.slug,
       widgetDisplayMode: mode,
       widgetDisplayMinValue: mode === "revenue_based" && /^\d+$/.test(minValue) ? Number(minValue) : null,
     });
@@ -107,7 +106,6 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const saveHostUrl = useDebouncedCallback(() => {
     hostUrlSaving.setState("saving");
     updateHostUrl({
-      mailboxSlug: mailbox.slug,
       widgetHost: widgetHost || null,
     });
   }, 500);
@@ -115,7 +113,6 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const saveEmailResponse = useDebouncedCallback(() => {
     emailResponseSaving.setState("saving");
     updateEmailResponse({
-      mailboxSlug: mailbox.slug,
       preferences: {
         autoRespondEmailToChat: autoRespond === "off" ? null : autoRespond,
       },
@@ -139,7 +136,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     setMode(newMode);
   };
 
-  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", `data-mailbox="${mailbox.slug}"`);
+  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", "");
 
   const plainJSPrompt = `
 Integrate the helper.ai widget into my app.
@@ -212,7 +209,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html>
       <body>
-        <HelperProvider host="${getBaseUrl()}" mailboxSlug="${mailbox.slug}">
+        <HelperProvider host="${getBaseUrl()}">
           {children}
         </HelperProvider>
       </body>
@@ -233,7 +230,6 @@ If I want to customize the widget, add props to the HelperProvider:
 \`\`\`
 <HelperProvider
   host="${getBaseUrl()}"
-  mailboxSlug="${mailbox.slug}"
   title="<widget title>"
   iconColor="<hex color>"
 >
@@ -254,7 +250,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ? await generateHelperAuth({
         email: session.user.email,
         hmacSecret: "YOUR_HMAC_SECRET",
-        mailboxSlug: "${mailbox.slug}",
       })
     : {};
 
@@ -478,7 +473,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html>
       <body>
-        <HelperProvider host="${getBaseUrl()}" mailboxSlug="${mailbox.slug}">
+        <HelperProvider host="${getBaseUrl()}">
           {children}
         </HelperProvider>
       </body>
@@ -500,7 +495,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     code={`
 <HelperProvider
   host="${getBaseUrl()}"
-  mailboxSlug="${mailbox.slug}"
   title="My Helper Widget"
   iconColor="#ff0000"
 >
@@ -572,11 +566,7 @@ export function SupportButton() {
                       development, add these to your environment file, and for production add them to your deployment
                       environment:
                     </p>
-                    <CodeBlock
-                      code={`HELPER_HMAC_SECRET=${mailbox.widgetHMACSecret}
-HELPER_MAILBOX_SLUG=${mailbox.slug}`}
-                      language="bash"
-                    />
+                    <CodeBlock code={`HELPER_HMAC_SECRET=${mailbox.widgetHMACSecret}`} language="bash" />
                     <p className="text-sm">
                       Then call <code>generateHelperAuth</code> in your root layout and pass the result to the{" "}
                       <code>HelperProvider</code>. Refer to the HTML/JavaScript guide if your backend is not in Node.js.
@@ -596,7 +586,6 @@ export default async function RootLayout({
     ? await generateHelperAuth({
         email: session.user.email,
         hmacSecret: "YOUR_HMAC_SECRET",
-        mailboxSlug: "${mailbox.slug}",
       })
     : {};
   

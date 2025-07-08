@@ -35,9 +35,9 @@ export const gmailSupportEmailRouter = {
         expiresAt: z.date(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { gmailSupportEmail } = await db.transaction(async (tx) => {
-        const gmailSupportEmail = await createGmailSupportEmail(ctx.mailbox.slug, input, tx);
+        const gmailSupportEmail = await createGmailSupportEmail(input, tx);
         const gmailService = getGmailService(gmailSupportEmail);
         await subscribeToMailbox(gmailService);
         return { gmailSupportEmail };

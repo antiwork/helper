@@ -20,7 +20,6 @@ export default async function WidgetTest({
   const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
 
   const config: HelperWidgetConfig = {
-    mailboxSlug: "gumroad",
     ...helperAuth,
     title: "Support & Help",
     experimentalReadPage: false,

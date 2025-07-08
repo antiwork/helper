@@ -2,7 +2,6 @@
 
 import { format } from "date-fns";
 import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
@@ -23,20 +22,17 @@ const isValidUrl = (url: string) => {
 };
 
 const WebsiteCrawlSetting = () => {
-  const params = useParams<{ mailbox_slug: string }>();
   const [showAddWebsite, setShowAddWebsite] = useState(false);
   const [newWebsite, setNewWebsite] = useState({ name: "", url: "" });
   const [urlError, setUrlError] = useState("");
   const utils = api.useUtils();
 
-  const { data: websites = [], isLoading: isLoadingWebsites } = api.mailbox.websites.list.useQuery({
-    mailboxSlug: params.mailbox_slug,
-  });
+  const { data: websites = [], isLoading: isLoadingWebsites } = api.mailbox.websites.list.useQuery();
 
   const addWebsiteMutation = api.mailbox.websites.create.useMutation({
     onSuccess: () => {
       toast.success("Website added!");
-      utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
+      utils.mailbox.websites.list.invalidate();
       setShowAddWebsite(false);
       setNewWebsite({ name: "", url: "" });
     },
@@ -48,7 +44,7 @@ const WebsiteCrawlSetting = () => {
   const deleteWebsiteMutation = api.mailbox.websites.delete.useMutation({
     onSuccess: () => {
       toast.success("Website deleted!");
-      utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
+      utils.mailbox.websites.list.invalidate();
     },
     onError: (error) => {
       toast.error("Error deleting website", { description: error.message });
@@ -60,7 +56,7 @@ const WebsiteCrawlSetting = () => {
       toast.success("Website scan started!", {
         description: "The scan will run in the background. Check back later for results.",
       });
-      utils.mailbox.websites.list.invalidate({ mailboxSlug: params.mailbox_slug });
+      utils.mailbox.websites.list.invalidate();
     },
     onError: (error) => {
       toast.error("Error starting website scan", { description: error.message });
@@ -69,21 +65,18 @@ const WebsiteCrawlSetting = () => {
 
   const handleAddWebsite = (url: string) => {
     return addWebsiteMutation.mutateAsync({
-      mailboxSlug: params.mailbox_slug,
       url,
     });
   };
 
   const handleDeleteWebsite = async (websiteId: number) => {
     await deleteWebsiteMutation.mutateAsync({
-      mailboxSlug: params.mailbox_slug,
       websiteId,
     });
   };
 
   const handleTriggerCrawl = async (websiteId: number) => {
     await triggerCrawlMutation.mutateAsync({
-      mailboxSlug: params.mailbox_slug,
       websiteId,
     });
   };

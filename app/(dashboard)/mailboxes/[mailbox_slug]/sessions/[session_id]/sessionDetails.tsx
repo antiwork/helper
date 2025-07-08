@@ -30,7 +30,7 @@ interface SessionDetailsProps {
   replayEvents: ReplayEvent[];
 }
 
-export default function SessionDetails({ mailbox, session, replayEvents }: SessionDetailsProps) {
+export default function SessionDetails({ session, replayEvents }: SessionDetailsProps) {
   const router = useRouter();
 
   // State for rrweb player
@@ -151,7 +151,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center">
-          <Button variant="ghost" onClick={() => router.push(`/mailboxes/${mailbox.slug}/sessions`)} className="mr-2">
+          <Button variant="ghost" onClick={() => router.push(`/sessions`)} className="mr-2">
             <ChevronLeft className="h-4 w-4" />
             Back to sessions
           </Button>
@@ -180,9 +180,7 @@ export default function SessionDetails({ mailbox, session, replayEvents }: Sessi
                 <div className="mb-4 shrink-0">
                   <Button
                     variant="outlined"
-                    onClick={() =>
-                      router.push(`/mailboxes/${mailbox.slug}/conversations?id=${session.conversation?.slug}`)
-                    }
+                    onClick={() => router.push(`/conversations?id=${session.conversation?.slug}`)}
                     className="w-full"
                   >
                     <MessageSquare className="mr-2 h-4 w-4" />

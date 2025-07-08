@@ -39,7 +39,6 @@ interface TeamMember {
 
 type TeamMemberRowProps = {
   member: TeamMember;
-  mailboxSlug: string;
   isAdmin: boolean;
 };
 
@@ -52,7 +51,7 @@ const updateMember = (
   members: data.members.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
 });
 
-const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [permissions, setPermissions] = useState<string>(member.permissions);
@@ -77,7 +76,6 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
   }, [member.keywords, member.role, member.permissions, member.displayName]);
 
   const { data: count } = api.mailbox.conversations.count.useQuery({
-    mailboxSlug,
     assignee: [member.id],
   });
 
@@ -85,7 +83,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
   const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
       // Only update displayName field to avoid race conditions
-      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
+      utils.mailbox.members.list.setData(undefined, (oldData) => {
         if (!oldData) return oldData;
         return updateMember(oldData, member, { displayName: data.user?.displayName ?? "" });
       });
@@ -101,7 +99,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
   const { mutate: updateRole } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
       // Update both role and keywords since role changes can affect keywords
-      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
+      utils.mailbox.members.list.setData(undefined, (oldData) => {
         if (!oldData) return oldData;
         return updateMember(oldData, member, { role: data.user?.role, keywords: data.user?.keywords });
       });
@@ -119,7 +117,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
   const { mutate: updateKeywords } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
       // Only update keywords field to avoid race conditions
-      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
+      utils.mailbox.members.list.setData(undefined, (oldData) => {
         if (!oldData) return oldData;
         return updateMember(oldData, member, { keywords: data.user?.keywords });
       });
@@ -135,7 +133,7 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
 
   const { mutate: updatePermissions } = api.mailbox.members.update.useMutation({
     onSuccess: (data) => {
-      utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
+      utils.mailbox.members.list.setData(undefined, (oldData) => {
         if (!oldData) return oldData;
         return updateMember(oldData, member, { permissions: data.user.permissions });
       });
@@ -152,7 +150,6 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
   const debouncedUpdateKeywords = useDebouncedCallback((newKeywords: string[]) => {
     keywordsSaving.setState("saving");
     updateKeywords({
-      mailboxSlug,
       userId: member.id,
       keywords: newKeywords,
     });
@@ -161,7 +158,6 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
   const debouncedUpdateDisplayName = useDebouncedCallback((newDisplayName: string) => {
     displayNameSaving.setState("saving");
     updateDisplayName({
-      mailboxSlug,
       userId: member.id,
       displayName: newDisplayName,
     });
@@ -181,7 +177,6 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
 
     roleSaving.setState("saving");
     updateRole({
-      mailboxSlug,
       userId: member.id,
       role: newRole,
       keywords: newKeywords,
@@ -207,7 +202,6 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
     setPermissions(newPermissions);
     permissionsSaving.setState("saving");
     updatePermissions({
-      mailboxSlug,
       userId: member.id,
       permissions: newPermissions,
     });
@@ -297,7 +291,6 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
         {currentUser?.id !== member.id && isAdmin && (
           <DeleteMemberDialog
             member={{ id: member.id, displayName: member.displayName }}
-            mailboxSlug={mailboxSlug}
             description={
               count?.total && count?.total > 0
                 ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`

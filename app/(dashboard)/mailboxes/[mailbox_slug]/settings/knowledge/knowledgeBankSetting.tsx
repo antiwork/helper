@@ -1,7 +1,6 @@
 "use client";
 
 import { PlusCircle } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -14,16 +13,12 @@ import KnowledgeBankItem, { KnowledgeEditForm } from "./knowledgeBankItem";
 import SuggestedKnowledgeBankItem from "./suggestedKnowledgeBankItem";
 
 const KnowledgeBankSetting = () => {
-  const params = useParams<{ mailbox_slug: string }>();
-
   const [newFaqContent, setNewFaqContent] = useState<string>("");
   const [showNewFaqForm, setShowNewFaqForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const utils = api.useUtils();
 
-  const { data: faqs = [], isLoading } = api.mailbox.faqs.list.useQuery({
-    mailboxSlug: params.mailbox_slug,
-  });
+  const { data: faqs = [], isLoading } = api.mailbox.faqs.list.useQuery();
 
   const filteredFaqs = faqs.filter((faq) => faq.content.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -38,7 +33,7 @@ const KnowledgeBankSetting = () => {
 
   const createMutation = api.mailbox.faqs.create.useMutation({
     onSuccess: (data) => {
-      utils.mailbox.faqs.list.setData({ mailboxSlug: params.mailbox_slug }, (old) =>
+      utils.mailbox.faqs.list.setData(undefined, (old) =>
         old ? [...old, data].sort((a, b) => a.content.localeCompare(b.content)) : [data],
       );
       setShowNewFaqForm(false);
@@ -52,7 +47,7 @@ const KnowledgeBankSetting = () => {
   const deleteMutation = api.mailbox.faqs.delete.useMutation({
     onSuccess: () => {
       toast.success("Knowledge deleted!");
-      utils.mailbox.faqs.list.invalidate({ mailboxSlug: params.mailbox_slug });
+      utils.mailbox.faqs.list.invalidate();
     },
     onError: (error) => {
       toast.error("Error deleting knowledge", { description: error.message });
@@ -63,12 +58,11 @@ const KnowledgeBankSetting = () => {
     if (!newFaqContent) return;
     await createMutation.mutateAsync({
       content: newFaqContent,
-      mailboxSlug: params.mailbox_slug,
     });
   };
 
   const handleDeleteFaq = async (id: number) => {
-    await deleteMutation.mutateAsync({ mailboxSlug: params.mailbox_slug, id });
+    await deleteMutation.mutateAsync({ id });
   };
 
   return (
@@ -102,7 +96,7 @@ const KnowledgeBankSetting = () => {
             <AccordionContent>
               <div className="space-y-2">
                 {suggestedFaqs.map((faq) => (
-                  <SuggestedKnowledgeBankItem key={faq.id} faq={faq} mailboxSlug={params.mailbox_slug} />
+                  <SuggestedKnowledgeBankItem key={faq.id} faq={faq} />
                 ))}
               </div>
             </AccordionContent>
@@ -130,16 +124,10 @@ const KnowledgeBankSetting = () => {
                 faq={faq}
                 suggestedReplacement={faq.suggestedReplacement}
                 onDelete={() => handleDeleteFaq(faq.id)}
-                mailboxSlug={params.mailbox_slug}
               />
             ))}
             {otherEntries.map((faq) => (
-              <KnowledgeBankItem
-                key={faq.id}
-                faq={faq}
-                onDelete={() => handleDeleteFaq(faq.id)}
-                mailboxSlug={params.mailbox_slug}
-              />
+              <KnowledgeBankItem key={faq.id} faq={faq} onDelete={() => handleDeleteFaq(faq.id)} />
             ))}
           </>
         )}

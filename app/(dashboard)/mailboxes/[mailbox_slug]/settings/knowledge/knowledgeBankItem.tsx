@@ -86,19 +86,18 @@ export const KnowledgeEditForm = ({
 };
 
 type KnowledgeBankItemProps = {
-  mailboxSlug: string;
   onDelete: () => void;
   faq: FAQ & Partial<{ key: string }>;
   suggestedReplacement?: FAQ | null;
 };
 
-const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }: KnowledgeBankItemProps) => {
+const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBankItemProps) => {
   const [editingContent, setEditingContent] = useState<string | null>(null);
 
   const utils = api.useUtils();
   const updateMutation = api.mailbox.faqs.update.useMutation({
-    onSuccess: (_, { mailboxSlug, id, ...input }) => {
-      utils.mailbox.faqs.list.setData({ mailboxSlug }, (data) =>
+    onSuccess: (_, { id, ...input }) => {
+      utils.mailbox.faqs.list.setData(undefined, (data) =>
         data?.map((faq) => (faq.id === id ? { ...faq, ...input } : faq)),
       );
       setEditingContent(null);
@@ -109,8 +108,8 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
   });
 
   const acceptMutation = api.mailbox.faqs.accept.useMutation({
-    onSuccess: (_, { mailboxSlug }) => {
-      utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+    onSuccess: () => {
+      utils.mailbox.faqs.list.invalidate();
     },
     onError: () => {
       toast.error("Error updating knowledge");
@@ -118,8 +117,8 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
   });
 
   const rejectMutation = api.mailbox.faqs.reject.useMutation({
-    onSuccess: (_, { mailboxSlug }) => {
-      utils.mailbox.faqs.list.invalidate({ mailboxSlug });
+    onSuccess: () => {
+      utils.mailbox.faqs.list.invalidate();
     },
     onError: () => {
       toast.error("Error updating knowledge");
@@ -129,7 +128,6 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
   const handleUpdateFaq = async () => {
     if (suggestedReplacement) {
       await acceptMutation.mutateAsync({
-        mailboxSlug,
         id: suggestedReplacement.id,
         content: editingContent ?? undefined,
       });
@@ -144,7 +142,6 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
 
     await updateMutation.mutateAsync({
       content: editingContent,
-      mailboxSlug,
       id: faq.id,
     });
     setEditingContent(null);
@@ -166,7 +163,7 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
           onCancel={() => {
             setEditingContent(null);
             if (suggestedReplacement) {
-              rejectMutation.mutateAsync({ mailboxSlug, id: suggestedReplacement.id });
+              rejectMutation.mutateAsync({ id: suggestedReplacement.id });
             }
           }}
           isLoading={updateMutation.isPending}
@@ -179,7 +176,6 @@ const KnowledgeBankItem = ({ mailboxSlug, faq, suggestedReplacement, onDelete }:
             onCheckedChange={() => {
               updateMutation.mutateAsync({
                 enabled: !faq.enabled,
-                mailboxSlug,
                 id: faq.id,
               });
             }}

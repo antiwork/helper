@@ -120,7 +120,6 @@ const events = {
   },
   "conversations/human-support-requested": {
     data: z.object({
-      mailboxSlug: z.string(),
       conversationId: z.number(),
     }),
     jobs: ["autoAssignConversation", "publishRequestHumanSupport"],

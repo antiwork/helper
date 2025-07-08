@@ -37,7 +37,7 @@ export const useMainPage = ({
   setSelectedTool,
   onInsertReply,
 }: MainPageProps): CommandGroup[] => {
-  const { data: conversation, updateStatus, mailboxSlug, conversationSlug } = useConversationContext();
+  const { data: conversation, updateStatus, conversationSlug } = useConversationContext();
   const utils = api.useUtils();
 
   const dismissToastRef = useRef<() => void>(() => {});
@@ -51,9 +51,7 @@ export const useMainPage = ({
     onSuccess: (draft) => {
       dismissToastRef.current?.();
       if (draft) {
-        utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
-          data ? { ...data, draft } : data,
-        );
+        utils.mailbox.conversations.get.setData({ conversationSlug }, (data) => (data ? { ...data, draft } : data));
       } else {
         toast.error("Error generating draft");
       }
@@ -65,21 +63,22 @@ export const useMainPage = ({
   });
 
   const { data: tools } = api.mailbox.conversations.tools.list.useQuery(
-    { mailboxSlug, conversationSlug },
+    { conversationSlug },
     { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!conversationSlug },
   );
 
   const { data: savedReplies } = api.mailbox.savedReplies.list.useQuery(
-    { mailboxSlug, onlyActive: true },
+    { onlyActive: true },
     { refetchOnWindowFocus: false, refetchOnMount: true },
   );
 
   const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
 
-  const { data: mailbox } = api.mailbox.get.useQuery(
-    { mailboxSlug },
-    { staleTime: Infinity, refetchOnMount: false, refetchOnWindowFocus: false, enabled: !!mailboxSlug },
-  );
+  const { data: mailbox } = api.mailbox.get.useQuery(undefined, {
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
   const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
 
@@ -102,7 +101,7 @@ export const useMainPage = ({
 
         // Track usage separately - don't fail the insertion if tracking fails
         incrementSavedReplyUsage(
-          { slug: savedReply.slug, mailboxSlug },
+          { slug: savedReply.slug },
           {
             onError: (error) => {
               // Log tracking error but don't show to user since content was inserted successfully
@@ -204,7 +203,7 @@ export const useMainPage = ({
             icon: SparklesIcon,
             onSelect: () => {
               if (conversation?.slug) {
-                generateDraft({ mailboxSlug, conversationSlug: conversation.slug });
+                generateDraft({ conversationSlug: conversation.slug });
               }
               onOpenChange(false);
             },

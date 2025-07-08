@@ -1,7 +1,6 @@
 "use client";
 
 import { Copy, Plus, Search } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FileUploadProvider } from "@/components/fileUploadContext";
@@ -21,9 +20,6 @@ import { SavedReplyForm } from "./savedReplyForm";
 type SavedReply = RouterOutputs["mailbox"]["savedReplies"]["list"][number];
 
 export default function SavedRepliesPage() {
-  const params = useParams();
-  const mailboxSlug = params.mailbox_slug as string;
-
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -45,7 +41,6 @@ export default function SavedRepliesPage() {
     refetch,
     isLoading,
   } = api.mailbox.savedReplies.list.useQuery({
-    mailboxSlug,
     search: debouncedSearchTerm || undefined,
   });
 
@@ -190,11 +185,7 @@ export default function SavedRepliesPage() {
                 Create a reusable text template that can be quickly inserted into conversations.
               </DialogDescription>
             </DialogHeader>
-            <SavedReplyForm
-              mailboxSlug={mailboxSlug}
-              onSuccess={handleCreateSuccess}
-              onCancel={() => setShowCreateDialog(false)}
-            />
+            <SavedReplyForm onSuccess={handleCreateSuccess} onCancel={() => setShowCreateDialog(false)} />
           </DialogContent>
         </Dialog>
 
@@ -207,7 +198,6 @@ export default function SavedRepliesPage() {
               </DialogHeader>
               <SavedReplyForm
                 savedReply={editingSavedReply}
-                mailboxSlug={mailboxSlug}
                 onSuccess={handleEditSuccess}
                 onCancel={() => setEditingSavedReply(null)}
                 onDelete={() => {

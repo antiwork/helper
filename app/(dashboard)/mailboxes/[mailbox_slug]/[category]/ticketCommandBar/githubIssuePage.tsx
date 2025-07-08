@@ -24,7 +24,7 @@ interface GitHubIssue {
 }
 
 export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
-  const { mailboxSlug, conversationSlug, data: conversation, refetch: refetchConversation } = useConversationContext();
+  const { conversationSlug, data: conversation, refetch: refetchConversation } = useConversationContext();
 
   const [activeTab, setActiveTab] = useState("create");
   const [title, setTitle] = useState("");
@@ -32,7 +32,7 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
   const [selectedIssueNumber, setSelectedIssueNumber] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: mailbox } = api.mailbox.get.useQuery({ mailboxSlug });
+  const { data: mailbox } = api.mailbox.get.useQuery();
 
   const { mutateAsync: createIssue, isPending: isCreating } =
     api.mailbox.conversations.github.createGitHubIssue.useMutation();
@@ -42,7 +42,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
   const { data: issues, isLoading: isLoadingIssues } = api.mailbox.conversations.github.listRepositoryIssues.useQuery(
     {
       state: "open",
-      mailboxSlug,
       conversationSlug,
     },
     {
@@ -82,7 +81,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
     try {
       const result = await createIssue({
-        mailboxSlug,
         conversationSlug,
         title,
         body,
@@ -117,7 +115,6 @@ export const GitHubIssuePage = ({ onOpenChange }: GitHubIssuePageProps) => {
 
     try {
       const result = await linkIssue({
-        mailboxSlug,
         conversationSlug,
         issueNumber: selectedIssueNumber,
       });

@@ -10,11 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { api } from "@/trpc/react";
 
 type TeamInviteProps = {
-  mailboxSlug: string;
   teamMembers: { id: string; email?: string }[];
 };
 
-export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
+export function AddMember({ teamMembers }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
   const [displayNameInput, setDisplayNameInput] = useState("");
   const [permissions, setPermissions] = useState<"member" | "admin" | undefined>(undefined);
@@ -29,7 +28,7 @@ export function AddMember({ mailboxSlug, teamMembers }: TeamInviteProps) {
       setDisplayNameInput("");
       setPermissions(undefined);
 
-      utils.mailbox.members.list.invalidate({ mailboxSlug });
+      utils.mailbox.members.list.invalidate();
     },
     onError: (error) => {
       toast.error("Failed to send invitation", { description: error.message });

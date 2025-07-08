@@ -12,7 +12,6 @@ import { formatCurrency } from "@/components/utils/currency";
 import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
-import { useConversationListContext } from "./conversationListContext";
 import { highlightKeywords } from "./filters/highlightKeywords";
 
 type ListItem = ConversationListItemType & { isNew?: boolean };
@@ -33,7 +32,6 @@ export const ConversationListItem = ({
   onToggleSelect,
 }: ConversationListItemProps) => {
   const listItemRef = useRef<HTMLAnchorElement>(null);
-  const { mailboxSlug } = useConversationListContext();
   const { searchParams } = useConversationsListInput();
   const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
 
@@ -85,7 +83,7 @@ export const ConversationListItem = ({
           <a
             ref={listItemRef}
             className="flex-1 min-w-0"
-            href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
+            href={`/conversations?id=${conversation.slug}`}
             onClick={(e) => {
               if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
                 e.preventDefault();

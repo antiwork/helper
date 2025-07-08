@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const mailbox = await getMailbox();
   if (!mailbox) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
 
-  const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);
+  const redirectUrl = new URL(`${getBaseUrl()}/settings`);
 
   if (!installationId) return NextResponse.redirect(`${redirectUrl}/integrations?githubConnectResult=error`);
 

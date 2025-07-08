@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
 interface ConversationSidebarProps {
-  mailboxSlug: string;
   conversation: Conversation;
 }
 
@@ -29,7 +28,6 @@ interface ConversationItemProps {
   createdAt: Date;
   similarity?: number;
   status: "open" | "closed" | "spam" | null;
-  mailboxSlug: string;
   navigateToConversation: (slug: string) => void;
   updateStatus: (status: "closed" | "spam" | "open") => void;
 }
@@ -41,7 +39,6 @@ const ConversationItem = ({
   createdAt,
   similarity,
   status,
-  mailboxSlug,
   navigateToConversation,
   updateStatus,
 }: ConversationItemProps) => (
@@ -52,7 +49,7 @@ const ConversationItem = ({
   >
     <div className="flex items-center gap-2 mb-1">
       <a
-        href={`/mailboxes/${mailboxSlug}/conversations?id=${slug}`}
+        href={`/conversations?id=${slug}`}
         target="_blank"
         rel="noopener noreferrer"
         className={cn("mr-auto text-sm truncate", status === "open" && "font-bold")}
@@ -83,19 +80,19 @@ const ConversationItem = ({
   </div>
 );
 
-const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarProps) => {
+const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const { navigateToConversation } = useConversationListContext();
   const { updateStatus } = useConversationContext();
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
 
   const { data: customerConversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery(
-    { mailboxSlug, customer: [conversation.emailFrom ?? ""], sort: "newest" },
+    { customer: [conversation.emailFrom ?? ""], sort: "newest" },
     { enabled: !!conversation.emailFrom && previousExpanded },
   );
 
   const { data: similarConversations, isFetching: isFetchingSimilar } = api.mailbox.conversations.findSimilar.useQuery(
-    { mailboxSlug, conversationSlug: conversation.slug },
+    { conversationSlug: conversation.slug },
     { enabled: similarExpanded },
   );
 
@@ -199,7 +196,6 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
                       summary={conv.summary}
                       createdAt={conv.createdAt}
                       status={conv.status}
-                      mailboxSlug={mailboxSlug}
                       navigateToConversation={navigateToConversation}
                       updateStatus={updateStatus}
                     />
@@ -231,7 +227,6 @@ const ConversationSidebar = ({ mailboxSlug, conversation }: ConversationSidebarP
                       createdAt={conv.createdAt}
                       status={conv.status}
                       similarity={similarConversations?.similarityMap?.[conv.slug]}
-                      mailboxSlug={mailboxSlug}
                       navigateToConversation={navigateToConversation}
                       updateStatus={updateStatus}
                     />

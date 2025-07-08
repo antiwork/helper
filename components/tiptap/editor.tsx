@@ -11,7 +11,6 @@ import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type 
 import { toast } from "sonner";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
-import { useConversationListContextSafe } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
 import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";
@@ -42,7 +41,6 @@ type TipTapEditorProps = {
   isRecording: boolean;
   startRecording: () => void;
   stopRecording: () => void;
-  mailboxSlug?: string;
 };
 
 declare module "@tiptap/core" {
@@ -98,19 +96,9 @@ const TipTapEditor = ({
   isRecording,
   startRecording,
   stopRecording,
-  mailboxSlug: propMailboxSlug,
   ref,
 }: TipTapEditorPropsWithRef) => {
-  // Try to get mailboxSlug from context, fallback to prop
-  const context = useConversationListContextSafe();
-  const contextMailboxSlug = context?.mailboxSlug || null;
-
-  const mailboxSlug = propMailboxSlug || contextMailboxSlug;
-
-  const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery(
-    { mailboxSlug: mailboxSlug ?? "" },
-    { enabled: !!mailboxSlug },
-  );
+  const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery();
   const { isAboveMd } = useBreakpoint("md");
   const [isMacOS, setIsMacOS] = useState(false);
   const [toolbarOpen, setToolbarOpen] = useState(() => {

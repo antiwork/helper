@@ -20,13 +20,12 @@ type SavedReply = {
 
 interface SavedReplyFormProps {
   savedReply?: SavedReply;
-  mailboxSlug: string;
   onSuccess: () => void;
   onCancel: () => void;
   onDelete?: () => void;
 }
 
-export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, onDelete }: SavedReplyFormProps) {
+export function SavedReplyForm({ savedReply, onSuccess, onCancel, onDelete }: SavedReplyFormProps) {
   const editorRef = useRef<TipTapEditorRef | null>(null);
   const [initialContentObject, setInitialContentObject] = useState({ content: savedReply?.content || "" });
 
@@ -95,7 +94,6 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
 
   const onSubmit = (data: { name: string; content: string }) => {
     const finalData = {
-      mailboxSlug,
       ...data,
     };
 
@@ -108,7 +106,7 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
 
   const handleDelete = () => {
     if (savedReply) {
-      deleteSavedReply.mutate({ mailboxSlug, slug: savedReply.slug });
+      deleteSavedReply.mutate({ slug: savedReply.slug });
     }
   };
 
@@ -155,7 +153,6 @@ export function SavedReplyForm({ savedReply, mailboxSlug, onSuccess, onCancel, o
                   isRecording={isRecording}
                   startRecording={startRecording}
                   stopRecording={stopRecording}
-                  mailboxSlug={mailboxSlug}
                 />
               </FormControl>
               <FormMessage />

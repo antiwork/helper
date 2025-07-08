@@ -21,17 +21,9 @@ type Props = {
   className?: string;
   customDate?: DateRange;
   onCustomDateChange?: (date: DateRange) => void;
-  mailboxSlug: string;
 };
 
-export function TimeRangeSelector({
-  value,
-  onValueChange,
-  className,
-  customDate,
-  onCustomDateChange,
-  mailboxSlug,
-}: Props) {
+export function TimeRangeSelector({ value, onValueChange, className, customDate, onCustomDateChange }: Props) {
   return (
     <div className="flex items-center gap-2">
       <Select value={value} onValueChange={onValueChange}>
@@ -47,7 +39,7 @@ export function TimeRangeSelector({
         </SelectContent>
       </Select>
       {value === "custom" && onCustomDateChange && (
-        <CustomTimeRangePicker onSelect={onCustomDateChange} selectedDate={customDate} mailboxSlug={mailboxSlug} />
+        <CustomTimeRangePicker onSelect={onCustomDateChange} selectedDate={customDate} />
       )}
     </div>
   );

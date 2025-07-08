@@ -10,12 +10,8 @@ import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 
-type TeamSettingProps = {
-  mailboxSlug: string;
-};
-
-const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
-  const { data, isLoading } = api.mailbox.members.list.useQuery({ mailboxSlug });
+const TeamSetting = () => {
+  const { data, isLoading } = api.mailbox.members.list.useQuery();
   const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
   const { data: permissionsData } = api.user.getPermissions.useQuery();
@@ -36,7 +32,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
       fullWidth
     >
       <div className="w-full space-y-6">
-        {permissionsData?.isAdmin && <AddMember mailboxSlug={mailboxSlug} teamMembers={teamMembers} />}
+        {permissionsData?.isAdmin && <AddMember teamMembers={teamMembers} />}
 
         {teamMembers.length > 0 && (
           <Input
@@ -79,12 +75,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => (
-                  <TeamMemberRow
-                    key={member.id}
-                    member={member}
-                    mailboxSlug={mailboxSlug}
-                    isAdmin={permissionsData?.isAdmin ?? false}
-                  />
+                  <TeamMemberRow key={member.id} member={member} isAdmin={permissionsData?.isAdmin ?? false} />
                 ))
               )}
             </TableBody>

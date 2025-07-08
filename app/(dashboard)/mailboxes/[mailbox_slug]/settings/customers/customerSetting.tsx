@@ -24,7 +24,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
 
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
@@ -39,13 +39,11 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     savingIndicator.setState("saving");
     if (isEnabled) {
       update({
-        mailboxSlug: mailbox.slug,
         vipThreshold: Number(threshold),
         vipExpectedResponseHours: responseHours ? Number(responseHours) : null,
       });
     } else {
       update({
-        mailboxSlug: mailbox.slug,
         vipThreshold: null,
         vipChannelId: null,
         vipExpectedResponseHours: null,
@@ -127,7 +125,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                       id="vipChannel"
                       selectedChannelId={mailbox.vipChannelId ?? undefined}
                       mailbox={mailbox}
-                      onChange={(vipChannelId) => update({ mailboxSlug: mailbox.slug, vipChannelId })}
+                      onChange={(vipChannelId) => update({ vipChannelId })}
                     />
                   ) : (
                     <Alert>

@@ -16,11 +16,11 @@ import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
-const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
+const RealtimeEvents = () => {
   const { ref: loadMoreRef, inView } = useInView();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = api.mailbox.latestEvents.useInfiniteQuery(
-    { mailboxSlug },
+    {},
     {
       getNextPageParam: (lastPage) => {
         if (!lastPage?.length) return undefined;
@@ -39,7 +39,7 @@ const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
 
   const newEventsRef = useRef<RouterOutputs["mailbox"]["latestEvents"]>([]);
   const addNewEvents = useDebouncedCallback(() => {
-    utils.mailbox.latestEvents.setInfiniteData({ mailboxSlug }, (data) => {
+    utils.mailbox.latestEvents.setInfiniteData({}, (data) => {
       const firstPage = data?.pages[0];
       if (!firstPage) return data;
       const eventsToAdd = newEventsRef.current.filter((event) => !firstPage.some((e) => e.id === event.id));
@@ -51,7 +51,7 @@ const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
     newEventsRef.current = [];
   }, 5000);
 
-  useRealtimeEvent(dashboardChannelId(mailboxSlug), "event", (message) => {
+  useRealtimeEvent(dashboardChannelId(), "event", (message) => {
     newEventsRef.current = [...newEventsRef.current, message.data];
     addNewEvents();
   });
@@ -96,7 +96,7 @@ const RealtimeEvents = ({ mailboxSlug }: { mailboxSlug: string }) => {
             )}
           >
             <Link
-              href={`/mailboxes/${mailboxSlug}/conversations?id=${event.conversationSlug}`}
+              href={`/conversations?id=${event.conversationSlug}`}
               className={cn(
                 "flex flex-col p-5 transition-colors rounded-lg",
                 "hover:bg-muted dark:hover:bg-muted",

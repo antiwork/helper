@@ -22,7 +22,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
 
   const { mutate: update } = api.mailbox.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate({ mailboxSlug: mailbox.slug });
+      utils.mailbox.get.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
@@ -36,7 +36,6 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
   const save = useDebouncedCallback(() => {
     savingIndicator.setState("saving");
     update({
-      mailboxSlug: mailbox.slug,
       autoCloseEnabled: isEnabled,
       autoCloseDaysOfInactivity: Number(daysOfInactivity),
     });
@@ -100,11 +99,7 @@ export default function AutoCloseSetting({ mailbox }: { mailbox: RouterOutputs["
           )}
 
           <div className="flex justify-between">
-            <Button
-              variant="outlined"
-              onClick={() => runAutoClose({ mailboxSlug: mailbox.slug })}
-              disabled={!isEnabled || isAutoClosePending}
-            >
+            <Button variant="outlined" onClick={() => runAutoClose()} disabled={!isEnabled || isAutoClosePending}>
               {isAutoClosePending ? "Running..." : "Run auto-close now"}
             </Button>
           </div>

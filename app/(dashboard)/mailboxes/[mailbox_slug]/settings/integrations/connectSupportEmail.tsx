@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
@@ -10,13 +10,10 @@ import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
 const ConnectSupportEmail = () => {
-  const params = useParams();
   const router = useRouter();
   const [error] = useQueryState("error");
   const { mutateAsync: deleteSupportEmailMutation } = api.gmailSupportEmail.delete.useMutation();
-  const { data: { supportAccount, enabled } = {}, isLoading } = api.gmailSupportEmail.get.useQuery({
-    mailboxSlug: params.mailbox_slug as string,
-  });
+  const { data: { supportAccount, enabled } = {}, isLoading } = api.gmailSupportEmail.get.useQuery();
 
   return (
     <SectionWrapper
@@ -47,7 +44,7 @@ const ConnectSupportEmail = () => {
         <ConfirmationDialog
           message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account."
           onConfirm={async () => {
-            await deleteSupportEmailMutation({ mailboxSlug: params.mailbox_slug as string });
+            await deleteSupportEmailMutation();
             router.refresh();
           }}
           confirmLabel="Yes, disconnect"
@@ -55,7 +52,7 @@ const ConnectSupportEmail = () => {
           <Button variant="destructive_outlined">{`Disconnect ${supportAccount.email}`}</Button>
         </ConfirmationDialog>
       ) : (
-        <Button variant="subtle" onClick={() => (location.href = `/api/connect/google?mailbox=${params.mailbox_slug}`)}>
+        <Button variant="subtle" onClick={() => (location.href = `/api/connect/google`)}>
           Connect your Gmail
         </Button>
       )}

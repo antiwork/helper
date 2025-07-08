@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { useSidebar } from "@/components/ui/sidebar";
+import { api } from "@/trpc/react";
 
-type Props = {
-  mailboxSlug: string;
-};
-
-export function AppSidebarOpen({ mailboxSlug }: Props) {
+export function AppSidebarOpen() {
   const { setOpenMobile } = useSidebar();
+  const { data: mailbox } = api.mailbox.get.useQuery();
 
   return (
     <Link
@@ -20,7 +18,7 @@ export function AppSidebarOpen({ mailboxSlug }: Props) {
         setOpenMobile(true);
       }}
     >
-      <Avatar src={undefined} fallback={mailboxSlug.toUpperCase().slice(0, 2)} />
+      <Avatar src={undefined} fallback={mailbox?.name?.[0]?.toUpperCase() || "G"} />
       <span className="sr-only">Toggle Sidebar</span>
     </Link>
   );

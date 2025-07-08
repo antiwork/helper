@@ -1,5 +1,4 @@
 import { Send } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -96,7 +95,6 @@ export const List = () => {
         {
           conversationFilter,
           status,
-          mailboxSlug: input.mailboxSlug,
         },
         {
           onSuccess: ({ updatedImmediately }) => {
@@ -150,7 +148,7 @@ export const List = () => {
     toggleAllConversations(false);
   }, [searchParams.status, clearSelectedConversations]);
 
-  useRealtimeEvent(conversationsListChannelId(input.mailboxSlug), "conversation.new", (message) => {
+  useRealtimeEvent(conversationsListChannelId(), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
     const sort = searchParams.sort ?? defaultSort;
@@ -325,9 +323,6 @@ export const List = () => {
 };
 
 const NewConversationModal = () => {
-  const params = useParams<{ mailbox_slug: string }>();
-  const mailboxSlug = params.mailbox_slug;
-
   const [newConversationModalOpen, setNewConversationModalOpen] = useState(false);
   const [newConversationSlug, setNewConversationSlug] = useState(generateSlug());
   useEffect(() => {
@@ -351,11 +346,7 @@ const NewConversationModal = () => {
         <DialogHeader>
           <DialogTitle>New message</DialogTitle>
         </DialogHeader>
-        <NewConversationModalContent
-          mailboxSlug={mailboxSlug}
-          conversationSlug={newConversationSlug}
-          onSubmit={closeModal}
-        />
+        <NewConversationModalContent conversationSlug={newConversationSlug} onSubmit={closeModal} />
       </DialogContent>
     </Dialog>
   );

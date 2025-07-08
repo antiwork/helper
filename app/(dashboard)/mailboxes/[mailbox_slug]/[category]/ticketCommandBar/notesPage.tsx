@@ -13,7 +13,7 @@ type NotesPageProps = {
 };
 
 const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
-  const { mailboxSlug, conversationSlug } = useConversationContext();
+  const { conversationSlug } = useConversationContext();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const utils = api.useUtils();
@@ -24,7 +24,6 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
     onSuccess: () => {
       if (textareaRef.current) textareaRef.current.value = "";
       utils.mailbox.conversations.get.invalidate({
-        mailboxSlug,
         conversationSlug,
       });
       onOpenChange(false);
@@ -43,7 +42,6 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
     setIsSubmitting(true);
     addNote.mutate(
       {
-        mailboxSlug,
         conversationSlug,
         message,
         fileSlugs,

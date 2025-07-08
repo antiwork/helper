@@ -20,14 +20,12 @@ import { api } from "@/trpc/react";
 interface DeleteMemberDialogProps {
   children: React.ReactNode;
   member: { id: string; displayName: string };
-  mailboxSlug: string;
   description?: string;
   assignedConversationCount: number;
 }
 
 export default function DeleteMemberDialog({
   children,
-  mailboxSlug,
   description,
   member,
   assignedConversationCount,
@@ -47,7 +45,7 @@ export default function DeleteMemberDialog({
 
   const { mutateAsync: removeTeamMember } = api.mailbox.members.delete.useMutation({
     onSuccess: () => {
-      utils.mailbox.members.list.invalidate({ mailboxSlug });
+      utils.mailbox.members.list.invalidate();
       utils.organization.getMembers.invalidate();
       cleanup();
     },
@@ -76,19 +74,18 @@ export default function DeleteMemberDialog({
         }
 
         await bulkUpdate({
-          mailboxSlug,
           conversationFilter: { assignee: [member.id] },
           assignedToAI: "ai" in assignedTo,
           assignedToId: "id" in assignedTo ? assignedTo.id : undefined,
           message: assignMessage,
         });
-        await removeTeamMember({ id: member.id, mailboxSlug });
+        await removeTeamMember({ id: member.id });
 
         toast.success("Member removed from the team", {
           description: `Conversations will be reassigned to ${"displayName" in assignedTo ? assignedTo.displayName : "Helper agent"}`,
         });
       } else {
-        await removeTeamMember({ id: member.id, mailboxSlug });
+        await removeTeamMember({ id: member.id });
 
         toast.success("Member removed from the team");
       }

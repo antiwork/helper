@@ -34,9 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html>
       <body>
-        <HelperProvider host="YOUR_HELPER_HOST" mailboxSlug="YOUR_MAILBOX_SLUG">
-          {children}
-        </HelperProvider>
+        <HelperProvider host="YOUR_HELPER_HOST">{children}</HelperProvider>
       </body>
     </html>
   );
@@ -51,13 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 Customize the widget by adding props to the `HelperProvider`:
 
 ```tsx
-<HelperProvider
-  host="YOUR_HELPER_HOST"
-  mailboxSlug="YOUR_MAILBOX_SLUG"
-  title="My Helper Widget"
-  iconColor="#ff0000"
-  showToggleButton
->
+<HelperProvider host="YOUR_HELPER_HOST" title="My Helper Widget" iconColor="#ff0000" showToggleButton>
   {children}
 </HelperProvider>
 ```
@@ -67,7 +59,6 @@ The `HelperProvider` accepts the following props:
 | Prop               | Type    | Required | Description                                 |
 | ------------------ | ------- | -------- | ------------------------------------------- |
 | `host`             | string  | Yes      | The domain you host Helper on               |
-| `mailboxSlug`      | string  | Yes      | Your mailbox slug                           |
 | `title`            | string  | No       | Custom title for the chat widget            |
 | `iconColor`        | string  | No       | A custom color for the widget icon          |
 | `showToggleButton` | boolean | No       | Override the "Chat Icon Visibility" setting |
@@ -137,7 +128,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ? await generateHelperAuth({
         email: session.user.email,
         hmacSecret: "YOUR_HMAC_SECRET",
-        mailboxSlug: "YOUR_MAILBOX_SLUG",
       })
     : {};
 

@@ -13,7 +13,7 @@ type PageProps = {
 export default async function SessionPage(props: { params: Promise<PageProps> }) {
   const { mailbox_slug, session_id } = await props.params;
 
-  const mailboxData = await api.mailbox.get({ mailboxSlug: mailbox_slug });
+  const mailboxData = await api.mailbox.get();
   const sessionId = parseInt(session_id, 10);
 
   if (isNaN(sessionId)) {

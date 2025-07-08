@@ -38,7 +38,7 @@ export const ConversationSearchBar = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(searchParams.search || "");
 
-  const { data: openCount } = api.mailbox.openCount.useQuery({ mailboxSlug: input.mailboxSlug });
+  const { data: openCount } = api.mailbox.openCount.useQuery();
 
   const status = openCount
     ? [

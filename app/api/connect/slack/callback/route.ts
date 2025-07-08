@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/mailboxes", request.url));
     }
 
-    const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);
+    const redirectUrl = new URL(`${getBaseUrl()}/settings`);
 
     const { teamId, botUserId, accessToken } = await getSlackAccessToken(code);
 

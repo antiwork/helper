@@ -19,7 +19,6 @@ const extractSummary = (embeddingText: string): string | null => {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mailboxSlug: string;
   title: string;
   conversations: NonNullable<RouterOutputs["mailbox"]["conversations"]["findSimilar"]>["conversations"];
   isLoading?: boolean;
@@ -30,7 +29,6 @@ type Props = {
 const ConversationsModal = ({
   open,
   onOpenChange,
-  mailboxSlug,
   title,
   conversations,
   isLoading,
@@ -44,7 +42,7 @@ const ConversationsModal = ({
   }, [conversations]);
 
   const { data: selectedConversationData, isLoading: isLoadingConversation } = api.mailbox.conversations.get.useQuery(
-    { mailboxSlug, conversationSlug: selectedConversation ?? "" },
+    { conversationSlug: selectedConversation ?? "" },
     { enabled: !!selectedConversation },
   );
 
@@ -75,7 +73,7 @@ const ConversationsModal = ({
                       <span className="text-sm text-muted-foreground whitespace-nowrap ml-2 flex items-center gap-2">
                         <HumanizedTime time={conversation.createdAt} />
                         <a
-                          href={`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`}
+                          href={`/conversations?id=${conversation.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:text-foreground transition-colors"
@@ -104,11 +102,7 @@ const ConversationsModal = ({
                   <LoadingSpinner size="md" />
                 </div>
               ) : selectedConversationData ? (
-                <MessageThread
-                  mailboxSlug={mailboxSlug}
-                  conversation={selectedConversationData}
-                  onPreviewAttachment={() => {}}
-                />
+                <MessageThread conversation={selectedConversationData} onPreviewAttachment={() => {}} />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Select a conversation to view details

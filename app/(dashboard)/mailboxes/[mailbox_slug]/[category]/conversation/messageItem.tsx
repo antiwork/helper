@@ -43,14 +43,12 @@ const hasReasoningMetadata = (metadata: any): metadata is { reasoning: string } 
 };
 
 const MessageItem = ({
-  mailboxSlug,
   conversation,
   message,
   onViewDraftedReply,
 
   onPreviewAttachment,
 }: {
-  mailboxSlug: string;
   conversation: Conversation;
   message: (MessageType | NoteType) & { isNew?: boolean };
   onPreviewAttachment?: (index: number) => void;
@@ -185,7 +183,7 @@ const MessageItem = ({
 
   const splitMergedMutation = api.mailbox.conversations.splitMerged.useMutation({
     onSuccess: (conversation) => {
-      router.push(`/mailboxes/${mailboxSlug}/conversations?id=${conversation.slug}`);
+      router.push(`/conversations?id=${conversation.slug}`);
     },
     onError: (e) => {
       captureExceptionAndLog(e);
@@ -238,7 +236,7 @@ const MessageItem = ({
                     <ConfirmationDialog
                       message="Are you sure you want to separate this conversation?"
                       onConfirm={() => {
-                        splitMergedMutation.mutate({ messageId: message.id, mailboxSlug });
+                        splitMergedMutation.mutate({ messageId: message.id });
                       }}
                     >
                       <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
@@ -325,7 +323,7 @@ const MessageItem = ({
                 </div>
               )}
               {message.type === "message" && message.role === "ai_assistant" && (
-                <FlagAsBadAction message={message} conversationSlug={conversation.slug} mailboxSlug={mailboxSlug} />
+                <FlagAsBadAction message={message} conversationSlug={conversation.slug} />
               )}
             </div>
           </div>

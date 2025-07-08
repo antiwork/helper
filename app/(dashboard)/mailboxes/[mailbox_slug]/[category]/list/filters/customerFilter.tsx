@@ -1,5 +1,4 @@
 import { Check, UserCircle } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -22,13 +21,11 @@ export function CustomerFilter({
   selectedCustomers: string[];
   onChange: (customers: string[]) => void;
 }) {
-  const params = useParams<{ mailbox_slug: string }>();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   const { data: customers, isFetching } = api.mailbox.customers.list.useQuery({
-    mailboxSlug: params.mailbox_slug,
     search: debouncedSearchTerm,
   });
 

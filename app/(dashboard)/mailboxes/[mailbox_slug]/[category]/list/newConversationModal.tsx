@@ -27,12 +27,11 @@ type NewConversationInfo = {
 } & DraftedEmail;
 
 type Props = {
-  mailboxSlug: string;
   conversationSlug: string;
   onSubmit: () => void;
 };
 
-const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props) => {
+const NewConversationModal = ({ conversationSlug, onSubmit }: Props) => {
   const { readyFiles, failedAttachmentsExist } = useFileUpload();
   const messageMemoized = useMemo(() => ({ content: "" }), []);
   const [newConversationInfo, setNewConversationInfo] = useState<NewConversationInfo>({
@@ -114,7 +113,7 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
       file_slugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
     };
 
-    await createNewConversation({ mailboxSlug, conversation: parsedNewConversationInfo });
+    await createNewConversation({ conversation: parsedNewConversationInfo });
   };
   const sendButton = (
     <Button disabled={sendDisabled} onClick={sendMessage}>
@@ -263,9 +262,9 @@ const CcAndBccInfo = ({
   );
 };
 
-const Wrapper = ({ mailboxSlug, conversationSlug, onSubmit }: Props) => (
+const Wrapper = ({ conversationSlug, onSubmit }: Props) => (
   <FileUploadProvider conversationSlug={conversationSlug}>
-    <NewConversationModal mailboxSlug={mailboxSlug} conversationSlug={conversationSlug} onSubmit={onSubmit} />
+    <NewConversationModal conversationSlug={conversationSlug} onSubmit={onSubmit} />
   </FileUploadProvider>
 );
 

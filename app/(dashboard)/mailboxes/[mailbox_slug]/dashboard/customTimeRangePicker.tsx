@@ -15,7 +15,6 @@ type Props = {
   onSelect: (date: DateRange) => void;
   className?: string;
   selectedDate?: DateRange;
-  mailboxSlug: string;
 };
 
 export function CustomTimeRangePicker({ onSelect, className, selectedDate }: Props) {

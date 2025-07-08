@@ -27,7 +27,6 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
   const { data, fetchNextPage, hasNextPage, isLoading, isFetching, isFetchingNextPage, error } =
     api.mailbox.getSessionsPaginated.useInfiniteQuery(
       {
-        mailboxSlug: mailbox.slug,
         limit,
       },
       {
@@ -50,7 +49,7 @@ export default function SessionsList({ mailbox, limit }: SessionsListProps) {
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleViewSession = (session: GuideSession) => {
-    router.push(`/mailboxes/${mailbox.slug}/sessions/${session.id}`);
+    router.push(`/sessions/${session.id}`);
   };
 
   if (error) {

@@ -102,7 +102,6 @@ class HelperWidget {
 
     try {
       const requestBody: Record<string, any> = {
-        mailboxSlug: this.config.mailboxSlug,
         currentURL: window.location.href,
       };
 
@@ -198,11 +197,6 @@ class HelperWidget {
   }
 
   private validateConfig(): boolean {
-    if (!this.config.mailboxSlug) {
-      // eslint-disable-next-line no-console
-      console.error("Invalid config, missing required fields", this.config);
-      return false;
-    }
     return true;
   }
 
@@ -543,10 +537,6 @@ class HelperWidget {
     this.toggleButton = document.createElement("button");
     this.toggleButton.className = "helper-widget-toggle-button";
 
-    if (this.config.mailboxSlug === GUMROAD_MAILBOX_SLUG) {
-      this.toggleButton.classList.add("gumroad-theme");
-    }
-
     const { backgroundColor, foregroundColor } = this.getIconColors();
 
     this.toggleButton.innerHTML = `
@@ -859,9 +849,6 @@ class HelperWidget {
   private createNotificationBubble(id: string): HTMLDivElement {
     const bubble = document.createElement("div");
     bubble.className = "notification-bubble";
-    if (this.config.mailboxSlug === GUMROAD_MAILBOX_SLUG) {
-      bubble.classList.add("gumroad-theme");
-    }
 
     const messageDiv = document.createElement("div");
     messageDiv.className = "message";
@@ -965,7 +952,6 @@ export default HelperWidget;
 
 if (typeof window !== "undefined" && window.document.currentScript?.dataset.mailbox) {
   HelperWidget.init({
-    mailboxSlug: window.document.currentScript.dataset.mailbox,
     ...(window.helperWidgetConfig || {}),
   });
 }

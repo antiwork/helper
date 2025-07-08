@@ -3,7 +3,6 @@ import { parseAsArrayOf, parseAsBoolean, parseAsString, parseAsStringEnum, useQu
 
 export const useConversationsListInput = () => {
   const params = useParams<{
-    mailbox_slug: string;
     category: "conversations" | "assigned" | "unassigned" | "mine";
   }>();
   const [searchParams, setSearchParams] = useQueryStates({
@@ -22,7 +21,6 @@ export const useConversationsListInput = () => {
   });
 
   const input = {
-    mailboxSlug: params.mailbox_slug,
     status: searchParams.status ? [searchParams.status] : ["open"],
     sort: searchParams.sort,
     category: params.category,

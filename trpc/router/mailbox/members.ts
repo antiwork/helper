@@ -56,8 +56,6 @@ export const membersRouter = {
             keywords: input.keywords,
             role: input.role,
             permissions: input.permissions,
-            mailboxId: ctx.mailbox.id,
-            mailboxSlug: ctx.mailbox.slug,
           },
         });
         if (error instanceof TRPCError) throw error;
@@ -107,7 +105,6 @@ export const membersRouter = {
           extra: {
             targetUserId: input.id,
             mailboxId: ctx.mailbox.id,
-            mailboxSlug: ctx.mailbox.slug,
           },
         });
         throw new TRPCError({

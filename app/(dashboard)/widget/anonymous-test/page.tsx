@@ -5,7 +5,6 @@ export const dynamic = "force-dynamic";
 
 export default function AnonymousWidgetTest() {
   const config: HelperWidgetConfig = {
-    mailboxSlug: "flexile",
     title: "Anonymous Support & Help",
   };
 

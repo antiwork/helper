@@ -32,7 +32,7 @@ export const NoConversations = ({ filtered }: { filtered?: boolean }) => {
         <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
         <div className="grid gap-2">
           <Link
-            href={`/mailboxes/${input.mailboxSlug}/settings/in-app-chat`}
+            href={`/settings/in-app-chat`}
             className="border transition-colors hover:border-foreground rounded-lg p-4"
           >
             <div className="flex items-center gap-2">

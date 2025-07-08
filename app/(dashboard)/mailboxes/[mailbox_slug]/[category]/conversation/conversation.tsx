@@ -160,7 +160,7 @@ const MessageThreadPanel = ({
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
 }) => {
-  const { mailboxSlug, data: conversationInfo } = useConversationContext();
+  const { data: conversationInfo } = useConversationContext();
 
   return (
     <div className="grow overflow-y-auto relative" ref={scrollRef}>
@@ -168,7 +168,6 @@ const MessageThreadPanel = ({
         <div className="flex flex-col gap-8 px-4 py-4 h-full">
           {conversationInfo && (
             <MessageThread
-              mailboxSlug={mailboxSlug}
               conversation={conversationInfo}
               onPreviewAttachment={(message, currentIndex) => {
                 setPreviewFileIndex(currentIndex);
@@ -208,7 +207,7 @@ const ConversationHeader = ({
   sidebarVisible: boolean;
   setSidebarVisible: (visible: boolean) => void;
 }) => {
-  const { mailboxSlug, data: conversationInfo } = useConversationContext();
+  const { data: conversationInfo } = useConversationContext();
   const { minimize, moveToNextConversation, moveToPreviousConversation, currentIndex, currentTotal, hasNextPage } =
     useConversationListContext();
 
@@ -244,7 +243,7 @@ const ConversationHeader = ({
       </div>
       <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">
         <CopyLinkButton />
-        {conversationInfo?.id && <Viewers mailboxSlug={mailboxSlug} conversationSlug={conversationInfo.slug} />}
+        {conversationInfo?.id && <Viewers conversationSlug={conversationInfo.slug} />}
         <Button
           variant={!isAboveSm && sidebarVisible ? "subtle" : "ghost"}
           size="sm"
@@ -356,31 +355,29 @@ const CarouselPreviewContent = ({
 };
 
 const MergedContent = () => {
-  const { mailboxSlug, data: conversationInfo } = useConversationContext();
+  const { data: conversationInfo } = useConversationContext();
   if (!conversationInfo?.mergedInto?.slug) return null;
 
   return (
     <div className="absolute inset-0 z-50 bg-background/75 flex flex-col items-center justify-center gap-4 h-full text-lg">
       Merged into another conversation.
       <Button variant="subtle" asChild>
-        <Link href={`/mailboxes/${mailboxSlug}/conversations?id=${conversationInfo.mergedInto.slug}`}>View</Link>
+        <Link href={`/conversations?id=${conversationInfo.mergedInto.slug}`}>View</Link>
       </Button>
     </div>
   );
 };
 
 const ConversationContent = () => {
-  const { mailboxSlug, conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
-  useRealtimeEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.updated", (event) => {
-    utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) =>
-      data ? { ...data, ...event.data } : null,
-    );
+  const { conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
+  useRealtimeEvent(conversationChannelId(conversationSlug), "conversation.updated", (event) => {
+    utils.mailbox.conversations.get.setData({ conversationSlug }, (data) => (data ? { ...data, ...event.data } : null));
   });
-  useRealtimeEvent(conversationChannelId(mailboxSlug, conversationSlug), "conversation.message", (event) => {
+  useRealtimeEvent(conversationChannelId(conversationSlug), "conversation.message", (event) => {
     const message = { ...event.data, createdAt: new Date(event.data.createdAt) } as Awaited<
       ReturnType<typeof serializeMessage>
     >;
-    utils.mailbox.conversations.get.setData({ mailboxSlug, conversationSlug }, (data) => {
+    utils.mailbox.conversations.get.setData({ conversationSlug }, (data) => {
       if (!data) return undefined;
       if (data.messages.some((m) => m.id === message.id)) return data;
 
@@ -482,9 +479,7 @@ const ConversationContent = () => {
           maxSize={50}
           className={cn("hidden lg:block", !sidebarVisible && "hidden!")}
         >
-          {conversationInfo && sidebarVisible ? (
-            <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
-          ) : null}
+          {conversationInfo && sidebarVisible ? <ConversationSidebar conversation={conversationInfo} /> : null}
         </ResizablePanel>
       </ResizablePanelGroup>
     );
@@ -527,7 +522,7 @@ const ConversationContent = () => {
 
       {conversationInfo && sidebarVisible ? (
         <div className="fixed z-20 inset-0 top-10">
-          <ConversationSidebar mailboxSlug={mailboxSlug} conversation={conversationInfo} />
+          <ConversationSidebar conversation={conversationInfo} />
         </div>
       ) : null}
     </div>

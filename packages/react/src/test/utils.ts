@@ -30,7 +30,6 @@ export const setupTestEnv = () => {
 export const createTestConfig = (overrides: Partial<HelperWidgetConfig> = {}): HelperWidgetConfig => ({
   email: "test@example.com",
   emailHash: "hash",
-  mailboxSlug: "test-mailbox",
   timestamp: 123456789,
   title: "Test Helper",
   customerMetadata: {},

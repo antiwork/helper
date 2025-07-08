@@ -35,8 +35,8 @@ const DashboardAlert = ({
   );
 };
 
-export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
-  const { data, isLoading } = api.mailbox.conversations.alertCounts.useQuery({ mailboxSlug });
+export const DashboardAlerts = () => {
+  const { data, isLoading } = api.mailbox.conversations.alertCounts.useQuery();
 
   if (isLoading)
     return (
@@ -49,23 +49,13 @@ export const DashboardAlerts = ({ mailboxSlug }: { mailboxSlug: string }) => {
 
   const alerts = [
     data.assignedToMe > 0 && (
-      <DashboardAlert
-        key="assigned"
-        icon={<User className="h-5 w-5" />}
-        variant="danger"
-        href={`/mailboxes/${mailboxSlug}/mine`}
-      >
+      <DashboardAlert key="assigned" icon={<User className="h-5 w-5" />} variant="danger" href={`/mine`}>
         {data.assignedToMe} open {data.assignedToMe === 1 ? "ticket is" : "tickets are"}{" "}
         <strong>assigned to you</strong>
       </DashboardAlert>
     ),
     data.vipOverdue > 0 && (
-      <DashboardAlert
-        key="vip"
-        icon={<Star className="h-5 w-5" />}
-        variant="warning"
-        href={`/mailboxes/${mailboxSlug}/conversations`}
-      >
+      <DashboardAlert key="vip" icon={<Star className="h-5 w-5" />} variant="warning" href={`/conversations`}>
         <strong>
           {data.vipOverdue} {data.vipOverdue === 1 ? "VIP has" : "VIPs have"} been waiting
         </strong>{" "}

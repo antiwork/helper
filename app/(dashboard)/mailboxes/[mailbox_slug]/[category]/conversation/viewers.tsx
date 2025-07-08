@@ -4,7 +4,6 @@ import { conversationChannelId } from "@/lib/realtime/channels";
 import { useRealtimePresence } from "@/lib/realtime/hooks";
 
 type Props = {
-  mailboxSlug: string;
   conversationSlug: string;
 };
 
@@ -19,8 +18,8 @@ const ViewersTooltipContent = ({ viewers }: { viewers: { id: string; name: strin
   </div>
 );
 
-const Viewers = ({ conversationSlug, mailboxSlug }: Props) => {
-  const { users: viewers } = useRealtimePresence(conversationChannelId(mailboxSlug, conversationSlug));
+const Viewers = ({ conversationSlug }: Props) => {
+  const { users: viewers } = useRealtimePresence(conversationChannelId(conversationSlug));
 
   if (viewers.length === 0) {
     return null;

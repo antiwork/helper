@@ -8,11 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 
 type SuggestedKnowledgeBankItemProps = {
-  mailboxSlug: string;
   faq: FAQ;
 };
 
-const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBankItemProps) => {
+const SuggestedKnowledgeBankItem = ({ faq }: SuggestedKnowledgeBankItemProps) => {
   const [content, setContent] = useState(faq.content);
   const utils = api.useUtils();
   const acceptFaq = api.mailbox.faqs.accept.useMutation({
@@ -33,17 +32,13 @@ const SuggestedKnowledgeBankItem = ({ faq, mailboxSlug }: SuggestedKnowledgeBank
         <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="subtle"
-          onClick={() => rejectFaq.mutate({ mailboxSlug, id: faq.id })}
-          disabled={rejectFaq.isPending}
-        >
+        <Button variant="subtle" onClick={() => rejectFaq.mutate({ id: faq.id })} disabled={rejectFaq.isPending}>
           <X className="h-4 w-4 mr-1" />
           Reject
         </Button>
         <Button
           variant="bright"
-          onClick={() => acceptFaq.mutate({ mailboxSlug, id: faq.id, content })}
+          onClick={() => acceptFaq.mutate({ id: faq.id, content })}
           disabled={acceptFaq.isPending}
         >
           <Check className="h-4 w-4 mr-1" />

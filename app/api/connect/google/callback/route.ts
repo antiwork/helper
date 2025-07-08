@@ -27,10 +27,9 @@ export async function GET(request: Request) {
     if (!details?.email) {
       return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=invalid_email`);
     }
-    if (!gmailScopesGranted(tokens.scope.split(" "))) return NextResponse.redirect(connectSupportEmailUrl(state));
+    if (!gmailScopesGranted(tokens.scope.split(" "))) return NextResponse.redirect(connectSupportEmailUrl());
 
     await api.gmailSupportEmail.create({
-      mailboxSlug: state,
       email: details.email,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,

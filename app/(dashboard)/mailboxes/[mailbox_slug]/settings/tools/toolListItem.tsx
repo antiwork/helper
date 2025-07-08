@@ -11,13 +11,13 @@ import { Switch } from "@/components/ui/switch";
 import { api } from "@/trpc/react";
 import type { ToolFormatted } from "@/types/tools";
 
-const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug: string }) => {
+const ToolListItem = ({ tool }: { tool: ToolFormatted }) => {
   const [editingTool, setEditingTool] = useState<ToolFormatted | null>(null);
   const utils = api.useUtils();
 
   const updateToolMutation = api.mailbox.tools.update.useMutation({
     onMutate: ({ toolId, settings }) => {
-      utils.mailbox.tools.list.setData({ mailboxSlug }, (currentApis = []) =>
+      utils.mailbox.tools.list.setData(undefined, (currentApis = []) =>
         currentApis.map((api) => ({
           ...api,
           tools: api.tools.map((t) => (t.id === toolId ? { ...t, ...settings } : t)),
@@ -31,7 +31,6 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
 
   const handleToolToggle = async (enabled: boolean) => {
     await updateToolMutation.mutateAsync({
-      mailboxSlug,
       toolId: tool.id,
       settings: {
         enabled,
@@ -46,7 +45,6 @@ const ToolListItem = ({ tool, mailboxSlug }: { tool: ToolFormatted; mailboxSlug:
       onSubmit={async (e) => {
         e.preventDefault();
         await updateToolMutation.mutateAsync({
-          mailboxSlug,
           toolId: editingTool.id,
           settings: {
             enabled: editingTool.enabled,

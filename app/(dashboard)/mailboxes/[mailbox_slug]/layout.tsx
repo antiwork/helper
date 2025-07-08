@@ -6,22 +6,16 @@ import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/client
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { env } from "@/lib/env";
 
-export default async function InboxLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ mailbox_slug: string }>;
-}) {
+export default async function InboxLayout({ children }: { children: React.ReactNode }) {
   try {
-    const mailboxSlug = (await params).mailbox_slug;
+    const { preferences } = await api.mailbox.get();
 
     return (
-      <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
+      <HelperProvider host={env.AUTH_URL} showToggleButton>
         <SidebarProvider>
           <InboxClientLayout>
             <div className="flex h-svh w-full">
-              <AppSidebar mailboxSlug={mailboxSlug} />
+              <AppSidebar />
               <main className="flex-1 min-w-0">{children}</main>
             </div>
           </InboxClientLayout>
@@ -30,7 +24,7 @@ export default async function InboxLayout({
     );
   } catch (e) {
     if (e instanceof TRPCError && e.code === "NOT_FOUND") {
-      return redirect("/mailboxes");
+      return redirect("/mine");
     }
     throw e;
   }
