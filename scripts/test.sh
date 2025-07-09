@@ -31,19 +31,23 @@ else
     echo "✅ .env.test.local found"
 fi
 
+# Source the environment file to get SUPABASE_PROJECT_ID
+set -o allexport
+source .env.test.local
+set +o allexport
+
 # Check for existing Supabase containers and clean them up if found
-echo "🔍 Checking for existing Supabase containers..."
-EXISTING_CONTAINERS=$(docker ps -a -q --filter "label=com.supabase.cli.project" 2>/dev/null || true)
+echo "🔍 Checking for existing Supabase containers for project ${SUPABASE_PROJECT_ID}..."
+EXISTING_CONTAINERS=$(docker ps -a -q --filter "name=${SUPABASE_PROJECT_ID}" 2>/dev/null || true)
 if [ ! -z "$EXISTING_CONTAINERS" ]; then
-    echo "🧹 Found existing Supabase containers, cleaning up..."
-    docker ps -a --filter "label=com.supabase.cli.project" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}" 2>/dev/null || true
+    echo "🧹 Found existing Supabase containers for project ${SUPABASE_PROJECT_ID}, cleaning up..."
     echo "🛑 Stopping containers..."
-    docker stop $EXISTING_CONTAINERS 2>/dev/null || true
+    docker stop $EXISTING_CONTAINERS || true
     echo "🗑️ Removing containers..."
-    docker rm $EXISTING_CONTAINERS 2>/dev/null || true
+    docker rm $EXISTING_CONTAINERS || true
     echo "✅ Existing containers cleaned up"
 else
-    echo "✅ No existing Supabase containers found"
+    echo "✅ No existing Supabase containers found for project ${SUPABASE_PROJECT_ID}"
 fi
 
 # Start Supabase services
@@ -56,9 +60,6 @@ echo "⏳ Waiting for Auth service to initialize..."
 sleep 5
 
 # Apply database migrations to the test database
-echo "🔄 Resetting the test database..."
-pnpm run with-test-env pnpm supabase db reset
-
 echo "📦 Applying database migrations..."
 pnpm run with-test-env drizzle-kit migrate --config ./db/drizzle.config.ts
 
