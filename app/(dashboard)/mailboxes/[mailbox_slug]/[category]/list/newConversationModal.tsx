@@ -1,3 +1,4 @@
+import { ChevronDown, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,19 +13,24 @@ import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseEmailList } from "@/components/utils/email";
+import { stripHtmlTags } from "@/components/utils/html";
 import { parseEmailAddress } from "@/lib/emails";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { RouterInputs } from "@/trpc";
+import { RouterInputs, RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
 type NewConversationInfo = {
   to_email_address: string;
   subject: string;
 } & DraftedEmail;
+
+type SavedReply = RouterOutputs["mailbox"]["savedReplies"]["list"][number];
 
 type Props = {
   mailboxSlug: string;
@@ -43,9 +49,19 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     bcc: "",
     files: [],
   });
+  const [showSavedReplies, setShowSavedReplies] = useState(false);
 
   const { sendDisabled, sending, setSending } = useSendDisabled(newConversationInfo.message);
   const editorRef = useRef<TipTapEditorRef | null>(null);
+
+  // Fetch saved replies
+  const { data: savedReplies, isLoading: isLoadingSavedReplies } = api.mailbox.savedReplies.list.useQuery({
+    mailboxSlug,
+    onlyActive: true,
+  });
+
+  // Mutation for tracking usage
+  const { mutateAsync: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
 
   const handleSegment = useCallback(
     (segment: string) => {
@@ -61,6 +77,39 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
       description: error,
     });
   }, []);
+
+  const handleSavedReplySelect = useCallback(
+    async (savedReply: SavedReply) => {
+      try {
+        // Update the conversation info with saved reply content
+        setNewConversationInfo((prev) => ({
+          ...prev,
+          subject: savedReply.name,
+          message: savedReply.content,
+        }));
+
+        // Update the TipTap editor content
+        if (editorRef.current?.editor) {
+          editorRef.current.editor.commands.setContent(savedReply.content);
+        }
+
+        // Close the popover
+        setShowSavedReplies(false);
+
+        // Track usage
+        await incrementSavedReplyUsage({
+          mailboxSlug,
+          slug: savedReply.slug,
+        });
+
+        toast.success("Saved reply inserted");
+      } catch (error) {
+        captureExceptionAndLog("Failed to insert saved reply", { error });
+        toast.error("Failed to insert saved reply");
+      }
+    },
+    [editorRef, incrementSavedReplyUsage, mailboxSlug],
+  );
 
   const {
     isSupported: isRecordingSupported,
@@ -152,6 +201,13 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
             }))
           }
           onModEnter={sendMessage}
+        />
+        <SavedReplySelector
+          savedReplies={savedReplies || []}
+          isLoading={isLoadingSavedReplies}
+          onSelect={handleSavedReplySelect}
+          open={showSavedReplies}
+          onOpenChange={setShowSavedReplies}
         />
         <TipTapEditor
           ref={editorRef}
@@ -259,6 +315,64 @@ const CcAndBccInfo = ({
         />
       )}
       {!bccVisible && ccVisible ? <BccButton /> : null}
+    </div>
+  );
+};
+
+const SavedReplySelector = ({
+  savedReplies,
+  isLoading,
+  onSelect,
+  open,
+  onOpenChange,
+}: {
+  savedReplies: SavedReply[];
+  isLoading: boolean;
+  onSelect: (savedReply: SavedReply) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => {
+  if (isLoading || savedReplies.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Popover open={open} onOpenChange={onOpenChange}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="w-fit">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Saved Replies
+            <ChevronDown className="h-4 w-4 ml-2" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search saved replies..." />
+            <CommandList>
+              <CommandEmpty>No saved replies found.</CommandEmpty>
+              <CommandGroup>
+                {savedReplies.map((savedReply) => (
+                  <CommandItem
+                    key={savedReply.slug}
+                    value={`${savedReply.name} ${savedReply.content}`}
+                    onSelect={() => onSelect(savedReply)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex flex-col w-full">
+                      <div className="font-medium text-sm">{savedReply.name}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        {stripHtmlTags(savedReply.content)}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Used {savedReply.usageCount} times</div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
