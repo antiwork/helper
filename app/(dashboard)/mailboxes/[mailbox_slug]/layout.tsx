@@ -5,7 +5,6 @@ import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSideba
 import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { env } from "@/lib/env";
-import { api } from "@/trpc/server";
 
 export default async function InboxLayout({
   children,
@@ -16,12 +15,11 @@ export default async function InboxLayout({
 }) {
   try {
     const mailboxSlug = (await params).mailbox_slug;
-    const { preferences } = await api.mailbox.get({ mailboxSlug });
 
     return (
       <HelperProvider host={env.AUTH_URL} mailboxSlug={mailboxSlug} showToggleButton>
         <SidebarProvider>
-          <InboxClientLayout theme={preferences?.theme}>
+          <InboxClientLayout>
             <div className="flex h-svh w-full">
               <AppSidebar mailboxSlug={mailboxSlug} />
               <main className="flex-1 min-w-0">{children}</main>
