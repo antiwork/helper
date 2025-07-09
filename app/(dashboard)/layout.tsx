@@ -48,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <StandaloneDisplayIntegration />
           <HelperProvider host={env.AUTH_URL} showToggleButton>
             <SidebarProvider>
-              <InboxClientLayout theme={preferences?.theme}>
+              <InboxClientLayout>
                 <div className="flex h-svh w-full">
                   <AppSidebar />
                   <main className="flex-1 min-w-0">
