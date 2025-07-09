@@ -56,11 +56,9 @@ export default function Conversation({
   const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useRealtimeEvent(
-    conversationSlug ? conversationRealtimeChannelId(conversationSlug) : DISABLED,
+    selectedConversationSlug ? conversationRealtimeChannelId(selectedConversationSlug) : DISABLED,
     "agent-typing",
     () => {
-      if (!conversationSlug) return;
-
       setIsAgentTyping(true);
 
       if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
@@ -75,11 +73,10 @@ export default function Conversation({
   }, []);
 
   useRealtimeEvent(
-    conversationSlug ? conversationRealtimeChannelId(conversationSlug) : DISABLED,
+    selectedConversationSlug ? conversationRealtimeChannelId(selectedConversationSlug) : DISABLED,
     "agent-reply",
     (event) => {
-      if (!conversationSlug) return;
-
+      setIsAgentTyping(false);
       setMessages((prev) => [
         ...prev,
         {
@@ -326,9 +323,9 @@ export default function Conversation({
       {isAgentTyping && (
         <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
           <div className="flex gap-1">
-            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-            <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
           </div>
           Support agent is typing...
         </div>

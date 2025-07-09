@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
+import { REALTIME_SUBSCRIBE_STATES, RealtimeChannel } from "@supabase/supabase-js";
 import { uniqBy } from "lodash-es";
 import { useEffect, useState } from "react";
 import SuperJSON from "superjson";
@@ -13,6 +13,14 @@ const supabase = createClient();
 
 export const DISABLED = Symbol("DISABLED");
 
+const channels: Record<
+  string,
+  {
+    channel: RealtimeChannel;
+    eventListeners: Record<string, ((payload: { id: string; data: any }) => void)[]>;
+  }
+> = {};
+
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 export const useRealtimeEvent = <Data = any>(
   channel: string | typeof DISABLED,
@@ -24,25 +32,58 @@ export const useRealtimeEvent = <Data = any>(
   useEffect(() => {
     if (channel === DISABLED) return;
 
-    const listener = supabase.channel(channel).on("broadcast", { event }, (payload) => {
-      if (!payload.data) {
-        Sentry.captureMessage("No data in realtime event", {
-          level: "warning",
-          extra: { channel, event },
-        });
-        return;
-      }
-      const data = SuperJSON.parse(payload.data);
-      if (env.NODE_ENV === "development") {
-        // eslint-disable-next-line no-console
-        console.debug("Received realtime event:", channel, event, { ...payload, data });
-      }
-      callbackRef.current({ id: payload.id as string, data: data as Data });
-    });
+    let channelObject = channels[channel];
+    if (!channelObject) {
+      channelObject = {
+        channel: supabase.channel(channel),
+        eventListeners: {},
+      };
+      channels[channel] = channelObject;
+      channelObject.channel.subscribe();
+    }
 
-    listener.subscribe();
+    if (!channelObject.eventListeners[event]) {
+      channelObject.eventListeners[event] = [];
+      channelObject.channel.on("broadcast", { event }, ({ payload }) => {
+        if (!payload.data) {
+          Sentry.captureMessage("No data in realtime event", {
+            level: "warning",
+            extra: { channel, event },
+          });
+          return;
+        }
+        const data = SuperJSON.parse(payload.data);
+        if (env.NODE_ENV === "development") {
+          // eslint-disable-next-line no-console
+          console.debug("Received realtime event:", channel, event, { ...payload, data });
+        }
+        channelObject.eventListeners[event]!.forEach((listener) =>
+          listener({ id: payload.id as string, data: data as Data }),
+        );
+      });
+    }
+
+    const listener = (payload: { id: string; data: any }) => callbackRef.current(payload);
+    channelObject.eventListeners[event].push(listener);
+
     return () => {
-      listener.unsubscribe();
+      const channelObject = channels[channel];
+      if (channelObject) {
+        const index = channelObject.eventListeners[event]?.indexOf(listener);
+
+        if (index != null && index >= 0) {
+          channelObject.eventListeners[event]!.splice(index, 1);
+        }
+
+        if (channelObject.eventListeners[event]!.length === 0) {
+          delete channelObject.eventListeners[event];
+        }
+
+        if (Object.keys(channelObject.eventListeners).length === 0) {
+          supabase.removeChannel(channelObject.channel);
+          delete channels[channel];
+        }
+      }
     };
   }, [channel, event]);
 };
