@@ -1,11 +1,18 @@
 import "@/app/globals.css";
+import { TRPCError } from "@trpc/server";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { HelperProvider } from "@helperai/react";
+import { AppSidebar } from "@/app/(dashboard)/appSidebar";
+import InboxClientLayout from "@/app/(dashboard)/clientLayout";
 import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDisplayIntegration";
 import { SentryContext } from "@/components/sentryContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { env } from "@/lib/env";
 import { TRPCReactProvider } from "@/trpc/react";
-import { HydrateClient } from "@/trpc/server";
+import { api, HydrateClient } from "@/trpc/server";
 
 export const metadata: Metadata = {
   title: "Helper",
@@ -29,15 +36,35 @@ export const viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <NuqsAdapter>
-      <Toaster richColors />
-      <SentryContext />
-      <TRPCReactProvider>
-        <StandaloneDisplayIntegration />
-        <HydrateClient>{children}</HydrateClient>
-      </TRPCReactProvider>
-    </NuqsAdapter>
-  );
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  try {
+    const { preferences } = await api.mailbox.get();
+
+    return (
+      <NuqsAdapter>
+        <Toaster richColors />
+        <SentryContext />
+        <TRPCReactProvider>
+          <StandaloneDisplayIntegration />
+          <HelperProvider host={env.AUTH_URL} showToggleButton>
+            <SidebarProvider>
+              <InboxClientLayout theme={preferences?.theme}>
+                <div className="flex h-svh w-full">
+                  <AppSidebar />
+                  <main className="flex-1 min-w-0">
+                    <HydrateClient>{children}</HydrateClient>
+                  </main>
+                </div>
+              </InboxClientLayout>
+            </SidebarProvider>
+          </HelperProvider>
+        </TRPCReactProvider>
+      </NuqsAdapter>
+    );
+  } catch (e) {
+    if (e instanceof TRPCError && e.code === "NOT_FOUND") {
+      return redirect("/mine");
+    }
+    throw e;
+  }
 }
