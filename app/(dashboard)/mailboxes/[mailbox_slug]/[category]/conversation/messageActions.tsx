@@ -1,5 +1,5 @@
 import { isMacOS } from "@tiptap/core";
-import { CornerUpLeft } from "lucide-react";
+import { ChevronDown, CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
@@ -121,7 +121,6 @@ export const MessageActions = () => {
     }
   }, [conversation]);
   useEffect(() => {
-    // Updates the drafted email upon draft refreshes
     if (conversation?.draft?.id) {
       const message = conversation?.draft.body ?? "";
       setDraftedEmail((email) => ({ ...email, message }));
@@ -150,7 +149,6 @@ export const MessageActions = () => {
     }
   }, [showCc]);
 
-  const onToggleCc = useCallback(() => setShowCc((prev) => !prev), []);
 
   const handleSegment = useCallback((segment: string) => {
     if (editorRef.current?.editor) {
@@ -241,7 +239,6 @@ export const MessageActions = () => {
         responseToId: lastUserMessage?.id ?? null,
       });
 
-      // Clear the draft immediately after message is sent successfully
       setDraftedEmail((prev) => ({ ...prev, message: "", files: [], modified: false }));
       setInitialMessageObject({ content: "" });
       resetFiles([]);
@@ -256,17 +253,15 @@ export const MessageActions = () => {
         captureExceptionAndLog(error);
       }
 
-      // Handle status update separately - if this fails, draft is already cleared
       let shouldTriggerConfetti = false;
       if (conversation.status === "open" && close) {
         try {
-          // Use direct update to avoid redundant toast since we're already showing "Replied and closed"
           await utils.client.mailbox.conversations.update.mutate({
             mailboxSlug,
             conversationSlug,
             status: "closed",
           });
-          // Remove conversation from list and move to next
+
           removeConversation();
           if (!assign) shouldTriggerConfetti = true;
         } catch (error) {
@@ -390,6 +385,15 @@ export const MessageActions = () => {
     setStoredMessage(changes.message);
   };
 
+  const handleToggleCc = useCallback(() => {
+    setShowCc((prev) => {
+      if (prev) {
+        updateDraftedEmail({ cc: "", bcc: "" });
+      }
+      return !prev;
+    });
+  }, []);
+
   const handleInsertReply = (content: string) => {
     setDraftedEmail((prev) => ({
       ...prev,
@@ -406,24 +410,40 @@ export const MessageActions = () => {
         open={showCommandBar}
         onOpenChange={setShowCommandBar}
         onInsertReply={handleInsertReply}
-        onToggleCc={onToggleCc}
+        onToggleCc={handleToggleCc}
         inputRef={commandInputRef}
       />
-      <div className={cn("shrink-0 grid grid-cols-2 gap-2 mt-4", (!showCc || showCommandBar) && "hidden")}>
-        <LabeledInput
-          ref={ccRef}
-          name="CC"
-          value={draftedEmail.cc}
-          onChange={(cc) => updateDraftedEmail({ cc })}
-          onModEnter={() => {}}
-        />
-        <LabeledInput
-          ref={bccRef}
-          name="BCC"
-          value={draftedEmail.bcc}
-          onChange={(bcc) => updateDraftedEmail({ bcc })}
-          onModEnter={() => {}}
-        />
+      <div className={cn("shrink-0 space-y-2 mt-4", showCommandBar && "hidden")}>
+        <div className="flex items-center gap-2">
+          <div className="text-sm text-muted-foreground min-w-8">
+            <span>To</span>
+          </div>
+          <div className="flex-1 text-sm text-muted-foreground">
+            {conversation?.customerMetadata?.name || "Customer"}
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleToggleCc} className="h-6 w-6 p-0 hover:bg-muted">
+            <ChevronDown className={cn("h-4 w-4 transition-transform", showCc && "rotate-180")} />
+          </Button>
+        </div>
+
+        {showCc && (
+          <div className="space-y-2">
+            <LabeledInput
+              ref={ccRef}
+              name="CC"
+              value={draftedEmail.cc}
+              onChange={(cc) => updateDraftedEmail({ cc })}
+              onModEnter={() => {}}
+            />
+            <LabeledInput
+              ref={bccRef}
+              name="BCC"
+              value={draftedEmail.bcc}
+              onChange={(bcc) => updateDraftedEmail({ bcc })}
+              onModEnter={() => {}}
+            />
+          </div>
+        )}
       </div>
       <TipTapEditor
         ref={editorRef}
@@ -446,7 +466,6 @@ export const MessageActions = () => {
         stopRecording={stopRecording}
       />
 
-      {/* Knowledge Bank Generation Dialog */}
       {lastSentMessageId && (
         <GenerateKnowledgeBankDialog
           open={showKnowledgeBankDialog}

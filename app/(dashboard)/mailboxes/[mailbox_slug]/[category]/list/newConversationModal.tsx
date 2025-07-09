@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { parseEmailList } from "@/components/utils/email";
 import { parseEmailAddress } from "@/lib/emails";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { cn } from "@/lib/utils";
 import { RouterInputs } from "@/trpc";
 import { api } from "@/trpc/react";
 
@@ -122,25 +124,47 @@ const NewConversationModal = ({ mailboxSlug, conversationSlug, onSubmit }: Props
     </Button>
   );
 
+  const [showCcBcc, setShowCcBcc] = useState(false);
+
   return (
     <>
       <div className="grid gap-4">
-        <LabeledInput
-          name="To"
-          value={newConversationInfo.to_email_address}
-          onChange={(to_email_address) =>
-            setNewConversationInfo((newConversationInfo) => ({
-              ...newConversationInfo,
-              to_email_address,
-            }))
-          }
-          onModEnter={sendMessage}
-        />
-        <CcAndBccInfo
-          newConversationInfo={newConversationInfo}
-          onChange={(changes) => setNewConversationInfo((info) => ({ ...info, ...changes }))}
-          onModEnter={sendMessage}
-        />
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <LabeledInput
+              name="To"
+              value={newConversationInfo.to_email_address}
+              onChange={(to_email_address) =>
+                setNewConversationInfo((newConversationInfo) => ({
+                  ...newConversationInfo,
+                  to_email_address,
+                }))
+              }
+              onModEnter={sendMessage}
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setShowCcBcc(!showCcBcc);
+              if (showCcBcc) {
+                // Clear CC/BCC when hiding
+                setNewConversationInfo((info) => ({ ...info, cc: "", bcc: "" }));
+              }
+            }}
+            className="h-8 w-8 p-0 hover:bg-muted self-end"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", showCcBcc && "rotate-180")} />
+          </Button>
+        </div>
+        {showCcBcc && (
+          <CcAndBccInfo
+            newConversationInfo={newConversationInfo}
+            onChange={(changes) => setNewConversationInfo((info) => ({ ...info, ...changes }))}
+            onModEnter={sendMessage}
+          />
+        )}
         <Input
           name="Subject"
           value={newConversationInfo.subject}
@@ -205,60 +229,27 @@ const CcAndBccInfo = ({
   onChange: (info: Partial<NewConversationInfo>) => void;
   onModEnter?: () => void;
 }) => {
-  const [ccVisible, setCcVisible] = useState(false);
-  const [bccVisible, setBccVisible] = useState(false);
   const ccRef = useRef<HTMLInputElement>(null);
-  const bccRef = useRef<HTMLInputElement>(null);
-  const CcButton = () => (
-    <button
-      onClick={() => {
-        setCcVisible(true);
-      }}
-      className="text-foreground text-sm hover:underline"
-    >
-      CC
-    </button>
-  );
-  const BccButton = () => (
-    <button
-      onClick={() => {
-        setBccVisible(true);
-      }}
-      className="text-foreground text-sm hover:underline"
-    >
-      BCC
-    </button>
-  );
-  useEffect(() => ccRef.current?.focus(), [ccVisible]);
-  useEffect(() => bccRef.current?.focus(), [bccVisible]);
+
+  useEffect(() => {
+    ccRef.current?.focus();
+  }, []);
 
   return (
-    <div className={ccVisible && bccVisible ? "flex flex-col gap-2" : "flex gap-2"}>
-      {!ccVisible && !bccVisible ? (
-        <span className="text-sm text-muted-foreground">
-          Add <CcButton /> or <BccButton />
-        </span>
-      ) : null}
-      {ccVisible && (
-        <LabeledInput
-          ref={ccRef}
-          name="CC"
-          value={newConversationInfo.cc}
-          onChange={(cc) => onChange({ cc })}
-          onModEnter={onModEnter}
-        />
-      )}
-      {!ccVisible && bccVisible ? <CcButton /> : null}
-      {bccVisible && (
-        <LabeledInput
-          ref={bccRef}
-          name="BCC"
-          value={newConversationInfo.bcc}
-          onChange={(bcc) => onChange({ bcc })}
-          onModEnter={onModEnter}
-        />
-      )}
-      {!bccVisible && ccVisible ? <BccButton /> : null}
+    <div className="flex flex-col gap-2">
+      <LabeledInput
+        ref={ccRef}
+        name="CC"
+        value={newConversationInfo.cc}
+        onChange={(cc) => onChange({ cc })}
+        onModEnter={onModEnter}
+      />
+      <LabeledInput
+        name="BCC"
+        value={newConversationInfo.bcc}
+        onChange={(bcc) => onChange({ bcc })}
+        onModEnter={onModEnter}
+      />
     </div>
   );
 };
