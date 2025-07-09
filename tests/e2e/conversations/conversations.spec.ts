@@ -225,7 +225,7 @@ test.describe("Working Conversation Management", () => {
     const currentUrl = page.url();
 
     // Should still be within the app
-    expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3010");
+    expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020");
 
     // Verify if navigation occurred or modal/dropdown opened
     if (currentUrl !== urlBefore) {
