@@ -5,7 +5,6 @@ import { AppSidebar } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/appSideba
 import InboxClientLayout from "@/app/(dashboard)/mailboxes/[mailbox_slug]/clientLayout";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { env } from "@/lib/env";
-import { api } from "@/trpc/server";
 
 export default async function InboxLayout({
   children,

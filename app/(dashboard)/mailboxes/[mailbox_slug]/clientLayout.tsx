@@ -10,11 +10,7 @@ export const useShowChatWidget = create<{
   setShowChatWidget: (showChatWidget) => set({ showChatWidget }),
 }));
 
-export default function InboxClientLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function InboxClientLayout({ children }: { children: React.ReactNode }) {
   const { showChatWidget } = useShowChatWidget();
 
   return (
