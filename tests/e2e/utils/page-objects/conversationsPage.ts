@@ -145,4 +145,41 @@ export class ConversationsPage extends BasePage {
   selectConversation(index = 0) {
     // This would need real conversation item selectors
   }
+
+  // New Conversation Modal methods
+  async openNewConversationModal() {
+    // Look for the new conversation button - it might be a floating action button or in the header
+    const newConversationButton = this.page.locator('button:has-text("New"), button[aria-label*="New"], button[aria-label*="Compose"], [data-testid="new-conversation"]');
+    await expect(newConversationButton.first()).toBeVisible();
+    await newConversationButton.first().click();
+    
+    // Wait for modal to open
+    await this.page.waitForLoadState("networkidle");
+    
+    // Verify modal is open by checking for To field
+    const toField = this.page.locator('input[placeholder="To"]');
+    await expect(toField).toBeVisible();
+  }
+
+  async expectNewConversationModalVisible() {
+    const toField = this.page.locator('input[placeholder="To"]');
+    const subjectField = this.page.locator('input[placeholder="Subject"]');
+    const editor = this.page.locator('[role="textbox"][contenteditable="true"]');
+    
+    await expect(toField).toBeVisible();
+    await expect(subjectField).toBeVisible();
+    await expect(editor).toBeVisible();
+  }
+
+  async closeNewConversationModal() {
+    // Try pressing Escape key to close modal
+    await this.page.keyboard.press("Escape");
+    
+    // Wait for modal to close
+    await this.page.waitForTimeout(500);
+    
+    // Verify modal is closed
+    const toField = this.page.locator('input[placeholder="To"]');
+    await expect(toField).not.toBeVisible();
+  }
 }
