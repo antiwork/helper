@@ -20,7 +20,7 @@ import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
-import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
+import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
@@ -71,7 +71,7 @@ export const MessageActions = () => {
     (conversationSlug: string) => {
       const now = Date.now();
       if (now - lastTypingBroadcastRef.current >= 8000) {
-        broadcastEvent(conversationRealtimeChannelId(conversationSlug), "agent-typing", {
+        broadcastEvent(publicConversationChannelId(conversationSlug), "agent-typing", {
           timestamp: now,
         });
         lastTypingBroadcastRef.current = now;
@@ -265,7 +265,7 @@ export const MessageActions = () => {
         responseToId: lastUserMessage?.id ?? null,
       });
 
-      broadcastEvent(conversationRealtimeChannelId(conversationSlug), "agent-reply", {
+      broadcastEvent(publicConversationChannelId(conversationSlug), "agent-reply", {
         agentName: orgMembers?.find((m) => m.id === currentUser?.id)?.displayName?.split(" ")[0],
         message: draftedEmail.message,
         timestamp: Date.now(),

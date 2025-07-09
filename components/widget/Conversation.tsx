@@ -13,7 +13,7 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
-import { conversationRealtimeChannelId } from "@/lib/realtime/channels";
+import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
@@ -56,7 +56,7 @@ export default function Conversation({
   const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useRealtimeEvent(
-    selectedConversationSlug ? conversationRealtimeChannelId(selectedConversationSlug) : DISABLED,
+    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
     "agent-typing",
     () => {
       setIsAgentTyping(true);
@@ -73,7 +73,7 @@ export default function Conversation({
   }, []);
 
   useRealtimeEvent(
-    selectedConversationSlug ? conversationRealtimeChannelId(selectedConversationSlug) : DISABLED,
+    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
     "agent-reply",
     (event) => {
       setIsAgentTyping(false);
