@@ -11,6 +11,7 @@ export const userProfiles = pgTable("user_profiles", {
     .references(() => authUsers.id, { onDelete: "cascade" }),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp()
     .defaultNow()

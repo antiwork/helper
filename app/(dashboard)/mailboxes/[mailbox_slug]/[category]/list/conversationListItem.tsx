@@ -7,10 +7,10 @@ import HumanizedTime from "@/components/humanizedTime";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMembers } from "@/components/useMembers";
 import { formatCurrency } from "@/components/utils/currency";
 import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import { useConversationListContext } from "./conversationListContext";
 import { highlightKeywords } from "./filters/highlightKeywords";
@@ -170,11 +170,7 @@ const AssignedToLabel = ({
   assignedToAI?: boolean;
   className?: string;
 }) => {
-  const { data: members } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: members } = useMembers();
 
   if (assignedToAI) {
     return (

@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
 import { useAssignTicket } from "./useAssignTicket";
 
 export const AssignPopoverButton = ({
@@ -23,11 +23,7 @@ export const AssignPopoverButton = ({
 }) => {
   const { assignTicket } = useAssignTicket();
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const { data: orgMembers = [] } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: orgMembers = [] } = useMembers();
   const { user: currentUser } = useSession() ?? {};
 
   const currentAssignee = orgMembers.find((m) => m.id === initialAssignedToId) ?? null;
@@ -79,7 +75,15 @@ export const AssignPopoverButton = ({
               "flex items-center gap-1 hover:underline min-w-0 w-full text-left",
               !currentAssignee && !assignedToAI && "text-muted-foreground",
             )}
-            title={currentAssignee ? currentAssignee.displayName : assignedToAI ? "Helper agent" : "Unassigned"}
+            title={
+              currentAssignee
+                ? currentAssignee.displayName?.trim()
+                  ? currentAssignee.displayName
+                  : currentAssignee.email
+                : assignedToAI
+                  ? "Helper agent"
+                  : "Unassigned"
+            }
           >
             {assignedToAI ? (
               <>
@@ -89,7 +93,13 @@ export const AssignPopoverButton = ({
             ) : (
               <>
                 <User className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate min-w-0">{currentAssignee ? currentAssignee.displayName : "Unassigned"}</span>
+                <span className="truncate min-w-0">
+                  {currentAssignee
+                    ? currentAssignee.displayName?.trim()
+                      ? currentAssignee.displayName
+                      : currentAssignee.email
+                    : "Unassigned"}
+                </span>
               </>
             )}
           </button>

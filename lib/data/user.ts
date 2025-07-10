@@ -54,6 +54,15 @@ export const addUser = async (
   if (error) throw error;
 };
 
+export const banUser = async (userId: string) => {
+  await db
+    .update(userProfiles)
+    .set({
+      deletedAt: new Date(),
+    })
+    .where(eq(userProfiles.id, userId));
+};
+
 export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
   const users = await db
     .select({
@@ -63,8 +72,9 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
       permissions: userProfiles.permissions,
       access: userProfiles.access,
     })
-    .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+    .from(authUsers)
+    .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .where(isNull(userProfiles.deletedAt));
 
   return users.map((user) => {
     const access = user.access ?? { role: "afk", keywords: [] };
@@ -72,7 +82,7 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
 
     return {
       id: user.id,
-      displayName: user.displayName || "",
+      displayName: user.displayName ?? "",
       email: user.email ?? undefined,
       role: access.role,
       keywords: access?.keywords ?? [],
@@ -87,6 +97,7 @@ export const updateUserMailboxData = async (
     displayName?: string;
     role?: UserRole;
     keywords?: MailboxAccess["keywords"];
+    permissions?: string;
   },
 ): Promise<UserWithMailboxAccessData> => {
   await db
@@ -97,6 +108,7 @@ export const updateUserMailboxData = async (
         role: updates.role || "afk",
         keywords: updates.keywords || [],
       },
+      permissions: updates.permissions,
     })
     .where(eq(userProfiles.id, userId));
 

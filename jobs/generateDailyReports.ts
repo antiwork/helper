@@ -155,6 +155,24 @@ export async function generateMailboxDailyReport() {
       : null;
   }
 
+  const [avgWaitTimeResult] = await db
+    .select({
+      average: sql<number>`ROUND(AVG(
+        EXTRACT(EPOCH FROM (${endTime.toISOString()}::timestamp - ${conversations.lastUserEmailCreatedAt}))
+      ))::integer`,
+    })
+    .from(conversations)
+    .where(
+      and(
+        eq(conversations.status, "open"),
+        isNull(conversations.mergedIntoId),
+        isNotNull(conversations.lastUserEmailCreatedAt),
+      ),
+    );
+  const avgWaitTimeMessage = avgWaitTimeResult?.average
+    ? `• Average time existing open tickets have been open: ${formatTime(avgWaitTimeResult.average)}`
+    : null;
+
   blocks.push({
     type: "section",
     text: {
@@ -166,6 +184,7 @@ export async function generateMailboxDailyReport() {
         answeredTicketsOverZeroMessage,
         avgReplyTimeMessage,
         vipAvgReplyTimeMessage,
+        avgWaitTimeMessage,
       ]
         .filter(Boolean)
         .join("\n"),
@@ -186,5 +205,6 @@ export async function generateMailboxDailyReport() {
     answeredTicketsOverZeroMessage,
     avgReplyTimeMessage,
     vipAvgReplyTimeMessage,
+    avgWaitTimeMessage,
   };
 }

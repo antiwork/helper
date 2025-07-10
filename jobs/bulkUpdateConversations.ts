@@ -12,10 +12,16 @@ export const bulkUpdateConversations = async ({
   conversationFilter,
   status,
   userId,
+  assignedToId,
+  assignedToAI,
+  message,
 }: {
   conversationFilter: number[] | z.infer<typeof searchSchema>;
-  status: "open" | "closed" | "spam";
+  status?: "open" | "closed" | "spam";
   userId: string;
+  assignedToId?: string;
+  assignedToAI?: boolean;
+  message?: string;
 }) => {
   const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
@@ -24,14 +30,22 @@ export const bulkUpdateConversations = async ({
     where = inArray(conversations.id, conversationFilter);
   } else {
     const { where: searchWhere } = await searchConversations(mailbox, conversationFilter, "");
-    where = and(...Object.values(searchWhere), ne(conversations.status, status));
+    const filters = Object.values(searchWhere);
+    if (status !== undefined) {
+      filters.push(ne(conversations.status, status));
+    }
+    where = and(...filters);
   }
 
   const results = await db.query.conversations.findMany({ columns: { id: true }, where });
   const targetConversationIds = results.map((c) => c.id);
 
   for (const conversationId of targetConversationIds) {
-    await updateConversation(conversationId, { set: { status }, byUserId: userId });
+    await updateConversation(conversationId, {
+      set: { status, assignedToId, assignedToAI },
+      byUserId: userId,
+      message,
+    });
   }
 
   return {

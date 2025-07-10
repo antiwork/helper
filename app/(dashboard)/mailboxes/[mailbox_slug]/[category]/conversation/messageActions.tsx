@@ -16,7 +16,11 @@ import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useMembers } from "@/components/useMembers";
+import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
+import { publicConversationChannelId } from "@/lib/realtime/channels";
+import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
@@ -55,6 +59,24 @@ export const MessageActions = () => {
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
+  const { data: orgMembers } = useMembers();
+  const { user: currentUser } = useSession() ?? {};
+
+  const broadcastEvent = useBroadcastRealtimeEvent();
+  const lastTypingBroadcastRef = useRef<number>(0);
+
+  const handleTypingEvent = useCallback(
+    (conversationSlug: string) => {
+      const now = Date.now();
+      if (now - lastTypingBroadcastRef.current >= 8000) {
+        broadcastEvent(publicConversationChannelId(conversationSlug), "agent-typing", {
+          timestamp: now,
+        });
+        lastTypingBroadcastRef.current = now;
+      }
+    },
+    [broadcastEvent],
+  );
 
   const { data: mailboxPreferences } = api.mailbox.get.useQuery({
     mailboxSlug,
@@ -239,6 +261,12 @@ export const MessageActions = () => {
         shouldAutoAssign: assign,
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,
+      });
+
+      broadcastEvent(publicConversationChannelId(conversationSlug), "agent-reply", {
+        agentName: orgMembers?.find((m) => m.id === currentUser?.id)?.displayName?.split(" ")[0],
+        message: draftedEmail.message,
+        timestamp: Date.now(),
       });
 
       // Clear the draft immediately after message is sent successfully
@@ -432,7 +460,12 @@ export const MessageActions = () => {
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
-        onUpdate={(message, isEmpty) => updateDraftedEmail({ message: isEmpty ? "" : message })}
+        onUpdate={(message, isEmpty) => {
+          updateDraftedEmail({ message: isEmpty ? "" : message });
+          if (!isEmpty && conversation?.slug) {
+            handleTypingEvent(conversation.slug);
+          }
+        }}
         onModEnter={() => !sendDisabled && handleSend({ assign: false })}
         onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
         onSlashKey={() => commandInputRef.current?.focus()}

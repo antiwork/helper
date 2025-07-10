@@ -8,6 +8,7 @@ import { userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
+import { getProfile, isAdmin } from "@/lib/data/user";
 import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -16,12 +17,14 @@ import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
-    const user = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, input.email),
-    });
+    const [user] = await db
+      .select({ id: authUsers.id, email: authUsers.email, deletedAt: userProfiles.deletedAt })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)));
+
     if (!user) {
-      const [_, emailDomain] = input.email.split("@");
-      if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+      if (isSignupPossible(input.email)) {
         return { signupPossible: true };
       }
 
@@ -84,6 +87,13 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ input }) => {
+      if (!isSignupPossible(input.email)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Signup is not possible for this email domain",
+        });
+      }
+
       const supabase = createAdminClient();
       const { error } = await supabase.auth.admin.createUser({
         email: input.email,
@@ -92,6 +102,7 @@ export const userRouter = {
         },
       });
       if (error) throw error;
+
       return { success: true };
     }),
   onboard: publicProcedure
@@ -168,5 +179,34 @@ export const userRouter = {
 
     if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
     return user;
+    }),
+
+  getPermissions: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User not authenticated",
+      });
+    }
+    const user = await getProfile(ctx.user.id);
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+    return {
+      permissions: user.permissions,
+      isAdmin: isAdmin(user),
+      displayName: user.displayName,
+    };
   }),
 } satisfies TRPCRouterRecord;
+
+const isSignupPossible = (email: string) => {
+  const [_, emailDomain] = email.split("@");
+  if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+    return true;
+  }
+  return false;
+};

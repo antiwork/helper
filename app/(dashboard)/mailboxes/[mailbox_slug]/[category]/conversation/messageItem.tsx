@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMembers } from "@/components/useMembers";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
@@ -61,15 +62,7 @@ const MessageItem = ({
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
 
-  const {
-    data: orgMembers,
-    isLoading: isLoadingMembers,
-    error: membersError,
-  } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: orgMembers, isLoading: isLoadingMembers, error: membersError } = useMembers();
 
   const getDisplayName = (msg: MessageType | NoteType): string => {
     if (msg.type === "message") {

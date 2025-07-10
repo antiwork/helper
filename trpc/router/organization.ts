@@ -11,17 +11,23 @@ export const organizationRouter = {
   getMembers: protectedProcedure.query(async () => {
     const users = await db
       .select({
-        id: userProfiles.id,
-        displayName: userProfiles.displayName,
+        id: authUsers.id,
         email: authUsers.email,
+        displayName: userProfiles.displayName,
+        permissions: userProfiles.permissions,
+        access: userProfiles.access,
+        deletedAt: userProfiles.deletedAt,
       })
-      .from(userProfiles)
-      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(isNull(userProfiles.deletedAt));
 
     return users.map((user) => ({
       id: user.id,
-      displayName: user?.displayName ?? user.email ?? user.id,
-      email: user.email,
+      displayName: user.displayName || "",
+      email: user.email || "",
+      permissions: user.permissions,
+      access: user.access || { role: "afk", keywords: [] },
     }));
   }),
   addMember: protectedProcedure

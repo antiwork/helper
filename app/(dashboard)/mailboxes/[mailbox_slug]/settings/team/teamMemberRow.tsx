@@ -1,17 +1,21 @@
 "use client";
 
+import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
+import { useSession } from "@/components/useSession";
 import { type UserRole } from "@/lib/data/user";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
+import DeleteMemberDialog from "./deleteMemberDialog";
 
 export const ROLE_DISPLAY_NAMES: Record<UserRole, string> = {
   core: "Core",
@@ -36,7 +40,7 @@ interface TeamMember {
 type TeamMemberRowProps = {
   member: TeamMember;
   mailboxSlug: string;
-  canChangePermissions: boolean;
+  isAdmin: boolean;
 };
 
 const updateMember = (
@@ -48,12 +52,13 @@ const updateMember = (
   members: data.members.map((m) => (m.id === member.id ? { ...m, ...updates } : m)),
 });
 
-const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMemberRowProps) => {
+const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => {
   const [keywordsInput, setKeywordsInput] = useState(member.keywords.join(", "));
   const [role, setRole] = useState<UserRole>(member.role);
   const [permissions, setPermissions] = useState<string>(member.permissions);
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
+  const { user: currentUser } = useSession() ?? {};
 
   // Separate saving indicators for each operation type
   const displayNameSaving = useSavingIndicator();
@@ -70,6 +75,11 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     setLocalKeywords(member.keywords);
     setDisplayNameInput(member.displayName || "");
   }, [member.keywords, member.role, member.permissions, member.displayName]);
+
+  const { data: count } = api.mailbox.conversations.count.useQuery({
+    mailboxSlug,
+    assignee: [member.id],
+  });
 
   // Separate mutations for each operation type
   const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
@@ -127,7 +137,7 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
     onSuccess: (data) => {
       utils.mailbox.members.list.setData({ mailboxSlug }, (oldData) => {
         if (!oldData) return oldData;
-        return updateMember(oldData, member, { permissions: data.permissions });
+        return updateMember(oldData, member, { permissions: data.user.permissions });
       });
       permissionsSaving.setState("saved");
     },
@@ -225,15 +235,19 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
         </div>
       </TableCell>
       <TableCell>
-        <Input
-          value={displayNameInput}
-          onChange={(e) => handleDisplayNameChange(e.target.value)}
-          placeholder="Enter display name"
-          className="w-full max-w-sm"
-        />
+        {isAdmin || member.id === currentUser?.id ? (
+          <Input
+            value={displayNameInput}
+            onChange={(e) => handleDisplayNameChange(e.target.value)}
+            placeholder="Enter display name"
+            className="w-full max-w-sm"
+          />
+        ) : (
+          <span>{member.displayName || "No display name"}</span>
+        )}
       </TableCell>
       <TableCell>
-        {canChangePermissions ? (
+        {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Permissions" />
@@ -248,26 +262,55 @@ const TeamMemberRow = ({ member, mailboxSlug, canChangePermissions }: TeamMember
         )}
       </TableCell>
       <TableCell>
-        <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-            <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-            <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-          </SelectContent>
-        </Select>
+        {isAdmin ? (
+          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
+        )}
       </TableCell>
       <TableCell>
-        <div className="w-[200px]">
-          <Input
-            value={keywordsInput}
-            onChange={(e) => handleKeywordsChange(e.target.value)}
-            placeholder="Enter keywords separated by commas"
-            className={role === "nonCore" ? "" : "invisible"}
-          />
-        </div>
+        {isAdmin ? (
+          <div className="w-[200px]">
+            <Input
+              value={keywordsInput}
+              onChange={(e) => handleKeywordsChange(e.target.value)}
+              placeholder="Enter keywords separated by commas"
+              className={role === "nonCore" ? "" : "invisible"}
+            />
+          </div>
+        ) : (
+          <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
+            {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
+          </span>
+        )}
+      </TableCell>
+      <TableCell>
+        {currentUser?.id !== member.id && isAdmin && (
+          <DeleteMemberDialog
+            member={{ id: member.id, displayName: member.displayName }}
+            mailboxSlug={mailboxSlug}
+            description={
+              count?.total && count?.total > 0
+                ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                : `Are you sure you want to remove ${member.displayName || member.email}?`
+            }
+            assignedConversationCount={count?.total || 0}
+          >
+            <Button variant="ghost" size="sm" iconOnly>
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </DeleteMemberDialog>
+        )}
       </TableCell>
       <TableCell className="w-[120px]">
         <div className="flex items-center gap-2">
