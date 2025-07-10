@@ -38,7 +38,7 @@ export const viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   try {
-    const { preferences } = await api.mailbox.get();
+    await api.mailbox.get();
 
     return (
       <NuqsAdapter>
