@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import superjson from "superjson";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -140,7 +141,7 @@ export const triggerEvent = <T extends EventName>(
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
-  const payloads = events[event].jobs.map((job) => ({ event, job, data }));
+  const payloads = events[event].jobs.map((job) => ({ event, job, data: superjson.serialize(data) }));
   return db.execute(
     sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
   );
