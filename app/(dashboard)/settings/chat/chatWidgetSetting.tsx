@@ -35,7 +35,7 @@ const hmac = crypto.createHmac('sha256', hmacSecret)
   .update(\`\${email}:\${timestamp}\`)
   .digest('hex'); // Format of content is "email:timestamp"`;
 
-const WIDGET_SAMPLE_CODE = `<script src="${getBaseUrl()}/widget/sdk.js" {{DATA_ATTRIBUTES}} async></script>`;
+const WIDGET_SAMPLE_CODE = `<script src="${getBaseUrl()}/widget/sdk.js" async></script>`;
 
 const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   const [mode, setMode] = useState<WidgetMode>(mailbox.widgetDisplayMode ?? "off");
@@ -136,15 +136,13 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
     setMode(newMode);
   };
 
-  const widgetSampleCode = WIDGET_SAMPLE_CODE.replace("{{DATA_ATTRIBUTES}}", "");
-
   const plainJSPrompt = `
 Integrate the helper.ai widget into my app.
 
 First, add the following code snippet in my HTML layout before the closing </body> tag:
 
 \`\`\`
-${widgetSampleCode}
+${WIDGET_SAMPLE_CODE}
 \`\`\`
 
 Then, ask if I want to do either of the following:
@@ -320,7 +318,7 @@ ${NODE_HMAC_SAMPLE_CODE}
               </TooltipProvider>
             </h3>
             <p className="text-sm">Copy and paste this code into your website:</p>
-            <CodeBlock code={widgetSampleCode} language="html" />
+            <CodeBlock code={WIDGET_SAMPLE_CODE} language="html" />
             <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
             <Accordion type="multiple" className="w-full">
               <AccordionItem value="customize">
@@ -338,7 +336,7 @@ ${NODE_HMAC_SAMPLE_CODE}
   }
 </script>
 <!-- The script you added earlier -->
-${widgetSampleCode}
+${WIDGET_SAMPLE_CODE}
                     `.trim()}
                     language="html"
                   />
@@ -407,7 +405,7 @@ ${widgetSampleCode}
   }
 </script>
 <!-- The script you added earlier -->
-${widgetSampleCode}
+${WIDGET_SAMPLE_CODE}
                       `.trim()}
                       language="html"
                     />
@@ -429,7 +427,7 @@ ${widgetSampleCode}
   }
 </script>
 <!-- The script you added earlier -->
-${widgetSampleCode}
+${WIDGET_SAMPLE_CODE}
                       `.trim()}
                       language="html"
                     />

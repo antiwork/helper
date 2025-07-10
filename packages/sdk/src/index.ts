@@ -950,8 +950,6 @@ class HelperWidget {
 
 export default HelperWidget;
 
-if (typeof window !== "undefined" && window.document.currentScript?.dataset.mailbox) {
-  HelperWidget.init({
-    ...(window.helperWidgetConfig || {}),
-  });
+if (typeof window !== "undefined" && !window.document.currentScript?.dataset.delayInit) {
+  HelperWidget.init(window.helperWidgetConfig || {});
 }

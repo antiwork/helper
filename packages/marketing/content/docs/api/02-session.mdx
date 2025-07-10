@@ -20,9 +20,9 @@ Creates a new session and returns a token that can be used for authentication in
 ### Request Parameters
 
 | Parameter                | Type   | Required    | Description                                                                       |
-| ------------------------ | ------ | ----------- | --------------------------------------------------------------------------------- | --- |
+| ------------------------ | ------ | ----------- | --------------------------------------------------------------------------------- |
 | `email`                  | string | Optional    | Email address of the user. If not provided, an anonymous session will be created. |
-| `emailHash`              | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided.              |     |
+| `emailHash`              | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided.              |
 | `timestamp`              | number | Conditional | Current timestamp in milliseconds. Required if email is provided.                 |
 | `customerMetadata`       | object | No          | Additional metadata about the customer.                                           |
 | `customerMetadata.value` | number | No          | Numeric value representing the customer's worth/revenue.                          |

@@ -24,7 +24,6 @@ export const mockHelperWidget = () => {
 
 export const setupTestEnv = () => {
   process.env.HELPER_HMAC_SECRET = "test-secret";
-  process.env.HELPER_MAILBOX_SLUG = "test-mailbox";
 };
 
 export const createTestConfig = (overrides: Partial<HelperWidgetConfig> = {}): HelperWidgetConfig => ({

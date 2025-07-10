@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 
 export default function Page() {
@@ -70,8 +69,8 @@ export default function Page() {
         <section className="text-lg">
           <h3>Contact Us</h3>
           If you have any questions about this Privacy Policy, please contact us via email at{" "}
-          <a className="underline" href={`mailto:${HELPER_SUPPORT_EMAIL_FROM}`}>
-            {HELPER_SUPPORT_EMAIL_FROM}
+          <a className="underline" href={`mailto:help@helper.ai`}>
+            help@helper.ai
           </a>
           .
         </section>

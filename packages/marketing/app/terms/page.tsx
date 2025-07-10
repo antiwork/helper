@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 
 export default function Page() {
@@ -91,8 +90,8 @@ export default function Page() {
         <section className="text-lg">
           <h3>13. Contact Information</h3>
           If you have any questions about these Terms, please contact us at{" "}
-          <a className="underline" href={`mailto:${HELPER_SUPPORT_EMAIL_FROM}`}>
-            {HELPER_SUPPORT_EMAIL_FROM}
+          <a className="underline" href={`mailto:help@helper.ai`}>
+            help@helper.ai
           </a>
         </section>
       </main>

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { HELPER_SUPPORT_EMAIL_FROM } from "@/components/constants";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,17 +19,7 @@ const ConnectSupportEmail = () => {
       title="Support Email"
       description="Connect your support email to receive and send emails from your support email address."
     >
-      {error && (
-        <div className="mb-4 rounded-lg bg-destructive-100 px-4 py-3 text-destructive-900" role="alert">
-          <h3>Failed to connect your gmail account, please try again.</h3>
-          <p className="mt-1 text-sm">
-            If the issue still persists please contact{" "}
-            <a className="underline" href={`mailto:${HELPER_SUPPORT_EMAIL_FROM}`}>
-              {HELPER_SUPPORT_EMAIL_FROM}
-            </a>
-          </p>
-        </div>
-      )}
+      {error && <Alert variant="destructive">Failed to connect your gmail account, please try again.</Alert>}
       {isLoading ? (
         <LoadingSpinner size="md" />
       ) : !enabled ? (

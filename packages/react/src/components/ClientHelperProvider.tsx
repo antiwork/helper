@@ -13,6 +13,7 @@ export function ClientHelperProvider({ host, onError, ...props }: ClientHelperPr
     const script = document.createElement("script");
     script.src = `${host}/widget/sdk.js`;
     script.async = true;
+    script.dataset.delayInit = "true";
 
     script.onload = () => {
       if (!window.HelperWidget) {
