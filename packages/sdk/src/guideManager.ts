@@ -4,8 +4,8 @@ import type { eventWithTime } from "@rrweb/types";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { domElements } from "./domElements";
 import { clickableElementsToString, constructDomTree, findInteractiveElements, type DomTrackingData } from "./domTree";
+import { RESUME_GUIDE, type GuideSessionEventType } from "./module";
 import { scriptOrigin } from "./scriptOrigin";
-import { RESUME_GUIDE, type GuideSessionEventType } from "./utils";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

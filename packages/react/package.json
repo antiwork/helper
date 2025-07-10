@@ -20,7 +20,8 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "@helperai/sdk": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

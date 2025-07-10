@@ -1,11 +1,11 @@
 {
   "name": "@helperai/sdk",
   "version": "1.0.0",
-  "description": "Helper SDK for embedding the widget in client websites",
-  "private": true,
+  "description": "Helper SDK for creating customer support widgets on your website",
   "type": "module",
-  "module": "dist/esm/utils.js",
-  "types": "dist/types/utils.d.ts",
+  "main": "dist/umd/module.js",
+  "module": "dist/esm/module.js",
+  "types": "dist/types/module.d.ts",
   "scripts": {
     "build": "pnpm build:types && webpack --config webpack.sdk.cjs --env production",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist/types",

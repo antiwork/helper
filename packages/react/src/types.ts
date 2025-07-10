@@ -1,1 +1,1 @@
-export { HelperWidgetConfig } from "../../sdk/src/utils";
+export { HelperWidgetConfig } from "@helperai/sdk";
