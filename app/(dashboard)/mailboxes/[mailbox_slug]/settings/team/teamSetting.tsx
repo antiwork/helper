@@ -83,7 +83,7 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                     key={member.id}
                     member={member}
                     mailboxSlug={mailboxSlug}
-                    canChangePermissions={data?.isAdmin === true && member.id !== session?.user.id}
+                    canChangePermissions={data?.isAdmin === true && member.id !== session?.user?.id}
                   />
                 ))
               )}
