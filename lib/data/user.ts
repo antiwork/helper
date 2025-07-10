@@ -64,8 +64,7 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
       access: userProfiles.access,
     })
     .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(isNull(userProfiles.deletedAt));
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
   return users.map((user) => {
     const access = user.access ?? { role: "afk", keywords: [] };
@@ -113,7 +112,7 @@ export const updateUserMailboxData = async (
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)))
+    .where(eq(userProfiles.id, userId));
 
   return {
     id: updatedProfile?.id ?? userId,

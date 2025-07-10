@@ -80,7 +80,7 @@ const assignBasedOnCc = async (
       })
       .from(userProfiles)
       .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-      .where(and(eq(authUsers.email, ccAddress), isNull(userProfiles.deletedAt)))
+      .where(eq(authUsers.email, ccAddress));
 
     if (ccStaffUser) {
       await updateConversation(conversationId, {

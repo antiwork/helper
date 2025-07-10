@@ -1,9 +1,10 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
@@ -11,7 +12,7 @@ import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
-import { publicProcedure } from "../trpc";
+import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
@@ -148,4 +149,24 @@ export const userRouter = {
         otp: linkData.properties.email_otp,
       };
     }),
+  currentUser: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    const userId = ctx.user.id;
+
+    const [user] = await db
+      .select({
+        id: authUsers.id,
+        email: authUsers.email,
+        displayName: userProfiles.displayName,
+      })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(eq(authUsers.id, userId));
+
+    if (!user) throw new Error("UNAUTHORIZED");
+    return user;
+  }),
 } satisfies TRPCRouterRecord;

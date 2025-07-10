@@ -16,8 +16,7 @@ export const organizationRouter = {
         email: authUsers.email,
       })
       .from(userProfiles)
-      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-      .where(isNull(userProfiles.deletedAt));
+      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
     return users.map((user) => ({
       id: user.id,

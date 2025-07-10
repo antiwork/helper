@@ -37,7 +37,7 @@ export function AccountDropdown() {
           className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           aria-label="Account menu"
         >
-          <Avatar fallback={getFullName(user.user_metadata?.display_name, user.email)} size="sm" />
+          <Avatar fallback={getFullName(user.displayName, user.email)} size="sm" />
           <span className="truncate text-sm group-data-[collapsible=icon]:hidden">{user.email}</span>
           <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
         </Button>

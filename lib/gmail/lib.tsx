@@ -54,7 +54,7 @@ export const convertConversationMessageToRaw = async (
           })
           .from(userProfiles)
           .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-          .where(and(eq(userProfiles.id, email.userId), isNull(userProfiles.deletedAt)))
+          .where(eq(userProfiles.id, email.userId))
       : [];
 
     if (html && hasDisplayName(user?.displayName)) {

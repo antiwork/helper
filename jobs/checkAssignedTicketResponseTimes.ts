@@ -45,8 +45,7 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
       access: userProfiles.access,
     })
     .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(isNull(userProfiles.deletedAt));
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
   const usersById = Object.fromEntries(users.map((user) => [user.id, user]));
 

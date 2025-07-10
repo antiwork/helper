@@ -28,8 +28,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
       access: userProfiles.access,
     })
     .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(isNull(userProfiles.deletedAt));
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
 
   const memberIds = allUsers.map((user) => user.id);
 

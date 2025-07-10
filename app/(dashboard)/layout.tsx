@@ -33,10 +33,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <NuqsAdapter>
       <Toaster richColors />
-      <SentryContext />
       <TRPCReactProvider>
-        <StandaloneDisplayIntegration />
-        <HydrateClient>{children}</HydrateClient>
+        <HydrateClient>
+          <SentryContext />
+          <StandaloneDisplayIntegration />
+          {children}
+        </HydrateClient>
       </TRPCReactProvider>
     </NuqsAdapter>
   );

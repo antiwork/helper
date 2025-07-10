@@ -125,7 +125,7 @@ const getUserAnnotation = cache(async (userId: string) => {
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(and(eq(userProfiles.id, userId), isNull(userProfiles.deletedAt)));
+    .where(eq(userProfiles.id, userId));
 
   return user
     ? [{ user: { name: hasDisplayName(user.displayName) ? getFirstName(user.displayName, user.email) : undefined } }]

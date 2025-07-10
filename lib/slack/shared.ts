@@ -195,7 +195,6 @@ const openAssignModal = async (message: SlackMessage, triggerId: string) => {
                 })
                 .from(userProfiles)
                 .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-                .where(isNull(userProfiles.deletedAt))
                 .limit(100)
             ).map((member) => ({
               text: {
