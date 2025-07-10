@@ -18,7 +18,7 @@ import { db } from "@/db/client";
 import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
-import { conversationMessages, conversations, mailboxes, mailboxesMetadataApi, userProfiles } from "../schema";
+import { conversationMessages, conversations, mailboxesMetadataApi, userProfiles } from "../schema";
 
 const getTables = async () => {
   const result = await db.execute(sql`

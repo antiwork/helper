@@ -5,7 +5,6 @@ import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
@@ -79,16 +78,14 @@ const TeamSetting = ({ mailboxSlug }: TeamSettingProps) => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTeamMembers.map((member) => {
-                  return (
-                    <TeamMemberRow
-                      key={member.id}
-                      member={member}
-                      mailboxSlug={mailboxSlug}
-                      isAdmin={permissionsData?.isAdmin ?? false}
-                    />
-                  );
-                })
+                filteredTeamMembers.map((member) => (
+                  <TeamMemberRow
+                    key={member.id}
+                    member={member}
+                    mailboxSlug={mailboxSlug}
+                    isAdmin={permissionsData?.isAdmin ?? false}
+                  />
+                ))
               )}
             </TableBody>
           </Table>

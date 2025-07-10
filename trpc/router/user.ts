@@ -2,7 +2,6 @@ import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { z } from "zod";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema";
@@ -25,8 +24,7 @@ export const userRouter = {
       .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)));
 
     if (!user) {
-      const [_, emailDomain] = input.email.split("@");
-      if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+      if (isSignupPossible(input.email)) {
         return { signupPossible: true };
       }
 
@@ -89,8 +87,15 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ input }) => {
+      if (!isSignupPossible(input.email)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Signup is not possible for this email domain",
+        });
+      }
+
       const supabase = createAdminClient();
-      const { data, error } = await supabase.auth.admin.createUser({
+      const { error } = await supabase.auth.admin.createUser({
         email: input.email,
         user_metadata: {
           display_name: input.displayName,
@@ -177,3 +182,11 @@ export const userRouter = {
     };
   }),
 } satisfies TRPCRouterRecord;
+
+const isSignupPossible = (email: string) => {
+  const [_, emailDomain] = email.split("@");
+  if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+    return true;
+  }
+  return false;
+};

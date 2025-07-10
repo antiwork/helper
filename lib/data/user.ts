@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import { eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
@@ -44,7 +43,7 @@ export const addUser = async (
   permission?: string,
 ) => {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { error } = await supabase.auth.admin.createUser({
     email: emailAddress,
     user_metadata: {
       inviter_user_id: inviterUserId,
