@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, inArray, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
@@ -13,15 +13,13 @@ export const bulkUpdateConversations = async ({
   status,
   userId,
   assignedToId,
-  prevAssigneeId,
-  message,
   assignedToAI,
+  message,
 }: {
   conversationFilter: number[] | z.infer<typeof searchSchema>;
   status?: "open" | "closed" | "spam";
   userId: string;
   assignedToId?: string;
-  prevAssigneeId?: string;
   assignedToAI?: boolean;
   message?: string;
 }) => {
@@ -35,9 +33,6 @@ export const bulkUpdateConversations = async ({
     const filters = Object.values(searchWhere);
     if (status !== undefined) {
       filters.push(ne(conversations.status, status));
-    }
-    if (prevAssigneeId !== undefined) {
-      filters.push(eq(conversations.assignedToId, prevAssigneeId));
     }
     where = and(...filters);
   }

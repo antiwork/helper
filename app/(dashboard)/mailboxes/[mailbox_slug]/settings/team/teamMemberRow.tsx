@@ -296,14 +296,14 @@ const TeamMemberRow = ({ member, mailboxSlug, isAdmin }: TeamMemberRowProps) => 
       <TableCell>
         {currentUser?.id !== member.id && isAdmin && (
           <DeleteMemberDialog
-            assignedToId={{ id: member.id, displayName: member.displayName }}
+            member={{ id: member.id, displayName: member.displayName }}
             mailboxSlug={mailboxSlug}
             description={
               count?.total && count?.total > 0
-                ? `You are about to remove ${member.displayName.toUpperCase()}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
-                : `There is no conversation assigned to ${member.displayName.toUpperCase()}. Are you sure you want to delete this member?`
+                ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                : `Are you sure you want to remove ${member.displayName || member.email}?`
             }
-            count={count?.total || 0}
+            assignedConversationCount={count?.total || 0}
           >
             <Button variant="ghost" size="sm" iconOnly>
               <Trash className="h-4 w-4" />

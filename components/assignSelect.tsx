@@ -44,6 +44,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
   const aiItem = {
     id: "ai",
     displayName: "Helper agent",
+    email: null,
   };
 
   const allItems = [
@@ -92,7 +93,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }
   };
 
-  const selectedDisplayName = selectedMember?.displayName || "Anyone";
+  const selectedDisplayName = selectedMember?.displayName || selectedMember?.email || "Anyone";
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -121,7 +122,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                   <span className="flex items-center gap-1 min-w-0">
                     {item.id === "ai" ? <Bot className="h-4 w-4 flex-shrink-0" /> : null}
                     <span className="flex-1 min-w-0 truncate">
-                      {item.displayName}
+                      {item.displayName || item.email}
                       {item.id === user?.id && " (You)"}
                     </span>
                   </span>
