@@ -31,7 +31,7 @@ export const useSession = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [user, refetch]);
+  }, []);
 
   return {
     session,

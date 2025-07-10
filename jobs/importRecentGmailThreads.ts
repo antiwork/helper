@@ -121,14 +121,15 @@ export const processGmailThreadWithClient = async (
         : extractQuotations(processedHtml),
     );
     // Process messages serially since we rely on the database ID for message ordering
-    const [staffUser] =await db.select({
-      id: authUsers.id,
-      displayName: userProfiles.displayName,
-      email: authUsers.email,
-    })
-    .from(authUsers)
-    .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
-    .where(eq(authUsers.email, parsedEmailFrom.address));
+    const [staffUser] = await db
+      .select({
+        id: authUsers.id,
+        displayName: userProfiles.displayName,
+        email: authUsers.email,
+      })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(eq(authUsers.email, parsedEmailFrom.address));
 
     await createMessageAndProcessAttachments(
       gmailSupportEmail,

@@ -1,8 +1,8 @@
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
+import { UserProfile } from "@/db/schema";
 import { notes } from "@/db/schema/notes";
 import { finishFileUpload } from "./files";
-import { UserProfile } from "@/db/schema";
 
 export const addNote = async ({
   conversationId,

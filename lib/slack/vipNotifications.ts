@@ -166,9 +166,7 @@ export const updateVipMessageInSlack = async ({
   email?: boolean;
   closed?: boolean;
 }) => {
-  const byUser = resolvingUser
-    ? ` by ${getFullName(resolvingUser.displayName, resolvingUser.email)}`
-    : "";
+  const byUser = resolvingUser ? ` by ${getFullName(resolvingUser.displayName, resolvingUser.email)}` : "";
 
   let text = "";
   if (email && closed) {

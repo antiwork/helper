@@ -124,11 +124,16 @@ export const updateUserMailboxData = async (
   };
 };
 
-export const findUserViaSlack = cache(async (token: string, slackUserId: string) : Promise<UserProfile | null> => {
+export const findUserViaSlack = cache(async (token: string, slackUserId: string): Promise<UserProfile | null> => {
   const slackUser = await getSlackUser(token, slackUserId);
-  const [user] = await db.select({ id: authUsers.id, displayName: userProfiles.displayName, email: authUsers.email }).from(userProfiles).innerJoin(authUsers, eq(userProfiles.id, authUsers.id)).where(eq(authUsers.email, slackUser?.profile?.email ?? "")) ?? null;
+  const [user] =
+    (await db
+      .select({ id: authUsers.id, displayName: userProfiles.displayName, email: authUsers.email })
+      .from(userProfiles)
+      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+      .where(eq(authUsers.email, slackUser?.profile?.email ?? ""))) ?? null;
 
-  if(user) {
+  if (user) {
     return user;
   }
   return null;

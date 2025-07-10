@@ -10,7 +10,15 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes, UserProfile, userProfiles } from "@/db/schema";
+import {
+  conversationMessages,
+  conversations,
+  files,
+  gmailSupportEmails,
+  mailboxes,
+  UserProfile,
+  userProfiles,
+} from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
@@ -273,15 +281,15 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       );
 
       const [staffUser] = await db
-      .select({
-        id: authUsers.id,
-        displayName: userProfiles.displayName,
-        email: authUsers.email,
-      })
-      .from(userProfiles)
-      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-      .where(eq(authUsers.email, parsedEmailFrom.address));
-      
+        .select({
+          id: authUsers.id,
+          displayName: userProfiles.displayName,
+          email: authUsers.email,
+        })
+        .from(userProfiles)
+        .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+        .where(eq(authUsers.email, parsedEmailFrom.address));
+
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
       let shouldIgnore =

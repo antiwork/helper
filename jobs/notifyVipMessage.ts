@@ -72,7 +72,9 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
         slackBotToken: mailbox.slackBotToken,
         slackChannel: mailbox.vipChannelId,
         slackMessageTs: originalMessage.slackMessageTs,
-        user: message.userId ? await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, message.userId) }) : null,
+        user: message.userId
+          ? await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, message.userId) })
+          : null,
         email: true,
         closed: conversation.status === "closed",
       });

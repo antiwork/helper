@@ -30,7 +30,6 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
   }),
 }));
 
-
 export type UserProfile = {
   id: string;
   displayName?: string | null;
@@ -43,4 +42,4 @@ export type UserProfile = {
   createdAt?: Date | null;
   updatedAt?: Date | null;
   deletedAt?: Date | null;
-}
+};

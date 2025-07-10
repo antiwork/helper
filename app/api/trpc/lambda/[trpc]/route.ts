@@ -1,9 +1,9 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { createClient } from "@/lib/supabase/server";
-import { appRouter, createTRPCContext } from "@/trpc";
+import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { createClient } from "@/lib/supabase/server";
+import { appRouter, createTRPCContext } from "@/trpc";
 
 export const OPTIONS = () => {
   const response = new Response(null, {
