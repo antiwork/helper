@@ -10,8 +10,8 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes, userProfiles } from "@/db/schema";
-import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes, UserProfile, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
@@ -103,7 +103,7 @@ export const createMessageAndProcessAttachments = async (
   gmailMessageId: string,
   gmailThreadId: string,
   conversation: { id: number; slug: string },
-  staffUser?: DbOrAuthUser,
+  staffUser?: UserProfile,
 ) => {
   const references = parsedEmail.references
     ? Array.isArray(parsedEmail.references)
@@ -272,9 +272,16 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
       );
 
-      const staffUser = await db.query.authUsers.findFirst({
-        where: eq(authUsers.email, parsedEmailFrom.address),
-      });
+      const [staffUser] = await db
+      .select({
+        id: authUsers.id,
+        displayName: userProfiles.displayName,
+        email: authUsers.email,
+      })
+      .from(userProfiles)
+      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+      .where(eq(authUsers.email, parsedEmailFrom.address));
+      
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
       let shouldIgnore =

@@ -29,3 +29,18 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
     references: [authUsers.id],
   }),
 }));
+
+
+export type UserProfile = {
+  id: string;
+  displayName?: string | null;
+  email?: string | null;
+  permissions?: string | null;
+  access?: {
+    role: AccessRole;
+    keywords: string[];
+  } | null;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
+}

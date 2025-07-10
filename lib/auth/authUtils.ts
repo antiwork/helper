@@ -1,4 +1,3 @@
-import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 
 export const hasDisplayName = (displayName?: string | null): displayName is string => {
   return typeof displayName === "string";

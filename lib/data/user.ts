@@ -1,7 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
-import { userProfiles } from "@/db/schema/userProfiles";
+import { UserProfile, userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getFullName } from "../auth/authUtils";
@@ -124,7 +124,12 @@ export const updateUserMailboxData = async (
   };
 };
 
-export const findUserViaSlack = cache(async (token: string, slackUserId: string) => {
+export const findUserViaSlack = cache(async (token: string, slackUserId: string) : Promise<UserProfile | null> => {
   const slackUser = await getSlackUser(token, slackUserId);
-  return (await db.query.authUsers.findFirst({ where: eq(authUsers.email, slackUser?.profile?.email ?? "") })) ?? null;
+  const [user] = await db.select({ id: authUsers.id, displayName: userProfiles.displayName, email: authUsers.email }).from(userProfiles).innerJoin(authUsers, eq(userProfiles.id, authUsers.id)).where(eq(authUsers.email, slackUser?.profile?.email ?? "")) ?? null;
+
+  if(user) {
+    return user;
+  }
+  return null;
 });

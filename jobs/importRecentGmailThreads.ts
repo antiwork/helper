@@ -4,7 +4,7 @@ import { htmlToText } from "html-to-text";
 import { simpleParser } from "mailparser";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, gmailSupportEmails } from "@/db/schema";
+import { conversationMessages, conversations, gmailSupportEmails, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
@@ -121,9 +121,15 @@ export const processGmailThreadWithClient = async (
         : extractQuotations(processedHtml),
     );
     // Process messages serially since we rely on the database ID for message ordering
-    const staffUser = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, parsedEmailFrom.address),
-    });
+    const [staffUser] =await db.select({
+      id: authUsers.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+    })
+    .from(authUsers)
+    .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .where(eq(authUsers.email, parsedEmailFrom.address));
+
     await createMessageAndProcessAttachments(
       gmailSupportEmail,
       parsedEmail,

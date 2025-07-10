@@ -4,6 +4,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { env } from "@/lib/env";
+import { UserProfile } from "@/db/schema";
 
 /**
  * 1. CONTEXT
@@ -17,7 +18,7 @@ import { env } from "@/lib/env";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = (opts: { headers: Headers; user: User | null }) => {
+export const createTRPCContext = (opts: { headers: Headers; user: UserProfile | null }) => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   // eslint-disable-next-line no-console
   console.log(">>> tRPC Request from", source, "by user ID", opts.user?.id ?? "Unknown");

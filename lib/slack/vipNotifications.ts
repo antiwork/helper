@@ -2,8 +2,7 @@ import { WebClient } from "@slack/web-api";
 import { and, desc, eq, isNull, not } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, platformCustomers } from "@/db/schema";
-import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { conversationMessages, conversations, platformCustomers, UserProfile, userProfiles } from "@/db/schema";
 import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getMailbox } from "@/lib/data/mailbox";
@@ -42,7 +41,7 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
         slackBotToken: mailbox.slackBotToken,
         slackChannel: mailbox.vipChannelId!,
         slackMessageTs: vipMessage.slackMessageTs,
-        user: byUserId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, byUserId) }) : null,
+        user: byUserId ? await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, byUserId) }) : null,
         closed: true,
       });
     }
@@ -163,12 +162,12 @@ export const updateVipMessageInSlack = async ({
   slackBotToken: string;
   slackChannel: string;
   slackMessageTs: string;
-  user?: DbOrAuthUser | null;
+  user?: UserProfile | null;
   email?: boolean;
   closed?: boolean;
 }) => {
   const byUser = resolvingUser
-    ? ` by ${getFullName(resolvingUser.user_metadata?.display_name, resolvingUser.email)}`
+    ? ` by ${getFullName(resolvingUser.displayName, resolvingUser.email)}`
     : "";
 
   let text = "";

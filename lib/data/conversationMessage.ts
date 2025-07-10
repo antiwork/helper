@@ -5,9 +5,8 @@ import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { conversationEvents, conversationMessages, DRAFT_STATUSES, files, mailboxes, notes, Tool } from "@/db/schema";
+import { conversationEvents, conversationMessages, DRAFT_STATUSES, files, mailboxes, notes, Tool, UserProfile } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
-import type { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
@@ -285,7 +284,7 @@ export const createReply = async (
   }: {
     conversationId: number;
     message: string | null;
-    user: DbOrAuthUser | null;
+    user: UserProfile | null;
     cc?: string[] | null;
     bcc?: string[];
     fileSlugs?: string[];

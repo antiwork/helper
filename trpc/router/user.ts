@@ -166,7 +166,7 @@ export const userRouter = {
       .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
       .where(eq(authUsers.id, userId));
 
-    if (!user) throw new Error("UNAUTHORIZED");
+    if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
     return user;
   }),
 } satisfies TRPCRouterRecord;

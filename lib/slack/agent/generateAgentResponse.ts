@@ -399,7 +399,7 @@ export const generateAgentResponse = async (
 
   const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
   const userPrompt = user
-    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user.user_metadata?.display_name, user.email)}\nCurrent user email: ${user.email}`
+    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user.displayName, user.email)}\nCurrent user email: ${user.email}`
     : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
 
   const result = await runAIQuery({

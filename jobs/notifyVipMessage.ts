@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
+import { conversationMessages, conversations, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getMailbox } from "@/lib/data/mailbox";
@@ -72,7 +72,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
         slackBotToken: mailbox.slackBotToken,
         slackChannel: mailbox.vipChannelId,
         slackMessageTs: originalMessage.slackMessageTs,
-        user: message.userId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, message.userId) }) : null,
+        user: message.userId ? await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, message.userId) }) : null,
         email: true,
         closed: conversation.status === "closed",
       });
