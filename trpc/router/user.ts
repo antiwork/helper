@@ -179,7 +179,7 @@ export const userRouter = {
 
     if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
     return user;
-    }),
+  }),
 
   getPermissions: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.user) {
