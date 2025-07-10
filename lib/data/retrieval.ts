@@ -5,20 +5,17 @@ import { conversations } from "@/db/schema/conversations";
 import { websitePages, websites } from "@/db/schema/websites";
 import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
-import { Mailbox } from "@/lib/data/mailbox";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, timestamp } from "../metadataApiClient";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
-import { getMetadataApiByMailboxSlug } from "./mailboxMetadataApi";
+import { getMetadataApi } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
 const MAX_SIMILAR_CONVERSATIONS = 3;
-const MAX_SIMILAR_KNOWLEDGE_ITEMS = 10;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
 export const findSimilarConversations = async (
   queryInput: string | number[],
-  mailbox: Mailbox,
   limit: number = MAX_SIMILAR_CONVERSATIONS,
   excludeConversationSlug?: string,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
@@ -28,7 +25,7 @@ export const findSimilarConversations = async (
     : await generateEmbedding(queryInput, "query-find-past-conversations");
   const similarity = sql<number>`1 - (${cosineDistance(conversations.embedding, queryEmbedding)})`;
 
-  let where = sql`${gt(similarity, similarityThreshold)} AND ${conversations.mailboxId} = ${mailbox.id} AND ${eq(conversations.isPrompt, false)}`;
+  let where = sql`${gt(similarity, similarityThreshold)} AND ${eq(conversations.isPrompt, false)}`;
   if (excludeConversationSlug) {
     where = sql`${where} AND ${conversations.slug} != ${excludeConversationSlug}`;
   }
@@ -47,8 +44,8 @@ export const findSimilarConversations = async (
   return similarConversations;
 };
 
-export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox) => {
-  const similarConversations = await findSimilarConversations(query, mailbox);
+export const getPastConversationsPrompt = async (query: string) => {
+  const similarConversations = await findSimilarConversations(query);
   if (!similarConversations) return null;
 
   const pastConversations = await Promise.all(
@@ -73,9 +70,9 @@ export const getPastConversationsPrompt = async (query: string, mailbox: Mailbox
   return conversationPrompt;
 };
 
-export const findEnabledKnowledgeBankEntries = async (mailbox: Mailbox) =>
+export const findEnabledKnowledgeBankEntries = async () =>
   await db.query.faqs.findMany({
-    where: and(eq(faqs.mailboxId, mailbox.id), eq(faqs.enabled, true)),
+    where: eq(faqs.enabled, true),
     columns: {
       id: true,
       content: true,
@@ -85,7 +82,6 @@ export const findEnabledKnowledgeBankEntries = async (mailbox: Mailbox) =>
 
 export const findSimilarWebsitePages = async (
   query: string,
-  mailbox: Mailbox,
   limit: number = MAX_SIMILAR_WEBSITE_PAGES,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
 ) => {
@@ -100,10 +96,7 @@ export const findSimilarWebsitePages = async (
       similarity: similarity.as("similarity"),
     })
     .from(websitePages)
-    .innerJoin(
-      websites,
-      and(eq(websites.id, websitePages.websiteId), isNull(websites.deletedAt), eq(websites.mailboxId, mailbox.id)),
-    )
+    .innerJoin(websites, and(eq(websites.id, websitePages.websiteId), isNull(websites.deletedAt)))
     .where(and(gt(similarity, similarityThreshold), isNull(websitePages.deletedAt)))
     .orderBy(desc(similarity))
     .limit(limit);
@@ -131,12 +124,11 @@ export type PromptRetrievalData = {
 };
 
 export const fetchPromptRetrievalData = async (
-  mailbox: Mailbox,
   query: string,
   metadata: object | null,
 ): Promise<PromptRetrievalData> => {
-  const knowledgeBank = await findEnabledKnowledgeBankEntries(mailbox);
-  const websitePages = await findSimilarWebsitePages(query, mailbox);
+  const knowledgeBank = await findEnabledKnowledgeBankEntries();
+  const websitePages = await findSimilarWebsitePages(query);
 
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;
 
@@ -148,8 +140,8 @@ export const fetchPromptRetrievalData = async (
   };
 };
 
-export const fetchMetadata = async (email: string, mailboxSlug: string) => {
-  const { metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+export const fetchMetadata = async (email: string) => {
+  const { metadataApi } = await getMetadataApi();
   if (!metadataApi) return null;
 
   try {

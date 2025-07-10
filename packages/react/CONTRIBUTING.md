@@ -33,8 +33,10 @@ We use Vitest for testing. Some key guidelines:
 1. Create a new branch for your feature/fix
 2. Write tests for new functionality
 3. Ensure all tests pass
-4. Create a changeset for your changes (see below)
-5. Submit a pull request with a clear description of changes
+4. Include screenshots of your test suite passing locally
+5. Use professional English in all communication with no excessive capitalization, question marks, or informal language - we have a zero tolerance policy as it makes async communication difficult
+6. Create a changeset for your changes (see below)
+7. Submit a pull request with a clear description of changes
 
 ## Code Style
 

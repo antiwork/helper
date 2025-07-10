@@ -1,7 +1,7 @@
 import { Lightbulb, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,16 +20,9 @@ type GenerateKnowledgeBankDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   messageId: number;
-  mailboxSlug: string;
 };
 
-export const GenerateKnowledgeBankDialog = ({
-  open,
-  onOpenChange,
-  messageId,
-  mailboxSlug,
-}: GenerateKnowledgeBankDialogProps) => {
-  const [suggestedContent, setSuggestedContent] = useState<string>("");
+export const GenerateKnowledgeBankDialog = ({ open, onOpenChange, messageId }: GenerateKnowledgeBankDialogProps) => {
   const [editedContent, setEditedContent] = useState<string>("");
   const [suggestionReason, setSuggestionReason] = useState<string>("");
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -39,15 +32,13 @@ export const GenerateKnowledgeBankDialog = ({
   const utils = api.useUtils();
 
   // Get the original entry content if we're updating
-  const { data: existingEntries } = api.mailbox.faqs.list.useQuery(
-    { mailboxSlug },
-    { enabled: open && updateEntryId !== null },
-  );
+  const { data: existingEntries } = api.mailbox.faqs.list.useQuery(undefined, {
+    enabled: open && updateEntryId !== null,
+  });
 
   const generateSuggestionMutation = api.mailbox.faqs.suggestFromHumanReply.useMutation({
     onSuccess: (data) => {
       if (data.action === "create_entry" || data.action === "update_entry") {
-        setSuggestedContent(data.content || "");
         setEditedContent(data.content || "");
         setSuggestionReason(data.reason);
         setUpdateEntryId(data.entryId || null);
@@ -59,62 +50,48 @@ export const GenerateKnowledgeBankDialog = ({
           setOriginalContent(existingEntry?.content || "");
         }
       } else {
-        toast({
-          title: "No knowledge entry needed",
+        toast.info("No knowledge entry needed", {
           description: data.reason,
         });
         onOpenChange(false);
       }
     },
     onError: (error) => {
-      toast({
-        title: "Error generating suggestion",
+      toast.error("Error generating suggestion", {
         description: error.message,
-        variant: "destructive",
       });
     },
   });
 
   const createKnowledgeMutation = api.mailbox.faqs.create.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Knowledge bank entry created!",
-        variant: "success",
-      });
+      toast.success("Knowledge bank entry created!");
       utils.mailbox.faqs.list.invalidate();
       onOpenChange(false);
       resetState();
     },
     onError: (error) => {
-      toast({
-        title: "Error creating knowledge entry",
+      toast.error("Error creating knowledge entry", {
         description: error.message,
-        variant: "destructive",
       });
     },
   });
 
   const updateKnowledgeMutation = api.mailbox.faqs.update.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Knowledge bank entry updated!",
-        variant: "success",
-      });
+      toast.success("Knowledge bank entry updated!");
       utils.mailbox.faqs.list.invalidate();
       onOpenChange(false);
       resetState();
     },
     onError: (error) => {
-      toast({
-        title: "Error updating knowledge entry",
+      toast.error("Error updating knowledge entry", {
         description: error.message,
-        variant: "destructive",
       });
     },
   });
 
   const resetState = () => {
-    setSuggestedContent("");
     setEditedContent("");
     setSuggestionReason("");
     setHasGenerated(false);
@@ -126,7 +103,6 @@ export const GenerateKnowledgeBankDialog = ({
   useEffect(() => {
     if (open && messageId && !hasGenerated && !generateSuggestionMutation.isPending) {
       generateSuggestionMutation.mutate({
-        mailboxSlug,
         messageId,
       });
     }
@@ -144,23 +120,19 @@ export const GenerateKnowledgeBankDialog = ({
 
   const handleSave = () => {
     if (!editedContent.trim()) {
-      toast({
-        title: "Content required",
+      toast.error("Content required", {
         description: "Please enter content for the knowledge bank entry",
-        variant: "destructive",
       });
       return;
     }
 
     if (updateEntryId) {
       updateKnowledgeMutation.mutate({
-        mailboxSlug,
         id: updateEntryId,
         content: editedContent,
       });
     } else {
       createKnowledgeMutation.mutate({
-        mailboxSlug,
         content: editedContent,
       });
     }

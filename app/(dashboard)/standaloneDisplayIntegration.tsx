@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
-import { useTabsState } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/tabBar";
+import { useTabsState } from "@/app/(dashboard)/[category]/tabBar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 

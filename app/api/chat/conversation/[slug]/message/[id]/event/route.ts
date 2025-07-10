@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { authenticateWidget } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
@@ -11,15 +11,9 @@ const EventPayloadSchema = z.object({
     isVisible: z.boolean(),
   }),
 });
-
-export async function POST(request: Request, { params }: { params: Promise<{ id: string; slug: string }> }) {
+type Params = { id: string; slug: string };
+export const POST = withWidgetAuth<Params>(async ({ request, context: { params } }, { session }) => {
   const { id, slug } = await params;
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return Response.json({ error: authResult.error }, { status: 401 });
-  }
-
   let messageId;
   try {
     const parsedId = z.coerce.bigint().parse(id);
@@ -34,7 +28,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       conversation: {
         id: conversations.id,
         emailFrom: conversations.emailFrom,
-        mailboxId: conversations.mailboxId,
       },
     })
     .from(conversationMessages)
@@ -43,11 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (
-    !message ||
-    (message.conversation.emailFrom && message.conversation.emailFrom !== authResult.session.email) ||
-    message.conversation.mailboxId !== authResult.mailbox.id
-  ) {
+  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 
@@ -72,4 +61,4 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   });
 
   return Response.json({ success: true });
-}
+});

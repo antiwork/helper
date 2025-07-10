@@ -65,9 +65,7 @@ describe("runAIQuery", () => {
       system: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
-      metadata: {
-        mailboxSlug: mailbox.slug,
-      },
+      metadata: {},
     });
   });
 
@@ -95,9 +93,7 @@ describe("runAIQuery", () => {
       maxSteps: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
-      metadata: {
-        mailboxSlug: mailbox.slug,
-      },
+      metadata: {},
     });
   });
 

@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
 import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { createWidgetSession, getEmailHash } from "@/lib/widgetSession";
@@ -10,7 +8,6 @@ import { corsOptions, corsResponse } from "../utils";
 const requestSchema = z.object({
   email: z.string().email().optional(),
   emailHash: z.string().min(1).optional(),
-  mailboxSlug: z.string().min(1),
   timestamp: z.number().int().positive().optional(),
   customerMetadata: z
     .object({
@@ -38,11 +35,9 @@ export async function POST(request: Request) {
     return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
 
-  const { email, emailHash, mailboxSlug, timestamp, customerMetadata, experimentalReadPage, currentToken } =
-    result.data;
+  const { email, emailHash, timestamp, customerMetadata, experimentalReadPage, currentToken } = result.data;
 
   const mailboxRecord = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, mailboxSlug),
     columns: {
       id: true,
       slug: true,
@@ -73,7 +68,7 @@ export async function POST(request: Request) {
       return corsResponse({ valid: false, error: "Timestamp is too far in the past" }, { status: 401 });
     }
 
-    const computedHmac = await getEmailHash(email, mailboxSlug, timestamp);
+    const computedHmac = await getEmailHash(email, timestamp);
     if (!computedHmac || computedHmac !== emailHash) {
       return corsResponse({ valid: false, error: "Invalid HMAC signature" }, { status: 401 });
     }
@@ -81,12 +76,11 @@ export async function POST(request: Request) {
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        mailboxId: mailboxRecord.id,
         customerMetadata,
       });
     }
 
-    platformCustomer = await getPlatformCustomer(mailboxRecord.id, email);
+    platformCustomer = await getPlatformCustomer(email);
 
     showWidget =
       mailboxRecord.widgetDisplayMode === "always" ||

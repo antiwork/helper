@@ -1,5 +1,4 @@
 import { conversationFactory } from "@tests/support/factories/conversations";
-import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
@@ -15,37 +14,13 @@ vi.mock("@/lib/data/user", () => ({
     CORE: "core",
     NON_CORE: "nonCore",
     AFK: "afk",
+    ADMIN: "admin",
   },
   updateUserMailboxData: vi.fn(),
   getUsersWithMailboxAccess: vi.fn(),
 }));
 
 describe("mailboxRouter", () => {
-  describe("list", () => {
-    it("returns a list of mailboxes for the user's organization", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      const { mailbox: mailbox2 } = await mailboxFactory.create();
-
-      const caller = createCaller(createTestTRPCContext(user));
-
-      const result = await caller.mailbox.list();
-
-      expect(result).toHaveLength(2);
-      expect(result).toEqual([
-        {
-          id: mailbox.id,
-          name: mailbox.name,
-          slug: mailbox.slug,
-        },
-        {
-          id: mailbox2.id,
-          name: mailbox2.name,
-          slug: mailbox2.slug,
-        },
-      ]);
-    });
-  });
-
   describe("update", () => {
     it("updates slack settings", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
@@ -58,7 +33,7 @@ describe("mailboxRouter", () => {
         slackAlertChannel: "#another-channel",
       };
 
-      await caller.mailbox.update({ mailboxSlug: mailbox.slug, ...updateData });
+      await caller.mailbox.update({ ...updateData });
 
       const updatedMailbox = await db.query.mailboxes.findFirst({
         where: eq(mailboxes.id, mailbox.id),
@@ -71,20 +46,20 @@ describe("mailboxRouter", () => {
 
   describe("members", () => {
     it("returns a list of mailbox members", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
 
       const user2 = await userFactory.createUser();
-      const { conversation: conversation1 } = await conversationFactory.create(mailbox.id);
+      const { conversation: conversation1 } = await conversationFactory.create();
       await conversationFactory.createStaffEmail(conversation1.id, user2.id);
       await conversationFactory.createStaffEmail(conversation1.id, user2.id);
 
       const user3 = await userFactory.createUser();
-      const { conversation: conversation2 } = await conversationFactory.create(mailbox.id);
+      const { conversation: conversation2 } = await conversationFactory.create();
       await conversationFactory.createStaffEmail(conversation2.id, user3.id);
 
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.mailbox.members.stats({ mailboxSlug: mailbox.slug, period: "1y" });
+      const result = await caller.mailbox.members.stats({ period: "1y" });
 
       expect(result.sort((a, b) => a.replyCount - b.replyCount)).toEqual([
         {
@@ -117,7 +92,7 @@ describe("mailboxRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
 
-      expect(await caller.mailbox.get({ mailboxSlug: mailbox.slug })).toEqual(await getMailboxInfo(mailbox));
+      expect(await caller.mailbox.get()).toEqual(await getMailboxInfo(mailbox));
     });
   });
 });

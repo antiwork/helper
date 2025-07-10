@@ -3,14 +3,14 @@ import type { mailboxes } from "@/db/schema";
 import { runAIObjectQuery } from "@/lib/ai";
 import { findEnabledKnowledgeBankEntries } from "@/lib/data/retrieval";
 
-export const knowledgeBankSuggestionSchema = z.object({
+const knowledgeBankSuggestionSchema = z.object({
   action: z.enum(["no_action", "create_entry", "update_entry"]),
   reason: z.string(),
   content: z.string().optional(),
   entryId: z.number().optional(),
 });
 
-export type KnowledgeBankSuggestion = z.infer<typeof knowledgeBankSuggestionSchema>;
+type KnowledgeBankSuggestion = z.infer<typeof knowledgeBankSuggestionSchema>;
 
 type SuggestionContext = {
   type: "human_reply" | "bad_response";
@@ -22,7 +22,7 @@ export const generateKnowledgeBankSuggestion = async (
   mailbox: typeof mailboxes.$inferSelect,
   context: SuggestionContext,
 ): Promise<KnowledgeBankSuggestion> => {
-  const similarFAQs = await findEnabledKnowledgeBankEntries(mailbox);
+  const similarFAQs = await findEnabledKnowledgeBankEntries();
 
   const baseSystemPrompt = `
 You are analyzing content to determine if it should lead to changes in a knowledge bank.

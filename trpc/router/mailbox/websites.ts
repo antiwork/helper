@@ -5,6 +5,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { websiteCrawls, websitePages, websites } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../components/utils/assert";
 import { mailboxProcedure } from "./procedure";
 
@@ -18,14 +19,15 @@ const fetchPageTitle = async (url: string): Promise<string> => {
     const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     return titleMatch?.[1] ? titleMatch[1].trim() : new URL(url).hostname;
   } catch (error) {
+    captureExceptionAndLog(error);
     return new URL(url).hostname;
   }
 };
 
 export const websitesRouter = {
-  list: mailboxProcedure.query(async ({ ctx }) => {
+  list: mailboxProcedure.query(async () => {
     const websitesList = await db.query.websites.findMany({
-      where: and(eq(websites.mailboxId, ctx.mailbox.id), isNull(websites.deletedAt)),
+      where: isNull(websites.deletedAt),
       orderBy: [asc(websites.createdAt)],
       with: {
         crawls: {
@@ -63,7 +65,7 @@ export const websitesRouter = {
         name: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const urlWithProtocol = /^https?:\/\//i.test(input.url) ? input.url : `https://${input.url}`;
 
       const name = input.name || (await fetchPageTitle(urlWithProtocol));
@@ -71,7 +73,6 @@ export const websitesRouter = {
       const website = await db
         .insert(websites)
         .values({
-          mailboxId: ctx.mailbox.id,
           name,
           url: urlWithProtocol,
           createdAt: new Date(),
@@ -108,7 +109,7 @@ export const websitesRouter = {
         websiteId: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const now = new Date();
 
       await db
@@ -125,7 +126,7 @@ export const websitesRouter = {
           deletedAt: now,
           updatedAt: now,
         })
-        .where(and(eq(websites.id, input.websiteId), eq(websites.mailboxId, ctx.mailbox.id)));
+        .where(eq(websites.id, input.websiteId));
 
       return { success: true };
     }),
@@ -136,10 +137,10 @@ export const websitesRouter = {
         websiteId: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const website = assertDefined(
         await db.query.websites.findFirst({
-          where: and(eq(websites.id, input.websiteId), eq(websites.mailboxId, ctx.mailbox.id)),
+          where: eq(websites.id, input.websiteId),
         }),
       );
 
@@ -172,7 +173,7 @@ export const websitesRouter = {
       return crawl;
     }),
 
-  pages: mailboxProcedure.query(async ({ ctx }) => {
+  pages: mailboxProcedure.query(async () => {
     const pages = await db
       .select({
         url: websitePages.url,
@@ -180,7 +181,7 @@ export const websitesRouter = {
       })
       .from(websitePages)
       .innerJoin(websites, eq(websites.id, websitePages.websiteId))
-      .where(and(eq(websites.mailboxId, ctx.mailbox.id), isNull(websites.deletedAt), isNull(websitePages.deletedAt)))
+      .where(and(isNull(websites.deletedAt), isNull(websitePages.deletedAt)))
       .orderBy(asc(websitePages.pageTitle));
 
     return pages;

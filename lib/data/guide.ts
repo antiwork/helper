@@ -22,14 +22,12 @@ export const createGuideSession = async ({
   title,
   instructions,
   conversationId,
-  mailboxId,
   steps,
 }: {
   platformCustomerId: number;
   title: string;
   instructions: string;
   conversationId: string | number;
-  mailboxId: number;
   steps: { description: string; completed: boolean }[];
 }): Promise<GuideSession> => {
   try {
@@ -40,7 +38,6 @@ export const createGuideSession = async ({
         title,
         instructions,
         conversationId: typeof conversationId === "string" ? null : conversationId,
-        mailboxId,
         status: "planning",
         steps,
       })
@@ -86,13 +83,11 @@ export const createGuideSessionEvent = async ({
   type,
   data,
   timestamp,
-  mailboxId,
 }: {
   guideSessionId: number;
   type: (typeof guideSessionEventTypeEnum.enumValues)[number];
   data: GuideSessionEventData;
   timestamp?: Date;
-  mailboxId: number;
   metadata?: Record<string, unknown>;
 }): Promise<GuideSessionEvent> => {
   try {
@@ -102,7 +97,6 @@ export const createGuideSessionEvent = async ({
         guideSessionId,
         type,
         data,
-        mailboxId,
         timestamp: timestamp || new Date(),
       })
       .returning();
@@ -119,21 +113,16 @@ export const createGuideSessionEvent = async ({
 };
 
 export const getGuideSessionsForMailbox = async (
-  mailboxId: number,
   page = 1,
   limit = 10,
 ): Promise<{ sessions: GuideSession[]; totalCount: number }> => {
   try {
     const offset = (page - 1) * limit;
 
-    const totalResult = await db
-      .select({ count: count() })
-      .from(guideSessions)
-      .where(eq(guideSessions.mailboxId, mailboxId));
+    const totalResult = await db.select({ count: count() }).from(guideSessions);
     const totalCount = totalResult[0]?.count || 0;
 
     const sessions = await db.query.guideSessions.findMany({
-      where: (gs, { eq }) => eq(gs.mailboxId, mailboxId),
       orderBy: (gs, { desc }) => [desc(gs.createdAt)],
       limit,
       offset,

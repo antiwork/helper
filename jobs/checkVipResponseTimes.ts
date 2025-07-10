@@ -30,7 +30,6 @@ export const checkVipResponseTimes = async () => {
       .innerJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
       .where(
         and(
-          eq(conversations.mailboxId, mailbox.id),
           isNull(conversations.assignedToId),
           isNull(conversations.mergedIntoId),
           eq(conversations.status, "open"),
@@ -58,7 +57,7 @@ export const checkVipResponseTimes = async () => {
               .slice(0, 10)
               .map(
                 (conversation) =>
-                  `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name}, ${formatDuration(conversation.lastUserEmailCreatedAt!)} since last reply)`,
+                  `• <${getBaseUrl()}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name}, ${formatDuration(conversation.lastUserEmailCreatedAt!)} since last reply)`,
               ),
             ...(overdueVipConversations.length > 10 ? [`(and ${overdueVipConversations.length - 10} more)`] : []),
           ].join("\n"),

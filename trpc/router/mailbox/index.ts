@@ -1,5 +1,5 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, isNotNull, isNull, sql, SQL } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
@@ -7,7 +7,6 @@ import { triggerEvent } from "@/jobs/trigger";
 import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
-import { protectedProcedure } from "@/trpc/trpc";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
@@ -15,6 +14,7 @@ import { githubRouter } from "./github";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
+import { savedRepliesRouter } from "./savedReplies";
 import { slackRouter } from "./slack";
 import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
@@ -22,30 +22,12 @@ import { websitesRouter } from "./websites";
 export { mailboxProcedure };
 
 export const mailboxRouter = {
-  list: protectedProcedure.query(async () => {
-    const allMailboxes = await db.query.mailboxes.findMany({
-      where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
-      columns: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-    });
-    return allMailboxes;
-  }),
   openCount: mailboxProcedure.query(async ({ ctx }) => {
     const countOpenStatus = async (where?: SQL) => {
       const result = await db
         .select({ count: count() })
         .from(conversations)
-        .where(
-          and(
-            eq(conversations.mailboxId, ctx.mailbox.id),
-            eq(conversations.status, "open"),
-            isNull(conversations.mergedIntoId),
-            where,
-          ),
-        );
+        .where(and(eq(conversations.status, "open"), isNull(conversations.mergedIntoId), where));
       return result[0]?.count ?? 0;
     };
 
@@ -83,16 +65,6 @@ export const mailboxRouter = {
         preferences: z
           .object({
             confetti: z.boolean().optional(),
-            theme: z
-              .object({
-                background: z.string().regex(/^#([0-9a-f]{6})$/i),
-                foreground: z.string().regex(/^#([0-9a-f]{6})$/i),
-                primary: z.string().regex(/^#([0-9a-f]{6})$/i),
-                accent: z.string().regex(/^#([0-9a-f]{6})$/i),
-                sidebarBackground: z.string().regex(/^#([0-9a-f]{6})$/i),
-              })
-              .nullable()
-              .optional(),
             autoRespondEmailToChat: z.enum(["draft", "reply"]).nullable().optional(),
             disableTicketResponseTimeAlerts: z.boolean().optional(),
           })
@@ -118,12 +90,11 @@ export const mailboxRouter = {
         cursor: z.number().nullish(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const { limit, cursor } = input;
-      const { id: mailboxId } = ctx.mailbox;
       const page = cursor || 1;
 
-      const result = await getGuideSessionsForMailbox(mailboxId, page, limit);
+      const result = await getGuideSessionsForMailbox(page, limit);
       const sessions = Array.isArray(result?.sessions) ? result.sessions : [];
       const totalCount = result?.totalCount ?? 0;
 
@@ -144,6 +115,8 @@ export const mailboxRouter = {
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
+  savedReplies: savedRepliesRouter,
+
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
       throw new TRPCError({
@@ -152,9 +125,7 @@ export const mailboxRouter = {
       });
     }
 
-    await triggerEvent("conversations/auto-close.check", {
-      mailboxId: ctx.mailbox.id,
-    });
+    await triggerEvent("conversations/auto-close.check", {});
 
     return {
       success: true,

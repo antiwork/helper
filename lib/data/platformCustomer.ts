@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { platformCustomers } from "@/db/schema";
-import { getMailboxById } from "./mailbox";
+import { getMailbox } from "./mailbox";
 
 type CustomerMetadata = {
   name?: string | null;
@@ -18,12 +18,12 @@ export const determineVipStatus = (customerValue: string | number | null, vipThr
   return Number(customerValue) / 100 >= vipThreshold;
 };
 
-export const getPlatformCustomer = async (mailboxId: number, email: string): Promise<PlatformCustomer | null> => {
+export const getPlatformCustomer = async (email: string): Promise<PlatformCustomer | null> => {
   const [customer, mailbox] = await Promise.all([
     db.query.platformCustomers.findFirst({
-      where: and(eq(platformCustomers.email, email), eq(platformCustomers.mailboxId, mailboxId)),
+      where: and(eq(platformCustomers.email, email)),
     }),
-    getMailboxById(mailboxId),
+    getMailbox(),
   ]);
 
   if (!customer) return null;
@@ -36,11 +36,9 @@ export const getPlatformCustomer = async (mailboxId: number, email: string): Pro
 
 export const upsertPlatformCustomer = async ({
   email,
-  mailboxId,
   customerMetadata,
 }: {
   email: string;
-  mailboxId: number;
   customerMetadata: CustomerMetadata;
 }) => {
   if (!customerMetadata) return;
@@ -57,7 +55,6 @@ export const upsertPlatformCustomer = async ({
     .insert(platformCustomers)
     .values({
       email,
-      mailboxId,
       ...data,
     })
     .onConflictDoUpdate({
@@ -66,11 +63,8 @@ export const upsertPlatformCustomer = async ({
     });
 };
 
-export const findOrCreatePlatformCustomerByEmail = async (
-  mailboxId: number,
-  email: string,
-): Promise<PlatformCustomer | null> => {
-  const existingCustomer = await getPlatformCustomer(mailboxId, email);
+export const findOrCreatePlatformCustomerByEmail = async (email: string): Promise<PlatformCustomer | null> => {
+  const existingCustomer = await getPlatformCustomer(email);
   if (existingCustomer) return existingCustomer;
 
   const [result, mailbox] = await Promise.all([
@@ -78,10 +72,9 @@ export const findOrCreatePlatformCustomerByEmail = async (
       .insert(platformCustomers)
       .values({
         email,
-        mailboxId,
       })
       .returning(),
-    getMailboxById(mailboxId),
+    getMailbox(),
   ]);
 
   const customer = result[0];

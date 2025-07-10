@@ -5,7 +5,7 @@ import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
-import { getMailboxById, Mailbox } from "@/lib/data/mailbox";
+import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 import { getUsersWithMailboxAccess, UserRoles, type UserWithMailboxAccessData } from "@/lib/data/user";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -92,11 +92,10 @@ Focus on understanding the customer's underlying needs rather than just surface-
 
 const getNextCoreTeamMemberInRotation = async (
   coreTeamMembers: UserWithMailboxAccessData[],
-  mailboxId: number,
 ): Promise<UserWithMailboxAccessData | null> => {
   if (coreTeamMembers.length === 0) return null;
 
-  const cache = cacheFor<number>(`${CACHE_ROUND_ROBIN_KEY_PREFIX}:${mailboxId}`);
+  const cache = cacheFor<number>(CACHE_ROUND_ROBIN_KEY_PREFIX);
 
   const lastAssignedIndex = (await cache.get()) ?? 0;
   const nextIndex = (lastAssignedIndex + 1) % coreTeamMembers.length;
@@ -151,7 +150,7 @@ const getNextTeamMember = async (
 
   const coreMembers = getCoreTeamMembers(teamMembers);
   return {
-    member: await getNextCoreTeamMemberInRotation(coreMembers, mailbox.id),
+    member: await getNextCoreTeamMemberInRotation(coreMembers),
   };
 };
 
@@ -162,7 +161,6 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
       with: {
         messages: {
           columns: {
-            id: true,
             role: true,
             cleanedUpText: true,
           },
@@ -171,11 +169,12 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
     }),
   );
 
-  if (conversation.assignedToId) return { message: "Skipped: already assigned" };
-  if (conversation.mergedIntoId) return { message: "Skipped: conversation is merged" };
+  if (conversation.assignedToId) {
+    return { message: "Conversation is already assigned" };
+  }
 
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailboxById(conversation.mailboxId));
-  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess(mailbox.id));
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
+  const teamMembers = assertDefinedOrRaiseNonRetriableError(await getUsersWithMailboxAccess());
 
   const activeTeamMembers = teamMembers.filter(
     (member) => member.role === UserRoles.CORE || member.role === UserRoles.NON_CORE,

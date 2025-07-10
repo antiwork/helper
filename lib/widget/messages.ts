@@ -7,7 +7,6 @@ import {
   GUIDE_START,
   InteractiveElement,
   MESSAGE_TYPE,
-  MINIMIZE_ACTION,
   READY_ACTION,
   SCREENSHOT_ACTION,
   SHOW_WIDGET,

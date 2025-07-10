@@ -694,6 +694,55 @@
       "when": 1750510579520,
       "tag": "0098_lean_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1750702587959,
+      "tag": "0099_nifty_goliath",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1751453332799,
+      "tag": "0100_cheerful_clea",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1751569631919,
+      "tag": "0101_complete_wraith",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1751569682212,
+      "tag": "0102_user_profile_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1751585212184,
+      "tag": "0103_backfill_user_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1751668761127,
+      "tag": "0104_little_revanche",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1751930366010,
+      "tag": "0105_nosy_lord_hawal",
+      "breakpoints": true
     }
   ]
 }

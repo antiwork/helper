@@ -40,7 +40,7 @@ describe("gmailSupportEmailRouter", () => {
       await db.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.id, mailbox.id));
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
+      const result = await caller.gmailSupportEmail.get();
 
       expect(result).toEqual({
         enabled: true,
@@ -53,10 +53,10 @@ describe("gmailSupportEmailRouter", () => {
     });
 
     it("returns null if no Gmail support email exists for the mailbox", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
+      const result = await caller.gmailSupportEmail.get();
 
       expect(result).toEqual({ enabled: true, supportAccount: null });
     });
@@ -75,7 +75,6 @@ describe("gmailSupportEmailRouter", () => {
       };
 
       await caller.gmailSupportEmail.create({
-        mailboxSlug: mailbox.slug,
         ...input,
       });
 
@@ -105,7 +104,7 @@ describe("gmailSupportEmailRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.gmailSupportEmail.delete({ mailboxSlug: mailbox.slug });
+      const result = await caller.gmailSupportEmail.delete();
 
       expect(result).toEqual({ message: "Support email deleted successfully." });
 
@@ -120,12 +119,10 @@ describe("gmailSupportEmailRouter", () => {
     });
 
     it("throws an error if no Gmail support email exists for the mailbox", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const caller = createCaller(createTestTRPCContext(user));
 
-      await expect(caller.gmailSupportEmail.delete({ mailboxSlug: mailbox.slug })).rejects.toThrow(
-        "Gmail support email not found",
-      );
+      await expect(caller.gmailSupportEmail.delete()).rejects.toThrow("Gmail support email not found");
     });
   });
 });

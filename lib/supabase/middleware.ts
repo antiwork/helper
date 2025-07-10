@@ -12,7 +12,7 @@ export const updateSession = async (request: NextRequest) => {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({
           request,
         });
@@ -28,11 +28,13 @@ export const updateSession = async (request: NextRequest) => {
     data: { user },
   } = await supabase.auth.getUser();
   if (user && request.nextUrl.pathname.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/mailboxes", request.url));
+    return NextResponse.redirect(new URL("/mine", request.url));
   }
   if (
     !user &&
-    (request.nextUrl.pathname.startsWith("/mailboxes") || request.nextUrl.pathname.startsWith("/dashboard"))
+    !request.nextUrl.pathname.startsWith("/api") &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/widget")
   ) {
     // Authentication required for these routes
     const url = request.nextUrl.clone();

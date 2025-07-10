@@ -32,13 +32,13 @@ describe("handleSlackAction", () => {
   });
 
   it("opens a Slack modal when the action is respond_in_slack", async () => {
-    const { user, mailbox } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -66,13 +66,13 @@ describe("handleSlackAction", () => {
   });
 
   it("closes the conversation when the action is close", async () => {
-    const { user, mailbox } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -94,10 +94,10 @@ describe("handleSlackAction", () => {
   });
 
   it("posts an ephemeral message when the Helper user is not found", async () => {
-    const { mailbox } = await userFactory.createRootUser({
+    await userFactory.createRootUser({
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -125,13 +125,13 @@ describe("handleSlackAction", () => {
   });
 
   it("creates a reply when the sending method is email", async () => {
-    const { user, mailbox } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -166,13 +166,13 @@ describe("handleSlackAction", () => {
   });
 
   it("creates a reply and closes the conversation when the sending method is email_and_close", async () => {
-    const { user, mailbox } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,
@@ -207,13 +207,13 @@ describe("handleSlackAction", () => {
   });
 
   it("adds a note when the sending method is note", async () => {
-    const { user, mailbox } = await userFactory.createRootUser({
+    const { user } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const message = {
       conversationId: conversation.id,

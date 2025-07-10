@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_mailbox" ADD COLUMN "chat_integration_used" boolean DEFAULT false NOT NULL;

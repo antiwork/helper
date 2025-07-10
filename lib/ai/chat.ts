@@ -144,7 +144,7 @@ const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
   promptInfo: Omit<PromptInfo, "availableTools">;
 }> => {
-  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
+  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(query, null);
 
   const systemPrompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -190,7 +190,6 @@ const generateReasoning = async ({
   reasoningModel,
   email,
   conversationId,
-  mailboxSlug,
   traceId = null,
   evaluation = false,
   dataStream,
@@ -201,7 +200,6 @@ const generateReasoning = async ({
   reasoningModel: LanguageModelV1;
   email: string | null;
   conversationId: number;
-  mailboxSlug: string;
   traceId?: string | null;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
@@ -259,7 +257,6 @@ const generateReasoning = async ({
           sessionId: conversationId,
           userId: email ?? "anonymous",
           email: email ?? "anonymous",
-          mailboxSlug,
         },
       },
     });
@@ -353,7 +350,7 @@ export const generateAIResponse = async ({
     promptInfo,
   } = await buildPromptMessages(mailbox, email, query, guideEnabled);
 
-  const tools = await buildTools(conversationId, email, mailbox, true, guideEnabled);
+  const tools = await buildTools(conversationId, email, true, guideEnabled);
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -373,7 +370,6 @@ export const generateAIResponse = async ({
       reasoningModel,
       email,
       conversationId,
-      mailboxSlug: mailbox.slug,
       traceId,
       evaluation,
       dataStream,
@@ -415,7 +411,6 @@ export const generateAIResponse = async ({
         store: true,
         metadata: {
           conversationId: conversationId.toString(),
-          mailboxSlug: mailbox.slug,
           email: email ?? "anonymous",
           usingReasoning: addReasoning.toString(),
         },
@@ -428,7 +423,6 @@ export const generateAIResponse = async ({
         sessionId: conversationId,
         userId: email ?? "anonymous",
         email: email ?? "anonymous",
-        mailboxSlug: mailbox.slug,
         usingReasoning: addReasoning,
       },
     },
@@ -559,7 +553,7 @@ export const respondWithAI = async ({
   });
 
   let platformCustomer = null;
-  if (userEmail) platformCustomer = await getPlatformCustomer(mailbox.id, userEmail);
+  if (userEmail) platformCustomer = await getPlatformCustomer(userEmail);
 
   const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;

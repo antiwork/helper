@@ -7,12 +7,11 @@ import { TextSelection } from "@tiptap/pm/state";
 import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
-import React, { ReactNode, useEffect, useImperativeHandle, useRef } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { toast } from "sonner";
 import UAParser from "ua-parser-js";
-import { isEmptyContent } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/messageActions";
-import { useConversationListContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/list/conversationListContext";
+import { isEmptyContent } from "@/app/(dashboard)/[category]/conversation/messageActions";
 import { UnsavedFileInfo, useFileUpload } from "@/components/fileUploadContext";
-import { toast } from "@/components/hooks/use-toast";
 import { getCaretPosition } from "@/components/tiptap/editorUtils";
 import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
@@ -29,7 +28,7 @@ type TipTapEditorProps = {
   onModEnter?: () => void;
   onOptionEnter?: () => void;
   onSlashKey?: () => void;
-  customToolbar?: () => React.ReactNode;
+  customToolbar?: () => ReactNode;
   enableImageUpload?: boolean;
   enableFileUpload?: boolean;
   autoFocus?: FocusPosition;
@@ -37,7 +36,7 @@ type TipTapEditorProps = {
   editable?: boolean;
   ariaLabel?: string;
   className?: string;
-  actionButtons?: React.ReactNode;
+  actionButtons?: ReactNode;
   isRecordingSupported: boolean;
   isRecording: boolean;
   startRecording: () => void;
@@ -73,7 +72,7 @@ export type TipTapEditorRef = {
   editor: Editor | null;
 };
 
-type TipTapEditorPropsWithRef = TipTapEditorProps & { signature?: ReactNode; ref: React.Ref<TipTapEditorRef> };
+type TipTapEditorPropsWithRef = TipTapEditorProps & { signature?: ReactNode; ref: Ref<TipTapEditorRef> };
 
 const initialMentionState = { isOpen: false, position: null, range: null, selectedIndex: 0 };
 
@@ -99,17 +98,16 @@ const TipTapEditor = ({
   stopRecording,
   ref,
 }: TipTapEditorPropsWithRef) => {
-  const { mailboxSlug } = useConversationListContext();
-  const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery({ mailboxSlug });
+  const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery();
   const { isAboveMd } = useBreakpoint("md");
-  const [isMacOS, setIsMacOS] = React.useState(false);
-  const [toolbarOpen, setToolbarOpen] = React.useState(() => {
+  const [isMacOS, setIsMacOS] = useState(false);
+  const [toolbarOpen, setToolbarOpen] = useState(() => {
     if (typeof window !== "undefined") {
       return (localStorage.getItem("editorToolbarOpen") ?? "true") === "true";
     }
     return isAboveMd;
   });
-  const [mentionState, setMentionState] = React.useState<{
+  const [mentionState, setMentionState] = useState<{
     isOpen: boolean;
     position: { top: number; left: number } | null;
     range: { from: number; to: number } | null;
@@ -272,18 +270,10 @@ const TipTapEditor = ({
 
   const { unsavedFiles, onUpload, onRetry } = useFileUpload();
   const retryNonImageUpload = (file: File) =>
-    onRetry(file).upload.catch((message: string | null) =>
-      toast({
-        title: message ?? `Failed to upload ${file.name}`,
-        variant: "destructive",
-      }),
-    );
+    onRetry(file).upload.catch((message: string | null) => toast.error(message ?? `Failed to upload ${file.name}`));
   const insertFileAttachment = (file: File) =>
     onUpload(file, { inline: false }).upload.catch((message: string | null) =>
-      toast({
-        title: message ?? `Failed to upload ${file.name}`,
-        variant: "destructive",
-      }),
+      toast.error(message ?? `Failed to upload ${file.name}`),
     );
   const insertInlineImage = (file: File) => {
     if (!editorRef.current) return;
@@ -306,7 +296,7 @@ const TipTapEditor = ({
   });
   const attachments = unsavedFiles.filter((f) => !f.inline);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsMacOS(new UAParser().getOS().name === "Mac OS");
   }, []);
 
@@ -321,7 +311,7 @@ const TipTapEditor = ({
     if (editor) editor.commands.setContent(defaultContent.content || "");
   }, [defaultContent, editor]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!editor) return;
     const plugin = {
       props: {
@@ -353,7 +343,7 @@ const TipTapEditor = ({
     };
   }, [editor, mentionState.isOpen, mentionState.range]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!editor || !mentionState.isOpen || !mentionState.range) return;
     const docText = editor.view.state.doc.textBetween(mentionState.range.from, mentionState.range.from + 1, "", "");
     if (docText !== "@") {
@@ -382,7 +372,7 @@ const TipTapEditor = ({
     setMentionState(initialMentionState);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMentionState((state) => ({ ...state, selectedIndex: 0 }));
   }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
 
@@ -458,7 +448,7 @@ const TipTapEditor = ({
           </BubbleMenu>
         )}
       </div>
-      <div className="flex w-full justify-between md:justify-start">
+      <div className="flex w-full justify-between md:justify-start relative">
         <div className="w-full md:w-auto">
           <Toolbar
             {...{
@@ -474,7 +464,6 @@ const TipTapEditor = ({
               isRecordingSupported,
               startRecording,
               stopRecording,
-              hasActionButtons: showActionButtons,
             }}
           />
         </div>

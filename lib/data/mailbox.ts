@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
@@ -10,34 +10,26 @@ import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
 import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
 
-export const getMailboxById = cache(async (id: number): Promise<Mailbox | null> => {
+export const getMailbox = cache(async (): Promise<typeof mailboxes.$inferSelect | null> => {
   const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, id),
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
   return result ?? null;
 });
 
-export const getMailboxBySlug = cache(async (slug: string): Promise<typeof mailboxes.$inferSelect | null> => {
-  const result = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, slug),
-  });
-  return result ?? null;
-});
-
-export const resetMailboxPromptUpdatedAt = async (tx: Transaction, mailboxId: number) => {
-  await tx.update(mailboxes).set({ promptUpdatedAt: new Date() }).where(eq(mailboxes.id, mailboxId));
+export const resetMailboxPromptUpdatedAt = async (tx: Transaction) => {
+  await tx.update(mailboxes).set({ promptUpdatedAt: new Date() });
 };
 
 export type Mailbox = typeof mailboxes.$inferSelect;
 
-const getSlackConnectUrl = (mailboxSlug: string): string | null => {
+const getSlackConnectUrl = (): string | null => {
   if (!env.SLACK_CLIENT_ID) return null;
 
   const params = new URLSearchParams({
     scope: REQUIRED_SCOPES.join(","),
     redirect_uri: SLACK_REDIRECT_URI,
     client_id: env.SLACK_CLIENT_ID,
-    state: JSON.stringify({ mailbox_slug: mailboxSlug }),
   });
 
   return `https://slack.com/oauth/v2/authorize?${params.toString()}`;
@@ -45,11 +37,7 @@ const getSlackConnectUrl = (mailboxSlug: string): string | null => {
 
 export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
   const metadataEndpoint = await db.query.mailboxesMetadataApi.findFirst({
-    where: and(
-      eq(mailboxesMetadataApi.mailboxId, mailbox.id),
-      isNull(mailboxesMetadataApi.deletedAt),
-      eq(mailboxesMetadataApi.isEnabled, true),
-    ),
+    where: and(isNull(mailboxesMetadataApi.deletedAt), eq(mailboxesMetadataApi.isEnabled, true)),
     columns: {
       isEnabled: true,
       deletedAt: true,
@@ -66,7 +54,7 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     hasMetadataEndpoint: !!metadataEndpoint,
     metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
-    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl(mailbox.slug) : null,
+    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl() : null,
     slackAlertChannel: mailbox.slackAlertChannel,
     githubConnected: !!mailbox.githubInstallationId,
     githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
@@ -135,3 +123,9 @@ export const updateGitHubRepo = async (mailboxId: number, repoOwner: string, rep
     })
     .where(eq(mailboxes.id, mailboxId));
 };
+
+export const getAllMailboxes = cache(async (): Promise<Mailbox[]> => {
+  return await db.query.mailboxes.findMany({
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+  });
+});

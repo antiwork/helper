@@ -78,7 +78,7 @@ export const buildMessagesWithMocks = ({
   });
 };
 
-export const parseMessagesWithMocks = (input: string) => {
+const parseMessagesWithMocks = (input: string) => {
   const { messages, mailboxName, tools, promptRetrievalData } = JSON.parse(input);
   const parsedTools: Record<string, HelperTool> = tools;
 
@@ -119,6 +119,7 @@ export const parseMessagesWithMocks = (input: string) => {
     githubRepoName: null,
     autoCloseEnabled: false,
     autoCloseDaysOfInactivity: 14,
+    chatIntegrationUsed: false,
     preferences: {
       confetti: false,
     },

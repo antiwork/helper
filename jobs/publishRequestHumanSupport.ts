@@ -1,23 +1,14 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationEvents, mailboxes } from "@/db/schema";
+import { conversationEvents } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { createHumanSupportRequestEventPayload } from "@/lib/data/dashboardEvent";
+import { getMailbox } from "@/lib/data/mailbox";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
-export const publishRequestHumanSupport = async ({
-  mailboxSlug,
-  conversationId,
-}: {
-  mailboxSlug: string;
-  conversationId: number;
-}) => {
-  const mailbox = assertDefinedOrRaiseNonRetriableError(
-    await db.query.mailboxes.findFirst({
-      where: eq(mailboxes.slug, mailboxSlug),
-    }),
-  );
+export const publishRequestHumanSupport = async ({ conversationId }: { conversationId: number }) => {
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
   const event = assertDefinedOrRaiseNonRetriableError(
     await db.query.conversationEvents.findFirst({
@@ -35,7 +26,7 @@ export const publishRequestHumanSupport = async ({
   );
 
   await publishToRealtime({
-    channel: dashboardChannelId(mailboxSlug),
+    channel: dashboardChannelId(),
     event: "event",
     data: createHumanSupportRequestEventPayload(event, mailbox),
   });

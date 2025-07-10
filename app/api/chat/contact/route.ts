@@ -1,6 +1,6 @@
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { triggerEvent } from "@/jobs/trigger";
 import { createConversation, generateConversationSubject } from "@/lib/data/conversation";
@@ -16,7 +16,7 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
+export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
   const body = await request.json();
   const result = requestSchema.safeParse(body);
 
@@ -26,19 +26,11 @@ export async function POST(request: Request) {
 
   const { email, message } = result.data;
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { mailbox } = authResult;
-
   try {
     const result = await db.transaction(async (tx) => {
       const newConversation = await createConversation(
         {
           emailFrom: email,
-          mailboxId: mailbox.id,
           subject: "Contact Form Submission",
           status: "open",
           source: "form",
@@ -76,4 +68,4 @@ export async function POST(request: Request) {
     captureExceptionAndLog(error);
     return corsResponse({ error: "Failed to send message" }, { status: 500 });
   }
-}
+});

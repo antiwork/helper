@@ -1,7 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
-import { userFactory } from "@tests/support/factories/users";
 import { subDays } from "date-fns";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
@@ -33,8 +32,7 @@ describe("cleanupDanglingFiles", () => {
     const { file: oldFile2 } = await fileFactory.create(null, { createdAt: yesterday });
     const { file: recentFile } = await fileFactory.create(null, { createdAt: today });
 
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { file: associatedFile } = await fileFactory.create(message.id, { createdAt: twoDaysAgo });
 
