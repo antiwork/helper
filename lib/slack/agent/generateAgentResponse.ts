@@ -264,8 +264,8 @@ export const generateAgentResponse = async (
             message.role === "user"
               ? message.emailFrom
               : (() => {
-                  const member = members.find((m) => m.id === message.userId)!;
-                  return getFullName(member.displayName, member.email);
+                  const member = members.find((m) => m.id === message.userId);
+                  return getFullName(member?.displayName, member?.email);
                 })(),
         }));
       },
