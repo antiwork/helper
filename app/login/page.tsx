@@ -1,5 +1,5 @@
-import { LoginForm } from "@/app/(auth)/login/loginForm";
-import { OnboardingForm } from "@/app/(auth)/login/onboardingForm";
+import { LoginForm } from "@/app/login/loginForm";
+import { OnboardingForm } from "@/app/login/onboardingForm";
 import { db } from "@/db/client";
 import { TRPCReactProvider } from "@/trpc/react";
 

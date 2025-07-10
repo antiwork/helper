@@ -26,7 +26,6 @@ type DecodedPayload = {
 };
 
 const queryClient = new QueryClient();
-const GUMROAD_MAILBOX_SLUG = "gumroad";
 
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
@@ -36,7 +35,7 @@ export default function Page() {
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
-  const isGumroadTheme = config?.mailboxSlug === GUMROAD_MAILBOX_SLUG;
+  const isGumroadTheme = typeof window !== "undefined" && location.hostname.includes("gumroad.com");
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
   const [resumeGuide, setResumeGuide] = useState<GuideInstructions | null>(null);
 

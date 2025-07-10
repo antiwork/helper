@@ -34,7 +34,7 @@ export function OnboardingForm({ className, ...props }: React.ComponentPropsWith
         setIsLoading(false);
         return;
       }
-      router.push("/mailboxes");
+      router.push("/mine");
     },
     onError: (error) => {
       setFormError(error.message);

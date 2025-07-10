@@ -6,18 +6,17 @@ import { api } from "@/trpc/server";
 import SessionDetails from "./sessionDetails";
 
 type PageProps = {
-  mailbox_slug: string;
   session_id: string;
 };
 
 export default async function SessionPage(props: { params: Promise<PageProps> }) {
-  const { mailbox_slug, session_id } = await props.params;
+  const { session_id } = await props.params;
 
   const mailboxData = await api.mailbox.get();
   const sessionId = parseInt(session_id, 10);
 
   if (isNaN(sessionId)) {
-    return redirect(`/mailboxes/${mailbox_slug}/sessions`);
+    return redirect(`/sessions`);
   }
 
   const session = await db.query.guideSessions.findFirst({

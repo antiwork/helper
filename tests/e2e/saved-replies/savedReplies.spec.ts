@@ -277,7 +277,7 @@ test.describe("Saved Replies Management", () => {
     const basePage = new (class extends BasePage {})(page);
 
     // Navigate to page and check for loading states
-    await basePage.goto("/mailboxes/gumroad/saved-replies");
+    await basePage.goto("/saved-replies");
 
     // Loading skeletons might be visible briefly
     // This test ensures the page loads correctly
@@ -297,18 +297,18 @@ test.describe("Saved Replies Management", () => {
     // First verify we're authenticated and on the correct page
     await savedRepliesPage.expectPageVisible();
     const currentUrl = page.url();
-    expect(currentUrl).toMatch(/.*mailboxes.*gumroad.*saved-replies.*/);
+    expect(currentUrl).toMatch(/.*saved-replies.*/);
 
     // Test navigation away and back to verify auth persists
-    await basePage.goto("/mailboxes/gumroad/mine");
+    await basePage.goto("/mine");
     await page.waitForLoadState("networkidle");
 
     // Navigate back to saved replies to test auth persistence
-    await basePage.goto("/mailboxes/gumroad/saved-replies");
+    await basePage.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
 
     // Should remain authenticated and stay on the saved replies page
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*saved-replies.*/);
+    await expect(page).toHaveURL(/.*saved-replies.*/);
     await savedRepliesPage.expectPageVisible();
 
     await takeDebugScreenshot(page, "saved-replies-auth-persisted.png");
@@ -319,12 +319,12 @@ test.describe("Saved Replies Management", () => {
     const basePage = new (class extends BasePage {})(page);
 
     // Test direct navigation to conversations page
-    await basePage.goto("/mailboxes/gumroad/mine");
+    await basePage.goto("/mine");
     await page.waitForLoadState("networkidle");
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(page).toHaveURL(/.*mine.*/);
 
     // Navigate back to saved replies
-    await basePage.goto("/mailboxes/gumroad/saved-replies");
+    await basePage.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*saved-replies.*/);
     await savedRepliesPage.expectPageVisible();

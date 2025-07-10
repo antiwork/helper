@@ -22,12 +22,12 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get("code");
 
     if (!code) {
-      return NextResponse.redirect(new URL("/mailboxes", request.url));
+      return NextResponse.redirect(new URL("/mine", request.url));
     }
 
     const mailbox = await getMailbox();
     if (!mailbox) {
-      return NextResponse.redirect(new URL("/mailboxes", request.url));
+      return NextResponse.redirect(new URL("/mine", request.url));
     }
 
     const redirectUrl = new URL(`${getBaseUrl()}/settings`);
@@ -48,6 +48,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${redirectUrl}/integrations?slackConnectResult=success`);
   } catch (error) {
     Sentry.captureException(error);
-    return NextResponse.redirect(`${getBaseUrl()}/mailboxes?slackConnectResult=error`);
+    return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?slackConnectResult=error`);
   }
 }

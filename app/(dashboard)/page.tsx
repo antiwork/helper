@@ -14,7 +14,7 @@ const Page = async () => {
 
   const mailboxes = await getAllMailboxes();
   if (mailboxes.length > 0) {
-    return redirect(`/mailboxes/${mailboxes[0]?.slug}/mine`);
+    return redirect("/mine");
   }
 
   return redirect("/login");

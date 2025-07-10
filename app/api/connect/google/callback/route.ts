@@ -10,13 +10,12 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
-  if (!code || !state)
-    return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=invalid_code`);
+  if (!code || !state) return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=invalid_code`);
 
   try {
     const { tokens } = await auth.getToken(code);
     if (!tokens.id_token || !tokens.access_token || !tokens.refresh_token || !tokens.scope) {
-      return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=invalid_code`);
+      return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=invalid_code`);
     }
 
     const idToken = await auth.verifyIdToken({
@@ -25,7 +24,7 @@ export async function GET(request: Request) {
     });
     const details = idToken.getPayload();
     if (!details?.email) {
-      return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=invalid_email`);
+      return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=invalid_email`);
     }
     if (!gmailScopesGranted(tokens.scope.split(" "))) return NextResponse.redirect(connectSupportEmailUrl());
 
@@ -35,8 +34,8 @@ export async function GET(request: Request) {
       refreshToken: tokens.refresh_token,
       expiresAt: new Date(tokens.expiry_date!),
     });
-    return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations`);
+    return NextResponse.redirect(`${getBaseUrl()}/settings/integrations`);
   } catch (error) {
-    return NextResponse.redirect(`${getBaseUrl()}/mailboxes/${state}/settings/integrations?error=${error}`);
+    return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=${error}`);
   }
 }

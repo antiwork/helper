@@ -97,7 +97,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       });
 
       if (error) throw error;
-      router.push("/mailboxes");
+      router.push("/mine");
     } catch (error: unknown) {
       captureExceptionAndLog(error);
       setOtpError(error instanceof Error ? error.message : "Invalid OTP");
