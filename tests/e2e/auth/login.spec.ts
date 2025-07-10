@@ -108,7 +108,7 @@ test.describe("Working Authentication", () => {
     const currentUrl = page.url();
 
     // Should still be on login page or show some response
-    expect(currentUrl).toContain("helperai.dev");
+    expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020");
   });
 
   test("should handle empty email submission", async ({ page }) => {
