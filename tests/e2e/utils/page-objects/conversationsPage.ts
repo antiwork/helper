@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { debugWait } from "../test-helpers";
 import { BasePage } from "./basePage";
 
@@ -17,7 +17,7 @@ export class ConversationsPage extends BasePage {
   private readonly conversationLinks = 'a[href*="/conversations?id="]';
 
   async navigateToConversations() {
-    await this.goto("/mailboxes/gumroad/mine");
+    await this.goto("/mine");
     await this.waitForPageLoad();
   }
 
@@ -114,7 +114,7 @@ export class ConversationsPage extends BasePage {
   async refreshAndWaitForAuth() {
     await this.page.reload();
     await this.page.waitForLoadState("networkidle");
-    await expect(this.page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(this.page).toHaveURL(/.*mine.*/);
     await this.waitForConversationsLoad();
   }
 

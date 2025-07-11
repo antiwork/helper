@@ -50,7 +50,6 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
 
 const createMessageBlocks = ({
   conversation,
-  mailbox,
   messages,
   customerLinks = [],
   closed = false,
@@ -82,10 +81,7 @@ const createMessageBlocks = ({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: [
-          `<${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|View in Helper>`,
-          ...customerLinks,
-        ].join(" · "),
+        text: [`<${getBaseUrl()}/conversations?id=${conversation.slug}|View in Helper>`, ...customerLinks].join(" · "),
       },
     },
     getActionButtons(),

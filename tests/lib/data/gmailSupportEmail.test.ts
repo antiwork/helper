@@ -50,7 +50,7 @@ describe("gmailSupportEmail", () => {
       };
 
       await db.transaction(async (tx) => {
-        const result = await createGmailSupportEmail(mailbox.slug, info, tx);
+        const result = await createGmailSupportEmail(info, tx);
         expect(result).toEqual(
           expect.objectContaining({
             email: "new@example.com",

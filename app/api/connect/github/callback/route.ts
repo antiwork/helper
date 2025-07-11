@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.redirect(`${getBaseUrl()}/login`);
 
   const mailbox = await getMailbox();
-  if (!mailbox) return NextResponse.redirect(`${getBaseUrl()}/mailboxes`);
+  if (!mailbox) return NextResponse.redirect(`${getBaseUrl()}/mine`);
 
-  const redirectUrl = new URL(`${getBaseUrl()}/mailboxes/${mailbox.slug}/settings`);
+  const redirectUrl = new URL(`${getBaseUrl()}/settings`);
 
   if (!installationId) return NextResponse.redirect(`${redirectUrl}/integrations?githubConnectResult=error`);
 

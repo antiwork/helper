@@ -2,7 +2,6 @@ import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
 export class SavedRepliesPage extends BasePage {
-  // Page elements
   readonly pageTitle: Locator;
   readonly searchInput: Locator;
   readonly newReplyButton: Locator;
@@ -11,8 +10,8 @@ export class SavedRepliesPage extends BasePage {
   readonly loadingSkeletons: Locator;
   readonly emptyState: Locator;
   readonly emptyStateText: Locator;
+  readonly floatingAddButton: Locator;
 
-  // Dialog elements
   readonly createDialog: Locator;
   readonly editDialog: Locator;
   readonly deleteDialog: Locator;
@@ -37,7 +36,7 @@ export class SavedRepliesPage extends BasePage {
 
     // Page elements
     this.pageTitle = page.locator('h1:has-text("Saved replies")');
-    this.searchInput = page.locator('input[placeholder="Search saved replies..."]');
+    this.searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
     this.newReplyButton = page.locator('button:has-text("New saved reply")');
     this.createOneButton = page.locator('button:has-text("Create one")');
     this.savedReplyCards = page.locator('[data-testid="saved-reply-card"]');
@@ -45,11 +44,14 @@ export class SavedRepliesPage extends BasePage {
     this.emptyState = page.locator('text="No saved replies yet"');
     this.emptyStateText = page.locator('text="No saved replies found matching your search"');
 
+    // Add floating action button selector - any fixed positioned button
+    this.floatingAddButton = page.locator("button.fixed");
+
     // Dialog elements
     this.createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
     this.editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
-    this.deleteDialog = page.locator('[role="alertdialog"]:has-text("Delete saved reply")');
-    this.dialogTitle = page.locator('[role="dialog"] h2, [role="alertdialog"] h2');
+    this.deleteDialog = page.locator('[role="dialog"]:has-text("Are you sure you want to delete")');
+    this.dialogTitle = page.locator('[role="dialog"] h2');
     this.nameInput = page.locator('input[placeholder*="Welcome Message"]');
     this.contentEditor = page.locator('[role="textbox"][contenteditable="true"]');
     this.saveButton = page.locator('button:has-text("Saving...")');
@@ -57,7 +59,7 @@ export class SavedRepliesPage extends BasePage {
     this.addButton = page.locator('button:has-text("Add")');
     this.updateButton = page.locator('button:has-text("Update")');
     this.deleteButton = page.locator('button:has-text("Delete"):not(:has-text("saved reply"))');
-    this.confirmDeleteButton = page.locator('[role="alertdialog"] button:has-text("Delete")');
+    this.confirmDeleteButton = page.locator('[role="dialog"] button:has-text("Yes")');
 
     // Card elements
     this.cardTitle = page.locator('[data-testid="saved-reply-card"] .text-lg');
@@ -67,8 +69,8 @@ export class SavedRepliesPage extends BasePage {
   }
 
   // Navigation
-  async navigateToSavedReplies(mailboxSlug = "gumroad") {
-    await this.goto(`/mailboxes/${mailboxSlug}/saved-replies`);
+  async navigateToSavedReplies() {
+    await this.goto(`/saved-replies`);
     await this.waitForPageLoad();
   }
 
@@ -82,7 +84,16 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async expectNewReplyButtonVisible() {
-    await expect(this.newReplyButton).toBeVisible();
+    // Check if we have saved replies or empty state
+    const hasReplies = await this.savedReplyCards.count() > 0;
+    
+    if (hasReplies) {
+      // When replies exist, expect floating action button
+      await expect(this.floatingAddButton).toBeVisible();
+    } else {
+      // When no replies, expect "Create one" button
+      await expect(this.createOneButton).toBeVisible();
+    }
   }
 
   async expectEmptyState() {
@@ -110,7 +121,7 @@ export class SavedRepliesPage extends BasePage {
 
   async expectDeleteDialogVisible() {
     await expect(this.deleteDialog).toBeVisible();
-    await expect(this.deleteDialog).toContainText("Delete saved reply");
+    await expect(this.deleteDialog).toContainText("Are you sure you want to delete");
   }
 
   // Actions
@@ -120,6 +131,10 @@ export class SavedRepliesPage extends BasePage {
 
   async clickCreateOneButton() {
     await this.createOneButton.click();
+  }
+
+  async clickFloatingAddButton() {
+    await this.floatingAddButton.click();
   }
 
   async searchSavedReplies(searchTerm: string) {
@@ -248,14 +263,38 @@ export class SavedRepliesPage extends BasePage {
     }
   }
 
-  // Helper methods
   async openCreateDialog() {
-    const replyCount = await this.getSavedReplyCount();
-    if (replyCount === 0) {
+    await this.page.waitForTimeout(500);
+
+    const emptyStateVisible = await this.emptyState.isVisible().catch(() => false);
+
+    if (emptyStateVisible) {
       await this.clickCreateOneButton();
     } else {
-      await this.clickNewReplyButton();
+      const fabVisible = await this.floatingAddButton.isVisible().catch(() => false);
+
+      if (fabVisible) {
+        await this.clickFloatingAddButton();
+      } else {
+        // Track both buttons because UI shows different add buttons based on state:
+        // "Create one" appears in empty state, floating button appears when replies exist
+        try {
+          await Promise.race([
+            this.createOneButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "createOne"),
+            this.floatingAddButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "floating"),
+          ]).then(async (buttonType) => {
+            if (buttonType === "createOne") {
+              await this.clickCreateOneButton();
+            } else {
+              await this.clickFloatingAddButton();
+            }
+          });
+        } catch {
+          throw new Error("Neither 'Create one' nor floating add button found");
+        }
+      }
     }
+
     await this.expectCreateDialogVisible();
   }
 
@@ -281,11 +320,9 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async deleteSavedReply(index: number) {
-    // Click on the saved reply card to open edit modal
     await this.savedReplyCards.nth(index).click();
     await this.expectEditDialogVisible();
 
-    // Click delete button in the modal
     await this.clickDeleteButtonInModal();
     await this.expectDeleteDialogVisible();
     await this.confirmDelete();
@@ -300,9 +337,7 @@ export class SavedRepliesPage extends BasePage {
     }
   }
 
-  async expectClipboardContent(expectedContent: string) {
-    // Note: Direct clipboard testing is limited in Playwright
-    // This would typically be verified through manual testing or other means
+  async expectClipboardContent() {
     await this.waitForToast("Saved reply copied to clipboard");
   }
 }

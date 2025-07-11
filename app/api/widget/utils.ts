@@ -1,9 +1,6 @@
-import { eq } from "drizzle-orm";
-import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
-import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
-import { Mailbox } from "@/lib/data/mailbox";
+import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
@@ -48,15 +45,7 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   }
 
   const token = authHeader.slice(7);
-  const decoded = jwt.decode(token) as WidgetSessionPayload;
-
-  if (!decoded?.mailboxSlug) {
-    return { success: false, error: "Invalid session token" };
-  }
-
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.slug, decoded.mailboxSlug),
-  });
+  const mailbox = await getMailbox();
 
   if (!mailbox) {
     return { success: false, error: "Mailbox not found" };

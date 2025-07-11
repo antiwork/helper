@@ -38,6 +38,7 @@ export const tools = pgTable(
     toolApiId: bigint({ mode: "number" }),
     enabled: boolean().notNull().default(true),
     availableInChat: boolean().notNull().default(false),
+    availableInAnonymousChat: boolean().notNull().default(false),
     customerEmailParameter: text(),
   },
   (table) => [

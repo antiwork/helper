@@ -30,6 +30,7 @@ export const toolsRouter = {
               enabled: true,
               slug: true,
               availableInChat: true,
+              availableInAnonymousChat: true,
               customerEmailParameter: true,
               parameters: true,
               toolApiId: true,
@@ -124,6 +125,7 @@ export const toolsRouter = {
         toolId: z.number(),
         settings: z.object({
           availableInChat: z.boolean(),
+          availableInAnonymousChat: z.boolean(),
           enabled: z.boolean(),
           customerEmailParameter: z.string().nullable(),
         }),
@@ -142,6 +144,7 @@ export const toolsRouter = {
         .update(toolsTable)
         .set({
           availableInChat: settings.enabled ? settings.availableInChat : false,
+          availableInAnonymousChat: settings.enabled ? settings.availableInAnonymousChat : false,
           enabled: settings.enabled,
           customerEmailParameter:
             tool.parameters?.find((param) => param.name === settings.customerEmailParameter)?.name ?? null,

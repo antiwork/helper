@@ -33,7 +33,7 @@ describe("mailboxRouter", () => {
         slackAlertChannel: "#another-channel",
       };
 
-      await caller.mailbox.update({ mailboxSlug: mailbox.slug, ...updateData });
+      await caller.mailbox.update({ ...updateData });
 
       const updatedMailbox = await db.query.mailboxes.findFirst({
         where: eq(mailboxes.id, mailbox.id),
@@ -46,7 +46,7 @@ describe("mailboxRouter", () => {
 
   describe("members", () => {
     it("returns a list of mailbox members", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
 
       const user2 = await userFactory.createUser();
       const { conversation: conversation1 } = await conversationFactory.create();
@@ -59,7 +59,7 @@ describe("mailboxRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.mailbox.members.stats({ mailboxSlug: mailbox.slug, period: "1y" });
+      const result = await caller.mailbox.members.stats({ period: "1y" });
 
       expect(result.sort((a, b) => a.replyCount - b.replyCount)).toEqual([
         {
@@ -92,7 +92,7 @@ describe("mailboxRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
 
-      expect(await caller.mailbox.get({ mailboxSlug: mailbox.slug })).toEqual(await getMailboxInfo(mailbox));
+      expect(await caller.mailbox.get()).toEqual(await getMailboxInfo(mailbox));
     });
   });
 });

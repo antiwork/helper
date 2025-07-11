@@ -33,7 +33,6 @@ export const approveSuggestedEdit = async (
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
     const blocks = suggestionResolvedBlocks(
       knowledge,
-      mailbox.slug,
       "approved",
       user ? getFullName(user.displayName, user.email) : null,
     );
@@ -60,7 +59,6 @@ export const rejectSuggestedEdit = async (
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
     const blocks = suggestionResolvedBlocks(
       knowledge,
-      mailbox.slug,
       "rejected",
       user ? getFullName(user.displayName, user.email) : null,
     );
@@ -152,7 +150,6 @@ const openTweakSuggestedEditModal = async (
 
 const suggestionResolvedBlocks = (
   faq: typeof faqs.$inferSelect,
-  mailboxSlug: string,
   action: "approved" | "rejected",
   userName: string | null,
 ): KnownBlock[] => {
@@ -170,7 +167,7 @@ const suggestionResolvedBlocks = (
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings/knowledge|View knowledge bank>`,
+        text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
       },
     },
   ];

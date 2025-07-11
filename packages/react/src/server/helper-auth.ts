@@ -5,7 +5,6 @@ import crypto from "node:crypto";
 export type HelperAuthParams = {
   email: string;
   hmacSecret?: string;
-  mailboxSlug?: string;
 };
 
 export class HelperAuthError extends Error {
@@ -31,7 +30,7 @@ function isValidEmail(email: string): boolean {
  * @returns Object with email, timestamp, and HMAC hash
  * @throws HelperAuthError if HMAC secret is not provided or if input validation fails
  */
-export function generateHelperAuth({ email, hmacSecret, mailboxSlug }: HelperAuthParams) {
+export function generateHelperAuth({ email, hmacSecret }: HelperAuthParams) {
   if (!email) {
     throw new HelperAuthError("Email is required");
   }
@@ -49,17 +48,9 @@ export function generateHelperAuth({ email, hmacSecret, mailboxSlug }: HelperAut
 
   const hmac = crypto.createHmac("sha256", finalHmacSecret).update(`${email}:${timestamp}`).digest("hex");
 
-  const finalMailboxSlug = mailboxSlug || process.env.HELPER_MAILBOX_SLUG;
-  if (!finalMailboxSlug) {
-    throw new HelperAuthError(
-      "Mailbox slug must be provided via parameter or HELPER_MAILBOX_SLUG environment variable",
-    );
-  }
-
   return {
     email,
     timestamp,
     emailHash: hmac,
-    mailboxSlug: finalMailboxSlug,
   };
 }

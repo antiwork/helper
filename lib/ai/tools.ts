@@ -5,7 +5,6 @@ import { assertDefined } from "@/components/utils/assert";
 import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
@@ -13,13 +12,13 @@ import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
-const fetchUserInformation = async (email: string, mailboxSlug: string) => {
+const fetchUserInformation = async (email: string) => {
   try {
     const metadata = await fetchMetadata(email);
     return metadata?.prompt;
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
-      extra: { email, mailboxSlug },
+      extra: { email },
     });
     return "Error fetching metadata";
   }
@@ -46,13 +45,7 @@ const updateCustomerMetadata = async (email: string) => {
   }
 };
 
-const requestHumanSupport = async (
-  conversationId: number,
-  email: string | null,
-  mailbox: Mailbox,
-  reason: string,
-  newEmail?: string,
-) => {
+const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
   const conversation = assertDefined(await getConversationById(conversationId));
 
   if (newEmail) {
@@ -75,7 +68,6 @@ const requestHumanSupport = async (
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
-        mailboxSlug: mailbox.slug,
         conversationId: conversation.id,
       }),
     );
@@ -98,7 +90,6 @@ const setUserEmail = async (conversationId: number, email: string) => {
 export const buildTools = async (
   conversationId: number,
   email: string | null,
-  mailbox: Mailbox,
   includeHumanSupport = true,
   guideEnabled = false,
   includeMailboxTools = true,
@@ -158,7 +149,7 @@ export const buildTools = async (
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, mailbox, reason, newEmail)),
+        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)),
     });
   }
 
@@ -168,7 +159,7 @@ export const buildTools = async (
       parameters: z.object({
         reason: z.string().describe("reason for fetching user information"),
       }),
-      execute: () => reasoningMiddleware(fetchUserInformation(email, mailbox.slug)),
+      execute: () => reasoningMiddleware(fetchUserInformation(email)),
     });
   }
 
@@ -183,14 +174,16 @@ export const buildTools = async (
       tools[slug] = tool({
         description: aiTool.description,
         parameters: aiTool.parameters,
-        execute: async (params) => {
-          if (aiTool.customerEmailParameter && email) {
-            params[aiTool.customerEmailParameter] = email;
-          }
-          const conversation = assertDefined(await getConversationById(conversationId));
-          const result = await callToolApi(conversation, mailboxTool, params);
-          return reasoningMiddleware(JSON.stringify(result));
-        },
+        execute: aiTool.available
+          ? async (params) => {
+              if (aiTool.customerEmailParameter && email) {
+                params[aiTool.customerEmailParameter] = email;
+              }
+              const conversation = assertDefined(await getConversationById(conversationId));
+              const result = await callToolApi(conversation, mailboxTool, params);
+              return reasoningMiddleware(JSON.stringify(result));
+            }
+          : () => Promise.resolve("This tool is not available"),
       });
     }
   }

@@ -1,8 +1,8 @@
-export const hasDisplayName = (displayName?: string | null): displayName is string => {
+export const hasDisplayName = (displayName: string | null): displayName is string => {
   return typeof displayName === "string";
 };
 
-export const getFullName = (displayName?: string | null, email?: string | null): string => {
+export const getFullName = (displayName: string | null, email: string | null): string => {
   if (displayName?.trim()) return displayName.trim();
 
   if (email) {
@@ -17,7 +17,7 @@ export const getFullName = (displayName?: string | null, email?: string | null):
   return "Unknown";
 };
 
-export const getFirstName = (displayName?: string | null, email?: string | null): string => {
+export const getFirstName = (displayName: string | null, email: string | null): string => {
   const fullName = getFullName(displayName, email);
   const firstName = fullName.split(" ")[0];
   return firstName || "Unknown";

@@ -168,7 +168,7 @@ Here's a complete example of how to use the Chat API in a simple web application
 
 ```javascript
 // First, create a session
-async function createSession(email, mailboxSlug) {
+async function createSession(email) {
   const timestamp = Date.now();
   const emailHash = await generateHmac(email, timestamp); // Implementation depends on your backend
 
@@ -180,7 +180,6 @@ async function createSession(email, mailboxSlug) {
     body: JSON.stringify({
       email,
       emailHash,
-      mailboxSlug,
       timestamp,
       currentURL: window.location.href,
     }),

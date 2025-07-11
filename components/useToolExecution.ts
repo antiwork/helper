@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { useConversationContext } from "@/app/(dashboard)/mailboxes/[mailbox_slug]/[category]/conversation/conversationContext";
+import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { api } from "@/trpc/react";
 
 export const useToolExecution = () => {
-  const { mailboxSlug, conversationSlug, refetch } = useConversationContext();
+  const { conversationSlug, refetch } = useConversationContext();
   const [isExecuting, setIsExecuting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const runTool = api.mailbox.conversations.tools.run.useMutation();
@@ -14,7 +14,6 @@ export const useToolExecution = () => {
     setIsSuccess(false);
     try {
       const result = await runTool.mutateAsync({
-        mailboxSlug,
         conversationSlug,
         tool: slug,
         params,

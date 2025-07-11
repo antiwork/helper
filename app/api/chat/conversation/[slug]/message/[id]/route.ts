@@ -130,7 +130,7 @@ const publishEvent = async (messageId: number) => {
   const mailbox = assertDefined(await getMailbox());
 
   await publishToRealtime({
-    channel: dashboardChannelId(mailbox.slug),
+    channel: dashboardChannelId(),
     event: "event",
     data: createReactionEventPayload(message, mailbox),
   });

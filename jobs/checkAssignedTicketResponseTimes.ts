@@ -91,7 +91,7 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
               const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
               const mention = slackUserId ? `<@${slackUserId}>` : assignee?.displayName || assignee?.email || "Unknown";
               const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-              return `• <${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
+              return `• <${getBaseUrl()}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
             }),
             ...(overdueAssignedConversations.length > 10
               ? [`(and ${overdueAssignedConversations.length - 10} more)`]

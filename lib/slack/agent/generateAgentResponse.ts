@@ -156,9 +156,7 @@ export const generateAgentResponse = async (
           const { list } = await searchConversations(mailbox, input);
           const { results, nextCursor } = await list;
           return {
-            tickets: results.map((conversation) =>
-              formatConversation(conversation, mailbox, conversation.platformCustomer),
-            ),
+            tickets: results.map((conversation) => formatConversation(conversation, conversation.platformCustomer)),
             nextCursor,
           };
         } catch (error) {
@@ -214,7 +212,7 @@ export const generateAgentResponse = async (
         const conversation = await findConversation(id);
         if (!conversation) return { error: "Ticket not found" };
         const platformCustomer = await getPlatformCustomer(conversation.emailFrom ?? "");
-        return formatConversation(conversation, mailbox, platformCustomer);
+        return formatConversation(conversation, platformCustomer);
       },
     }),
     getTicketMessages: tool({
@@ -458,11 +456,10 @@ const formatConversation = (
     Conversation,
     "id" | "slug" | "subject" | "status" | "emailFrom" | "lastUserEmailCreatedAt" | "assignedToId" | "assignedToAI"
   >,
-  mailbox: Mailbox,
   platformCustomer?: PlatformCustomer | null,
 ) => {
   return {
-    standardSlackFormat: `*<${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
+    standardSlackFormat: `*<${getBaseUrl()}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
     id: conversation.id,
     slug: conversation.slug,
     subject: conversation.subject,
@@ -472,6 +469,6 @@ const formatConversation = (
     assignedToUserId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
     isVip: platformCustomer?.isVip || false,
-    url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,
+    url: `${getBaseUrl()}/conversations?id=${conversation.slug}`,
   };
 };

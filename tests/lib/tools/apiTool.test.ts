@@ -37,11 +37,33 @@ describe("apiTools", () => {
         ],
       });
 
-      const aiTools = buildAITools([tool], null);
+      const aiTools = buildAITools([tool], "test@example.com");
 
-      expect(aiTools[tool.slug]).toBeDefined();
       expect(aiTools[tool.slug]?.description).toBe(`${tool.name} - ${tool.description}`);
       expect(aiTools[tool.slug]?.parameters).toBeDefined();
+      expect(aiTools[tool.slug]?.available).toBe(true);
+    });
+
+    it("excludes tools that are not available in anonymous chat", async () => {
+      const { tool } = await toolsFactory.create({
+        parameters: [],
+        availableInAnonymousChat: false,
+      });
+
+      const { tool: tool2 } = await toolsFactory.create({
+        parameters: [],
+        availableInAnonymousChat: true,
+      });
+
+      const aiTools = buildAITools([tool, tool2], null);
+
+      expect(aiTools[tool.slug]?.description).toBe(
+        `${tool.name} - This tool requires you to be logged in. Please log in and try again.`,
+      );
+      expect(aiTools[tool.slug]?.available).toBe(false);
+
+      expect(aiTools[tool2.slug]?.description).toBe(`${tool2.name} - ${tool2.description}`);
+      expect(aiTools[tool2.slug]?.available).toBe(true);
     });
   });
 
