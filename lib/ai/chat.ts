@@ -489,12 +489,6 @@ export const createUserMessage = async (
     });
   }
 
-  if (attachments && attachments.length > 0) {
-    for (const attachment of attachments) {
-      if (attachment.url && !attachment.url.startsWith('data:')) {
-      }
-    }
-  }
 
   return message;
 };
