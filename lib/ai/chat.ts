@@ -463,6 +463,7 @@ export const createUserMessage = async (
   email: string | null,
   query: string,
   screenshotData?: string,
+  attachments?: Array<{ name: string; contentType: string; url: string }>,
 ) => {
   const message = await createConversationMessage({
     conversationId,
@@ -473,7 +474,10 @@ export const createUserMessage = async (
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
-    metadata: { includesScreenshot: !!screenshotData },
+    metadata: { 
+      includesScreenshot: !!screenshotData,
+      hasAttachments: !!(attachments && attachments.length > 0)
+    },
   });
 
   if (screenshotData) {
@@ -483,6 +487,13 @@ export const createUserMessage = async (
       prefix: `screenshots/${conversationId}`,
       messageId: message.id,
     });
+  }
+
+  if (attachments && attachments.length > 0) {
+    for (const attachment of attachments) {
+      if (attachment.url && !attachment.url.startsWith('data:')) {
+      }
+    }
   }
 
   return message;

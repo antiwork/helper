@@ -1,6 +1,7 @@
-import { Camera, Mic } from "lucide-react";
+import { Camera, Mic, Paperclip } from "lucide-react";
 import * as motion from "motion/react-client";
 import { useCallback, useEffect, useState } from "react";
+import { useFileUpload } from "@/components/fileUploadContext";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +16,7 @@ type Props = {
   input: string;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (screenshotData?: string) => void;
+  handleSubmit: (screenshotData?: string, attachments?: any[]) => void;
   isLoading: boolean;
   isGumroadTheme: boolean;
   placeholder?: string;
@@ -71,6 +72,18 @@ export default function ChatInput({
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
   const { screenshot, setScreenshot } = useScreenshotStore();
+  const { onUpload, readyFiles } = useFileUpload();
+
+  const handleFileUpload = useCallback((files: File[]) => {
+    const imageFiles = files.filter(file => 
+      file.type.startsWith('image/') && 
+      (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg')
+    );
+    
+    imageFiles.forEach(file => {
+      onUpload(file, { inline: false });
+    });
+  }, [onUpload]);
 
   const handleSegment = useCallback(
     (segment: string) => {
@@ -140,10 +153,17 @@ export default function ChatInput({
       closeWidget();
       return;
     }
+    
+    const attachments = readyFiles.map(file => ({
+      name: file.file.name,
+      contentType: file.file.type,
+      url: file.url
+    }));
+    
     if (includeScreenshot) {
       sendScreenshot();
     } else {
-      handleSubmit();
+      handleSubmit(undefined, attachments.length > 0 ? attachments : undefined);
     }
   };
 
@@ -185,6 +205,30 @@ export default function ChatInput({
             disabled={isLoading}
           />
           <div className="flex items-center gap-2">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <label className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/png,image/jpeg,image/jpg"
+                      className="hidden"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          handleFileUpload(files);
+                        }
+                        e.target.value = '';
+                      }}
+                      disabled={isLoading}
+                    />
+                    <Paperclip className="w-4 h-4" />
+                  </label>
+                </TooltipTrigger>
+                <TooltipContent>Add images</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {isSupported && (
               <TooltipProvider delayDuration={100}>
                 <Tooltip>

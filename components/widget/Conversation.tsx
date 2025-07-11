@@ -242,7 +242,7 @@ export default function Conversation({
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
 
-  const handleSubmit = async (screenshotData?: string) => {
+  const handleSubmit = async (screenshotData?: string, attachments?: any[]) => {
     if (!input.trim()) return;
 
     setData(undefined);
@@ -255,10 +255,21 @@ export default function Conversation({
 
       if (currentSlug) {
         setIsNewConversation(false);
+        
+        const experimentalAttachments = [];
+        if (screenshotData) {
+          experimentalAttachments.push({ 
+            name: "screenshot.png", 
+            contentType: "image/png", 
+            url: screenshotData 
+          });
+        }
+        if (attachments) {
+          experimentalAttachments.push(...attachments);
+        }
+        
         handleAISubmit(undefined, {
-          experimental_attachments: screenshotData
-            ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
-            : [],
+          experimental_attachments: experimentalAttachments.length > 0 ? experimentalAttachments : undefined,
           body: { conversationSlug: currentSlug },
         });
       }
