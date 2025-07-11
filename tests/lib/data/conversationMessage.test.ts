@@ -546,7 +546,7 @@ describe("createReply", () => {
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToId).toBe(profile!.id);
+    expect(updatedConversation?.assignedToId).toBe(profile.id);
   });
 
   it("does not change assignment when replying to an already assigned conversation", async () => {

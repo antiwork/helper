@@ -383,7 +383,7 @@ test.describe("Saved Replies Management", () => {
 
     // Test keyboard navigation to the appropriate button
     await page.keyboard.press("Escape"); // Ensure no dialogs are open
-    
+
     if (replyCount === 0) {
       // When no replies exist, use the "Create one" button
       await savedRepliesPage.clickCreateOneButton();
@@ -391,7 +391,7 @@ test.describe("Saved Replies Management", () => {
       // When replies exist, use the floating action button
       await savedRepliesPage.clickFloatingAddButton();
     }
-    
+
     await savedRepliesPage.expectCreateDialogVisible();
 
     // Escape should close dialog
@@ -703,12 +703,12 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     // Verify the saved reply was created with formatted content
     await savedRepliesPage.expectSavedRepliesVisible();
-    
+
     // Find the specific saved reply by name instead of assuming its position
     const replyCount = await savedRepliesPage.getSavedReplyCount();
     let foundReply = false;
     let replyIndex = -1;
-    
+
     for (let i = 0; i < replyCount; i++) {
       try {
         const title = await savedRepliesPage.getSavedReplyTitle(i);
@@ -721,7 +721,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
         // Continue checking other replies
       }
     }
-    
+
     expect(foundReply).toBe(true);
 
     // Test copying the formatted content

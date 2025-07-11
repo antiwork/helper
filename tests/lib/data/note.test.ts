@@ -24,7 +24,7 @@ describe("addNote", () => {
       expect.objectContaining({
         conversationId: conversation.id,
         body: "Test note",
-        userId: profile!.id,
+        userId: profile.id,
         role: "staff",
         slackChannel: "C123456",
         slackMessageTs: "1234567890.123456",

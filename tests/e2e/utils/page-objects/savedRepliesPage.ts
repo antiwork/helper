@@ -85,8 +85,8 @@ export class SavedRepliesPage extends BasePage {
 
   async expectNewReplyButtonVisible() {
     // Check if we have saved replies or empty state
-    const hasReplies = await this.savedReplyCards.count() > 0;
-    
+    const hasReplies = (await this.savedReplyCards.count()) > 0;
+
     if (hasReplies) {
       // When replies exist, expect floating action button
       await expect(this.floatingAddButton).toBeVisible();
