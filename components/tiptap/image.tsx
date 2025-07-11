@@ -1,7 +1,7 @@
 import { mergeAttributes, Node as TiptapNode } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tiptap/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "sonner";
 import { useRunOnce } from "@/components/useRunOnce";
 
 export const imageFileTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/heic"];
@@ -30,10 +30,9 @@ const ImageNodeView = ({ node, editor, getPos, updateAttributes, deleteNode }: N
             });
           } catch {}
         })
-        .catch(() => {
-          toast({
-            variant: "destructive",
-            title: "Failed to upload image",
+        .catch((error: unknown) => {
+          toast.error("Failed to upload image", {
+            description: error instanceof Error ? error.message : "Unknown error",
           });
           // Tiptap types claim that this won't be undefined, but the types are wrong
           if (getPos() !== undefined) deleteNode();

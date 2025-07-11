@@ -11,7 +11,7 @@ export function useReadPageTool(
 
   useEffect(() => {
     const fetchReadPageTool = async () => {
-      if (!token || !config?.experimental_read_page || !pageHTML) return;
+      if (!token || !config?.experimentalReadPage || !pageHTML) return;
 
       try {
         const response = await fetch(`${window.location.origin}/api/widget/read-page-tool`, {
@@ -43,7 +43,7 @@ export function useReadPageTool(
     };
 
     void fetchReadPageTool();
-  }, [token, config?.experimental_read_page, pageHTML, currentURL]);
+  }, [token, config?.experimentalReadPage, pageHTML, currentURL]);
 
   return { readPageToolCall };
 }

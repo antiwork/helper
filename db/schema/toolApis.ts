@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 import { bigint, index, pgTable, text } from "drizzle-orm/pg-core";
-import { nativeEncryptedField } from "../lib/encryptedField";
+import { encryptedField } from "../lib/encryptedField";
 import { withTimestamps } from "../lib/with-timestamps";
 import { mailboxes } from "./mailboxes";
 import { tools } from "./tools";
@@ -11,18 +11,20 @@ const toolApis = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     name: text().notNull(),
-    mailboxId: bigint({ mode: "number" }).notNull(),
+    unused_mailboxId: bigint("mailbox_id", { mode: "number" })
+      .notNull()
+      .$defaultFn(() => 0),
     baseUrl: text(),
     schema: text(),
-    authenticationToken: nativeEncryptedField(),
+    authenticationToken: encryptedField(),
   },
-  (table) => [index("tool_apis_mailbox_id_idx").on(table.mailboxId)],
+  (table) => [index("tool_apis_mailbox_id_idx").on(table.unused_mailboxId)],
 ).enableRLS();
 
 export const toolApisRelations = relations(toolApis, ({ many, one }) => ({
   tools: many(tools),
   mailbox: one(mailboxes, {
-    fields: [toolApis.mailboxId],
+    fields: [toolApis.unused_mailboxId],
     references: [mailboxes.id],
   }),
 }));

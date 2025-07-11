@@ -3,14 +3,15 @@ import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { faqs } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { conversationMessages, faqs } from "@/db/schema";
+import { triggerEvent } from "@/jobs/trigger";
+import { generateKnowledgeBankSuggestion } from "@/lib/ai/knowledgeBankSuggestions";
 import { approveSuggestedEdit, rejectSuggestedEdit } from "@/lib/data/knowledge";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { mailboxProcedure } from "./procedure";
 
 export const faqsRouter = {
-  list: mailboxProcedure.query(async ({ ctx }) => {
+  list: mailboxProcedure.query(async ({}) => {
     return await db
       .select({
         id: faqs.id,
@@ -18,12 +19,10 @@ export const faqsRouter = {
         enabled: faqs.enabled,
         suggested: faqs.suggested,
         suggestedReplacementForId: faqs.suggestedReplacementForId,
-        mailboxId: faqs.mailboxId,
         createdAt: faqs.createdAt,
         updatedAt: faqs.updatedAt,
       })
       .from(faqs)
-      .where(eq(faqs.mailboxId, ctx.mailbox.id))
       .orderBy(asc(faqs.content));
   }),
   create: mailboxProcedure
@@ -32,20 +31,13 @@ export const faqsRouter = {
         content: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       return await db.transaction(async (tx) => {
-        const faq = await tx
-          .insert(faqs)
-          .values({ mailboxId: ctx.mailbox.id, content: input.content })
-          .returning()
-          .then(takeUniqueOrThrow);
+        const faq = await tx.insert(faqs).values({ content: input.content }).returning().then(takeUniqueOrThrow);
 
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+        await resetMailboxPromptUpdatedAt(tx);
 
-        inngest.send({
-          name: "faqs/embedding.create",
-          data: { faqId: faq.id },
-        });
+        await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
         return faq;
       });
@@ -58,12 +50,12 @@ export const faqsRouter = {
         enabled: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       return await db.transaction(async (tx) => {
         const faq = await tx
           .update(faqs)
           .set({ content: input.content, enabled: input.enabled, suggested: false })
-          .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+          .where(and(eq(faqs.id, input.id)))
           .returning()
           .then(takeUniqueOrThrow);
 
@@ -74,29 +66,26 @@ export const faqsRouter = {
           });
         }
 
-        await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+        await resetMailboxPromptUpdatedAt(tx);
 
-        inngest.send({
-          name: "faqs/embedding.create",
-          data: { faqId: faq.id },
-        });
+        await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
         return faq;
       });
     }),
-  delete: mailboxProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+  delete: mailboxProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
     return await db.transaction(async (tx) => {
       const [faq] = await tx
         .select()
         .from(faqs)
-        .where(and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)))
+        .where(and(eq(faqs.id, input.id)))
         .limit(1);
       if (!faq) {
         throw new TRPCError({ code: "NOT_FOUND", message: "FAQ not found" });
       }
 
       await tx.delete(faqs).where(eq(faqs.id, faq.id));
-      await resetMailboxPromptUpdatedAt(tx, ctx.mailbox.id);
+      await resetMailboxPromptUpdatedAt(tx);
     });
   }),
   accept: mailboxProcedure
@@ -108,10 +97,7 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const knowledge = await db.query.faqs.findFirst({
-        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
-        with: {
-          mailbox: true,
-        },
+        where: and(eq(faqs.id, input.id)),
       });
 
       if (!knowledge) {
@@ -124,15 +110,11 @@ export const faqsRouter = {
     .input(
       z.object({
         id: z.number(),
-        mailboxSlug: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const knowledge = await db.query.faqs.findFirst({
-        where: and(eq(faqs.id, input.id), eq(faqs.mailboxId, ctx.mailbox.id)),
-        with: {
-          mailbox: true,
-        },
+        where: and(eq(faqs.id, input.id)),
       });
 
       if (!knowledge) {
@@ -140,5 +122,32 @@ export const faqsRouter = {
       }
 
       await rejectSuggestedEdit(knowledge, ctx.mailbox, ctx.user);
+    }),
+  suggestFromHumanReply: mailboxProcedure
+    .input(
+      z.object({
+        messageId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const message = await db.query.conversationMessages.findFirst({
+        where: and(eq(conversationMessages.id, input.messageId), eq(conversationMessages.role, "staff")),
+      });
+
+      if (!message) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
+      }
+
+      const messageContent = message.body || message.cleanedUpText || "";
+      if (!messageContent.trim()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Message content is empty" });
+      }
+
+      const suggestion = await generateKnowledgeBankSuggestion(ctx.mailbox, {
+        type: "human_reply",
+        messageContent,
+      });
+
+      return suggestion;
     }),
 } satisfies TRPCRouterRecord;

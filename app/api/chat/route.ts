@@ -2,7 +2,7 @@ import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
 import { ReadPageToolConfig } from "@helperai/sdk";
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
@@ -11,7 +11,6 @@ import {
   generateConversationSubject,
   getConversationBySlugAndMailbox,
 } from "@/lib/data/conversation";
-import { type Mailbox } from "@/lib/data/mailbox";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 
@@ -26,8 +25,8 @@ interface ChatRequestBody {
   isToolResult?: boolean;
 }
 
-const getConversation = async (conversationSlug: string, session: WidgetSessionPayload, mailbox: Mailbox) => {
-  const conversation = await getConversationBySlugAndMailbox(conversationSlug, mailbox.id);
+const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
+  const conversation = await getConversationBySlugAndMailbox(conversationSlug);
 
   if (!conversation) {
     throw new Error("Conversation not found");
@@ -35,11 +34,10 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 
   // For anonymous sessions, only allow access if the conversation has no emailFrom
   // For authenticated sessions, only allow access if the emailFrom matches
-  if (session.isAnonymous) {
-    if (conversation.emailFrom !== null) {
-      throw new Error("Unauthorized");
-    }
-  } else if (session.email && conversation.emailFrom !== session.email) {
+  const isAnonymousUnauthorized = session.isAnonymous && conversation.emailFrom !== null;
+  const isAuthenticatedUnauthorized = session.email && conversation.emailFrom !== session.email;
+
+  if (isAnonymousUnauthorized || isAuthenticatedUnauthorized) {
     throw new Error("Unauthorized");
   }
 
@@ -50,16 +48,10 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
-  const { message, conversationSlug, readPageTool, guideEnabled, isToolResult }: ChatRequestBody = await request.json();
+export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
+  const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const { session, mailbox } = authResult;
-  const conversation = await getConversation(conversationSlug, session, mailbox);
+  const conversation = await getConversation(conversationSlug, session);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
   const screenshotData = message.experimental_attachments?.[0]?.url;
@@ -112,4 +104,4 @@ export async function POST(request: Request) {
       }
     },
   });
-}
+});

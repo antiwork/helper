@@ -1,6 +1,6 @@
 import type { MessageRole } from "@/db/schema/conversationMessages";
 
-export type AIRole = "assistant" | "user" | "tool";
+type AIRole = "assistant" | "user" | "tool";
 
 export const HELPER_TO_AI_ROLES_MAPPING: Record<MessageRole, AIRole> = {
   user: "user",

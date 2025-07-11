@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";
@@ -23,21 +24,39 @@ const LinkModal = ({ isLinkModalOpen, linkData, setLinkData, setLinkModalOpen, s
     }
   };
 
+  const isValid = linkData.url && /^https?:\/\//.test(linkData.url);
+
   return (
     <div
       ref={containerRef}
       className="flex w-full sm:w-96 flex-col gap-2 rounded-lg border border-border bg-background p-4 shadow-lg"
     >
-      <Input
-        ref={inputRef}
-        type="url"
-        placeholder="URL"
-        autoFocus
-        value={linkData.url}
-        onChange={(e) => setLinkData({ ...linkData, url: e.target.value })}
-        onKeyDown={handleKeyDown}
-        className="h-10"
-      />
+      <div className="relative flex items-center">
+        <Input
+          ref={inputRef}
+          type="url"
+          placeholder="URL"
+          autoFocus
+          value={linkData.url}
+          onChange={(e) => setLinkData({ ...linkData, url: e.target.value })}
+          onKeyDown={handleKeyDown}
+          className="h-10 pr-10"
+        />
+        {linkData.url ? (
+          <a
+            href={isValid ? linkData.url : undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary ${!isValid ? "pointer-events-none opacity-40" : ""}`}
+            tabIndex={-1}
+            aria-label="Open link in new tab"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => !isValid && e.preventDefault()}
+          >
+            <ExternalLink size={18} />
+          </a>
+        ) : null}
+      </div>
       <Input
         type="text"
         placeholder="Link text"

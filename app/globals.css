@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "fumadocs-ui/css/preset.css";
 
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
@@ -118,7 +117,8 @@
 @layer base {
   :root,
   .light {
-    --sidebar-width: 20rem; /* Sidebar width */
+    --sidebar-width: 16rem;
+    --sidebar-width-icon: 3rem;
     --sidebar-width-mobile: 60%; /* Mobile sidebar width */
     --sidebar-background: hsl(0 69% 17%); /* Sidebar background color */
     --sidebar-foreground: hsl(0 0% 100%); /* Sidebar text color */
@@ -170,11 +170,12 @@
   }
 
   .dark {
-    --sidebar-width: 20rem; /* Sidebar width */
-    --sidebar-width-mobile: 90%; /* Mobile sidebar width */
-    --sidebar-background: hsl(0 69% 10%); /* Updated to match #290B0A */
+    --sidebar-width: 16rem;
+    --sidebar-width-icon: 3rem;
+    --sidebar-width-mobile: 60%; /* Mobile sidebar width */
+    --sidebar-background: hsl(0 58% 10%); /* Updated to match background color */
     --sidebar-foreground: hsl(0 0% 100%);
-    --sidebar-primary: hsl(0 69% 10%); /* Updated to match sidebar background */
+    --sidebar-primary: hsl(0 58% 10%);
     --sidebar-primary-foreground: hsl(0 0% 100%);
     --sidebar-accent: hsl(0 0% 100% / 10%);
     --sidebar-accent-foreground: hsl(0 0% 100%);
@@ -188,11 +189,11 @@
     --popover-foreground: hsl(0 0% 100%); /* Text color for popovers */
     --primary: hsl(0 0% 100%); /* Primary colors for <Button> */
     --primary-foreground: hsl(0 58% 10%); /* Primary text color for <Button> */
-    --secondary: hsl(0 0% 100% / 10%); /* Secondary colors for <Button> */
+    --secondary: hsl(0 20% 22%); /* Secondary colors for <Button> */
     --secondary-foreground: hsl(0 0% 100%); /* Secondary text color for <Button> */
-    --muted: hsl(0 0% 100% / 10%); /* Muted backgrounds for <TabsList>, <Skeleton>, <Switch> */
+    --muted: hsl(0 20% 22%); /* Muted backgrounds for <TabsList>, <Skeleton>, <Switch> */
     --muted-foreground: hsl(0 0% 100% / 70%); /* Muted text color */
-    --accent: hsl(0 0% 100% / 10%); /* Used for accents like hover effects */
+    --accent: hsl(0 20% 22%); /* Used for accents like hover effects */
     --accent-foreground: hsl(0 0% 100%); /* Text color for accent elements */
     --destructive: hsl(0 84% 65%); /* Used for destructive actions */
     --destructive-foreground: hsl(0 0% 100%); /* Text color for destructive elements */
@@ -313,5 +314,17 @@
   pre.code .token-line::before {
     counter-increment: step;
     @apply mr-4 inline-block w-4 text-right text-muted-foreground/40 content-[counter(step)];
+  }
+}
+
+:root {
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 100%;
+    --sidebar-width-icon: 100%;
   }
 }

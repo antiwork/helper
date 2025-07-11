@@ -3,10 +3,11 @@ import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, ToolMetadata } from "@/db/schema";
-import { assertDefinedOrRaiseNonRetriableError } from "@/inngest/utils";
 import { runAIObjectQuery } from "@/lib/ai";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
 import { cleanUpTextForAI } from "@/lib/ai/core";
+import { findOriginalAndMergedMessages } from "@/lib/data/conversationMessage";
+import { getMailbox } from "@/lib/data/mailbox";
 
 const constructMessagesForConversationSummary = (
   emails: Pick<typeof conversationMessages.$inferSelect, "role" | "cleanedUpText" | "metadata">[],
@@ -28,44 +29,47 @@ const summarySchema = z.object({
   summary: z.array(z.string()),
 });
 
-export const generateConversationSummary = async (conversationId: number, { force }: { force?: boolean } = {}) => {
-  const conversation = assertDefinedOrRaiseNonRetriableError(
-    await db.query.conversations.findFirst({
-      where: eq(conversations.id, conversationId),
-      with: { mailbox: true },
+export const generateConversationSummary = async (
+  conversation: typeof conversations.$inferSelect,
+  { force }: { force?: boolean } = {},
+) => {
+  const mailbox = await getMailbox();
+  if (!mailbox) throw new Error("Mailbox not found");
+
+  const emails = await findOriginalAndMergedMessages(conversation.id, (condition) =>
+    db.query.conversationMessages.findMany({
+      where: and(condition, isNull(conversationMessages.deletedAt), eq(conversationMessages.status, "sent")),
+      orderBy: asc(conversationMessages.createdAt),
+      columns: {
+        role: true,
+        cleanedUpText: true,
+        metadata: true,
+      },
     }),
   );
 
-  const emails = await db.query.conversationMessages.findMany({
-    where: and(
-      eq(conversationMessages.conversationId, conversation.id),
-      isNull(conversationMessages.deletedAt),
-      eq(conversationMessages.status, "sent"),
-    ),
-    orderBy: asc(conversationMessages.createdAt),
-    columns: {
-      role: true,
-      cleanedUpText: true,
-      metadata: true,
-    },
-  });
-
-  if (emails.length <= 2 && !force) return "No summary needed";
+  if (emails.length <= 2 && !force) return false;
 
   const prompt = [
     'The goal is to summarize all the messages in the conversation in bullet points and output in JSON format with key "summary" and value should be list of points.',
     "Make sure to generate only JSON output. The output JSON should be in the format specified.",
-    "Provide a concise summary of the main points discussed in the all the conversations in less than 5 sentences.",
-    "Focus on the key issues, questions, and resolutions discussed in the conversation.",
-    "If a tool returned a highly relevant result such as purchase details, include ALL information from the tool result as a SEPARATE bullet point (this bullet point can be longer if necessary to include all the information).",
+    "PRIORITIZE extracting concrete, actionable details that can be copy/pasted into Admin tools:",
+    "- Product names, SKUs, or service names mentioned",
+    "- Credit card information (last 4 digits, card type, billing issues)",
+    "- Receipt URLs, transaction IDs, order numbers, or purchase references",
+    "- Account details, email addresses, or customer identifiers",
+    "- Specific dollar amounts, refund amounts, or pricing mentioned",
+    "- Dates of purchases, subscriptions, or important events",
+    "If a tool returned highly relevant results with concrete details (purchase info, payment data, account details), include ALL specific information from the tool result as separate bullet points.",
+    "Focus on actionable information over general conversation flow - what specific details would a support agent need to help this customer?",
     "Create the summary in English only, regardless of the original conversation language.",
-    "Avoid starting with generic descriptions like 'The conversation involves a discussion about a technical issue with a software application.' Instead, start with the most specific and relevant point from the conversation.",
+    "Start with the most specific and concrete details first, not generic descriptions.",
   ].join("\n");
 
   const messages = constructMessagesForConversationSummary(emails);
 
   const { summary } = await runAIObjectQuery({
-    mailbox: conversation.mailbox,
+    mailbox,
     queryType: "conversation_summary",
     functionId: "generate-conversation-summary",
     system: prompt,
@@ -78,5 +82,5 @@ export const generateConversationSummary = async (conversationId: number, { forc
 
   await db.update(conversations).set({ summary }).where(eq(conversations.id, conversation.id));
 
-  return "Summary generated";
+  return true;
 };

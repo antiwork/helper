@@ -5,8 +5,7 @@ import { fileFactory } from "@tests/support/factories/files";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { noteFactory } from "@tests/support/factories/notes";
 import { userFactory } from "@tests/support/factories/users";
-import { mockInngest } from "@tests/support/inngestUtils";
-import { addSeconds } from "date-fns";
+import { mockJobs, mockTriggerEvent } from "@tests/support/jobsUtils";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
@@ -28,11 +27,6 @@ import { getSlackPermalink } from "@/lib/slack/client";
 vi.mock("@/lib/slack/client", () => ({
   getSlackPermalink: vi.fn().mockResolvedValue(null),
 }));
-vi.mock("@/inngest/client", () => ({
-  inngest: {
-    send: vi.fn(),
-  },
-}));
 vi.mock("@/lib/data/files", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/data/files")>();
   return {
@@ -48,7 +42,7 @@ beforeEach(() => {
 describe("serializeResponseAiDraft", () => {
   it("returns null if draft is missing a responseToId", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message: draft } = await conversationMessagesFactory.create(conversation.id, {
       role: "ai_assistant" as const,
       responseToId: null,
@@ -59,7 +53,7 @@ describe("serializeResponseAiDraft", () => {
 
   it("correctly serializes a valid draft", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const params = {
       role: "ai_assistant" as const,
       promptInfo: {},
@@ -95,7 +89,7 @@ describe("getMessages", () => {
         },
       },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const { message: message1 } = await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -130,7 +124,7 @@ describe("getMessages", () => {
 
     assert(result[1]?.type === "message");
     expect(result[1].id).toBe(message2.id);
-    expect(result[1].from).toBe(user.user_metadata?.display_name);
+    expect(result[1].userId).toBe(user.id);
 
     assert(result[2]?.type === "note");
     expect(result[2].id).toBe(note.id);
@@ -148,7 +142,7 @@ describe("getMessages", () => {
         },
       },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
       role: "user",
@@ -165,12 +159,13 @@ describe("getMessages", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].from).toBe("customer@example.com");
-    expect(result[1].from).toBe(user.user_metadata?.display_name);
+    expect(result[1].from).toBe(null); // Staff messages: frontend resolves from userId
+    expect(result[1].userId).toBe(user.id); // Backend returns userId, frontend resolves display name
   });
 
   it("includes files for messages", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id);
     const { file } = await fileFactory.create(message.id, { isInline: false, size: 1024 * 1024 });
 
@@ -200,7 +195,7 @@ describe("getMessages", () => {
 
   it("generates Slack links", async () => {
     const { mailbox } = await mailboxFactory.create({ slackBotToken: "test-token" });
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, {
       slackChannel: "test-channel",
       slackMessageTs: "1234567890.123456",
@@ -217,7 +212,7 @@ describe("getMessages", () => {
 
   it("sanitizes message bodies", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const unsafeHtml = `
       <p>Safe content</p>
       <script>alert('XSS attack');</script>
@@ -240,12 +235,147 @@ describe("getMessages", () => {
     expect(result[0].body).toContain('<img src="x">');
     expect(result[0].body).not.toContain("onclick=");
   });
+
+  it("should handle staff messages with null userId correctly", async () => {
+    const { mailbox } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
+
+    // Create staff message with null userId (system-generated message)
+    await conversationMessagesFactory.create(conversation.id, {
+      role: "staff",
+      userId: null,
+      body: "System generated message",
+    });
+
+    const result = await getMessages(conversation.id, mailbox);
+    assert(result[0]?.type === "message");
+
+    expect(result[0].from).toBe(null); // Staff messages return null for from
+    expect(result[0].userId).toBe(null); // userId should be null
+    expect(result[0].role).toBe("staff");
+  });
+
+  it("should handle notes with null userId correctly", async () => {
+    const { mailbox } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
+
+    // Create note with null userId
+    const { note } = await noteFactory.create(conversation.id, {
+      userId: null,
+      body: "System note",
+    });
+
+    const result = await getMessages(conversation.id, mailbox);
+    assert(result[0]?.type === "note");
+
+    expect(result[0].id).toBe(note.id);
+    expect(result[0].userId).toBe(null); // Backend returns userId, not resolved name
+    expect(result[0].body).toBe("System note");
+  });
+
+  it("should handle events with null byUserId correctly", async () => {
+    const { mailbox } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
+
+    // Create event with null byUserId (system event)
+    const { event } = await conversationEventsFactory.create(conversation.id, {
+      byUserId: null,
+      type: "update",
+      reason: "System update",
+    });
+
+    const result = await getMessages(conversation.id, mailbox);
+    assert(result[0]?.type === "event");
+
+    expect(result[0].id).toBe(event.id);
+    expect(result[0].byUserId).toBe(null); // Backend returns raw userId, not resolved name
+    expect(result[0].reason).toBe("System update");
+  });
+
+  it("should handle events with null assignedToId in changes correctly", async () => {
+    const { user, mailbox } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
+
+    // Create event with null assignedToId (unassignment)
+    await conversationEventsFactory.create(conversation.id, {
+      byUserId: user.id,
+      type: "update",
+      changes: { assignedToId: null, assignedToAI: false },
+      reason: "Unassigned",
+    });
+
+    const result = await getMessages(conversation.id, mailbox);
+    assert(result[0]?.type === "event");
+
+    expect(result[0].changes.assignedToId).toBe(null); // Raw ID, not resolved name
+    expect(result[0].changes.assignedToAI).toBe(false);
+    expect(result[0].byUserId).toBe(user.id);
+  });
+
+  it("should handle conversation with mixed user presence correctly", async () => {
+    const { user: user1, mailbox } = await userFactory.createRootUser();
+    const { user: user2 } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
+
+    // Create messages with different user scenarios
+    await conversationMessagesFactory.create(conversation.id, {
+      role: "user",
+      emailFrom: "customer@test.com",
+      userId: null, // Customer message
+    });
+
+    await conversationMessagesFactory.create(conversation.id, {
+      role: "staff",
+      userId: user1.id, // Staff with userId
+    });
+
+    await conversationMessagesFactory.create(conversation.id, {
+      role: "staff",
+      userId: null, // System staff message
+    });
+
+    // Create note and event
+    await noteFactory.create(conversation.id, {
+      userId: user2.id,
+    });
+
+    await conversationEventsFactory.create(conversation.id, {
+      byUserId: user1.id,
+      changes: { assignedToId: user2.id },
+    });
+
+    const result = await getMessages(conversation.id, mailbox);
+    expect(result).toHaveLength(5);
+
+    // Customer message
+    assert(result[0]?.type === "message");
+    expect(result[0].from).toBe("customer@test.com");
+    expect(result[0].userId).toBe(null);
+
+    // Staff message with userId
+    assert(result[1]?.type === "message");
+    expect(result[1].from).toBe(null); // Staff messages return null
+    expect(result[1].userId).toBe(user1.id);
+
+    // System staff message
+    assert(result[2]?.type === "message");
+    expect(result[2].from).toBe(null);
+    expect(result[2].userId).toBe(null);
+
+    // Note with userId
+    assert(result[3]?.type === "note");
+    expect(result[3].userId).toBe(user2.id); // Raw userId, not resolved name
+
+    // Event with user IDs
+    assert(result[4]?.type === "event");
+    expect(result[4].byUserId).toBe(user1.id); // Raw userId, not resolved name
+    expect(result[4].changes.assignedToId).toBe(user2.id); // Raw ID, not resolved name
+  });
 });
 
 describe("ensureCleanedUpText", () => {
   it("returns existing cleanedUpText if already present", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<p>Original content</p>",
       cleanedUpText: "Existing cleaned up text",
@@ -257,8 +387,7 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("generates and stores cleanedUpText if not present", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<p>Hello</p><p>World</p>",
       cleanedUpText: null,
@@ -273,8 +402,7 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("handles empty body", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "",
       cleanedUpText: null,
@@ -286,8 +414,7 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("removes HTML tags and extra whitespace", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<div>  Hello  </div><br><br><p>  World  </p>",
       cleanedUpText: null,
@@ -299,8 +426,7 @@ describe("ensureCleanedUpText", () => {
   });
 
   it("removes invisible tags", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id, {
       body: "<p>Hello</p><script>alert('test');</script><style>.test{color:red;}</style><p>World</p>",
       cleanedUpText: null,
@@ -312,15 +438,15 @@ describe("ensureCleanedUpText", () => {
   });
 });
 
-const inngest = mockInngest();
+mockJobs();
 
 describe("createReply", () => {
   it("creates a reply and closes the conversation", async () => {
     const time = new Date("2023-01-01 01:00:00");
     vi.setSystemTime(time);
 
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create({ status: "open" });
 
     const messageId = await createReply({ conversationId: conversation.id, message: "Test message", user });
 
@@ -333,22 +459,22 @@ describe("createReply", () => {
     const updatedConversation = await getConversationById(conversation.id);
     expect(updatedConversation?.status).toBe("closed");
 
-    expect(inngest.send).toHaveBeenCalledWith([
-      {
-        name: "conversations/message.created",
-        data: { messageId, conversationId: conversation.id },
-      },
-      {
-        name: "conversations/email.enqueued",
-        data: { messageId },
-        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-      },
-    ]);
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/message.created",
+      { messageId, conversationId: conversation.id },
+      {},
+    );
+
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/email.enqueued",
+      { messageId },
+      { sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS },
+    );
   });
 
   it("creates a reply without closing the conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create({ status: "open" });
 
     const result = await createReply({
       conversationId: conversation.id,
@@ -368,8 +494,8 @@ describe("createReply", () => {
   });
 
   it("creates a reply with CC and BCC recipients", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     const result = await createReply({
       conversationId: conversation.id,
@@ -388,8 +514,8 @@ describe("createReply", () => {
   });
 
   it("creates a reply with Slack information", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     const result = await createReply({
       conversationId: conversation.id,
@@ -410,8 +536,8 @@ describe("createReply", () => {
   });
 
   it("assigns the conversation to the user when replying to an unassigned conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: null });
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create({ assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
@@ -424,9 +550,9 @@ describe("createReply", () => {
   });
 
   it("does not change assignment when replying to an already assigned conversation", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
+    const { user } = await userFactory.createRootUser();
     const { user: otherUser } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: otherUser.id });
+    const { conversation } = await conversationFactory.create({ assignedToId: otherUser.id });
 
     await createReply({
       conversationId: conversation.id,
@@ -439,8 +565,8 @@ describe("createReply", () => {
   });
 
   it("handles reply without user (no assignment)", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { assignedToId: null });
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({ assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
@@ -453,8 +579,8 @@ describe("createReply", () => {
   });
 
   it("handles file uploads", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
     const { file } = await fileFactory.create(null, { isInline: true });
 
     const emailId = await createReply({
@@ -471,8 +597,8 @@ describe("createReply", () => {
   });
 
   it("marks message as perfect if it matches the last AI draft", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
       role: "ai_assistant",
@@ -494,8 +620,8 @@ describe("createReply", () => {
   });
 
   it("discards AI-generated drafts after creating a reply", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
       role: "ai_assistant",
@@ -523,8 +649,8 @@ describe("createReply", () => {
 
 describe("createConversationMessage", () => {
   it("creates a conversation message", async () => {
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     const message = await createConversationMessage({
       conversationId: conversation.id,
@@ -539,17 +665,16 @@ describe("createConversationMessage", () => {
     expect(message).toBeTruthy();
     expect(message.body).toBe("Test message");
 
-    expect(inngest.send).toHaveBeenCalledWith([
-      {
-        name: "conversations/message.created",
-        data: { messageId: message.id, conversationId: message.conversationId },
-      },
-    ]);
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/message.created",
+      { messageId: message.id, conversationId: message.conversationId },
+      {},
+    );
 
-    expect(inngest.send).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "conversations/email.enqueued",
-      }),
+    expect(mockTriggerEvent).not.toHaveBeenCalledWith(
+      "conversations/email.enqueued",
+      expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -557,8 +682,8 @@ describe("createConversationMessage", () => {
     const time = new Date("2023-01-01 01:00:00");
     vi.setSystemTime(time);
 
-    const { user, mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
 
     const message = await createConversationMessage({
       conversationId: conversation.id,
@@ -570,24 +695,23 @@ describe("createConversationMessage", () => {
       status: "queueing",
     });
 
-    expect(inngest.send).toHaveBeenCalledWith([
-      {
-        name: "conversations/message.created",
-        data: { messageId: message.id, conversationId: message.conversationId },
-      },
-      {
-        name: "conversations/email.enqueued",
-        data: { messageId: message.id },
-        ts: addSeconds(time, EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
-      },
-    ]);
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/message.created",
+      { messageId: message.id, conversationId: message.conversationId },
+      {},
+    );
+
+    expect(mockTriggerEvent).toHaveBeenCalledWith(
+      "conversations/email.enqueued",
+      { messageId: message.id },
+      { sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS },
+    );
   });
 });
 
 describe("getConversationMessageById", () => {
   it("finds a conversation message", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     const { message } = await conversationMessagesFactory.create(conversation.id);
 
     const foundMessage = await getConversationMessageById(message.id);

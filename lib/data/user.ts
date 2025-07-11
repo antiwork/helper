@@ -1,22 +1,11 @@
-import { and, eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db/client";
-import { authIdentities, authUsers } from "@/db/supabaseSchema/auth";
+import { userProfiles } from "@/db/schema/userProfiles";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getSlackUser } from "../slack/client";
-
-export const addUser = async (inviterUserId: string, emailAddress: string, displayName: string) => {
-  const supabase = createAdminClient();
-  const { error } = await supabase.auth.admin.createUser({
-    email: emailAddress,
-    user_metadata: {
-      inviter_user_id: inviterUserId,
-      display_name: displayName,
-    },
-  });
-  if (error) throw error;
-};
 
 export const UserRoles = {
   CORE: "core",
@@ -38,33 +27,77 @@ export type UserWithMailboxAccessData = {
   email: string | undefined;
   role: UserRole;
   keywords: MailboxAccess["keywords"];
+  permissions: string;
 };
 
-export const getUsersWithMailboxAccess = async (mailboxId: number): Promise<UserWithMailboxAccessData[]> => {
-  const users = await db.query.authUsers.findMany();
+export const getProfile = cache(
+  async (userId: string) => await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, userId) }),
+);
+
+export const isAdmin = (profile?: typeof userProfiles.$inferSelect) => profile?.permissions === "admin";
+
+export const addUser = async (
+  inviterUserId: string,
+  emailAddress: string,
+  displayName: string,
+  permission?: string,
+) => {
+  const supabase = createAdminClient();
+  const { error } = await supabase.auth.admin.createUser({
+    email: emailAddress,
+    user_metadata: {
+      inviter_user_id: inviterUserId,
+      display_name: displayName,
+      permissions: permission ?? "member",
+    },
+  });
+  if (error) throw error;
+};
+
+export const banUser = async (userId: string) => {
+  await db
+    .update(userProfiles)
+    .set({
+      deletedAt: new Date(),
+    })
+    .where(eq(userProfiles.id, userId));
+};
+
+export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccessData[]> => {
+  const users = await db
+    .select({
+      id: authUsers.id,
+      email: authUsers.email,
+      displayName: userProfiles.displayName,
+      permissions: userProfiles.permissions,
+      access: userProfiles.access,
+    })
+    .from(authUsers)
+    .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+    .where(isNull(userProfiles.deletedAt));
 
   return users.map((user) => {
-    const metadata = user.user_metadata || {};
-    const mailboxAccess = (metadata.mailboxAccess as Record<string, any>) || {};
-    const access = mailboxAccess[mailboxId];
+    const access = user.access ?? { role: "afk", keywords: [] };
+    const permissions = user.permissions ?? "member";
 
     return {
       id: user.id,
-      displayName: user.user_metadata?.display_name ?? null,
+      displayName: user.displayName ?? "",
       email: user.email ?? undefined,
-      role: access?.role || "afk",
-      keywords: access?.keywords || [],
+      role: access.role,
+      keywords: access?.keywords ?? [],
+      permissions,
     };
   });
 };
 
 export const updateUserMailboxData = async (
   userId: string,
-  mailboxId: number,
   updates: {
     displayName?: string;
     role?: UserRole;
     keywords?: MailboxAccess["keywords"];
+    permissions?: string;
   },
 ): Promise<UserWithMailboxAccessData> => {
   const supabase = createAdminClient();
@@ -75,11 +108,9 @@ export const updateUserMailboxData = async (
   if (error) throw error;
 
   const userMetadata = user?.user_metadata || {};
-  const mailboxAccess = (userMetadata.mailboxAccess as Record<string, any>) || {};
 
   // Only update the fields that were provided, keep the rest
   const updatedMailboxData = {
-    ...mailboxAccess[mailboxId],
     ...(updates.role && { role: updates.role }),
     ...(updates.keywords && { keywords: updates.keywords }),
     updatedAt: new Date().toISOString(),
@@ -92,31 +123,36 @@ export const updateUserMailboxData = async (
     user_metadata: {
       ...userMetadata,
       ...(updates.displayName && { display_name: updates.displayName }),
-      mailboxAccess: {
-        ...mailboxAccess,
-        [mailboxId]: updatedMailboxData,
-      },
+      mailboxAccess: updatedMailboxData,
     },
   });
   if (updateError) throw updateError;
   if (!updatedUser) throw new Error("Failed to update user");
 
+  const [updatedProfile] = await db
+    .update(userProfiles)
+    .set({
+      displayName: updates.displayName,
+      access: {
+        role: updates.role || "afk",
+        keywords: updates.keywords || [],
+      },
+      permissions: updates.permissions,
+    })
+    .where(eq(userProfiles.id, updatedUser.id))
+    .returning();
+
   return {
     id: updatedUser.id,
     displayName: getFullName(updatedUser),
     email: updatedUser.email ?? undefined,
-    role: updatedMailboxData.role || "afk",
-    keywords: updatedMailboxData.keywords || [],
+    role: updatedProfile?.access?.role || "afk",
+    keywords: updatedProfile?.access?.keywords || [],
+    permissions: updatedProfile?.permissions ?? "",
   };
 };
 
 export const findUserViaSlack = cache(async (token: string, slackUserId: string) => {
-  const linkedAccount = await db.query.authIdentities.findFirst({
-    where: and(eq(authIdentities.provider, "slack_oidc"), eq(authIdentities.provider_id, slackUserId)),
-  });
-  if (linkedAccount) {
-    return (await db.query.authUsers.findFirst({ where: eq(authUsers.id, linkedAccount.user_id) })) ?? null;
-  }
   const slackUser = await getSlackUser(token, slackUserId);
   return (await db.query.authUsers.findFirst({ where: eq(authUsers.email, slackUser?.profile?.email ?? "") })) ?? null;
 });

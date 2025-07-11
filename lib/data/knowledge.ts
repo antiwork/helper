@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { faqs, mailboxes } from "@/db/schema";
 import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
 import { findUserViaSlack } from "@/lib/data/user";
@@ -26,16 +26,13 @@ export const approveSuggestedEdit = async (
       await tx.delete(faqs).where(eq(faqs.id, knowledge.suggestedReplacementForId));
     }
 
-    await resetMailboxPromptUpdatedAt(tx, knowledge.mailboxId);
+    await resetMailboxPromptUpdatedAt(tx);
 
-    inngest.send({
-      name: "faqs/embedding.create",
-      data: { faqId: knowledge.id },
-    });
+    await triggerEvent("faqs/embedding.create", { faqId: knowledge.id });
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user ? getFullName(user) : null);
+    const blocks = suggestionResolvedBlocks(knowledge, "approved", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -53,11 +50,11 @@ export const rejectSuggestedEdit = async (
 ) => {
   await db.transaction(async (tx) => {
     await tx.delete(faqs).where(eq(faqs.id, knowledge.id));
-    await resetMailboxPromptUpdatedAt(tx, knowledge.mailboxId);
+    await resetMailboxPromptUpdatedAt(tx);
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user ? getFullName(user) : null);
+    const blocks = suggestionResolvedBlocks(knowledge, "rejected", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -146,7 +143,6 @@ const openTweakSuggestedEditModal = async (
 
 const suggestionResolvedBlocks = (
   faq: typeof faqs.$inferSelect,
-  mailboxSlug: string,
   action: "approved" | "rejected",
   userName: string | null,
 ): KnownBlock[] => {
@@ -164,7 +160,7 @@ const suggestionResolvedBlocks = (
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings?tab=knowledge|View knowledge bank>`,
+        text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
       },
     },
   ];

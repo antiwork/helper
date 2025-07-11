@@ -1,13 +1,12 @@
 import { withSentryConfig } from "@sentry/nextjs";
-import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 import { env } from "@/lib/env";
 
 // Ensures that `env` is not an unused variable. Importing `env` during build-time
 // ensures that the project never gets deployed unless all environment variables
 // have been properly configured.
-if (!env.GOOGLE_CLIENT_ID) {
-  throw new Error("GOOGLE_CLIENT_ID is not set");
+if (!env.NEXT_RUNTIME) {
+  throw new Error("NEXT_RUNTIME is not set");
 }
 
 let nextConfig: NextConfig = {
@@ -25,8 +24,8 @@ let nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     // canvas is a huge module which can overflow the edge function size limit on Vercel.
     // PDF.js includes it for Node.js support but we don't need it as we only use it in the browser.
-    "/mailboxes/[mailbox_slug]/conversations": ["node_modules/canvas"],
-    "/api/inngest": ["node_modules/canvas"],
+    "/conversations": ["node_modules/canvas"],
+    "/api/job": ["node_modules/canvas"],
   },
   turbopack: {
     rules: {
@@ -141,9 +140,6 @@ let nextConfig: NextConfig = {
     ];
   },
 };
-
-const withMDX = createMDX({ configPath: "./content/source.config.ts" });
-nextConfig = withMDX(nextConfig);
 
 export default process.env.VERCEL_ENV === "production"
   ? withSentryConfig(nextConfig, {

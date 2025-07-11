@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html>
       <body>
-        <HelperProvider mailbox="YOUR_MAILBOX_SLUG">{children}</HelperProvider>
+        <HelperProvider host="YOUR_HELPER_HOST">{children}</HelperProvider>
       </body>
     </html>
   );
@@ -49,19 +49,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 Customize the widget by adding props to the `HelperProvider`:
 
 ```tsx
-<HelperProvider mailbox="YOUR_MAILBOX_SLUG" title="My Helper Widget" icon_color="#ff0000" show_toggle_button={true}>
+<HelperProvider host="YOUR_HELPER_HOST" title="My Helper Widget" iconColor="#ff0000" showToggleButton>
   {children}
 </HelperProvider>
 ```
 
 The `HelperProvider` accepts the following props:
 
-| Prop                 | Type    | Required | Description                                 |
-| -------------------- | ------- | -------- | ------------------------------------------- |
-| `mailbox`            | string  | Yes      | Your mailbox slug                           |
-| `title`              | string  | No       | Custom title for the chat widget            |
-| `icon_color`         | string  | No       | A custom color for the widget icon          |
-| `show_toggle_button` | boolean | No       | Override the "Chat Icon Visibility" setting |
+| Prop               | Type    | Required | Description                                 |
+| ------------------ | ------- | -------- | ------------------------------------------- |
+| `host`             | string  | Yes      | The domain you host Helper on               |
+| `title`            | string  | No       | Custom title for the chat widget            |
+| `iconColor`        | string  | No       | A custom color for the widget icon          |
+| `showToggleButton` | boolean | No       | Override the "Chat Icon Visibility" setting |
 
 ## Add Contextual Help Buttons
 
@@ -104,7 +104,6 @@ Add your Helper authentication credentials to your environment variables:
 
 ```bash
 HELPER_HMAC_SECRET=your_hmac_secret
-HELPER_MAILBOX_SLUG=your_mailbox_slug
 ```
 
 For local development, add these to your environment file (e.g., `.env.local`), and for production, add them to your deployment environment.
@@ -124,21 +123,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth(); // Your auth solution
   if (!session?.user?.email) return children;
 
-  const helperAuth = await generateHelperAuth({
-    email: session.user.email,
-    metadata: {
-      value: "CUSTOMER_VALUE", // Optional: Revenue value
-      name: "CUSTOMER_NAME", // Optional: Customer name
-      links: {
-        Profile: "https://example.com/profile",
-      },
-    },
-  });
+  const helperAuth = session.user.email
+    ? await generateHelperAuth({
+        email: session.user.email,
+        hmacSecret: "YOUR_HMAC_SECRET",
+      })
+    : {};
 
   return (
     <html>
       <body>
-        <HelperProvider {...helperAuth}>{children}</HelperProvider>
+        <HelperProvider host="YOUR_HELPER_HOST" {...helperAuth}>
+          {children}
+        </HelperProvider>
       </body>
     </html>
   );

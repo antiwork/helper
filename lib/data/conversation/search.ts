@@ -1,4 +1,3 @@
-import "server-only";
 import {
   and,
   asc,
@@ -7,18 +6,20 @@ import {
   eq,
   exists,
   gt,
+  gte,
   ilike,
   inArray,
   isNotNull,
   isNull,
   lt,
+  lte,
   or,
   SQL,
   sql,
 } from "drizzle-orm";
 import { memoize } from "lodash-es";
-import { z } from "zod";
 import { db } from "@/db/client";
+import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -28,6 +29,8 @@ import {
   MARKED_AS_SPAM_BY_AGENT_MESSAGE,
   REOPENED_BY_AGENT_MESSAGE,
 } from "@/lib/slack/constants";
+import "server-only";
+import { z } from "zod";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
 
 export const searchConversations = async (
@@ -50,7 +53,6 @@ export const searchConversations = async (
 
   // Filters on conversations and messages that we can pass to searchEmailsByKeywords
   let where: Record<string, SQL> = {
-    mailboxId: eq(conversations.mailboxId, mailbox.id),
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToId, filters.assignee) } : {}),
@@ -91,6 +93,12 @@ export const searchConversations = async (
                   eq(conversationMessages.conversationId, conversations.id),
                   eq(conversationMessages.reactionType, filters.reactionType),
                   isNull(conversationMessages.deletedAt),
+                  filters.reactionAfter
+                    ? gte(conversationMessages.reactionCreatedAt, new Date(filters.reactionAfter))
+                    : undefined,
+                  filters.reactionBefore
+                    ? lte(conversationMessages.reactionCreatedAt, new Date(filters.reactionBefore))
+                    : undefined,
                 ),
               ),
           ),
@@ -106,7 +114,7 @@ export const searchConversations = async (
       : {}),
   };
 
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, mailbox.id, Object.values(where)) : [];
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
 
   // Additional filters we can't pass to searchEmailsByKeywords
   where = {
@@ -138,32 +146,46 @@ export const searchConversations = async (
       ? conversations.closedAt
       : conversations.lastUserEmailCreatedAt;
   const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
-  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox(mailbox));
+  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox());
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
 
   const list = memoize(() =>
     db
-      .select()
+      .select({
+        conversations_conversation: conversations,
+        mailboxes_platformcustomer: platformCustomers,
+        recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
+      })
       .from(conversations)
+      .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
       .leftJoin(
-        platformCustomers,
-        and(
-          eq(conversations.mailboxId, platformCustomers.mailboxId),
-          eq(conversations.emailFrom, platformCustomers.email),
-        ),
+        sql`LATERAL (
+          SELECT ${conversationMessages.cleanedUpText} as cleaned_up_text
+          FROM ${conversationMessages}
+          WHERE ${and(
+            eq(conversationMessages.conversationId, conversations.id),
+            inArray(conversationMessages.role, ["user", "staff"]),
+          )}
+          ORDER BY ${desc(conversationMessages.createdAt)}
+          LIMIT 1
+        ) as recent_message`,
+        sql`true`,
       )
       .where(and(...Object.values(where)))
       .orderBy(...orderBy)
       .limit(filters.limit + 1) // Get one extra to determine if there's a next page
       .offset(filters.cursor ? parseInt(filters.cursor) : 0)
       .then((results) => ({
-        results: results.slice(0, filters.limit).map(({ conversations_conversation, mailboxes_platformcustomer }) => ({
-          ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-          matchedMessageText:
-            matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-        })),
+        results: results
+          .slice(0, filters.limit)
+          .map(({ conversations_conversation, mailboxes_platformcustomer, recent_message_cleanedUpText }) => ({
+            ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+            matchedMessageText:
+              matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+            recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
+          })),
         nextCursor:
           results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
       })),
@@ -182,13 +204,7 @@ export const countSearchResults = async (where: Record<string, SQL>) => {
   const [total] = await db
     .select({ count: count() })
     .from(conversations)
-    .leftJoin(
-      platformCustomers,
-      and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
-        eq(conversations.emailFrom, platformCustomers.email),
-      ),
-    )
+    .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
     .where(and(...Object.values(where)));
 
   return total?.count ?? 0;
@@ -198,13 +214,7 @@ export const getSearchResultIds = async (where: Record<string, SQL>) => {
   const results = await db
     .select({ id: conversations.id })
     .from(conversations)
-    .leftJoin(
-      platformCustomers,
-      and(
-        eq(conversations.mailboxId, platformCustomers.mailboxId),
-        eq(conversations.emailFrom, platformCustomers.email),
-      ),
-    )
+    .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
     .where(and(...Object.values(where)));
 
   return results.map((result) => result.id);

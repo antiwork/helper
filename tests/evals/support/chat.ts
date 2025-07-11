@@ -78,7 +78,7 @@ export const buildMessagesWithMocks = ({
   });
 };
 
-export const parseMessagesWithMocks = (input: string) => {
+const parseMessagesWithMocks = (input: string) => {
   const { messages, mailboxName, tools, promptRetrievalData } = JSON.parse(input);
   const parsedTools: Record<string, HelperTool> = tools;
 
@@ -99,7 +99,6 @@ export const parseMessagesWithMocks = (input: string) => {
     id: 1,
     name: mailboxName || "Gumroad",
     slug: mailboxName || "gumroad",
-    unused_organizationId: "test_org",
     gmailSupportEmailId: null,
     slackAlertChannel: null,
     slackBotToken: null,
@@ -118,16 +117,9 @@ export const parseMessagesWithMocks = (input: string) => {
     githubInstallationId: null,
     githubRepoOwner: null,
     githubRepoName: null,
-    unused_autoRespondEmailToChat: false,
-    unused_disableAutoResponseForVips: false,
-    unused_responseGeneratorPrompt: [],
-    unused_escalationEmailBody: null,
-    unused_escalationExpectedResolutionHours: null,
     autoCloseEnabled: false,
     autoCloseDaysOfInactivity: 14,
-    unused_onboardingMetadata: {
-      completed: true,
-    },
+    chatIntegrationUsed: false,
     preferences: {
       confetti: false,
     },

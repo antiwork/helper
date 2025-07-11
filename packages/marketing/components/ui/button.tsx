@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export const buttonVariants = cva(
+const buttonVariants = cva(
   "inline-flex items-center justify-center rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-[.60]",
   {
     variants: {
@@ -62,25 +62,32 @@ export const buttonVariants = cva(
   },
 );
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   desktop?: boolean;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, iconOnly, asChild = false, desktop, tabIndex, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, iconOnly, className }))}
-        ref={ref}
-        tabIndex={tabIndex}
-        data-desktop={desktop}
-        {...props}
-      />
-    );
-  },
-);
+export const Button = ({
+  className,
+  variant,
+  size,
+  iconOnly,
+  asChild = false,
+  desktop,
+  tabIndex,
+  ref,
+  ...props
+}: ButtonProps) => {
+  const Comp = asChild ? Slot : "button";
+  return (
+    <Comp
+      className={cn(buttonVariants({ variant, size, iconOnly, className }))}
+      ref={ref}
+      tabIndex={tabIndex}
+      data-desktop={desktop}
+      {...props}
+    />
+  );
+};
 Button.displayName = "Button";

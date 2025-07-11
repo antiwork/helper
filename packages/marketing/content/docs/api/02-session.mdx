@@ -23,7 +23,6 @@ Creates a new session and returns a token that can be used for authentication in
 | ------------------------ | ------ | ----------- | --------------------------------------------------------------------------------- |
 | `email`                  | string | Optional    | Email address of the user. If not provided, an anonymous session will be created. |
 | `emailHash`              | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided.              |
-| `mailboxSlug`            | string | Yes         | Slug of the mailbox to connect to.                                                |
 | `timestamp`              | number | Conditional | Current timestamp in milliseconds. Required if email is provided.                 |
 | `customerMetadata`       | object | No          | Additional metadata about the customer.                                           |
 | `customerMetadata.value` | number | No          | Numeric value representing the customer's worth/revenue.                          |
@@ -37,7 +36,6 @@ Creates a new session and returns a token that can be used for authentication in
 {
   "email": "customer@example.com",
   "emailHash": "a1b2c3d4e5f6...",
-  "mailboxSlug": "your-mailbox",
   "timestamp": 1693324800000,
   "customerMetadata": {
     "value": 500,

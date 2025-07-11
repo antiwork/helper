@@ -1,12 +1,13 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
+import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversations, gmailSupportEmails } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { runAIQuery } from "@/lib/ai";
 import {
   createConversation,
@@ -34,12 +35,6 @@ vi.mock("@/lib/emailSearchService/searchEmailsByKeywords", () => ({
   searchEmailsByKeywords: vi.fn(),
 }));
 
-vi.mock("@/inngest/client", () => ({
-  inngest: {
-    send: vi.fn(),
-  },
-}));
-
 vi.mock("@/lib/ai", async () => {
   const actual = await vi.importActual("@/lib/ai");
   return {
@@ -52,12 +47,11 @@ vi.mock("@/lib/realtime/publish", () => ({
   publishToRealtime: vi.fn(),
 }));
 
+const jobsMock = mockJobs();
+
 describe("createConversation", () => {
   it("creates a new conversation", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-
     const conversation = await createConversation({
-      mailboxId: mailbox.id,
       subject: "Test Conversation",
       status: "open",
       slug: "test-conversation",
@@ -66,7 +60,6 @@ describe("createConversation", () => {
     });
 
     expect(conversation).toHaveProperty("id");
-    expect(conversation.mailboxId).toBe(mailbox.id);
     expect(conversation.subject).toBe("Test Conversation");
     expect(conversation.status).toBe("open");
     expect(conversation.slug).toBe("test-conversation");
@@ -79,8 +72,7 @@ describe("updateConversation", () => {
   });
 
   it("updates an existing conversation", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const result = await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
@@ -89,8 +81,7 @@ describe("updateConversation", () => {
   });
 
   it("sets closedAt when status changes to closed", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
+    const { conversation } = await conversationFactory.create({ status: "open" });
 
     const result = await updateConversation(conversation.id, { set: { status: "closed" } });
 
@@ -100,16 +91,15 @@ describe("updateConversation", () => {
   });
 
   it("publishes a realtime event when conversation is updated", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
-
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create();
     const result = await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
     await vi.waitUntil(() => vi.mocked(publishToRealtime).mock.calls.length === 1);
 
     expect(result).not.toBeNull();
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationChannelId(mailbox.slug, conversation.slug),
+      channel: conversationChannelId(conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
         slug: conversation.slug,
@@ -122,16 +112,15 @@ describe("updateConversation", () => {
   });
 
   it("publishes a realtime event when conversation status changes to closed", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
-
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({ status: "open" });
     const result = await updateConversation(conversation.id, { set: { status: "closed" } });
 
     await vi.waitUntil(() => vi.mocked(publishToRealtime).mock.calls.length === 2);
 
     expect(result).not.toBeNull();
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationChannelId(mailbox.slug, conversation.slug),
+      channel: conversationChannelId(conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
         id: conversation.id,
@@ -139,7 +128,7 @@ describe("updateConversation", () => {
       }),
     });
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationsListChannelId(mailbox.slug),
+      channel: conversationsListChannelId(),
       event: "conversation.statusChanged",
       data: {
         id: conversation.id,
@@ -156,31 +145,27 @@ describe("updateConversation", () => {
   });
 
   it("sends embedding event when status changes to closed", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
+    const { conversation } = await conversationFactory.create({ status: "open" });
 
     await updateConversation(conversation.id, { set: { status: "closed" } });
 
-    expect(inngest.send).toHaveBeenCalledWith({
-      name: "conversations/embedding.create",
-      data: { conversationSlug: conversation.slug },
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("conversations/embedding.create", {
+      conversationSlug: conversation.slug,
     });
   });
 
   it("does not send embedding event when status is not changed to closed", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { status: "open" });
+    const { conversation } = await conversationFactory.create({ status: "open" });
 
     await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
-    expect(inngest.send).not.toHaveBeenCalled();
+    expect(jobsMock.triggerEvent).not.toHaveBeenCalled();
   });
 });
 
 describe("getConversationBySlug", () => {
   it("returns a conversation by slug", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { slug: "test-slug" });
+    const { conversation } = await conversationFactory.create({ slug: "test-slug" });
 
     const result = await getConversationBySlug("test-slug");
 
@@ -197,8 +182,7 @@ describe("getConversationBySlug", () => {
 
 describe("getConversationById", () => {
   it("returns a conversation by id", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
 
     const result = await getConversationById(conversation.id);
 
@@ -214,20 +198,17 @@ describe("getConversationById", () => {
 
 describe("getConversationBySlugAndMailbox", () => {
   it("returns a conversation by slug and mailbox id", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { slug: "test-slug-mailbox" });
+    const { conversation } = await conversationFactory.create({ slug: "test-slug-mailbox" });
 
-    const result = await getConversationBySlugAndMailbox("test-slug-mailbox", mailbox.id);
+    const result = await getConversationBySlugAndMailbox("test-slug-mailbox");
 
     expect(result).not.toBeNull();
     expect(result?.id).toBe(conversation.id);
     expect(result?.slug).toBe("test-slug-mailbox");
-    expect(result?.mailboxId).toBe(mailbox.id);
   });
 
   it("returns null if conversation not found", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const result = await getConversationBySlugAndMailbox("non-existent-slug", mailbox.id);
+    const result = await getConversationBySlugAndMailbox("non-existent-slug");
     expect(result).toBeNull();
   });
 });
@@ -243,10 +224,10 @@ describe("getNonSupportParticipants", () => {
       })
       .returning({ id: gmailSupportEmails.id })
       .then(takeUniqueOrThrow);
-    const { mailbox } = await userFactory.createRootUser({
+    await userFactory.createRootUser({
       mailboxOverrides: { gmailSupportEmailId: gmailSupportEmail.id },
     });
-    const { conversation } = await conversationFactory.create(mailbox.id, { emailFrom: "support@example.com" });
+    const { conversation } = await conversationFactory.create({ emailFrom: "support@example.com" });
     await conversationMessagesFactory.create(conversation.id, {
       emailTo: "user1@example.com",
       emailCc: ["user2@example.com", "support@example.com"],
@@ -270,8 +251,8 @@ describe("getNonSupportParticipants", () => {
   });
 
   it("parses the emailTo field", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, { emailFrom: "support@example.com" });
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({ emailFrom: "support@example.com" });
     await conversationMessagesFactory.create(conversation.id, {
       emailTo:
         "New Example <to1@example.com>, to2@example.com, Support Email <support@example.com>, Acme <to3@example.com>",
@@ -284,14 +265,14 @@ describe("getNonSupportParticipants", () => {
 
 describe("getRelatedConversations", () => {
   it("returns related conversations based on email keywords", async () => {
+    await mailboxFactory.create();
     vi.mocked(runAIQuery).mockResolvedValue({ text: "keyword1 keyword2" } as any);
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation: conversation1 } = await conversationFactory.create(mailbox.id, {
+    const { conversation: conversation1 } = await conversationFactory.create({
       emailFrom: "related1@example.com",
       subject: "Related Conversation 1",
       status: "open",
     });
-    const { conversation: conversation2 } = await conversationFactory.create(mailbox.id, {
+    const { conversation: conversation2 } = await conversationFactory.create({
       emailFrom: "related2@example.com",
       subject: "Related Conversation 2",
       status: "closed",
@@ -325,14 +306,13 @@ describe("getRelatedConversations", () => {
   });
 
   it("returns an empty array when the conversaiton has no user message", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id);
+    const { conversation } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation.id, {
       role: "staff",
       body: "A staff message",
       status: "sent",
     });
-    const { conversation: conversation2 } = await conversationFactory.create(mailbox.id);
+    const { conversation: conversation2 } = await conversationFactory.create();
     await conversationMessagesFactory.create(conversation2.id, {
       role: "staff",
       body: "Another staff message",
@@ -343,8 +323,7 @@ describe("getRelatedConversations", () => {
   });
 
   it("returns an empty array when the subject or body is empty", async () => {
-    const { mailbox } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create(mailbox.id, {
+    const { conversation } = await conversationFactory.create({
       emailFrom: "user@example.com",
       subject: "Test Conversation",
     });
@@ -353,7 +332,7 @@ describe("getRelatedConversations", () => {
       body: "",
       status: null,
     });
-    const { conversation: conversation2 } = await conversationFactory.create(mailbox.id, {
+    const { conversation: conversation2 } = await conversationFactory.create({
       emailFrom: "user@example.com",
       subject: "Test Conversation 2",
     });

@@ -11,6 +11,33 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Helper - AI customer service",
   description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+  openGraph: {
+    title: "Helper - AI customer service",
+    description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "Helper - AI customer service",
+      },
+    ],
+  },
+  twitter: {
+    title: "Helper - AI Customer Service Platform",
+    description: "Helper is an AI customer service agent that helps you handle customer inquiries.",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "Helper - AI customer service",
+      },
+    ],
+  },
   icons: {
     icon: "/favicon.ico",
   },
@@ -26,11 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <NuqsAdapter>
-        <body className={cn(inter.className, "flex flex-col min-h-screen [&_.prose_a]:no-underline")}>
+        <body className={cn(inter.className, "flex flex-col min-h-screen [&_.prose_a[href^='#']]:no-underline")}>
           <RootProvider>
             <HelperProvider
               host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://help.gumroad.com"}
-              mailbox_slug="helper"
             >
               <div className="flex flex-col min-h-screen">{children}</div>
             </HelperProvider>

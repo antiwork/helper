@@ -1,20 +1,15 @@
-import { addSeconds } from "date-fns";
-import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, notInArray, or, SQL } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, DRAFT_STATUSES, files, mailboxes } from "@/db/schema";
-import { conversationEvents } from "@/db/schema/conversationEvents";
+import { conversationEvents, conversationMessages, DRAFT_STATUSES, files, mailboxes, notes, Tool } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
-import { notes } from "@/db/schema/notes";
-import type { Tool } from "@/db/schema/tools";
-import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import type { DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
-import { getFullName } from "@/lib/auth/authUtils";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { formatBytes } from "../files";
@@ -38,6 +33,22 @@ export const serializeResponseAiDraft = (
     body: draft.body,
     isStale: isAiDraftStale(draft, mailbox),
   };
+};
+
+export const findOriginalAndMergedMessages = async <T>(
+  conversationId: number,
+  query: (condition: SQL) => Promise<T[]>,
+) => {
+  const [originalMessages, mergedMessages] = await Promise.all([
+    query(eq(conversationMessages.conversationId, conversationId)),
+    query(
+      inArray(
+        conversationMessages.conversationId,
+        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
+      ),
+    ),
+  ]);
+  return [...originalMessages, ...mergedMessages];
 };
 
 export const getMessagesOnly = async (conversationId: number) => {
@@ -90,14 +101,8 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       },
     });
 
-  const [messages, mergedMessages, noteRecords, eventRecords, members] = await Promise.all([
-    findMessages(eq(conversationMessages.conversationId, conversationId)),
-    findMessages(
-      inArray(
-        conversationMessages.conversationId,
-        db.select({ id: conversations.id }).from(conversations).where(eq(conversations.mergedIntoId, conversationId)),
-      ),
-    ),
+  const [messages, noteRecords, eventRecords] = await Promise.all([
+    findOriginalAndMergedMessages(conversationId, findMessages),
     db.query.notes.findMany({
       where: eq(notes.conversationId, conversationId),
       columns: {
@@ -127,24 +132,15 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         reason: true,
       },
     }),
-    db.query.authUsers.findMany(),
   ]);
 
-  const allMessages = [...messages, ...mergedMessages];
-
-  const membersById = Object.fromEntries(members.map((user) => [user.id, user]));
-
-  const messageInfos = await Promise.all(
-    allMessages.map((message) =>
-      serializeMessage(message, conversationId, mailbox, (message.userId && membersById[message.userId]) || null),
-    ),
-  );
+  const messageInfos = await Promise.all(messages.map((message) => serializeMessage(message, conversationId, mailbox)));
 
   const noteInfos = await Promise.all(
     noteRecords.map(async (note) => ({
       ...note,
       type: "note" as const,
-      from: note.userId && membersById[note.userId] ? getFullName(membersById[note.userId]!) : null,
+      userId: note.userId,
       slackUrl:
         mailbox.slackBotToken && note.slackChannel && note.slackMessageTs
           ? await getSlackPermalink(mailbox.slackBotToken, note.slackChannel, note.slackMessageTs)
@@ -158,13 +154,10 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       ...event,
       changes: {
         ...event.changes,
-        assignedToUser:
-          event.changes.assignedToId && membersById[event.changes.assignedToId]
-            ? getFullName(membersById[event.changes.assignedToId]!)
-            : event.changes.assignedToId,
-        assignedToAI: event.changes.assignedToAI,
+        assignedToId: event.changes?.assignedToId,
+        assignedToAI: event.changes?.assignedToAI,
       },
-      byUser: event.byUserId && membersById[event.byUserId] ? getFullName(membersById[event.byUserId]!) : null,
+      byUserId: event.byUserId,
       eventType: event.type,
       type: "event" as const,
     })),
@@ -206,7 +199,6 @@ export const serializeMessage = async (
   },
   conversationId: number,
   mailbox: typeof mailboxes.$inferSelect,
-  user?: DbOrAuthUser | null,
 ) => {
   const messageFiles =
     message.files ??
@@ -231,7 +223,8 @@ export const serializeMessage = async (
     emailTo: message.emailTo,
     cc: message.emailCc || [],
     bcc: message.emailBcc || [],
-    from: message.role === "staff" && user ? getFullName(user) : message.emailFrom,
+    from: message.role === "staff" ? null : message.emailFrom, // Frontend resolves staff names using userId
+    userId: message.userId,
     isMerged: message.conversationId !== conversationId,
     isPinned: message.isPinned ?? false,
     slackUrl:
@@ -248,7 +241,7 @@ export const serializeMessage = async (
   };
 };
 
-export const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
+const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
     inputFiles.map(async (file) => {
       if (file.isInline) {
@@ -320,7 +313,6 @@ export const createReply = async (
       {
         conversationId,
         body: message,
-        encryptedBody: message,
         userId: user?.id,
         emailCc: cc ?? (await getNonSupportParticipants(conversation)),
         emailBcc: bcc,
@@ -393,12 +385,16 @@ export const createConversationMessage = async (
     eventsToSend.push({
       name: "conversations/email.enqueued" as const,
       data: { messageId: message.id },
-      ts: addSeconds(new Date(), EMAIL_UNDO_COUNTDOWN_SECONDS).getTime(),
+      sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS,
     });
   }
 
   if (eventsToSend.length > 0) {
-    await inngest.send(eventsToSend);
+    await Promise.all(
+      eventsToSend.map((event) =>
+        triggerEvent(event.name, event.data, event.sleepSeconds ? { sleepSeconds: event.sleepSeconds } : {}),
+      ),
+    );
   }
 
   return message;
@@ -421,13 +417,11 @@ export const createAiDraft = async (
     {
       conversationId,
       body: sanitizedBody,
-      encryptedBody: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo: promptInfo ? { details: promptInfo } : null,
       cleanedUpText: body,
-      encryptedCleanedUpText: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -441,10 +435,7 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx
-    .update(conversationMessages)
-    .set({ cleanedUpText, encryptedCleanedUpText: cleanedUpText })
-    .where(eq(conversationMessages.id, message.id));
+  await tx.update(conversationMessages).set({ cleanedUpText }).where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
@@ -479,28 +470,6 @@ export async function getTextWithConversationSubject(
   return `${subject ? `${subject}\n\n` : ""}${cleanedUpText}`;
 }
 
-export const getPastMessages = async (
-  message: typeof conversationMessages.$inferSelect,
-): Promise<(typeof conversationMessages.$inferSelect)[]> => {
-  const pastMessages = await db.query.conversationMessages.findMany({
-    where: and(
-      eq(conversationMessages.conversationId, message.conversationId),
-      ne(conversationMessages.id, message.id),
-      notInArray(conversationMessages.status, DRAFT_STATUSES),
-      isNotNull(conversationMessages.body),
-      isNotNull(conversationMessages.cleanedUpText),
-    ),
-    orderBy: [asc(conversationMessages.createdAt)],
-  });
-
-  for (const pastMessage of pastMessages) {
-    if (pastMessage.cleanedUpText === null) {
-      pastMessage.cleanedUpText = await ensureCleanedUpText(pastMessage);
-    }
-  }
-  return pastMessages;
-};
-
 export const createToolEvent = async ({
   conversationId,
   tool,
@@ -524,9 +493,7 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
-    encryptedBody: userMessage,
     cleanedUpText: userMessage,
-    encryptedCleanedUpText: userMessage,
     metadata: {
       tool: {
         id: tool.id,

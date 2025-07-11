@@ -2,7 +2,7 @@
   "short_name": "Helper",
   "name": "Helper for Customer Support",
   "description": "AI-powered customer support assistant",
-  "start_url": "/mailboxes",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#280B0B",
   "theme_color": "#280B0B",

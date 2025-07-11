@@ -6,7 +6,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { serializeConversation, serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
@@ -15,6 +15,7 @@ import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { createReply, getLastAiGeneratedDraft, serializeResponseAiDraft } from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
+import { env } from "@/lib/env";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
 import { githubRouter } from "./github";
@@ -22,8 +23,6 @@ import { messagesRouter } from "./messages";
 import { notesRouter } from "./notes";
 import { conversationProcedure } from "./procedure";
 import { toolsRouter } from "./tools";
-
-export { conversationProcedure };
 
 export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
@@ -33,8 +32,12 @@ export const conversationsRouter = {
 
     return {
       conversations: results,
-      defaultSort: metadataEnabled ? ("highest_value" as const) : ("oldest" as const),
-      hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
+      defaultSort: metadataEnabled ? ("highest_value" as const) : ("newest" as const),
+      onboardingState: {
+        hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
+        hasWidgetHost: !!ctx.mailbox.chatIntegrationUsed,
+        hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
+      },
       assignedToIds: input.assignee ?? null,
       nextCursor,
     };
@@ -86,7 +89,7 @@ export const conversationsRouter = {
 
   bySlug: mailboxProcedure.input(z.object({ slugs: z.array(z.string()) })).query(async ({ input, ctx }) => {
     const list = await db.query.conversations.findMany({
-      where: and(eq(conversations.mailboxId, ctx.mailbox.id), inArray(conversations.slug, input.slugs)),
+      where: and(inArray(conversations.slug, input.slugs)),
     });
     return await Promise.all(list.map((c) => serializeConversationWithMessages(ctx.mailbox, c)));
   }),
@@ -117,7 +120,6 @@ export const conversationsRouter = {
       const { id: conversationId } = await db
         .insert(conversations)
         .values({
-          mailboxId: ctx.mailbox.id,
           slug: conversation.conversation_slug,
           subject: conversation.subject,
           emailFrom: conversation.to_email_address,
@@ -154,7 +156,7 @@ export const conversationsRouter = {
 
       await updateConversation(ctx.conversation.id, {
         set: {
-          status: input.status,
+          ...(input.status !== undefined ? { status: input.status } : {}),
           assignedToId: input.assignedToId,
           assignedToAI: input.assignedToAI,
         },
@@ -166,27 +168,33 @@ export const conversationsRouter = {
     .input(
       z.object({
         conversationFilter: z.union([z.array(z.number()), searchSchema]),
-        status: z.enum(["open", "closed", "spam"]),
+        status: z.enum(["open", "closed", "spam"]).optional(),
+        assignedToId: z.string().optional(),
+        assignedToAI: z.boolean().optional(),
+        message: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { conversationFilter, status } = input;
+      const { conversationFilter, status, assignedToId, message, assignedToAI } = input;
 
-      if (Array.isArray(conversationFilter) && conversationFilter.length < 25) {
+      if (Array.isArray(conversationFilter) && conversationFilter.length <= 25) {
         for (const conversationId of conversationFilter) {
-          await updateConversation(conversationId, { set: { status }, byUserId: ctx.user.id });
+          await updateConversation(conversationId, {
+            set: { status, assignedToId, assignedToAI },
+            byUserId: ctx.user.id,
+            message,
+          });
         }
         return { updatedImmediately: true };
       }
 
-      await inngest.send({
-        name: "conversations/bulk-update",
-        data: {
-          mailboxId: ctx.mailbox.id,
-          userId: ctx.user.id,
-          conversationFilter: input.conversationFilter,
-          status: input.status,
-        },
+      await triggerEvent("conversations/bulk-update", {
+        userId: ctx.user.id,
+        conversationFilter: input.conversationFilter,
+        status: input.status,
+        assignedToId: input.assignedToId,
+        assignedToAI: input.assignedToAI,
+        message: input.message,
       });
       return { updatedImmediately: false };
     }),
@@ -194,6 +202,7 @@ export const conversationsRouter = {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
+
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
     const email = await db.query.conversationMessages.findFirst({
       where: and(
@@ -225,7 +234,7 @@ export const conversationsRouter = {
         conversation: true,
       },
     });
-    if (!message || message.conversation.mailboxId !== ctx.mailbox.id || !message.conversation.mergedIntoId) {
+    if (!message?.conversation.mergedIntoId) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Message not found" });
     }
     const conversation = await db
@@ -255,7 +264,6 @@ export const conversationsRouter = {
 
     const similarConversations = await findSimilarConversations(
       assertDefined(conversation.embeddingText),
-      ctx.mailbox,
       5,
       conversation.slug,
     );
@@ -279,30 +287,15 @@ export const conversationsRouter = {
     const [conversation, assignedToMe, vipOverdue] = await Promise.all([
       db.query.conversations.findFirst({
         columns: { id: true },
-        where: and(eq(conversations.mailboxId, ctx.mailbox.id)),
       }),
-      db.$count(
-        conversations,
-        and(
-          eq(conversations.mailboxId, ctx.mailbox.id),
-          eq(conversations.assignedToId, ctx.user.id),
-          eq(conversations.status, "open"),
-        ),
-      ),
+      db.$count(conversations, and(eq(conversations.assignedToId, ctx.user.id), eq(conversations.status, "open"))),
       ctx.mailbox.vipThreshold && ctx.mailbox.vipExpectedResponseHours
         ? db
             .select({ count: count() })
             .from(conversations)
-            .leftJoin(
-              platformCustomers,
-              and(
-                eq(conversations.mailboxId, platformCustomers.mailboxId),
-                eq(conversations.emailFrom, platformCustomers.email),
-              ),
-            )
+            .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
             .where(
               and(
-                eq(conversations.mailboxId, ctx.mailbox.id),
                 eq(conversations.status, "open"),
                 lt(
                   conversations.lastUserEmailCreatedAt,

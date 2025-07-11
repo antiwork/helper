@@ -4,11 +4,11 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { agentMessages, agentThreads } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { Mailbox } from "@/lib/data/mailbox";
-import { SlackMailboxInfo, WHICH_MAILBOX_MESSAGE } from "@/lib/slack/agent/findMailboxForEvent";
+import { SlackMailboxInfo } from "@/lib/slack/agent/findMailboxForEvent";
 
-export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, mailboxInfo: SlackMailboxInfo) {
+export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, mailbox: Mailbox) {
   if (event.bot_id || event.bot_profile) return;
 
   const existingThread = await db.query.agentThreads.findFirst({
@@ -40,7 +40,6 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
       .onConflictDoNothing()
       .returning();
 
-    // message will be null if we've already handled an event for this message due to the onConflictDoNothing
     message = createdMessage;
   }
 
@@ -48,37 +47,12 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
     return;
   }
 
-  const mailbox = mailboxInfo.mailboxes.find(({ id }) => id === agentThread.mailboxId) ?? mailboxInfo.currentMailbox;
-  if (!mailbox) {
-    await askWhichMailbox(event, mailboxInfo.mailboxes);
-    return;
-  }
-
-  const mentionedMailbox = event.text ? findMentionedMailbox(event.text, mailboxInfo.mailboxes, mailbox) : null;
-
-  if (!agentThread.mailboxId || mentionedMailbox) {
-    const mailboxToUse = mentionedMailbox || mailbox;
-    await db.update(agentThreads).set({ mailboxId: mailboxToUse.id }).where(eq(agentThreads.id, agentThread.id));
-
-    if (mentionedMailbox && mailboxInfo.mailboxes.length > 1) {
-      await postMailboxSwitchMessage(
-        new WebClient(assertDefined(mailboxToUse.slackBotToken)),
-        event.channel,
-        event.thread_ts ?? event.ts,
-        mailboxToUse.name,
-      );
-    }
-  }
-
   const client = new WebClient(assertDefined(mailbox.slackBotToken));
 
-  await inngest.send({
-    name: "slack/agent.message",
-    data: {
-      slackUserId: event.user ?? null,
-      statusMessageTs: await postThinkingMessage(client, event.channel, event.thread_ts ?? event.ts),
-      agentThreadId: agentThread.id,
-    },
+  await triggerEvent("slack/agent.message", {
+    slackUserId: event.user ?? null,
+    statusMessageTs: await postThinkingMessage(client, event.channel, event.thread_ts ?? event.ts),
+    agentThreadId: agentThread.id,
   });
 }
 
@@ -149,33 +123,4 @@ export const postThinkingMessage = async (client: WebClient, channel: string, th
   if (!message?.ts) throw new Error("Failed to post initial message");
 
   return message.ts;
-};
-
-const askWhichMailbox = async (event: GenericMessageEvent | AppMentionEvent, mailboxes: Mailbox[]) => {
-  const client = new WebClient(assertDefined(mailboxes[0]?.slackBotToken));
-  await client.chat.postMessage({
-    channel: event.channel,
-    thread_ts: event.thread_ts ?? event.ts,
-    text: `${WHICH_MAILBOX_MESSAGE} (${mailboxes.map((m) => m.name).join("/")})`,
-  });
-};
-
-const findMentionedMailbox = (messageText: string, mailboxes: Mailbox[], currentMailbox: Mailbox): Mailbox | null => {
-  if (mailboxes.length <= 1) return null;
-
-  const lowercaseText = messageText.toLowerCase();
-  for (const mailbox of mailboxes) {
-    if (mailbox.id !== currentMailbox.id && lowercaseText.includes(mailbox.name.toLowerCase())) {
-      return mailbox;
-    }
-  }
-  return null;
-};
-
-const postMailboxSwitchMessage = async (client: WebClient, channel: string, threadTs: string, mailboxName: string) => {
-  await client.chat.postMessage({
-    channel,
-    thread_ts: threadTs,
-    text: `_Switched to the ${mailboxName} mailbox_`,
-  });
 };

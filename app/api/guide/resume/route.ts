@@ -1,4 +1,4 @@
-import { authenticateWidget, corsOptions, corsResponse } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";
@@ -8,22 +8,12 @@ export function OPTIONS() {
   return corsOptions();
 }
 
-export async function POST(request: Request) {
+export const POST = withWidgetAuth(async ({ request }, { session: { email } }) => {
   const { sessionId } = await request.json();
 
   if (!sessionId || typeof sessionId !== "string") {
     return corsResponse({ error: "Missing or invalid sessionId" }, { status: 400 });
   }
-
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return corsResponse({ error: authResult.error }, { status: 401 });
-  }
-
-  const {
-    mailbox,
-    session: { email },
-  } = authResult;
 
   try {
     const guideSession = await getGuideSessionByUuid(sessionId);
@@ -32,7 +22,7 @@ export async function POST(request: Request) {
       return corsResponse({ error: "Guide session not found" }, { status: 404 });
     }
 
-    if (guideSession.mailboxId !== mailbox.id || email !== guideSession.platformCustomer.email) {
+    if (email !== guideSession.platformCustomer.email) {
       return corsResponse({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -50,4 +40,4 @@ export async function POST(request: Request) {
     captureExceptionAndLogIfDevelopment(error);
     return corsResponse({ error: "Failed to fetch guide session" }, { status: 500 });
   }
-}
+});

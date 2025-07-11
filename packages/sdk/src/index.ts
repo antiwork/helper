@@ -1,6 +1,7 @@
 // This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
 
 import { Context } from "modern-screenshot";
+import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
 import { scriptOrigin } from "./scriptOrigin";
@@ -62,10 +63,11 @@ class HelperWidget {
   private readonly ANONYMOUS_SESSION_TOKEN_KEY = "helper_widget_anonymous_session_token";
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
+  private renderedContactForms: Set<HTMLElement> = new Set();
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
-    this.showToggleButton = config.show_toggle_button ?? null;
+    this.showToggleButton = config.showToggleButton ?? null;
     this.isMinimized = localStorage.getItem(this.MINIMIZED_STORAGE_KEY) === "true";
     this.guideManager = new GuideManager(this);
   }
@@ -100,21 +102,20 @@ class HelperWidget {
 
     try {
       const requestBody: Record<string, any> = {
-        mailboxSlug: this.config.mailbox_slug,
         currentURL: window.location.href,
       };
 
       if (!this.isAnonymous()) {
-        if (!this.config.email_hash || !this.config.timestamp) {
+        if (!this.config.emailHash || !this.config.timestamp) {
           // eslint-disable-next-line no-console
           console.error("Email authentication fields missing");
           return;
         }
 
         requestBody.email = this.config.email;
-        requestBody.emailHash = this.config.email_hash;
+        requestBody.emailHash = this.config.emailHash;
         requestBody.timestamp = this.config.timestamp;
-        requestBody.customerMetadata = this.config.customer_metadata;
+        requestBody.customerMetadata = this.config.customerMetadata;
       } else {
         requestBody.currentToken = localStorage.getItem(this.ANONYMOUS_SESSION_TOKEN_KEY);
       }
@@ -196,11 +197,6 @@ class HelperWidget {
   }
 
   private validateConfig(): boolean {
-    if (!this.config.mailbox_slug) {
-      // eslint-disable-next-line no-console
-      console.error("Invalid config, missing required fields", this.config);
-      return false;
-    }
     return true;
   }
 
@@ -239,7 +235,7 @@ class HelperWidget {
   }
 
   public getIconColors(): { backgroundColor: string; foregroundColor: string } {
-    const backgroundColor = this.config.icon_color || "#222";
+    const backgroundColor = this.config.iconColor || "#222";
     const foregroundColor = this.isLightColor(backgroundColor) ? "#000000" : "#FFFFFF";
     return { backgroundColor, foregroundColor };
   }
@@ -289,6 +285,7 @@ class HelperWidget {
   private setupEventListeners(): void {
     this.connectExistingPromptElements();
     this.connectExistingToggleElements();
+    this.connectExistingContactFormElements();
     this.setupMutationObserver();
 
     let resizeTimeout: NodeJS.Timeout;
@@ -462,6 +459,10 @@ class HelperWidget {
     document.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
   }
 
+  private connectExistingContactFormElements(): void {
+    document.querySelectorAll("[data-helper-contact-form]").forEach(this.connectContactFormElement.bind(this));
+  }
+
   private connectPromptElement(element: Element): void {
     element.addEventListener("click", (event: Event) => this.handlePromptClick(event as MouseEvent));
   }
@@ -484,6 +485,10 @@ class HelperWidget {
 
   private connectToggleElement(element: Element): void {
     element.addEventListener("click", (event: Event) => this.handleToggleClick(event as MouseEvent));
+  }
+
+  private connectContactFormElement(element: Element): void {
+    this.renderContactForm(element as HTMLElement);
   }
 
   private handleToggleClick(event: MouseEvent): void {
@@ -509,8 +514,12 @@ class HelperWidget {
               if (node.hasAttribute("data-helper-toggle")) {
                 this.connectToggleElement(node);
               }
+              if (node.hasAttribute("data-helper-contact-form")) {
+                this.connectContactFormElement(node);
+              }
               node.querySelectorAll("[data-helper-prompt]").forEach(this.connectPromptElement.bind(this));
               node.querySelectorAll("[data-helper-toggle]").forEach(this.connectToggleElement.bind(this));
+              node.querySelectorAll("[data-helper-contact-form]").forEach(this.connectContactFormElement.bind(this));
             }
           });
         }
@@ -527,10 +536,6 @@ class HelperWidget {
 
     this.toggleButton = document.createElement("button");
     this.toggleButton.className = "helper-widget-toggle-button";
-
-    if (this.config.mailbox_slug === GUMROAD_MAILBOX_SLUG) {
-      this.toggleButton.classList.add("gumroad-theme");
-    }
 
     const { backgroundColor, foregroundColor } = this.getIconColors();
 
@@ -681,6 +686,41 @@ class HelperWidget {
     });
   }
 
+  private async renderContactForm(element: HTMLElement): Promise<void> {
+    if (this.renderedContactForms.has(element)) {
+      return;
+    }
+
+    this.renderedContactForms.add(element);
+
+    const [{ createRoot }, { ContactForm }] = await Promise.all([
+      import("react-dom/client"),
+      import("./components/contactForm"),
+    ]);
+
+    const root = createRoot(element);
+
+    const handleSubmit = async (email: string, message: string) => {
+      const response = await fetch(`${scriptOrigin}/api/chat/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.sessionToken}`,
+        },
+        body: JSON.stringify({
+          email,
+          message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+    };
+
+    root.render(React.createElement(ContactForm, { onSubmit: handleSubmit }));
+  }
+
   private destroyInternal(): void {
     if (this.iframeWrapper) {
       document.body.removeChild(this.iframeWrapper);
@@ -809,9 +849,6 @@ class HelperWidget {
   private createNotificationBubble(id: string): HTMLDivElement {
     const bubble = document.createElement("div");
     bubble.className = "notification-bubble";
-    if (this.config.mailbox_slug === GUMROAD_MAILBOX_SLUG) {
-      bubble.classList.add("gumroad-theme");
-    }
 
     const messageDiv = document.createElement("div");
     messageDiv.className = "message";
@@ -901,7 +938,7 @@ class HelperWidget {
   }
 
   private hideAllNotifications(): void {
-    this.notificationBubbles.forEach((bubble, conversationSlug) => {
+    this.notificationBubbles.forEach((_bubble, conversationSlug) => {
       this.hideNotification(conversationSlug);
     });
   }
@@ -913,9 +950,6 @@ class HelperWidget {
 
 export default HelperWidget;
 
-if (typeof window !== "undefined" && window.document.currentScript?.dataset.mailbox) {
-  HelperWidget.init({
-    mailbox_slug: window.document.currentScript.dataset.mailbox,
-    ...(window.helperWidgetConfig || {}),
-  });
+if (typeof window !== "undefined" && !window.document.currentScript?.dataset.delayInit) {
+  HelperWidget.init(window.helperWidgetConfig || {});
 }

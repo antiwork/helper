@@ -1,4 +1,3 @@
-import { WebClient } from "@slack/web-api";
 import { CoreMessage, Tool, tool } from "ai";
 import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
@@ -15,6 +14,7 @@ import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { createReply } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
+import { findEnabledKnowledgeBankEntries, findSimilarWebsitePages } from "@/lib/data/retrieval";
 import { getMemberStats } from "@/lib/data/stats";
 import { findUserViaSlack } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -25,8 +25,8 @@ const searchToolSchema = searchSchema.omit({
 });
 
 // Define the schema for filters separately
-const searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true });
-type SearchFiltersInput = z.infer<typeof searchFiltersSchema>;
+const _searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true });
+type SearchFiltersInput = z.infer<typeof _searchFiltersSchema>;
 
 export const generateAgentResponse = async (
   messages: CoreMessage[],
@@ -42,7 +42,6 @@ export const generateAgentResponse = async (
     });
   }
 
-  const client = new WebClient(assertDefined(mailbox.slackBotToken));
   const searchToolSchema = searchSchema.omit({
     category: true,
   });
@@ -113,26 +112,7 @@ export const generateAgentResponse = async (
   };
 
   const tools: Record<string, Tool> = {
-    getCurrentSlackUser: tool({
-      description: "Get the current Slack user",
-      parameters: z.object({}),
-      execute: async () => {
-        showStatus(`Checking user...`, { toolName: "getCurrentSlackUser", parameters: { slackUserId } });
-        if (!slackUserId) return { error: "User not found" };
-        const { user } = await client.users.info({ user: slackUserId });
-        const dbUser = await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId);
-        if (user) {
-          return {
-            id: user.id,
-            dbUserId: dbUser?.id,
-            name: user.profile?.real_name,
-            email: user.profile?.email,
-          };
-        }
-        return { error: "User not found" };
-      },
-    }),
-    getMembers: tool({
+    getUsers: tool({
       description: "Get IDs, names and emails of all team members",
       parameters: z.object({}),
       execute: async () => {
@@ -141,12 +121,13 @@ export const generateAgentResponse = async (
         return members.map((member) => ({
           id: member.id,
           name: getFullName(member),
-          emails: member.email,
+          email: member.email,
         }));
       },
     }),
-    getMemberStats: tool({
-      description: "Check how many replies members sent to tickets in a given time period",
+    getUserReplyCounts: tool({
+      description:
+        "Check how many replies members sent to tickets in a given time period. This is NOT the same as closed tickets: use the countTickets tool to get the number of closed tickets.",
       parameters: z.object({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
@@ -166,9 +147,7 @@ export const generateAgentResponse = async (
           const { list } = await searchConversations(mailbox, input);
           const { results, nextCursor } = await list;
           return {
-            tickets: results.map((conversation) =>
-              formatConversation(conversation, mailbox, conversation.platformCustomer),
-            ),
+            tickets: results.map((conversation) => formatConversation(conversation, conversation.platformCustomer)),
             nextCursor,
           };
         } catch (error) {
@@ -221,10 +200,10 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ id }) => {
         showStatus(`Checking ticket...`, { toolName: "getTicket", parameters: { id } });
-        const conversation = await findConversation(id, mailbox);
+        const conversation = await findConversation(id);
         if (!conversation) return { error: "Ticket not found" };
-        const platformCustomer = await getPlatformCustomer(mailbox.id, conversation.emailFrom ?? "");
-        return formatConversation(conversation, mailbox, platformCustomer);
+        const platformCustomer = await getPlatformCustomer(conversation.emailFrom ?? "");
+        return formatConversation(conversation, platformCustomer);
       },
     }),
     getTicketMessages: tool({
@@ -239,7 +218,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ id }) => {
         showStatus(`Reading ticket...`, { toolName: "getTicketMessages", parameters: { id } });
-        const conversation = await findConversation(id, mailbox);
+        const conversation = await findConversation(id);
         if (!conversation) return { error: "Ticket not found" };
         const messages = await db.query.conversationMessages.findMany({
           where: and(
@@ -322,6 +301,32 @@ export const generateAgentResponse = async (
         return await updateTickets({ status: "spam" }, input, MARKED_AS_SPAM_BY_AGENT_MESSAGE, "mark as spam");
       },
     }),
+    searchKnowledgeBase: tool({
+      description:
+        "Search the knowledge base for information when other tools cannot answer the user's question. Use this as a fallback when the question is about topics not covered by ticket management tools.",
+      parameters: z.object({
+        query: z.string().describe("The search query to find relevant knowledge base articles"),
+      }),
+      execute: async ({ query }) => {
+        showStatus(`Searching knowledge base...`, { toolName: "searchKnowledgeBase", parameters: { query } });
+        try {
+          const [websitePages, knowledgeBank] = await Promise.all([
+            findSimilarWebsitePages(query),
+            findEnabledKnowledgeBankEntries(),
+          ]);
+          if (websitePages.length === 0 && knowledgeBank.length === 0) {
+            return { message: "No relevant website pages found for this query" };
+          }
+          return {
+            websitePages,
+            knowledgeBank: knowledgeBank.map(({ content }) => content),
+          };
+        } catch (error) {
+          captureExceptionAndLog(error);
+          return { error: "Failed to search website pages" };
+        }
+      },
+    }),
   };
 
   if (confirmedReplyText) {
@@ -334,7 +339,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ ticketId }) => {
         showStatus(`Sending reply...`, { toolName: "sendReply", parameters: { ticketId } });
-        const conversation = await findConversation(ticketId, mailbox);
+        const conversation = await findConversation(ticketId);
         if (!conversation) return { error: "Ticket not found" };
         await createReply({
           conversationId: conversation.id,
@@ -371,6 +376,11 @@ export const generateAgentResponse = async (
     });
   }
 
+  const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
+  const userPrompt = user
+    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
+    : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
+
   const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
@@ -378,6 +388,8 @@ export const generateAgentResponse = async (
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
 You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat or explicitly mention another mailbox by name to access others.
+
+${userPrompt}
 
 IMPORTANT GUIDELINES:
 - Always identify as "Helper" (never as "Helper AI" or any other variation)
@@ -392,6 +404,10 @@ IMPORTANT GUIDELINES:
 - When listing tickets, display the standardSlackFormat field as is. You may add other information after that if relevant in context.
 - If you will need to reply to a ticket as part of your response and the sendReply tool is not available, use the confirmReplyText tool and *do not do anything else* at this stage.
 - *If you have the sendReply tool, call it!* Then include in your response that the reply has been sent.
+
+CITATIONS:
+- When using website content from the searchKnowledgeBase tool, assign each unique URL an incremental number (inside a pair of parentheses), including whitespaces around the parentheses, and add it as a hyperlink immediately after the text. Use the format \`[(n)](URL)\`.
+- Example: "This information comes from our documentation [(1)](https://example.com/docs)."
 
 If asked to do something inappropriate, harmful, or outside your capabilities, politely decline and suggest focusing on customer support questions instead.`,
     messages,
@@ -409,11 +425,10 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
   };
 };
 
-const findConversation = async (id: string | number, mailbox: Mailbox) => {
+const findConversation = async (id: string | number) => {
   const conversation = /^\d+$/.test(id.toString())
     ? await getConversationById(Number(id))
     : await getConversationBySlug(id.toString());
-  if (!conversation || conversation.mailboxId !== mailbox.id) return null;
   return conversation;
 };
 
@@ -422,11 +437,10 @@ const formatConversation = (
     Conversation,
     "id" | "slug" | "subject" | "status" | "emailFrom" | "lastUserEmailCreatedAt" | "assignedToId" | "assignedToAI"
   >,
-  mailbox: Mailbox,
   platformCustomer?: PlatformCustomer | null,
 ) => {
   return {
-    standardSlackFormat: `*<${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
+    standardSlackFormat: `*<${getBaseUrl()}/conversations?id=${conversation.slug}|${conversation.subject}>*\n${conversation.emailFrom ?? "Anonymous"}`,
     id: conversation.id,
     slug: conversation.slug,
     subject: conversation.subject,
@@ -436,6 +450,6 @@ const formatConversation = (
     assignedToUserId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
     isVip: platformCustomer?.isVip || false,
-    url: `${getBaseUrl()}/mailboxes/${mailbox.slug}/conversations?id=${conversation.slug}`,
+    url: `${getBaseUrl()}/conversations?id=${conversation.slug}`,
   };
 };

@@ -24,7 +24,7 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
@@ -42,6 +42,7 @@ import { createAndUploadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
+import { env } from "@/lib/env";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -79,7 +80,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   return summary;
 };
 
-export const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
+const loadScreenshotAttachments = async (messages: (typeof conversationMessages.$inferSelect)[]) => {
   const attachments = await db.query.files.findMany({
     where: inArray(
       files.messageId,
@@ -133,7 +134,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     });
 };
 
-export const buildPromptMessages = async (
+const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
@@ -143,7 +144,7 @@ export const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
   promptInfo: Omit<PromptInfo, "availableTools">;
 }> => {
-  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(mailbox, query, null);
+  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(query, null);
 
   const systemPrompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -189,7 +190,6 @@ const generateReasoning = async ({
   reasoningModel,
   email,
   conversationId,
-  mailboxSlug,
   traceId = null,
   evaluation = false,
   dataStream,
@@ -200,7 +200,6 @@ const generateReasoning = async ({
   reasoningModel: LanguageModelV1;
   email: string | null;
   conversationId: number;
-  mailboxSlug: string;
   traceId?: string | null;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
@@ -258,7 +257,6 @@ const generateReasoning = async ({
           sessionId: conversationId,
           userId: email ?? "anonymous",
           email: email ?? "anonymous",
-          mailboxSlug,
         },
       },
     });
@@ -352,7 +350,7 @@ export const generateAIResponse = async ({
     promptInfo,
   } = await buildPromptMessages(mailbox, email, query, guideEnabled);
 
-  const tools = await buildTools(conversationId, email, mailbox, true, guideEnabled);
+  const tools = await buildTools(conversationId, email, true, guideEnabled);
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -372,7 +370,6 @@ export const generateAIResponse = async ({
       reasoningModel,
       email,
       conversationId,
-      mailboxSlug: mailbox.slug,
       traceId,
       evaluation,
       dataStream,
@@ -414,7 +411,6 @@ export const generateAIResponse = async ({
         store: true,
         metadata: {
           conversationId: conversationId.toString(),
-          mailboxSlug: mailbox.slug,
           email: email ?? "anonymous",
           usingReasoning: addReasoning.toString(),
         },
@@ -427,7 +423,6 @@ export const generateAIResponse = async ({
         sessionId: conversationId,
         userId: email ?? "anonymous",
         email: email ?? "anonymous",
-        mailboxSlug: mailbox.slug,
         usingReasoning: addReasoning,
       },
     },
@@ -473,9 +468,7 @@ export const createUserMessage = async (
     conversationId,
     emailFrom: email,
     body: query,
-    encryptedBody: query,
     cleanedUpText: query,
-    encryptedCleanedUpText: query,
     role: "user",
     isPerfect: false,
     isPinned: false,
@@ -495,7 +488,7 @@ export const createUserMessage = async (
   return message;
 };
 
-export const createAssistantMessage = (
+const createAssistantMessage = (
   conversationId: number,
   userMessageId: number,
   text: string,
@@ -510,9 +503,7 @@ export const createAssistantMessage = (
     responseToId: userMessageId,
     status: options?.sendEmail ? "queueing" : "sent",
     body: text,
-    encryptedBody: text,
     cleanedUpText: text,
-    encryptedCleanedUpText: text,
     role: "ai_assistant",
     isPerfect: false,
     isPinned: false,
@@ -523,18 +514,6 @@ export const createAssistantMessage = (
     },
   });
 };
-
-export const lastAssistantMessage = (conversationId: number) =>
-  db.query.conversationMessages.findFirst({
-    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "ai_assistant")),
-    orderBy: desc(conversationMessages.createdAt),
-  });
-
-export const lastUserMessage = (conversationId: number) =>
-  db.query.conversationMessages.findFirst({
-    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
-    orderBy: desc(conversationMessages.createdAt),
-  });
 
 export const respondWithAI = async ({
   conversation,
@@ -574,7 +553,7 @@ export const respondWithAI = async ({
   });
 
   let platformCustomer = null;
-  if (userEmail) platformCustomer = await getPlatformCustomer(mailbox.id, userEmail);
+  if (userEmail) platformCustomer = await getPlatformCustomer(userEmail);
 
   const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;
@@ -670,13 +649,14 @@ export const respondWithAI = async ({
             traceId,
             reasoning,
           );
-          await inngest.send({
-            name: "conversations/check-resolution",
-            data: {
+          await triggerEvent(
+            "conversations/check-resolution",
+            {
               conversationId: conversation.id,
               messageId: assistantMessage.id,
             },
-          });
+            { sleepSeconds: env.NODE_ENV === "development" ? 5 * 60 : 24 * 60 * 60 },
+          );
 
           // Extract sources from markdown links like [(1)](url)
           const markdownSources = Array.from(text.matchAll(/\[\((\d+)\)\]\((https?:\/\/[^\s)]+)\)/g)).map((match) => {

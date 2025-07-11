@@ -12,8 +12,6 @@ import { mailboxProcedure } from "./procedure";
 
 export const toolsRouter = {
   list: mailboxProcedure.query(async ({ ctx }) => {
-    const mailbox = ctx.mailbox;
-
     try {
       const apis = await db.query.toolApis.findMany({
         columns: {
@@ -40,7 +38,6 @@ export const toolsRouter = {
             orderBy: [desc(toolsTable.enabled), asc(toolsTable.id)],
           },
         },
-        where: eq(toolApis.mailboxId, mailbox.id),
       });
 
       return apis.map((api) => ({
@@ -56,6 +53,7 @@ export const toolsRouter = {
                 .pop()!
                 .replace(/^\/+|\/+$/g, ""),
               toolApiId: api.id,
+              unused_mailboxId: ctx.mailbox.id,
             }) satisfies ToolFormatted,
         ),
       }));
@@ -77,9 +75,7 @@ export const toolsRouter = {
         name: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const { mailbox } = ctx;
-
+    .mutation(async ({ input }) => {
       if (!input.url && !input.schema) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -101,7 +97,6 @@ export const toolsRouter = {
           .insert(toolApis)
           .values({
             name: input.name,
-            mailboxId: mailbox.id,
             baseUrl: input.url,
             schema: input.schema,
             authenticationToken: input.apiKey,
@@ -110,7 +105,6 @@ export const toolsRouter = {
           .then(takeUniqueOrThrow);
 
         await importToolsFromSpec({
-          mailboxId: mailbox.id,
           toolApiId: toolApi.id,
           openApiSpec,
           apiKey: input.apiKey,
@@ -137,12 +131,11 @@ export const toolsRouter = {
         }),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const { mailbox } = ctx;
+    .mutation(async ({ input }) => {
       const { toolId, settings } = input;
 
       const tool = await db.query.tools.findFirst({
-        where: and(eq(toolsTable.id, toolId), eq(toolsTable.mailboxId, mailbox.id)),
+        where: eq(toolsTable.id, toolId),
       });
 
       if (!tool) throw new TRPCError({ code: "NOT_FOUND", message: "Tool not found" });
@@ -167,13 +160,12 @@ export const toolsRouter = {
         apiId: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      const { mailbox } = ctx;
+    .mutation(async ({ input }) => {
       const { apiId } = input;
 
       await db.transaction(async (tx) => {
-        await tx.delete(toolsTable).where(and(eq(toolsTable.toolApiId, apiId), eq(toolsTable.mailboxId, mailbox.id)));
-        await tx.delete(toolApis).where(and(eq(toolApis.id, apiId), eq(toolApis.mailboxId, mailbox.id)));
+        await tx.delete(toolsTable).where(eq(toolsTable.toolApiId, apiId));
+        await tx.delete(toolApis).where(and(eq(toolApis.id, apiId)));
       });
 
       return { success: true };
@@ -186,9 +178,9 @@ export const toolsRouter = {
         schema: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx: { mailbox }, input: { apiId, schema } }) => {
+    .mutation(async ({ input: { apiId, schema } }) => {
       const api = await db.query.toolApis.findFirst({
-        where: and(eq(toolApis.id, apiId), eq(toolApis.mailboxId, mailbox.id)),
+        where: eq(toolApis.id, apiId),
       });
 
       if (!api) throw new TRPCError({ code: "NOT_FOUND", message: "API not found" });
@@ -198,7 +190,6 @@ export const toolsRouter = {
         const openApiSpec = api.baseUrl ? await fetchOpenApiSpec(api.baseUrl, api.authenticationToken) : schema;
 
         await importToolsFromSpec({
-          mailboxId: mailbox.id,
           toolApiId: api.id,
           openApiSpec: assertDefined(openApiSpec),
           apiKey: api.authenticationToken ?? "",

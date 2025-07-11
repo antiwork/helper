@@ -1,15 +1,15 @@
 import { gmailSupportEmailFactory } from "@tests/support/factories/gmailSupportEmails";
 import { userFactory } from "@tests/support/factories/users";
+import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { eq } from "drizzle-orm";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, inject, it, vi } from "vitest";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { gmailSupportEmails, mailboxes } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { createCaller } from "@/trpc";
 
-vi.mock("@/inngest/client");
+vi.mock("@/jobs/client");
 vi.mock("googleapis", () => ({
   google: {
     auth: {
@@ -25,6 +25,12 @@ vi.mock("googleapis", () => ({
     })),
   },
 }));
+vi.mock("@/lib/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    GOOGLE_CLIENT_ID: "test-client-id",
+  },
+}));
 
 describe("gmailSupportEmailRouter", () => {
   describe("get", () => {
@@ -34,22 +40,25 @@ describe("gmailSupportEmailRouter", () => {
       await db.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.id, mailbox.id));
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
+      const result = await caller.gmailSupportEmail.get();
 
       expect(result).toEqual({
-        id: gmailSupportEmail.id,
-        email: gmailSupportEmail.email,
-        createdAt: gmailSupportEmail.createdAt,
+        enabled: true,
+        supportAccount: {
+          id: gmailSupportEmail.id,
+          email: gmailSupportEmail.email,
+          createdAt: gmailSupportEmail.createdAt,
+        },
       });
     });
 
     it("returns null if no Gmail support email exists for the mailbox", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.gmailSupportEmail.get({ mailboxSlug: mailbox.slug });
+      const result = await caller.gmailSupportEmail.get();
 
-      expect(result).toBeNull();
+      expect(result).toEqual({ enabled: true, supportAccount: null });
     });
   });
 
@@ -66,7 +75,6 @@ describe("gmailSupportEmailRouter", () => {
       };
 
       await caller.gmailSupportEmail.create({
-        mailboxSlug: mailbox.slug,
         ...input,
       });
 
@@ -82,11 +90,8 @@ describe("gmailSupportEmailRouter", () => {
 
       expect(createdEmail).toMatchObject(input);
 
-      expect(inngest.send).toHaveBeenCalledWith({
-        name: "gmail/import-recent-threads",
-        data: {
-          gmailSupportEmailId: createdEmail.id,
-        },
+      expect(mockTriggerEvent).toHaveBeenCalledWith("gmail/import-recent-threads", {
+        gmailSupportEmailId: createdEmail.id,
       });
     });
   });
@@ -99,7 +104,7 @@ describe("gmailSupportEmailRouter", () => {
 
       const caller = createCaller(createTestTRPCContext(user));
 
-      const result = await caller.gmailSupportEmail.delete({ mailboxSlug: mailbox.slug });
+      const result = await caller.gmailSupportEmail.delete();
 
       expect(result).toEqual({ message: "Support email deleted successfully." });
 
@@ -114,12 +119,10 @@ describe("gmailSupportEmailRouter", () => {
     });
 
     it("throws an error if no Gmail support email exists for the mailbox", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const caller = createCaller(createTestTRPCContext(user));
 
-      await expect(caller.gmailSupportEmail.delete({ mailboxSlug: mailbox.slug })).rejects.toThrow(
-        "Gmail support email not found",
-      );
+      await expect(caller.gmailSupportEmail.delete()).rejects.toThrow("Gmail support email not found");
     });
   });
 });

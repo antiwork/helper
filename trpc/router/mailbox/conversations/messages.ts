@@ -1,10 +1,10 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, eq, exists, gte, inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
+import { and, eq, exists, gte, inArray, isNotNull, isNull, lte, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
 import { findSimilarConversations } from "@/lib/data/retrieval";
@@ -20,7 +20,6 @@ export const messagesRouter = {
 
     const similarConversations = await findSimilarConversations(
       assertDefined(conversation.embedding),
-      ctx.mailbox,
       5,
       conversation.slug,
     );
@@ -64,8 +63,8 @@ export const messagesRouter = {
       z.object({
         message: z.string(),
         fileSlugs: z.array(z.string()),
-        cc: z.array(z.string()),
-        bcc: z.array(z.string()),
+        cc: z.array(z.string().email()),
+        bcc: z.array(z.string().email()),
         shouldAutoAssign: z.boolean().optional().default(true),
         shouldClose: z.boolean().optional().default(true),
         responseToId: z.number().nullable(),
@@ -77,13 +76,14 @@ export const messagesRouter = {
         user: ctx.user,
         message,
         fileSlugs,
-        // TODO Add proper email validation on the frontend and backend using Zod,
-        // similar to how the new conversation modal does it.
-        cc: cc.filter(Boolean),
-        bcc: bcc.filter(Boolean),
+        cc,
+        bcc,
         shouldAutoAssign,
         close: shouldClose,
         responseToId,
+      });
+      await triggerEvent("conversations/auto-response.create", {
+        messageId: id,
       });
       return { id };
     }),
@@ -120,19 +120,20 @@ export const messagesRouter = {
         });
       }
 
-      await inngest.send({
-        name: "messages/flagged.bad",
-        data: { messageId: id, reason: reason || null },
+      await triggerEvent("messages/flagged.bad", {
+        messageId: id,
+        reason: reason || null,
       });
     }),
   reactionCount: mailboxProcedure
     .input(
       z.object({
         startDate: z.date(),
+        endDate: z.date().optional(),
         period: z.enum(["hourly", "daily", "monthly"]),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       const groupByFormat = (() => {
         switch (input.period) {
           case "hourly":
@@ -144,6 +145,13 @@ export const messagesRouter = {
         }
       })();
 
+      const dateFilter = input.endDate
+        ? and(
+            gte(conversationMessages.reactionCreatedAt, input.startDate),
+            lte(conversationMessages.reactionCreatedAt, input.endDate),
+          )
+        : gte(conversationMessages.reactionCreatedAt, input.startDate);
+
       const data = await db
         .select({
           timePeriod: sql<string>`to_char(${conversationMessages.reactionCreatedAt}, ${groupByFormat}) AS period`,
@@ -152,14 +160,7 @@ export const messagesRouter = {
         })
         .from(conversationMessages)
         .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-        .where(
-          and(
-            gte(conversationMessages.reactionCreatedAt, input.startDate),
-            isNotNull(conversationMessages.reactionType),
-            isNull(conversationMessages.deletedAt),
-            eq(conversations.mailboxId, ctx.mailbox.id),
-          ),
-        )
+        .where(and(dateFilter, isNotNull(conversationMessages.reactionType), isNull(conversationMessages.deletedAt)))
         .groupBy(sql`period`, conversationMessages.reactionType);
 
       return data.map(({ count, ...rest }) => ({
@@ -171,28 +172,25 @@ export const messagesRouter = {
     .input(
       z.object({
         startDate: z.date(),
+        endDate: z.date().optional(),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
+      const createdAtFilter = input.endDate
+        ? and(gte(conversations.createdAt, input.startDate), lte(conversations.createdAt, input.endDate))
+        : gte(conversations.createdAt, input.startDate);
+
       const results = await Promise.all([
         db
-          .$count(
-            conversations,
-            and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
-              eq(conversations.status, "open"),
-              gte(conversations.createdAt, input.startDate),
-            ),
-          )
+          .$count(conversations, and(eq(conversations.status, "open"), createdAtFilter))
           .then((count) => ({ type: "open", count })),
 
         db
           .$count(
             conversations,
             and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
-              gte(conversations.createdAt, input.startDate),
+              createdAtFilter,
               exists(
                 db
                   .select()
@@ -228,9 +226,8 @@ export const messagesRouter = {
           .$count(
             conversations,
             and(
-              eq(conversations.mailboxId, ctx.mailbox.id),
               eq(conversations.status, "closed"),
-              gte(conversations.createdAt, input.startDate),
+              createdAtFilter,
               exists(
                 db
                   .select()

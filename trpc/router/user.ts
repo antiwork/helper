@@ -1,11 +1,14 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
+import { getProfile, isAdmin } from "@/lib/data/user";
 import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -14,12 +17,14 @@ import { publicProcedure } from "../trpc";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
-    const user = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, input.email),
-    });
+    const [user] = await db
+      .select({ id: authUsers.id, email: authUsers.email, deletedAt: userProfiles.deletedAt })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)));
+
     if (!user) {
-      const [_, emailDomain] = input.email.split("@");
-      if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+      if (isSignupPossible(input.email)) {
         return { signupPossible: true };
       }
 
@@ -45,7 +50,7 @@ export const userRouter = {
       const { error } = await resend.emails.send({
         from: env.RESEND_FROM_ADDRESS,
         to: assertDefined(user.email),
-        subject: "Your OTP for Helper",
+        subject: `Your OTP for Helper: ${data.properties.email_otp}`,
         react: OtpEmail({ otp: data.properties.email_otp }),
       });
       if (error) {
@@ -82,6 +87,13 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ input }) => {
+      if (!isSignupPossible(input.email)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Signup is not possible for this email domain",
+        });
+      }
+
       const supabase = createAdminClient();
       const { error } = await supabase.auth.admin.createUser({
         email: input.email,
@@ -90,6 +102,91 @@ export const userRouter = {
         },
       });
       if (error) throw error;
+
       return { success: true };
     }),
+  onboard: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        displayName: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const existingMailbox = await db.query.mailboxes.findFirst({
+        columns: { id: true },
+      });
+
+      if (existingMailbox) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A mailbox already exists. Please use the login form instead.",
+        });
+      }
+
+      const supabase = createAdminClient();
+      const { data: userData, error: createUserError } = await supabase.auth.admin.createUser({
+        email: input.email,
+        user_metadata: {
+          display_name: input.displayName,
+          permissions: "admin",
+        },
+        email_confirm: true,
+      });
+
+      if (createUserError) throw createUserError;
+      if (!userData.user) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create user",
+        });
+      }
+
+      await setupMailboxForNewUser(userData.user);
+
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "recovery",
+        email: userData.user.email ?? "",
+      });
+
+      if (linkError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate OTP",
+        });
+      }
+
+      return {
+        otp: linkData.properties.email_otp,
+      };
+    }),
+
+  getPermissions: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User not authenticated",
+      });
+    }
+    const user = await getProfile(ctx.user.id);
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+    return {
+      permissions: user.permissions,
+      isAdmin: isAdmin(user),
+      displayName: user.displayName,
+    };
+  }),
 } satisfies TRPCRouterRecord;
+
+const isSignupPossible = (email: string) => {
+  const [_, emailDomain] = email.split("@");
+  if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+    return true;
+  }
+  return false;
+};

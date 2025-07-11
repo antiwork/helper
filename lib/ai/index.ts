@@ -13,7 +13,7 @@ import {
   ShortenPromptOptions,
 } from "./core";
 
-export { generateCompletion, generateEmbedding, generateStructuredObject };
+export { generateCompletion, generateEmbedding };
 
 type CommonAIQueryOptions = {
   messages: CoreMessage[];
@@ -52,9 +52,7 @@ export const runAIQuery = async ({
         tools,
         functionId,
         shortenPromptBy,
-        metadata: {
-          mailboxSlug: mailbox.slug,
-        },
+        metadata: {},
       }),
     { mailbox, queryType, model },
   );

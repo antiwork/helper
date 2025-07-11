@@ -36,6 +36,9 @@ function extractWords(text: string): string[] {
 }
 
 function hashWord(word: string, length = 7): string {
-  const fullHash = crypto.createHmac("sha256", env.CRYPTO_SECRET).update(word).digest("base64url");
+  const fullHash = crypto
+    .createHmac("sha256", env.HASH_WORDS_SECRET ?? env.ENCRYPT_COLUMN_SECRET)
+    .update(word)
+    .digest("base64url");
   return fullHash.slice(0, length);
 }

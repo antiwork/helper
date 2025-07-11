@@ -1,59 +1,51 @@
 import { waitUntil } from "@vercel/functions";
-import { CoreMessage, tool, type Tool } from "ai";
+import { tool, type Tool } from "ai";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
-import { getMailboxToolsForAnonymousChat, getMailboxToolsForChat } from "@/lib/data/tools";
+import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
-const fetchUserInformation = async (email: string, mailboxSlug: string, reason: string) => {
+const fetchUserInformation = async (email: string) => {
   try {
-    const metadata = await fetchMetadata(email, mailboxSlug);
+    const metadata = await fetchMetadata(email);
     return metadata?.prompt;
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
-      extra: { email, mailboxSlug },
+      extra: { email },
     });
     return "Error fetching metadata";
   }
 };
 
-const searchKnowledgeBase = async (query: string, mailbox: Mailbox) => {
-  const documents = await getPastConversationsPrompt(query, mailbox);
+const searchKnowledgeBase = async (query: string) => {
+  const documents = await getPastConversationsPrompt(query);
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string, mailboxId: number, mailboxSlug: string) => {
+const updateCustomerMetadata = async (email: string) => {
   try {
-    const customerMetadata = (await fetchMetadata(email, mailboxSlug))?.metadata ?? null;
+    const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        mailboxId,
         customerMetadata,
       });
     }
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
-      extra: { email, mailboxId },
+      extra: { email },
     });
   }
 };
 
-const requestHumanSupport = async (
-  conversationId: number,
-  email: string | null,
-  mailbox: Mailbox,
-  reason: string,
-  newEmail?: string,
-) => {
+const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
   const conversation = assertDefined(await getConversationById(conversationId));
 
   if (newEmail) {
@@ -66,21 +58,17 @@ const requestHumanSupport = async (
   }
 
   await updateOriginalConversation(conversation.id, {
-    set: { status: "open", assignedToAI: false },
+    set: { status: "open", assignedToAI: false, lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt },
     message: reason,
     type: "request_human_support",
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email, conversation.mailboxId, mailbox.slug));
+    waitUntil(updateCustomerMetadata(email));
 
     waitUntil(
-      inngest.send({
-        name: "conversations/human-support-requested",
-        data: {
-          mailboxSlug: mailbox.slug,
-          conversationId: conversation.id,
-        },
+      triggerEvent("conversations/human-support-requested", {
+        conversationId: conversation.id,
       }),
     );
   }
@@ -102,18 +90,14 @@ const setUserEmail = async (conversationId: number, email: string) => {
 export const buildTools = async (
   conversationId: number,
   email: string | null,
-  mailbox: Mailbox,
   includeHumanSupport = true,
   guideEnabled = false,
   includeMailboxTools = true,
   reasoningMiddlewarePrompt?: string,
 ): Promise<Record<string, Tool>> => {
-  const metadataApi = await getMetadataApiByMailbox(mailbox);
+  const metadataApi = await getMetadataApiByMailbox();
 
-  const reasoningMiddleware = async (
-    result: Promise<string | undefined> | string | undefined,
-    messages: CoreMessage[],
-  ) => {
+  const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
     const resultString = await result;
     if (reasoningMiddlewarePrompt && resultString) {
       return `${reasoningMiddlewarePrompt}\n\n${resultString}`;
@@ -127,7 +111,7 @@ export const buildTools = async (
       parameters: z.object({
         query: z.string().describe("query to search the knowledge base"),
       }),
-      execute: ({ query }, { messages }) => reasoningMiddleware(searchKnowledgeBase(query, mailbox), messages),
+      execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query)),
     }),
   };
 
@@ -147,7 +131,7 @@ export const buildTools = async (
       parameters: z.object({
         email: z.string().email().describe("email address to set for the user"),
       }),
-      execute: ({ email }, { messages }) => reasoningMiddleware(setUserEmail(conversationId, email), messages),
+      execute: ({ email }) => reasoningMiddleware(setUserEmail(conversationId, email)),
     });
   }
 
@@ -164,8 +148,8 @@ export const buildTools = async (
           ? z.string().optional()
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
-      execute: ({ reason, email: newEmail }, { messages }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, mailbox, reason, newEmail), messages),
+      execute: ({ reason, email: newEmail }) =>
+        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)),
     });
   }
 
@@ -175,13 +159,12 @@ export const buildTools = async (
       parameters: z.object({
         reason: z.string().describe("reason for fetching user information"),
       }),
-      execute: ({ reason }, { messages }) =>
-        reasoningMiddleware(fetchUserInformation(email, mailbox.slug, reason), messages),
+      execute: () => reasoningMiddleware(fetchUserInformation(email)),
     });
   }
 
   if (includeMailboxTools) {
-    const mailboxTools = email ? await getMailboxToolsForChat(mailbox) : await getMailboxToolsForAnonymousChat(mailbox);
+    const mailboxTools = await getMailboxToolsForChat();
     const aiTools = buildAITools(mailboxTools, email);
 
     for (const [slug, aiTool] of Object.entries(aiTools)) {
@@ -191,11 +174,16 @@ export const buildTools = async (
       tools[slug] = tool({
         description: aiTool.description,
         parameters: aiTool.parameters,
-        execute: async (params, { messages }) => {
-          const conversation = assertDefined(await getConversationById(conversationId));
-          const result = await callToolApi(conversation, mailboxTool, params);
-          return reasoningMiddleware(JSON.stringify(result), messages);
-        },
+        execute: aiTool.enabled
+          ? async (params) => {
+              if (aiTool.customerEmailParameter && email) {
+                params[aiTool.customerEmailParameter] = email;
+              }
+              const conversation = assertDefined(await getConversationById(conversationId));
+              const result = await callToolApi(conversation, mailboxTool, params);
+              return reasoningMiddleware(JSON.stringify(result));
+            }
+          : () => Promise.resolve("This tool is not available"),
       });
     }
   }

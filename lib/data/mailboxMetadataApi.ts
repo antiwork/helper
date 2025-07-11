@@ -1,37 +1,31 @@
 import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
-import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
+import { mailboxesMetadataApi } from "@/db/schema";
 import { getMetadata, MetadataAPIError, timestamp } from "../metadataApiClient";
 import { DataError } from "./dataError";
-import { getMailboxBySlug } from "./mailbox";
+import { getMailbox } from "./mailbox";
 
 export const METADATA_API_HMAC_SECRET_PREFIX = "hlpr_";
 
-export const getMetadataApiByMailbox = async (mailbox: typeof mailboxes.$inferSelect) => {
+export const getMetadataApiByMailbox = async () => {
   const metadataApi = await db
     .select()
     .from(mailboxesMetadataApi)
-    .where(
-      and(
-        eq(mailboxesMetadataApi.mailboxId, mailbox.id),
-        eq(mailboxesMetadataApi.isEnabled, true),
-        isNull(mailboxesMetadataApi.deletedAt),
-      ),
-    );
+    .where(and(eq(mailboxesMetadataApi.isEnabled, true), isNull(mailboxesMetadataApi.deletedAt)));
   return metadataApi[0] ?? null;
 };
 
-export const getMetadataApiByMailboxSlug = async (mailboxSlug: string) => {
-  const mailbox = await getMailboxBySlug(mailboxSlug);
+export const getMetadataApi = async () => {
+  const mailbox = await getMailbox();
   if (!mailbox) {
     throw new Error("Mailbox not found");
   }
-  return { mailbox, metadataApi: await getMetadataApiByMailbox(mailbox) };
+  return { metadataApi: await getMetadataApiByMailbox() };
 };
 
-export const createMailboxMetadataApi = async (mailboxSlug: string, params: { url: string }): Promise<void> => {
-  const { mailbox, metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+export const createMailboxMetadataApi = async (params: { url: string }): Promise<void> => {
+  const { metadataApi } = await getMetadataApi();
   if (metadataApi) {
     throw new DataError("Mailbox already has a metadata endpoint");
   }
@@ -43,15 +37,14 @@ export const createMailboxMetadataApi = async (mailboxSlug: string, params: { ur
 
   const hmacSecret = `${METADATA_API_HMAC_SECRET_PREFIX}${crypto.randomUUID().replace(/-/g, "")}`;
   await db.insert(mailboxesMetadataApi).values({
-    mailboxId: mailbox.id,
     url,
     hmacSecret,
     isEnabled: true,
   });
 };
 
-export const deleteMailboxMetadataApiByMailboxSlug = async (mailboxSlug: string): Promise<void> => {
-  const { mailbox, metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+export const deleteMailboxMetadataApi = async (): Promise<void> => {
+  const { metadataApi } = await getMetadataApi();
   if (!metadataApi) {
     throw new DataError("Mailbox does not have a metadata endpoint");
   }
@@ -59,8 +52,8 @@ export const deleteMailboxMetadataApiByMailboxSlug = async (mailboxSlug: string)
   await db.delete(mailboxesMetadataApi).where(eq(mailboxesMetadataApi.id, metadataApi.id));
 };
 
-export const testMailboxMetadataApiURL = async (mailboxSlug: string) => {
-  const { metadataApi } = await getMetadataApiByMailboxSlug(mailboxSlug);
+export const testMailboxMetadataApiURL = async () => {
+  const { metadataApi } = await getMetadataApi();
   if (!metadataApi) {
     throw new DataError("Mailbox does not have a metadata endpoint");
   }

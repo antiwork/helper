@@ -13,6 +13,8 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
+import { publicConversationChannelId } from "@/lib/realtime/channels";
+import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
@@ -24,7 +26,6 @@ type Props = {
   selectedConversationSlug?: string | null;
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
-  isAnonymous: boolean;
   guideEnabled: boolean;
   resumeGuide: GuideInstructions | null;
 };
@@ -42,7 +43,6 @@ export default function Conversation({
   selectedConversationSlug,
   readPageTool,
   onLoadFailed,
-  isAnonymous,
   guideEnabled,
   resumeGuide,
 }: Props) {
@@ -51,6 +51,47 @@ export default function Conversation({
   const [isEscalated, setIsEscalated] = useState(false);
   const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
+
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  useRealtimeEvent(
+    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
+    "agent-typing",
+    () => {
+      setIsAgentTyping(true);
+
+      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
+      agentTypingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 10000);
+    },
+  );
+
+  useEffect(() => {
+    return () => {
+      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
+    };
+  }, []);
+
+  useRealtimeEvent(
+    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
+    "agent-reply",
+    (event) => {
+      setIsAgentTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `staff_${Date.now()}`,
+          role: "assistant",
+          content: event.data.message,
+          createdAt: new Date(event.data.timestamp),
+          reactionType: null,
+          reactionFeedback: null,
+          reactionCreatedAt: null,
+          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
+        },
+      ]);
+    },
+  );
 
   useEffect(() => {
     if (conversationSlug) {
@@ -101,6 +142,18 @@ export default function Conversation({
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    onError: (error) => {
+      captureExceptionAndLog(error);
+
+      setMessages((messages) => [
+        ...messages,
+        {
+          id: `error_${Date.now()}`,
+          role: "system",
+          content: "Sorry, there was an error processing your request. Please try again.",
+        },
+      ]);
+    },
   });
 
   useEffect(() => {
@@ -110,7 +163,7 @@ export default function Conversation({
   }, [selectedConversationSlug, isNewConversation, setConversationSlug]);
 
   const isLoading = status === "streaming" || status === "submitted";
-  const lastAIMessage = messages.findLast((msg) => msg.role === "assistant");
+  const lastAIMessage = messages?.findLast((msg) => msg.role === "assistant");
 
   const { data: conversation, isLoading: isLoadingConversation } = useQuery<{
     messages: MessageWithReaction[];
@@ -127,7 +180,10 @@ export default function Conversation({
         },
       });
       if (!response.ok) {
-        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.statusText}`));
+        const text = await response.text().catch(() => null);
+        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.status}`), {
+          extra: { conversationSlug, text },
+        });
         onLoadFailed();
         return null;
       }
@@ -165,7 +221,7 @@ export default function Conversation({
       }
       return null;
     },
-    enabled: !!conversationSlug && !!token && !isNewConversation && !isAnonymous,
+    enabled: !!conversationSlug && !!token && !isNewConversation,
   });
 
   const conversationMessages = conversation?.messages.filter((message) =>
@@ -264,6 +320,16 @@ export default function Conversation({
         resumeGuide={resumeGuide}
         status={status}
       />
+      {isAgentTyping && (
+        <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
+          <div className="flex gap-1">
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+          Support agent is typing...
+        </div>
+      )}
       <AnimatePresence>
         <SupportButtons
           conversationSlug={conversationSlug}

@@ -8,7 +8,6 @@ import {
   ModalView,
   WebClient,
 } from "@slack/web-api";
-import { ChannelAndAttachments } from "@slack/web-api/dist/types/request/chat";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { SLACK_REDIRECT_URI } from "./constants";
@@ -28,12 +27,6 @@ export const getSlackUser = async (token: string, user_id: string) => {
   const client = new WebClient(token);
   const response = await client.users.info({ user: user_id });
   return response.user ?? null;
-};
-
-export const getSlackTeam = async (token: string) => {
-  const client = new WebClient(token);
-  const response = await client.team.info();
-  return response.team ?? null;
 };
 
 export const verifySlackRequest = (body: string, headers: Headers) => {
@@ -224,25 +217,7 @@ export const getSlackAccessToken = async (code: string) => {
   };
 };
 
-export const postSlackDM = async (
-  token: string,
-  userId: string,
-  options: Omit<ChatPostMessageArguments, "channel"> & Pick<ChannelAndAttachments, "attachments">,
-) => {
-  const client = new WebClient(token);
-
-  const conversationResponse = await client.conversations.open({ users: userId });
-  if (!conversationResponse.ok || !conversationResponse.channel?.id) {
-    throw new Error(`Failed to open DM channel: ${conversationResponse.error}`);
-  }
-
-  return await postSlackMessage(token, {
-    ...options,
-    channel: conversationResponse.channel.id,
-  } as ChatPostMessageArguments);
-};
-
-export const listSlackUsers = async (token: string) => {
+const listSlackUsers = async (token: string) => {
   const response = await fetch("https://slack.com/api/users.list", {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -265,4 +240,19 @@ export const getSlackUsersByEmail = async (token: string) => {
     return [];
   });
   return new Map<string, string>(slackUsers.map((user) => [user.profile.email, user.id]));
+};
+
+export const handleSlackErrors = async <T>(operation: Promise<T>) => {
+  try {
+    return await operation;
+  } catch (error) {
+    if (error instanceof Error && "data" in error) {
+      captureExceptionAndLog(error, {
+        extra: {
+          slackResponse: error.data,
+        },
+      });
+    }
+    captureExceptionAndLog(error);
+  }
 };

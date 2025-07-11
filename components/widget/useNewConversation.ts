@@ -21,7 +21,7 @@ export const useNewConversation = (token: string | null) => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create conversation");
+        throw new Error(`Failed to create conversation: ${response.status}`);
       }
 
       const data = await response.json();

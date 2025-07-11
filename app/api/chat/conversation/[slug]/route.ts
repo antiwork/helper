@@ -1,27 +1,27 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { cache } from "react";
-import { authenticateWidget } from "@/app/api/widget/utils";
+import { withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
 
-export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params } }, { session }) => {
   const { slug } = await params;
 
-  const authResult = await authenticateWidget(request);
-  if (!authResult.success) {
-    return Response.json({ error: authResult.error }, { status: 401 });
-  }
-
-  if (!authResult.session.email) {
-    return Response.json({ error: "Email is required" }, { status: 401 });
+  let baseCondition;
+  if (session.isAnonymous && session.anonymousSessionId) {
+    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
+  } else if (session.email) {
+    baseCondition = eq(conversations.emailFrom, session.email);
+  } else {
+    return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
 
   const conversation = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.emailFrom, authResult.session.email)),
+    where: and(eq(conversations.slug, slug), baseCondition),
     with: {
       messages: {
         where: inArray(conversationMessages.role, ["user", "ai_assistant", "staff"]),
@@ -114,7 +114,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     ),
     isEscalated: !originalConversation.assignedToAI,
   });
-}
+});
 
 const getUserAnnotation = cache(async (userId: string) => {
   const user = await db.query.authUsers.findFirst({

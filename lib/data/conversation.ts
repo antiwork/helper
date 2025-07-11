@@ -5,9 +5,9 @@ import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, gmailSupportEmails, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
-import { inngest } from "@/inngest/client";
+import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
@@ -17,7 +17,7 @@ import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
 import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
-import { getMailboxById } from "./mailbox";
+import { getMailbox } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
@@ -34,16 +34,17 @@ export type Conversation = typeof conversations.$inferSelect;
 
 export const CHAT_CONVERSATION_SUBJECT = "Chat";
 
-export const MAX_RELATED_CONVERSATIONS_COUNT = 3;
-
-export const createConversation = async (conversation: NewConversation): Promise<typeof conversations.$inferSelect> => {
+export const createConversation = async (
+  conversation: NewConversation,
+  tx: Transaction | typeof db = db,
+): Promise<typeof conversations.$inferSelect> => {
   try {
     const conversationValues = {
       ...conversation,
       conversationProvider: "chat" as const,
     };
 
-    const [newConversation] = await db.insert(conversations).values(conversationValues).returning();
+    const [newConversation] = await tx.insert(conversations).values(conversationValues).returning();
     if (!newConversation) throw new Error("Failed to create conversation");
 
     return newConversation;
@@ -51,6 +52,14 @@ export const createConversation = async (conversation: NewConversation): Promise
     captureExceptionAndLog(error);
     throw new Error("Failed to create conversation");
   }
+};
+
+export const getOriginalConversation = async (conversationId: number): Promise<typeof conversations.$inferSelect> => {
+  const conversation = assertDefined(
+    await db.query.conversations.findFirst({ where: eq(conversations.id, conversationId) }),
+  );
+  if (conversation.mergedIntoId) return getOriginalConversation(conversation.mergedIntoId);
+  return conversation;
 };
 
 // If the conversation is merged into another conversation, update the original conversation instead.
@@ -116,28 +125,22 @@ export const updateConversation = async (
       orderBy: desc(conversationMessages.createdAt),
     });
     if (message?.role === "user") {
-      await inngest.send({
-        name: "conversations/auto-response.create",
-        data: { messageId: message.id },
-      });
+      await triggerEvent("conversations/auto-response.create", { messageId: message.id });
     }
   }
 
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
     await updateVipMessageOnClose(updatedConversation.id, byUserId);
 
-    await inngest.send({
-      name: "conversations/embedding.create",
-      data: { conversationSlug: updatedConversation.slug },
-    });
+    await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug });
   }
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
-        const mailbox = assertDefined(await getMailboxById(updatedConversation.mailboxId));
+        const mailbox = assertDefined(await getMailbox());
         const events = [
           publishToRealtime({
-            channel: conversationChannelId(mailbox.slug, updatedConversation.slug),
+            channel: conversationChannelId(updatedConversation.slug),
             event: "conversation.updated",
             data: serializeConversation(mailbox, updatedConversation),
           }),
@@ -149,7 +152,7 @@ export const updateConversation = async (
         ) {
           events.push(
             publishToRealtime({
-              channel: conversationsListChannelId(mailbox.slug),
+              channel: conversationsListChannelId(),
               event: "conversation.statusChanged",
               data: {
                 id: updatedConversation.id,
@@ -170,7 +173,7 @@ export const updateConversation = async (
         captureExceptionAndLog(error);
       }
     };
-    publishEvents();
+    await publishEvents();
   }
   return updatedConversation ?? null;
 };
@@ -215,9 +218,7 @@ export const serializeConversationWithMessages = async (
   mailbox: typeof mailboxes.$inferSelect,
   conversation: typeof conversations.$inferSelect,
 ) => {
-  const platformCustomer = conversation.emailFrom
-    ? await getPlatformCustomer(mailbox.id, conversation.emailFrom)
-    : null;
+  const platformCustomer = conversation.emailFrom ? await getPlatformCustomer(conversation.emailFrom) : null;
 
   const mergedInto = conversation.mergedIntoId
     ? await db.query.conversations.findFirst({
@@ -259,20 +260,23 @@ export const getConversationById = cache(async (id: number): Promise<typeof conv
 
 export const getConversationBySlugAndMailbox = async (
   slug: string,
-  mailboxId: number,
 ): Promise<typeof conversations.$inferSelect | null> => {
   const result = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), eq(conversations.mailboxId, mailboxId)),
+    where: eq(conversations.slug, slug),
   });
   return result ?? null;
 };
 
 export const getNonSupportParticipants = async (conversation: Conversation): Promise<string[]> => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: eq(mailboxes.id, conversation.mailboxId),
-    with: { gmailSupportEmail: { columns: { email: true } } },
-  });
+  const mailbox = await getMailbox();
   if (!mailbox) throw new Error("Mailbox not found");
+
+  const gmailSupportEmail = mailbox.gmailSupportEmailId
+    ? await db.query.gmailSupportEmails.findFirst({
+        where: eq(gmailSupportEmails.id, mailbox.gmailSupportEmailId),
+        columns: { email: true },
+      })
+    : null;
 
   const messages = await db.query.conversationMessages.findMany({
     where: and(eq(conversationMessages.conversationId, conversation.id), isNull(conversationMessages.deletedAt)),
@@ -291,14 +295,12 @@ export const getNonSupportParticipants = async (conversation: Conversation): Pro
   }
 
   if (conversation.emailFrom) participants.delete(conversation.emailFrom.toLowerCase());
-  if (mailbox.gmailSupportEmail) participants.delete(mailbox.gmailSupportEmail.email.toLowerCase());
+  if (gmailSupportEmail) participants.delete(gmailSupportEmail.email.toLowerCase());
 
   return Array.from(participants);
 };
 
-export const getLastUserMessage = async (
-  conversationId: number,
-): Promise<typeof conversationMessages.$inferSelect | null> => {
+const getLastUserMessage = async (conversationId: number): Promise<typeof conversationMessages.$inferSelect | null> => {
   const lastUserMessage = await db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
     orderBy: [desc(conversationMessages.createdAt)],
@@ -313,9 +315,10 @@ export const getRelatedConversations = async (
     whereMessages?: SQLWrapper;
   },
 ): Promise<Conversation[]> => {
+  const mailbox = await getMailbox();
+  if (!mailbox) return [];
   const conversationWithMailbox = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
-    with: { mailbox: true },
   });
   if (!conversationWithMailbox) return [];
 
@@ -327,17 +330,16 @@ export const getRelatedConversations = async (
   if (!subject && !body) return [];
 
   const keywords = await emailKeywordsExtractor({
-    mailbox: conversationWithMailbox.mailbox,
+    mailbox,
     subject,
     body,
   });
   if (!keywords.length) return [];
 
-  const messageIds = await searchEmailsByKeywords(keywords.join(" "), conversationWithMailbox.mailbox.id);
+  const messageIds = await searchEmailsByKeywords(keywords.join(" "));
 
   const relatedConversations = await db.query.conversations.findMany({
     where: and(
-      eq(conversations.mailboxId, conversationWithMailbox.mailboxId),
       not(eq(conversations.id, conversationId)),
       inArray(
         conversations.id,

@@ -2,13 +2,14 @@ import { SlackEvent } from "@slack/web-api";
 import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { disconnectSlack } from "@/lib/data/mailbox";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { findMailboxForEvent } from "@/lib/slack/agent/findMailboxForEvent";
 import { handleAssistantThreadMessage, handleMessage, isAgentThread } from "@/lib/slack/agent/handleMessages";
-import { verifySlackRequest } from "@/lib/slack/client";
+import { handleSlackErrors, verifySlackRequest } from "@/lib/slack/client";
+import { handleSlackUnfurl } from "@/lib/slack/linkUnfurl";
 
 export const POST = async (request: Request) => {
   const body = await request.text();
@@ -34,9 +35,10 @@ export const POST = async (request: Request) => {
   }
 
   const event = data.event as SlackEvent | undefined;
-
   if (!event) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-
+  if (event && !("team_id" in event) && "team_id" in data) {
+    (event as any).team_id = data.team_id;
+  }
   if (event.type === "message" && (event.subtype || event.bot_id || event.bot_profile)) {
     // Not messages we need to handle
     return new Response("Success!", { status: 200 });
@@ -50,7 +52,8 @@ export const POST = async (request: Request) => {
     (event.type === "message" &&
       (event.channel_type === "im" || (await handleSlackErrors(isAgentThread(event, mailboxInfo)))))
   ) {
-    waitUntil(handleSlackErrors(handleMessage(event, mailboxInfo)));
+    const currentMailbox = assertDefined(mailboxInfo.currentMailbox, "No current mailbox found");
+    waitUntil(handleSlackErrors(handleMessage(event, currentMailbox)));
     return new Response("Success!", { status: 200 });
   }
 
@@ -58,21 +61,10 @@ export const POST = async (request: Request) => {
     waitUntil(handleSlackErrors(handleAssistantThreadMessage(event, mailboxInfo)));
     return new Response("Success!", { status: 200 });
   }
+  if (event.type === "link_shared") {
+    waitUntil(handleSlackErrors(handleSlackUnfurl(event)));
+    return new Response("Success!", { status: 200 });
+  }
 
   return new Response("Not handled", { status: 200 });
-};
-
-const handleSlackErrors = async <T>(operation: Promise<T>) => {
-  try {
-    return await operation;
-  } catch (error) {
-    if (error instanceof Error && "data" in error) {
-      captureExceptionAndLog(error, {
-        extra: {
-          slackResponse: error.data,
-        },
-      });
-    }
-    captureExceptionAndLog(error);
-  }
 };

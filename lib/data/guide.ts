@@ -2,19 +2,13 @@ import "server-only";
 import { count, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, type Transaction } from "@/db/client";
-import {
-  guideSessionEvents,
-  guideSessionEventTypeEnum,
-  guideSessionReplays,
-  guideSessions,
-  platformCustomers,
-} from "@/db/schema";
+import { guideSessionEvents, guideSessionEventTypeEnum, guideSessions, platformCustomers } from "@/db/schema";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export type GuideSession = typeof guideSessions.$inferSelect;
 export type GuideSessionEvent = typeof guideSessionEvents.$inferSelect;
 
-export type GuideSessionEventData = {
+type GuideSessionEventData = {
   steps?: string[];
   state_analysis?: string;
   progress_evaluation?: string;
@@ -28,14 +22,12 @@ export const createGuideSession = async ({
   title,
   instructions,
   conversationId,
-  mailboxId,
   steps,
 }: {
   platformCustomerId: number;
   title: string;
   instructions: string;
   conversationId: string | number;
-  mailboxId: number;
   steps: { description: string; completed: boolean }[];
 }): Promise<GuideSession> => {
   try {
@@ -46,7 +38,6 @@ export const createGuideSession = async ({
         title,
         instructions,
         conversationId: typeof conversationId === "string" ? null : conversationId,
-        mailboxId,
         status: "planning",
         steps,
       })
@@ -92,13 +83,11 @@ export const createGuideSessionEvent = async ({
   type,
   data,
   timestamp,
-  mailboxId,
 }: {
   guideSessionId: number;
   type: (typeof guideSessionEventTypeEnum.enumValues)[number];
   data: GuideSessionEventData;
   timestamp?: Date;
-  mailboxId: number;
   metadata?: Record<string, unknown>;
 }): Promise<GuideSessionEvent> => {
   try {
@@ -108,7 +97,6 @@ export const createGuideSessionEvent = async ({
         guideSessionId,
         type,
         data,
-        mailboxId,
         timestamp: timestamp || new Date(),
       })
       .returning();
@@ -125,21 +113,16 @@ export const createGuideSessionEvent = async ({
 };
 
 export const getGuideSessionsForMailbox = async (
-  mailboxId: number,
   page = 1,
   limit = 10,
 ): Promise<{ sessions: GuideSession[]; totalCount: number }> => {
   try {
     const offset = (page - 1) * limit;
 
-    const totalResult = await db
-      .select({ count: count() })
-      .from(guideSessions)
-      .where(eq(guideSessions.mailboxId, mailboxId));
+    const totalResult = await db.select({ count: count() }).from(guideSessions);
     const totalCount = totalResult[0]?.count || 0;
 
     const sessions = await db.query.guideSessions.findMany({
-      where: (gs, { eq }) => eq(gs.mailboxId, mailboxId),
       orderBy: (gs, { desc }) => [desc(gs.createdAt)],
       limit,
       offset,
@@ -149,22 +132,6 @@ export const getGuideSessionsForMailbox = async (
   } catch (error) {
     captureExceptionAndLog(error);
     throw new Error("Failed to fetch guide sessions");
-  }
-};
-
-export const getGuideSessionReplays = async (
-  sessionId: number,
-): Promise<(typeof guideSessionReplays.$inferSelect)[]> => {
-  try {
-    const replays = await db.query.guideSessionReplays.findMany({
-      where: (gsr, { eq }) => eq(gsr.guideSessionId, sessionId),
-      orderBy: (gsr, { asc }) => [asc(gsr.timestamp)],
-    });
-
-    return replays;
-  } catch (error) {
-    captureExceptionAndLog(error);
-    throw new Error("Failed to fetch guide session replays");
   }
 };
 

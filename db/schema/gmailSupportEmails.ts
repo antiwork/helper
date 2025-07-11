@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, integer, pgTable, text, timestamp, unique, varchar } from "drizzle-orm/pg-core";
-import { encryptedField, nativeEncryptedField } from "@/db/lib/encryptedField";
+import { bigint, index, integer, pgTable, timestamp, unique, varchar } from "drizzle-orm/pg-core";
+import { encryptedField } from "@/db/lib/encryptedField";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { withTimestamps } from "../lib/with-timestamps";
 
@@ -12,11 +12,8 @@ export const gmailSupportEmails = pgTable(
     email: varchar({ length: 254 }).notNull(),
     expiresAt: timestamp({ withTimezone: true, mode: "date" }),
     historyId: integer(),
-    accessToken: encryptedField(),
-    encryptedAccessToken: nativeEncryptedField("encrypted_access_token"),
-    refreshToken: encryptedField(),
-    encryptedRefreshToken: nativeEncryptedField("encrypted_refresh_token"),
-    unused_userId: text("clerk_user_id"),
+    accessToken: encryptedField("encrypted_access_token"),
+    refreshToken: encryptedField("encrypted_refresh_token"),
   },
   (table) => [
     index("mailboxes_gmailsupportemail_created_at_321a00f1").on(table.createdAt),

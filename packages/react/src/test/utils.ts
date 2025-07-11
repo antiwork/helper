@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { HelperConfig } from "../types";
+import type { HelperWidgetConfig } from "../types";
 
 export const mockHelperWidget = () => {
   const mockShow = vi.fn();
@@ -24,16 +24,14 @@ export const mockHelperWidget = () => {
 
 export const setupTestEnv = () => {
   process.env.HELPER_HMAC_SECRET = "test-secret";
-  process.env.HELPER_MAILBOX_SLUG = "test-mailbox";
 };
 
-export const createTestConfig = (overrides: Partial<HelperConfig> = {}): HelperConfig => ({
+export const createTestConfig = (overrides: Partial<HelperWidgetConfig> = {}): HelperWidgetConfig => ({
   email: "test@example.com",
-  email_hash: "hash",
-  mailbox_slug: "test-mailbox",
+  emailHash: "hash",
   timestamp: 123456789,
   title: "Test Helper",
-  customer_metadata: {},
+  customerMetadata: {},
   ...overrides,
 });
 

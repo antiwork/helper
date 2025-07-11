@@ -4,29 +4,10 @@ import { db, Transaction } from "@/db/client";
 import { tools as toolsTable } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
 import { parseToolsFromOpenAPISpec } from "@/lib/tools/openApiParser";
-import type { Mailbox } from "./mailbox";
 
-export const getMailboxToolsForChat = async (mailbox: Mailbox, tx: Transaction | typeof db = db): Promise<Tool[]> => {
+export const getMailboxToolsForChat = async (tx: Transaction | typeof db = db): Promise<Tool[]> => {
   return await tx.query.tools.findMany({
-    where: and(
-      eq(toolsTable.mailboxId, mailbox.id),
-      eq(toolsTable.enabled, true),
-      eq(toolsTable.availableInChat, true),
-    ),
-  });
-};
-
-export const getMailboxToolsForAnonymousChat = async (
-  mailbox: Mailbox,
-  tx: Transaction | typeof db = db,
-): Promise<Tool[]> => {
-  return await tx.query.tools.findMany({
-    where: and(
-      eq(toolsTable.mailboxId, mailbox.id),
-      eq(toolsTable.enabled, true),
-      eq(toolsTable.availableInChat, true),
-      eq(toolsTable.availableInAnonymousChat, true),
-    ),
+    where: and(eq(toolsTable.enabled, true), eq(toolsTable.availableInChat, true)),
   });
 };
 
@@ -47,12 +28,10 @@ export const fetchOpenApiSpec = async (url: string, apiKey: string | null): Prom
 };
 
 export const importToolsFromSpec = async ({
-  mailboxId,
   toolApiId,
   openApiSpec,
   apiKey,
 }: {
-  mailboxId: number;
   toolApiId: number;
   openApiSpec: string;
   apiKey: string;
@@ -84,7 +63,6 @@ export const importToolsFromSpec = async ({
     await db.insert(toolsTable).values(
       toolsToInsert.map((tool) => ({
         ...tool,
-        mailboxId,
         toolApiId,
       })),
     );

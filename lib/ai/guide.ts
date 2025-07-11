@@ -1,8 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { Mailbox } from "@/lib/data/mailbox";
-import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const PLAN_PROMPT = `You are a planning agent that helps break down tasks into smaller steps and reason about the current state. Your role is to:
@@ -35,21 +33,12 @@ const PlanResultSchema = z.object({
   title: z.string().describe("Title of the guide session"),
 });
 
-export type PlanResult = z.infer<typeof PlanResultSchema>;
+type PlanResult = z.infer<typeof PlanResultSchema>;
 
-export async function generateGuidePlan(title: string, instructions: string, mailbox: Mailbox): Promise<PlanResult> {
+export async function generateGuidePlan(title: string, instructions: string): Promise<PlanResult> {
   const prompt = `# USER REQUEST:
   ${title}
   ${instructions}`;
-
-  const { knowledgeBank, websitePagesPrompt } = await fetchPromptRetrievalData(mailbox, prompt, null);
-  let knowledgeBase = "";
-  if (knowledgeBank) {
-    knowledgeBase += `\n${knowledgeBank}`;
-  }
-  if (websitePagesPrompt) {
-    knowledgeBase += `\n${websitePagesPrompt}`;
-  }
 
   try {
     const result = await generateObject({

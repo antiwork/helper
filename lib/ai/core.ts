@@ -7,14 +7,14 @@ import { assertDefined } from "@/components/utils/assert";
 import openai from "@/lib/ai/openai";
 import { cacheFor } from "@/lib/cache";
 
-export const GPT_4O_MODEL = "gpt-4o";
+const _GPT_4O_MODEL = "gpt-4o";
 export const GPT_4_1_MODEL = "gpt-4.1";
 export const GPT_4O_MINI_MODEL = "gpt-4o-mini";
 export const GPT_4_1_MINI_MODEL = "gpt-4.1-mini";
 
 export type AvailableModel =
   | typeof GPT_4O_MINI_MODEL
-  | typeof GPT_4O_MODEL
+  | typeof _GPT_4O_MODEL
   | typeof GPT_4_1_MINI_MODEL
   | typeof GPT_4_1_MODEL;
 

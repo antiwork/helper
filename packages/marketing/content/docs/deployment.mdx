@@ -1,27 +1,30 @@
 ---
 title: Self Hosting
-description: Get started by hosting Helper on Vercel
+description: Get started by setting up a Helper instance
 ---
 
-Helper is intended to be deployed to [Vercel](https://vercel.com).
+## Deploy on Vercel (recommended)
 
-<Callout type="warn">Self hosting is a work in progress. Please let us know if you find issues or gaps!</Callout>
+Click and follow the instructions:
 
-1. Fork the repository.
-1. Create a Vercel project and import your fork.
-1. Connect essential services:
-   - [Supabase](https://supabase.com)
-   - [Inngest](https://www.inngest.com/cloud)
-1. Set up environment variables for required integrations (see the [README](https://github.com/antiwork/helper/blob/main/README.md#set-up-environment-variables) and [development guide](/docs/development#optional-integrations) for instructions).
+<a
+  href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fantiwork%2Fhelper&env=OPENAI_API_KEY,ENCRYPT_COLUMN_SECRET&envDescription=See%20our%20deployment%20guide%20for%20details.&envLink=https%3A%2F%2Fhelper.ai%2Fdocs%2Fdeployment&project-name=helper&repository-name=helper&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6"
+  target="_blank"
+>
+  <img src="https://vercel.com/button" alt="Deploy with Vercel" />
+</a>
 
-Vercel will automatically build and deploy your fork upon pushing to the main branch.
+You will need to set the following environment variables:
 
-You can optionally set up preview branches as long as your services support it.
+- `OPENAI_API_KEY`: Create an API key at [OpenAI](https://platform.openai.com)
+- `ENCRYPT_COLUMN_SECRET`: <SecretGenerator />
 
-<Callout>
-  The script in `vercel.json` will automatically seed the database with sample data on preview branches. After that, the
-  database will continue attempting to apply migrations, but it will not clear/re-seed the database. If you want a clean
-  slate on the preview branch without creating a new PR, then you can temporarily modify `build:preview` in
-  `package.json` to include `pnpm db:reset`, commit/push to Github, and then after the Vercel build completes, you can
-  commit/push a revert commit.
-</Callout>
+After deploying, go to the app URL and follow the instructions to complete setup.
+
+## Other platforms
+
+Helper is a Next.js app, so follow the Next.js deployment guide for your platform of choice.
+
+You will need to set up the following services. The environment variables may be set automatically if your platform has a built-in integration, or you may need to set them manually.
+
+- [Supabase](https://supabase.com) (set up environment variables for `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)

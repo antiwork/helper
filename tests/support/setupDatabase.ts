@@ -2,34 +2,69 @@
 // Adapted from https://www.answeroverflow.com/m/1128519076952682517
 
 import path from "path";
-import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { GenericContainer } from "testcontainers";
 import * as schema from "@/db/schema";
+
+async function waitForDatabase(connectionString: string, maxRetries = 30, delay = 250) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`Attempting database connection (attempt ${i + 1}/${maxRetries})...`);
+      const testDb = drizzle(connectionString, { schema });
+      await testDb.execute(sql`SELECT 1`);
+      await (testDb.$client as any).end();
+      console.log("Database connection successful!");
+      return;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`Database connection failed (attempt ${i + 1}/${maxRetries}): ${errorMessage}`);
+
+      if (i === maxRetries - 1) {
+        throw new Error(`Database failed to become ready after ${maxRetries} attempts. Last error: ${errorMessage}`);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
 
 export async function setupDockerTestDb() {
   console.log("Starting Docker test database setup...");
 
-  const POSTGRES_USER = "username";
-  const POSTGRES_PASSWORD = "password";
-  const POSTGRES_DB = "helperai_development";
   const POSTGRES_PORT = 5445;
 
   console.log("Initializing PostgreSQL container...");
-  const container = await new PostgreSqlContainer("pgvector/pgvector:0.7.4-pg15")
-    .withEnvironment({
-      POSTGRES_USER,
-      POSTGRES_PASSWORD,
-      POSTGRES_DB,
+  const container = await new GenericContainer("supabase/postgres:15.8.1.100")
+    .withEnvironment({ POSTGRES_PASSWORD: "password" })
+    .withExposedPorts({ host: POSTGRES_PORT, container: 5432 })
+    .withCommand(["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"])
+    .withHealthCheck({
+      test: ["CMD-SHELL", `PGPASSWORD=password pg_isready --host localhost --username postgres --dbname postgres`],
+      interval: 250,
+      timeout: 3000,
+      retries: 1000,
     })
-    .withExposedPorts(POSTGRES_PORT)
     .start();
 
   console.log("PostgreSQL container started successfully.");
 
-  const connectionString = container.getConnectionUri();
-  console.log("Connecting to database...");
+  const adminConnectionString = `postgres://supabase_admin:password@${container.getHost()}:${container.getMappedPort(5432)}/postgres`;
+
+  console.log("Waiting for database to be ready...");
+  await waitForDatabase(adminConnectionString);
+
+  const adminDb = drizzle(adminConnectionString, { schema });
+
+  console.log("Applying patches ...");
+  // Fix the Docker image's default schema to be closer to the real Supabase schema
+  // We should ideally run Supabase default migrations here
+  await adminDb.execute(sql`ALTER TABLE storage.buckets ADD COLUMN public boolean NOT NULL DEFAULT false`);
+  await (adminDb.$client as any).end();
+
+  const connectionString = `postgres://postgres:password@${container.getHost()}:${container.getMappedPort(5432)}/postgres`;
+  console.log(`Connecting to database: ${connectionString}`);
   const db = drizzle(connectionString, { schema });
 
   console.log("Applying migrations...");
@@ -39,13 +74,6 @@ export async function setupDockerTestDb() {
     migrationsFolder: migrationPath,
   });
   console.log("Migrations applied successfully.");
-
-  console.log("Creating mock Supabase tables...");
-  await db.execute(sql`CREATE SCHEMA IF NOT EXISTS auth;`);
-  await db.execute(
-    sql`CREATE TABLE auth.users (id text PRIMARY KEY NOT NULL, email text, raw_user_meta_data jsonb, created_at timestamp DEFAULT now(), updated_at timestamp DEFAULT now());`,
-  );
-  console.log("Mock Supabase tables created successfully.");
 
   console.log("Confirming database connection...");
   const confirmDatabaseReady = await db.execute(sql`SELECT 1`);

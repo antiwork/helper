@@ -2,7 +2,7 @@
 import type { GlobalSetupContext } from "vitest/node";
 import { setupDockerTestDb } from "./setupDatabase";
 
-let testDatabase: Awaited<ReturnType<typeof setupDockerTestDb>>;
+let testDatabase: Awaited<ReturnType<typeof setupDockerTestDb>> | undefined;
 
 export async function setup({ provide }: GlobalSetupContext) {
   console.log("Starting global setup...");
@@ -15,12 +15,12 @@ export async function setup({ provide }: GlobalSetupContext) {
 export async function teardown() {
   console.log("Starting global teardown...");
   try {
-    if (testDatabase.client && "end" in testDatabase.client) {
+    if (testDatabase?.client && "end" in testDatabase.client) {
       console.log("Closing database connection...");
       await testDatabase.client.end();
       console.log("Database connection closed.");
     }
-    if (testDatabase.container) {
+    if (testDatabase?.container) {
       console.log("Stopping Docker container...");
       await testDatabase.container.stop();
       console.log("Docker container stopped.");
