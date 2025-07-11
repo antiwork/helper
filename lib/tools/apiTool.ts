@@ -32,21 +32,21 @@ Based on the user's conversation and the provided metadata, suggest appropriate 
 
 export const buildAITools = (tools: Tool[], email: string | null) => {
   const aiTools = tools.reduce<
-    Record<string, Omit<AITool, "execute"> & { customerEmailParameter: string | null; enabled: boolean }>
+    Record<string, Omit<AITool, "execute"> & { customerEmailParameter: string | null; available: boolean }>
   >((acc, tool) => {
     if (!email && !tool.availableInAnonymousChat) {
       acc[tool.slug] = {
         description: `${tool.name} - This tool requires you to be logged in. Please log in and try again.`,
         parameters: z.object({}),
         customerEmailParameter: tool.customerEmailParameter,
-        enabled: false,
+        available: false,
       };
     } else {
       acc[tool.slug] = {
         description: `${tool.name} - ${tool.description}`,
         parameters: buildParameterSchema(tool, { useEmailParameter: true, email }),
         customerEmailParameter: tool.customerEmailParameter,
-        enabled: true,
+        available: true,
       };
     }
     return acc;

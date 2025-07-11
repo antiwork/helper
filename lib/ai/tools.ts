@@ -174,7 +174,7 @@ export const buildTools = async (
       tools[slug] = tool({
         description: aiTool.description,
         parameters: aiTool.parameters,
-        execute: aiTool.enabled
+        execute: aiTool.available
           ? async (params) => {
               if (aiTool.customerEmailParameter && email) {
                 params[aiTool.customerEmailParameter] = email;
