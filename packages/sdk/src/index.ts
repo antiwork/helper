@@ -978,8 +978,9 @@ class HelperWidget {
   private setupTurboEventListeners(): void {
     const turboHandler = async () => {
       try {
+        const currentConfig = this.config;
         HelperWidget.destroy();
-        await HelperWidget.init(window.helperWidgetConfig || {});
+        await HelperWidget.init(currentConfig);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error during Turbo load:", error);
