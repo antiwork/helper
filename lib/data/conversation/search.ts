@@ -147,7 +147,8 @@ export const searchConversations = async (
       : conversations.lastUserEmailCreatedAt;
   const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
   const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox());
-  if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
+  const isClosedTicketsOnly = filters.status?.length === 1 && filters.status[0] === "closed";
+  if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort) && !isClosedTicketsOnly) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
 
