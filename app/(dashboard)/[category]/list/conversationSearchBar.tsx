@@ -104,7 +104,7 @@ export const ConversationSearchBar = ({
 
   const sortOptions = useMemo(
     () => [
-      ...(defaultSort === "highest_value" && searchParams.status !== "closed"
+      ...(defaultSort === "highest_value"
         ? [
             {
               value: `highest_value` as const,
