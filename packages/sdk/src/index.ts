@@ -287,6 +287,7 @@ class HelperWidget {
     this.connectExistingToggleElements();
     this.connectExistingContactFormElements();
     this.setupMutationObserver();
+    this.setupTurboEventListeners();
 
     let resizeTimeout: NodeJS.Timeout;
     window.addEventListener("resize", () => {
@@ -945,6 +946,14 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
+  }
+
+  private setupTurboEventListeners(): void {
+    document.addEventListener("turbo:load", () => {
+      HelperWidget.destroy();
+
+      HelperWidget.init(window.helperWidgetConfig || {});
+    });
   }
 }
 
