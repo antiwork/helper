@@ -74,16 +74,20 @@ export default function ChatInput({
   const { screenshot, setScreenshot } = useScreenshotStore();
   const { onUpload, readyFiles } = useFileUpload();
 
-  const handleFileUpload = useCallback((files: File[]) => {
-    const imageFiles = files.filter(file => 
-      file.type.startsWith('image/') && 
-      (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg')
-    );
-    
-    imageFiles.forEach(file => {
-      onUpload(file, { inline: false });
-    });
-  }, [onUpload]);
+  const handleFileUpload = useCallback(
+    (files: File[]) => {
+      const imageFiles = files.filter(
+        (file) =>
+          file.type.startsWith("image/") &&
+          (file.type === "image/png" || file.type === "image/jpeg" || file.type === "image/jpg"),
+      );
+
+      imageFiles.forEach((file) => {
+        onUpload(file, { inline: false });
+      });
+    },
+    [onUpload],
+  );
 
   const handleSegment = useCallback(
     (segment: string) => {
@@ -153,13 +157,13 @@ export default function ChatInput({
       closeWidget();
       return;
     }
-    
-    const attachments = readyFiles.map(file => ({
+
+    const attachments = readyFiles.map((file) => ({
       name: file.file.name,
       contentType: file.file.type,
-      url: file.url
+      url: file.url,
     }));
-    
+
     if (includeScreenshot) {
       sendScreenshot();
     } else {
@@ -219,7 +223,7 @@ export default function ChatInput({
                         if (files.length > 0) {
                           handleFileUpload(files);
                         }
-                        e.target.value = '';
+                        e.target.value = "";
                       }}
                       disabled={isLoading}
                     />

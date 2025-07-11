@@ -255,19 +255,19 @@ export default function Conversation({
 
       if (currentSlug) {
         setIsNewConversation(false);
-        
+
         const experimentalAttachments = [];
         if (screenshotData) {
-          experimentalAttachments.push({ 
-            name: "screenshot.png", 
-            contentType: "image/png", 
-            url: screenshotData 
+          experimentalAttachments.push({
+            name: "screenshot.png",
+            contentType: "image/png",
+            url: screenshotData,
           });
         }
         if (attachments) {
           experimentalAttachments.push(...attachments);
         }
-        
+
         handleAISubmit(undefined, {
           experimental_attachments: experimentalAttachments.length > 0 ? experimentalAttachments : undefined,
           body: { conversationSlug: currentSlug },

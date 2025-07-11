@@ -55,24 +55,22 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
 
   const userEmail = session.isAnonymous ? null : session.email || null;
   const attachments = message.experimental_attachments || [];
-  
-  const invalidAttachments = attachments.filter(attachment => 
-    !attachment.contentType?.startsWith('image/') ||
-    (!attachment.contentType.includes('png') && 
-     !attachment.contentType.includes('jpeg') && 
-     !attachment.contentType.includes('jpg'))
+
+  const invalidAttachments = attachments.filter(
+    (attachment) =>
+      !attachment.contentType?.startsWith("image/") ||
+      (!attachment.contentType.includes("png") &&
+        !attachment.contentType.includes("jpeg") &&
+        !attachment.contentType.includes("jpg")),
   );
-  
+
   if (invalidAttachments.length > 0) {
-    return corsResponse(
-      { error: "Only PNG and JPEG image attachments are supported" },
-      { status: 400 },
-    );
+    return corsResponse({ error: "Only PNG and JPEG image attachments are supported" }, { status: 400 });
   }
 
-  const screenshotData = attachments.find(a => 
-    a.url?.startsWith("data:image/png;base64,") && a.name === "screenshot.png"
-  )?.url?.replace("data:image/png;base64,", "");
+  const screenshotData = attachments
+    .find((a) => a.url?.startsWith("data:image/png;base64,") && a.name === "screenshot.png")
+    ?.url?.replace("data:image/png;base64,", "");
 
   const userMessage = await createUserMessage(
     conversation.id,
@@ -80,9 +78,9 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     message.content,
     screenshotData,
     attachments
-      .filter(a => !a.url?.startsWith("data:image/png;base64,"))
-      .filter(a => a.name && a.contentType && a.url)
-      .map(a => ({ name: a.name!, contentType: a.contentType!, url: a.url! }))
+      .filter((a) => !a.url?.startsWith("data:image/png;base64,"))
+      .filter((a) => a.name && a.contentType && a.url)
+      .map((a) => ({ name: a.name!, contentType: a.contentType!, url: a.url })),
   );
 
   const supabase = await createClient();
