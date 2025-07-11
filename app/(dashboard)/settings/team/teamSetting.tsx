@@ -5,6 +5,7 @@ import { useState } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
@@ -14,7 +15,7 @@ const TeamSetting = () => {
   const { data, isLoading } = api.mailbox.members.list.useQuery();
   const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: permissionsData } = api.user.getPermissions.useQuery();
+  const { user } = useSession();
 
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
@@ -32,7 +33,7 @@ const TeamSetting = () => {
       fullWidth
     >
       <div className="w-full space-y-6">
-        {permissionsData?.isAdmin && <AddMember teamMembers={teamMembers} />}
+        {user?.permissions === "admin" && <AddMember teamMembers={teamMembers} />}
 
         {teamMembers.length > 0 && (
           <Input
@@ -75,7 +76,7 @@ const TeamSetting = () => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => (
-                  <TeamMemberRow key={member.id} member={member} isAdmin={permissionsData?.isAdmin ?? false} />
+                  <TeamMemberRow key={member.id} member={member} isAdmin={user?.permissions === "admin"} />
                 ))
               )}
             </TableBody>

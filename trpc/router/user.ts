@@ -8,7 +8,6 @@ import { userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
-import { getProfile, isAdmin } from "@/lib/data/user";
 import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -160,6 +159,7 @@ export const userRouter = {
         otp: linkData.properties.email_otp,
       };
     }),
+
   currentUser: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -172,6 +172,7 @@ export const userRouter = {
         id: authUsers.id,
         email: authUsers.email,
         displayName: userProfiles.displayName,
+        permissions: userProfiles.permissions,
       })
       .from(authUsers)
       .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
@@ -179,27 +180,6 @@ export const userRouter = {
 
     if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
     return user;
-  }),
-
-  getPermissions: publicProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "User not authenticated",
-      });
-    }
-    const user = await getProfile(ctx.user.id);
-    if (!user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-    return {
-      permissions: user.permissions,
-      isAdmin: isAdmin(user),
-      displayName: user.displayName,
-    };
   }),
 } satisfies TRPCRouterRecord;
 

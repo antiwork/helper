@@ -1,9 +1,8 @@
-import { and, count, eq, isNull, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
-import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
 
 type DateRange = {
@@ -19,7 +18,7 @@ export type MemberStats = {
   role: UserRole;
 }[];
 
-export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
+export async function getMemberStats(dateRange?: DateRange): Promise<MemberStats> {
   const allUsers = await db
     .select({
       id: userProfiles.id,
@@ -60,7 +59,7 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
       return {
         id: user.id,
         email: user.email ?? undefined,
-        displayName: getFullName(user.displayName, user.email),
+        displayName: getFullName(user),
         replyCount: replyCounts[user.id] || 0,
         role: user.access?.role || UserRoles.AFK,
       };

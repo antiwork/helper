@@ -54,7 +54,7 @@ export async function generateMailboxReport({
   const lastWeekStart = subWeeks(startOfWeek(now, { weekStartsOn: 0 }), 1);
   const lastWeekEnd = subWeeks(endOfWeek(now, { weekStartsOn: 0 }), 1);
 
-  const stats = await getMemberStats(mailbox, {
+  const stats = await getMemberStats({
     startDate: lastWeekStart,
     endDate: lastWeekEnd,
   });

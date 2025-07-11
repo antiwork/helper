@@ -6,6 +6,7 @@ import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
 import {
+  BasicUserProfile,
   conversationEvents,
   conversationMessages,
   DRAFT_STATUSES,
@@ -13,7 +14,6 @@ import {
   mailboxes,
   notes,
   Tool,
-  UserProfile,
 } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
 import { triggerEvent } from "@/jobs/trigger";
@@ -293,7 +293,7 @@ export const createReply = async (
   }: {
     conversationId: number;
     message: string | null;
-    user: UserProfile | null;
+    user: BasicUserProfile | null;
     cc?: string[] | null;
     bcc?: string[];
     fileSlugs?: string[];

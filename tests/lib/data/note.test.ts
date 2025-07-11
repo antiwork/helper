@@ -9,13 +9,13 @@ describe("addNote", () => {
   });
 
   it("creates a note for a conversation", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const note = await addNote({
       conversationId: conversation.id,
       message: "Test note",
-      user,
+      user: profile,
       slackChannel: "C123456",
       slackMessageTs: "1234567890.123456",
     });
@@ -24,7 +24,7 @@ describe("addNote", () => {
       expect.objectContaining({
         conversationId: conversation.id,
         body: "Test note",
-        userId: user.id,
+        userId: profile!.id,
         role: "staff",
         slackChannel: "C123456",
         slackMessageTs: "1234567890.123456",

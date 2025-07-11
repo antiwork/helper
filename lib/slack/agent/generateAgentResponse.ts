@@ -129,7 +129,7 @@ export const generateAgentResponse = async (
 
         return members.map((member) => ({
           id: member.id,
-          name: getFullName(member?.displayName, member.email),
+          name: getFullName(member),
           email: member.email,
         }));
       },
@@ -143,7 +143,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ startDate, endDate }) => {
         showStatus(`Checking member stats...`, { toolName: "getMemberStats", parameters: { startDate, endDate } });
-        return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
+        return await getMemberStats({ startDate: new Date(startDate), endDate: new Date(endDate) });
       },
     }),
     searchTickets: tool({
@@ -261,10 +261,7 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : (() => {
-                  const member = members.find((m) => m.id === message.userId);
-                  return getFullName(member?.displayName, member?.email);
-                })(),
+              : getFullName(members.find((m) => m.id === message.userId) ?? { displayName: null, email: null }),
         }));
       },
     }),
@@ -397,7 +394,7 @@ export const generateAgentResponse = async (
 
   const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
   const userPrompt = user
-    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user.displayName, user.email)}\nCurrent user email: ${user.email}`
+    ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
     : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
 
   const result = await runAIQuery({

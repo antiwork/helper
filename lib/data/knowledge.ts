@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { faqs, mailboxes, UserProfile } from "@/db/schema";
+import { BasicUserProfile, faqs, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
@@ -13,7 +13,7 @@ import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slac
 export const approveSuggestedEdit = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user: UserProfile | null,
+  user: BasicUserProfile | null,
   content?: string,
 ) => {
   await db.transaction(async (tx) => {
@@ -31,11 +31,7 @@ export const approveSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(
-      knowledge,
-      "approved",
-      user ? getFullName(user.displayName, user.email) : null,
-    );
+    const blocks = suggestionResolvedBlocks(knowledge, "approved", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -49,7 +45,7 @@ export const approveSuggestedEdit = async (
 export const rejectSuggestedEdit = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user: UserProfile | null,
+  user: BasicUserProfile | null,
 ) => {
   await db.transaction(async (tx) => {
     await tx.delete(faqs).where(eq(faqs.id, knowledge.id));
@@ -57,11 +53,7 @@ export const rejectSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(
-      knowledge,
-      "rejected",
-      user ? getFullName(user.displayName, user.email) : null,
-    );
+    const blocks = suggestionResolvedBlocks(knowledge, "rejected", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,

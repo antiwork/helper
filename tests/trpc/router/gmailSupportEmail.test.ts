@@ -38,7 +38,7 @@ describe("gmailSupportEmailRouter", () => {
       const { user, mailbox } = await userFactory.createRootUser();
       const { gmailSupportEmail } = await gmailSupportEmailFactory.create();
       await db.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.id, mailbox.id));
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const result = await caller.gmailSupportEmail.get();
 
@@ -54,7 +54,7 @@ describe("gmailSupportEmailRouter", () => {
 
     it("returns null if no Gmail support email exists for the mailbox", async () => {
       const { user } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const result = await caller.gmailSupportEmail.get();
 
@@ -65,7 +65,7 @@ describe("gmailSupportEmailRouter", () => {
   describe("create", () => {
     it("creates a new Gmail support email for the mailbox", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const input = {
         email: "support@example.com",
@@ -102,7 +102,7 @@ describe("gmailSupportEmailRouter", () => {
       const { gmailSupportEmail } = await gmailSupportEmailFactory.create();
       await db.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.id, mailbox.id));
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const result = await caller.gmailSupportEmail.delete();
 
@@ -120,7 +120,7 @@ describe("gmailSupportEmailRouter", () => {
 
     it("throws an error if no Gmail support email exists for the mailbox", async () => {
       const { user } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       await expect(caller.gmailSupportEmail.delete()).rejects.toThrow("Gmail support email not found");
     });

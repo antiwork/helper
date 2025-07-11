@@ -14,7 +14,7 @@ describe("faqsRouter", () => {
     it("lists FAQs for a mailbox", async () => {
       const { user } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       const faqs = await caller.mailbox.faqs.list();
       expect(faqs).toHaveLength(1);
       expect(faqs[0]).toMatchObject({
@@ -29,7 +29,7 @@ describe("faqsRouter", () => {
   describe("create", () => {
     it("creates a new FAQ", async () => {
       const { user } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.faqs.create({
         content: "Test Content",
       });
@@ -50,7 +50,7 @@ describe("faqsRouter", () => {
     it("updates a FAQ", async () => {
       const { user } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.faqs.update({
         id: faq.id,
         content: "Updated Content",
@@ -74,7 +74,7 @@ describe("faqsRouter", () => {
     it("deletes a FAQ", async () => {
       const { user } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.faqs.delete({
         id: faq.id,
       });
@@ -87,7 +87,7 @@ describe("faqsRouter", () => {
 
     it("throws an error when trying to delete a non-existent FAQ", async () => {
       const { user } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await expect(
         caller.mailbox.faqs.delete({
           id: 9999, // Non-existent ID

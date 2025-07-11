@@ -8,7 +8,8 @@ import { findUserViaSlack } from "@/lib/data/user";
 import { openSlackModal, postSlackMessage } from "@/lib/slack/client";
 import { handleMessageSlackAction } from "@/lib/slack/shared";
 
-vi.mock("@/lib/data/user", () => ({
+vi.mock("@/lib/data/user", async (importOriginal) => ({
+  ...(await importOriginal()),
   findUserViaSlack: vi.fn(),
 }));
 
@@ -32,7 +33,7 @@ describe("handleSlackAction", () => {
   });
 
   it("opens a Slack modal when the action is respond_in_slack", async () => {
-    const { user } = await userFactory.createRootUser({
+    const { profile } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
@@ -46,7 +47,7 @@ describe("handleSlackAction", () => {
       slackMessageTs: "1234567890.123456",
     };
 
-    vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
+    vi.mocked(findUserViaSlack).mockResolvedValueOnce(profile);
 
     const payload = {
       actions: [{ action_id: "respond_in_slack" }],
@@ -66,7 +67,7 @@ describe("handleSlackAction", () => {
   });
 
   it("closes the conversation when the action is close", async () => {
-    const { user } = await userFactory.createRootUser({
+    const { profile } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
@@ -85,7 +86,7 @@ describe("handleSlackAction", () => {
       user: { id: "U12345" },
     };
 
-    vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
+    vi.mocked(findUserViaSlack).mockResolvedValueOnce(profile);
 
     await handleMessageSlackAction(message, payload);
 
@@ -125,7 +126,7 @@ describe("handleSlackAction", () => {
   });
 
   it("creates a reply when the sending method is email", async () => {
-    const { user } = await userFactory.createRootUser({
+    const { profile } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
@@ -152,21 +153,21 @@ describe("handleSlackAction", () => {
       },
     };
 
-    vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
+    vi.mocked(findUserViaSlack).mockResolvedValueOnce(profile);
 
     await handleMessageSlackAction(message, payload);
 
     expect(createReply).toHaveBeenCalledWith({
       conversationId: conversation.id,
       message: "Test reply",
-      user,
+      user: profile,
       close: false,
       slack: { channel: "C12345", messageTs: "1234567890.123456" },
     });
   });
 
   it("creates a reply and closes the conversation when the sending method is email_and_close", async () => {
-    const { user } = await userFactory.createRootUser({
+    const { profile } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
@@ -180,7 +181,7 @@ describe("handleSlackAction", () => {
       slackMessageTs: "1234567890.123456",
     };
 
-    vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
+    vi.mocked(findUserViaSlack).mockResolvedValueOnce(profile);
 
     const payload = {
       type: "view_submission",
@@ -200,14 +201,14 @@ describe("handleSlackAction", () => {
     expect(createReply).toHaveBeenCalledWith({
       conversationId: conversation.id,
       message: "Test reply and close",
-      user,
+      user: profile,
       close: true,
       slack: { channel: "C12345", messageTs: "1234567890.123456" },
     });
   });
 
   it("adds a note when the sending method is note", async () => {
-    const { user } = await userFactory.createRootUser({
+    const { profile } = await userFactory.createRootUser({
       userOverrides: {
         email: "user@example.com",
       },
@@ -221,7 +222,7 @@ describe("handleSlackAction", () => {
       slackMessageTs: "1234567890.123456",
     };
 
-    vi.mocked(findUserViaSlack).mockResolvedValueOnce(user);
+    vi.mocked(findUserViaSlack).mockResolvedValueOnce(profile);
 
     const payload = {
       type: "view_submission",
@@ -241,7 +242,7 @@ describe("handleSlackAction", () => {
     expect(addNote).toHaveBeenCalledWith({
       conversationId: conversation.id,
       message: "Test note",
-      user,
+      user: profile,
       slackChannel: "C12345",
       slackMessageTs: "1234567890.123456",
     });

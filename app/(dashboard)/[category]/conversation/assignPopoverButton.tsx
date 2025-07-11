@@ -46,7 +46,7 @@ export const AssignPopoverButton = ({
 
     const selfAssignee = {
       id: currentUser.id,
-      displayName: getFullName(currentUser.displayName, currentUser.email),
+      displayName: getFullName(currentUser),
     };
     assignTicket(selfAssignee, null);
   });

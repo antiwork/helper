@@ -44,7 +44,7 @@ describe("toolsRouter", () => {
         authenticationToken: "test-token",
       });
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       const result = await caller.mailbox.conversations.tools.list({
         conversationSlug: conversation.slug,
       });
@@ -73,7 +73,7 @@ describe("toolsRouter", () => {
         slug: "test-tool",
       });
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       const params = { test: "params" };
 
       const result = await caller.mailbox.conversations.tools.run({
@@ -97,7 +97,7 @@ describe("toolsRouter", () => {
       const { user } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await expect(
         caller.mailbox.conversations.tools.run({
           conversationSlug: conversation.slug,
@@ -116,7 +116,7 @@ describe("toolsRouter", () => {
 
       vi.mocked(callToolApi).mockRejectedValueOnce(new ToolApiError("Tool execution failed", ""));
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await expect(
         caller.mailbox.conversations.tools.run({
           conversationSlug: conversation.slug,

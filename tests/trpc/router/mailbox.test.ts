@@ -9,7 +9,8 @@ import { getMailboxInfo } from "@/lib/data/mailbox";
 import { UserRoles } from "@/lib/data/user";
 import { createCaller } from "@/trpc";
 
-vi.mock("@/lib/data/user", () => ({
+vi.mock("@/lib/data/user", async (importOriginal) => ({
+  ...(await importOriginal()),
   UserRoles: {
     CORE: "core",
     NON_CORE: "nonCore",
@@ -25,7 +26,7 @@ describe("mailboxRouter", () => {
     it("updates slack settings", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const promptUpdatedAtBefore = mailbox.promptUpdatedAt;
 
@@ -47,17 +48,16 @@ describe("mailboxRouter", () => {
   describe("members", () => {
     it("returns a list of mailbox members", async () => {
       const { user } = await userFactory.createRootUser();
-
-      const user2 = await userFactory.createUser();
+      const { user: user2 } = await userFactory.createUser();
       const { conversation: conversation1 } = await conversationFactory.create();
       await conversationFactory.createStaffEmail(conversation1.id, user2.id);
       await conversationFactory.createStaffEmail(conversation1.id, user2.id);
 
-      const user3 = await userFactory.createUser();
+      const { user: user3 } = await userFactory.createUser();
       const { conversation: conversation2 } = await conversationFactory.create();
       await conversationFactory.createStaffEmail(conversation2.id, user3.id);
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const result = await caller.mailbox.members.stats({ period: "1y" });
 
@@ -90,7 +90,7 @@ describe("mailboxRouter", () => {
     it("returns info for the requested mailbox", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       expect(await caller.mailbox.get()).toEqual(await getMailboxInfo(mailbox));
     });

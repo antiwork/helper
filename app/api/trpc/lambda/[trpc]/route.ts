@@ -1,7 +1,6 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { eq } from "drizzle-orm";
-import { db } from "@/db/client";
-import { userProfiles } from "@/db/schema";
+import { assertDefined } from "@/components/utils/assert";
+import { getProfile } from "@/lib/data/user";
 import { createClient } from "@/lib/supabase/server";
 import { appRouter, createTRPCContext } from "@/trpc";
 
@@ -21,21 +20,10 @@ const handler = async (req: any) => {
   let enrichedUser = null;
 
   if (authUser) {
-    const [profile] = await db
-      .select({
-        displayName: userProfiles.displayName,
-        permissions: userProfiles.permissions,
-        access: userProfiles.access,
-        createdAt: userProfiles.createdAt,
-        updatedAt: userProfiles.updatedAt,
-      })
-      .from(userProfiles)
-      .where(eq(userProfiles.id, authUser.id))
-      .limit(1);
+    const profile = assertDefined(await getProfile(authUser.id));
 
     enrichedUser = {
-      id: authUser.id,
-      email: authUser.email,
+      email: authUser.email ?? null,
       ...profile,
     };
   }
@@ -44,7 +32,7 @@ const handler = async (req: any) => {
     endpoint: "/api/trpc/lambda",
     router: appRouter,
     req,
-    createContext: async () => {
+    createContext: () => {
       return createTRPCContext({
         user: enrichedUser,
         headers: req.headers,

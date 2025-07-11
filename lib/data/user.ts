@@ -1,7 +1,8 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { cache } from "react";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { UserProfile, userProfiles } from "@/db/schema/userProfiles";
+import { BasicUserProfile, userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getFullName } from "../auth/authUtils";
@@ -33,6 +34,24 @@ export type UserWithMailboxAccessData = {
 export const getProfile = cache(
   async (userId: string) => await db.query.userProfiles.findFirst({ where: eq(userProfiles.id, userId) }),
 );
+
+export const getBasicProfileById = cache(async (userId: string) => {
+  const [user] = await db
+    .select({ id: userProfiles.id, displayName: userProfiles.displayName, email: authUsers.email })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(eq(userProfiles.id, userId));
+  return user ?? null;
+});
+
+export const getBasicProfileByEmail = cache(async (email: string) => {
+  const [user] = await db
+    .select({ id: userProfiles.id, displayName: userProfiles.displayName, email: authUsers.email })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(eq(authUsers.email, email));
+  return user ?? null;
+});
 
 export const isAdmin = (profile?: typeof userProfiles.$inferSelect) => profile?.permissions === "admin";
 
@@ -112,7 +131,7 @@ export const updateUserMailboxData = async (
     })
     .where(eq(userProfiles.id, userId));
 
-  const [updatedProfile] = await db
+  const updatedProfile = await db
     .select({
       id: userProfiles.id,
       displayName: userProfiles.displayName,
@@ -124,11 +143,12 @@ export const updateUserMailboxData = async (
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .where(eq(userProfiles.id, userId));
+    .where(eq(userProfiles.id, userId))
+    .then(takeUniqueOrThrow);
 
   return {
     id: updatedProfile?.id ?? userId,
-    displayName: getFullName(updatedProfile?.displayName, updatedProfile?.email),
+    displayName: getFullName(updatedProfile),
     email: updatedProfile?.email ?? undefined,
     role: updatedProfile?.access?.role || "afk",
     keywords: updatedProfile?.access?.keywords || [],
@@ -136,17 +156,8 @@ export const updateUserMailboxData = async (
   };
 };
 
-export const findUserViaSlack = cache(async (token: string, slackUserId: string): Promise<UserProfile | null> => {
+export const findUserViaSlack = cache(async (token: string, slackUserId: string): Promise<BasicUserProfile | null> => {
   const slackUser = await getSlackUser(token, slackUserId);
-  const [user] =
-    (await db
-      .select({ id: authUsers.id, displayName: userProfiles.displayName, email: authUsers.email })
-      .from(userProfiles)
-      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-      .where(eq(authUsers.email, slackUser?.profile?.email ?? ""))) ?? null;
-
-  if (user) {
-    return user;
-  }
-  return null;
+  const user = await getBasicProfileByEmail(slackUser?.profile?.email ?? "");
+  return user ?? null;
 });

@@ -136,7 +136,7 @@ export const useRealtimePresence = (roomName: string) => {
       })
       .subscribe(async (status) => {
         if (status !== REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) return;
-        await room.track({ id: user.id, name: getFullName(user.displayName, user.email) });
+        await room.track({ id: user.id, name: getFullName(user) });
       });
 
     return () => {

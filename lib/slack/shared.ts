@@ -1,5 +1,5 @@
 import { KnownBlock } from "@slack/web-api";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversations, userProfiles } from "@/db/schema";
@@ -199,7 +199,7 @@ const openAssignModal = async (message: SlackMessage, triggerId: string) => {
             ).map((member) => ({
               text: {
                 type: "plain_text",
-                text: getFullName(member.displayName, member.email),
+                text: getFullName(member),
               },
               value: member.id,
             })),

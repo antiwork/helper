@@ -33,11 +33,5 @@ export const useSession = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  return {
-    session,
-    user: user,
-    isLoading: isLoading,
-    error: error,
-    refetch: refetch,
-  };
+  return { session, user, isLoading, error, refetch };
 };
