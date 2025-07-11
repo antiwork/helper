@@ -53,6 +53,7 @@ class HelperWidget {
   private showToggleButton: boolean | null = null;
   private isMinimized = true;
   private guideManager: GuideManager;
+  private turboEventHandler: ((event: Event) => void) | null = null;
 
   private messageQueue: any[] = [];
   private observer: MutationObserver | null = null;
@@ -755,6 +756,10 @@ class HelperWidget {
 
     this.hideAllNotifications();
     this.guideManager.destroy();
+    if (this.turboEventHandler) {
+      document.removeEventListener("turbo:load", this.turboEventHandler);
+      this.turboEventHandler = null;
+    }
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -971,11 +976,18 @@ class HelperWidget {
   }
 
   private setupTurboEventListeners(): void {
-    document.addEventListener("turbo:load", () => {
-      HelperWidget.destroy();
+    const turboHandler = async () => {
+      try {
+        HelperWidget.destroy();
+        await HelperWidget.init(window.helperWidgetConfig || {});
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error during Turbo load:", error);
+      }
+    };
 
-      HelperWidget.init(window.helperWidgetConfig || {});
-    });
+    document.addEventListener("turbo:load", turboHandler);
+    this.turboEventHandler = turboHandler;
   }
 }
 
