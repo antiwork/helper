@@ -188,7 +188,8 @@ type Fixtures = Record<
 const fixturesPath = path.join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
   const content = JSON.parse(fs.readFileSync(path.join(fixturesPath, file), "utf8")) as Fixtures;
-  return { ...acc, ...content };
+  Object.assign(acc, content);
+  return acc;
 }, {});
 
 const generateSeedsFromFixtures = async () => {
