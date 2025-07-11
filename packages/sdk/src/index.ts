@@ -723,19 +723,41 @@ class HelperWidget {
   }
 
   private destroyInternal(): void {
-    if (this.iframeWrapper) {
+    if (this.iframeWrapper && document.body.contains(this.iframeWrapper)) {
       document.body.removeChild(this.iframeWrapper);
     }
-    if (this.toggleButton) {
+    if (this.helperIcon && document.body.contains(this.helperIcon)) {
+      document.body.removeChild(this.helperIcon);
+    }
+    if (this.toggleButton && document.body.contains(this.toggleButton)) {
       document.body.removeChild(this.toggleButton);
     }
-    if (this.notificationContainer) {
+    if (this.notificationContainer && document.body.contains(this.notificationContainer)) {
       document.body.removeChild(this.notificationContainer);
     }
+
+    // Reset all element references
+    this.iframe = null;
+    this.iframeWrapper = null;
+    this.helperIcon = null;
+    this.loadingOverlay = null;
+    this.toggleButton = null;
+    this.notificationContainer = null;
+    this.notificationBubbles.clear();
+    this.renderedContactForms.clear();
+
+    // Reset state
+    this.isVisible = false;
+    this.isIframeReady = false;
+    this.hasBeenOpened = false;
+    this.currentConversationSlug = null;
+    this.screenshotContext = null;
+
     this.hideAllNotifications();
     this.guideManager.destroy();
     if (this.observer) {
       this.observer.disconnect();
+      this.observer = null;
     }
   }
 
