@@ -178,32 +178,21 @@ type MessageDetail = {
 };
 
 type Fixtures = Record<
-  string, // fixtureId
-  Record<
-    string, // conversationId
-    {
-      messages: MessageDetail[];
-      conversation: ConversationDetail;
-    }
-  >
+  string, // conversationId
+  {
+    messages: MessageDetail[];
+    conversation: ConversationDetail;
+  }
 >;
 
 const fixturesPath = path.join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
   const content = JSON.parse(fs.readFileSync(path.join(fixturesPath, file), "utf8")) as Fixtures;
-  const [fixtureId, conversations] = Object.entries(content)[0]!;
-  return {
-    ...acc,
-    [fixtureId]: {
-      ...(acc[fixtureId] ?? {}),
-      ...conversations,
-    },
-  };
+  return { ...acc, ...content };
 }, {});
 
 const generateSeedsFromFixtures = async () => {
-  // Since we're single-tenant, just use the first fixture data
-  const fixtures = Object.entries(assertDefined(Object.values(fixtureData)[0]));
+  const fixtures = Object.entries(fixtureData).sort(([a], [b]) => parseInt(a) - parseInt(b));
 
   await Promise.all(
     fixtures
