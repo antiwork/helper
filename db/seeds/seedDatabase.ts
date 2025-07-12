@@ -193,7 +193,7 @@ const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) =>
 }, {});
 
 const generateSeedsFromFixtures = async () => {
-  const fixtures = Object.entries(fixtureData).sort(([a], [b]) => parseInt(a) - parseInt(b));
+  const fixtures = Object.entries(fixtureData);
 
   await Promise.all(
     fixtures
