@@ -36,11 +36,12 @@ export const CustomerFilter = memo(function CustomerFilter({
     });
   }, 300);
 
-  const buttonText = selectedCustomers.length === 1
-    ? selectedCustomers[0]
-    : selectedCustomers.length > 1
-      ? `${selectedCustomers.length} customers`
-      : "Customer";
+  const buttonText =
+    selectedCustomers.length === 1
+      ? selectedCustomers[0]
+      : selectedCustomers.length > 1
+        ? `${selectedCustomers.length} customers`
+        : "Customer";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

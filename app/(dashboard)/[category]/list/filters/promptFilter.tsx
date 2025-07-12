@@ -16,11 +16,7 @@ export const PromptFilter = memo(function PromptFilter({
   isPrompt: boolean | undefined;
   onChange: (isPrompt: boolean | undefined) => void;
 }) {
-  const buttonText = isPrompt === true 
-    ? "From a prompt" 
-    : isPrompt === false 
-      ? "Not from a prompt" 
-      : "Prompt";
+  const buttonText = isPrompt === true ? "From a prompt" : isPrompt === false ? "Not from a prompt" : "Prompt";
 
   return (
     <DropdownMenu>

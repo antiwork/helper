@@ -18,11 +18,7 @@ export const ReactionFilter = memo(function ReactionFilter({
 }) {
   const buttonContent = useMemo(() => {
     const icon =
-      reactionType === "thumbs-down" ? (
-        <ThumbsDown className="h-4 w-4 mr-2" />
-      ) : (
-        <ThumbsUp className="h-4 w-4 mr-2" />
-      );
+      reactionType === "thumbs-down" ? <ThumbsDown className="h-4 w-4 mr-2" /> : <ThumbsUp className="h-4 w-4 mr-2" />;
 
     const text =
       reactionType === "thumbs-up"

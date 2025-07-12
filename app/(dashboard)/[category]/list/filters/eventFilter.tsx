@@ -27,11 +27,12 @@ interface EventFilterProps {
 }
 
 export const EventFilter = memo(function EventFilter({ selectedEvents, onChange }: EventFilterProps) {
-  const buttonText = selectedEvents.length === 1
-    ? EVENT_OPTIONS.find((event) => event.value === selectedEvents[0])?.label
-    : selectedEvents.length > 1
-      ? `${selectedEvents.length} events`
-      : "Events";
+  const buttonText =
+    selectedEvents.length === 1
+      ? EVENT_OPTIONS.find((event) => event.value === selectedEvents[0])?.label
+      : selectedEvents.length > 1
+        ? `${selectedEvents.length} events`
+        : "Events";
 
   return (
     <DropdownMenu>
@@ -49,10 +50,7 @@ export const EventFilter = memo(function EventFilter({ selectedEvents, onChange 
               key={event.value}
               checked={isChecked}
               onCheckedChange={(checked) => {
-                onChange(checked 
-                  ? [...selectedEvents, event.value] 
-                  : selectedEvents.filter((e) => e !== event.value)
-                );
+                onChange(checked ? [...selectedEvents, event.value] : selectedEvents.filter((e) => e !== event.value));
               }}
             >
               {event.label}
