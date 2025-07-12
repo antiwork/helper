@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { HelperWidgetConfig, MESSAGE_TYPE, RESUME_GUIDE } from "@helperai/sdk";
+import { FileUploadProvider } from "@/components/fileUploadContext";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header from "@/components/widget/Header";
@@ -179,16 +180,18 @@ export default function Page() {
               </div>
 
               <div className="shrink-0 w-full h-full flex flex-col">
-                <Conversation
-                  token={token}
-                  readPageTool={readPageToolCall}
-                  isGumroadTheme={isGumroadTheme}
-                  isNewConversation={isNewConversation}
-                  selectedConversationSlug={selectedConversationSlug}
-                  onLoadFailed={memoizedHandleNewConversation}
-                  guideEnabled={config.enableGuide ?? false}
-                  resumeGuide={resumeGuide}
-                />
+                <FileUploadProvider conversationSlug={selectedConversationSlug}>
+                  <Conversation
+                    token={token}
+                    readPageTool={readPageToolCall}
+                    isGumroadTheme={isGumroadTheme}
+                    isNewConversation={isNewConversation}
+                    selectedConversationSlug={selectedConversationSlug}
+                    onLoadFailed={memoizedHandleNewConversation}
+                    guideEnabled={config.enableGuide ?? false}
+                    resumeGuide={resumeGuide}
+                  />
+                </FileUploadProvider>
               </div>
             </m.div>
           </LazyMotion>

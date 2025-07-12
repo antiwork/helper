@@ -463,6 +463,7 @@ export const createUserMessage = async (
   email: string | null,
   query: string,
   screenshotData?: string,
+  attachments?: { name: string; contentType: string; url: string }[],
 ) => {
   const message = await createConversationMessage({
     conversationId,
@@ -473,7 +474,10 @@ export const createUserMessage = async (
     isPerfect: false,
     isPinned: false,
     isFlaggedAsBad: false,
-    metadata: { includesScreenshot: !!screenshotData },
+    metadata: {
+      includesScreenshot: !!screenshotData,
+      hasAttachments: !!(attachments && attachments.length > 0),
+    },
   });
 
   if (screenshotData) {
