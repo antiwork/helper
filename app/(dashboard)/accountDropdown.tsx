@@ -28,7 +28,7 @@ export function AccountDropdown() {
     router.push("/login");
   }, [router]);
 
-  const handleDocsClick = useCallback((e: Event) => {
+  const handleDocsClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     window.open(`${getMarketingSiteUrl()}/docs`, "_blank", "noopener,noreferrer");
   }, []);
