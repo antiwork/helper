@@ -31,7 +31,7 @@ module.exports = (env) => {
         },
         {
           test: /modern-screenshot\/dist\/worker.js$/,
-          type: "asset/resource",
+          use: "raw-loader",
           generator: {
             filename: "sdk-modern-screenshot-worker.js",
           },

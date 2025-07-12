@@ -1,5 +1,6 @@
 // This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
 
+import { Context } from "modern-screenshot";
 import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
@@ -17,13 +18,20 @@ import {
   type NotificationStatus,
 } from "./utils";
 
+// Import worker code as string
+const workerCode = require("modern-screenshot/dist/worker.js");
+
+// Function to create inline worker URL using Blob
+function createInlineWorkerUrl(): string {
+  const blob = new Blob([workerCode], { type: "application/javascript" });
+  return URL.createObjectURL(blob);
+}
+
 declare global {
   interface Window {
     helperWidgetConfig?: HelperWidgetConfig;
   }
 }
-
-const screenshotWorkerUrl = new URL("modern-screenshot/dist/worker.js", import.meta.url).href;
 
 interface Notification {
   id: number;
@@ -59,7 +67,7 @@ class HelperWidget {
   private readonly MINIMIZED_STORAGE_KEY = "helper_widget_minimized";
   private readonly ANONYMOUS_SESSION_TOKEN_KEY = "helper_widget_anonymous_session_token";
   private currentConversationSlug: string | null = null;
-  private screenshotContext: any | null = null;
+  private screenshotContext: Context | null = null;
   private renderedContactForms: Set<HTMLElement> = new Set();
 
   private constructor(config: HelperWidgetConfig) {
@@ -752,17 +760,20 @@ class HelperWidget {
   }
 
   private async takeScreenshot(): Promise<void> {
-    const { domToPng, createContext } = await import("modern-screenshot");
-    this.screenshotContext ??= await createContext(document.body, {
-      workerUrl: screenshotWorkerUrl,
-      workerNumber: 1,
-      filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
-    });
     try {
+      const { domToPng, createContext } = await import("modern-screenshot");
+
+      if (!this.screenshotContext) {
+        this.screenshotContext = await createContext(document.body, {
+          workerUrl: createInlineWorkerUrl(),
+          workerNumber: 1,
+          filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
+        });
+      }
+
       const screenshot = await domToPng(this.screenshotContext);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: screenshot });
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Failed to take screenshot:", error);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: null });
     }
