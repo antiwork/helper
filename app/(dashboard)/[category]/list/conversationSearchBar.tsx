@@ -208,15 +208,17 @@ export const ConversationSearchBar = React.memo<ConversationSearchBarProps>(({
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
         
-        {conversationCount > 0 && (
-          <button
-            onClick={toggleAllConversations}
-            className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"
-            type="button"
-          >
-            {selectAllText}
-          </button>
-        )}
+        <div className="hidden md:block min-w-[80px]">
+          {conversationCount > 0 && (
+            <button
+              onClick={toggleAllConversations}
+              className="text-sm text-muted-foreground hover:text-foreground cursor-pointer text-left"
+              type="button"
+            >
+              {selectAllText}
+            </button>
+          )}
+        </div>
       </div>
       
       <div className="flex-1 max-w-[400px] flex items-center gap-2">
