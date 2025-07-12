@@ -1,7 +1,8 @@
 import { User } from "lucide-react";
+import { memo } from "react";
 import { MemberFilter } from "./memberFilter";
 
-export function AssigneeFilter({
+export const AssigneeFilter = memo(function AssigneeFilter({
   selectedAssignees,
   onChange,
 }: {
@@ -19,4 +20,4 @@ export function AssigneeFilter({
       multiSelectionDisplay={(count) => `${count} assignees`}
     />
   );
-}
+});
