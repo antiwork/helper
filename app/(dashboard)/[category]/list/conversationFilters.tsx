@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
@@ -10,6 +10,7 @@ import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
 import { VipFilter } from "./filters/vipFilter";
+import React from "react";
 
 interface FilterValues {
   assignee: string[];
@@ -76,12 +77,12 @@ export const useConversationFilters = () => {
     });
   }, [searchParams]);
 
-  const updateFilter = (updates: Partial<FilterValues>) => {
+  const updateFilter = useCallback((updates: Partial<FilterValues>) => {
     setFilterValues((prev) => ({ ...prev, ...updates }));
     debouncedSetFilters(updates);
-  };
+  }, [debouncedSetFilters]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     const clearedFilters = {
       assignee: null,
       createdAfter: null,
@@ -94,7 +95,7 @@ export const useConversationFilters = () => {
       events: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
-  };
+  }, [setSearchParams]);
 
   return {
     filterValues,
@@ -104,40 +105,80 @@ export const useConversationFilters = () => {
   };
 };
 
-export const ConversationFilters = ({
+export const ConversationFilters = React.memo<ConversationFiltersProps>(({
   filterValues,
   onUpdateFilter,
   activeFilterCount,
   onClearFilters,
-}: ConversationFiltersProps) => {
+}) => {
+  // Memoize individual filter callbacks to prevent unnecessary re-renders
+  const handleDateSelect = useCallback((startDate: string | null, endDate: string | null) => {
+    onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
+  }, [onUpdateFilter]);
+
+  const handleAssigneeChange = useCallback((assignees: string[]) => {
+    onUpdateFilter({ assignee: assignees });
+  }, [onUpdateFilter]);
+
+  const handleResponderChange = useCallback((responders: string[]) => {
+    onUpdateFilter({ repliedBy: responders });
+  }, [onUpdateFilter]);
+
+  const handleCustomerChange = useCallback((customers: string[]) => {
+    onUpdateFilter({ customer: customers });
+  }, [onUpdateFilter]);
+
+  const handleVipChange = useCallback((isVip: boolean | undefined) => {
+    onUpdateFilter({ isVip });
+  }, [onUpdateFilter]);
+
+  const handleReactionChange = useCallback((reactionType: "thumbs-up" | "thumbs-down" | null) => {
+    onUpdateFilter({ reactionType });
+  }, [onUpdateFilter]);
+
+  const handleEventChange = useCallback((events: ("request_human_support" | "resolved_by_ai")[]) => {
+    onUpdateFilter({ events });
+  }, [onUpdateFilter]);
+
+  const handlePromptChange = useCallback((isPrompt: boolean | undefined) => {
+    onUpdateFilter({ isPrompt });
+  }, [onUpdateFilter]);
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
       <DateFilter
         startDate={filterValues.createdAfter}
         endDate={filterValues.createdBefore}
-        onSelect={(startDate, endDate) => {
-          onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
-        }}
+        onSelect={handleDateSelect}
       />
       <AssigneeFilter
         selectedAssignees={filterValues.assignee}
-        onChange={(assignees) => onUpdateFilter({ assignee: assignees })}
+        onChange={handleAssigneeChange}
       />
       <ResponderFilter
         selectedResponders={filterValues.repliedBy}
-        onChange={(responders) => onUpdateFilter({ repliedBy: responders })}
+        onChange={handleResponderChange}
       />
       <CustomerFilter
         selectedCustomers={filterValues.customer}
-        onChange={(customers) => onUpdateFilter({ customer: customers })}
+        onChange={handleCustomerChange}
       />
-      <VipFilter isVip={filterValues.isVip} onChange={(isVip) => onUpdateFilter({ isVip })} />
+      <VipFilter 
+        isVip={filterValues.isVip} 
+        onChange={handleVipChange} 
+      />
       <ReactionFilter
         reactionType={filterValues.reactionType ?? null}
-        onChange={(reactionType) => onUpdateFilter({ reactionType })}
+        onChange={handleReactionChange}
       />
-      <EventFilter selectedEvents={filterValues.events} onChange={(events) => onUpdateFilter({ events })} />
-      <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => onUpdateFilter({ isPrompt })} />
+      <EventFilter 
+        selectedEvents={filterValues.events} 
+        onChange={handleEventChange} 
+      />
+      <PromptFilter 
+        isPrompt={filterValues.isPrompt} 
+        onChange={handlePromptChange} 
+      />
       {activeFilterCount > 0 && (
         <Button data-testid="clear-filters-button" variant="ghost" onClick={onClearFilters}>
           Clear filters
@@ -145,4 +186,4 @@ export const ConversationFilters = ({
       )}
     </div>
   );
-};
+});
