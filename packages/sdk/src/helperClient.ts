@@ -24,8 +24,6 @@ export const createHelperClient = ({ host, token }: { host: string; token?: stri
 
   return {
     conversations: {
-      unreadCount: () => null,
-
       create: (params: CreateConversationParams = {}) =>
         request<CreateConversationResponse>("/api/chat/conversation", {
           method: "POST",
@@ -43,6 +41,5 @@ export const createHelperClient = ({ host, token }: { host: string; token?: stri
           body: JSON.stringify(params),
         }),
     },
-    useChat: () => null,
   };
 };

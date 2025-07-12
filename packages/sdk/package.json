@@ -1,6 +1,6 @@
 {
   "name": "@helperai/sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Helper SDK for creating customer support widgets on your website",
   "author": "Helper (https://helper.ai)",
   "license": "MIT",
