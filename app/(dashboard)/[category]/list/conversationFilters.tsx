@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
@@ -10,7 +10,6 @@ import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
 import { VipFilter } from "./filters/vipFilter";
-import React from "react";
 
 interface FilterValues {
   assignee: string[];

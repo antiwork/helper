@@ -1,6 +1,6 @@
 import { escape } from "lodash-es";
 import { Bot, User } from "lucide-react";
-import { useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useCallback, useMemo } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem as ConversationListItemType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -13,7 +13,6 @@ import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
 import { highlightKeywords } from "./filters/highlightKeywords";
-import React from "react";
 
 type ListItem = ConversationListItemType & { isNew?: boolean };
 

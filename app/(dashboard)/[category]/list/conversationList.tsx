@@ -1,6 +1,6 @@
 import { Send } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
@@ -22,7 +22,6 @@ import { ConversationListSkeleton } from "./conversationListSkeleton";
 import { ConversationSearchBar } from "./conversationSearchBar";
 import { NoConversations } from "./emptyState";
 import NewConversationModalContent from "./newConversationModal";
-import React from "react";
 
 type ListItem = ConversationItem & { isNew?: boolean };
 

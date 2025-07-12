@@ -1,7 +1,7 @@
 import { capitalize } from "lodash-es";
 import { ArrowDownUp, Filter, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
-import React from "react";
 
 type StatusOption = "open" | "closed" | "spam";
 type SortOption = "oldest" | "newest" | "highest_value";
