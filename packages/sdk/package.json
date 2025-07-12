@@ -1,8 +1,23 @@
 {
   "name": "@helperai/sdk",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Helper SDK for creating customer support widgets on your website",
-  "type": "module",
+  "author": "Helper (https://helper.ai)",
+  "license": "MIT",
+  "homepage": "https://helper.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antiwork/helper.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "main": "dist/umd/module.js",
   "module": "dist/esm/module.js",
   "types": "dist/types/module.d.ts",
