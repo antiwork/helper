@@ -10,6 +10,7 @@ import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
+import React from "react";
 
 type StatusOption = "open" | "closed" | "spam";
 type SortOption = "oldest" | "newest" | "highest_value";
@@ -24,7 +25,7 @@ interface ConversationSearchBarProps {
   conversationCount: number;
 }
 
-export const ConversationSearchBar = ({
+export const ConversationSearchBar = React.memo<ConversationSearchBarProps>(({
   toggleAllConversations,
   allConversationsSelected,
   activeFilterCount,
@@ -32,7 +33,7 @@ export const ConversationSearchBar = ({
   showFilters,
   setShowFilters,
   conversationCount,
-}: ConversationSearchBarProps) => {
+}) => {
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -40,13 +41,15 @@ export const ConversationSearchBar = ({
 
   const { data: openCount } = api.mailbox.openCount.useQuery();
 
-  const status = openCount
-    ? [
-        { status: "open", count: openCount[input.category] },
-        { status: "closed", count: 0 },
-        { status: "spam", count: 0 },
-      ]
-    : [];
+  const status = useMemo(() => {
+    return openCount
+      ? [
+          { status: "open" as const, count: openCount[input.category] },
+          { status: "closed" as const, count: 0 },
+          { status: "spam" as const, count: 0 },
+        ]
+      : [];
+  }, [openCount, input.category]);
 
   const debouncedSetSearch = useDebouncedCallback((val: string) => {
     setSearchParams({ search: val || null });
@@ -55,11 +58,13 @@ export const ConversationSearchBar = ({
 
   useEffect(() => {
     debouncedSetSearch(search);
-  }, [search]);
+  }, [search, debouncedSetSearch]);
 
-  useHotkeys("mod+k", () => {
+  const focusSearchInput = useCallback(() => {
     searchInputRef.current?.focus();
-  });
+  }, []);
+
+  useHotkeys("mod+k", focusSearchInput);
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
@@ -82,49 +87,95 @@ export const ConversationSearchBar = ({
     [setId, setSearchParams],
   );
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters(!showFilters);
+  }, [showFilters, setShowFilters]);
+
   const statusOptions = useMemo(() => {
-    const statuses = status.flatMap((s) => ({
-      value: s.status as StatusOption,
+    const statuses = status.map((s) => ({
+      value: s.status,
       label: s.count ? `${s.count} ${s.status}` : capitalize(s.status),
-      selected: searchParams.status ? searchParams.status == s.status : s.status === "open",
+      selected: searchParams.status ? searchParams.status === s.status : s.status === "open",
     }));
 
-    if (searchParams.status) {
-      if (!statuses.some((s) => s.value === searchParams.status)) {
-        statuses.push({
-          value: searchParams.status as StatusOption,
-          label: capitalize(searchParams.status),
-          selected: true,
-        });
-      }
+    // Add current status if it's not in the default list
+    if (searchParams.status && !statuses.some((s) => s.value === searchParams.status)) {
+      statuses.push({
+        value: searchParams.status as StatusOption,
+        label: capitalize(searchParams.status),
+        selected: true,
+      });
     }
 
     return statuses;
-  }, [status, searchParams]);
+  }, [status, searchParams.status]);
 
-  const sortOptions = useMemo(
-    () => [
-      ...(defaultSort === "highest_value"
-        ? [
-            {
-              value: `highest_value` as const,
-              label: `Highest Value`,
-              selected: searchParams.sort ? searchParams.sort == "highest_value" : true,
-            },
-          ]
-        : []),
+  const sortOptions = useMemo(() => {
+    const options: Array<{
+      value: SortOption;
+      label: string;
+      selected: boolean;
+    }> = [
       {
-        value: `oldest` as const,
-        label: `Oldest`,
+        value: "oldest",
+        label: "Oldest",
         selected: searchParams.sort ? searchParams.sort === "oldest" : defaultSort === "oldest",
       },
       {
-        value: `newest` as const,
-        label: `Newest`,
-        selected: searchParams.sort == "newest",
+        value: "newest",
+        label: "Newest",
+        selected: searchParams.sort === "newest",
       },
-    ],
-    [defaultSort, searchParams],
+    ];
+
+    // Add highest_value option if it's the default sort
+    if (defaultSort === "highest_value") {
+      options.unshift({
+        value: "highest_value",
+        label: "Highest Value",
+        selected: searchParams.sort ? searchParams.sort === "highest_value" : true,
+      });
+    }
+
+    return options;
+  }, [defaultSort, searchParams.sort]);
+
+  const selectedStatusOption = useMemo(() => 
+    statusOptions.find(({ selected }) => selected),
+    [statusOptions]
+  );
+
+  const selectedSortOption = useMemo(() => 
+    sortOptions.find(({ selected }) => selected),
+    [sortOptions]
+  );
+
+  const selectAllText = useMemo(() => 
+    allConversationsSelected ? "Select none" : "Select all",
+    [allConversationsSelected]
+  );
+
+  const statusIndicatorClass = useMemo(() => {
+    const statusValue = selectedStatusOption?.value;
+    return cn(
+      "w-2 h-2 rounded-full",
+      statusValue === "open"
+        ? "bg-success"
+        : statusValue === "closed"
+          ? "bg-muted-foreground"
+          : statusValue === "spam"
+            ? "bg-destructive"
+            : "bg-muted",
+    );
+  }, [selectedStatusOption?.value]);
+
+  const filterButtonClass = useMemo(() => 
+    cn("h-8 w-auto px-2", showFilters && "bg-bright text-bright-foreground hover:bg-bright/90"),
+    [showFilters]
   );
 
   return (
@@ -132,31 +183,22 @@ export const ConversationSearchBar = ({
       <div className="flex items-center gap-4">
         {statusOptions.length > 1 ? (
           <Select
-            value={statusOptions.find(({ selected }) => selected)?.value || ""}
+            value={selectedStatusOption?.value || ""}
             onValueChange={handleStatusFilterChange}
           >
             <SelectTrigger className="w-auto text-foreground [&>svg]:text-foreground text-sm">
               <SelectValue placeholder="Select status">
-                <span className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      statusOptions.find(({ selected }) => selected)?.value === "open"
-                        ? "bg-success"
-                        : statusOptions.find(({ selected }) => selected)?.value === "closed"
-                          ? "bg-muted-foreground"
-                          : statusOptions.find(({ selected }) => selected)?.value === "spam"
-                            ? "bg-destructive"
-                            : "bg-muted",
-                    )}
-                  />
-                  {statusOptions.find(({ selected }) => selected)?.label}
-                </span>
+                {selectedStatusOption && (
+                  <span className="flex items-center gap-2">
+                    <span className={statusIndicatorClass} />
+                    {selectedStatusOption.label}
+                  </span>
+                )}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="">
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
@@ -165,21 +207,24 @@ export const ConversationSearchBar = ({
         ) : statusOptions[0] ? (
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
+        
         {conversationCount > 0 && (
           <button
-            onClick={() => toggleAllConversations()}
+            onClick={toggleAllConversations}
             className="hidden md:block text-sm text-muted-foreground hover:text-foreground cursor-pointer min-w-[80px] text-left"
+            type="button"
           >
-            {allConversationsSelected ? "Select none" : "Select all"}
+            {selectAllText}
           </button>
         )}
       </div>
+      
       <div className="flex-1 max-w-[400px] flex items-center gap-2">
         <Input
           ref={searchInputRef}
           placeholder="Search conversations"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="flex-1 h-10 rounded-full text-sm"
           iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
           autoFocus
@@ -189,14 +234,18 @@ export const ConversationSearchBar = ({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          className={cn("h-8 w-auto px-2", showFilters && "bg-bright text-bright-foreground hover:bg-bright/90")}
+          onClick={handleToggleFilters}
+          className={filterButtonClass}
         >
           <Filter className="h-4 w-4" />
           {activeFilterCount > 0 && <span className="text-xs ml-1">({activeFilterCount})</span>}
         </Button>
       </div>
-      <Select value={sortOptions.find(({ selected }) => selected)?.value || ""} onValueChange={handleSortChange}>
+      
+      <Select 
+        value={selectedSortOption?.value || ""} 
+        onValueChange={handleSortChange}
+      >
         <SelectTrigger
           variant="bare"
           className="w-auto text-foreground [&>svg]:text-foreground text-sm md:min-w-[110px] justify-center"
@@ -211,7 +260,7 @@ export const ConversationSearchBar = ({
             }
           >
             <ArrowDownUp className="h-4 w-4 md:hidden" />
-            <span className="hidden md:block">{sortOptions.find(({ selected }) => selected)?.label}</span>
+            <span className="hidden md:block">{selectedSortOption?.label}</span>
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -224,4 +273,6 @@ export const ConversationSearchBar = ({
       </Select>
     </div>
   );
-};
+});
+
+ConversationSearchBar.displayName = 'ConversationSearchBar';
