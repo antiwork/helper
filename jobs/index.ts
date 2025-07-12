@@ -1,5 +1,6 @@
 import { autoAssignConversation } from "./autoAssignConversation";
 import { closeInactiveConversations, closeInactiveConversationsForMailbox } from "./autoCloseInactiveConversations";
+import { categorizeConversationToIssueGroup } from "./categorizeConversationToIssueGroup";
 import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversations";
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
@@ -54,6 +55,7 @@ export const eventJobs = {
   closeInactiveConversations,
   closeInactiveConversationsForMailbox,
   autoAssignConversation,
+  categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
 };

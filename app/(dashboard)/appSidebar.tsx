@@ -4,10 +4,12 @@ import {
   BarChart,
   BookOpen,
   ChevronLeft,
+  GitBranch,
   Inbox,
   Link as LinkIcon,
   MessageSquareText,
   MonitorSmartphone,
+  Pin,
   Settings as SettingsIcon,
   Ticket,
   User,
@@ -42,6 +44,7 @@ declare global {
 const settingsItems = [
   { label: "Knowledge", id: "knowledge", icon: BookOpen },
   { label: "Team", id: "team", icon: Users },
+  { label: "Common Issues", id: "common-issues", icon: GitBranch },
   { label: "Customers", id: "customers", icon: UserPlus },
   { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
   { label: "Integrations", id: "integrations", icon: LinkIcon },
@@ -54,6 +57,8 @@ export function AppSidebar() {
   const previousAppUrlRef = useRef<string | null>(null);
   const { data: openCounts } = api.mailbox.openCount.useQuery();
   const { data: mailbox } = api.mailbox.get.useQuery();
+  // Check if Common Issues feature is available
+  const { data: pinnedIssues, error: issueGroupsError } = api.mailbox.issueGroups.pinnedList.useQuery();
   const isSettingsPage = pathname.startsWith(`/settings`);
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -162,8 +167,50 @@ export function AppSidebar() {
                       <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
+                  {!issueGroupsError && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={pathname === `/common-issues`} tooltip="Common issues">
+                        <Link href={`/common-issues`} onClick={handleItemClick}>
+                          <GitBranch className="size-4" />
+                          <span className="group-data-[collapsible=icon]:hidden">Common issues</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                 </SidebarMenu>
               </SidebarGroup>
+
+              {/* Pinned Issues Section */}
+              {!issueGroupsError && pinnedIssues && pinnedIssues.groups.length > 0 && (
+                <SidebarGroup>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton className="text-xs font-medium text-muted-foreground pointer-events-none">
+                        <Pin className="size-3" />
+                        <span className="group-data-[collapsible=icon]:hidden">Pinned Issues</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    {pinnedIssues.groups.slice(0, 5).map((group) => (
+                      <SidebarMenuItem key={group.id}>
+                        <SidebarMenuButton asChild tooltip={group.title}>
+                          <Link href={`/all?issueGroupId=${group.id}`} onClick={handleItemClick} className="text-xs">
+                            <Ticket className="size-3" />
+                            <span className="group-data-[collapsible=icon]:hidden truncate text-xs leading-tight">
+                              {group.title.replace(/^\d+\s+/, "").length > 25
+                                ? `${group.title.replace(/^\d+\s+/, "").substring(0, 25)}...`
+                                : group.title.replace(/^\d+\s+/, "")}
+                            </span>
+                          </Link>
+                        </SidebarMenuButton>
+                        {group.openCount > 0 && (
+                          <SidebarMenuBadge className="text-xs">{group.openCount}</SidebarMenuBadge>
+                        )}
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroup>
+              )}
+
               <SidebarGroup>
                 <SidebarMenu>
                   <SidebarMenuItem>

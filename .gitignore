@@ -58,3 +58,6 @@ test-results/
 tests/e2e/debug/*.png
 tests/e2e/screenshots/
 tests/e2e/.auth/
+
+# Claude development notes
+CLAUDE.md
