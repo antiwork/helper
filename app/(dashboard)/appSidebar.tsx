@@ -84,7 +84,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const previousAppUrlRef = useRef<string | null>(null);
-  const { data: openCounts, isLoading: isCountsLoading } = api.mailbox.openCount.useQuery();
+  const { data: openCounts } = api.mailbox.openCount.useQuery();
   const { data: mailbox, isLoading: isMailboxLoading } = api.mailbox.get.useQuery();
   const { isMobile, setOpenMobile } = useSidebar();
 
