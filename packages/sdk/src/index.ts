@@ -1,6 +1,5 @@
 // This is *only* used for the SDK output in the public directory and is not importable by the Next.js app
 
-import { Context } from "modern-screenshot";
 import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
@@ -23,8 +22,6 @@ declare global {
     helperWidgetConfig?: HelperWidgetConfig;
   }
 }
-
-const GUMROAD_MAILBOX_SLUG = "gumroad";
 
 const screenshotWorkerUrl = new URL("modern-screenshot/dist/worker.js", import.meta.url).href;
 
@@ -62,7 +59,7 @@ class HelperWidget {
   private readonly MINIMIZED_STORAGE_KEY = "helper_widget_minimized";
   private readonly ANONYMOUS_SESSION_TOKEN_KEY = "helper_widget_anonymous_session_token";
   private currentConversationSlug: string | null = null;
-  private screenshotContext: Context | null = null;
+  private screenshotContext: any | null = null;
   private renderedContactForms: Set<HTMLElement> = new Set();
 
   private constructor(config: HelperWidgetConfig) {
