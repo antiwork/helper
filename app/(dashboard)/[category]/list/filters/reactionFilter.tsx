@@ -17,16 +17,20 @@ export const ReactionFilter = memo(function ReactionFilter({
   onChange: (reactionType: "thumbs-up" | "thumbs-down" | null) => void;
 }) {
   const buttonContent = useMemo(() => {
-    const icon = reactionType === "thumbs-down" 
-      ? <ThumbsDown className="h-4 w-4 mr-2" />
-      : <ThumbsUp className="h-4 w-4 mr-2" />;
-    
-    const text = reactionType === "thumbs-up"
-      ? "Positive reaction"
-      : reactionType === "thumbs-down"
-        ? "Negative reaction"
-        : "Reaction";
-    
+    const icon =
+      reactionType === "thumbs-down" ? (
+        <ThumbsDown className="h-4 w-4 mr-2" />
+      ) : (
+        <ThumbsUp className="h-4 w-4 mr-2" />
+      );
+
+    const text =
+      reactionType === "thumbs-up"
+        ? "Positive reaction"
+        : reactionType === "thumbs-down"
+          ? "Negative reaction"
+          : "Reaction";
+
     return { icon, text };
   }, [reactionType]);
 
