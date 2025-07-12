@@ -18,15 +18,18 @@ import {
   type NotificationStatus,
 } from "./utils";
 
+const workerCode = require("modern-screenshot/dist/worker.js");
+
+function createInlineWorkerUrl(): string {
+  const blob = new Blob([workerCode], { type: "application/javascript" });
+  return URL.createObjectURL(blob);
+}
+
 declare global {
   interface Window {
     helperWidgetConfig?: HelperWidgetConfig;
   }
 }
-
-const GUMROAD_MAILBOX_SLUG = "gumroad";
-
-const screenshotWorkerUrl = new URL("modern-screenshot/dist/worker.js", import.meta.url).href;
 
 interface Notification {
   id: number;
@@ -755,13 +758,17 @@ class HelperWidget {
   }
 
   private async takeScreenshot(): Promise<void> {
-    const { domToPng, createContext } = await import("modern-screenshot");
-    this.screenshotContext ??= await createContext(document.body, {
-      workerUrl: screenshotWorkerUrl,
-      workerNumber: 1,
-      filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
-    });
     try {
+      const { domToPng, createContext } = await import("modern-screenshot");
+
+      if (!this.screenshotContext) {
+        this.screenshotContext = await createContext(document.body, {
+          workerUrl: createInlineWorkerUrl(),
+          workerNumber: 1,
+          filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
+        });
+      }
+
       const screenshot = await domToPng(this.screenshotContext);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: screenshot });
     } catch (error) {
