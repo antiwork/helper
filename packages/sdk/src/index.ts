@@ -21,7 +21,6 @@ import {
 // Import worker code as string
 const workerCode = require("modern-screenshot/dist/worker.js");
 
-// Function to create inline worker URL using Blob
 function createInlineWorkerUrl(): string {
   const blob = new Blob([workerCode], { type: "application/javascript" });
   return URL.createObjectURL(blob);
@@ -774,6 +773,7 @@ class HelperWidget {
       const screenshot = await domToPng(this.screenshotContext);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: screenshot });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to take screenshot:", error);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: null });
     }
