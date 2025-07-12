@@ -53,7 +53,6 @@ class HelperWidget {
   private showToggleButton: boolean | null = null;
   private isMinimized = true;
   private guideManager: GuideManager;
-  private turboEventHandler: ((event: Event) => void) | null = null;
 
   private messageQueue: any[] = [];
   private observer: MutationObserver | null = null;
@@ -288,7 +287,6 @@ class HelperWidget {
     this.connectExistingToggleElements();
     this.connectExistingContactFormElements();
     this.setupMutationObserver();
-    this.setupTurboEventListeners();
 
     let resizeTimeout: NodeJS.Timeout;
     window.addEventListener("resize", () => {
@@ -756,10 +754,6 @@ class HelperWidget {
 
     this.hideAllNotifications();
     this.guideManager.destroy();
-    if (this.turboEventHandler) {
-      document.removeEventListener("turbo:load", this.turboEventHandler);
-      this.turboEventHandler = null;
-    }
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -973,22 +967,6 @@ class HelperWidget {
 
   private isAnonymous(): boolean {
     return !this.config.email;
-  }
-
-  private setupTurboEventListeners(): void {
-    const turboHandler = async () => {
-      try {
-        const currentConfig = this.config;
-        HelperWidget.destroy();
-        await HelperWidget.init(currentConfig);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error during Turbo load:", error);
-      }
-    };
-
-    document.addEventListener("turbo:load", turboHandler);
-    this.turboEventHandler = turboHandler;
   }
 }
 
