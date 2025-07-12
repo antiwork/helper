@@ -18,7 +18,6 @@ import {
   type NotificationStatus,
 } from "./utils";
 
-// Import worker code as string
 const workerCode = require("modern-screenshot/dist/worker.js");
 
 function createInlineWorkerUrl(): string {
