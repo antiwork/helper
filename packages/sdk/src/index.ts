@@ -4,7 +4,6 @@ import { Context } from "modern-screenshot";
 import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
-import { scriptOrigin } from "./scriptOrigin";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -16,7 +15,8 @@ import {
   SHOW_WIDGET,
   type HelperWidgetConfig,
   type NotificationStatus,
-} from "./utils";
+} from "./module";
+import { scriptOrigin } from "./scriptOrigin";
 
 declare global {
   interface Window {

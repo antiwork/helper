@@ -617,6 +617,10 @@ importers:
         version: 5.8.3
 
   packages/react:
+    dependencies:
+      '@helperai/sdk':
+        specifier: '*'
+        version: 0.1.2
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3
@@ -675,6 +679,9 @@ importers:
       scroll-into-view-if-needed:
         specifier: ^3.1.0
         version: 3.1.0
+      zod:
+        specifier: ^3.24.3
+        version: 3.25.56
     devDependencies:
       '@babel/preset-env':
         specifier: ^7.25.4
@@ -2337,6 +2344,9 @@ packages:
     resolution: {integrity: sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@helperai/sdk@0.1.2':
+    resolution: {integrity: sha512-JDcbkr7l0jPbr5Yc6uKeMjZRHSsd3oBXl/1pGqzZfJsXfU0qejOW1e27oJvZzQuV261PO6rQcFgb6O+oP1CBqA==}
 
   '@heroku-cli/color@1.1.16':
     resolution: {integrity: sha512-97bYxNaDe/+GCUAKu0V2qudQmR3NFRnv3SrQd2FTtOAa9OWKwkvoBs2WzT7MkNwP4DIpYL6W/e3CSfShfhzEMw==}
@@ -12895,10 +12905,10 @@ snapshots:
       css-tree: 2.3.1
       is-potential-custom-element-name: 1.0.1
 
-  '@asteasolutions/zod-to-openapi@6.4.0(zod@3.24.3)':
+  '@asteasolutions/zod-to-openapi@6.4.0(zod@3.25.56)':
     dependencies:
       openapi3-ts: 4.4.0
-      zod: 3.24.3
+      zod: 3.25.56
 
   '@aws-crypto/sha256-browser@5.2.0':
     dependencies:
@@ -13836,9 +13846,9 @@ snapshots:
 
   '@braintrust/core@0.0.76':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 6.4.0(zod@3.24.3)
+      '@asteasolutions/zod-to-openapi': 6.4.0(zod@3.25.56)
       uuid: 9.0.1
-      zod: 3.24.3
+      zod: 3.25.56
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -14418,6 +14428,16 @@ snapshots:
       protobufjs: 7.5.0
       yargs: 17.7.2
 
+  '@helperai/sdk@0.1.2':
+    dependencies:
+      '@rrweb/record': 2.0.0-alpha.18
+      '@rrweb/types': 2.0.0-alpha.18
+      modern-screenshot: 4.6.0
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      scroll-into-view-if-needed: 3.1.0
+      zod: 3.25.56
+
   '@heroku-cli/color@1.1.16':
     dependencies:
       ansi-styles: 3.2.1
@@ -14921,8 +14941,8 @@ snapshots:
     dependencies:
       axios: 1.9.0
       typescript-event-target: 1.1.1
-      zod: 3.24.3
-      zod-to-json-schema: 3.24.5(zod@3.24.3)
+      zod: 3.25.56
+      zod-to-json-schema: 3.24.5(zod@3.25.56)
     transitivePeerDependencies:
       - debug
 
@@ -19076,8 +19096,8 @@ snapshots:
       linear-sum-assignment: 1.0.7
       mustache: 4.2.0
       openai: 4.47.1
-      zod: 3.24.3
-      zod-to-json-schema: 3.24.5(zod@3.24.3)
+      zod: 3.25.56
+      zod-to-json-schema: 3.24.5(zod@3.25.56)
     transitivePeerDependencies:
       - encoding
 
@@ -26704,6 +26724,10 @@ snapshots:
   zod-to-json-schema@3.24.5(zod@3.24.3):
     dependencies:
       zod: 3.24.3
+
+  zod-to-json-schema@3.24.5(zod@3.25.56):
+    dependencies:
+      zod: 3.25.56
 
   zod@3.24.3: {}
 
