@@ -54,23 +54,33 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   const conversation = await getConversation(conversationSlug, session);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
-  const screenshotData = message.experimental_attachments?.[0]?.url;
+  const attachments = message.experimental_attachments ?? [];
 
-  if (
-    (message.experimental_attachments ?? []).length > 1 ||
-    (screenshotData && !screenshotData.startsWith("data:image/png;base64,"))
-  ) {
-    return corsResponse(
-      { error: "Only a single PNG image attachment sent via data URL is supported" },
-      { status: 400 },
-    );
+  // Validate attachments
+  for (const attachment of attachments) {
+    if (!attachment.url.startsWith("data:image/") || !attachment.url.includes(",")) {
+      return corsResponse({ error: "Only valid image data URLs are supported" }, { status: 400 });
+    }
   }
+
+  // Convert attachments to the format expected by createUserMessage
+  const attachmentData = attachments.map((attachment) => {
+    const [, base64Data] = attachment.url.split(",");
+    if (!base64Data) {
+      throw new Error("Invalid data URL format - missing base64 data");
+    }
+    return {
+      name: attachment.name || "unknown.png",
+      contentType: attachment.contentType || "image/png",
+      data: base64Data,
+    };
+  });
 
   const userMessage = await createUserMessage(
     conversation.id,
     userEmail,
-    message.content,
-    screenshotData?.replace("data:image/png;base64,", ""),
+    message.content || (attachmentData.length > 0 ? "[Image]" : ""),
+    attachmentData.length > 0 ? attachmentData : undefined,
   );
 
   const supabase = await createClient();

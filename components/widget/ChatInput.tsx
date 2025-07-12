@@ -1,4 +1,4 @@
-import { Camera, Mic } from "lucide-react";
+import { Camera, Mic, Paperclip } from "lucide-react";
 import * as motion from "motion/react-client";
 import { useCallback, useEffect, useState } from "react";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
@@ -15,7 +15,7 @@ type Props = {
   input: string;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (screenshotData?: string) => void;
+  handleSubmit: (screenshotData?: string, attachments?: File[]) => void;
   isLoading: boolean;
   isGumroadTheme: boolean;
   placeholder?: string;
@@ -70,7 +70,13 @@ export default function ChatInput({
 }: Props) {
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const { screenshot, setScreenshot } = useScreenshotStore();
+
+  // File size limit: 25MB (to match existing limits)
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
   const handleSegment = useCallback(
     (segment: string) => {
@@ -116,6 +122,7 @@ export default function ChatInput({
     if (!input) {
       setShowScreenshot(false);
       setIncludeScreenshot(false);
+      setSelectedFiles([]);
     } else if (SCREENSHOT_KEYWORDS.some((keyword) => input.toLowerCase().includes(keyword))) {
       setShowScreenshot(true);
     }
@@ -123,10 +130,77 @@ export default function ChatInput({
 
   useEffect(() => {
     if (screenshot?.response) {
-      handleSubmit(screenshot.response);
+      // Get any pending attachments that were selected before screenshot
+      const pendingAttachments = (window as any).pendingAttachments || [];
+      (window as any).pendingAttachments = undefined;
+
+      handleSubmit(screenshot.response, pendingAttachments.length > 0 ? pendingAttachments : undefined);
       setScreenshot(null);
     }
   }, [screenshot]);
+
+  const validateAndFilterFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    for (const file of fileArray) {
+      if (!file.type.startsWith("image/")) {
+        errors.push(`${file.name}: Only image files are supported`);
+        continue;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name}: File size (${Math.round(file.size / 1024 / 1024)}MB) exceeds limit (25MB)`);
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (errors.length > 0) {
+      setFileError(errors.join(", "));
+      // Clear error after 5 seconds
+      setTimeout(() => setFileError(null), 5000);
+    } else {
+      setFileError(null);
+    }
+
+    return validFiles;
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const validFiles = validateAndFilterFiles(files);
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = validateAndFilterFiles(files);
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
 
   const submit = () => {
     const normalizedInput = input.trim().toLowerCase();
@@ -141,9 +215,13 @@ export default function ChatInput({
       return;
     }
     if (includeScreenshot) {
+      // Store selected files in a temporary state that can be accessed after screenshot
+      if (selectedFiles.length > 0) {
+        (window as any).pendingAttachments = selectedFiles;
+      }
       sendScreenshot();
     } else {
-      handleSubmit();
+      handleSubmit(undefined, selectedFiles.length > 0 ? selectedFiles : undefined);
     }
   };
 
@@ -156,7 +234,14 @@ export default function ChatInput({
   };
 
   return (
-    <div className="border-t border-black p-4 bg-white">
+    <div
+      className={cn("border-t border-black p-4 bg-white", {
+        "bg-blue-50": isDragOver,
+      })}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -185,6 +270,27 @@ export default function ChatInput({
             disabled={isLoading}
           />
           <div className="flex items-center gap-2">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <label
+                    className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted cursor-pointer"
+                    aria-label="Attach images"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileSelect}
+                      disabled={isLoading}
+                    />
+                  </label>
+                </TooltipTrigger>
+                <TooltipContent>Attach images</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {isSupported && (
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
@@ -213,6 +319,48 @@ export default function ChatInput({
             <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
           </div>
         </div>
+        {fileError && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 30,
+            }}
+            className="bg-red-50 border border-red-200 rounded-lg p-2"
+          >
+            <div className="text-sm text-red-600">{fileError}</div>
+          </motion.div>
+        )}
+        {selectedFiles.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 30,
+            }}
+            className="flex flex-wrap gap-2"
+          >
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="relative bg-muted rounded-lg p-2 flex items-center gap-2">
+                <div className="text-sm text-muted-foreground">{file.name}</div>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={`Remove ${file.name}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </motion.div>
+        )}
         {showScreenshot && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}

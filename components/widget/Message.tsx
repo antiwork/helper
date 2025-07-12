@@ -112,15 +112,57 @@ export default function Message({
           color={color}
         />
         {message.experimental_attachments?.map((attachment) => (
-          <a
+          <div
             key={attachment.url}
-            href={attachment.url}
-            className="block p-4 pt-0"
-            target="_blank"
-            rel="noopener noreferrer"
+            className="p-4 pt-0 cursor-pointer"
+            onClick={() => {
+              // Open image in new tab with proper handling
+              const newWindow = window.open();
+              if (newWindow) {
+                // Properly escape values to prevent XSS
+                const safeTitle = document.createElement('div');
+                safeTitle.textContent = attachment.name;
+                const escapedTitle = safeTitle.innerHTML;
+                
+                const safeUrl = document.createElement('div');
+                safeUrl.textContent = attachment.url;
+                const escapedUrl = safeUrl.innerHTML;
+                
+                newWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>${escapedTitle}</title>
+                      <style>
+                        body {
+                          margin: 0;
+                          display: flex;
+                          justify-content: center;
+                          align-items: center;
+                          min-height: 100vh;
+                          background: #000;
+                        }
+                        img {
+                          max-width: 100%;
+                          max-height: 100vh;
+                          object-fit: contain;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <img src="${escapedUrl}" alt="${escapedTitle}" />
+                    </body>
+                  </html>
+                `);
+                newWindow.document.close();
+              }
+            }}
           >
-            <img className="w-full rounded-lg" src={attachment.url} alt={attachment.name} />
-          </a>
+            <img
+              className="w-full rounded-lg hover:opacity-90 transition-opacity"
+              src={attachment.url}
+              alt={attachment.name}
+            />
+          </div>
         ))}
         {!message.experimental_attachments?.length && attachments.length > 0 && (
           <div className="p-4 pt-0 flex flex-col gap-2">
