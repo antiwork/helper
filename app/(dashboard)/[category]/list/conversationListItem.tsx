@@ -1,6 +1,6 @@
 import { escape } from "lodash-es";
 import { Bot, User } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import scrollIntoView from "scroll-into-view-if-needed";
 import { ConversationListItem as ConversationListItemType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -13,6 +13,7 @@ import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
 import { highlightKeywords } from "./filters/highlightKeywords";
+import React from "react";
 
 type ListItem = ConversationListItemType & { isNew?: boolean };
 
@@ -24,16 +25,89 @@ type ConversationListItemProps = {
   onToggleSelect: (isSelected: boolean, shiftKey: boolean) => void;
 };
 
-export const ConversationListItem = ({
+const AssignedToLabel = React.memo<{
+  assignedToId: string | null;
+  assignedToAI?: boolean;
+  className?: string;
+}>(({ assignedToId, assignedToAI, className }) => {
+  const { data: members } = useMembers();
+
+  const displayName = useMemo(() => {
+    if (assignedToAI) return null;
+    return members?.find((m) => m.id === assignedToId)?.displayName?.split(" ")[0];
+  }, [members, assignedToId, assignedToAI]);
+
+  if (assignedToAI) {
+    return (
+      <div className={className} title="Assigned to Helper agent">
+        <Bot className="h-3 w-3" />
+      </div>
+    );
+  }
+
+  return displayName ? (
+    <div className={className} title={`Assigned to ${displayName}`}>
+      <User className="h-3 w-3" />
+      {displayName}
+    </div>
+  ) : null;
+});
+
+AssignedToLabel.displayName = 'AssignedToLabel';
+
+export const ConversationListItem = React.memo<ConversationListItemProps>(({
   conversation,
   isActive,
   onSelectConversation,
   isSelected,
   onToggleSelect,
-}: ConversationListItemProps) => {
+}) => {
   const listItemRef = useRef<HTMLAnchorElement>(null);
   const { searchParams } = useConversationsListInput();
-  const searchTerms = searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [];
+  
+  const searchTerms = useMemo(() => 
+    searchParams.search ? searchParams.search.split(/\s+/).filter(Boolean) : [],
+    [searchParams.search]
+  );
+
+  const { highlightedSubject, highlightedBody } = useMemo(() => {
+    let highlightedSubject = escape(conversation.subject);
+    let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
+
+    if (searchTerms.length > 0 && conversation.matchedMessageText) {
+      bodyText = createSearchSnippet(bodyText, searchTerms);
+    }
+
+    let highlightedBody = escape(bodyText);
+
+    if (searchTerms.length > 0) {
+      highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
+
+      if (conversation.matchedMessageText) {
+        highlightedBody = highlightKeywords(highlightedBody, searchTerms);
+      }
+    }
+
+    return { highlightedSubject, highlightedBody };
+  }, [conversation.subject, conversation.matchedMessageText, conversation.recentMessageText, searchTerms]);
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      onSelectConversation(conversation.slug);
+    }
+  }, [onSelectConversation, conversation.slug]);
+
+  const handleToggleSelect = useCallback((event: React.MouseEvent) => {
+    onToggleSelect(!isSelected, event.nativeEvent.shiftKey);
+  }, [onToggleSelect, isSelected]);
+
+  const customerValue = useMemo(() => {
+    if (!conversation.platformCustomer?.value) return null;
+    return parseFloat(conversation.platformCustomer.value);
+  }, [conversation.platformCustomer?.value]);
+
+  const isVip = conversation.platformCustomer?.isVip;
 
   useEffect(() => {
     if (isActive && listItemRef.current) {
@@ -44,23 +118,6 @@ export const ConversationListItem = ({
       });
     }
   }, [conversation, isActive]);
-
-  let highlightedSubject = escape(conversation.subject);
-  let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
-
-  if (searchTerms.length > 0 && conversation.matchedMessageText) {
-    bodyText = createSearchSnippet(bodyText, searchTerms);
-  }
-
-  let highlightedBody = escape(bodyText);
-
-  if (searchTerms.length > 0) {
-    highlightedSubject = highlightKeywords(highlightedSubject, searchTerms);
-
-    if (conversation.matchedMessageText) {
-      highlightedBody = highlightKeywords(highlightedBody, searchTerms);
-    }
-  }
 
   return (
     <div className="px-1 md:px-2">
@@ -76,7 +133,7 @@ export const ConversationListItem = ({
           <div className="w-5 flex items-center">
             <Checkbox
               checked={isSelected}
-              onClick={(event) => onToggleSelect(!isSelected, event.nativeEvent.shiftKey)}
+              onClick={handleToggleSelect}
               className="mt-1"
             />
           </div>
@@ -84,12 +141,7 @@ export const ConversationListItem = ({
             ref={listItemRef}
             className="flex-1 min-w-0"
             href={`/conversations?id=${conversation.slug}`}
-            onClick={(e) => {
-              if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-                e.preventDefault();
-                onSelectConversation(conversation.slug);
-              }
-            }}
+            onClick={handleClick}
             style={{ overflowAnchor: "none" }}
           >
             <div className="flex flex-col gap-2">
@@ -98,13 +150,13 @@ export const ConversationListItem = ({
                   <p className="text-muted-foreground truncate text-xs md:text-sm">
                     {conversation.emailFrom ?? "Anonymous"}
                   </p>
-                  {conversation.platformCustomer?.value &&
-                    (conversation.platformCustomer.isVip ? (
+                  {customerValue && (
+                    isVip ? (
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Badge variant="bright" className="gap-1 text-xs">
-                              {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                              {formatCurrency(customerValue)}
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="text-xs">
@@ -114,9 +166,10 @@ export const ConversationListItem = ({
                       </TooltipProvider>
                     ) : (
                       <Badge variant="gray" className="gap-1 text-xs">
-                        {formatCurrency(parseFloat(conversation.platformCustomer.value))}
+                        {formatCurrency(customerValue)}
                       </Badge>
-                    ))}
+                    )
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (
@@ -157,33 +210,6 @@ export const ConversationListItem = ({
       </div>
     </div>
   );
-};
+});
 
-const AssignedToLabel = ({
-  assignedToId,
-  assignedToAI,
-  className,
-}: {
-  assignedToId: string | null;
-  assignedToAI?: boolean;
-  className?: string;
-}) => {
-  const { data: members } = useMembers();
-
-  if (assignedToAI) {
-    return (
-      <div className={className} title="Assigned to Helper agent">
-        <Bot className="h-3 w-3" />
-      </div>
-    );
-  }
-
-  const displayName = members?.find((m) => m.id === assignedToId)?.displayName?.split(" ")[0];
-
-  return displayName ? (
-    <div className={className} title={`Assigned to ${displayName}`}>
-      <User className="h-3 w-3" />
-      {displayName}
-    </div>
-  ) : null;
-};
+ConversationListItem.displayName = 'ConversationListItem';

@@ -1,6 +1,6 @@
 import { Send } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
@@ -22,8 +22,68 @@ import { ConversationListSkeleton } from "./conversationListSkeleton";
 import { ConversationSearchBar } from "./conversationSearchBar";
 import { NoConversations } from "./emptyState";
 import NewConversationModalContent from "./newConversationModal";
+import React from "react";
 
 type ListItem = ConversationItem & { isNew?: boolean };
+
+const NewConversationModal = React.memo(() => {
+  const [newConversationModalOpen, setNewConversationModalOpen] = useState(false);
+  const [newConversationSlug, setNewConversationSlug] = useState(generateSlug());
+  
+  useEffect(() => {
+    if (newConversationModalOpen) setNewConversationSlug(generateSlug());
+  }, [newConversationModalOpen]);
+
+  const closeModal = useCallback(() => setNewConversationModalOpen(false), []);
+
+  return (
+    <Dialog open={newConversationModalOpen} onOpenChange={setNewConversationModalOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="default"
+          iconOnly
+          className="fixed z-50 bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
+          aria-label="New message"
+        >
+          <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>New message</DialogTitle>
+        </DialogHeader>
+        <NewConversationModalContent conversationSlug={newConversationSlug} onSubmit={closeModal} />
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+NewConversationModal.displayName = 'NewConversationModal';
+
+// Memoized conversation list item component to prevent re-renders
+const ConversationListItemMemo = React.memo<{
+  conversation: ListItem;
+  isActive: boolean;
+  isSelected: boolean;
+  onSelectConversation: (slug: string) => void;
+  onToggleSelect: (id: number, isSelected: boolean, shiftKey: boolean) => void;
+}>(({ conversation, isActive, isSelected, onSelectConversation, onToggleSelect }) => {
+  const handleToggleSelect = useCallback((isSelected: boolean, shiftKey: boolean) => {
+    onToggleSelect(conversation.id, isSelected, shiftKey);
+  }, [onToggleSelect, conversation.id]);
+
+  return (
+    <ConversationListItem
+      conversation={conversation}
+      isActive={isActive}
+      onSelectConversation={onSelectConversation}
+      isSelected={isSelected}
+      onToggleSelect={handleToggleSelect}
+    />
+  );
+});
+
+ConversationListItemMemo.displayName = 'ConversationListItemMemo';
 
 export const List = () => {
   const [conversationSlug] = useQueryState("id");
@@ -43,6 +103,7 @@ export const List = () => {
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
+  
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: (err) => {
       toast.error("Failed to update conversations", { description: err.message });
@@ -62,12 +123,14 @@ export const List = () => {
     set: setSelectedConversations,
   } = useSelected<number>([]);
 
+  const conversationIds = useMemo(() => conversations.map((c) => c.id), [conversations]);
+
   const onShiftSelectConversation = useShiftSelected<number>(
-    conversations.map((c) => c.id),
+    conversationIds,
     changeSelectedConversations,
   );
 
-  const toggleConversation = (id: number, isSelected: boolean, shiftKey: boolean) => {
+  const toggleConversation = useCallback((id: number, isSelected: boolean, shiftKey: boolean) => {
     if (allConversationsSelected) {
       // If all conversations are selected, toggle the selected conversation
       setAllConversationsSelected(false);
@@ -75,14 +138,14 @@ export const List = () => {
     } else {
       onShiftSelectConversation(id, isSelected, shiftKey);
     }
-  };
+  }, [allConversationsSelected, conversations, onShiftSelectConversation, setSelectedConversations]);
 
-  const toggleAllConversations = (forceValue?: boolean) => {
+  const toggleAllConversations = useCallback((forceValue?: boolean) => {
     setAllConversationsSelected((prev) => forceValue ?? !prev);
     clearSelectedConversations();
-  };
+  }, [clearSelectedConversations]);
 
-  const handleBulkUpdate = (status: "open" | "closed" | "spam") => {
+  const handleBulkUpdate = useCallback((status: "open" | "closed" | "spam") => {
     setIsBulkUpdating(true);
     try {
       const conversationFilter = allConversationsSelected
@@ -119,7 +182,28 @@ export const List = () => {
     } finally {
       setIsBulkUpdating(false);
     }
-  };
+  }, [
+    allConversationsSelected,
+    conversations,
+    hasNextPage,
+    input,
+    selectedConversations,
+    bulkUpdate,
+    clearSelectedConversations,
+    utils.mailbox.conversations.list,
+    utils.mailbox.conversations.count
+  ]);
+
+  const conversationsText = useMemo(() => {
+    return allConversationsSelected
+      ? "all matching conversations"
+      : `${selectedConversations.length} conversation${selectedConversations.length === 1 ? "" : "s"}`;
+  }, [allConversationsSelected, selectedConversations.length]);
+
+  // Memoize bulk action handlers
+  const handleReopenConfirm = useCallback(() => handleBulkUpdate("open"), [handleBulkUpdate]);
+  const handleCloseConfirm = useCallback(() => handleBulkUpdate("closed"), [handleBulkUpdate]);
+  const handleSpamConfirm = useCallback(() => handleBulkUpdate("spam"), [handleBulkUpdate]);
 
   useEffect(() => {
     const currentRef = loadMoreRef.current;
@@ -146,7 +230,7 @@ export const List = () => {
   // Clear selections when status filter changes
   useEffect(() => {
     toggleAllConversations(false);
-  }, [searchParams.status, clearSelectedConversations]);
+  }, [searchParams.status, toggleAllConversations]);
 
   useRealtimeEvent(conversationsListChannelId(), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
@@ -209,9 +293,7 @@ export const List = () => {
     });
   });
 
-  const conversationsText = allConversationsSelected
-    ? "all matching conversations"
-    : `${selectedConversations.length} conversation${selectedConversations.length === 1 ? "" : "s"}`;
+  const hasSelectedConversations = allConversationsSelected || selectedConversations.length > 0;
 
   return (
     <div className="flex flex-col w-full h-full">
@@ -226,7 +308,7 @@ export const List = () => {
             setShowFilters={setShowFilters}
             conversationCount={conversations.length}
           />
-          {(allConversationsSelected || selectedConversations.length > 0) && (
+          {hasSelectedConversations && (
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <TooltipProvider delayDuration={0}>
@@ -244,7 +326,7 @@ export const List = () => {
                   {searchParams.status !== "open" && (
                     <ConfirmationDialog
                       message={`Are you sure you want to reopen ${conversationsText}?`}
-                      onConfirm={() => handleBulkUpdate("open")}
+                      onConfirm={handleReopenConfirm}
                       confirmLabel="Yes, reopen"
                       confirmVariant="bright"
                     >
@@ -256,7 +338,7 @@ export const List = () => {
                   {searchParams.status !== "closed" && (
                     <ConfirmationDialog
                       message={`Are you sure you want to close ${conversationsText}?`}
-                      onConfirm={() => handleBulkUpdate("closed")}
+                      onConfirm={handleCloseConfirm}
                       confirmLabel="Yes, close"
                       confirmVariant="bright"
                     >
@@ -268,7 +350,7 @@ export const List = () => {
                   {searchParams.status !== "spam" && (
                     <ConfirmationDialog
                       message={`Are you sure you want to mark ${conversationsText} as spam?`}
-                      onConfirm={() => handleBulkUpdate("spam")}
+                      onConfirm={handleSpamConfirm}
                       confirmLabel="Yes, mark as spam"
                       confirmVariant="bright"
                     >
@@ -300,13 +382,13 @@ export const List = () => {
       ) : (
         <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
           {conversations.map((conversation) => (
-            <ConversationListItem
+            <ConversationListItemMemo
               key={conversation.slug}
               conversation={conversation}
               isActive={conversationSlug === conversation.slug}
               onSelectConversation={navigateToConversation}
               isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
-              onToggleSelect={(isSelected, shiftKey) => toggleConversation(conversation.id, isSelected, shiftKey)}
+              onToggleSelect={toggleConversation}
             />
           ))}
           <div ref={loadMoreRef} />
@@ -319,36 +401,5 @@ export const List = () => {
       )}
       <NewConversationModal />
     </div>
-  );
-};
-
-const NewConversationModal = () => {
-  const [newConversationModalOpen, setNewConversationModalOpen] = useState(false);
-  const [newConversationSlug, setNewConversationSlug] = useState(generateSlug());
-  useEffect(() => {
-    if (newConversationModalOpen) setNewConversationSlug(generateSlug());
-  }, [newConversationModalOpen]);
-
-  const closeModal = () => setNewConversationModalOpen(false);
-
-  return (
-    <Dialog open={newConversationModalOpen} onOpenChange={setNewConversationModalOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="default"
-          iconOnly
-          className="fixed z-50 bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
-          aria-label="New message"
-        >
-          <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>New message</DialogTitle>
-        </DialogHeader>
-        <NewConversationModalContent conversationSlug={newConversationSlug} onSubmit={closeModal} />
-      </DialogContent>
-    </Dialog>
   );
 };
