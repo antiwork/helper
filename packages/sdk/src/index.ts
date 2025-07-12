@@ -734,6 +734,12 @@ class HelperWidget {
     if (this.notificationContainer && document.body.contains(this.notificationContainer)) {
       document.body.removeChild(this.notificationContainer);
     }
+    if (this.loadingOverlay && document.body.contains(this.loadingOverlay)) {
+      document.body.removeChild(this.loadingOverlay);
+    }
+
+    this.hideAllNotifications();
+    this.guideManager.destroy();
 
     // Reset all element references
     this.iframe = null;
@@ -752,8 +758,6 @@ class HelperWidget {
     this.currentConversationSlug = null;
     this.screenshotContext = null;
 
-    this.hideAllNotifications();
-    this.guideManager.destroy();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
