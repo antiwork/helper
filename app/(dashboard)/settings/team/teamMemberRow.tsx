@@ -73,23 +73,23 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
   });
 
   const { mutate: updateMemberAllFields, isPending: isSaving } = api.mailbox.members.update.useMutation({
-  onSuccess: (data) => {
-    utils.mailbox.members.list.setData(undefined, (oldData) => {
-      if (!oldData) return oldData;
-      return updateMember(oldData, member, {
-        displayName: data.user.displayName,
-        role: data.user.role,
-        permissions: data.user.permissions,
-        keywords: data.user.keywords,
+    onSuccess: (data) => {
+      utils.mailbox.members.list.setData(undefined, (oldData) => {
+        if (!oldData) return oldData;
+        return updateMember(oldData, member, {
+          displayName: data.user.displayName,
+          role: data.user.role,
+          permissions: data.user.permissions,
+          keywords: data.user.keywords,
+        });
       });
-    });
-    toast.success("Member updated");
-    setIsEditing(false);
-  },
-  onError: (error) => {
-    toast.error("Failed to update member", { description: error.message });
-  },
-});
+      toast.success("Member updated");
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      toast.error("Failed to update member", { description: error.message });
+    },
+  });
 
   const handleSave = () => {
     updateMemberAllFields({
@@ -101,18 +101,16 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
     });
   };
 
-
   const handleEditToggle = () => {
-  if (isEditing) {
-    setDisplayNameInput(member.displayName || "");
-    setRole(member.role);
-    setPermissions(member.permissions);
-    setKeywordsInput(member.keywords.join(", "));
-    setLocalKeywords(member.keywords);
-  }
-  setIsEditing(!isEditing);
-};
-
+    if (isEditing) {
+      setDisplayNameInput(member.displayName || "");
+      setRole(member.role);
+      setPermissions(member.permissions);
+      setKeywordsInput(member.keywords.join(", "));
+      setLocalKeywords(member.keywords);
+    }
+    setIsEditing(!isEditing);
+  };
 
   const getAvatarFallback = (member: TeamMember): string => {
     if (member.displayName?.trim()) {
@@ -187,17 +185,20 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         <div className="min-w-[120px]">
           {isAdmin && isEditing ? (
-              <Input
-                value={keywordsInput}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const value = e.target.value;
-                  setKeywordsInput(value);
-                  const newKeywords = value.split(",").map((k : string) => k.trim()).filter(Boolean);
-                  setLocalKeywords(newKeywords);
-                }}
-                placeholder="Enter keywords separated by commas"
-                className={role === "nonCore" ? "" : "invisible"}
-              />
+            <Input
+              value={keywordsInput}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = e.target.value;
+                setKeywordsInput(value);
+                const newKeywords = value
+                  .split(",")
+                  .map((k: string) => k.trim())
+                  .filter(Boolean);
+                setLocalKeywords(newKeywords);
+              }}
+              placeholder="Enter keywords separated by commas"
+              className={role === "nonCore" ? "" : "invisible"}
+            />
           ) : (
             <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
               {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
@@ -209,16 +210,17 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" iconOnly onClick={isEditing ? handleSave : handleEditToggle}>
             {isEditing ? (
-              isSaving ? 
+              isSaving ? (
                 <>
                   <span className="sr-only">Saving...</span>
                   <Loader className="h-4 w-4 animate-spin" />
-                </> 
-              : 
+                </>
+              ) : (
                 <>
                   <span className="sr-only">Save</span>
                   <Save className="h-4 w-4" />
                 </>
+              )
             ) : (
               <>
                 <span className="sr-only">Edit</span>
@@ -227,21 +229,21 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             )}
           </Button>
           {currentUser?.id !== member.id && isAdmin && (
-          <DeleteMemberDialog
-            member={{ id: member.id, displayName: member.displayName }}
-            description={
-              count?.total && count?.total > 0
-                ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
-                : `Are you sure you want to remove ${member.displayName || member.email}?`
-            }
-            assignedConversationCount={count?.total || 0}
-          >
-            <Button variant="ghost" size="sm" iconOnly>
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
-          </DeleteMemberDialog>
-        )}
+            <DeleteMemberDialog
+              member={{ id: member.id, displayName: member.displayName }}
+              description={
+                count?.total && count?.total > 0
+                  ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                  : `Are you sure you want to remove ${member.displayName || member.email}?`
+              }
+              assignedConversationCount={count?.total || 0}
+            >
+              <Button variant="ghost" size="sm" iconOnly>
+                <Trash className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </DeleteMemberDialog>
+          )}
         </div>
       </TableCell>
     </TableRow>
