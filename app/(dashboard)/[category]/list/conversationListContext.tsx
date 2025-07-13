@@ -86,7 +86,7 @@ export const ConversationListContextProvider = ({
   const debouncedInvalidate = useDebouncedCallback(() => {
     router.refresh();
     utils.mailbox.conversations.list.invalidate();
-    utils.mailbox.openCount.invalidate();
+    utils.mailbox.getCount.invalidate();
   }, 1000);
 
   const removeConversationFromList = (condition: (conversation: ConversationListItem) => boolean) => {
@@ -101,7 +101,7 @@ export const ConversationListContextProvider = ({
       };
     });
     if (!input.status || input.status[0] === "open") {
-      utils.mailbox.openCount.setData(undefined, (data) => {
+      utils.mailbox.getCount.setData(undefined, (data) => {
         if (!data) return data;
         return {
           ...data,

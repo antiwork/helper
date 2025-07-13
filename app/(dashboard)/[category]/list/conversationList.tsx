@@ -102,7 +102,7 @@ export const List = () => {
             clearSelectedConversations();
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
-            void utils.mailbox.openCount.invalidate();
+            void utils.mailbox.getCount.invalidate();
 
             if (updatedImmediately) {
               const ticketsText = allConversationsSelected

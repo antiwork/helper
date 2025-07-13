@@ -22,7 +22,7 @@ import { websitesRouter } from "./websites";
 export { mailboxProcedure };
 
 export const mailboxRouter = {
-  openCount: mailboxProcedure.query(async ({ ctx }) => {
+  getCount: mailboxProcedure.query(async ({ ctx }) => {
     const countByStatus = async (status: "open" | "closed" | "spam", extraCondition?: SQL) => {
       const result = await db
         .select({ count: count() })

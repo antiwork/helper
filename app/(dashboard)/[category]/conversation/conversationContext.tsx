@@ -76,7 +76,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
       utils.mailbox.conversations.get.invalidate({
         conversationSlug: variables.conversationSlug,
       });
-      utils.mailbox.openCount.invalidate();
+      utils.mailbox.getCount.invalidate();
     },
   });
 
