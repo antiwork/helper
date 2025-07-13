@@ -16,7 +16,7 @@ If you use React, please refer to the [React integration guide](/widget/03-react
 Add the following script to your HTML, replacing the placeholder values with your mailbox slug:
 
 ```html
-<script src="https://helper.ai/widget/sdk.js" data-mailbox="YOUR_MAILBOX_SLUG" async></script>
+<script src="https://<your-helper-host>/widget/sdk.js" async></script>
 ```
 
 This is the simplest way to add the widget to your site. The widget will appear in the bottom-right corner of your page.
@@ -36,7 +36,7 @@ You can customize the widget by adding a `helperWidgetConfig` object above the w
   };
 </script>
 <!-- The script you added earlier -->
-<script src="https://helper.ai/widget/sdk.js" data-mailbox="YOUR_MAILBOX_SLUG" async></script>
+<script src="https://<your-helper-host>/widget/sdk.js" async></script>
 ```
 
 The `helperWidgetConfig` object accepts the following options:
@@ -104,7 +104,7 @@ Add the generated HMAC hash, customer email, and timestamp to your widget config
   };
 </script>
 <!-- The script you added earlier -->
-<script src="https://helper.ai/widget/sdk.js" data-mailbox="YOUR_MAILBOX_SLUG" async></script>
+<script src="https://<your-helper-host>/widget/sdk.js" data-mailbox="YOUR_MAILBOX_SLUG" async></script>
 ```
 
 Optionally, you can add metadata to give Helper more context about the customer:
@@ -123,7 +123,7 @@ Optionally, you can add metadata to give Helper more context about the customer:
   };
 </script>
 <!-- The script you added earlier -->
-<script src="https://helper.ai/widget/sdk.js" data-mailbox="YOUR_MAILBOX_SLUG" async></script>
+<script src="https://<your-helper-host>/widget/sdk.js" data-mailbox="YOUR_MAILBOX_SLUG" async></script>
 ```
 
 </Step>
