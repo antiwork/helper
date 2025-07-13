@@ -2,7 +2,6 @@
 
 import { ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
 import { getMarketingSiteUrl } from "@/components/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,10 +11,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const supabase = createClient();
 
@@ -23,19 +22,11 @@ export function AccountDropdown() {
   const { user, isLoading } = useSession() ?? {};
   const router = useRouter();
 
-  const handleSignOut = useCallback(async () => {
+  const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/login");
-  }, [router]);
+  };
 
-  const handleDocsClick = useCallback((e: Event) => {
-    e.preventDefault();
-    window.open(`${getMarketingSiteUrl()}/docs`, "_blank", "noopener,noreferrer");
-  }, []);
-
-  const userDisplayName = useMemo(() => user ? getFullName(user) : "", [user]);
-
-  // Prevent layout shift by maintaining consistent height during loading
   if (isLoading || !user) {
     return (
       <div className="flex items-center gap-2 w-full h-10 px-2 rounded-lg">
@@ -55,13 +46,19 @@ export function AccountDropdown() {
           className="flex items-center gap-2 w-full h-10 px-2 rounded-lg transition-colors hover:bg-sidebar-accent/80 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           aria-label="Account menu"
         >
-          <Avatar fallback={userDisplayName} size="sm" />
+          <Avatar fallback={getFullName(user)} size="sm" />
           <span className="truncate text-sm group-data-[collapsible=icon]:hidden">{user.email}</span>
           <ChevronUp className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="end" className="w-(--radix-popper-anchor-width)">
-        <DropdownMenuItem className="cursor-pointer" onSelect={handleDocsClick}>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onSelect={(e) => {
+            e.preventDefault();
+            window.open(`${getMarketingSiteUrl()}/docs`, "_blank", "noopener,noreferrer");
+          }}
+        >
           <span>Documentation</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
