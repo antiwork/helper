@@ -3,6 +3,25 @@
 # It ensures services are running, the database is migrated and seeded, and then executes the Playwright test suite.
 set -e
 
+# Stop any previously running instances to ensure a clean slate.
+# Use --no-backup to avoid creating a new backup that might be used on start.
+echo "🛑 Ensuring no Supabase services are running..."
+pnpm run with-test-env pnpm supabase stop --no-backup
+
+# Parse command line arguments
+PLAYWRIGHT_COMMAND=""
+
+# Collect all arguments to pass to playwright
+while [[ $# -gt 0 ]]; do
+    PLAYWRIGHT_COMMAND="$PLAYWRIGHT_COMMAND $1"
+    shift
+done
+
+# If no arguments provided, default to basic playwright test
+if [ -z "$PLAYWRIGHT_COMMAND" ]; then
+    PLAYWRIGHT_COMMAND="playwright test"
+fi
+
 # Trap to ensure cleanup on exit
 CLEANUP_NEEDED=false
 
@@ -40,7 +59,7 @@ set +o allexport
 echo "🔍 Checking for existing Supabase containers for project ${SUPABASE_PROJECT_ID}..."
 EXISTING_CONTAINERS=$(docker ps -a -q --filter "name=${SUPABASE_PROJECT_ID}" 2>/dev/null || true)
 if [ ! -z "$EXISTING_CONTAINERS" ]; then
-    echo "🧹 Found existing Supabase containers for project ${SUPABASE_PROJECT_ID}, cleaning up..."
+    echo "🧹 Found existing Supabase containers for project ${SUPABASE_PROJECT_ID}, cleaning up..."\
     echo "🛑 Stopping containers..."
     docker stop $EXISTING_CONTAINERS || true
     echo "🗑️ Removing containers..."
@@ -58,6 +77,9 @@ CLEANUP_NEEDED=true
 # Additional wait for Auth service to be fully ready
 echo "⏳ Waiting for Auth service to initialize..."
 sleep 5
+
+echo "🔄 Resetting database..."
+pnpm run with-test-env pnpm supabase db reset
 
 # Apply database migrations to the test database
 echo "📦 Applying database migrations..."
@@ -80,7 +102,7 @@ pnpm run with-test-env playwright test tests/e2e/setup/auth.setup.ts --project=s
 
 # Run the e2e tests
 echo "🧪 Running Playwright e2e tests..."
-pnpm run with-test-env playwright test
+pnpm run with-test-env $PLAYWRIGHT_COMMAND
 
 echo "✅ All tests completed successfully!"
 echo "🎉 Test run complete!"
