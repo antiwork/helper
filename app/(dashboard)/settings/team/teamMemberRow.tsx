@@ -272,10 +272,10 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
         )}
       </TableCell>
       <TableCell>
-        {!isAdmin ? (
+        {isAdmin ? (
           <div className="w-[180px]">
             <Input
-              value={"keywordsInput"}
+              value={keywordsInput}
               onChange={(e) => handleKeywordsChange(e.target.value)}
               placeholder="Enter keywords separated by commas"
               className={role === "nonCore" ? "" : "invisible"}
@@ -283,7 +283,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           </div>
         ) : (
           <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
-            {member.keywords.length > 0 ? member.keywords.join(", ") : "keywordsInput"}
+            {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
           </span>
         )}
       </TableCell>
