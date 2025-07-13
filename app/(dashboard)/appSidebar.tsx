@@ -31,8 +31,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { api } from "@/trpc/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/trpc/react";
 
 declare global {
   interface Window {
