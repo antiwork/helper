@@ -27,9 +27,7 @@ export const mailboxRouter = {
       const result = await db
         .select({ count: count() })
         .from(conversations)
-        .where(
-          and(eq(conversations.status, status), isNull(conversations.mergedIntoId), extraCondition),
-        );
+        .where(and(eq(conversations.status, status), isNull(conversations.mergedIntoId), extraCondition));
       return result[0]?.count ?? 0;
     };
 

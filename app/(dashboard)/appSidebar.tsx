@@ -136,9 +136,7 @@ export function AppSidebar() {
                         <span className="group-data-[collapsible=icon]:hidden">Assigned</span>
                       </Link>
                     </SidebarMenuButton>
-                    {counts && counts.open.assigned > 0 && (
-                      <SidebarMenuBadge>{counts.open.assigned}</SidebarMenuBadge>
-                    )}
+                    {counts && counts.open.assigned > 0 && <SidebarMenuBadge>{counts.open.assigned}</SidebarMenuBadge>}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={pathname === `/unassigned`} tooltip="Up for grabs">
