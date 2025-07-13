@@ -3,7 +3,6 @@
 import { Loader, Save, SquarePen, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,7 +207,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" iconOnly onClick={isEditing ? handleSave : handleEditToggle}>
+          {(isAdmin || member.id === currentUser?.id) && (<Button variant="ghost" size="sm" iconOnly onClick={isEditing ? handleSave : handleEditToggle}>
             {isEditing ? (
               isSaving ? (
                 <>
@@ -227,7 +226,8 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
                 <SquarePen className="h-4 w-4" />
               </>
             )}
-          </Button>
+            </Button>
+          )}
           {currentUser?.id !== member.id && isAdmin && (
             <DeleteMemberDialog
               member={{ id: member.id, displayName: member.displayName }}
