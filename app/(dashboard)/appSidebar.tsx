@@ -127,7 +127,7 @@ export function AppSidebar() {
                         <span className="group-data-[collapsible=icon]:hidden">Mine</span>
                       </Link>
                     </SidebarMenuButton>
-                    {openCounts && openCounts.mine > 0 && <SidebarMenuBadge>{openCounts.mine}</SidebarMenuBadge>}
+                    {openCounts && openCounts.open.mine > 0 && <SidebarMenuBadge>{openCounts.open.mine}</SidebarMenuBadge>}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={pathname === `/assigned`} tooltip="Assigned">
@@ -136,8 +136,8 @@ export function AppSidebar() {
                         <span className="group-data-[collapsible=icon]:hidden">Assigned</span>
                       </Link>
                     </SidebarMenuButton>
-                    {openCounts && openCounts.assigned > 0 && (
-                      <SidebarMenuBadge>{openCounts.assigned}</SidebarMenuBadge>
+                    {openCounts && openCounts.open.assigned > 0 && (
+                      <SidebarMenuBadge>{openCounts.open.assigned}</SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -147,8 +147,8 @@ export function AppSidebar() {
                         <span className="group-data-[collapsible=icon]:hidden">Up for grabs</span>
                       </Link>
                     </SidebarMenuButton>
-                    {openCounts && openCounts.unassigned > 0 && (
-                      <SidebarMenuBadge>{openCounts.unassigned}</SidebarMenuBadge>
+                    {openCounts && openCounts.open.unassigned > 0 && (
+                      <SidebarMenuBadge>{openCounts.open.unassigned}</SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -158,8 +158,8 @@ export function AppSidebar() {
                         <span className="group-data-[collapsible=icon]:hidden">All</span>
                       </Link>
                     </SidebarMenuButton>
-                    {openCounts && openCounts.conversations > 0 && (
-                      <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
+                    {openCounts && openCounts.open.conversations > 0 && (
+                      <SidebarMenuBadge>{openCounts.open.conversations}</SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
                 </SidebarMenu>

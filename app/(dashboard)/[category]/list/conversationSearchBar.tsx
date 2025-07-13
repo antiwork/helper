@@ -38,13 +38,13 @@ export const ConversationSearchBar = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(searchParams.search || "");
 
-  const { data: openCount } = api.mailbox.openCount.useQuery();
+  const { data: count } = api.mailbox.openCount.useQuery();
 
-  const status = openCount
+  const status = count
     ? [
-        { status: "open", count: openCount[input.category] },
-        { status: "closed", count: 0 },
-        { status: "spam", count: 0 },
+        { status: "open", count: count.open[input.category] },
+        { status: "closed", count: count.closed[input.category] },
+        { status: "spam", count: count.spam[input.category] },
       ]
     : [];
 

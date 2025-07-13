@@ -23,25 +23,53 @@ export { mailboxProcedure };
 
 export const mailboxRouter = {
   openCount: mailboxProcedure.query(async ({ ctx }) => {
-    const countOpenStatus = async (where?: SQL) => {
+    const countByStatus = async (status: "open" | "closed" | "spam", extraCondition?: SQL) => {
       const result = await db
         .select({ count: count() })
         .from(conversations)
-        .where(and(eq(conversations.status, "open"), isNull(conversations.mergedIntoId), where));
+        .where(
+          and(eq(conversations.status, status), isNull(conversations.mergedIntoId), extraCondition),
+        );
       return result[0]?.count ?? 0;
     };
 
-    const [all, mine, assigned] = await Promise.all([
-      countOpenStatus(),
-      countOpenStatus(eq(conversations.assignedToId, ctx.user.id)),
-      countOpenStatus(isNotNull(conversations.assignedToId)),
+    const [allOpen, myOpen, assignedOpen] = await Promise.all([
+      countByStatus("open"),
+      countByStatus("open", eq(conversations.assignedToId, ctx.user.id)),
+      countByStatus("open", isNotNull(conversations.assignedToId)),
+    ]);
+
+    const [allClosed, myClosed, assignedClosed] = await Promise.all([
+      countByStatus("closed"),
+      countByStatus("closed", eq(conversations.assignedToId, ctx.user.id)),
+      countByStatus("closed", isNotNull(conversations.assignedToId)),
+    ]);
+
+    const [allSpam, mySpam, assignedSpam] = await Promise.all([
+      countByStatus("spam"),
+      countByStatus("spam", eq(conversations.assignedToId, ctx.user.id)),
+      countByStatus("spam", isNotNull(conversations.assignedToId)),
     ]);
 
     return {
-      conversations: all,
-      mine,
-      assigned,
-      unassigned: all - assigned,
+      open: {
+        conversations: allOpen,
+        mine: myOpen,
+        assigned: assignedOpen,
+        unassigned: allOpen - assignedOpen,
+      },
+      closed: {
+        conversations: allClosed,
+        mine: myClosed,
+        assigned: assignedClosed,
+        unassigned: allClosed - assignedClosed,
+      },
+      spam: {
+        conversations: allSpam,
+        mine: mySpam,
+        assigned: assignedSpam,
+        unassigned: allSpam - assignedSpam,
+      },
     };
   }),
   get: mailboxProcedure.query(async ({ ctx }) => {

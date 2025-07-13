@@ -105,7 +105,7 @@ export const ConversationListContextProvider = ({
         if (!data) return data;
         return {
           ...data,
-          [input.category]: data[input.category] - 1,
+          [input.category]: data.open[input.category] - 1,
         };
       });
     }

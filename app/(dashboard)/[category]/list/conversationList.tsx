@@ -102,6 +102,7 @@ export const List = () => {
             clearSelectedConversations();
             void utils.mailbox.conversations.list.invalidate();
             void utils.mailbox.conversations.count.invalidate();
+            void utils.mailbox.openCount.invalidate();
 
             if (updatedImmediately) {
               const ticketsText = allConversationsSelected
@@ -241,7 +242,7 @@ export const List = () => {
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2">
-                  {searchParams.status !== "open" && (
+                  {searchParams.status && searchParams.status !== "open" && (
                     <ConfirmationDialog
                       message={`Are you sure you want to reopen ${conversationsText}?`}
                       onConfirm={() => handleBulkUpdate("open")}
