@@ -1,6 +1,19 @@
 import React from "react";
+import { HelperContextProvider } from "../context/HelperContext";
 import type { HelperWidgetConfig } from "../types";
 import { ClientHelperProvider } from "./ClientHelperProvider";
+
+export type HelperTool = {
+  description?: string;
+  parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
+} & (
+  | {
+      execute: (params: Record<string, unknown>) => Promise<unknown>;
+    }
+  | {
+      url: string;
+    }
+);
 
 /**
  * Props for the HelperProvider component
@@ -12,6 +25,7 @@ import { ClientHelperProvider } from "./ClientHelperProvider";
 export type HelperProviderProps = HelperWidgetConfig & {
   children: React.ReactNode;
   host: string;
+  tools?: Record<string, HelperTool>;
 };
 
 /**
@@ -25,9 +39,9 @@ export type HelperProviderProps = HelperWidgetConfig & {
  */
 export function HelperProvider({ children, host, ...props }: HelperProviderProps) {
   return (
-    <>
+    <HelperContextProvider host={host} {...props}>
       <ClientHelperProvider host={host} {...props} />
       {children}
-    </>
+    </HelperContextProvider>
   );
 }
