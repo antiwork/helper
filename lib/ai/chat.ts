@@ -317,6 +317,7 @@ export const generateAIResponse = async ({
   reasoningModel = REASONING_MODEL,
   evaluation = false,
   guideEnabled = false,
+  tools: clientProvidedTools,
 }: {
   messages: Message[];
   mailbox: Mailbox;
@@ -339,6 +340,7 @@ export const generateAIResponse = async ({
   seed?: number | undefined;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
+  tools?: ClientProvidedTool[];
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -356,6 +358,28 @@ export const generateAIResponse = async ({
       description: readPageTool.toolDescription,
       parameters: z.object({}),
     };
+  }
+
+  if (clientProvidedTools) {
+    clientProvidedTools.forEach((tool) => {
+      tools[tool.name] = {
+        description: tool.description,
+        parameters: z.object(
+          Object.fromEntries(
+            Object.entries(tool.parameters).map(([key, value]) => {
+              let type: z.ZodType = value.type === "string" ? z.string() : z.number();
+              if (value.optional) {
+                type = type.optional();
+              }
+              if (value.description) {
+                type = type.describe(value.description);
+              }
+              return [key, type];
+            }),
+          ),
+        ),
+      };
+    });
   }
 
   const traceId = randomUUID();
@@ -515,6 +539,13 @@ const createAssistantMessage = (
   });
 };
 
+export interface ClientProvidedTool {
+  name: string;
+  description: string;
+  parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
+  serverRequestUrl?: string;
+}
+
 export const respondWithAI = async ({
   conversation,
   mailbox,
@@ -527,6 +558,7 @@ export const respondWithAI = async ({
   onResponse,
   isHelperUser = false,
   reasoningEnabled = true,
+  tools,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -545,6 +577,7 @@ export const respondWithAI = async ({
   }) => void | Promise<void>;
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
+  tools?: ClientProvidedTool[];
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
@@ -627,6 +660,7 @@ export const respondWithAI = async ({
         readPageTool,
         guideEnabled,
         addReasoning: reasoningEnabled,
+        tools,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

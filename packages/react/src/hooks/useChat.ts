@@ -1,25 +1,37 @@
 import { Message, useChat as useAIChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
+import { HelperTool } from "../components/HelperProvider";
 import { useHelperContext } from "../context/HelperContext";
 
 export const useChat = (
   conversationSlug: string,
   options?: {
-    aiChat?: Partial<Omit<Parameters<typeof useAIChat>[0], "onToolCall" | "experimental_prepareRequestBody">>;
+    tools?: Record<string, HelperTool>;
+    aiChat?: Partial<Omit<Parameters<typeof useAIChat>[0], "onToolCall" | "experimental_prepareRequestBody" | "fetch">>;
   },
 ): {
   messages: Message[];
   send: (message: string) => void;
   aiChat: ReturnType<typeof useAIChat>;
 } => {
-  const { tools, getToken } = useHelperContext();
+  const { getToken } = useHelperContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const aiChat = useAIChat({
     maxSteps: 3,
     generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
+    fetch: async (url, options) => {
+      const token = await getToken();
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options?.headers,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    },
     onToolCall({ toolCall }) {
-      const tool = tools[toolCall.toolName];
+      const tool = options?.tools?.[toolCall.toolName];
       if (!tool || !("execute" in tool)) {
         throw new Error(`Tool ${toolCall.toolName} not found or not executable on the client`);
       }
@@ -30,7 +42,7 @@ export const useChat = (
         id,
         message: messages[messages.length - 1],
         conversationSlug,
-        tools: Object.entries(tools).map(([name, tool]) => ({
+        tools: Object.entries(options?.tools ?? {}).map(([name, tool]) => ({
           name,
           description: tool.description,
           parameters: tool.parameters,
@@ -57,13 +69,7 @@ export const useChat = (
   useEffect(() => {
     if (isSubmitting) {
       setIsSubmitting(false);
-      getToken().then((token) =>
-        aiChat.handleSubmit(undefined, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      );
+      aiChat.handleSubmit();
     }
   }, [isSubmitting]);
 

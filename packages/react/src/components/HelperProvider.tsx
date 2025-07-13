@@ -8,7 +8,7 @@ export type HelperTool = {
   parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
 } & (
   | {
-      execute: (params: Record<string, unknown>) => Promise<unknown>;
+      execute: (params: Record<string, unknown>) => Promise<unknown> | unknown;
     }
   | {
       url: string;
@@ -25,7 +25,6 @@ export type HelperTool = {
 export type HelperProviderProps = HelperWidgetConfig & {
   children: React.ReactNode;
   host: string;
-  tools?: Record<string, HelperTool>;
 };
 
 /**

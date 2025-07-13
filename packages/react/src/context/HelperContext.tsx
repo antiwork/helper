@@ -1,12 +1,10 @@
 "use client";
 
 import React, { createContext, ReactNode, useContext, useMemo, useRef } from "react";
-import { HelperTool } from "../components/HelperProvider";
 import { createSession, CreateSessionParams } from "../hooks/useCreateSession";
 
 interface HelperContextValue {
   host: string;
-  tools: Record<string, HelperTool>;
   getToken: () => Promise<string>;
 }
 
@@ -15,16 +13,14 @@ const HelperContext = createContext<HelperContextValue | null>(null);
 export interface HelperContextProviderProps extends CreateSessionParams {
   children: ReactNode;
   host: string;
-  tools?: Record<string, HelperTool>;
 }
 
-export function HelperContextProvider({ children, host, tools = {}, ...params }: HelperContextProviderProps) {
+export function HelperContextProvider({ children, host, ...params }: HelperContextProviderProps) {
   const tokenRef = useRef<string | null>(null);
 
   const value: HelperContextValue = useMemo(
     () => ({
       host,
-      tools,
       getToken: async () => {
         if (!tokenRef.current) {
           const { token: newToken } = await createSession(host, params);

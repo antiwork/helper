@@ -6,7 +6,7 @@ import { getConversation } from "@/app/api/chat/getConversation";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
-import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { ClientProvidedTool, createUserMessage, respondWithAI } from "@/lib/ai/chat";
 import { CHAT_CONVERSATION_SUBJECT, generateConversationSubject } from "@/lib/data/conversation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,7 +18,7 @@ interface ChatRequestBody {
   conversationSlug: string;
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
-  isToolResult?: boolean;
+  tools?: ClientProvidedTool[];
 }
 
 export function OPTIONS() {
@@ -26,7 +26,7 @@ export function OPTIONS() {
 }
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
 
   const conversation = await getConversation(conversationSlug, session);
 
@@ -67,6 +67,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     sendEmail: false,
     reasoningEnabled: false,
     isHelperUser,
+    tools,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||
