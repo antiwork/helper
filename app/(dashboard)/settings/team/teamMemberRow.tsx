@@ -1,16 +1,14 @@
 "use client";
 
-import { Trash } from "lucide-react";
+import { Loader, Save, SquarePen, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
-import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useSession } from "@/components/useSession";
 import { type UserRole } from "@/lib/data/user";
 import { RouterOutputs } from "@/trpc";
@@ -58,12 +56,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
   const [localKeywords, setLocalKeywords] = useState<string[]>(member.keywords);
   const [displayNameInput, setDisplayNameInput] = useState(member.displayName || "");
   const { user: currentUser } = useSession() ?? {};
-
-  // Separate saving indicators for each operation type
-  const displayNameSaving = useSavingIndicator();
-  const roleSaving = useSavingIndicator();
-  const permissionsSaving = useSavingIndicator();
-  const keywordsSaving = useSavingIndicator();
+  const [isEditing, setIsEditing] = useState(false);
 
   const utils = api.useUtils();
 
@@ -79,133 +72,47 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
     assignee: [member.id],
   });
 
-  // Separate mutations for each operation type
-  const { mutate: updateDisplayName } = api.mailbox.members.update.useMutation({
-    onSuccess: (data) => {
-      // Only update displayName field to avoid race conditions
-      utils.mailbox.members.list.setData(undefined, (oldData) => {
-        if (!oldData) return oldData;
-        return updateMember(oldData, member, { displayName: data.user?.displayName ?? "" });
+  const { mutate: updateMemberAllFields, isPending: isSaving } = api.mailbox.members.update.useMutation({
+  onSuccess: (data) => {
+    utils.mailbox.members.list.setData(undefined, (oldData) => {
+      if (!oldData) return oldData;
+      return updateMember(oldData, member, {
+        displayName: data.user.displayName,
+        role: data.user.role,
+        permissions: data.user.permissions,
+        keywords: data.user.keywords,
       });
-      displayNameSaving.setState("saved");
-    },
-    onError: (error) => {
-      displayNameSaving.setState("error");
-      toast.error("Failed to update display name", { description: error.message });
-      setDisplayNameInput(member.displayName || "");
-    },
-  });
-
-  const { mutate: updateRole } = api.mailbox.members.update.useMutation({
-    onSuccess: (data) => {
-      // Update both role and keywords since role changes can affect keywords
-      utils.mailbox.members.list.setData(undefined, (oldData) => {
-        if (!oldData) return oldData;
-        return updateMember(oldData, member, { role: data.user?.role, keywords: data.user?.keywords });
-      });
-      roleSaving.setState("saved");
-    },
-    onError: (error) => {
-      roleSaving.setState("error");
-      toast.error("Failed to update role", { description: error.message });
-      setRole(member.role);
-      setKeywordsInput(member.keywords.join(", "));
-      setLocalKeywords(member.keywords);
-    },
-  });
-
-  const { mutate: updateKeywords } = api.mailbox.members.update.useMutation({
-    onSuccess: (data) => {
-      // Only update keywords field to avoid race conditions
-      utils.mailbox.members.list.setData(undefined, (oldData) => {
-        if (!oldData) return oldData;
-        return updateMember(oldData, member, { keywords: data.user?.keywords });
-      });
-      keywordsSaving.setState("saved");
-    },
-    onError: (error) => {
-      keywordsSaving.setState("error");
-      toast.error("Failed to update keywords", { description: error.message });
-      setKeywordsInput(member.keywords.join(", "));
-      setLocalKeywords(member.keywords);
-    },
-  });
-
-  const { mutate: updatePermissions } = api.mailbox.members.update.useMutation({
-    onSuccess: (data) => {
-      utils.mailbox.members.list.setData(undefined, (oldData) => {
-        if (!oldData) return oldData;
-        return updateMember(oldData, member, { permissions: data.user.permissions });
-      });
-      permissionsSaving.setState("saved");
-    },
-    onError: (error) => {
-      permissionsSaving.setState("error");
-      toast.error("Failed to update permissions", { description: error.message });
-      setPermissions(member.permissions);
-    },
-  });
-
-  // Debounced function for keyword updates
-  const debouncedUpdateKeywords = useDebouncedCallback((newKeywords: string[]) => {
-    keywordsSaving.setState("saving");
-    updateKeywords({
-      userId: member.id,
-      keywords: newKeywords,
     });
-  }, 500);
+    toast.success("Member updated");
+    setIsEditing(false);
+  },
+  onError: (error) => {
+    toast.error("Failed to update member", { description: error.message });
+  },
+});
 
-  const debouncedUpdateDisplayName = useDebouncedCallback((newDisplayName: string) => {
-    displayNameSaving.setState("saving");
-    updateDisplayName({
+  const handleSave = () => {
+    updateMemberAllFields({
       userId: member.id,
-      displayName: newDisplayName,
-    });
-  }, 500);
-
-  const handleRoleChange = (newRole: UserRole) => {
-    setRole(newRole);
-
-    // Clear keywords when changing FROM nonCore to another role
-    // Keep keywords when changing TO nonCore
-    const newKeywords = newRole === "nonCore" ? localKeywords : [];
-
-    if (newRole !== "nonCore") {
-      setKeywordsInput("");
-      setLocalKeywords([]);
-    }
-
-    roleSaving.setState("saving");
-    updateRole({
-      userId: member.id,
-      role: newRole,
-      keywords: newKeywords,
+      displayName: displayNameInput,
+      role,
+      permissions,
+      keywords: localKeywords,
     });
   };
 
-  const handleKeywordsChange = (value: string) => {
-    setKeywordsInput(value);
-    const newKeywords = value
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean);
-    setLocalKeywords(newKeywords);
-    debouncedUpdateKeywords(newKeywords);
-  };
 
-  const handleDisplayNameChange = (value: string) => {
-    setDisplayNameInput(value);
-    debouncedUpdateDisplayName(value);
-  };
+  const handleEditToggle = () => {
+  if (isEditing) {
+    setDisplayNameInput(member.displayName || "");
+    setRole(member.role);
+    setPermissions(member.permissions);
+    setKeywordsInput(member.keywords.join(", "));
+    setLocalKeywords(member.keywords);
+  }
+  setIsEditing(!isEditing);
+};
 
-  const handlePermissionsChange = (newPermissions: string) => {
-    setPermissions(newPermissions);
-    permissionsSaving.setState("saving");
-    updatePermissions({
-      userId: member.id,
-      permissions: newPermissions,
-    });
-  };
 
   const getAvatarFallback = (member: TeamMember): string => {
     if (member.displayName?.trim()) {
@@ -229,66 +136,97 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
         </div>
       </TableCell>
       <TableCell>
-        {isAdmin || member.id === currentUser?.id ? (
-          <Input
-            value={displayNameInput}
-            onChange={(e) => handleDisplayNameChange(e.target.value)}
-            placeholder="Enter display name"
-            className="w-full max-w-sm"
-          />
-        ) : (
-          <span>{member.displayName || "No display name"}</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {isAdmin ? (
-          <Select value={permissions} onValueChange={handlePermissionsChange}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Permissions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
-              <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {isAdmin ? (
-          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {isAdmin ? (
-          <div className="w-[200px]">
+        <div className="w-full min-w-[120px]">
+          {(isAdmin || member.id === currentUser?.id) && isEditing ? (
             <Input
-              value={keywordsInput}
-              onChange={(e) => handleKeywordsChange(e.target.value)}
-              placeholder="Enter keywords separated by commas"
-              className={role === "nonCore" ? "" : "invisible"}
+              value={displayNameInput}
+              onChange={(e) => setDisplayNameInput(e.target.value)}
+              placeholder="Enter display name"
+              className="w-full max-w-sm"
             />
-          </div>
-        ) : (
-          <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
-            {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
-          </span>
-        )}
+          ) : (
+            <span>{member.displayName || "No display name"}</span>
+          )}
+        </div>
       </TableCell>
       <TableCell>
-        {currentUser?.id !== member.id && isAdmin && (
+        <div className="min-w-[120px]">
+          {isAdmin && isEditing ? (
+            <Select value={permissions} onValueChange={(value) => setPermissions(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Permissions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
+                <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="min-w-[120px]">
+          {isAdmin && isEditing ? (
+            <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+                <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+                <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="min-w-[120px]">
+          {isAdmin && isEditing ? (
+              <Input
+                value={keywordsInput}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const value = e.target.value;
+                  setKeywordsInput(value);
+                  const newKeywords = value.split(",").map((k : string) => k.trim()).filter(Boolean);
+                  setLocalKeywords(newKeywords);
+                }}
+                placeholder="Enter keywords separated by commas"
+                className={role === "nonCore" ? "" : "invisible"}
+              />
+          ) : (
+            <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
+              {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" iconOnly onClick={isEditing ? handleSave : handleEditToggle}>
+            {isEditing ? (
+              isSaving ? 
+                <>
+                  <span className="sr-only">Saving...</span>
+                  <Loader className="h-4 w-4 animate-spin" />
+                </> 
+              : 
+                <>
+                  <span className="sr-only">Save</span>
+                  <Save className="h-4 w-4" />
+                </>
+            ) : (
+              <>
+                <span className="sr-only">Edit</span>
+                <SquarePen className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+          {currentUser?.id !== member.id && isAdmin && (
           <DeleteMemberDialog
             member={{ id: member.id, displayName: member.displayName }}
             description={
@@ -304,13 +242,6 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             </Button>
           </DeleteMemberDialog>
         )}
-      </TableCell>
-      <TableCell className="w-[120px]">
-        <div className="flex items-center gap-2">
-          <SavingIndicator state={displayNameSaving.state} />
-          <SavingIndicator state={permissionsSaving.state} />
-          <SavingIndicator state={roleSaving.state} />
-          {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
         </div>
       </TableCell>
     </TableRow>
