@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function VipFilter({
+export const VipFilter = memo(function VipFilter({
   isVip,
   onChange,
 }: {
@@ -35,4 +36,4 @@ export function VipFilter({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});

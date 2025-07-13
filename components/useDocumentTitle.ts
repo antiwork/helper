@@ -4,7 +4,7 @@ export function useDocumentTitle(title: string, retainOnUnmount = false) {
   const defaultTitle = useRef(typeof window !== "undefined" ? document.title : "");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && title != null) {
       document.title = title;
     }
   }, [title]);

@@ -1,4 +1,5 @@
 import { BellIcon } from "lucide-react";
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,32 +26,38 @@ interface EventFilterProps {
   onChange: (events: EventType[]) => void;
 }
 
-export function EventFilter({ selectedEvents, onChange }: EventFilterProps) {
+export const EventFilter = memo(function EventFilter({ selectedEvents, onChange }: EventFilterProps) {
+  const buttonText =
+    selectedEvents.length === 1
+      ? EVENT_OPTIONS.find((event) => event.value === selectedEvents[0])?.label
+      : selectedEvents.length > 1
+        ? `${selectedEvents.length} events`
+        : "Events";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={selectedEvents.length > 0 ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
           <BellIcon className="h-4 w-4 mr-2" />
-          {selectedEvents.length === 1
-            ? EVENT_OPTIONS.find((event) => event.value === selectedEvents[0])?.label
-            : selectedEvents.length > 0
-              ? `${selectedEvents.length} events`
-              : "Events"}
+          {buttonText}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        {EVENT_OPTIONS.map((event) => (
-          <DropdownMenuCheckboxItem
-            key={event.value}
-            checked={selectedEvents.includes(event.value)}
-            onCheckedChange={(checked) => {
-              onChange(checked ? [...selectedEvents, event.value] : selectedEvents.filter((e) => e !== event.value));
-            }}
-          >
-            {event.label}
-          </DropdownMenuCheckboxItem>
-        ))}
+        {EVENT_OPTIONS.map((event) => {
+          const isChecked = selectedEvents.includes(event.value);
+          return (
+            <DropdownMenuCheckboxItem
+              key={event.value}
+              checked={isChecked}
+              onCheckedChange={(checked) => {
+                onChange(checked ? [...selectedEvents, event.value] : selectedEvents.filter((e) => e !== event.value));
+              }}
+            >
+              {event.label}
+            </DropdownMenuCheckboxItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
