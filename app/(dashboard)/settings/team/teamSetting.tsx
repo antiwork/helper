@@ -10,6 +10,7 @@ import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
+import { TeamSettingLoading } from "./teamSettingLoading";
 
 const TeamSetting = () => {
   const { data, isLoading } = api.mailbox.members.list.useQuery();
@@ -35,7 +36,7 @@ const TeamSetting = () => {
       <div className="w-full space-y-6">
         {user?.permissions === "admin" && <AddMember teamMembers={teamMembers} />}
 
-        {teamMembers.length > 0 && (
+        {(teamMembers.length > 0 || isLoading) && (
           <Input
             placeholder="Search..."
             value={searchTerm}
@@ -59,13 +60,7 @@ const TeamSetting = () => {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <div className="flex justify-center">
-                      <LoadingSpinner size="md" />
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TeamSettingLoading />
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
