@@ -1,4 +1,4 @@
-import { TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 
 export function TeamSettingLoading() {
   return (
