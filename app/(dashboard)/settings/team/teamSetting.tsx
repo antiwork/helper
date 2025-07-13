@@ -50,10 +50,10 @@ const TeamSetting = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="w-[120px]">Permissions</TableHead>
-                <TableHead className="w-[180px]">Support role</TableHead>
-                <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
+                <TableHead className="min-w-[140px]">Name</TableHead>
+                <TableHead className="w-[100px]">Permissions</TableHead>
+                <TableHead className="w-[100px]">Support role</TableHead>
+                <TableHead className="min-w-[180px]">Auto-assign keywords</TableHead>
                 <TableHead>Actions</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
               </TableRow>

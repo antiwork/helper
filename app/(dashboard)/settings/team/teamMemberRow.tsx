@@ -243,7 +243,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue placeholder="Permissions" />
             </SelectTrigger>
             <SelectContent>
@@ -258,7 +258,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
@@ -272,10 +272,10 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
         )}
       </TableCell>
       <TableCell>
-        {isAdmin ? (
-          <div className="w-[200px]">
+        {!isAdmin ? (
+          <div className="w-[180px]">
             <Input
-              value={keywordsInput}
+              value={"keywordsInput"}
               onChange={(e) => handleKeywordsChange(e.target.value)}
               placeholder="Enter keywords separated by commas"
               className={role === "nonCore" ? "" : "invisible"}
@@ -283,7 +283,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           </div>
         ) : (
           <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
-            {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
+            {member.keywords.length > 0 ? member.keywords.join(", ") : "keywordsInput"}
           </span>
         )}
       </TableCell>
@@ -305,7 +305,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           </DeleteMemberDialog>
         )}
       </TableCell>
-      <TableCell className="w-[120px]">
+      <TableCell className="min-w-[120px]">
         <div className="flex items-center gap-2">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={permissionsSaving.state} />
