@@ -1,0 +1,44 @@
+---
+title: Other Frameworks
+description: Integrate the Helper Chat Widget with other JavaScript frameworks
+---
+
+## Turbo (Rails, Stimulus)
+
+If you're using Turbo with Rails or other frameworks, you'll need to handle page navigation events to properly initialize and destroy the widget:
+
+```javascript
+const config = {
+  // ... your configurations
+};
+
+document.addEventListener("turbo:load", async () => {
+  try {
+    HelperWidget.destroy();
+    await HelperWidget.init(config);
+  } catch (error) {
+    console.error("Error during Turbo load:", error);
+  }
+});
+```
+
+Since Turbo replaces the entire <body> on navigation, reinitializing the widget ensures it functions correctly across pages, avoids DOM conflicts, and maintains consistent behavior.
+
+## Need Support for Another Framework?
+
+<Callout>
+
+We'd love to help you integrate Helper with your framework! If you have a working integration example for a framework not listed here, please let us know and we'll add it to this page.
+
+Contact us through the chat widget or reach out to our support team with your integration example.
+
+</Callout>
+
+## General Integration Guidelines
+
+For any JavaScript framework or library:
+
+1. **Initialize the widget** when your page/component mounts
+2. **Destroy the widget** when your page/component unmounts to prevent memory leaks
+3. **Handle navigation events** if your framework uses client-side routing
+4. **Ensure proper cleanup** to avoid DOM conflicts
