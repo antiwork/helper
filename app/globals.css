@@ -173,54 +173,57 @@
     --sidebar-width: 16rem;
     --sidebar-width-icon: 3rem;
     --sidebar-width-mobile: 60%; /* Mobile sidebar width */
-    --sidebar-background: hsl(0 58% 10%); /* Updated to match background color */
-    --sidebar-foreground: hsl(0 0% 100%);
-    --sidebar-primary: hsl(0 58% 10%);
-    --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(0 0% 100% / 10%);
-    --sidebar-accent-foreground: hsl(0 0% 100%);
-    --sidebar-border: hsl(0 0% 100% / 20%);
-    --sidebar-ring: hsl(0 0% 100%);
-    --background: hsl(0 58% 10%); /* Default background color of <body> */
-    --foreground: hsl(0 0% 100%); /* Default text color */
-    --card: hsl(0 58% 10%); /* Background color for <Card> */
-    --card-foreground: hsl(0 0% 100%); /* Text color for <Card> */
-    --popover: hsl(0 58% 10%); /* Background color for popovers */
-    --popover-foreground: hsl(0 0% 100%); /* Text color for popovers */
-    --primary: hsl(0 0% 100%); /* Primary colors for <Button> */
-    --primary-foreground: hsl(0 58% 10%); /* Primary text color for <Button> */
-    --secondary: hsl(0 20% 22%); /* Secondary colors for <Button> */
-    --secondary-foreground: hsl(0 0% 100%); /* Secondary text color for <Button> */
-    --muted: hsl(0 20% 22%); /* Muted backgrounds for <TabsList>, <Skeleton>, <Switch> */
-    --muted-foreground: hsl(0 0% 100% / 70%); /* Muted text color */
-    --accent: hsl(0 20% 22%); /* Used for accents like hover effects */
-    --accent-foreground: hsl(0 0% 100%); /* Text color for accent elements */
-    --destructive: hsl(0 84% 65%); /* Used for destructive actions */
-    --destructive-foreground: hsl(0 0% 100%); /* Text color for destructive elements */
-    --success: hsl(142 72% 29%); /* Used for success states */
-    --success-foreground: hsl(0 0% 100%); /* Text color for success elements */
-    --border: hsl(0 0% 100% / 20%); /* Default border color */
-    --input: hsl(0 0% 100% / 20%); /* Border color for inputs */
-    --ring: hsl(0 0% 100% / 20%); /* Used for focus ring */
-    --chart-1: hsl(12 76% 41%); /* Chart color 1 */
-    --chart-2: hsl(173 58% 29%); /* Chart color 2 */
-    --chart-3: hsl(197 37% 14%); /* Chart color 3 */
-    --chart-4: hsl(43 74% 46%); /* Chart color 4 */
-    --chart-5: hsl(27 87% 47%); /* Chart color 5 */
-    --radius: 0.5rem; /* Border radius */
-    --bright: hsl(41 99% 55%); /* Pop of bright color */
-    --bright-foreground: hsl(0 58% 10%); /* Text on top of pop of bright color */
-    --syntax-plain: #d4d4d4;
-    --syntax-comment: #6a9955;
+    --sidebar-background: hsl(220 15% 8%); /* Darker, more neutral sidebar */
+    --sidebar-foreground: hsl(220 15% 95%); /* Higher contrast text */
+    --sidebar-primary: hsl(220 15% 12%); /* Slightly lighter than background */
+    --sidebar-primary-foreground: hsl(220 15% 95%);
+    --sidebar-accent: hsl(220 15% 15%); /* More visible accent */
+    --sidebar-accent-foreground: hsl(220 15% 95%);
+    --sidebar-border: hsl(220 15% 20%); /* More visible borders */
+    --sidebar-ring: hsl(220 15% 85%);
+    --background: hsl(220 15% 9%); /* Darker, more neutral background */
+    --foreground: hsl(220 15% 95%); /* High contrast text */
+    --card: hsl(220 15% 11%); /* Slightly lighter than background */
+    --card-foreground: hsl(220 15% 95%);
+    --popover: hsl(220 15% 10%);
+    --popover-foreground: hsl(220 15% 95%);
+    --primary: hsl(220 15% 95%); /* High contrast primary */
+    --primary-foreground: hsl(220 15% 9%);
+    --secondary: hsl(220 15% 15%); /* More visible secondary */
+    --secondary-foreground: hsl(220 15% 90%);
+    --muted: hsl(220 15% 14%); /* Better muted background */
+    --muted-foreground: hsl(220 10% 65%); /* Better muted text contrast */
+    --accent: hsl(220 15% 16%); /* More visible accent */
+    --accent-foreground: hsl(220 15% 90%);
+    --destructive: hsl(0 75% 60%); /* More visible destructive color */
+    --destructive-foreground: hsl(220 15% 95%);
+    --success: hsl(142 60% 45%); /* More visible success color */
+    --success-foreground: hsl(220 15% 95%);
+    --border: hsl(220 15% 20%); /* More visible borders */
+    --input: hsl(220 15% 18%); /* Better input styling */
+    --ring: hsl(220 15% 50%); /* More visible focus ring */
+    --chart-1: hsl(12 76% 55%); /* Adjusted chart colors for dark mode */
+    --chart-2: hsl(173 58% 45%);
+    --chart-3: hsl(197 37% 55%);
+    --chart-4: hsl(43 74% 60%);
+    --chart-5: hsl(27 87% 55%);
+    --radius: 0.5rem;
+    --bright: hsl(41 99% 55%); /* Keep bright color consistent */
+    --bright-foreground: hsl(220 15% 9%);
+    --syntax-plain: #e6e6e6; /* Better syntax highlighting for dark mode */
+    --syntax-comment: #7c7c7c;
     --syntax-keyword: #569cd6;
     --syntax-function: #dcdcaa;
     --syntax-string: #ce9178;
-    --syntax-number: #9cdcfe;
-    --chart-open: hsl(17 90% 49%); /* Slightly lighter in dark mode for better visibility */
+    --syntax-number: #4fc1ff;
+    --chart-open: hsl(1 75% 55%); /* Better visibility for charts */
+    --chart-closed-manual: hsl(45 99% 55%);
+    --chart-closed-ai: hsl(73 58% 56%);
+    --chart-negative: hsl(0 75% 60%);
   }
 }
 
-/* Docs theme */
+/* Docs theme - Enhanced for better dark mode */
 
 @theme {
   --color-fd-background: hsl(0, 0%, 98%);
@@ -242,22 +245,22 @@
 }
 
 .dark {
-  --color-fd-background: hsl(0, 50%, 10%);
-  --color-fd-foreground: hsl(0, 30%, 94.5%);
-  --color-fd-muted: hsl(0, 50%, 14%);
-  --color-fd-muted-foreground: hsl(0, 30%, 90%);
-  --color-fd-popover: hsl(0, 50%, 14%);
-  --color-fd-popover-foreground: hsl(0, 30%, 94.5%);
-  --color-fd-card: hsl(0, 50%, 14%);
-  --color-fd-card-foreground: hsl(0, 30%, 94.5%);
-  --color-fd-border: hsl(0, 50%, 20%);
-  --color-fd-primary: #feb81d;
-  --color-fd-primary-foreground: hsl(0, 0%, 9%);
-  --color-fd-secondary: hsl(15, 25%, 20%);
-  --color-fd-secondary-foreground: hsl(15, 25%, 90%);
-  --color-fd-accent: hsl(15, 25%, 25%);
-  --color-fd-accent-foreground: hsl(15, 25%, 90%);
-  --color-fd-ring: hsl(350, 64%, 80%);
+  --color-fd-background: hsl(220, 15%, 8%); /* Consistent with main dark theme */
+  --color-fd-foreground: hsl(220, 15%, 95%); /* High contrast text */
+  --color-fd-muted: hsl(220, 15%, 14%); /* Better muted background */
+  --color-fd-muted-foreground: hsl(220, 10%, 65%); /* Better muted text */
+  --color-fd-popover: hsl(220, 15%, 10%); /* Consistent popover */
+  --color-fd-popover-foreground: hsl(220, 15%, 95%);
+  --color-fd-card: hsl(220, 15%, 11%); /* Consistent card background */
+  --color-fd-card-foreground: hsl(220, 15%, 95%);
+  --color-fd-border: hsl(220, 15%, 20%); /* More visible borders */
+  --color-fd-primary: hsl(41, 99%, 55%); /* Bright accent color */
+  --color-fd-primary-foreground: hsl(220, 15%, 9%);
+  --color-fd-secondary: hsl(220, 15%, 15%); /* Consistent secondary */
+  --color-fd-secondary-foreground: hsl(220, 15%, 90%);
+  --color-fd-accent: hsl(220, 15%, 16%); /* Consistent accent */
+  --color-fd-accent-foreground: hsl(220, 15%, 90%);
+  --color-fd-ring: hsl(41, 99%, 55%); /* Bright focus ring */
 }
 
 /* Additional styles */
@@ -272,6 +275,29 @@
   [role="button"],
   button {
     @apply cursor-pointer;
+  }
+  
+  /* Enhanced dark mode scrollbar styling */
+  .dark {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(220 15% 25%) hsl(220 15% 12%);
+  }
+  
+  .dark::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .dark::-webkit-scrollbar-track {
+    background: hsl(220 15% 12%);
+  }
+  
+  .dark::-webkit-scrollbar-thumb {
+    background: hsl(220 15% 25%);
+    border-radius: 4px;
+  }
+  
+  .dark::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 15% 30%);
   }
 }
 
@@ -314,6 +340,19 @@
   pre.code .token-line::before {
     counter-increment: step;
     @apply mr-4 inline-block w-4 text-right text-muted-foreground/40 content-[counter(step)];
+  }
+  
+  /* Enhanced dark mode component styling */
+  .dark .btn-group .btn-group-item {
+    @apply border-border/50;
+  }
+  
+  .dark pre.code {
+    @apply bg-muted/50;
+  }
+  
+  .dark pre.code .token-line::before {
+    @apply text-muted-foreground/60;
   }
 }
 
