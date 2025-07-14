@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { useState } from "react";
 
 export default function ShadowHoverButton({
@@ -20,7 +20,7 @@ export default function ShadowHoverButton({
         onMouseLeave={() => setIsHovered(false)}
         disabled={isLoading}
       >
-        <Send className="h-3.5 w-3.5 -rotate-90" />
+        {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 -rotate-90" />}
       </button>
       <div
         className={`absolute left-0 top-0 h-8 w-8 rounded-md ${isGumroadTheme ? "bg-black" : "bg-bright-foreground"} transition-all duration-300 ease-in-out`}

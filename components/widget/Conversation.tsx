@@ -350,6 +350,7 @@ export default function Conversation({
         isLoading={isLoading}
         isGumroadTheme={isGumroadTheme}
         placeholder={isProvidingDetails ? "Provide additional details..." : "Ask a question..."}
+        conversationSlug={conversationSlug}
       />
     </>
   );
