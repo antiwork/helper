@@ -117,9 +117,8 @@ export default function Home() {
   const docsBaseUrl = getBaseUrl().includes("localhost") ? "http://localhost:3011" : "https://helper.ai";
 
   return (
-    <main className="bg-[#2B0808] text-white flex flex-col">
-      <MarketingHeader bgColor="#2B0808" />
-
+    <main className="bg-[#2B0808] dark:bg-background text-white dark:text-foreground flex flex-col">
+      <MarketingHeader  />
       <div className="flex-grow">
         <section className="flex items-center justify-center h-dvh pt-20">
           <div className="container mx-auto px-4">
@@ -136,7 +135,7 @@ export default function Home() {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="max-w-md w-full">
-                    <div className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-bl-2xl p-6 shadow-md min-h-[80px] flex items-center">
+                    <div className="bg-[rgba(99,72,71,0.3)] dark:bg-muted rounded-t-2xl rounded-bl-2xl p-6 shadow-md min-h-[80px] flex items-center">
                       {customerQuestions[currentQuestionIndex] && (
                         <AnimatedTyping
                           text={customerQuestions[currentQuestionIndex]}
@@ -160,7 +159,7 @@ export default function Home() {
                   <div className="w-96">
                     <div
                       ref={helperMessageRef}
-                      className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-br-2xl p-6 shadow-md"
+                      className="bg-[rgba(99,72,71,0.3)] dark:bg-muted rounded-t-2xl rounded-br-2xl p-6 shadow-md"
                     >
                       <AnimatedTyping
                         text="Let me show you how I can help..."
@@ -177,7 +176,7 @@ export default function Home() {
                           <Button
                             ref={showMeButtonRef}
                             onClick={scrollToFeatures}
-                            className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
+                            className="bg-bright hover:bg-[#FFEDC2] dark:hover:bg-bright/90 text-black hover:text-black dark:text-bright-foreground font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                           >
                             Take the tour
                           </Button>
@@ -195,7 +194,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         <section id="smarter-support" className="py-12 md:py-20">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-16 gap-0 items-start">
@@ -205,7 +203,7 @@ export default function Home() {
                 </h2>
                 <div className="space-y-6 mb-12 mt-8">
                   <div className="flex items-start gap-4 md:items-center">
-                    <MousePointer className="w-6 h-6 text-amber-400" />
+                    <MousePointer className="w-6 h-6 text-amber-400 dark:text-bright" />
                     <span>
                       <span className="font-bold text-bright">Helping hand</span>
                       <span className="text-secondary dark:text-foreground">
@@ -240,7 +238,7 @@ export default function Home() {
                   </div>
                 </div>
                 <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
+                  className="bg-bright hover:bg-[#FFEDC2] dark:hover:bg-bright/90 text-black hover:text-black dark:text-bright-foreground font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                   asChild
                 >
                   <Link href="https://github.com/antiwork/helper">Get started</Link>
@@ -261,7 +259,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         <section className="py-12 md:py-20">
           <div className="container mx-auto px-4">
             <div className="mb-24 text-left max-w-5xl mx-auto">
@@ -275,10 +272,10 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-6 items-center md:items-stretch">
               <div className="relative flex flex-col items-center md:items-end h-full px-4 md:px-0">
-                <div className="bg-[#3B1B1B] rounded-3xl p-8 max-w-xl w-full mx-auto h-full flex flex-col justify-between mt-8 md:mt-0">
-                  <div className="flex items-center bg-[#2B0808] rounded-xl px-6 py-4 mb-8">
+                <div className="bg-[#3B1B1B] dark:bg-card rounded-3xl p-8 max-w-xl w-full mx-auto h-full flex flex-col justify-between mt-8 md:mt-0">
+                  <div className="flex items-center bg-[#2B0808] dark:bg-muted rounded-xl px-6 py-4 mb-8">
                     <svg
-                      className="w-6 h-6 text-yellow-300 mr-3"
+                      className="w-6 h-6 text-yellow-300 dark:text-bright mr-3"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -287,7 +284,7 @@ export default function Home() {
                       <circle cx="12" cy="12" r="10" />
                       <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
                     </svg>
-                    <span className="text-lg md:text-xl text-[#FFE6B0]">yourwebsite.com</span>
+                    <span className="text-lg md:text-xl text-[#FFE6B0] dark:text-foreground">yourwebsite.com</span>
                   </div>
                   <div className="space-y-6">
                     <div className="flex items-center">
@@ -304,43 +301,42 @@ export default function Home() {
                           />
                         </svg>
                       </span>
-                      <span className="text-base md:text-lg text-[#FFE6B0]">Scanning website content</span>
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-foreground">Scanning website content</span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-6 h-6 flex items-center justify-center mr-4">
                         <svg
-                          className="w-5 h-5 animate-spin text-[#FFD34E]"
+                          className="w-5 h-5 animate-spin text-[#FFD34E] dark:text-bright"
                           viewBox="0 0 20 20"
                           fill="none"
                           xmlns="http://www.w3.org/2000/svg"
                         >
-                          <circle className="opacity-20" cx="10" cy="10" r="9" stroke="#FFD34E" strokeWidth="3" />
-                          <path d="M10 2a8 8 0 1 1-8 8" stroke="#FFD34E" strokeWidth="3" strokeLinecap="round" />
+                          <circle className="opacity-20" cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="3" />
+                          <path d="M10 2a8 8 0 1 1-8 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                         </svg>
                       </span>
-                      <span className="text-base md:text-lg text-[#FFE6B0]">Extracting knowledge structure</span>
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-foreground">Extracting knowledge structure</span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-6 h-6 flex items-center justify-center mr-4">
                         <svg className="w-5 h-5" viewBox="0 0 20 20">
-                          <circle cx="10" cy="10" r="9" stroke="#FFE6B0" strokeWidth="2" fill="none" opacity="0.5" />
+                          <circle cx="10" cy="10" r="9" stroke="#FFE6B0" className="dark:stroke-muted-foreground" strokeWidth="2" fill="none" opacity="0.5" />
                         </svg>
                       </span>
-                      <span className="text-base md:text-lg text-[#FFE6B0]">Indexing content</span>
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-muted-foreground">Indexing content</span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-6 h-6 flex items-center justify-center mr-4">
                         <svg className="w-5 h-5" viewBox="0 0 20 20">
-                          <circle cx="10" cy="10" r="9" stroke="#FFE6B0" strokeWidth="2" fill="none" opacity="0.5" />
+                          <circle cx="10" cy="10" r="9" stroke="#FFE6B0" className="dark:stroke-muted-foreground" strokeWidth="2" fill="none" opacity="0.5" />
                         </svg>
                       </span>
-                      <span className="text-base md:text-lg text-[#FFE6B0]">Building AI model</span>
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-muted-foreground">Building AI model</span>
                     </div>
                   </div>
                 </div>
                 <div
-                  className="absolute -top-2 -left-1 md:-top-8 md:-left-2 rotate-[-6deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50 transition-transform duration-200 hover:-rotate-12"
-                  style={{ borderColor: "#FF90E8", background: "#250404", color: "#FF90E8" }}
+                  className="absolute -top-2 -left-1 md:-top-8 md:-left-2 rotate-[-6deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50 dark:shadow-none transition-transform duration-200 hover:-rotate-12 bg-[#250404] dark:bg-card border-[#FF90E8] dark:border-[#FF90E8] text-[#FF90E8]"
                 >
                   <svg
                     className="w-5 h-5"
@@ -348,7 +344,6 @@ export default function Home() {
                     stroke="currentColor"
                     strokeWidth="2"
                     viewBox="0 0 24 24"
-                    style={{ color: "#FF90E8" }}
                   >
                     <circle cx="12" cy="12" r="10" />
                     <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
@@ -359,40 +354,39 @@ export default function Home() {
               <div className="relative flex flex-col items-center md:items-start mt-16 md:mt-0 h-full px-4 md:px-0">
                 <div className="relative w-full flex justify-center md:justify-start h-full">
                   <div className="w-full max-w-xl flex flex-col gap-3 h-full">
-                    <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
-                      <Banknote className="w-6 h-6 text-[#FFD34E] mr-3" />
-                      <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
+                    <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-card rounded-2xl px-6 py-4">
+                      <Banknote className="w-6 h-6 text-[#FFD34E] dark:text-bright mr-3" />
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-foreground font-medium">
                         What's your refund policy?
                       </span>
                     </div>
-                    <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
+                    <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-card rounded-2xl px-6 py-4">
                       <Archive className="w-6 h-6 text-[#459EFD] mr-3" />
-                      <span className="text-base md:text-lg text-[#FFE6B0] font-medium">Can I expedite shipping?</span>
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-foreground font-medium">Can I expedite shipping?</span>
                     </div>
-                    <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
+                    <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-card rounded-2xl px-6 py-4">
                       <Trash2 className="w-6 h-6 text-[#FF4343] mr-3" />
-                      <span className="text-base md:text-lg text-[#FFE6B0] font-medium">
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-foreground font-medium">
                         How do I delete my account?
                       </span>
                     </div>
-                    <div className="flex-1 flex items-center bg-[#3B1B1B] rounded-2xl px-6 py-4">
+                    <div className="flex-1 flex items-center bg-[#3B1B1B] dark:bg-card rounded-2xl px-6 py-4">
                       <svg
-                        className="w-6 h-6 text-[#FFE6B0] mr-3"
+                        className="w-6 h-6 text-[#FFE6B0] dark:text-foreground mr-3"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
                         viewBox="0 0 24 24"
                       >
-                        <circle cx="12" cy="12" r="10" stroke="#FFE6B0" strokeWidth="2" fill="none" />
-                        <path d="M12 8v8M8 12h8" stroke="#FFE6B0" strokeWidth="2" strokeLinecap="round" />
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                        <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                       </svg>
-                      <span className="text-base md:text-lg text-[#FFE6B0] font-medium">Add knowledge</span>
+                      <span className="text-base md:text-lg text-[#FFE6B0] dark:text-foreground font-medium">Add knowledge</span>
                     </div>
                   </div>
                 </div>
                 <div
-                  className="absolute -top-8 right-1 md:-top-10 md:right-20 rotate-[4deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50 transition-transform duration-200 hover:rotate-12"
-                  style={{ borderColor: "#459EFD", background: "#250404", color: "#459EFD" }}
+                  className="absolute -top-8 right-1 md:-top-10 md:right-20 rotate-[4deg] z-10 flex items-center gap-2 px-4 py-2 rounded-xl border-1 font-medium shadow-md shadow-black/50 dark:shadow-none transition-transform duration-200 hover:rotate-12 bg-[#250404] dark:bg-card border-[#459EFD] dark:border-[#459EFD] text-[#459EFD]"
                 >
                   <svg
                     className="w-5 h-5"
@@ -400,7 +394,6 @@ export default function Home() {
                     stroke="currentColor"
                     strokeWidth="2"
                     viewBox="0 0 24 24"
-                    style={{ color: "#459EFD" }}
                   >
                     <path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5V6.5A2.5 2.5 0 016.5 4H20v13M4 19.5H20" />
                   </svg>
@@ -410,7 +403,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         <section className="py-12 md:py-20">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-2 xl:gap-16 gap-0 items-start">
@@ -455,7 +447,7 @@ export default function Home() {
                   </div>
                 </div>
                 <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
+                  className="bg-bright hover:bg-[#FFEDC2] dark:hover:bg-bright/90 text-black hover:text-black dark:text-bright-foreground font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                   asChild
                 >
                   <Link href="https://github.com/antiwork/helper">Get started</Link>
@@ -486,13 +478,13 @@ export default function Home() {
                     <div className="flex justify-center gap-2 mt-4">
                       <button
                         onClick={() => setCurrentSlide(0)}
-                        className={`w-2 h-2 rounded-full ${currentSlide === 0 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
+                        className={`w-2 h-2 rounded-full ${currentSlide === 0 ? "bg-[#FEB81D] dark:bg-bright" : "bg-[#FEB81D]/30 dark:bg-bright/30"}`}
                         aria-label="Show Slack interface slide"
                         aria-pressed={currentSlide === 0}
                       />
                       <button
                         onClick={() => setCurrentSlide(1)}
-                        className={`w-2 h-2 rounded-full ${currentSlide === 1 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
+                        className={`w-2 h-2 rounded-full ${currentSlide === 1 ? "bg-[#FEB81D] dark:bg-bright" : "bg-[#FEB81D]/30 dark:bg-bright/30"}`}
                         aria-label="Show Slack notification slide"
                         aria-pressed={currentSlide === 1}
                       />
@@ -503,7 +495,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="mb-24 text-left  max-w-5xl mx-auto">
@@ -523,17 +514,17 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex flex-col gap-8 h-full">
-                <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col justify-between h-full">
+                <div className="bg-[rgba(99,72,71,0.3)] dark:bg-card rounded-2xl p-8 flex-1 flex flex-col justify-between h-full">
                   <div className="text-center mb-2">
-                    <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Customer sentiment</div>
+                    <div className="text-3xl font-bold text-[#FFE6B0] dark:text-foreground mb-1">Customer sentiment</div>
                   </div>
                   <div className="flex-1 flex items-center justify-center">
                     <img src="/customer-sentiment.svg" alt="Customer sentiment" className="w-full max-w-xs" />
                   </div>
                 </div>
-                <div className="bg-[rgba(99,72,71,0.3)] rounded-2xl p-8 flex-1 flex flex-col items-center justify-center h-full">
+                <div className="bg-[rgba(99,72,71,0.3)] dark:bg-card rounded-2xl p-8 flex-1 flex flex-col items-center justify-center h-full">
                   <div className="text-center mb-2">
-                    <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Agent satisfaction</div>
+                    <div className="text-3xl font-bold text-[#FFE6B0] dark:text-foreground mb-1">Agent satisfaction</div>
                   </div>
                   <span className="text-7xl mb-8 pt-4">😊</span>
                   <span className="text-5xl font-bold mb-2" style={{ color: "#C2D44B" }}>
@@ -544,7 +535,7 @@ export default function Home() {
             </div>
             <div className="flex justify-center mt-12">
               <Button
-                className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
+                className="bg-bright hover:bg-[#FFEDC2] dark:hover:bg-bright/90 text-black hover:text-black dark:text-bright-foreground font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                 asChild
               >
                 <Link href="https://github.com/antiwork/helper">Get started</Link>
@@ -552,25 +543,24 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        <section className="w-full py-20 bg-[#2B0808] dark:bg-[#2B0808]">
+        <section className="w-full py-20 bg-[#2B0808] dark:bg-background">
           <div className="container mx-auto px-4">
-            <h2 className="text-4xl font-bold mb-12">Knowledge base</h2>
+            <h2 className="text-4xl font-bold mb-12 text-white dark:text-foreground">Knowledge base</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <Link
                 href={`${docsBaseUrl}/docs`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-card rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
                 style={{ boxShadow: "none" }}
               >
                 <span className="flex items-center justify-center w-10 h-10">
                   <BookOpen className="w-6 h-6" style={{ color: "#459EFD" }} />
                 </span>
-                <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                <span className="text-lg font-bold text-[#FFE6B0] dark:text-foreground">
                   Getting started
                 </span>
-                <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                <span className="ml-auto text-[#FFE6B0] dark:text-foreground">
                   <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
@@ -578,16 +568,16 @@ export default function Home() {
                 href={`${docsBaseUrl}/docs/tools/01-overview`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-card rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
                 style={{ boxShadow: "none" }}
               >
                 <span className="flex items-center justify-center w-10 h-10">
                   <Clock className="w-6 h-6" style={{ color: "#C2D44B" }} />
                 </span>
-                <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                <span className="text-lg font-bold text-[#FFE6B0] dark:text-foreground">
                   Tools
                 </span>
-                <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                <span className="ml-auto text-[#FFE6B0] dark:text-foreground">
                   <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
@@ -595,16 +585,16 @@ export default function Home() {
                 href={`${docsBaseUrl}/docs/api/01-overview`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-card rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
                 style={{ boxShadow: "none" }}
               >
                 <span className="flex items-center justify-center w-10 h-10">
                   <MessageSquare className="w-6 h-6" style={{ color: "#FF90E8" }} />
                 </span>
-                <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                <span className="text-lg font-bold text-[#FFE6B0] dark:text-foreground">
                   Conversation API
                 </span>
-                <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                <span className="ml-auto text-[#FFE6B0] dark:text-foreground">
                   <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
@@ -612,16 +602,16 @@ export default function Home() {
                 href={`${docsBaseUrl}/docs/api/api-reference/create-conversation`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-card rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
                 style={{ boxShadow: "none" }}
               >
                 <span className="flex items-center justify-center w-10 h-10">
                   <FileCode className="w-6 h-6" style={{ color: "#FF4343" }} />
                 </span>
-                <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                <span className="text-lg font-bold text-[#FFE6B0] dark:text-foreground">
                   API reference
                 </span>
-                <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                <span className="ml-auto text-[#FFE6B0] dark:text-foreground">
                   <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
@@ -629,28 +619,28 @@ export default function Home() {
                 href={`${docsBaseUrl}/docs/widget/01-overview`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-[#3B1B1B] rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
+                className="flex items-center gap-4 bg-[#3B1B1B] dark:bg-card rounded-2xl p-8 transition-transform hover:-rotate-2 hover:shadow-xl group"
                 style={{ boxShadow: "none" }}
               >
                 <span className="flex items-center justify-center w-10 h-10">
                   <Monitor className="w-6 h-6" style={{ color: "#FFD34E" }} />
                 </span>
-                <span className="text-lg font-bold" style={{ color: "#FFE6B0" }}>
+                <span className="text-lg font-bold text-[#FFE6B0] dark:text-foreground">
                   Chat widget
                 </span>
-                <span className="ml-auto" style={{ color: "#FFE6B0" }}>
+                <span className="ml-auto text-[#FFE6B0] dark:text-foreground">
                   <ArrowRight className="w-6 h-6" />
                 </span>
               </Link>
             </div>
           </div>
         </section>
-        <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: "#2B0808" }}>
+        <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5 bg-[#2B0808] dark:bg-background">
           <div className="flex items-center">
             <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
               <svg width="200" height="40" viewBox="0 0 500 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M57 91L41.4115 47.5L72.5885 47.5L57 91Z" fill={"#FFFFFF"} />
-                <path d="M25 91L9.41154 47.5L40.5885 47.5L25 91Z" fill={"#FFFFFF"} />
+                <path d="M57 91L41.4115 47.5L72.5885 47.5L57 91Z" fill={"#FFFFFF"} className="dark:fill-foreground" />
+                <path d="M25 91L9.41154 47.5L40.5885 47.5L25 91Z" fill={"#FFFFFF"} className="dark:fill-foreground" />
               </svg>
             </a>
           </div>

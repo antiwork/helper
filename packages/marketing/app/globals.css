@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "fumadocs-ui/css/preset.css";
 
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
@@ -112,13 +113,10 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-@import "../components/tiptap/editor.css";
-
 @layer base {
   :root,
   .light {
-    --sidebar-width: 16rem;
-    --sidebar-width-icon: 3rem;
+    --sidebar-width: 20rem; /* Sidebar width */
     --sidebar-width-mobile: 60%; /* Mobile sidebar width */
     --sidebar-background: hsl(0 69% 17%); /* Sidebar background color */
     --sidebar-foreground: hsl(0 0% 100%); /* Sidebar text color */
@@ -170,7 +168,7 @@
   }
 
   .dark {
-    --sidebar-width: 16rem;
+    --sidebar-width: 20rem;
     --sidebar-width-icon: 3rem;
     --sidebar-width-mobile: 60%; /* Mobile sidebar width */
     --sidebar-background: hsl(220 15% 8%); /* Darker, more neutral sidebar */
@@ -223,7 +221,7 @@
   }
 }
 
-/* Docs theme - Enhanced for better dark mode */
+/* Docs theme */
 
 @theme {
   --color-fd-background: hsl(0, 0%, 98%);
@@ -357,7 +355,7 @@
 }
 
 :root {
-  --sidebar-width: 16rem;
+  --sidebar-width: 20rem;
   --sidebar-width-icon: 3rem;
 }
 

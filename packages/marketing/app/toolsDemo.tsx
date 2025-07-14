@@ -22,7 +22,7 @@ const tools = [
   {
     text: "Resend my last receipt",
     color: "#FEB81D",
-    border: "border-[#FEB81D]",
+    border: "border-[#FEB81D] dark:border-bright",
     completed: { icon: <Receipt color="#FEB81D" className="w-7 h-7" />, text: "Done! Check your email." },
   },
   {
@@ -56,7 +56,7 @@ export default function ToolsDemo() {
                   <PlayCircle className="w-5 h-5 md:w-7 md:h-7" color={tool.color} fill="none" />
                 </span>
               )}
-              <span className="italic text-base md:text-xl text-[#FFE6B0]">
+              <span className="italic text-base md:text-xl text-[#FFE6B0] dark:text-foreground">
                 {hovered === i ? tool.completed.text : tool.text}
               </span>
             </div>

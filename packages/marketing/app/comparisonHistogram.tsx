@@ -16,10 +16,21 @@ function ComparisonHistogram() {
   ]);
 
   const { isAboveMd } = useBreakpoint("md");
+
+  const chartColors = {
+    background: "var(--color-card, #250404)",
+    text: "var(--color-foreground, #FFE6B0)",
+    textSecondary: "var(--color-muted-foreground, #fff)",
+    withHelper: "#FEB81D",
+    withoutHelper: "#FF4343",
+    tooltipBg: "var(--color-card, #250404)",
+    cursorHover: "rgba(255,255,255,0.04)"
+  };
+
   return (
-    <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] rounded-3xl p-4 md:p-10 flex flex-col items-center min-h-[400px] h-full flex-1">
+    <div className="w-full max-w-5xl mx-auto bg-[rgba(99,72,71,0.3)] dark:bg-card rounded-3xl p-4 md:p-10 flex flex-col items-center min-h-[400px] h-full flex-1">
       <div className="text-center mb-2">
-        <div className="text-3xl font-bold text-[#FFE6B0] mb-1">Response time</div>
+        <div className="text-3xl font-bold text-[#FFE6B0] dark:text-foreground mb-1">Response time</div>
       </div>
       <div className="w-full flex-1 min-h-[300px]">
         <ResponsiveContainer width="100%" height={400}>
@@ -35,40 +46,55 @@ function ComparisonHistogram() {
               dataKey="name"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#FFE6B0", fontSize: isAboveMd ? 14 : 12, fontWeight: 500, dy: isAboveMd ? 12 : 8 }}
+              tick={{ 
+                fill: "var(--color-foreground, #FFE6B0)", 
+                fontSize: isAboveMd ? 14 : 12, 
+                fontWeight: 500, 
+                dy: isAboveMd ? 12 : 8 
+              }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#fff", fontSize: isAboveMd ? 16 : 12, fontWeight: 400 }}
+              tick={{ 
+                fill: "var(--color-foreground, #fff)", 
+                fontSize: isAboveMd ? 16 : 12, 
+                fontWeight: 400 
+              }}
               width={isAboveMd ? 40 : 28}
               label={{
                 value: "minutes",
                 angle: -90,
                 position: "insideLeft",
-                fill: "#FFE6B0",
+                fill: "var(--color-foreground, #FFE6B0)",
                 fontSize: isAboveMd ? 16 : 12,
                 fontWeight: 500,
                 dx: isAboveMd ? -10 : -8,
               }}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "#250404", border: "none", borderRadius: 8, color: "#fff" }}
-              labelStyle={{ color: "#fff" }}
-              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              contentStyle={{ 
+                backgroundColor: chartColors.tooltipBg, 
+                border: "1px solid var(--color-border, transparent)", 
+                borderRadius: 8, 
+                color: "var(--color-foreground, #fff)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+              }}
+              labelStyle={{ color: "var(--color-foreground, #fff)" }}
+              cursor={{ fill: "var(--color-muted, rgba(255,255,255,0.04))" }}
               formatter={(value: number) => (value === 1 ? `${value} minute` : `${value} minutes`)}
             />
             <Bar
               dataKey="withHelper"
               name="With Helper"
-              fill="#FEB81D"
+              fill={chartColors.withHelper}
               radius={[8, 8, 8, 8]}
               barSize={isAboveMd ? 32 : 18}
             />
             <Bar
               dataKey="withoutHelper"
               name="Without Helper"
-              fill="#FF4343"
+              fill={chartColors.withoutHelper}
               radius={[8, 8, 8, 8]}
               barSize={isAboveMd ? 32 : 18}
             />
@@ -78,11 +104,11 @@ function ComparisonHistogram() {
       <div className="flex gap-3 md:gap-6 justify-center mt-4 md:mt-8 mb-1 md:mb-2">
         <div className="flex items-center gap-1 md:gap-2">
           <span className="inline-block w-3 h-3 md:w-5 md:h-5 rounded-md bg-[#FEB81D]" />
-          <span className="text-[#FFE6B0] text-sm md:text-lg">With Helper</span>
+          <span className="text-[#FFE6B0] dark:text-foreground text-sm md:text-lg">With Helper</span>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
           <span className="inline-block w-3 h-3 md:w-5 md:h-5 rounded-md bg-[#FF4343]" />
-          <span className="text-[#FFE6B0] text-sm md:text-lg">Without Helper</span>
+          <span className="text-[#FFE6B0] dark:text-foreground text-sm md:text-lg">Without Helper</span>
         </div>
       </div>
     </div>
