@@ -10,7 +10,7 @@ import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
-import { TeamSettingLoading } from "./teamSettingLoading";
+import { TeamSettingLoadingSkeleton } from "./teamSettingLoadingSkeleton";
 
 const TeamSetting = () => {
   const { data, isLoading } = api.mailbox.members.list.useQuery();
@@ -60,7 +60,7 @@ const TeamSetting = () => {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TeamSettingLoading />
+                <TeamSettingLoadingSkeleton />
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">

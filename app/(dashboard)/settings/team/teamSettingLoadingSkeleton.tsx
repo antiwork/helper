@@ -1,6 +1,6 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 
-export function TeamSettingLoading() {
+export function TeamSettingLoadingSkeleton() {
   return (
     <>
       {Array.from({ length: 3 }).map((_, index) => (
