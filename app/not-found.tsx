@@ -70,15 +70,6 @@ export default function NotFound() {
                 alt="Helper"
                 width={120}
                 height={32}
-                className="block dark:hidden"
-              />
-              <Image
-                src="/logo-white.svg"
-                priority
-                alt="Helper"
-                width={120}
-                height={32}
-                className="hidden dark:block"
               />
             </Link>
           </div>
