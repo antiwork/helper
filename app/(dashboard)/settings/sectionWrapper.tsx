@@ -12,12 +12,13 @@ type SectionWrapperProps = {
   className?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  leftClassName?: string;
 };
 
-const SectionWrapper = ({ title, description, fullWidth, className, action, children }: SectionWrapperProps) => {
+const SectionWrapper = ({ title, description, fullWidth, className, action, children, leftClassName }: SectionWrapperProps) => {
   return (
-    <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row">
-      <div className="flex w-full flex-col gap-3 lg:max-w-xs">
+    <section className="flex flex-col gap-2 border-b py-8 first:pt-4 lg:flex-row">
+      <div className={cn("flex flex-col gap-3 lg:max-w-xs", !leftClassName && "w-full", leftClassName)}>
         <div className="flex w-full flex-col gap-1">
           <h2 className="text-base flex items-center gap-2">{title}</h2>
           <div className="w-full text-sm text-muted-foreground">{description}</div>

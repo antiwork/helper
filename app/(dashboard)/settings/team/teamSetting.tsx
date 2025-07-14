@@ -31,6 +31,7 @@ const TeamSetting = () => {
       title="Manage Team Members"
       description="Add and organize team members for efficient ticket assignment"
       fullWidth
+      leftClassName="lg:w-auto lg:overflow-hidden"
     >
       <div className="w-full space-y-6">
         {user?.permissions === "admin" && <AddMember teamMembers={teamMembers} />}
@@ -44,9 +45,10 @@ const TeamSetting = () => {
           />
         )}
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
+        <div className="rounded-md border overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead className="w-[240px] min-w-[180px]">Name</TableHead>
@@ -56,7 +58,7 @@ const TeamSetting = () => {
                 <TableHead>Actions</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
               </TableRow>
-            </TableHeader>
+              </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
@@ -81,6 +83,7 @@ const TeamSetting = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">
