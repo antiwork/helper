@@ -20,7 +20,6 @@ export const getGmailSupportEmail = async (
 };
 
 export const createGmailSupportEmail = async (
-  mailboxSlug: string,
   info: {
     email: string;
     accessToken: string;
@@ -40,7 +39,7 @@ export const createGmailSupportEmail = async (
     .returning()
     .then(takeUniqueOrThrow);
 
-  await tx.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id }).where(eq(mailboxes.slug, mailboxSlug));
+  await tx.update(mailboxes).set({ gmailSupportEmailId: gmailSupportEmail.id });
 
   return assertDefined(gmailSupportEmail);
 };

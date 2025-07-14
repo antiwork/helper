@@ -1,6 +1,8 @@
 import { createHydrationHelpers } from "@trpc/react-query/rsc";
 import { headers } from "next/headers";
 import { cache } from "react";
+import { assertDefined } from "@/components/utils/assert";
+import { getProfile } from "@/lib/data/user";
 import { createClient } from "@/lib/supabase/server";
 import { createCaller, createTRPCContext, type AppRouter } from "@/trpc";
 import { createQueryClient } from "./query-client";
@@ -14,8 +16,14 @@ const createContext = cache(async (source: string) => {
   heads.set("x-trpc-source", source);
 
   const supabase = await createClient();
+  const user = (await supabase.auth.getUser()).data.user;
   return createTRPCContext({
-    user: (await supabase.auth.getUser()).data.user,
+    user: user
+      ? {
+          email: user.email ?? null,
+          ...assertDefined(await getProfile(user.id)),
+        }
+      : null,
     headers: heads,
   });
 });

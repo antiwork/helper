@@ -11,6 +11,7 @@ export const userProfiles = pgTable("user_profiles", {
     .references(() => authUsers.id, { onDelete: "cascade" }),
   displayName: text().default(""),
   permissions: text().notNull().default("member"), // "member" or "admin"
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp()
     .defaultNow()
@@ -29,3 +30,6 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
     references: [authUsers.id],
   }),
 }));
+
+export type BasicUserProfile = { id: string; displayName: string | null; email: string | null };
+export type FullUserProfile = typeof userProfiles.$inferSelect & { email: string | null };

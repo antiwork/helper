@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import superjson from "superjson";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -40,7 +41,10 @@ const events = {
     data: z.object({
       userId: z.string(),
       conversationFilter: z.union([z.array(z.number()), searchSchema]),
-      status: z.enum(["open", "closed", "spam"]),
+      status: z.enum(["open", "closed", "spam"]).optional(),
+      assignedToId: z.string().optional(),
+      assignedToAI: z.boolean().optional(),
+      message: z.string().optional(),
     }),
     jobs: ["bulkUpdateConversations"],
   },
@@ -116,7 +120,6 @@ const events = {
   },
   "conversations/human-support-requested": {
     data: z.object({
-      mailboxSlug: z.string(),
       conversationId: z.number(),
     }),
     jobs: ["autoAssignConversation", "publishRequestHumanSupport"],
@@ -140,7 +143,7 @@ export const triggerEvent = <T extends EventName>(
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
-  const payloads = events[event].jobs.map((job) => ({ event, job, data }));
+  const payloads = events[event].jobs.map((job) => ({ event, job, data: superjson.serialize(data) }));
   return db.execute(
     sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
   );

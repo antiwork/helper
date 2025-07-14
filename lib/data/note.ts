@@ -1,7 +1,7 @@
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
+import { BasicUserProfile } from "@/db/schema";
 import { notes } from "@/db/schema/notes";
-import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
 import { finishFileUpload } from "./files";
 
 export const addNote = async ({
@@ -14,7 +14,7 @@ export const addNote = async ({
 }: {
   conversationId: number;
   message: string;
-  user: DbOrAuthUser | null;
+  user: BasicUserProfile | null;
   slackChannel?: string | null;
   slackMessageTs?: string | null;
   fileSlugs?: string[];

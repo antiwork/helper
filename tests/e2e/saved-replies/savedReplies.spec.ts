@@ -29,7 +29,7 @@ test.describe("Saved Replies Management", () => {
   test("should display saved replies page with proper title", async ({ page }) => {
     await savedRepliesPage.expectPageVisible();
     await expect(page).toHaveTitle("Helper");
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*saved-replies.*/);
+    await expect(page).toHaveURL(/.*saved-replies.*/);
 
     await takeDebugScreenshot(page, "saved-replies-page-loaded.png");
   });
@@ -62,11 +62,22 @@ test.describe("Saved Replies Management", () => {
       // Verify the new reply appears
       await savedRepliesPage.expectSavedRepliesVisible();
       const newCount = await savedRepliesPage.getSavedReplyCount();
-      expect(newCount).toBe(1);
+      expect(newCount).toBeGreaterThan(0);
 
-      // Verify content
-      const title = await savedRepliesPage.getSavedReplyTitle(0);
-      expect(title).toContain(testName);
+      // Verify our specific reply was created by searching for it
+      let foundReply = false;
+      for (let i = 0; i < newCount; i++) {
+        try {
+          const title = await savedRepliesPage.getSavedReplyTitle(i);
+          if (title.includes(testName)) {
+            foundReply = true;
+            break;
+          }
+        } catch (error) {
+          // Continue checking other replies
+        }
+      }
+      expect(foundReply).toBe(true);
 
       await takeDebugScreenshot(page, "saved-reply-created-from-empty.png");
     } else {
@@ -87,21 +98,19 @@ test.describe("Saved Replies Management", () => {
       // Wait for UI to update
       await page.waitForTimeout(1000);
 
-      // Verify the new reply appears - use more flexible assertion
+      // No longer rely on overall count – instead verify our specific reply exists
       const newCount = await savedRepliesPage.getSavedReplyCount();
-      expect(newCount).toBeGreaterThanOrEqual(initialCount);
 
-      // Verify our specific reply was created by checking if we can find it
       let foundReply = false;
-      for (let i = 0; i < Math.min(newCount, 10); i++) {
+      for (let i = 0; i < newCount; i++) {
         try {
           const title = await savedRepliesPage.getSavedReplyTitle(i);
           if (title.includes(testName)) {
             foundReply = true;
             break;
           }
-        } catch (error) {
-          // Continue checking other replies
+        } catch {
+          // ignore and keep checking
         }
       }
       expect(foundReply).toBe(true);
@@ -165,33 +174,64 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should edit a saved reply", async ({ page }) => {
+    const testName = `Edit Target ${generateRandomString()}`;
+    const testContent = `Original content ${generateRandomString()}`;
+    const updatedTitle = `Updated ${generateRandomString()}`;
+    const updatedContent = `Updated content - ${generateRandomString()}`;
+
+    // Create a reply specifically for this edit test
+    await savedRepliesPage.createSavedReply(testName, testContent);
+    await page.waitForTimeout(1000);
+
     const replyCount = await savedRepliesPage.getSavedReplyCount();
-
-    if (replyCount > 0) {
-      const originalTitle = await savedRepliesPage.getSavedReplyTitle(0);
-      const newTitle = `Updated ${generateRandomString()}`;
-      const newContent = `Updated content - ${generateRandomString()}`;
-
-      await savedRepliesPage.editSavedReply(0, newTitle, newContent);
-
-      // Verify the reply was updated
-      const updatedTitle = await savedRepliesPage.getSavedReplyTitle(0);
-      expect(updatedTitle).not.toBe(originalTitle);
-      expect(updatedTitle).toContain(newTitle);
-
-      await takeDebugScreenshot(page, "saved-reply-edited.png");
+    let targetIndex = -1;
+    for (let i = 0; i < replyCount; i++) {
+      try {
+        const title = await savedRepliesPage.getSavedReplyTitle(i);
+        if (title.includes(testName)) {
+          targetIndex = i;
+          break;
+        }
+      } catch {
+        // continue searching
+      }
     }
+    expect(targetIndex).toBeGreaterThanOrEqual(0);
+
+    await savedRepliesPage.editSavedReply(targetIndex, updatedTitle, updatedContent);
+
+    const updatedTitleActual = await savedRepliesPage.getSavedReplyTitle(targetIndex);
+    expect(updatedTitleActual).toContain(updatedTitle);
+
+    await takeDebugScreenshot(page, "saved-reply-edited.png");
   });
 
   test("should copy saved reply to clipboard", async ({ page }) => {
+    const testName = `Copy Target ${generateRandomString()}`;
+    const testContent = `Copy content ${generateRandomString()}`;
+
+    await savedRepliesPage.createSavedReply(testName, testContent);
+    await page.waitForTimeout(1000);
+
     const replyCount = await savedRepliesPage.getSavedReplyCount();
-
-    if (replyCount > 0) {
-      await savedRepliesPage.clickCopyButton(0);
-      await savedRepliesPage.expectClipboardContent(""); // Content validation is limited in E2E
-
-      await takeDebugScreenshot(page, "saved-reply-copied.png");
+    let targetIndex = -1;
+    for (let i = 0; i < replyCount; i++) {
+      try {
+        const title = await savedRepliesPage.getSavedReplyTitle(i);
+        if (title.includes(testName)) {
+          targetIndex = i;
+          break;
+        }
+      } catch {
+        // continue searching
+      }
     }
+    expect(targetIndex).toBeGreaterThanOrEqual(0);
+
+    await savedRepliesPage.clickCopyButton(targetIndex);
+    await savedRepliesPage.expectClipboardContent();
+
+    await takeDebugScreenshot(page, "saved-reply-copied.png");
   });
 
   test("should delete a saved reply with confirmation", async ({ page }) => {
@@ -277,7 +317,7 @@ test.describe("Saved Replies Management", () => {
     const basePage = new (class extends BasePage {})(page);
 
     // Navigate to page and check for loading states
-    await basePage.goto("/mailboxes/gumroad/saved-replies");
+    await basePage.goto("/saved-replies");
 
     // Loading skeletons might be visible briefly
     // This test ensures the page loads correctly
@@ -297,18 +337,18 @@ test.describe("Saved Replies Management", () => {
     // First verify we're authenticated and on the correct page
     await savedRepliesPage.expectPageVisible();
     const currentUrl = page.url();
-    expect(currentUrl).toMatch(/.*mailboxes.*gumroad.*saved-replies.*/);
+    expect(currentUrl).toMatch(/.*saved-replies.*/);
 
     // Test navigation away and back to verify auth persists
-    await basePage.goto("/mailboxes/gumroad/mine");
+    await basePage.goto("/mine");
     await page.waitForLoadState("networkidle");
 
     // Navigate back to saved replies to test auth persistence
-    await basePage.goto("/mailboxes/gumroad/saved-replies");
+    await basePage.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
 
     // Should remain authenticated and stay on the saved replies page
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*saved-replies.*/);
+    await expect(page).toHaveURL(/.*saved-replies.*/);
     await savedRepliesPage.expectPageVisible();
 
     await takeDebugScreenshot(page, "saved-replies-auth-persisted.png");
@@ -319,12 +359,12 @@ test.describe("Saved Replies Management", () => {
     const basePage = new (class extends BasePage {})(page);
 
     // Test direct navigation to conversations page
-    await basePage.goto("/mailboxes/gumroad/mine");
+    await basePage.goto("/mine");
     await page.waitForLoadState("networkidle");
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(page).toHaveURL(/.*mine.*/);
 
     // Navigate back to saved replies
-    await basePage.goto("/mailboxes/gumroad/saved-replies");
+    await basePage.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*saved-replies.*/);
     await savedRepliesPage.expectPageVisible();
@@ -335,49 +375,33 @@ test.describe("Saved Replies Management", () => {
   test("should support keyboard navigation", async ({ page }) => {
     const replyCount = await savedRepliesPage.getSavedReplyCount();
 
+    // Focus on search input if it exists (when there are replies)
     if (replyCount > 0) {
-      // Focus on search input with proper wait
       await savedRepliesPage.searchInput.focus();
       await expect(savedRepliesPage.searchInput).toBeFocused();
-
-      // Verify search is focused
-      await expect(savedRepliesPage.searchInput).toBeFocused();
-
-      // Tab to new reply button - wait for focus to move
-      await page.keyboard.press("Tab");
-      await page.waitForTimeout(200);
-
-      // Find the currently focused element and verify it's the new reply button
-      const focusedElement = await page.locator(":focus").first();
-      const isNewReplyButtonFocused = await savedRepliesPage.newReplyButton.evaluate(
-        (el, focused) => el === focused,
-        await focusedElement.elementHandle(),
-      );
-
-      if (isNewReplyButtonFocused) {
-        // Activate with Enter
-        await page.keyboard.press("Enter");
-        await page.waitForTimeout(500);
-
-        // Dialog should open
-        await savedRepliesPage.expectCreateDialogVisible();
-
-        // Escape should close dialog
-        await page.keyboard.press("Escape");
-        await page.waitForTimeout(300);
-
-        // Verify dialog is closed
-        await expect(savedRepliesPage.createDialog).not.toBeVisible();
-      } else {
-        // If tab navigation didn't work as expected, test keyboard shortcut directly
-        await page.keyboard.press("Escape"); // Ensure no dialogs are open
-        await savedRepliesPage.newReplyButton.click(); // Use direct click
-        await savedRepliesPage.expectCreateDialogVisible();
-        await page.keyboard.press("Escape");
-      }
-
-      await takeDebugScreenshot(page, "saved-replies-keyboard-nav.png");
     }
+
+    // Test keyboard navigation to the appropriate button
+    await page.keyboard.press("Escape"); // Ensure no dialogs are open
+
+    if (replyCount === 0) {
+      // When no replies exist, use the "Create one" button
+      await savedRepliesPage.clickCreateOneButton();
+    } else {
+      // When replies exist, use the floating action button
+      await savedRepliesPage.clickFloatingAddButton();
+    }
+
+    await savedRepliesPage.expectCreateDialogVisible();
+
+    // Escape should close dialog
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+
+    // Verify dialog is closed
+    await expect(savedRepliesPage.createDialog).not.toBeVisible();
+
+    await takeDebugScreenshot(page, "saved-replies-keyboard-nav.png");
   });
 
   test("should handle edge cases and errors gracefully", async ({ page }) => {
@@ -679,11 +703,29 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     // Verify the saved reply was created with formatted content
     await savedRepliesPage.expectSavedRepliesVisible();
-    const title = await savedRepliesPage.getSavedReplyTitle(0);
-    expect(title).toBe(testName);
+
+    // Find the specific saved reply by name instead of assuming its position
+    const replyCount = await savedRepliesPage.getSavedReplyCount();
+    let foundReply = false;
+    let replyIndex = -1;
+
+    for (let i = 0; i < replyCount; i++) {
+      try {
+        const title = await savedRepliesPage.getSavedReplyTitle(i);
+        if (title === testName) {
+          foundReply = true;
+          replyIndex = i;
+          break;
+        }
+      } catch (error) {
+        // Continue checking other replies
+      }
+    }
+
+    expect(foundReply).toBe(true);
 
     // Test copying the formatted content
-    await savedRepliesPage.clickCopyButton(0);
+    await savedRepliesPage.clickCopyButton(replyIndex);
     await page.waitForTimeout(500);
 
     await takeDebugScreenshot(page, "formatted-reply-created.png");

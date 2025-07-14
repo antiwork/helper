@@ -1,9 +1,14 @@
 import "@/app/globals.css";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { HelperProvider } from "@helperai/react";
+import { AppSidebar } from "@/app/(dashboard)/appSidebar";
+import InboxClientLayout from "@/app/(dashboard)/clientLayout";
 import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDisplayIntegration";
 import { SentryContext } from "@/components/sentryContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { env } from "@/lib/env";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
@@ -33,10 +38,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <NuqsAdapter>
       <Toaster richColors />
-      <SentryContext />
       <TRPCReactProvider>
         <StandaloneDisplayIntegration />
-        <HydrateClient>{children}</HydrateClient>
+        <HydrateClient>
+          <SentryContext />
+          <HelperProvider host={env.AUTH_URL} showToggleButton>
+            <SidebarProvider>
+              <InboxClientLayout>
+                <div className="flex h-svh w-full">
+                  <AppSidebar />
+                  <main className="flex-1 min-w-0">{children}</main>
+                </div>
+              </InboxClientLayout>
+            </SidebarProvider>
+          </HelperProvider>
+        </HydrateClient>
       </TRPCReactProvider>
     </NuqsAdapter>
   );

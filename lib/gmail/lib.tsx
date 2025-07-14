@@ -1,12 +1,12 @@
 import { render } from "@react-email/render";
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, isNotNull, isNull } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files } from "@/db/schema";
-import { authUsers } from "@/db/supabaseSchema/auth";
-import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
+import { getFirstName } from "@/lib/auth/authUtils";
 import { downloadFile } from "@/lib/data/files";
+import { getBasicProfileById } from "@/lib/data/user";
 import AIReplyEmail from "@/lib/emails/aiReply";
 
 export const convertConversationMessageToRaw = async (
@@ -45,10 +45,9 @@ export const convertConversationMessageToRaw = async (
     text = await render(reactEmail, { plainText: true });
   } else {
     html = email.body ?? undefined;
-    const user = email.userId
-      ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, email.userId) })
-      : undefined;
-    if (html && hasDisplayName(user)) {
+    const user = email.userId ? await getBasicProfileById(email.userId) : null;
+
+    if (html && user?.displayName) {
       html += `<p>Best,<br />${getFirstName(user)}</p>`;
     }
     text = html ? htmlToText(html) : undefined;

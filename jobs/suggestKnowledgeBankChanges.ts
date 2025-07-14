@@ -117,7 +117,7 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `<${getBaseUrl()}/mailboxes/${mailbox.slug}/settings/knowledge|View knowledge bank>`,
+          text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
         },
       },
       getSuggestedEditButtons(faq.id),

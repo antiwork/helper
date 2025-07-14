@@ -32,7 +32,10 @@ export const conversationsRouter = {
 
     return {
       conversations: results,
-      defaultSort: metadataEnabled ? ("highest_value" as const) : ("newest" as const),
+      defaultSort:
+        metadataEnabled && (!input.status || input.status.includes("open"))
+          ? ("highest_value" as const)
+          : ("newest" as const),
       onboardingState: {
         hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
         hasWidgetHost: !!ctx.mailbox.chatIntegrationUsed,
@@ -156,7 +159,7 @@ export const conversationsRouter = {
 
       await updateConversation(ctx.conversation.id, {
         set: {
-          status: input.status,
+          ...(input.status !== undefined ? { status: input.status } : {}),
           assignedToId: input.assignedToId,
           assignedToAI: input.assignedToAI,
         },
@@ -168,15 +171,22 @@ export const conversationsRouter = {
     .input(
       z.object({
         conversationFilter: z.union([z.array(z.number()), searchSchema]),
-        status: z.enum(["open", "closed", "spam"]),
+        status: z.enum(["open", "closed", "spam"]).optional(),
+        assignedToId: z.string().optional(),
+        assignedToAI: z.boolean().optional(),
+        message: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { conversationFilter, status } = input;
+      const { conversationFilter, status, assignedToId, message, assignedToAI } = input;
 
       if (Array.isArray(conversationFilter) && conversationFilter.length <= 25) {
         for (const conversationId of conversationFilter) {
-          await updateConversation(conversationId, { set: { status }, byUserId: ctx.user.id });
+          await updateConversation(conversationId, {
+            set: { status, assignedToId, assignedToAI },
+            byUserId: ctx.user.id,
+            message,
+          });
         }
         return { updatedImmediately: true };
       }
@@ -185,6 +195,9 @@ export const conversationsRouter = {
         userId: ctx.user.id,
         conversationFilter: input.conversationFilter,
         status: input.status,
+        assignedToId: input.assignedToId,
+        assignedToAI: input.assignedToAI,
+        message: input.message,
       });
       return { updatedImmediately: false };
     }),
@@ -192,6 +205,7 @@ export const conversationsRouter = {
     const newDraft = await generateDraftResponse(ctx.conversation.id, ctx.mailbox);
     return serializeResponseAiDraft(newDraft, ctx.mailbox);
   }),
+
   undo: conversationProcedure.input(z.object({ emailId: z.number() })).mutation(async ({ ctx, input }) => {
     const email = await db.query.conversationMessages.findFirst({
       where: and(

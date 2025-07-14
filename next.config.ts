@@ -24,7 +24,7 @@ let nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     // canvas is a huge module which can overflow the edge function size limit on Vercel.
     // PDF.js includes it for Node.js support but we don't need it as we only use it in the browser.
-    "/mailboxes/[mailbox_slug]/conversations": ["node_modules/canvas"],
+    "/conversations": ["node_modules/canvas"],
     "/api/job": ["node_modules/canvas"],
   },
   turbopack: {

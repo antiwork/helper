@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { waitUntil } from "@vercel/functions";
 import { eq, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
+import superjson from "superjson";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -78,7 +79,7 @@ export const POST = async (request: NextRequest) => {
     }
 
     const data = JSON.parse(body) as
-      | { event: EventName; job: string; jobRunId?: number; data: EventData<EventName> }
+      | { event: EventName; job: string; jobRunId?: number; data: any }
       | { job: string; jobRunId?: number; event?: undefined; data?: undefined };
     const queueMessageId = request.headers.get("X-Queue-Message-Id");
 
@@ -101,7 +102,7 @@ export const POST = async (request: NextRequest) => {
         await db.update(jobRuns).set({ status: "error", error: "Job not found" }).where(eq(jobRuns.id, jobRun.id));
         return new Response("Not found", { status: 404 });
       }
-      waitUntil(handleJob(jobRun, handler(data.data)));
+      waitUntil(handleJob(jobRun, handler(data.data?.json ? superjson.deserialize(data.data) : data.data)));
     } else {
       const handler = Object.assign({}, ...Object.values(cronJobs))[data.job] as () => Promise<any>;
       if (!handler) {

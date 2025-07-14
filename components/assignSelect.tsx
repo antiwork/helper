@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
-import { api } from "@/trpc/react";
 
 export type AssigneeOption =
   | {
@@ -25,11 +25,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const { data: orgMembers } = api.organization.getMembers.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
+  const { data: orgMembers } = useMembers();
 
   const sortedMembers =
     orgMembers?.sort((a, b) => {
@@ -44,10 +40,10 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
   const aiItem = {
     id: "ai",
     displayName: "Helper agent",
+    email: null,
   };
 
   const allItems = [
-    ...(!searchTerm || "anyone".includes(searchTerm.toLowerCase()) ? [{ id: null, displayName: "Anyone" }] : []),
     ...(aiOption && (!searchTerm || aiItem.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
       ? [aiItem]
       : []),
@@ -93,7 +89,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }
   };
 
-  const selectedDisplayName = selectedMember?.displayName || "Anyone";
+  const selectedDisplayName = selectedMember?.displayName || selectedMember?.email || "Anyone";
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -122,7 +118,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                   <span className="flex items-center gap-1 min-w-0">
                     {item.id === "ai" ? <Bot className="h-4 w-4 flex-shrink-0" /> : null}
                     <span className="flex-1 min-w-0 truncate">
-                      {item.displayName}
+                      {item.displayName || item.email}
                       {item.id === user?.id && " (You)"}
                     </span>
                   </span>

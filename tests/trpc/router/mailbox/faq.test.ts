@@ -12,10 +12,10 @@ import { createCaller } from "@/trpc";
 describe("faqsRouter", () => {
   describe("list", () => {
     it("lists FAQs for a mailbox", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create();
-      const caller = createCaller(createTestTRPCContext(user));
-      const faqs = await caller.mailbox.faqs.list({ mailboxSlug: mailbox.slug });
+      const caller = createCaller(await createTestTRPCContext(user));
+      const faqs = await caller.mailbox.faqs.list();
       expect(faqs).toHaveLength(1);
       expect(faqs[0]).toMatchObject({
         id: faq.id,
@@ -28,10 +28,9 @@ describe("faqsRouter", () => {
 
   describe("create", () => {
     it("creates a new FAQ", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const { user } = await userFactory.createRootUser();
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.faqs.create({
-        mailboxSlug: mailbox.slug,
         content: "Test Content",
       });
 
@@ -49,11 +48,10 @@ describe("faqsRouter", () => {
 
   describe("update", () => {
     it("updates a FAQ", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.faqs.update({
-        mailboxSlug: mailbox.slug,
         id: faq.id,
         content: "Updated Content",
       });
@@ -74,12 +72,11 @@ describe("faqsRouter", () => {
 
   describe("delete", () => {
     it("deletes a FAQ", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
+      const { user } = await userFactory.createRootUser();
       const { faq } = await faqsFactory.create();
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.faqs.delete({
         id: faq.id,
-        mailboxSlug: mailbox.slug,
       });
 
       const faqRow = await db.query.faqs.findFirst({
@@ -89,11 +86,10 @@ describe("faqsRouter", () => {
     });
 
     it("throws an error when trying to delete a non-existent FAQ", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-      const caller = createCaller(createTestTRPCContext(user));
+      const { user } = await userFactory.createRootUser();
+      const caller = createCaller(await createTestTRPCContext(user));
       await expect(
         caller.mailbox.faqs.delete({
-          mailboxSlug: mailbox.slug,
           id: 9999, // Non-existent ID
         }),
       ).rejects.toThrow(TRPCError);

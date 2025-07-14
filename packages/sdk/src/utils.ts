@@ -6,7 +6,6 @@ export type HelperWidgetConfig = {
   title?: string;
   email?: string;
   emailHash?: string;
-  mailboxSlug: string;
   timestamp?: number;
   customerMetadata?: {
     name?: string | null;

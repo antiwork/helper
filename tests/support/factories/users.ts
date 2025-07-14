@@ -1,15 +1,22 @@
 import { faker } from "@faker-js/faker";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { getBasicProfileById } from "@/lib/data/user";
 
 const createUser = async (overrides: Partial<typeof authUsers.$inferInsert> = {}) => {
-  return await db
+  const user = await db
     .insert(authUsers)
     .values({ id: faker.string.uuid(), email: faker.internet.email(), ...overrides })
     .returning()
     .then(takeUniqueOrThrow);
+
+  return {
+    user,
+    profile: assertDefined(await getBasicProfileById(user.id)),
+  };
 };
 
 export const userFactory = {
@@ -20,7 +27,7 @@ export const userFactory = {
     userOverrides?: Partial<typeof authUsers.$inferInsert>;
     mailboxOverrides?: Partial<typeof mailboxes.$inferInsert>;
   } = {}) => {
-    const user = await createUser(userOverrides);
+    const { user, profile } = await createUser(userOverrides);
 
     const mailboxName = `${faker.company.name()} Support`;
     const mailbox = await db
@@ -37,10 +44,7 @@ export const userFactory = {
       .returning()
       .then(takeUniqueOrThrow);
 
-    return {
-      user,
-      mailbox,
-    };
+    return { user, profile, mailbox };
   },
   createUser,
 };

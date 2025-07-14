@@ -18,7 +18,7 @@ import { db } from "@/db/client";
 import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
-import { conversationMessages, conversations, mailboxesMetadataApi } from "../schema";
+import { conversationMessages, conversations, mailboxesMetadataApi, userProfiles } from "../schema";
 
 const getTables = async () => {
   const result = await db.execute(sql`
@@ -58,20 +58,27 @@ export const seedDatabase = async () => {
 
     const supabase = createAdminClient();
     const users = await Promise.all(
-      env.INITIAL_USER_EMAILS.map(async (email) =>
-        assertDefined(
-          (
-            await supabase.auth.admin.createUser({
-              email,
-              password: "password",
-              email_confirm: true,
-              user_metadata: {
-                permissions: "admin",
-              },
-            })
-          ).data.user,
-        ),
-      ),
+      env.INITIAL_USER_EMAILS.map(async (email) => {
+        const { data, error } = await supabase.auth.admin.createUser({
+          email,
+          password: "password",
+          email_confirm: true,
+          user_metadata: {
+            permissions: "admin",
+          },
+        });
+
+        const user = assertDefined(data.user, `Failed to create user: ${email}`);
+        if (error) throw error;
+
+        await db
+          .update(userProfiles)
+          .set({
+            permissions: "admin",
+          })
+          .where(eq(userProfiles.id, user.id));
+        return user;
+      }),
     );
 
     await createSettingsPageRecords();
@@ -171,32 +178,22 @@ type MessageDetail = {
 };
 
 type Fixtures = Record<
-  string, // fixtureId
-  Record<
-    string, // conversationId
-    {
-      messages: MessageDetail[];
-      conversation: ConversationDetail;
-    }
-  >
+  string, // conversationId
+  {
+    messages: MessageDetail[];
+    conversation: ConversationDetail;
+  }
 >;
 
 const fixturesPath = path.join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const fixtureData = fs.readdirSync(fixturesPath).reduce<Fixtures>((acc, file) => {
   const content = JSON.parse(fs.readFileSync(path.join(fixturesPath, file), "utf8")) as Fixtures;
-  const [fixtureId, conversations] = Object.entries(content)[0]!;
-  return {
-    ...acc,
-    [fixtureId]: {
-      ...(acc[fixtureId] ?? {}),
-      ...conversations,
-    },
-  };
+  Object.assign(acc, content);
+  return acc;
 }, {});
 
 const generateSeedsFromFixtures = async () => {
-  // Since we're single-tenant, just use the first fixture data
-  const fixtures = Object.entries(assertDefined(Object.values(fixtureData)[0]));
+  const fixtures = Object.entries(fixtureData);
 
   await Promise.all(
     fixtures

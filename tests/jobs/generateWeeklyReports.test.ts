@@ -15,7 +15,8 @@ vi.mock("@/lib/slack/client", () => ({
   getSlackUsersByEmail: vi.fn(),
 }));
 
-vi.mock("@/lib/data/user", () => ({
+vi.mock("@/lib/data/user", async (importOriginal) => ({
+  ...(await importOriginal()),
   UserRoles: {
     CORE: "core",
     NON_CORE: "nonCore",

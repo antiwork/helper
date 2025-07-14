@@ -110,7 +110,6 @@ export const faqsRouter = {
     .input(
       z.object({
         id: z.number(),
-        mailboxSlug: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

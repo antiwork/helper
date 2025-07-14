@@ -19,7 +19,7 @@ describe("organizationRouter", () => {
           },
         },
       });
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const result = await caller.organization.getMembers();
 
@@ -28,6 +28,11 @@ describe("organizationRouter", () => {
           id: user.id,
           displayName: user.user_metadata?.display_name,
           email: user.email,
+          permissions: "member",
+          access: {
+            keywords: [],
+            role: "afk",
+          },
         },
       ]);
     });

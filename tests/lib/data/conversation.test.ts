@@ -18,7 +18,6 @@ import {
   getRelatedConversations,
   updateConversation,
 } from "@/lib/data/conversation";
-import { getMailbox } from "@/lib/data/mailbox";
 import { searchEmailsByKeywords } from "@/lib/emailSearchService/searchEmailsByKeywords";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
@@ -94,14 +93,13 @@ describe("updateConversation", () => {
   it("publishes a realtime event when conversation is updated", async () => {
     await mailboxFactory.create();
     const { conversation } = await conversationFactory.create();
-    const mailbox = await getMailbox();
     const result = await updateConversation(conversation.id, { set: { subject: "Updated Subject" } });
 
     await vi.waitUntil(() => vi.mocked(publishToRealtime).mock.calls.length === 1);
 
     expect(result).not.toBeNull();
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationChannelId(mailbox!.slug, conversation.slug),
+      channel: conversationChannelId(conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
         slug: conversation.slug,
@@ -116,14 +114,13 @@ describe("updateConversation", () => {
   it("publishes a realtime event when conversation status changes to closed", async () => {
     await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ status: "open" });
-    const mailbox = await getMailbox();
     const result = await updateConversation(conversation.id, { set: { status: "closed" } });
 
     await vi.waitUntil(() => vi.mocked(publishToRealtime).mock.calls.length === 2);
 
     expect(result).not.toBeNull();
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationChannelId(mailbox!.slug, conversation.slug),
+      channel: conversationChannelId(conversation.slug),
       event: "conversation.updated",
       data: expect.objectContaining({
         id: conversation.id,
@@ -131,7 +128,7 @@ describe("updateConversation", () => {
       }),
     });
     expect(publishToRealtime).toHaveBeenCalledWith({
-      channel: conversationsListChannelId(mailbox!.slug),
+      channel: conversationsListChannelId(),
       event: "conversation.statusChanged",
       data: {
         id: conversation.id,

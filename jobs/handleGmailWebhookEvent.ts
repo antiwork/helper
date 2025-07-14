@@ -10,14 +10,21 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, gmailSupportEmails, mailboxes } from "@/db/schema";
-import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import {
+  BasicUserProfile,
+  conversationMessages,
+  conversations,
+  files,
+  gmailSupportEmails,
+  mailboxes,
+} from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
 import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, finishFileUpload, generateKey, uploadFile } from "@/lib/data/files";
 import { matchesTransactionalEmailAddress } from "@/lib/data/transactionalEmailAddressRegex";
+import { getBasicProfileByEmail } from "@/lib/data/user";
 import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
@@ -72,9 +79,8 @@ const assignBasedOnCc = async (
   );
 
   for (const ccAddress of ccAddresses) {
-    const ccStaffUser = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, ccAddress),
-    });
+    const ccStaffUser = await getBasicProfileByEmail(ccAddress);
+
     if (ccStaffUser) {
       await updateConversation(conversationId, {
         set: { assignedToId: ccStaffUser.id, assignedToAI: false },
@@ -96,7 +102,7 @@ export const createMessageAndProcessAttachments = async (
   gmailMessageId: string,
   gmailThreadId: string,
   conversation: { id: number; slug: string },
-  staffUser?: DbOrAuthUser,
+  staffUser?: BasicUserProfile | null,
 ) => {
   const references = parsedEmail.references
     ? Array.isArray(parsedEmail.references)
@@ -265,9 +271,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
       );
 
-      const staffUser = await db.query.authUsers.findFirst({
-        where: eq(authUsers.email, parsedEmailFrom.address),
-      });
+      const staffUser = await getBasicProfileByEmail(parsedEmailFrom.address);
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
       let shouldIgnore =

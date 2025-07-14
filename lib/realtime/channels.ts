@@ -1,6 +1,7 @@
-export const conversationsListChannelId = (mailboxSlug: string) => `${mailboxSlug}:conversations`;
+export const conversationsListChannelId = () => `conversations`;
 
-export const conversationChannelId = (mailboxSlug: string, conversationSlug: string) =>
-  `${mailboxSlug}:conversation-${conversationSlug}`;
+export const conversationChannelId = (conversationSlug: string) => `conversation-${conversationSlug}`;
 
-export const dashboardChannelId = (mailboxSlug: string) => `${mailboxSlug}:dashboard`;
+export const publicConversationChannelId = (conversationSlug: string) => `public:conversation-${conversationSlug}`;
+
+export const dashboardChannelId = () => `dashboard`;

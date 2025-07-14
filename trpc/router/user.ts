@@ -1,9 +1,10 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
@@ -11,16 +12,18 @@ import OtpEmail from "@/lib/emails/otp";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
-import { publicProcedure } from "../trpc";
+import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
-    const user = await db.query.authUsers.findFirst({
-      where: eq(authUsers.email, input.email),
-    });
+    const [user] = await db
+      .select({ id: authUsers.id, email: authUsers.email, deletedAt: userProfiles.deletedAt })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(and(eq(authUsers.email, input.email), isNull(userProfiles.deletedAt)));
+
     if (!user) {
-      const [_, emailDomain] = input.email.split("@");
-      if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+      if (isSignupPossible(input.email)) {
         return { signupPossible: true };
       }
 
@@ -83,6 +86,13 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ input }) => {
+      if (!isSignupPossible(input.email)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Signup is not possible for this email domain",
+        });
+      }
+
       const supabase = createAdminClient();
       const { error } = await supabase.auth.admin.createUser({
         email: input.email,
@@ -91,6 +101,7 @@ export const userRouter = {
         },
       });
       if (error) throw error;
+
       return { success: true };
     }),
   onboard: publicProcedure
@@ -148,4 +159,34 @@ export const userRouter = {
         otp: linkData.properties.email_otp,
       };
     }),
+
+  currentUser: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    const userId = ctx.user.id;
+
+    const [user] = await db
+      .select({
+        id: authUsers.id,
+        email: authUsers.email,
+        displayName: userProfiles.displayName,
+        permissions: userProfiles.permissions,
+      })
+      .from(authUsers)
+      .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
+      .where(eq(authUsers.id, userId));
+
+    if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
+    return user;
+  }),
 } satisfies TRPCRouterRecord;
+
+const isSignupPossible = (email: string) => {
+  const [_, emailDomain] = email.split("@");
+  if (emailDomain && env.EMAIL_SIGNUP_DOMAINS.some((domain) => domain === emailDomain)) {
+    return true;
+  }
+  return false;
+};

@@ -13,12 +13,12 @@ test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate with retry logic for improved reliability
     try {
-      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await page.goto("/mine", { timeout: 15000 });
       await page.waitForLoadState("networkidle", { timeout: 10000 });
     } catch (error) {
       // Retry navigation on failure
       console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/mailboxes/gumroad/mine", { timeout: 15000 });
+      await page.goto("/mine", { timeout: 15000 });
       await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
     }
   });
@@ -128,7 +128,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Should still be on the same page
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(page).toHaveURL(/.*mine.*/);
   });
 
   test("should handle select all functionality", async ({ page }) => {
@@ -200,7 +200,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     // Should remain authenticated and stay on the dashboard
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(page).toHaveURL(/.*mine.*/);
 
     // Verify dashboard elements are visible (confirms authentication persisted)
     const searchInput = page.locator('input[placeholder="Search conversations"]');
@@ -208,41 +208,6 @@ test.describe("Working Conversation Management", () => {
 
     const openFilter = page.locator('button:has-text("open")');
     await expect(openFilter).toBeVisible();
-  });
-
-  test("should handle navigation to different sections", async ({ page }) => {
-    // Record URL before clicking
-    const urlBefore = page.url();
-
-    // Try clicking on the Gumroad button to test navigation
-    const gumroadButton = page.locator('button:has-text("Gumroad")').first();
-    await gumroadButton.click();
-
-    // Wait for potential navigation
-    await page.waitForLoadState("networkidle");
-
-    // Check where we end up
-    const currentUrl = page.url();
-
-    // Should still be within the app
-    expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020");
-
-    // Verify if navigation occurred or modal/dropdown opened
-    if (currentUrl !== urlBefore) {
-      // Navigation occurred - verify it's to a valid section
-      expect(currentUrl).toMatch(/mailboxes|settings|account|dashboard/);
-    } else {
-      // No navigation - might have opened a modal or dropdown
-      // Check for modal, dropdown, or other UI changes
-      const modal = page.locator('[role="dialog"], .modal, [data-modal]');
-      const dropdown = page.locator('[role="menu"], .dropdown-menu, [data-dropdown]');
-
-      const hasModal = (await modal.count()) > 0;
-      const hasDropdown = (await dropdown.count()) > 0;
-
-      // At least some UI response should occur (or just staying on page is acceptable)
-      expect(hasModal || hasDropdown || currentUrl === urlBefore).toBeTruthy();
-    }
   });
 
   test("should support keyboard navigation", async ({ page }) => {

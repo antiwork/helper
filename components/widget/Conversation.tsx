@@ -13,6 +13,8 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView } from "@/components/widget/useWidgetView";
+import { publicConversationChannelId } from "@/lib/realtime/channels";
+import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
@@ -49,6 +51,47 @@ export default function Conversation({
   const [isEscalated, setIsEscalated] = useState(false);
   const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
+
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  useRealtimeEvent(
+    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
+    "agent-typing",
+    () => {
+      setIsAgentTyping(true);
+
+      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
+      agentTypingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 10000);
+    },
+  );
+
+  useEffect(() => {
+    return () => {
+      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
+    };
+  }, []);
+
+  useRealtimeEvent(
+    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
+    "agent-reply",
+    (event) => {
+      setIsAgentTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `staff_${Date.now()}`,
+          role: "assistant",
+          content: event.data.message,
+          createdAt: new Date(event.data.timestamp),
+          reactionType: null,
+          reactionFeedback: null,
+          reactionCreatedAt: null,
+          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
+        },
+      ]);
+    },
+  );
 
   useEffect(() => {
     if (conversationSlug) {
@@ -277,6 +320,16 @@ export default function Conversation({
         resumeGuide={resumeGuide}
         status={status}
       />
+      {isAgentTyping && (
+        <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground">
+          <div className="flex gap-1">
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+          Support agent is typing...
+        </div>
+      )}
       <AnimatePresence>
         <SupportButtons
           conversationSlug={conversationSlug}

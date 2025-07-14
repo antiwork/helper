@@ -3,8 +3,7 @@ import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { faqs, mailboxes } from "@/db/schema";
-import { DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { BasicUserProfile, faqs, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getFullName } from "@/lib/auth/authUtils";
 import { resetMailboxPromptUpdatedAt } from "@/lib/data/mailbox";
@@ -14,7 +13,7 @@ import { openSlackModal, postSlackMessage, updateSlackMessage } from "@/lib/slac
 export const approveSuggestedEdit = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user: DbOrAuthUser | null,
+  user: BasicUserProfile | null,
   content?: string,
 ) => {
   await db.transaction(async (tx) => {
@@ -32,7 +31,7 @@ export const approveSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "approved", user ? getFullName(user) : null);
+    const blocks = suggestionResolvedBlocks(knowledge, "approved", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -46,7 +45,7 @@ export const approveSuggestedEdit = async (
 export const rejectSuggestedEdit = async (
   knowledge: typeof faqs.$inferSelect,
   mailbox: typeof mailboxes.$inferSelect,
-  user: DbOrAuthUser | null,
+  user: BasicUserProfile | null,
 ) => {
   await db.transaction(async (tx) => {
     await tx.delete(faqs).where(eq(faqs.id, knowledge.id));
@@ -54,7 +53,7 @@ export const rejectSuggestedEdit = async (
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
-    const blocks = suggestionResolvedBlocks(knowledge, mailbox.slug, "rejected", user ? getFullName(user) : null);
+    const blocks = suggestionResolvedBlocks(knowledge, "rejected", user ? getFullName(user) : null);
 
     await updateSlackMessage({
       token: mailbox.slackBotToken,
@@ -143,7 +142,6 @@ const openTweakSuggestedEditModal = async (
 
 const suggestionResolvedBlocks = (
   faq: typeof faqs.$inferSelect,
-  mailboxSlug: string,
   action: "approved" | "rejected",
   userName: string | null,
 ): KnownBlock[] => {
@@ -161,7 +159,7 @@ const suggestionResolvedBlocks = (
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `<${getBaseUrl()}/mailboxes/${mailboxSlug}/settings/knowledge|View knowledge bank>`,
+        text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
       },
     },
   ];

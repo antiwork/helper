@@ -23,14 +23,13 @@ export const resetMailboxPromptUpdatedAt = async (tx: Transaction) => {
 
 export type Mailbox = typeof mailboxes.$inferSelect;
 
-const getSlackConnectUrl = (mailboxSlug: string): string | null => {
+const getSlackConnectUrl = (): string | null => {
   if (!env.SLACK_CLIENT_ID) return null;
 
   const params = new URLSearchParams({
     scope: REQUIRED_SCOPES.join(","),
     redirect_uri: SLACK_REDIRECT_URI,
     client_id: env.SLACK_CLIENT_ID,
-    state: JSON.stringify({ mailbox_slug: mailboxSlug }),
   });
 
   return `https://slack.com/oauth/v2/authorize?${params.toString()}`;
@@ -55,7 +54,7 @@ export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => 
     hasMetadataEndpoint: !!metadataEndpoint,
     metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
-    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl(mailbox.slug) : null,
+    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl() : null,
     slackAlertChannel: mailbox.slackAlertChannel,
     githubConnected: !!mailbox.githubInstallationId,
     githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,

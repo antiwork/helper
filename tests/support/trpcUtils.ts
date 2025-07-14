@@ -1,22 +1,19 @@
-import { User } from "@supabase/supabase-js";
+import { assertDefined } from "@/components/utils/assert";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { getProfile } from "@/lib/data/user";
 import { createTRPCContext } from "@/trpc";
 
-export const createTestTRPCContext = (user: typeof authUsers.$inferSelect) =>
+export const createTestTRPCContext = async (user: typeof authUsers.$inferSelect) =>
   createTRPCContext({
-    user: createTestAuthUser(user),
+    user: await createTestAuthUser(user),
     headers: new Headers({
       "x-trpc-source": "test",
     }),
   });
 
-const createTestAuthUser = (user: typeof authUsers.$inferSelect): User => {
+const createTestAuthUser = async (user: typeof authUsers.$inferSelect) => {
   return {
-    id: user.id,
-    email: user.email ?? undefined,
-    user_metadata: user.user_metadata ?? {},
-    app_metadata: {},
-    aud: "authenticated",
-    created_at: user.created_at?.toISOString() ?? new Date().toISOString(),
+    email: user.email,
+    ...assertDefined(await getProfile(user.id)),
   };
 };

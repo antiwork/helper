@@ -190,7 +190,6 @@ const generateReasoning = async ({
   reasoningModel,
   email,
   conversationId,
-  mailboxSlug,
   traceId = null,
   evaluation = false,
   dataStream,
@@ -201,7 +200,6 @@ const generateReasoning = async ({
   reasoningModel: LanguageModelV1;
   email: string | null;
   conversationId: number;
-  mailboxSlug: string;
   traceId?: string | null;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
@@ -259,7 +257,6 @@ const generateReasoning = async ({
           sessionId: conversationId,
           userId: email ?? "anonymous",
           email: email ?? "anonymous",
-          mailboxSlug,
         },
       },
     });
@@ -353,7 +350,7 @@ export const generateAIResponse = async ({
     promptInfo,
   } = await buildPromptMessages(mailbox, email, query, guideEnabled);
 
-  const tools = await buildTools(conversationId, email, mailbox, true, guideEnabled);
+  const tools = await buildTools(conversationId, email, true, guideEnabled);
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -373,7 +370,6 @@ export const generateAIResponse = async ({
       reasoningModel,
       email,
       conversationId,
-      mailboxSlug: mailbox.slug,
       traceId,
       evaluation,
       dataStream,
@@ -415,7 +411,6 @@ export const generateAIResponse = async ({
         store: true,
         metadata: {
           conversationId: conversationId.toString(),
-          mailboxSlug: mailbox.slug,
           email: email ?? "anonymous",
           usingReasoning: addReasoning.toString(),
         },
@@ -428,7 +423,6 @@ export const generateAIResponse = async ({
         sessionId: conversationId,
         userId: email ?? "anonymous",
         email: email ?? "anonymous",
-        mailboxSlug: mailbox.slug,
         usingReasoning: addReasoning,
       },
     },
@@ -647,7 +641,7 @@ export const respondWithAI = async ({
 
           const reasoning = experimental_providerMetadata?.reasoning;
           const responseText = hasRequestHumanSupportCall
-            ? "_Escalated to a human! You will be contacted soon by email._"
+            ? "_Escalated to a human! You will be contacted soon here and by email._"
             : text;
           const assistantMessage = await handleAssistantMessage(
             responseText,

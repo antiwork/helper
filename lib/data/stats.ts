@@ -1,8 +1,8 @@
 import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversations, conversationMessages as emails } from "@/db/schema";
+import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
-import { Mailbox } from "@/lib/data/mailbox";
 import { UserRole, UserRoles } from "@/lib/data/user";
 
 type DateRange = {
@@ -18,8 +18,17 @@ export type MemberStats = {
   role: UserRole;
 }[];
 
-export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): Promise<MemberStats> {
-  const allUsers = await db.query.authUsers.findMany();
+export async function getMemberStats(dateRange?: DateRange): Promise<MemberStats> {
+  const allUsers = await db
+    .select({
+      id: userProfiles.id,
+      email: authUsers.email,
+      displayName: userProfiles.displayName,
+      access: userProfiles.access,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+
   const memberIds = allUsers.map((user) => user.id);
 
   const dateConditions = [];
@@ -47,15 +56,12 @@ export async function getMemberStats(mailbox: Mailbox, dateRange?: DateRange): P
 
   return allUsers
     .map((user) => {
-      const mailboxAccess = user.user_metadata?.mailboxAccess as Record<string, { role: UserRole }> | undefined;
-      const mailboxRole = mailboxAccess?.[mailbox.id.toString()]?.role || UserRoles.AFK;
-
       return {
         id: user.id,
         email: user.email ?? undefined,
         displayName: getFullName(user),
         replyCount: replyCounts[user.id] || 0,
-        role: mailboxRole,
+        role: user.access?.role || UserRoles.AFK,
       };
     })
     .sort((a, b) => b.replyCount - a.replyCount);
