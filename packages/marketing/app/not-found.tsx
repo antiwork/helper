@@ -42,7 +42,7 @@ export default function NotFound() {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const setVH = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
@@ -64,13 +64,7 @@ export default function NotFound() {
         <nav className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center transition-transform hover:scale-105">
-              <Image
-                src="/logo-white.svg"
-                priority
-                alt="Helper"
-                width={120}
-                height={32}
-              />
+              <Image src="/logo-white.svg" priority alt="Helper" width={120} height={32} />
             </Link>
           </div>
         </nav>
@@ -83,10 +77,10 @@ export default function NotFound() {
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative">
-                <Image 
-                  src="/logo_icon.svg" 
-                  alt="Helper" 
-                  width={60} 
+                <Image
+                  src="/logo_icon.svg"
+                  alt="Helper"
+                  width={60}
                   height={60}
                   className="sm:w-[70px] sm:h-[70px] md:w-[80px] md:h-[80px] lg:w-[90px] lg:h-[90px] xl:w-[100px] xl:h-[100px] animate-pulse opacity-80"
                 />
@@ -104,15 +98,13 @@ export default function NotFound() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
             <Link href="/">
-              <Button 
-                className="bg-bright hover:bg-bright/90 text-bright-foreground font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
+              <Button className="bg-bright hover:bg-bright/90 text-bright-foreground font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                 <Home className="w-4 h-4 mr-2" />
                 Go Home
               </Button>
             </Link>
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               onClick={() => window.history.back()}
               className="border-white/20 dark:border-border text-white dark:text-foreground hover:bg-white/10 dark:hover:bg-muted px-6 py-2.5"
             >
@@ -122,18 +114,12 @@ export default function NotFound() {
           </div>
 
           <div className="p-4 rounded-2xl bg-white/5 dark:bg-muted/30 backdrop-blur-sm border border-white/10 dark:border-border">
-            <h3 className="text-sm md:text-base font-semibold text-white dark:text-foreground mb-2">
-              Need help?
-            </h3>
+            <h3 className="text-sm md:text-base font-semibold text-white dark:text-foreground mb-2">Need help?</h3>
             <p className="text-white/70 dark:text-muted-foreground mb-3 text-xs md:text-sm">
               If you think this is an error, please contact our support team.
             </p>
             <Link href="/docs">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-bright hover:text-bright/80 hover:bg-bright/10"
-              >
+              <Button variant="ghost" size="sm" className="text-bright hover:text-bright/80 hover:bg-bright/10">
                 Visit Documentation
               </Button>
             </Link>
@@ -146,9 +132,9 @@ export default function NotFound() {
       >
         <div className="container mx-auto h-full flex items-center justify-between">
           <div className="flex items-center">
-            <a 
-              href="https://helper.ai/" 
-              target="_blank" 
+            <a
+              href="https://helper.ai/"
+              target="_blank"
               rel="noopener noreferrer"
               className="transition-transform hover:scale-105"
             >
@@ -170,10 +156,10 @@ export default function NotFound() {
               onClick={generateRandomColors}
               size="sm"
               className="transition-all duration-300 hover:scale-110 rounded-full shadow-lg w-8 h-8 sm:w-9 sm:h-9"
-              style={{ 
-                backgroundColor: footerTextColor, 
+              style={{
+                backgroundColor: footerTextColor,
                 color: footerBgColor,
-                border: `2px solid ${footerTextColor}20`
+                border: `2px solid ${footerTextColor}20`,
               }}
             >
               <Shuffle className="w-3 h-3 sm:w-4 sm:h-4" />
