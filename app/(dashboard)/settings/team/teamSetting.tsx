@@ -2,7 +2,6 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
-import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/components/useSession";
