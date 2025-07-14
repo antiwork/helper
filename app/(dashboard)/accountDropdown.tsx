@@ -11,10 +11,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
 import { createClient } from "@/lib/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const supabase = createClient();
 

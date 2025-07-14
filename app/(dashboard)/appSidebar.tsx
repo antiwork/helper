@@ -75,12 +75,7 @@ export function AppSidebar() {
       return (
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="cursor-pointer"
-              onClick={handleBackToApp}
-              tooltip="Back to app"
-            >
+            <SidebarMenuButton asChild className="cursor-pointer" onClick={handleBackToApp} tooltip="Back to app">
               <div className="flex items-center gap-2 h-10">
                 <ChevronLeft className="size-4" />
                 <span className="font-medium group-data-[collapsible=icon]:hidden">Back to app</span>
@@ -113,9 +108,7 @@ export function AppSidebar() {
       className="bg-sidebar text-sidebar-foreground border-r border-sidebar-border fixed top-0 h-svh"
       collapsible="icon"
     >
-      <SidebarHeader>
-        {renderHeader()}
-      </SidebarHeader>
+      <SidebarHeader>{renderHeader()}</SidebarHeader>
       <SidebarContent className="flex flex-col h-full">
         {isSettingsPage ? (
           <>
@@ -234,4 +227,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
