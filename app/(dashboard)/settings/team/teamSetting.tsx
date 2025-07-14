@@ -45,19 +45,20 @@ const TeamSetting = () => {
           />
         )}
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
+        <div className="rounded-md border overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Email</TableHead>
-                <TableHead className="w-[180px]">Name</TableHead>
-                <TableHead className="w-[120px]">Permissions</TableHead>
-                <TableHead className="w-[180px]">Support role</TableHead>
-                <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-                <TableHead className="w-[120px]">Status</TableHead>
+                <TableHead className="w-[200px] min-w-[150px] text-center">Email</TableHead>
+                <TableHead className="w-[180px] min-w-[120px] text-center">Name</TableHead>
+                <TableHead className="w-[120px] min-w-[100px] text-center">Permissions</TableHead>
+                <TableHead className="w-[180px] min-w-[120px] text-center">Support role</TableHead>
+                <TableHead className="min-w-[200px] text-center">Auto-assign keywords</TableHead>
+                <TableHead className="w-[100px] min-w-[80px] text-center">Actions</TableHead>
+                <TableHead className="w-[120px] min-w-[100px] text-center">Status</TableHead>
               </TableRow>
-            </TableHeader>
+              </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
@@ -82,6 +83,7 @@ const TeamSetting = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">

@@ -222,25 +222,25 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
 
   return (
     <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
+      <TableCell className="text-center">
+        <div className="flex items-center gap-3 justify-center">
           <Avatar fallback={getAvatarFallback(member)} size="sm" />
           <span className="truncate">{member.email || "No email"}</span>
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         {isAdmin || member.id === currentUser?.id ? (
           <Input
             value={displayNameInput}
             onChange={(e) => handleDisplayNameChange(e.target.value)}
-            placeholder="Enter display name"
-            className="w-full max-w-sm"
+            placeholder="Enter name"
+            className="w-full max-w-sm placeholder:text-xs"
           />
         ) : (
           <span>{member.displayName || "No display name"}</span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
             <SelectTrigger className="w-[120px]">
@@ -255,7 +255,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         {isAdmin ? (
           <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
             <SelectTrigger className="w-[180px]">
@@ -271,7 +271,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         {isAdmin ? (
           <div className="w-[200px]">
             <Input
@@ -287,7 +287,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           </span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center">
         {currentUser?.id !== member.id && isAdmin && (
           <DeleteMemberDialog
             member={{ id: member.id, displayName: member.displayName }}
@@ -305,8 +305,8 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           </DeleteMemberDialog>
         )}
       </TableCell>
-      <TableCell className="w-[120px]">
-        <div className="flex items-center gap-2">
+      <TableCell className="w-[120px] text-center">
+        <div className="flex items-center gap-2 justify-center">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={permissionsSaving.state} />
           <SavingIndicator state={roleSaving.state} />
