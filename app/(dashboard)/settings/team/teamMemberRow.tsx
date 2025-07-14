@@ -234,7 +234,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             value={displayNameInput}
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
-            className="w-full max-w-sm"
+            className="w-full max-w-lg"
           />
         ) : (
           <span>{member.displayName || "No display name"}</span>

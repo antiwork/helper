@@ -49,7 +49,7 @@ const TeamSetting = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead className="w-[240px] min-w-[180px]">Name</TableHead>
                 <TableHead className="w-[120px]">Permissions</TableHead>
                 <TableHead className="w-[180px]">Support role</TableHead>
                 <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
