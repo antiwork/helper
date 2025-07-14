@@ -35,6 +35,8 @@ We use Vitest for testing. Some key guidelines:
 3. Ensure all tests pass
 4. Include screenshots of your test suite passing locally
 5. Use professional English in all communication with no excessive capitalization, question marks, or informal language - we have a zero tolerance policy as it makes async communication difficult
+   - ❌ Before: "is this still open ?? I am happy to work on it ??"
+   - ✅ After: "Is this actively being worked on? I've started work on it here…"
 6. Create a changeset for your changes (see below)
 7. Submit a pull request with a clear description of changes
 
