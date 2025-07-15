@@ -1,26 +1,11 @@
 {
   "name": "@helperai/sdk",
-  "version": "0.1.2",
-  "description": "Helper SDK for creating customer support widgets on your website",
-  "author": "Helper (https://helper.ai)",
-  "license": "MIT",
-  "homepage": "https://helper.ai",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/antiwork/helper.git"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "src",
-    "README.md"
-  ],
-  "main": "dist/umd/module.js",
-  "module": "dist/esm/module.js",
-  "types": "dist/types/module.d.ts",
+  "version": "1.0.0",
+  "description": "Helper SDK for embedding the widget in client websites",
+  "private": true,
+  "type": "module",
+  "module": "dist/esm/utils.js",
+  "types": "dist/types/utils.d.ts",
   "scripts": {
     "build": "pnpm build:types && webpack --config webpack.sdk.cjs --env production",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist/types",
@@ -33,8 +18,7 @@
     "@rrweb/types": "2.0.0-alpha.18",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "scroll-into-view-if-needed": "^3.1.0",
-    "zod": "^3.24.3"
+    "scroll-into-view-if-needed": "^3.1.0"
   },
   "devDependencies": {
     "webpack": "^5.94.0",

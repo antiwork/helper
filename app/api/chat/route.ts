@@ -2,13 +2,17 @@ import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
 import { ReadPageToolConfig } from "@helperai/sdk";
-import { getConversation } from "@/app/api/chat/getConversation";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { ClientProvidedTool, createUserMessage, respondWithAI } from "@/lib/ai/chat";
-import { CHAT_CONVERSATION_SUBJECT, generateConversationSubject } from "@/lib/data/conversation";
+import {
+  CHAT_CONVERSATION_SUBJECT,
+  generateConversationSubject,
+  getConversationBySlugAndMailbox,
+} from "@/lib/data/conversation";
 import { createClient } from "@/lib/supabase/server";
+import { WidgetSessionPayload } from "@/lib/widgetSession";
 
 export const maxDuration = 60;
 
@@ -18,8 +22,28 @@ interface ChatRequestBody {
   conversationSlug: string;
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
+  isToolResult?: boolean;
   tools?: ClientProvidedTool[];
 }
+
+const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
+  const conversation = await getConversationBySlugAndMailbox(conversationSlug);
+
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  // For anonymous sessions, only allow access if the conversation has no emailFrom
+  // For authenticated sessions, only allow access if the emailFrom matches
+  const isAnonymousUnauthorized = session.isAnonymous && conversation.emailFrom !== null;
+  const isAuthenticatedUnauthorized = session.email && conversation.emailFrom !== session.email;
+
+  if (isAnonymousUnauthorized || isAuthenticatedUnauthorized) {
+    throw new Error("Unauthorized");
+  }
+
+  return conversation;
+};
 
 export function OPTIONS() {
   return corsOptions();

@@ -48,9 +48,9 @@ module.exports = (env) => {
   return [
     {
       ...baseConfig,
-      entry: path.resolve(__dirname, "src/module.ts"),
+      entry: path.resolve(__dirname, "src/utils.ts"),
       output: {
-        filename: "module.js",
+        filename: "utils.js",
         library: {
           type: "module",
         },
@@ -58,17 +58,6 @@ module.exports = (env) => {
       },
       experiments: {
         outputModule: true,
-      },
-    },
-    {
-      ...baseConfig,
-      entry: path.resolve(__dirname, "src/module.ts"),
-      output: {
-        filename: "module.js",
-        library: {
-          type: "umd",
-        },
-        path: path.resolve(__dirname, "dist/umd"),
       },
     },
     {

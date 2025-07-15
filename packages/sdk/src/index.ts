@@ -4,6 +4,7 @@ import { Context } from "modern-screenshot";
 import React from "react";
 import embedStyles from "./embed.css";
 import GuideManager from "./guideManager";
+import { scriptOrigin } from "./scriptOrigin";
 import {
   CLOSE_ACTION,
   CONVERSATION_UPDATE_ACTION,
@@ -15,8 +16,7 @@ import {
   SHOW_WIDGET,
   type HelperWidgetConfig,
   type NotificationStatus,
-} from "./module";
-import { scriptOrigin } from "./scriptOrigin";
+} from "./utils";
 
 const workerCode = require("modern-screenshot/dist/worker.js");
 
