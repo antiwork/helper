@@ -16,15 +16,21 @@ type SectionWrapperProps = {
 
 const SectionWrapper = ({ title, description, fullWidth, className, action, children }: SectionWrapperProps) => {
   return (
-    <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row">
-      <div className="flex w-full flex-col gap-3 lg:max-w-xs">
-        <div className="flex w-full flex-col gap-1">
-          <h2 className="text-base flex items-center gap-2">{title}</h2>
-          <div className="w-full text-sm text-muted-foreground">{description}</div>
+    <section className="flex flex-col gap-8 border-b py-8 first:pt-4">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">{title}</h2>
+            {action && <div className="flex-shrink-0">{action}</div>}
+          </div>
+          {description && (
+            <div className="text-sm text-muted-foreground">{description}</div>
+          )}
         </div>
-        {action}
       </div>
-      <div className={cn("grow", !fullWidth && "max-w-xl", className)}>{children}</div>
+      <div className={cn("w-full", !fullWidth && "max-w-3xl", className)}>
+        {children}
+      </div>
     </section>
   );
 };
@@ -52,23 +58,30 @@ const SwitchSectionWrapper = ({
 
   const handleSwitchChange = (checked: boolean) => {
     setIsSwitchChecked(checked);
-    if (onSwitchChange) {
-      onSwitchChange(checked);
-    }
+    onSwitchChange?.(checked);
   };
 
   return (
     <SectionWrapper
       title={
-        <>
-          {title}
-          <Badge variant={isSwitchChecked ? "dark" : "default"}>{isSwitchChecked ? "On" : "Off"}</Badge>
-        </>
+        <div className="flex items-center gap-3">
+          <span>{title}</span>
+          <Badge variant={isSwitchChecked ? "dark" : "default"} className="h-6">
+            {isSwitchChecked ? "On" : "Off"}
+          </Badge>
+        </div>
       }
       description={description}
       fullWidth={fullWidth}
       className={className}
-      action={<Switch aria-label={`${title} Switch`} checked={isSwitchChecked} onCheckedChange={handleSwitchChange} />}
+      action={
+        <Switch 
+          aria-label={`${title} Switch`} 
+          checked={isSwitchChecked} 
+          onCheckedChange={handleSwitchChange}
+          className="scale-110"
+        />
+      }
     >
       {children}
     </SectionWrapper>
