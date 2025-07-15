@@ -12,7 +12,7 @@ import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
-import { useWidgetView } from "@/components/widget/useWidgetView";
+import { useWidgetView, View } from "@/components/widget/useWidgetView";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -28,6 +28,7 @@ type Props = {
   onLoadFailed: () => void;
   guideEnabled: boolean;
   resumeGuide: GuideInstructions | null;
+  currentView: View;
 };
 
 export type Attachment = {
@@ -45,6 +46,7 @@ export default function Conversation({
   onLoadFailed,
   guideEnabled,
   resumeGuide,
+  currentView,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -302,6 +304,7 @@ export default function Conversation({
     setIsProvidingDetails(true);
   };
 
+  if (currentView !== "chat") return null;
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
     return <MessagesSkeleton />;
   }

@@ -2,7 +2,7 @@ import { Message } from "ai";
 import { create } from "zustand";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 
-type View = "chat" | "previous";
+export type View = "chat" | "previous";
 
 type WidgetViewState = {
   currentView: View;

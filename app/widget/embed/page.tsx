@@ -181,6 +181,7 @@ export default function Page() {
               <div className="shrink-0 w-full h-full flex flex-col">
                 <Conversation
                   token={token}
+                  currentView={currentView}
                   readPageTool={readPageToolCall}
                   isGumroadTheme={isGumroadTheme}
                   isNewConversation={isNewConversation}
