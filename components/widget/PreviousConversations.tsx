@@ -111,7 +111,7 @@ export default function PreviousConversations({ token, onSelectConversation, isA
                     onClick={handleClearHistory}
                     className="absolute flex items-center justify-center bottom-4 right-4 w-10 h-10 bg-white border border-gray-200 rounded-full hover:border-black transition-colors"
                   >
-                    <Trash2 className="h-5 w-5" color="black" />
+                    <Trash2 className="h-5 w-5 text-black" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>Clear history</TooltipContent>

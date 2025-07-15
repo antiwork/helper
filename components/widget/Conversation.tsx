@@ -305,6 +305,7 @@ export default function Conversation({
   };
 
   if (currentView !== "chat") return null;
+
   if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
     return <MessagesSkeleton />;
   }
