@@ -228,13 +228,13 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           <span className="truncate">{member.email || "No email"}</span>
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[150px">
         {isAdmin || member.id === currentUser?.id ? (
           <Input
             value={displayNameInput}
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
-            className="w-full max-w-lg"
+            className="w-full max-w-sm"
           />
         ) : (
           <span>{member.displayName || "No display name"}</span>
@@ -258,7 +258,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
