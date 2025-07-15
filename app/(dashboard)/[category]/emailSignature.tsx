@@ -1,10 +1,10 @@
 import { useSession } from "@/components/useSession";
-import { getFirstName, hasDisplayName } from "@/lib/auth/authUtils";
+import { getFirstName } from "@/lib/auth/authUtils";
 
 export const EmailSignature = () => {
   const { user } = useSession() ?? {};
 
-  if (!hasDisplayName(user)) {
+  if (!user?.displayName) {
     return null;
   }
 

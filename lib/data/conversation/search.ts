@@ -145,9 +145,12 @@ export const searchConversations = async (
     filters.status?.length === 1 && filters.status[0] === "closed"
       ? conversations.closedAt
       : conversations.lastUserEmailCreatedAt;
-  const orderBy = [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)];
+  const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
+  const orderBy = isOpenTicketsOnly
+    ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]
+    : [filters.sort === "oldest" ? asc(orderByField) : desc(orderByField)];
   const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox());
-  if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort)) {
+  if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort) && isOpenTicketsOnly) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
 

@@ -5,10 +5,10 @@ import cx from "classnames";
 import { jwtDecode } from "jwt-decode";
 import { domAnimation, LazyMotion, m } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
-import { HelperWidgetConfig, MESSAGE_TYPE, RESUME_GUIDE } from "@helperai/sdk";
+import { MESSAGE_TYPE, RESUME_GUIDE } from "@helperai/sdk";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
-import Header from "@/components/widget/Header";
+import Header, { WidgetHeaderConfig } from "@/components/widget/Header";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import PromptDetailsModal from "@/components/widget/PromptDetailsModal";
@@ -29,7 +29,7 @@ const queryClient = new QueryClient();
 
 export default function Page() {
   const [token, setToken] = useState<string | null>(null);
-  const [config, setConfig] = useState<HelperWidgetConfig | null>(null);
+  const [config, setConfig] = useState<WidgetHeaderConfig | null>(null);
   const [defaultTitle, setDefaultTitle] = useState<string | null>(null);
   const [currentURL, setCurrentURL] = useState<string | null>(null);
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);

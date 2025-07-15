@@ -38,10 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <NuqsAdapter>
       <Toaster richColors />
-      <SentryContext />
       <TRPCReactProvider>
         <StandaloneDisplayIntegration />
         <HydrateClient>
+          <SentryContext />
           <HelperProvider host={env.AUTH_URL} showToggleButton>
             <SidebarProvider>
               <InboxClientLayout>

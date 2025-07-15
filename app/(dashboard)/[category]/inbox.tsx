@@ -47,7 +47,7 @@ const Inbox = () => {
   const isMobile = useIsMobile();
   const { data: currentConversation } = useConversationQuery(currentConversationSlug) ?? {};
   const pageTitle = currentConversation
-    ? `${currentConversation.subject} - ${currentConversation.emailFrom}`
+    ? `${currentConversation.subject} - ${currentConversation.emailFrom ?? "Anonymous"}`
     : CATEGORY_LABELS[params.category];
 
   useDocumentTitle(pageTitle);

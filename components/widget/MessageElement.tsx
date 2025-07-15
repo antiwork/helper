@@ -103,7 +103,7 @@ export default function MessageElement({
           {message.parts?.find(
             (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
           )
-            ? "_Escalated to a human! You will be contacted soon by email._"
+            ? "_Escalated to a human! You will be contacted soon here and by email._"
             : message.content}
         </MessageMarkdown>
       ) : (

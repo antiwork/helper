@@ -3,7 +3,8 @@ import { intervalToDuration, isWeekend } from "date-fns";
 import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
-import { conversations } from "@/db/schema";
+import { conversations, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { getMailbox } from "@/lib/data/mailbox";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
@@ -35,7 +36,18 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
 
   const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
 
-  const usersById = Object.fromEntries((await db.query.authUsers.findMany()).map((user) => [user.id, user]));
+  const users = await db
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+      permissions: userProfiles.permissions,
+      access: userProfiles.access,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+
+  const usersById = Object.fromEntries(users.map((user) => [user.id, user]));
 
   if (mailbox.preferences?.disableTicketResponseTimeAlerts) return { success: true, skipped: "disabled" };
 
@@ -77,9 +89,7 @@ export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
               const assignee = usersById[conversation.assignedToId!];
               const assigneeEmail = assignee?.email;
               const slackUserId = assigneeEmail ? slackUsersByEmail.get(assigneeEmail) : undefined;
-              const mention = slackUserId
-                ? `<@${slackUserId}>`
-                : assignee?.user_metadata?.display_name || assignee?.email || "Unknown";
+              const mention = slackUserId ? `<@${slackUserId}>` : assignee?.displayName || assignee?.email || "Unknown";
               const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
               return `• <${getBaseUrl()}/conversations?id=${conversation.slug}|${subject?.replace(/\|<>/g, "") ?? "No subject"}> (Assigned to ${mention}, ${timeSinceLastReply} since last reply)`;
             }),

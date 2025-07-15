@@ -4,7 +4,8 @@ import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, DRAFT_STATUSES } from "@/db/schema";
+import { conversationMessages, conversations, DRAFT_STATUSES, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { runAIQuery } from "@/lib/ai";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
@@ -117,7 +118,15 @@ export const generateAgentResponse = async (
       parameters: z.object({}),
       execute: async () => {
         showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
-        const members = await db.query.authUsers.findMany();
+        const members = await db
+          .select({
+            id: userProfiles.id,
+            displayName: userProfiles.displayName,
+            email: authUsers.email,
+          })
+          .from(userProfiles)
+          .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+
         return members.map((member) => ({
           id: member.id,
           name: getFullName(member),
@@ -134,7 +143,7 @@ export const generateAgentResponse = async (
       }),
       execute: async ({ startDate, endDate }) => {
         showStatus(`Checking member stats...`, { toolName: "getMemberStats", parameters: { startDate, endDate } });
-        return await getMemberStats(mailbox, { startDate: new Date(startDate), endDate: new Date(endDate) });
+        return await getMemberStats({ startDate: new Date(startDate), endDate: new Date(endDate) });
       },
     }),
     searchTickets: tool({
@@ -235,7 +244,15 @@ export const generateAgentResponse = async (
             role: true,
           },
         });
-        const members = await db.query.authUsers.findMany();
+        const members = await db
+          .select({
+            id: userProfiles.id,
+            displayName: userProfiles.displayName,
+            email: authUsers.email,
+          })
+          .from(userProfiles)
+          .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
+
         return messages.map((message) => ({
           id: message.id,
           content: message.cleanedUpText,
@@ -244,8 +261,7 @@ export const generateAgentResponse = async (
           sentBy:
             message.role === "user"
               ? message.emailFrom
-              : getFullName(members.find((member) => member.id === message.userId)!),
-          userId: message.userId,
+              : getFullName(members.find((m) => m.id === message.userId) ?? { displayName: null, email: null }),
         }));
       },
     }),

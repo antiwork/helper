@@ -743,6 +743,13 @@
       "when": 1751930366010,
       "tag": "0105_nosy_lord_hawal",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1752225813165,
+      "tag": "0106_rare_songbird",
+      "breakpoints": true
     }
   ]
 }

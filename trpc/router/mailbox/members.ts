@@ -122,7 +122,7 @@ export const membersRouter = {
         customEndDate: z.date().optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const now = new Date();
       const periodInHours = {
         "24h": 24,
@@ -133,6 +133,6 @@ export const membersRouter = {
 
       const startDate = input.customStartDate || subHours(now, periodInHours[input.period]);
       const endDate = input.customEndDate || now;
-      return await getMemberStats(ctx.mailbox, { startDate, endDate });
+      return await getMemberStats({ startDate, endDate });
     }),
 } satisfies TRPCRouterRecord;

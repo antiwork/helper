@@ -19,7 +19,7 @@ describe("organizationRouter", () => {
           },
         },
       });
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       const result = await caller.organization.getMembers();
 

@@ -23,7 +23,7 @@ describe("messagesRouter", () => {
       const userMessage = await conversationFactory.createUserEmail(conversation.id);
       const { message: aiMessage } = await conversationMessagesFactory.createDraft(conversation.id, userMessage.id);
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
       await caller.mailbox.conversations.messages.flagAsBad({
         conversationSlug: conversation.slug,
         id: aiMessage.id,
@@ -50,7 +50,7 @@ describe("messagesRouter", () => {
       const { user } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create();
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       await expect(
         caller.mailbox.conversations.messages.flagAsBad({
@@ -66,7 +66,7 @@ describe("messagesRouter", () => {
       const { conversation } = await conversationFactory.create();
       const userMessage = await conversationFactory.createUserEmail(conversation.id);
 
-      const caller = createCaller(createTestTRPCContext(user));
+      const caller = createCaller(await createTestTRPCContext(user));
 
       await expect(
         caller.mailbox.conversations.messages.flagAsBad({

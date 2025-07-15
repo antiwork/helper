@@ -53,6 +53,7 @@ export const importToolsFromSpec = async ({
         ...tool,
         enabled: existingTool?.enabled ?? true,
         availableInChat: existingTool?.availableInChat ?? false,
+        availableInAnonymousChat: existingTool?.availableInAnonymousChat ?? false,
         updatedAt: new Date(),
       })
       .where(eq(toolsTable.slug, tool.slug));

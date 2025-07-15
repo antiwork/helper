@@ -1,4 +1,5 @@
 import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,27 +9,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ReactionFilter({
+export const ReactionFilter = memo(function ReactionFilter({
   reactionType,
   onChange,
 }: {
   reactionType: "thumbs-up" | "thumbs-down" | null;
   onChange: (reactionType: "thumbs-up" | "thumbs-down" | null) => void;
 }) {
+  const buttonContent = useMemo(() => {
+    const icon =
+      reactionType === "thumbs-down" ? <ThumbsDown className="h-4 w-4 mr-2" /> : <ThumbsUp className="h-4 w-4 mr-2" />;
+
+    const text =
+      reactionType === "thumbs-up"
+        ? "Positive reaction"
+        : reactionType === "thumbs-down"
+          ? "Negative reaction"
+          : "Reaction";
+
+    return { icon, text };
+  }, [reactionType]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={reactionType ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
-          {reactionType === "thumbs-down" ? (
-            <ThumbsDown className="h-4 w-4 mr-2" />
-          ) : (
-            <ThumbsUp className="h-4 w-4 mr-2" />
-          )}
-          {reactionType === "thumbs-up"
-            ? "Positive reaction"
-            : reactionType === "thumbs-down"
-              ? "Negative reaction"
-              : "Reaction"}
+          {buttonContent.icon}
+          {buttonContent.text}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
@@ -44,4 +51,4 @@ export function ReactionFilter({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});

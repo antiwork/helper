@@ -6,7 +6,7 @@ We take the security of Helper and its users seriously. If you believe you have 
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them via email to hi@gumroad.com. You should receive a response within 48 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
+Instead, please report them via email to help@helper.ai. You should receive a response within 48 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
 
 When submitting your vulnerability report, please provide the following details:
 

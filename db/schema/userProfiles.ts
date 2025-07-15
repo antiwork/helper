@@ -30,3 +30,6 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
     references: [authUsers.id],
   }),
 }));
+
+export type BasicUserProfile = { id: string; displayName: string | null; email: string | null };
+export type FullUserProfile = typeof userProfiles.$inferSelect & { email: string | null };

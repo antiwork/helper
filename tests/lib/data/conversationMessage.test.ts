@@ -445,10 +445,10 @@ describe("createReply", () => {
     const time = new Date("2023-01-01 01:00:00");
     vi.setSystemTime(time);
 
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ status: "open" });
 
-    const messageId = await createReply({ conversationId: conversation.id, message: "Test message", user });
+    const messageId = await createReply({ conversationId: conversation.id, message: "Test message", user: profile });
 
     const createdMessage = await getConversationMessageById(messageId);
     expect(createdMessage).toMatchObject({
@@ -473,13 +473,13 @@ describe("createReply", () => {
   });
 
   it("creates a reply without closing the conversation", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ status: "open" });
 
     const result = await createReply({
       conversationId: conversation.id,
       message: "Test message",
-      user,
+      user: profile,
       close: false,
     });
 
@@ -494,13 +494,13 @@ describe("createReply", () => {
   });
 
   it("creates a reply with CC and BCC recipients", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const result = await createReply({
       conversationId: conversation.id,
       message: "Test message",
-      user,
+      user: profile,
       cc: ["cc@example.com"],
       bcc: ["bcc@example.com"],
     });
@@ -514,13 +514,13 @@ describe("createReply", () => {
   });
 
   it("creates a reply with Slack information", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     const result = await createReply({
       conversationId: conversation.id,
       message: "Test message",
-      user,
+      user: profile,
       slack: {
         channel: "C12345",
         messageTs: "1234567890.123456",
@@ -536,28 +536,28 @@ describe("createReply", () => {
   });
 
   it("assigns the conversation to the user when replying to an unassigned conversation", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ assignedToId: null });
 
     await createReply({
       conversationId: conversation.id,
       message: "Test message",
-      user,
+      user: profile,
     });
 
     const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToId).toBe(user.id);
+    expect(updatedConversation?.assignedToId).toBe(profile.id);
   });
 
   it("does not change assignment when replying to an already assigned conversation", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { user: otherUser } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create({ assignedToId: otherUser.id });
 
     await createReply({
       conversationId: conversation.id,
       message: "Test message",
-      user,
+      user: profile,
     });
 
     const updatedConversation = await getConversationById(conversation.id);
@@ -579,14 +579,14 @@ describe("createReply", () => {
   });
 
   it("handles file uploads", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
     const { file } = await fileFactory.create(null, { isInline: true });
 
     const emailId = await createReply({
       conversationId: conversation.id,
       message: "Test message with files",
-      user,
+      user: profile,
       fileSlugs: [file.slug],
     });
 
@@ -597,7 +597,7 @@ describe("createReply", () => {
   });
 
   it("marks message as perfect if it matches the last AI draft", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
@@ -609,7 +609,7 @@ describe("createReply", () => {
     const result = await createReply({
       conversationId: conversation.id,
       message: `<p>AI generated response</p>`,
-      user,
+      user: profile,
     });
 
     const createdMessage = await getConversationMessageById(result);
@@ -620,7 +620,7 @@ describe("createReply", () => {
   });
 
   it("discards AI-generated drafts after creating a reply", async () => {
-    const { user } = await userFactory.createRootUser();
+    const { profile } = await userFactory.createRootUser();
     const { conversation } = await conversationFactory.create();
 
     await conversationMessagesFactory.create(conversation.id, {
@@ -637,7 +637,7 @@ describe("createReply", () => {
     await createReply({
       conversationId: conversation.id,
       message: "Human response",
-      user,
+      user: profile,
     });
 
     const remainingDrafts = await db.query.conversationMessages.findMany({

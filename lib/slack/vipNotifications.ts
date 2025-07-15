@@ -2,12 +2,12 @@ import { WebClient } from "@slack/web-api";
 import { and, desc, eq, isNull, not } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, platformCustomers } from "@/db/schema";
-import { authUsers, DbOrAuthUser } from "@/db/supabaseSchema/auth";
+import { BasicUserProfile, conversationMessages, conversations, platformCustomers } from "@/db/schema";
 import { getFullName } from "@/lib/auth/authUtils";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getMailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
+import { getBasicProfileById } from "@/lib/data/user";
 import { isIgnorableSlackError, postSlackMessage } from "@/lib/slack/client";
 import { getActionButtons, OPEN_ATTACHMENT_COLOR, RESOLVED_ATTACHMENT_COLOR } from "@/lib/slack/shared";
 
@@ -42,7 +42,7 @@ export const updateVipMessageOnClose = async (conversationId: number, byUserId: 
         slackBotToken: mailbox.slackBotToken,
         slackChannel: mailbox.vipChannelId!,
         slackMessageTs: vipMessage.slackMessageTs,
-        user: byUserId ? await db.query.authUsers.findFirst({ where: eq(authUsers.id, byUserId) }) : null,
+        user: byUserId ? await getBasicProfileById(byUserId) : null,
         closed: true,
       });
     }
@@ -159,7 +159,7 @@ export const updateVipMessageInSlack = async ({
   slackBotToken: string;
   slackChannel: string;
   slackMessageTs: string;
-  user?: DbOrAuthUser | null;
+  user?: BasicUserProfile | null;
   email?: boolean;
   closed?: boolean;
 }) => {

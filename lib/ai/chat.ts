@@ -675,7 +675,7 @@ export const respondWithAI = async ({
 
           const reasoning = experimental_providerMetadata?.reasoning;
           const responseText = hasRequestHumanSupportCall
-            ? "_Escalated to a human! You will be contacted soon by email._"
+            ? "_Escalated to a human! You will be contacted soon here and by email._"
             : text;
           const assistantMessage = await handleAssistantMessage(
             responseText,

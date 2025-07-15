@@ -128,7 +128,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Should still be on the same page
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(page).toHaveURL(/.*mine.*/);
   });
 
   test("should handle select all functionality", async ({ page }) => {
@@ -200,7 +200,7 @@ test.describe("Working Conversation Management", () => {
     await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     // Should remain authenticated and stay on the dashboard
-    await expect(page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(page).toHaveURL(/.*mine.*/);
 
     // Verify dashboard elements are visible (confirms authentication persisted)
     const searchInput = page.locator('input[placeholder="Search conversations"]');

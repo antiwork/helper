@@ -2,7 +2,7 @@ import { KnownBlock } from "@slack/web-api";
 import { eq } from "drizzle-orm";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversations } from "@/db/schema";
+import { conversations, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
@@ -186,7 +186,17 @@ const openAssignModal = async (message: SlackMessage, triggerId: string) => {
             type: "static_select",
             action_id: "user",
             placeholder: { type: "plain_text", text: "Select a user" },
-            options: (await db.query.authUsers.findMany({ limit: 100 })).map((member) => ({
+            options: (
+              await db
+                .select({
+                  id: userProfiles.id,
+                  displayName: userProfiles.displayName,
+                  email: authUsers.email,
+                })
+                .from(userProfiles)
+                .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+                .limit(100)
+            ).map((member) => ({
               text: {
                 type: "plain_text",
                 text: getFullName(member),

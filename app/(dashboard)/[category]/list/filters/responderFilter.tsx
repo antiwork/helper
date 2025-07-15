@@ -1,7 +1,8 @@
 import { MessagesSquare } from "lucide-react";
+import { memo } from "react";
 import { MemberFilter } from "./memberFilter";
 
-export function ResponderFilter({
+export const ResponderFilter = memo(function ResponderFilter({
   selectedResponders,
   onChange,
 }: {
@@ -19,4 +20,4 @@ export function ResponderFilter({
       multiSelectionDisplay={(count) => `${count} responders`}
     />
   );
-}
+});

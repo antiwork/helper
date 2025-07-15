@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
-import { User } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { FullUserProfile } from "@/db/schema";
 import { env } from "@/lib/env";
 
 /**
@@ -17,7 +17,7 @@ import { env } from "@/lib/env";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = (opts: { headers: Headers; user: User | null }) => {
+export const createTRPCContext = (opts: { headers: Headers; user: FullUserProfile | null }) => {
   const source = opts.headers.get("x-trpc-source") ?? "unknown";
   // eslint-disable-next-line no-console
   console.log(">>> tRPC Request from", source, "by user ID", opts.user?.id ?? "Unknown");

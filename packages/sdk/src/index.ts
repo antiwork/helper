@@ -18,15 +18,18 @@ import {
 } from "./module";
 import { scriptOrigin } from "./scriptOrigin";
 
+const workerCode = require("modern-screenshot/dist/worker.js");
+
+function createInlineWorkerUrl(): string {
+  const blob = new Blob([workerCode], { type: "application/javascript" });
+  return URL.createObjectURL(blob);
+}
+
 declare global {
   interface Window {
     helperWidgetConfig?: HelperWidgetConfig;
   }
 }
-
-const GUMROAD_MAILBOX_SLUG = "gumroad";
-
-const screenshotWorkerUrl = new URL("modern-screenshot/dist/worker.js", import.meta.url).href;
 
 interface Notification {
   id: number;
@@ -301,7 +304,7 @@ class HelperWidget {
         this.sendMessageToEmbed({
           action: "CONFIG",
           content: {
-            config: { ...this.config, viewportWidth: window.innerWidth },
+            config: { ...this.config, viewportWidth: window.innerWidth, isMinimized: this.isMinimized },
             sessionToken: this.sessionToken,
             pageHTML: document.documentElement.outerHTML,
             currentURL: window.location.href,
@@ -447,7 +450,7 @@ class HelperWidget {
     this.sendMessageToEmbed({
       action: "CONFIG",
       content: {
-        config: { ...this.config, viewportWidth: window.innerWidth },
+        config: { ...this.config, viewportWidth: window.innerWidth, isMinimized: this.isMinimized },
         sessionToken: this.sessionToken,
         pageHTML: document.documentElement.outerHTML,
         currentURL: window.location.href,
@@ -654,6 +657,7 @@ class HelperWidget {
       if (this.toggleButton) {
         this.toggleButton.classList.add("with-minimized-widget");
       }
+      this.initFrameConfig();
     }
   }
 
@@ -669,6 +673,7 @@ class HelperWidget {
       if (this.toggleButton) {
         this.toggleButton.classList.remove("with-minimized-widget");
       }
+      this.initFrameConfig();
     }
   }
 
@@ -722,19 +727,45 @@ class HelperWidget {
   }
 
   private destroyInternal(): void {
-    if (this.iframeWrapper) {
+    if (this.iframeWrapper && document.body.contains(this.iframeWrapper)) {
       document.body.removeChild(this.iframeWrapper);
     }
-    if (this.toggleButton) {
+    if (this.helperIcon && document.body.contains(this.helperIcon)) {
+      document.body.removeChild(this.helperIcon);
+    }
+    if (this.toggleButton && document.body.contains(this.toggleButton)) {
       document.body.removeChild(this.toggleButton);
     }
-    if (this.notificationContainer) {
+    if (this.notificationContainer && document.body.contains(this.notificationContainer)) {
       document.body.removeChild(this.notificationContainer);
     }
+    if (this.loadingOverlay && document.body.contains(this.loadingOverlay)) {
+      document.body.removeChild(this.loadingOverlay);
+    }
+
     this.hideAllNotifications();
     this.guideManager.destroy();
+
+    // Reset all element references
+    this.iframe = null;
+    this.iframeWrapper = null;
+    this.helperIcon = null;
+    this.loadingOverlay = null;
+    this.toggleButton = null;
+    this.notificationContainer = null;
+    this.notificationBubbles.clear();
+    this.renderedContactForms.clear();
+
+    // Reset state
+    this.isVisible = false;
+    this.isIframeReady = false;
+    this.hasBeenOpened = false;
+    this.currentConversationSlug = null;
+    this.screenshotContext = null;
+
     if (this.observer) {
       this.observer.disconnect();
+      this.observer = null;
     }
   }
 
@@ -755,13 +786,17 @@ class HelperWidget {
   }
 
   private async takeScreenshot(): Promise<void> {
-    const { domToPng, createContext } = await import("modern-screenshot");
-    this.screenshotContext ??= await createContext(document.body, {
-      workerUrl: screenshotWorkerUrl,
-      workerNumber: 1,
-      filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
-    });
     try {
+      const { domToPng, createContext } = await import("modern-screenshot");
+
+      if (!this.screenshotContext) {
+        this.screenshotContext = await createContext(document.body, {
+          workerUrl: createInlineWorkerUrl(),
+          workerNumber: 1,
+          filter: (node) => !(node instanceof HTMLElement && node.className.startsWith("helper-widget")),
+        });
+      }
+
       const screenshot = await domToPng(this.screenshotContext);
       this.sendMessageToEmbed({ action: "SCREENSHOT", content: screenshot });
     } catch (error) {

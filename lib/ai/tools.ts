@@ -174,14 +174,16 @@ export const buildTools = async (
       tools[slug] = tool({
         description: aiTool.description,
         parameters: aiTool.parameters,
-        execute: async (params) => {
-          if (aiTool.customerEmailParameter && email) {
-            params[aiTool.customerEmailParameter] = email;
-          }
-          const conversation = assertDefined(await getConversationById(conversationId));
-          const result = await callToolApi(conversation, mailboxTool, params);
-          return reasoningMiddleware(JSON.stringify(result));
-        },
+        execute: aiTool.available
+          ? async (params) => {
+              if (aiTool.customerEmailParameter && email) {
+                params[aiTool.customerEmailParameter] = email;
+              }
+              const conversation = assertDefined(await getConversationById(conversationId));
+              const result = await callToolApi(conversation, mailboxTool, params);
+              return reasoningMiddleware(JSON.stringify(result));
+            }
+          : () => Promise.resolve("This tool is not available"),
       });
     }
   }

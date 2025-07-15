@@ -1,5 +1,5 @@
 import { Check, UserCircle } from "lucide-react";
-import { useState } from "react";
+import { memo, useState, useTransition } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { api } from "@/trpc/react";
 
-export function CustomerFilter({
+export const CustomerFilter = memo(function CustomerFilter({
   selectedCustomers,
   onChange,
 }: {
@@ -24,27 +24,31 @@ export function CustomerFilter({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   const { data: customers, isFetching } = api.mailbox.customers.list.useQuery({
     search: debouncedSearchTerm,
   });
 
   const debouncedSearch = useDebouncedCallback((term: string) => {
-    setDebouncedSearchTerm(term);
+    startTransition(() => {
+      setDebouncedSearchTerm(term);
+    });
   }, 300);
+
+  const buttonText =
+    selectedCustomers.length === 1
+      ? selectedCustomers[0]
+      : selectedCustomers.length > 1
+        ? `${selectedCustomers.length} customers`
+        : "Customer";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant={selectedCustomers.length ? "bright" : "outlined_subtle"} className="whitespace-nowrap">
           <UserCircle className="h-4 w-4 mr-2" />
-          <span className="max-w-40 truncate">
-            {selectedCustomers.length === 1
-              ? selectedCustomers[0]
-              : selectedCustomers.length
-                ? `${selectedCustomers.length} customers`
-                : "Customer"}
-          </span>
+          <span className="max-w-40 truncate">{buttonText}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[250px] p-0" align="start">
@@ -58,7 +62,7 @@ export function CustomerFilter({
             }}
           />
           <div className="max-h-[300px] overflow-y-auto">
-            {isFetching ? (
+            {isFetching || isPending ? (
               <div className="flex justify-center p-4">
                 <LoadingSpinner size="sm" />
               </div>
@@ -66,26 +70,24 @@ export function CustomerFilter({
               <>
                 <CommandEmpty>No customers found</CommandEmpty>
                 <CommandGroup>
-                  {(customers ?? []).map((customer) => (
-                    <CommandItem
-                      key={customer.id}
-                      onSelect={() => {
-                        const isSelected = selectedCustomers.includes(customer.email);
-                        onChange(
-                          isSelected
-                            ? selectedCustomers.filter((c) => c !== customer.email)
-                            : [...selectedCustomers, customer.email],
-                        );
-                      }}
-                    >
-                      <Check
-                        className={`mr-2 h-4 w-4 ${
-                          selectedCustomers.includes(customer.email) ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                      <span className="truncate">{customer.email}</span>
-                    </CommandItem>
-                  ))}
+                  {(customers ?? []).map((customer) => {
+                    const isSelected = selectedCustomers.includes(customer.email);
+                    return (
+                      <CommandItem
+                        key={customer.id}
+                        onSelect={() => {
+                          onChange(
+                            isSelected
+                              ? selectedCustomers.filter((c) => c !== customer.email)
+                              : [...selectedCustomers, customer.email],
+                          );
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${isSelected ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{customer.email}</span>
+                      </CommandItem>
+                    );
+                  })}
                 </CommandGroup>
               </>
             )}
@@ -104,4 +106,4 @@ export function CustomerFilter({
       </PopoverContent>
     </Popover>
   );
-}
+});

@@ -114,7 +114,7 @@ export class ConversationsPage extends BasePage {
   async refreshAndWaitForAuth() {
     await this.page.reload();
     await this.page.waitForLoadState("networkidle");
-    await expect(this.page).toHaveURL(/.*mailboxes.*gumroad.*mine.*/);
+    await expect(this.page).toHaveURL(/.*mine.*/);
     await this.waitForConversationsLoad();
   }
 

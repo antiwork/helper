@@ -338,6 +338,7 @@ const NewConversationModal = () => {
           variant="default"
           iconOnly
           className="fixed z-50 bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
+          aria-label="New message"
         >
           <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
         </Button>

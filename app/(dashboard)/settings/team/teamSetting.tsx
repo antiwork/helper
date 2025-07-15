@@ -2,19 +2,20 @@
 
 import { Search } from "lucide-react";
 import { useState } from "react";
-import LoadingSpinner from "@/components/loadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
+import { TeamSettingLoadingSkeleton } from "./teamSettingLoadingSkeleton";
 
 const TeamSetting = () => {
   const { data, isLoading } = api.mailbox.members.list.useQuery();
   const teamMembers = data?.members ?? [];
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: permissionsData } = api.user.getPermissions.useQuery();
+  const { user } = useSession();
 
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
@@ -32,9 +33,9 @@ const TeamSetting = () => {
       fullWidth
     >
       <div className="w-full space-y-6">
-        {permissionsData?.isAdmin && <AddMember teamMembers={teamMembers} />}
+        {user?.permissions === "admin" && <AddMember teamMembers={teamMembers} />}
 
-        {teamMembers.length > 0 && (
+        {(teamMembers.length > 0 || isLoading) && (
           <Input
             placeholder="Search..."
             value={searchTerm}
@@ -48,23 +49,17 @@ const TeamSetting = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="w-[120px]">Permissions</TableHead>
-                <TableHead className="w-[180px]">Support role</TableHead>
-                <TableHead className="min-w-[200px]">Auto-assign keywords</TableHead>
+                <TableHead className="min-w-[140px]">Name</TableHead>
+                <TableHead className="w-[100px]">Permissions</TableHead>
+                <TableHead className="w-[100px]">Support role</TableHead>
+                <TableHead className="min-w-[180px]">Auto-assign keywords</TableHead>
                 <TableHead>Actions</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <div className="flex justify-center">
-                      <LoadingSpinner size="md" />
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TeamSettingLoadingSkeleton />
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
@@ -75,7 +70,7 @@ const TeamSetting = () => {
                 </TableRow>
               ) : (
                 filteredTeamMembers.map((member) => (
-                  <TeamMemberRow key={member.id} member={member} isAdmin={permissionsData?.isAdmin ?? false} />
+                  <TeamMemberRow key={member.id} member={member} isAdmin={user?.permissions === "admin"} />
                 ))
               )}
             </TableBody>
