@@ -232,7 +232,7 @@ export const useMainPage = ({
         ? [
             {
               heading: "Saved replies",
-              items: savedReplies.slice(0, 10).map((savedReply) => ({
+              items: savedReplies.map((savedReply) => ({
                 id: savedReply.slug,
                 label: savedReply.name,
                 icon: SavedReplyIcon,
