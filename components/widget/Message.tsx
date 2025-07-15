@@ -112,15 +112,33 @@ export default function Message({
           color={color}
         />
         {message.experimental_attachments?.map((attachment) => (
-          <a
-            key={attachment.url}
-            href={attachment.url}
-            className="block p-4 pt-0"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img className="w-full rounded-lg" src={attachment.url} alt={attachment.name} />
-          </a>
+          <div key={attachment.url} className="p-4 pt-0">
+            <button
+              type="button"
+              className="w-full text-left rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              onClick={() => {
+                if (attachment.url.startsWith("data:")) {
+                  const link = document.createElement("a");
+                  link.href = attachment.url;
+                  link.target = "_blank";
+                  link.rel = "noopener noreferrer";
+                  link.download = attachment.name || "image";
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                } else {
+                  window.open(attachment.url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              aria-label={`View image: ${attachment.name}`}
+            >
+              <img
+                className="w-full rounded-lg hover:opacity-90 transition-opacity"
+                src={attachment.url}
+                alt={attachment.name}
+              />
+            </button>
+          </div>
         ))}
         {!message.experimental_attachments?.length && attachments.length > 0 && (
           <div className="p-4 pt-0 flex flex-col gap-2">

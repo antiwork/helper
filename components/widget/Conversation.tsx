@@ -242,8 +242,8 @@ export default function Conversation({
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
 
-  const handleSubmit = async (screenshotData?: string) => {
-    if (!input.trim()) return;
+  const handleSubmit = async (screenshotData?: string, attachments?: File[]) => {
+    if (!input.trim() && !screenshotData && (!attachments || attachments.length === 0)) return;
 
     setData(undefined);
 
@@ -255,10 +255,48 @@ export default function Conversation({
 
       if (currentSlug) {
         setIsNewConversation(false);
+
+        const attachmentsToSend = [];
+
+        if (screenshotData) {
+          attachmentsToSend.push({
+            name: "screenshot.png",
+            contentType: "image/png",
+            url: screenshotData,
+          });
+        }
+
+        if (attachments && attachments.length > 0) {
+          const filePromises = attachments.map(async (file) => {
+            try {
+              const reader = new FileReader();
+              const dataUrl = await new Promise<string>((resolve, reject) => {
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+                reader.readAsDataURL(file);
+              });
+
+              return {
+                name: file.name,
+                contentType: file.type,
+                url: dataUrl,
+              };
+            } catch (error) {
+              captureExceptionAndLog(error);
+              return null;
+            }
+          });
+
+          const fileResults = await Promise.all(filePromises);
+          fileResults.forEach((result) => {
+            if (result) {
+              attachmentsToSend.push(result);
+            }
+          });
+        }
+
         handleAISubmit(undefined, {
-          experimental_attachments: screenshotData
-            ? [{ name: "screenshot.png", contentType: "image/png", url: screenshotData }]
-            : [],
+          experimental_attachments: attachmentsToSend,
           body: { conversationSlug: currentSlug },
         });
       }

@@ -234,7 +234,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             value={displayNameInput}
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
-            className="w-full max-w-sm"
+            className="w-full max-w-lg"
           />
         ) : (
           <span>{member.displayName || "No display name"}</span>
@@ -243,7 +243,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue placeholder="Permissions" />
             </SelectTrigger>
             <SelectContent>
@@ -258,7 +258,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
@@ -273,7 +273,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       </TableCell>
       <TableCell>
         {isAdmin ? (
-          <div className="w-[200px]">
+          <div className="w-[180px]">
             <Input
               value={keywordsInput}
               onChange={(e) => handleKeywordsChange(e.target.value)}
@@ -305,7 +305,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           </DeleteMemberDialog>
         )}
       </TableCell>
-      <TableCell className="w-[120px]">
+      <TableCell className="min-w-[120px]">
         <div className="flex items-center gap-2">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={permissionsSaving.state} />

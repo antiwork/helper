@@ -304,7 +304,7 @@ class HelperWidget {
         this.sendMessageToEmbed({
           action: "CONFIG",
           content: {
-            config: { ...this.config, viewportWidth: window.innerWidth },
+            config: { ...this.config, viewportWidth: window.innerWidth, isMinimized: this.isMinimized },
             sessionToken: this.sessionToken,
             pageHTML: document.documentElement.outerHTML,
             currentURL: window.location.href,
@@ -450,7 +450,7 @@ class HelperWidget {
     this.sendMessageToEmbed({
       action: "CONFIG",
       content: {
-        config: { ...this.config, viewportWidth: window.innerWidth },
+        config: { ...this.config, viewportWidth: window.innerWidth, isMinimized: this.isMinimized },
         sessionToken: this.sessionToken,
         pageHTML: document.documentElement.outerHTML,
         currentURL: window.location.href,
@@ -657,6 +657,7 @@ class HelperWidget {
       if (this.toggleButton) {
         this.toggleButton.classList.add("with-minimized-widget");
       }
+      this.initFrameConfig();
     }
   }
 
@@ -672,6 +673,7 @@ class HelperWidget {
       if (this.toggleButton) {
         this.toggleButton.classList.remove("with-minimized-widget");
       }
+      this.initFrameConfig();
     }
   }
 

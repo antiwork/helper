@@ -1,12 +1,13 @@
-import { Camera, Mic } from "lucide-react";
+import { Camera, Mic, Paperclip, X } from "lucide-react";
 import * as motion from "motion/react-client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ShadowHoverButton from "@/components/widget/ShadowHoverButton";
 import { useScreenshotStore } from "@/components/widget/widgetState";
+import { validateClientAttachments } from "@/lib/shared/attachmentValidation";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 import { closeWidget, sendScreenshot } from "@/lib/widget/messages";
@@ -15,7 +16,7 @@ type Props = {
   input: string;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (screenshotData?: string) => void;
+  handleSubmit: (screenshotData?: string, attachments?: File[]) => void;
   isLoading: boolean;
   isGumroadTheme: boolean;
   placeholder?: string;
@@ -70,7 +71,13 @@ export default function ChatInput({
 }: Props) {
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const { screenshot, setScreenshot } = useScreenshotStore();
+
+  const pendingAttachmentsRef = useRef<File[]>([]);
+  const objectUrlsRef = useRef<Map<string, string>>(new Map());
 
   const handleSegment = useCallback(
     (segment: string) => {
@@ -116,6 +123,7 @@ export default function ChatInput({
     if (!input) {
       setShowScreenshot(false);
       setIncludeScreenshot(false);
+      setSelectedFiles([]);
     } else if (SCREENSHOT_KEYWORDS.some((keyword) => input.toLowerCase().includes(keyword))) {
       setShowScreenshot(true);
     }
@@ -123,10 +131,116 @@ export default function ChatInput({
 
   useEffect(() => {
     if (screenshot?.response) {
-      handleSubmit(screenshot.response);
+      const pendingAttachments = pendingAttachmentsRef.current;
+      pendingAttachmentsRef.current = [];
+
+      handleSubmit(screenshot.response, pendingAttachments.length > 0 ? pendingAttachments : undefined);
       setScreenshot(null);
+
+      // Clean up all object URLs when clearing files
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      objectUrlsRef.current.clear();
+      setSelectedFiles([]);
     }
-  }, [screenshot]);
+  }, [screenshot, handleSubmit]);
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      objectUrlsRef.current.clear();
+    };
+  }, []);
+
+  // Memoized object URLs to prevent recreation on every render
+  const filePreviewData = useMemo(() => {
+    return selectedFiles.map((file) => {
+      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+      let objectUrl = objectUrlsRef.current.get(fileKey);
+
+      if (!objectUrl) {
+        objectUrl = URL.createObjectURL(file);
+        objectUrlsRef.current.set(fileKey, objectUrl);
+      }
+
+      return {
+        file,
+        objectUrl,
+        key: fileKey,
+      };
+    });
+  }, [selectedFiles]);
+
+  const validateAndFilterFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+
+    const validationResult = validateClientAttachments(
+      fileArray.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      })),
+      selectedFiles.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      })),
+    );
+
+    if (!validationResult.isValid) {
+      setFileError(validationResult.errors.join(", "));
+      setTimeout(() => setFileError(null), 5000);
+      return [];
+    }
+
+    setFileError(null);
+    return fileArray.filter((file) => file.type.startsWith("image/"));
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const validFiles = validateAndFilterFiles(files);
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => {
+      const fileToRemove = prev[index];
+      if (fileToRemove) {
+        // Clean up object URL for removed file
+        const fileKey = `${fileToRemove.name}-${fileToRemove.size}-${fileToRemove.lastModified}`;
+        const objectUrl = objectUrlsRef.current.get(fileKey);
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrlsRef.current.delete(fileKey);
+        }
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = validateAndFilterFiles(files);
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
 
   const submit = () => {
     const normalizedInput = input.trim().toLowerCase();
@@ -141,9 +255,15 @@ export default function ChatInput({
       return;
     }
     if (includeScreenshot) {
+      pendingAttachmentsRef.current = [...selectedFiles];
       sendScreenshot();
     } else {
-      handleSubmit();
+      handleSubmit(undefined, selectedFiles.length > 0 ? selectedFiles : undefined);
+
+      // Clean up all object URLs when clearing files
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      objectUrlsRef.current.clear();
+      setSelectedFiles([]);
     }
   };
 
@@ -156,14 +276,21 @@ export default function ChatInput({
   };
 
   return (
-    <div className="border-t border-black p-4 bg-white">
+    <div
+      className={cn("border-t border-black p-4 bg-background", {
+        "bg-muted": isDragOver,
+      })}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault();
           stopRecording();
           submit();
         }}
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-2 relative"
       >
         <div className="flex-1 flex items-start">
           <Textarea
@@ -181,10 +308,31 @@ export default function ChatInput({
               }
             }}
             placeholder={placeholder}
-            className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-white p-0 pr-3 outline-none focus:border-none focus:outline-none focus:ring-0 min-h-[24px] max-h-[200px]"
+            className="self-stretch max-w-md placeholder:text-muted-foreground text-foreground flex-1 resize-none border-none bg-background p-0 pr-3 outline-none focus:border-none focus:outline-none focus:ring-0 min-h-[24px] max-h-[200px]"
             disabled={isLoading}
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <label
+                    className="text-primary hover:text-muted-foreground p-2 rounded-full hover:bg-muted cursor-pointer"
+                    aria-label="Attach images"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileSelect}
+                      disabled={isLoading}
+                    />
+                  </label>
+                </TooltipTrigger>
+                <TooltipContent>Attach images</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {isSupported && (
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
@@ -213,6 +361,56 @@ export default function ChatInput({
             <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
           </div>
         </div>
+        {fileError && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 30,
+            }}
+            className="absolute bottom-full left-4 right-4 mb-2 bg-red-50 border border-red-200 rounded-lg p-2 shadow-lg z-50"
+          >
+            <div className="text-sm text-red-600">{fileError}</div>
+          </motion.div>
+        )}
+        {selectedFiles.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 30,
+            }}
+            className="flex flex-wrap gap-2"
+          >
+            {filePreviewData.map(({ file, objectUrl, key }, index) => (
+              <TooltipProvider key={key} delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative border border-black rounded flex items-center gap-2">
+                      <img src={objectUrl} alt={file.name} className="w-10 h-10 object-cover rounded-l" />
+                      <div className="text-sm truncate max-w-20 text-black">{file.name}</div>
+                      <button
+                        type="button"
+                        className="p-2 pl-0"
+                        onClick={() => removeFile(index)}
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        <X className="w-3 h-3 text-black" />
+                      </button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>{file.name}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </motion.div>
+        )}
         {showScreenshot && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}

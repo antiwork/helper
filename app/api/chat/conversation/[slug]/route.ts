@@ -68,9 +68,19 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,
       annotations: message.userId ? await getUserAnnotation(message.userId) : undefined,
-      experimental_attachments: (message.metadata as MessageMetadata)?.includesScreenshot
-        ? attachments.filter((a) => a.messageId === message.id)
-        : [],
+      experimental_attachments:
+        (message.metadata as MessageMetadata)?.hasAttachments ||
+        (message.metadata as MessageMetadata)?.includesScreenshot
+          ? await Promise.all(
+              attachments
+                .filter((a) => a.messageId === message.id)
+                .map(async (a) => ({
+                  name: a.name,
+                  url: await getFileUrl(a),
+                  contentType: a.mimetype,
+                })),
+            )
+          : [],
     })),
   );
 

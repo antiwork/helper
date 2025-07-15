@@ -29,6 +29,7 @@
   right: 20px;
   transform: translateX(0);
   opacity: 1;
+  pointer-events: auto;
 }
 
 .helper-widget-wrapper.temporarily-hidden {
@@ -240,6 +241,7 @@
   align-items: center;
   justify-content: center;
   z-index: 2147482998;
+  pointer-events: auto;
 }
 
 .helper-widget-icon:hover {

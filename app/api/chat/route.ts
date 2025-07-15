@@ -5,12 +5,13 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
-import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { ClientProvidedTool, createUserMessage, respondWithAI } from "@/lib/ai/chat";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
   getConversationBySlugAndMailbox,
 } from "@/lib/data/conversation";
+import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 
@@ -23,6 +24,7 @@ interface ChatRequestBody {
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
   isToolResult?: boolean;
+  tools?: ClientProvidedTool[];
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
@@ -49,28 +51,47 @@ export function OPTIONS() {
 }
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
 
   const conversation = await getConversation(conversationSlug, session);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
-  const screenshotData = message.experimental_attachments?.[0]?.url;
+  const attachments = message.experimental_attachments ?? [];
 
-  if (
-    (message.experimental_attachments ?? []).length > 1 ||
-    (screenshotData && !screenshotData.startsWith("data:image/png;base64,"))
-  ) {
-    return corsResponse(
-      { error: "Only a single PNG image attachment sent via data URL is supported" },
-      { status: 400 },
-    );
+  const validationResult = validateAttachments(
+    attachments.map((att) => ({
+      name: att.name || "unknown",
+      url: att.url,
+      type: att.contentType,
+    })),
+  );
+
+  if (!validationResult.isValid) {
+    return corsResponse({ error: validationResult.errors.join(", ") }, { status: 400 });
   }
+
+  const attachmentData = attachments.map((attachment) => {
+    if (!attachment.url) {
+      throw new Error(`Attachment ${attachment.name || "unknown"} is missing URL`);
+    }
+
+    const [, base64Data] = attachment.url.split(",");
+    if (!base64Data) {
+      throw new Error(`Attachment ${attachment.name || "unknown"} has invalid URL format`);
+    }
+
+    return {
+      name: attachment.name || "unknown.png",
+      contentType: attachment.contentType || "image/png",
+      data: base64Data,
+    };
+  });
 
   const userMessage = await createUserMessage(
     conversation.id,
     userEmail,
-    message.content,
-    screenshotData?.replace("data:image/png;base64,", ""),
+    message.content || (attachmentData.length > 0 ? "[Image]" : ""),
+    attachmentData,
   );
 
   const supabase = await createClient();
@@ -90,6 +111,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     sendEmail: false,
     reasoningEnabled: false,
     isHelperUser,
+    tools,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||

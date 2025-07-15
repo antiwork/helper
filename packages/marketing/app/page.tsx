@@ -122,17 +122,19 @@ export default function Home() {
       <div className="flex-grow">
         <section className="flex items-center justify-center h-dvh pt-20">
           <div className="container mx-auto px-4">
-            <h1 className="text-5xl sm:text-6xl font-bold mb-24 text-center text-secondary dark:text-foreground">
+            <h1 className="text-5xl sm:text-6xl font-bold mb-12 sm:mb-24 text-center text-secondary dark:text-foreground">
               Helper helps customers help themselves.
             </h1>
 
             <div className="max-w-lg mx-auto">
               {showCustomerMessage && (
                 <motion.div
-                  className="flex justify-end mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
+                  className="flex justify-end mb-4 sm:mb-8"
+                  initial={{ opacity: 0, y: 20, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  transition={{ duration: 0.5, height: { duration: 0.6, ease: "easeOut" } }}
+                  style={{ overflow: "hidden" }}
+                  layout
                 >
                   <div className="max-w-md w-full">
                     <div className="bg-[rgba(99,72,71,0.3)] dark:bg-muted rounded-t-2xl rounded-bl-2xl p-6 shadow-md min-h-[80px] flex items-center">
@@ -143,8 +145,8 @@ export default function Home() {
                           onComplete={handleCustomerTypingComplete}
                         />
                       )}
-                    </div>
                     <div className="flex justify-end mt-2"></div>
+                  </div>
                   </div>
                 </motion.div>
               )}
@@ -152,12 +154,14 @@ export default function Home() {
               {showHelperMessage && (
                 <motion.div
                   className="flex mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
+                  initial={{ opacity: 0, y: 20, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  transition={{ duration: 0.5, height: { duration: 0.6, ease: "easeOut" } }}
+                  style={{ overflow: "hidden" }}
+                  layout
                 >
                   <div className="w-96">
-                    <div
+                    <motion.div
                       ref={helperMessageRef}
                       className="bg-[rgba(99,72,71,0.3)] dark:bg-muted rounded-t-2xl rounded-br-2xl p-6 shadow-md"
                     >
@@ -169,9 +173,10 @@ export default function Home() {
                       {showHelperButton && (
                         <motion.div
                           className="mt-4"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: 0.2 }}
+                          initial={{ opacity: 0, y: 10, height: 0 }}
+                          animate={{ opacity: 1, y: 0, height: "auto" }}
+                          transition={{ duration: 0.3, delay: 0.2, height: { duration: 0.4, ease: "easeOut" } }}
+                          style={{ overflow: "hidden" }}
                         >
                           <Button
                             ref={showMeButtonRef}
@@ -182,12 +187,18 @@ export default function Home() {
                           </Button>
                         </motion.div>
                       )}
-                    </div>
-                    <div className="flex justify-start mt-2">
+                    </motion.div>
+                    <motion.div
+                      className="flex justify-start mt-2"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      transition={{ duration: 0.4, delay: 0.3, height: { duration: 0.4, ease: "easeOut" } }}
+                      style={{ overflow: "hidden" }}
+                    >
                       <div className="w-8 h-8">
                         <LogoIconAmber />
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 </motion.div>
               )}

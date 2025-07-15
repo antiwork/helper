@@ -134,6 +134,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   const handleSwitchChange = (checked: boolean) => {
     const newMode = checked ? "always" : "off";
     setMode(newMode);
+    setShowChatWidget(newMode !== "off");
   };
 
   const plainJSPrompt = `

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 
 function withHelperWidget(callback: (helperWidget: typeof window.HelperWidget) => void) {

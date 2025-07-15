@@ -11,7 +11,7 @@ export default function ShadowHoverButton({
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative ml-2">
       <button
         type="submit"
         aria-label="Send message"

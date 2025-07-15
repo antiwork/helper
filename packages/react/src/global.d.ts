@@ -1,4 +1,4 @@
-import type { HelperWidgetConfig } from "@helperai/sdk";
+import type { HelperWidgetConfig } from "./types";
 
 declare global {
   interface Window {

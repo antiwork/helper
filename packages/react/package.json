@@ -2,6 +2,26 @@
   "name": "@helperai/react",
   "version": "0.6.0",
   "description": "React/Next.js integration for Helper chat widget",
+  "keywords": [
+    "helper",
+    "chat",
+    "ai",
+    "widget",
+    "sdk",
+    "react",
+    "nextjs",
+    "customer-service"
+  ],
+  "author": "Helper (https://helper.ai)",
+  "license": "MIT",
+  "homepage": "https://helper.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antiwork/helper.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "files": [
     "dist",
@@ -35,21 +55,5 @@
     "tsup": "^8.3.6",
     "typescript": "^5.3.3",
     "vitest": "^3.2.4"
-  },
-  "keywords": [
-    "helper",
-    "chat",
-    "ai",
-    "widget",
-    "sdk",
-    "react",
-    "nextjs",
-    "customer-service"
-  ],
-  "author": "Helper (https://helper.ai)",
-  "license": "MIT",
-  "homepage": "https://helper.ai",
-  "publishConfig": {
-    "access": "public"
   }
 }
