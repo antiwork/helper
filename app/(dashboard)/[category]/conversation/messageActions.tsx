@@ -309,7 +309,7 @@ export const MessageActions = () => {
           <div className="flex gap-2 items-center">
             {close && (
               <button
-                className="text-xs px-2 py-1 text-white underline hover:no-underline"
+                className="text-xs px-2 py-1 text-foreground underline hover:no-underline"
                 onClick={() => {
                   navigateToConversation(conversation.slug);
                 }}
@@ -318,7 +318,7 @@ export const MessageActions = () => {
               </button>
             )}
             <button
-              className="text-xs px-2 py-1 text-white underline hover:no-underline"
+              className="text-xs px-2 py-1 text-foreground underline hover:no-underline"
               onClick={() => {
                 setLastSentMessageId(emailId);
                 setShowKnowledgeBankDialog(true);
@@ -327,7 +327,7 @@ export const MessageActions = () => {
               Generate knowledge
             </button>
             <button
-              className="text-xs px-2 py-1 text-white underline hover:no-underline"
+              className="text-xs px-2 py-1 text-foreground underline hover:no-underline"
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
