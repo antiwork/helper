@@ -1,3 +1,5 @@
+"use client";
+
 import { Message, useChat as useAIChat } from "@ai-sdk/react";
 import { useEffect, useState } from "react";
 import { HelperTool } from "../components/HelperProvider";
