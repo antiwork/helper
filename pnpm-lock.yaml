@@ -602,10 +602,6 @@ importers:
         version: 5.8.3
 
   packages/react:
-    dependencies:
-      '@helperai/sdk':
-        specifier: '*'
-        version: 0.1.2
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3
@@ -2326,9 +2322,6 @@ packages:
     resolution: {integrity: sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==}
     engines: {node: '>=6'}
     hasBin: true
-
-  '@helperai/sdk@0.1.2':
-    resolution: {integrity: sha512-JDcbkr7l0jPbr5Yc6uKeMjZRHSsd3oBXl/1pGqzZfJsXfU0qejOW1e27oJvZzQuV261PO6rQcFgb6O+oP1CBqA==}
 
   '@heroku-cli/color@1.1.16':
     resolution: {integrity: sha512-97bYxNaDe/+GCUAKu0V2qudQmR3NFRnv3SrQd2FTtOAa9OWKwkvoBs2WzT7MkNwP4DIpYL6W/e3CSfShfhzEMw==}
@@ -14287,16 +14280,6 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.5.0
       yargs: 17.7.2
-
-  '@helperai/sdk@0.1.2':
-    dependencies:
-      '@rrweb/record': 2.0.0-alpha.18
-      '@rrweb/types': 2.0.0-alpha.18
-      modern-screenshot: 4.6.0
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      scroll-into-view-if-needed: 3.1.0
-      zod: 3.25.56
 
   '@heroku-cli/color@1.1.16':
     dependencies:
