@@ -1,16 +1,17 @@
 "use client";
 
 import { format } from "date-fns";
-import { Clock, PlusCircle, RefreshCw, Trash } from "lucide-react";
+import { Clock, Globe, PlusCircle, RefreshCw, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
-import SectionWrapper from "../sectionWrapper";
 
 const isValidUrl = (url: string) => {
   try {
@@ -21,7 +22,7 @@ const isValidUrl = (url: string) => {
   }
 };
 
-const WebsiteCrawlSetting = () => {
+export default function WebsiteCrawlSetting() {
   const [showAddWebsite, setShowAddWebsite] = useState(false);
   const [newWebsite, setNewWebsite] = useState({ name: "", url: "" });
   const [urlError, setUrlError] = useState("");
@@ -31,7 +32,7 @@ const WebsiteCrawlSetting = () => {
 
   const addWebsiteMutation = api.mailbox.websites.create.useMutation({
     onSuccess: () => {
-      toast.success("Website added!");
+      toast.success("Website added successfully");
       utils.mailbox.websites.list.invalidate();
       setShowAddWebsite(false);
       setNewWebsite({ name: "", url: "" });
@@ -43,7 +44,7 @@ const WebsiteCrawlSetting = () => {
 
   const deleteWebsiteMutation = api.mailbox.websites.delete.useMutation({
     onSuccess: () => {
-      toast.success("Website deleted!");
+      toast.success("Website deleted successfully");
       utils.mailbox.websites.list.invalidate();
     },
     onError: (error) => {
@@ -53,7 +54,7 @@ const WebsiteCrawlSetting = () => {
 
   const triggerCrawlMutation = api.mailbox.websites.triggerCrawl.useMutation({
     onSuccess: () => {
-      toast.success("Website scan started!", {
+      toast.success("Website scan started", {
         description: "The scan will run in the background. Check back later for results.",
       });
       utils.mailbox.websites.list.invalidate();
@@ -63,207 +64,233 @@ const WebsiteCrawlSetting = () => {
     },
   });
 
-  const handleAddWebsite = (url: string) => {
-    return addWebsiteMutation.mutateAsync({
-      url,
-    });
-  };
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      completed: { variant: "success", label: "Updated" },
+      failed: { variant: "destructive", label: "Failed" },
+      loading: { variant: "default", label: "Updating" },
+      pending: { variant: "default", label: "Pending" },
+    } as const;
 
-  const handleDeleteWebsite = async (websiteId: number) => {
-    await deleteWebsiteMutation.mutateAsync({
-      websiteId,
-    });
-  };
-
-  const handleTriggerCrawl = async (websiteId: number) => {
-    await triggerCrawlMutation.mutateAsync({
-      websiteId,
-    });
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    const baseClasses = "rounded-full px-2 py-1 text-xs font-medium";
-    const statusMap = {
-      completed: {
-        classes: `${baseClasses} bg-green-100 text-green-800`,
-        label: "Updated",
-      },
-      failed: {
-        classes: `${baseClasses} bg-red-100 text-red-800`,
-        label: "Failed",
-      },
-      loading: {
-        classes: `${baseClasses} bg-blue-100 text-blue-800`,
-        label: "Updating",
-      },
-      pending: {
-        classes: `${baseClasses} bg-yellow-100 text-yellow-800`,
-        label: "Pending",
-      },
-    };
+    const config = statusConfig[status as keyof typeof statusConfig] ?? { variant: "default", label: status };
 
     return (
-      statusMap[status as keyof typeof statusMap] ?? {
-        classes: `${baseClasses} bg-gray-100 text-gray-800`,
-        label: status,
-      }
+      <Badge variant={config.variant} className="h-6">
+        {config.label}
+      </Badge>
     );
   };
 
   return (
-    <>
-      <SectionWrapper
-        title="Website Learning"
-        description={
-          <>
-            <div className="mb-2">
-              Helper will learn about your product by reading your websites to provide better responses.
-            </div>
-            <div>Content is automatically updated weekly, but you can also update it manually.</div>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {isLoadingWebsites ? (
-            <>
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-4">
-                  <div className="grow space-y-2">
-                    <div className="h-4 w-32 rounded bg-secondary animate-skeleton" />
-                    <div className="h-4 w-48 rounded bg-secondary animate-skeleton" />
-                  </div>
-                  <div className="h-6 w-16 rounded bg-secondary animate-skeleton" />
-                </div>
-              ))}
-            </>
-          ) : (
-            websites.map((website) => {
-              const latestCrawl = website.latestCrawl;
-
-              return (
-                <div
-                  key={website.id}
-                  className="group relative flex items-center gap-4 rounded-lg border p-4 hover:bg-muted/50"
-                >
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm font-medium truncate">{website.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {website.pagesCount > 0 && (
-                          <span className="rounded-full bg-secondary px-2 py-0.5">{website.pagesCount} pages</span>
-                        )}
-                      </div>
-                    </div>
-                    <a
-                      href={website.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-muted-foreground hover:text-primary truncate block"
-                    >
-                      {website.url}
-                    </a>
-                    {latestCrawl && (
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className={getStatusBadgeColor(latestCrawl.status).classes}>
-                          {getStatusBadgeColor(latestCrawl.status).label}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {format(new Date(latestCrawl.startedAt), "MMM d, yyyy HH:mm")}
+    <div className="space-y-6 mt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Website Learning</CardTitle>
+          <CardDescription>
+            Helper will learn about your product by reading your websites to provide better responses.
+            Content is automatically updated weekly, but you can also update it manually.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {isLoadingWebsites ? (
+              <div className="space-y-4">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 space-y-3">
+                          <div className="h-5 w-40 rounded bg-muted" />
+                          <div className="h-4 w-60 rounded bg-muted" />
+                          <div className="h-4 w-32 rounded bg-muted" />
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="h-9 w-24 rounded bg-muted" />
+                          <div className="h-9 w-9 rounded bg-muted" />
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleTriggerCrawl(website.id)}
-                      disabled={triggerCrawlMutation.isPending || latestCrawl?.status === "loading"}
-                    >
-                      <RefreshCw
-                        className={`mr-2 h-4 w-4 ${latestCrawl?.status === "loading" ? "animate-spin" : ""}`}
-                      />
-                      {triggerCrawlMutation.isPending ? "Updating..." : "Update"}
-                    </Button>
-                    <ConfirmationDialog
-                      message="Are you sure you want to delete this website? All scanned pages will be deleted."
-                      onConfirm={() => {
-                        handleDeleteWebsite(website.id);
-                      }}
-                    >
-                      <Button variant="ghost" size="sm" disabled={deleteWebsiteMutation.isPending}>
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </ConfirmationDialog>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-        <div className="mt-4">
-          {showAddWebsite ? (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-
-                const urlWithProtocol = /^https?:\/\//i.test(newWebsite.url)
-                  ? newWebsite.url
-                  : `https://${newWebsite.url}`;
-
-                if (!isValidUrl(urlWithProtocol)) {
-                  setUrlError("Please enter a valid URL");
-                  return;
-                }
-                setUrlError("");
-
-                try {
-                  await handleAddWebsite(urlWithProtocol);
-                  setNewWebsite({ name: "", url: "" });
-                  setShowAddWebsite(false);
-                } catch (error) {
-                  captureExceptionAndLog(error);
-                  setUrlError("Failed to add website. Please try again.");
-                }
-              }}
-            >
-              <div className="border rounded-lg p-4 grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="url">URL</Label>
-                  <Input
-                    id="url"
-                    placeholder="https://example.com"
-                    value={newWebsite.url}
-                    onChange={(e) => {
-                      setNewWebsite({ ...newWebsite, name: "", url: e.target.value });
-                      setUrlError("");
-                    }}
-                    autoFocus
-                  />
-                  {urlError && <div className="text-sm text-destructive">{urlError}</div>}
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="ghost" onClick={() => setShowAddWebsite(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={addWebsiteMutation.isPending}>
-                    {addWebsiteMutation.isPending ? "Adding..." : "Add website"}
-                  </Button>
-                </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </form>
-          ) : (
-            <Button variant="subtle" onClick={() => setShowAddWebsite(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add website
-            </Button>
-          )}
-        </div>
-      </SectionWrapper>
-    </>
-  );
-};
+            ) : (
+              <>
+                {websites.map((website) => {
+                  const latestCrawl = website.latestCrawl;
 
-export default WebsiteCrawlSetting;
+                  return (
+                    <Card key={website.id}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1 min-w-0 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Globe className="h-4 w-4 text-muted-foreground" />
+                              <h3 className="text-sm font-medium truncate">{website.name}</h3>
+                              {website.pagesCount > 0 && (
+                                <Badge variant="default" className="h-6">
+                                                                    {website.pagesCount} pages
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <a
+                              href={website.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-muted-foreground hover:text-primary truncate block transition-colors"
+                            >
+                              {website.url}
+                            </a>
+
+                            {latestCrawl && (
+                              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                                {getStatusBadge(latestCrawl.status)}
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-4 w-4" />
+                                  {format(new Date(latestCrawl.startedAt), "MMM d, yyyy HH:mm")}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => triggerCrawlMutation.mutate({ websiteId: website.id })}
+                              disabled={triggerCrawlMutation.isPending || latestCrawl?.status === "loading"}
+                            >
+                              <RefreshCw
+                                className={`mr-2 h-4 w-4 ${latestCrawl?.status === "loading" ? "animate-spin" : ""}`}
+                              />
+                              {triggerCrawlMutation.isPending ? "Updating..." : "Update"}
+                            </Button>
+
+                            <ConfirmationDialog
+                              message="Are you sure you want to delete this website? All scanned pages will be deleted."
+                              onConfirm={() => deleteWebsiteMutation.mutate({ websiteId: website.id })}
+                            >
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                                disabled={deleteWebsiteMutation.isPending}
+                              >
+                                <Trash className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </ConfirmationDialog>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                {websites.length === 0 && !showAddWebsite && (
+                  <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+                      <Globe className="h-8 w-8 text-muted-foreground" />
+                      <div className="space-y-1">
+                        <h3 className="font-semibold">No websites added</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Add your first website to help Helper learn about your product
+                        </p>
+                      </div>
+                      <Button 
+                        variant="outlined" 
+                        onClick={() => setShowAddWebsite(true)}
+                        className="mt-2"
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add your first website
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
+            {showAddWebsite && (
+              <Card>
+                <CardContent className="p-6">
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const urlWithProtocol = /^https?:\/\//i.test(newWebsite.url)
+                        ? newWebsite.url
+                        : `https://${newWebsite.url}`;
+
+                      if (!isValidUrl(urlWithProtocol)) {
+                        setUrlError("Please enter a valid URL");
+                        return;
+                      }
+                      
+                      try {
+                        await addWebsiteMutation.mutateAsync({ url: urlWithProtocol });
+                      } catch (error) {
+                        captureExceptionAndLog(error);
+                        setUrlError("Failed to add website. Please try again.");
+                      }
+                    }}
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="url" className="text-sm font-medium">
+                          Website URL
+                        </Label>
+                        <div className="mt-1.5">
+                          <Input
+                            id="url"
+                            placeholder="https://example.com"
+                            value={newWebsite.url}
+                            onChange={(e) => {
+                              setNewWebsite({ ...newWebsite, name: "", url: e.target.value });
+                              setUrlError("");
+                            }}
+                            autoFocus
+                            className="max-w-md"
+                          />
+                          {urlError && (
+                            <p className="mt-2 text-sm text-destructive">{urlError}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          onClick={() => setShowAddWebsite(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={addWebsiteMutation.isPending}
+                        >
+                          {addWebsiteMutation.isPending ? "Adding..." : "Add website"}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {!showAddWebsite && websites.length > 0 && (
+              <Button 
+                variant="outlined" 
+                onClick={() => setShowAddWebsite(true)}
+                className="w-full sm:w-auto"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add another website
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
