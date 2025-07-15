@@ -228,7 +228,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           <span className="truncate">{member.email || "No email"}</span>
         </div>
       </TableCell>
-      <TableCell className="w-[150px">
+      <TableCell className="w-[150px]">
         {isAdmin || member.id === currentUser?.id ? (
           <Input
             value={displayNameInput}
