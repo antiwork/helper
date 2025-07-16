@@ -272,6 +272,24 @@ const createSettingsPageRecords = async () => {
     authenticationToken: gumroadDevToken,
   });
 
+  await toolsFactory.create({
+    name: "Resend all receipts",
+    description: "Resend all receipt emails to the user",
+    slug: "resend_all_receipts",
+    requestMethod: "POST",
+    url: "http://app.gumroad.dev/internal/helper/purchases/resend_all_receipts",
+    parameters: [
+      {
+        in: "body",
+        name: "email",
+        type: "string",
+        required: true,
+      },
+    ],
+    authenticationMethod: "bearer_token",
+    authenticationToken: gumroadDevToken,
+  });
+
   await faqsFactory.create({
     content: "1. You are a helpful customer support assistant.",
   });
