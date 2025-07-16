@@ -21,7 +21,10 @@ export const searchSchema = z.object({
   repliedBefore: z.string().datetime().optional().describe("Filter tickets where a human has replied before this date"),
   repliedBy: z.array(z.string().uuid()).optional().describe("ID of team members who have replied to the conversation"),
   customer: z.array(z.string()).optional().describe("Email address of the customer who opened the ticket"),
-  anonymousSessionId: z.string().optional().describe("Anonymous session ID for identifying anonymous user conversations"),
+  anonymousSessionId: z
+    .string()
+    .optional()
+    .describe("Anonymous session ID for identifying anonymous user conversations"),
   isVip: z.boolean().optional().describe("Filter by VIP customers"),
   minValueDollars: z.number().optional().describe("Filter by customers with a minimum value"),
   maxValueDollars: z.number().optional().describe("Filter by customers with a maximum value"),
