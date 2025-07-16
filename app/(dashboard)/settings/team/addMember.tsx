@@ -57,7 +57,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding && permissions;
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col gap-4 md:flex-row">
       <div className="relative flex-1">
         <Label className="sr-only" htmlFor="email-input">
           Email Address

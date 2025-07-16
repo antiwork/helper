@@ -7,6 +7,7 @@ import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -221,99 +222,217 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
   };
 
   return (
-    <TableRow>
-      <TableCell>
-        <div className="flex items-center gap-3">
-          <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate">{member.email || "No email"}</span>
-        </div>
-      </TableCell>
-      <TableCell>
-        {isAdmin || member.id === currentUser?.id ? (
-          <Input
-            value={displayNameInput}
-            onChange={(e) => handleDisplayNameChange(e.target.value)}
-            placeholder="Enter display name"
-            className="w-full max-w-lg"
-          />
-        ) : (
-          <span>{member.displayName || "No display name"}</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {isAdmin ? (
-          <Select value={permissions} onValueChange={handlePermissionsChange}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="Permissions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
-              <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {isAdmin ? (
-          <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {isAdmin ? (
-          <div className="w-[180px]">
-            <Input
-              value={keywordsInput}
-              onChange={(e) => handleKeywordsChange(e.target.value)}
-              placeholder="Enter keywords separated by commas"
-              className={role === "nonCore" ? "" : "invisible"}
-            />
+    <>
+      <TableRow className="hidden md:table-row">
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <Avatar fallback={getAvatarFallback(member)} size="sm" />
+            <span className="truncate">{member.email || "No email"}</span>
           </div>
-        ) : (
-          <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
-            {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
-          </span>
-        )}
-      </TableCell>
-      <TableCell>
-        {currentUser?.id !== member.id && isAdmin && (
-          <DeleteMemberDialog
-            member={{ id: member.id, displayName: member.displayName }}
-            description={
-              count?.total && count?.total > 0
-                ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
-                : `Are you sure you want to remove ${member.displayName || member.email}?`
-            }
-            assignedConversationCount={count?.total || 0}
-          >
-            <Button variant="ghost" size="sm" iconOnly>
-              <Trash className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
-            </Button>
-          </DeleteMemberDialog>
-        )}
-      </TableCell>
-      <TableCell className="min-w-[120px]">
-        <div className="flex items-center gap-2">
-          <SavingIndicator state={displayNameSaving.state} />
-          <SavingIndicator state={permissionsSaving.state} />
-          <SavingIndicator state={roleSaving.state} />
-          {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
-        </div>
-      </TableCell>
-    </TableRow>
+        </TableCell>
+        <TableCell>
+          {isAdmin || member.id === currentUser?.id ? (
+            <Input
+              aria-label="Display Name"
+              value={displayNameInput}
+              onChange={(e) => handleDisplayNameChange(e.target.value)}
+              placeholder="Enter display name"
+              className="w-full max-w-lg"
+            />
+          ) : (
+            <span>{member.displayName || "No display name"}</span>
+          )}
+        </TableCell>
+        <TableCell>
+          {isAdmin ? (
+            <Select value={permissions} onValueChange={handlePermissionsChange}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Permissions" aria-label="Select permissions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
+                <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
+          )}
+        </TableCell>
+        <TableCell>
+          {isAdmin ? (
+            <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
+              <SelectTrigger className="w-[100px]" aria-label="Select role">
+                <SelectValue placeholder="Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+                <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+                <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
+          )}
+        </TableCell>
+        <TableCell>
+          {isAdmin ? (
+            <div className="w-[180px]">
+              <Input
+                aria-label="Keywords"
+                value={keywordsInput}
+                onChange={(e) => handleKeywordsChange(e.target.value)}
+                placeholder="Enter keywords separated by commas"
+                className={role === "nonCore" ? "" : "invisible"}
+              />
+            </div>
+          ) : (
+            <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
+              {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
+            </span>
+          )}
+        </TableCell>
+        <TableCell>
+          {currentUser?.id !== member.id && isAdmin && (
+            <DeleteMemberDialog
+              member={{ id: member.id, displayName: member.displayName }}
+              description={
+                count?.total && count?.total > 0
+                  ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                  : `Are you sure you want to remove ${member.displayName || member.email}?`
+              }
+              assignedConversationCount={count?.total || 0}
+            >
+              <Button variant="ghost" size="sm" iconOnly>
+                <Trash className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </DeleteMemberDialog>
+          )}
+        </TableCell>
+        <TableCell className="min-w-[120px]">
+          <div className="flex items-center gap-2">
+            <SavingIndicator state={displayNameSaving.state} />
+            <SavingIndicator state={permissionsSaving.state} />
+            <SavingIndicator state={roleSaving.state} />
+            {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
+          </div>
+        </TableCell>
+      </TableRow>
+
+      <Card className="md:hidden mb-4">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar size="sm" fallback={getAvatarFallback(member)}></Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">{member.displayName || member.email}</div>
+                <div className="text-sm text-muted-foreground truncate">{member.email}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <SavingIndicator state={displayNameSaving.state} />
+              <SavingIndicator state={permissionsSaving.state} />
+              <SavingIndicator state={roleSaving.state} />
+              {role === "nonCore" && <SavingIndicator state={keywordsSaving.state} />}
+            </div>
+          </div>
+
+          {(isAdmin || member.id === currentUser?.id) && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Display Name</label>
+              <Input
+                aria-label="Display Name"
+                value={displayNameInput}
+                onChange={(e) => handleDisplayNameChange(e.target.value)}
+                placeholder="Enter display name"
+                className="w-full"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Role</label>
+              {isAdmin ? (
+                <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
+                  <SelectTrigger className="w-full" aria-label="Select role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+                    <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+                    <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm py-2">{ROLE_DISPLAY_NAMES[role]}</div>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Permissions</label>
+              {isAdmin ? (
+                <Select value={permissions} onValueChange={handlePermissionsChange}>
+                  <SelectTrigger className="w-full" aria-label="Select permissions">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
+                    <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm py-2">{PERMISSIONS_DISPLAY_NAMES[permissions]}</div>
+              )}
+            </div>
+          </div>
+
+          {role === "nonCore" && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Keywords</label>
+              {isAdmin ? (
+                <Input
+                  aria-label="Keywords"
+                  value={keywordsInput}
+                  onChange={(e) => handleKeywordsChange(e.target.value)}
+                  placeholder="Enter keywords separated by commas"
+                  className="w-full"
+                />
+              ) : (
+                <div className="text-sm py-2 text-muted-foreground">
+                  {member.keywords.length > 0 ? member.keywords.join(", ") : "No keywords"}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="text-xs text-muted-foreground">Assigned conversations: {count?.total ?? 0}</div>
+
+          {currentUser?.id !== member.id && isAdmin && (
+            <>
+              <div className="border-t pt-2">
+                <div className="flex justify-end">
+                  <DeleteMemberDialog
+                    member={{ id: member.id, displayName: member.displayName }}
+                    description={
+                      count?.total && count?.total > 0
+                        ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                        : `Are you sure you want to remove ${member.displayName || member.email}?`
+                    }
+                    assignedConversationCount={count?.total || 0}
+                  >
+                    <Button variant="destructive" size="sm">
+                      <Trash className="h-4 w-4 mr-2" />
+                      Remove Member
+                    </Button>
+                  </DeleteMemberDialog>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 };
 
