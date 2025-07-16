@@ -82,6 +82,9 @@ export const searchConversations = async (
         }
       : {}),
     ...(filters.customer?.length ? { customer: inArray(conversations.emailFrom, filters.customer) } : {}),
+    ...(filters.anonymousSessionId
+      ? { anonymousSessionId: eq(conversations.anonymousSessionId, filters.anonymousSessionId) }
+      : {}),
     ...(filters.reactionType
       ? {
           reaction: exists(

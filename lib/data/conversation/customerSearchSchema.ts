@@ -14,6 +14,10 @@ export const customerSearchSchema = z.object({
   createdAfter: z.string().datetime().optional().describe("Filter conversations created after this date"),
   createdBefore: z.string().datetime().optional().describe("Filter conversations created before this date"),
   customer: z.array(z.string()).optional().describe("Email address of the customer who opened the conversation"),
+  anonymousSessionId: z
+    .string()
+    .optional()
+    .describe("Anonymous session ID for identifying anonymous user conversations"),
   isVip: z.boolean().optional().describe("Filter by VIP customers"),
   minValueDollars: z.number().optional().describe("Filter by customers with a minimum value"),
   maxValueDollars: z.number().optional().describe("Filter by customers with a maximum value"),
