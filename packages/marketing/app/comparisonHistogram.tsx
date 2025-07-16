@@ -19,12 +19,13 @@ function ComparisonHistogram() {
 
   const chartColors = {
     background: "var(--color-card, #250404)",
-    text: "var(--color-foreground, #FFE6B0)",
+    text: "var(--color-foreground, #FFE6B0)", 
     textSecondary: "var(--color-muted-foreground, #fff)",
     withHelper: "#FEB81D",
     withoutHelper: "#FF4343",
     tooltipBg: "var(--color-card, #250404)",
-    cursorHover: "rgba(255,255,255,0.04)"
+    cursorHover: "rgba(255,255,255,0.04)",
+    foreground: "var(--color-foreground, #fff)"
   };
 
   return (
@@ -47,7 +48,7 @@ function ComparisonHistogram() {
               axisLine={false}
               tickLine={false}
               tick={{ 
-                fill: "var(--color-foreground, #FFE6B0)", 
+                fill: chartColors.text,
                 fontSize: isAboveMd ? 14 : 12, 
                 fontWeight: 500, 
                 dy: isAboveMd ? 12 : 8 
@@ -57,7 +58,7 @@ function ComparisonHistogram() {
               axisLine={false}
               tickLine={false}
               tick={{ 
-                fill: "var(--color-foreground, #fff)", 
+                fill: chartColors.foreground, 
                 fontSize: isAboveMd ? 16 : 12, 
                 fontWeight: 400 
               }}
@@ -66,7 +67,7 @@ function ComparisonHistogram() {
                 value: "minutes",
                 angle: -90,
                 position: "insideLeft",
-                fill: "var(--color-foreground, #FFE6B0)",
+                fill: chartColors.text,
                 fontSize: isAboveMd ? 16 : 12,
                 fontWeight: 500,
                 dx: isAboveMd ? -10 : -8,
@@ -77,10 +78,10 @@ function ComparisonHistogram() {
                 backgroundColor: chartColors.tooltipBg, 
                 border: "1px solid var(--color-border, transparent)", 
                 borderRadius: 8, 
-                color: "var(--color-foreground, #fff)",
+                color: chartColors.foreground,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
               }}
-              labelStyle={{ color: "var(--color-foreground, #fff)" }}
+              labelStyle={{ color: chartColors.foreground }}
               cursor={{ fill: "var(--color-muted, rgba(255,255,255,0.04))" }}
               formatter={(value: number) => (value === 1 ? `${value} minute` : `${value} minutes`)}
             />

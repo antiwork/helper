@@ -2,9 +2,6 @@
 @import "tw-animate-css";
 @import "fumadocs-ui/css/preset.css";
 
-@plugin "@tailwindcss/forms";
-@plugin "@tailwindcss/typography";
-
 @config '../tailwind.config.ts';
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -171,7 +168,7 @@
     --sidebar-width: 20rem;
     --sidebar-width-icon: 3rem;
     --sidebar-width-mobile: 60%; /* Mobile sidebar width */
-    --sidebar-background: hsl(220 15% 8%); /* Darker, more neutral sidebar */
+    --sidebar-background: #111418; /* Darker, more neutral sidebar */
     --sidebar-foreground: hsl(220 15% 95%); /* Higher contrast text */
     --sidebar-primary: hsl(220 15% 12%); /* Slightly lighter than background */
     --sidebar-primary-foreground: hsl(220 15% 95%);
