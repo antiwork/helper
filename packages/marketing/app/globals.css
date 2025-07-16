@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "fumadocs-ui/css/preset.css";
 
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+
 @config '../tailwind.config.ts';
 
 @custom-variant dark (&:where(.dark, .dark *));
