@@ -52,6 +52,7 @@ fi
 
 # Source the environment file to get SUPABASE_PROJECT_ID
 set -o allexport
+source .env.test
 source .env.test.local
 set +o allexport
 
