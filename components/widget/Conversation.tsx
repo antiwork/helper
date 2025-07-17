@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ReadPageToolConfig } from "@helperai/sdk";
+import type { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -79,9 +79,9 @@ export default function Conversation({
     "agent-reply",
     async (event) => {
       setIsAgentTyping(false);
-      const newMessage = {
+      const newMessage: MessageWithReaction = {
         id: `staff_${Date.now()}`,
-        role: "assistant",
+        role: "assistant" as const,
         content: event.data.message,
         createdAt: new Date(event.data.timestamp),
         reactionType: null,
