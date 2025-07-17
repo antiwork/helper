@@ -156,25 +156,10 @@ export const useMainPage = ({
             icon: ArrowUturnUpIcon,
             onSelect: () => {
               if (conversation?.emailFrom) {
-                setSelectedTool({
-                  slug: "refresh_library",
-                  name: "Refresh purchases in library",
-                  description: "Link purchases with missing purchaser_id to the user account",
-                  parameterTypes: [{ name: "email", type: "string", required: true, description: "Email address of the customer", in: "body" }],
-                  customerEmailParameter: "email",
-                  url: "",
-                  requestMethod: "POST",
-                  headers: {},
-                  authenticationMethod: "bearer_token",
-                  authenticationToken: "",
-                  parameters: [],
-                  enabled: true,
-                  availableInChat: false,
-                  availableInAnonymousChat: false,
-                  toolApiId: 0,
-                  createdAt: new Date(),
-                  updatedAt: new Date()
-                });
+                const refreshTool = tools?.all.find(tool => tool.slug === "refresh_library");
+                if (refreshTool) {
+                  setSelectedTool(refreshTool);
+                }
               }
               onOpenChange(false);
             },
