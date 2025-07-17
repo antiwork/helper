@@ -163,12 +163,15 @@ export const searchConversations = async (
         conversations_conversation: conversations,
         mailboxes_platformcustomer: platformCustomers,
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
+        recent_message_createdAt: sql<string | null>`recent_message.created_at`,
       })
       .from(conversations)
       .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
       .leftJoin(
         sql`LATERAL (
-          SELECT ${conversationMessages.cleanedUpText} as cleaned_up_text
+          SELECT
+            ${conversationMessages.cleanedUpText} as cleaned_up_text, 
+            ${conversationMessages.createdAt} as created_at
           FROM ${conversationMessages}
           WHERE ${and(
             eq(conversationMessages.conversationId, conversations.id),
@@ -186,12 +189,20 @@ export const searchConversations = async (
       .then((results) => ({
         results: results
           .slice(0, filters.limit)
-          .map(({ conversations_conversation, mailboxes_platformcustomer, recent_message_cleanedUpText }) => ({
-            ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-            matchedMessageText:
-              matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-            recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
-          })),
+          .map(
+            ({
+              conversations_conversation,
+              mailboxes_platformcustomer,
+              recent_message_cleanedUpText,
+              recent_message_createdAt,
+            }) => ({
+              ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+              matchedMessageText:
+                matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+              recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
+              recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
+            }),
+          ),
         nextCursor:
           results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
       })),

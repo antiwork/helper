@@ -10,7 +10,7 @@ type Conversation = {
   slug: string;
   subject: string;
   createdAt: string;
-  firstMessage: string | null;
+  latestMessage: string | null;
 };
 
 type ConversationsResponse = {
@@ -130,9 +130,9 @@ export default function PreviousConversations({ token, onSelectConversation, isA
                   <HumanizedTime time={conversation.createdAt} />
                 </div>
               </div>
-              {conversation.firstMessage && (
+              {conversation.latestMessage && (
                 <div className="mt-2 line-clamp-2 text-sm text-gray-600 group-hover:text-gray-900">
-                  {conversation.firstMessage}
+                  {conversation.latestMessage}
                 </div>
               )}
             </button>
