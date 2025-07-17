@@ -13,7 +13,7 @@ export function OPTIONS() {
 }
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { isPrompt } = await request.json();
+  const { isPrompt, subject } = await request.json();
   const isVisitor = session.isAnonymous;
   let status = DEFAULT_INITIAL_STATUS;
 
@@ -26,7 +26,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
 
   const newConversation = await createConversation({
     emailFrom: isVisitor || !session.email ? null : session.email,
-    subject: CHAT_CONVERSATION_SUBJECT,
+    subject: subject || CHAT_CONVERSATION_SUBJECT,
     closedAt: status === DEFAULT_INITIAL_STATUS ? new Date() : undefined,
     status: status as "open" | "closed",
     source: "chat",
