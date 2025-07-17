@@ -5,6 +5,7 @@ import { useHelperContext } from "../context/HelperContext";
 
 interface CreateConversationParams {
   isPrompt?: boolean;
+  subject?: string;
 }
 
 interface CreateConversationResult {
