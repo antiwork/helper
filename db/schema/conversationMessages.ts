@@ -68,7 +68,7 @@ export const conversationMessages = pgTable(
     reactionType: text().$type<"thumbs-up" | "thumbs-down">(),
     reactionFeedback: text(),
     reactionCreatedAt: timestamp({ withTimezone: true }),
-    
+
     // For message read status
     readAt: timestamp({ withTimezone: true }),
   },

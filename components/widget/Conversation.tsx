@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import type { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -17,6 +16,7 @@ import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
+import type { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { GuideInstructions } from "@/types/guide";
 
 type Props = {
@@ -89,9 +89,9 @@ export default function Conversation({
         reactionCreatedAt: null,
         annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
       };
-      
+
       setMessages((prev) => [...prev, newMessage]);
-      
+
       if (token && selectedConversationSlug && event.data.messageId) {
         try {
           await fetch(`/api/chat/conversation/${selectedConversationSlug}/message/${event.data.messageId}`, {

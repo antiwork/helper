@@ -73,10 +73,7 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
   const action = actionResult.data;
 
   if (action.type === "read") {
-    await db
-      .update(conversationMessages)
-      .set({ readAt: new Date() })
-      .where(eq(conversationMessages.id, messageId));
+    await db.update(conversationMessages).set({ readAt: new Date() }).where(eq(conversationMessages.id, messageId));
     return Response.json({ success: true });
   }
 
