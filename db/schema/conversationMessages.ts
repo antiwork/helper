@@ -68,6 +68,9 @@ export const conversationMessages = pgTable(
     reactionType: text().$type<"thumbs-up" | "thumbs-down">(),
     reactionFeedback: text(),
     reactionCreatedAt: timestamp({ withTimezone: true }),
+    
+    // For message read status
+    readAt: timestamp({ withTimezone: true }),
   },
   (table) => [
     index("conversatio_created_c4e0d1_idx").on(table.createdAt.asc().nullsLast()),

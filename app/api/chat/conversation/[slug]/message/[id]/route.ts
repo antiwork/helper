@@ -11,13 +11,16 @@ import { getMailbox } from "@/lib/data/mailbox";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
-const MessageReactionSchema = z.discriminatedUnion("type", [
+const MessageActionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("thumbs-up"),
   }),
   z.object({
     type: z.literal("thumbs-down"),
     feedback: z.string().nullish(),
+  }),
+  z.object({
+    type: z.literal("read"),
   }),
 ]);
 type Params = { id: string; slug: string };
@@ -58,30 +61,38 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const reactionResult = MessageReactionSchema.safeParse({
+  const actionResult = MessageActionSchema.safeParse({
     ...body,
     messageId,
   });
 
-  if (!reactionResult.success) {
-    return Response.json({ error: "Invalid reaction" }, { status: 400 });
+  if (!actionResult.success) {
+    return Response.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  const reaction = reactionResult.data;
+  const action = actionResult.data;
 
-  if (message.reactionType === "thumbs-down" && reaction.type === "thumbs-down" && message.reactionFeedback == null) {
+  if (action.type === "read") {
+    await db
+      .update(conversationMessages)
+      .set({ readAt: new Date() })
+      .where(eq(conversationMessages.id, messageId));
+    return Response.json({ success: true });
+  }
+
+  if (message.reactionType === "thumbs-down" && action.type === "thumbs-down" && message.reactionFeedback == null) {
     await db
       .update(conversationMessages)
       .set({
-        reactionFeedback: reaction.feedback,
+        reactionFeedback: action.feedback,
         reactionCreatedAt: new Date(),
       })
       .where(eq(conversationMessages.id, messageId));
     waitUntil(publishEvent(messageId));
-    return Response.json({ reaction });
+    return Response.json({ reaction: action });
   }
 
-  if (message.reactionType === reaction.type) {
+  if (message.reactionType === action.type) {
     await db
       .update(conversationMessages)
       .set({
@@ -96,14 +107,14 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
   await db
     .update(conversationMessages)
     .set({
-      reactionType: reaction.type,
-      reactionFeedback: reaction.type === "thumbs-down" ? reaction.feedback : null,
+      reactionType: action.type,
+      reactionFeedback: action.type === "thumbs-down" ? action.feedback : null,
       reactionCreatedAt: new Date(),
     })
     .where(eq(conversationMessages.id, messageId));
   waitUntil(publishEvent(messageId));
 
-  return Response.json({ reaction });
+  return Response.json({ reaction: action });
 });
 
 const publishEvent = async (messageId: number) => {

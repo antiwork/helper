@@ -77,21 +77,35 @@ export default function Conversation({
   useRealtimeEvent(
     selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
     "agent-reply",
-    (event) => {
+    async (event) => {
       setIsAgentTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `staff_${Date.now()}`,
-          role: "assistant",
-          content: event.data.message,
-          createdAt: new Date(event.data.timestamp),
-          reactionType: null,
-          reactionFeedback: null,
-          reactionCreatedAt: null,
-          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
-        },
-      ]);
+      const newMessage = {
+        id: `staff_${Date.now()}`,
+        role: "assistant",
+        content: event.data.message,
+        createdAt: new Date(event.data.timestamp),
+        reactionType: null,
+        reactionFeedback: null,
+        reactionCreatedAt: null,
+        annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
+      };
+      
+      setMessages((prev) => [...prev, newMessage]);
+      
+      if (token && selectedConversationSlug && event.data.messageId) {
+        try {
+          await fetch(`/api/chat/conversation/${selectedConversationSlug}/message/${event.data.messageId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ type: "read" }),
+          });
+        } catch (error) {
+          captureExceptionAndLog(error);
+        }
+      }
     },
   );
 
