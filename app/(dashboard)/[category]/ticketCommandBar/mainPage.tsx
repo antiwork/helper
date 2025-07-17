@@ -156,7 +156,7 @@ export const useMainPage = ({
             icon: ArrowUturnUpIcon,
             onSelect: () => {
               if (conversation?.emailFrom) {
-                const refreshTool = tools?.all.find(tool => tool.slug === "refresh_library");
+                const refreshTool = tools?.all.find((tool) => tool.slug === "refresh_library");
                 if (refreshTool) {
                   setSelectedTool(refreshTool);
                 }
