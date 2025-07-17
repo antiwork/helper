@@ -49,6 +49,7 @@ export const conversations = pgTable(
           }
       )[]
     >(),
+    lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true, mode: "date" }),
   },
   (table) => [
     index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),

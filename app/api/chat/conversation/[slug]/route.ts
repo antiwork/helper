@@ -7,8 +7,10 @@ import { getFirstName } from "@/lib/auth/authUtils";
 import { getFileUrl } from "@/lib/data/files";
 import { getBasicProfileById } from "@/lib/data/user";
 
-export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params } }, { session }) => {
+export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
+  const url = new URL(request.url);
+  const trackFetch = url.searchParams.get('trackFetch') !== 'false';
 
   let baseCondition;
   if (session.isAnonymous && session.anonymousSessionId) {
@@ -31,6 +33,13 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 
   if (!conversation) {
     return Response.json({ error: "Conversation not found" }, { status: 404 });
+  }
+
+  if (trackFetch) {
+    await db
+      .update(conversations)
+      .set({ lastFetchedAt: new Date() })
+      .where(eq(conversations.id, conversation.id));
   }
 
   const originalConversation =
