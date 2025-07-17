@@ -7,6 +7,9 @@ interface Conversation {
   slug: string;
   subject: string;
   createdAt: string;
+  latestMessage: string | null;
+  latestMessageCreatedAt: string | null;
+  messageCount: number;
 }
 
 interface UseConversationsResult {
