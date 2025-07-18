@@ -61,10 +61,12 @@ export const eventJobs = {
 export const cronJobs = {
   "0 19 * * *": { bulkEmbeddingClosedConversations },
   "0 * * * *": {
-    checkAssignedTicketResponseTimes,
-    checkVipResponseTimes,
     cleanupDanglingFiles,
     closeInactiveConversations,
+  },
+  "0 14 * * 1-5": {
+    checkAssignedTicketResponseTimes,
+    checkVipResponseTimes,
   },
   "0 0 * * *": { renewMailboxWatches },
   "0 0 * * 0": { scheduledWebsiteCrawl },
