@@ -27,7 +27,7 @@ vi.mock("@/app/api/widget/utils", () => ({
 describe("GET /api/chat/conversation/[slug]", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    
+
     const mockSupabase = {
       channel: vi.fn().mockReturnValue({
         send: vi.fn(),
@@ -41,15 +41,15 @@ describe("GET /api/chat/conversation/[slug]", () => {
     const { conversation } = await conversationFactory.create({
       emailFrom: "test@example.com",
     });
-    
+
     mockSession = { isAnonymous: false, email: "test@example.com" };
     mockMailbox = mailbox;
-    
+
     const request = new Request(`https://example.com/api/chat/conversation/${conversation.slug}`);
     const context = { params: Promise.resolve({ slug: conversation.slug }) };
-    
+
     const response = await GET(request, context);
-    
+
     expect(response.status).toBe(200);
   });
 
@@ -58,15 +58,15 @@ describe("GET /api/chat/conversation/[slug]", () => {
     const { conversation } = await conversationFactory.create({
       emailFrom: "test@example.com",
     });
-    
+
     mockSession = { isAnonymous: false, email: "test@example.com" };
     mockMailbox = mailbox;
-    
+
     const request = new Request(`https://example.com/api/chat/conversation/${conversation.slug}?markRead=false`);
     const context = { params: Promise.resolve({ slug: conversation.slug }) };
-    
+
     const response = await GET(request, context);
-    
+
     expect(response.status).toBe(200);
   });
 });
@@ -74,7 +74,7 @@ describe("GET /api/chat/conversation/[slug]", () => {
 describe("PATCH /api/chat/conversation/[slug]", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    
+
     const mockSupabase = {
       channel: vi.fn().mockReturnValue({
         send: vi.fn(),
