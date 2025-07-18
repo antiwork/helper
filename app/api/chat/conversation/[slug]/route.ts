@@ -10,7 +10,7 @@ import { getBasicProfileById } from "@/lib/data/user";
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
   const url = new URL(request.url);
-  const trackFetch = url.searchParams.get('trackFetch') !== 'false';
+  const trackFetch = url.searchParams.get("trackFetch") !== "false";
 
   let baseCondition;
   if (session.isAnonymous && session.anonymousSessionId) {
@@ -36,10 +36,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   }
 
   if (trackFetch) {
-    await db
-      .update(conversations)
-      .set({ lastFetchedAt: new Date() })
-      .where(eq(conversations.id, conversation.id));
+    await db.update(conversations).set({ lastFetchedAt: new Date() }).where(eq(conversations.id, conversation.id));
   }
 
   const originalConversation =

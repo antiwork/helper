@@ -100,14 +100,11 @@ export const conversationsRouter = {
     .input(z.object({ trackFetch: z.boolean().optional() }).default({}))
     .query(async ({ ctx, input }) => {
       const conversation = ctx.conversation;
-      
+
       if (input.trackFetch !== false) {
-        await db
-          .update(conversations)
-          .set({ lastFetchedAt: new Date() })
-          .where(eq(conversations.id, conversation.id));
+        await db.update(conversations).set({ lastFetchedAt: new Date() }).where(eq(conversations.id, conversation.id));
       }
-      
+
       const draft = await getLastAiGeneratedDraft(conversation.id);
 
       return {
