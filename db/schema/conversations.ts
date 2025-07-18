@@ -22,6 +22,7 @@ export const conversations = pgTable(
     emailFromName: text(),
     slug: randomSlugField("slug"),
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
+    lastReadAt: timestamp({ withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
     assignedToId: text("assigned_to_clerk_id"),
@@ -49,7 +50,6 @@ export const conversations = pgTable(
           }
       )[]
     >(),
-    lastReadAt: timestamp({ withTimezone: true, mode: "date" }),
   },
   (table) => [
     index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),

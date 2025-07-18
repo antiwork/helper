@@ -13,17 +13,11 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   const url = new URL(request.url);
   const markRead = url.searchParams.get("markRead") !== "false";
 
-  let baseCondition;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
-  } else if (session.email) {
-    baseCondition = eq(conversations.emailFrom, session.email);
-  } else {
-    return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
-  }
+  const whereCondition = conversationMatcher(slug, session);
+  if (!whereCondition) return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
 
   const conversation = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), baseCondition),
+    where: whereCondition,
     with: {
       messages: {
         where: inArray(conversationMessages.role, ["user", "ai_assistant", "staff"]),
@@ -132,21 +126,18 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   });
 });
 
-export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params } }, { session }) => {
+export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
 
-  let baseCondition;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
-  } else if (session.email) {
-    baseCondition = eq(conversations.emailFrom, session.email);
-  } else {
-    return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
+  const body = await request.json();
+  if (!body.markRead) {
+    return Response.json({ error: "markRead parameter is required" }, { status: 400 });
   }
 
-  const conversation = await db.query.conversations.findFirst({
-    where: and(eq(conversations.slug, slug), baseCondition),
-  });
+  const whereCondition = conversationMatcher(slug, session);
+  if (!whereCondition) return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
+
+  const conversation = await db.query.conversations.findFirst({ columns: { id: true }, where: whereCondition });
 
   if (!conversation) {
     return Response.json({ error: "Conversation not found" }, { status: 404 });
@@ -160,4 +151,14 @@ export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params
 const getUserAnnotation = async (userId: string) => {
   const user = await getBasicProfileById(userId);
   return user ? [{ user: { name: user.displayName ? getFirstName(user) : undefined } }] : undefined;
+};
+
+const conversationMatcher = (slug: string, session: any) => {
+  let baseCondition;
+  if (session.isAnonymous && session.anonymousSessionId) {
+    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
+  } else if (session.email) {
+    baseCondition = eq(conversations.emailFrom, session.email);
+  }
+  return baseCondition ? and(eq(conversations.slug, slug), baseCondition) : null;
 };

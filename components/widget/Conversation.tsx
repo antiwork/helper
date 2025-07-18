@@ -96,6 +96,7 @@ export default function Conversation({
       if (selectedConversationSlug && token) {
         fetch(`/api/chat/conversation/${selectedConversationSlug}`, {
           method: "PATCH",
+          body: JSON.stringify({ markRead: true }),
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

@@ -5,6 +5,7 @@ export { useHelperContext } from "./context/HelperContext";
 export { useConversations } from "./hooks/useConversations";
 export { useConversation } from "./hooks/useConversation";
 export { useCreateConversation } from "./hooks/useCreateConversation";
+export { useUpdateConversation } from "./hooks/useUpdateConversation";
 export { useChat } from "./hooks/useChat";
 
 export * from "./server/helper-auth";
