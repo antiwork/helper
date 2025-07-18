@@ -59,6 +59,14 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
     (session) => !session.events.some((event) => event.type === "completed"),
   );
 
+  const allAttachments = await Promise.all(
+    attachments.map(async (a) => ({
+      messageId: a.messageId?.toString(),
+      name: a.name,
+      presignedUrl: await getFileUrl(a),
+    })),
+  );
+
   const formattedMessages = await Promise.all(
     conversation.messages.map(async (message) => ({
       id: message.id.toString(),
@@ -67,7 +75,12 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
       createdAt: message.createdAt.toISOString(),
       reactionType: message.reactionType,
       reactionFeedback: message.reactionFeedback,
-      annotations: message.userId ? await getUserAnnotation(message.userId) : undefined,
+      annotations: [
+        ...(await getUserAnnotation(message.userId)),
+        ...allAttachments
+          .filter((a) => a.messageId === message.id.toString())
+          .map((a) => ({ attachment: { name: a.name, url: a.presignedUrl } })),
+      ],
       experimental_attachments:
         (message.metadata as MessageMetadata)?.hasAttachments ||
         (message.metadata as MessageMetadata)?.includesScreenshot
@@ -112,20 +125,16 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   );
 
   return Response.json({
+    subject: conversation.subject,
     messages: allMessages,
     // We don't want to include staff-uploaded attachments in the AI messages, but we need to show them in the UI
-    allAttachments: await Promise.all(
-      attachments.map(async (a) => ({
-        messageId: a.messageId?.toString(),
-        name: a.name,
-        presignedUrl: await getFileUrl(a),
-      })),
-    ),
+    allAttachments,
     isEscalated: !originalConversation.assignedToAI,
   });
 });
 
-const getUserAnnotation = async (userId: string) => {
+const getUserAnnotation = async (userId: string | null) => {
+  if (!userId) return [];
   const user = await getBasicProfileById(userId);
-  return user ? [{ user: { name: user.displayName ? getFirstName(user) : undefined } }] : undefined;
+  return user ? [{ user: { name: user.displayName ? getFirstName(user) : undefined } }] : [];
 };

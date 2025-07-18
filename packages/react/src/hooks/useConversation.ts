@@ -1,16 +1,32 @@
 "use client";
 
+import { Message } from "@ai-sdk/react";
 import { useCallback, useEffect, useState } from "react";
 import { useHelperContext } from "../context/HelperContext";
 
-interface Message {
-  id: string;
-  content: string;
-  role: string;
+// TODO: Make this return custom types rather than forcing everything into the Message interface
+
+export interface AttachmentAnnotation {
+  attachment: {
+    name: string;
+    url: string;
+  };
+}
+
+export interface UserAnnotation {
+  user: {
+    name: string;
+  };
+}
+
+export interface Conversation {
+  subject: string | null;
+  messages: Message[];
+  isEscalated: boolean;
 }
 
 interface UseConversationResult {
-  messages: Message[];
+  conversation: Conversation | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -18,7 +34,7 @@ interface UseConversationResult {
 
 export function useConversation(conversationSlug: string): UseConversationResult {
   const { host, getToken } = useHelperContext();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +68,7 @@ export function useConversation(conversationSlug: string): UseConversationResult
       }
 
       const data = await response.json();
-      setMessages(data.messages || []);
+      setConversation(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch conversation");
     } finally {
@@ -65,7 +81,7 @@ export function useConversation(conversationSlug: string): UseConversationResult
   }, [fetchConversation]);
 
   return {
-    messages,
+    conversation,
     loading,
     error,
     refetch: fetchConversation,

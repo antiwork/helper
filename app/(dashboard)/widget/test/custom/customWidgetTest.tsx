@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useChat, useCreateConversation, useConversations } from "@helperai/react";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { useChat, useConversations, useCreateConversation } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { cn } from "@/lib/utils";
 
 export const CustomWidgetTest = () => {
   const { conversations, loading, error } = useConversations();
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
+  const [newTicketMessage, setNewTicketMessage] = useState("");
 
   if (loading) {
     return <div className="p-4">Loading conversations...</div>;
@@ -26,28 +28,32 @@ export const CustomWidgetTest = () => {
       <div className="w-1/2 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h1 className="text-xl font-semibold">Support</h1>
-          <NewTicketModal 
-            open={showNewTicketModal} 
+          <NewTicketModal
+            open={showNewTicketModal}
             onOpenChange={setShowNewTicketModal}
-            onTicketCreated={(slug) => {
+            onTicketCreated={(slug, message) => {
               setSelectedConversationSlug(slug);
+              setNewTicketMessage(message);
               setShowNewTicketModal(false);
             }}
           />
         </div>
-        
+
         <div className="flex-1 overflow-y-auto">
-          <ConversationTable 
+          <ConversationTable
             conversations={conversations}
             selectedSlug={selectedConversationSlug}
-            onSelectConversation={setSelectedConversationSlug}
+            onSelectConversation={(slug) => {
+              setSelectedConversationSlug(slug);
+              setNewTicketMessage("");
+            }}
           />
         </div>
       </div>
 
       <div className="w-1/2 flex flex-col">
         {selectedConversationSlug ? (
-          <ChatWidget conversationSlug={selectedConversationSlug} />
+          <ChatWidget conversationSlug={selectedConversationSlug} newTicketMessage={newTicketMessage} />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             Select a conversation to view details
@@ -58,19 +64,19 @@ export const CustomWidgetTest = () => {
   );
 };
 
-const ConversationTable = ({ 
-  conversations, 
-  selectedSlug, 
-  onSelectConversation 
+const ConversationTable = ({
+  conversations,
+  selectedSlug,
+  onSelectConversation,
 }: {
-  conversations: Array<{
+  conversations: {
     slug: string;
     subject: string;
     createdAt: string;
     latestMessage: string | null;
     latestMessageCreatedAt: string | null;
     messageCount: number;
-  }>;
+  }[];
   selectedSlug: string | null;
   onSelectConversation: (slug: string) => void;
 }) => {
@@ -81,27 +87,26 @@ const ConversationTable = ({
         <div>Messages</div>
         <div>Last updated</div>
       </div>
-      
+
       {conversations.map((conversation) => (
         <div
           key={conversation.slug}
           className={cn(
             "grid grid-cols-3 gap-4 p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors",
-            selectedSlug === conversation.slug && "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400"
+            selectedSlug === conversation.slug && "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400",
           )}
           onClick={() => onSelectConversation(conversation.slug)}
         >
           <div className="font-medium truncate">{conversation.subject || "No subject"}</div>
           <div className="text-sm text-muted-foreground">{conversation.messageCount}</div>
           <div className="text-sm text-muted-foreground">
-            {conversation.latestMessageCreatedAt 
+            {conversation.latestMessageCreatedAt
               ? new Date(conversation.latestMessageCreatedAt).toLocaleDateString()
-              : new Date(conversation.createdAt).toLocaleDateString()
-            }
+              : new Date(conversation.createdAt).toLocaleDateString()}
           </div>
         </div>
       ))}
-      
+
       {conversations.length === 0 && (
         <div className="p-8 text-center text-muted-foreground">
           No conversations found. Create your first ticket to get started.
@@ -111,14 +116,14 @@ const ConversationTable = ({
   );
 };
 
-const NewTicketModal = ({ 
-  open, 
-  onOpenChange, 
-  onTicketCreated 
+const NewTicketModal = ({
+  open,
+  onOpenChange,
+  onTicketCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTicketCreated: (slug: string) => void;
+  onTicketCreated: (slug: string, message: string) => void;
 }) => {
   const { createConversation, loading } = useCreateConversation();
   const [subject, setSubject] = useState("");
@@ -126,17 +131,17 @@ const NewTicketModal = ({
 
   const handleSubmit = async () => {
     if (!subject.trim()) return;
-    
+
     try {
-      const result = await createConversation({ 
+      const result = await createConversation({
         subject: subject.trim(),
-        isPrompt: true 
+        isPrompt: true,
       });
-      onTicketCreated(result.conversationSlug);
+      onTicketCreated(result.conversationSlug, message);
       setSubject("");
       setMessage("");
     } catch (error) {
-      console.error("Failed to create ticket:", error);
+      captureExceptionAndLog(error);
     }
   };
 
@@ -149,7 +154,7 @@ const NewTicketModal = ({
         <DialogHeader>
           <DialogTitle>New support ticket</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Subject</label>
@@ -159,7 +164,7 @@ const NewTicketModal = ({
               onChange={(e) => setSubject(e.target.value)}
             />
           </div>
-          
+
           <div>
             <label className="text-sm font-medium">Message</label>
             <Textarea
@@ -169,9 +174,9 @@ const NewTicketModal = ({
               rows={4}
             />
           </div>
-          
+
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outlined" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={loading || !subject.trim()}>
@@ -184,8 +189,8 @@ const NewTicketModal = ({
   );
 };
 
-const ChatWidget = ({ conversationSlug }: { conversationSlug: string }) => {
-  const { messages, send } = useChat(conversationSlug, {
+const ChatWidget = ({ conversationSlug, newTicketMessage }: { conversationSlug: string; newTicketMessage: string }) => {
+  const { messages, input, handleInputChange, handleSubmit, append, conversation } = useChat(conversationSlug, {
     tools: {
       getProductStatus: {
         description: "Get the status of a Gumroad product",
@@ -198,58 +203,51 @@ const ChatWidget = ({ conversationSlug }: { conversationSlug: string }) => {
       },
     },
   });
-  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    if (conversation?.messages.length === 0 && newTicketMessage) {
+      append({ role: "user", content: newTicketMessage });
+    }
+  }, [conversation, newTicketMessage, append]);
 
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
-        <h2 className="font-semibold">Conversation</h2>
+        <h2 className="font-semibold">{conversation?.subject}</h2>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col gap-4">
           {messages.map((message) => (
             <div
               className={cn(
                 "rounded-lg p-3 max-w-[80%]",
-                message.role === "user" 
-                  ? "bg-primary text-primary-foreground ml-auto" 
-                  : "bg-secondary text-secondary-foreground"
+                message.role === "user"
+                  ? "bg-primary text-primary-foreground ml-auto"
+                  : "bg-secondary text-secondary-foreground",
               )}
               key={message.id}
             >
-              {message.content}
+              {message.content ? message.content : JSON.stringify(message)}
             </div>
           ))}
         </div>
       </div>
-      
+
       <div className="p-4 border-t border-border">
         <div className="flex gap-2">
-          <Input 
-            placeholder="Type your message..." 
-            value={input} 
-            onChange={(e) => setInput(e.target.value)}
+          <Input
+            placeholder="Type your message..."
+            value={input}
+            onChange={handleInputChange}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (input.trim()) {
-                  send(input);
-                  setInput("");
-                }
+                handleSubmit();
               }
             }}
           />
-          <Button 
-            onClick={() => {
-              if (input.trim()) {
-                send(input);
-                setInput("");
-              }
-            }}
-          >
-            Send
-          </Button>
+          <Button onClick={handleSubmit}>Send</Button>
         </div>
       </div>
     </div>
