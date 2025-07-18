@@ -96,22 +96,15 @@ export const conversationsRouter = {
     });
     return await Promise.all(list.map((c) => serializeConversationWithMessages(ctx.mailbox, c)));
   }),
-  get: conversationProcedure
-    .input(z.object({ trackFetch: z.boolean().optional() }).default({}))
-    .query(async ({ ctx, input }) => {
-      const conversation = ctx.conversation;
+  get: conversationProcedure.query(async ({ ctx }) => {
+    const conversation = ctx.conversation;
+    const draft = await getLastAiGeneratedDraft(conversation.id);
 
-      if (input.trackFetch !== false) {
-        await db.update(conversations).set({ lastFetchedAt: new Date() }).where(eq(conversations.id, conversation.id));
-      }
-
-      const draft = await getLastAiGeneratedDraft(conversation.id);
-
-      return {
-        ...(await serializeConversationWithMessages(ctx.mailbox, ctx.conversation)),
-        draft: draft ? serializeResponseAiDraft(draft, ctx.mailbox) : null,
-      };
-    }),
+    return {
+      ...(await serializeConversationWithMessages(ctx.mailbox, ctx.conversation)),
+      draft: draft ? serializeResponseAiDraft(draft, ctx.mailbox) : null,
+    };
+  }),
   create: mailboxProcedure
     .input(
       z.object({

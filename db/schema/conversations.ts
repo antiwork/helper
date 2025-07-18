@@ -49,6 +49,7 @@ export const conversations = pgTable(
           }
       )[]
     >(),
+    // Note: Only tracked for chat conversations (we don't have email open tracking yet)
     lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true, mode: "date" }),
   },
   (table) => [
