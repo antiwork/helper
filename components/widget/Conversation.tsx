@@ -92,6 +92,18 @@ export default function Conversation({
           annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
         },
       ]);
+
+      if (selectedConversationSlug && token) {
+        fetch(`/api/chat/conversation/${selectedConversationSlug}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }).catch((error) => {
+          captureExceptionAndLog(error);
+        });
+      }
     },
   );
 

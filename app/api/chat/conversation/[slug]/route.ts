@@ -4,11 +4,14 @@ import { withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { getFirstName } from "@/lib/auth/authUtils";
+import { updateConversation } from "@/lib/data/conversation";
 import { getFileUrl } from "@/lib/data/files";
 import { getBasicProfileById } from "@/lib/data/user";
 
-export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params } }, { session }) => {
+export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
+  const url = new URL(request.url);
+  const markRead = url.searchParams.get('markRead') !== 'false';
 
   let baseCondition;
   if (session.isAnonymous && session.anonymousSessionId) {
@@ -31,6 +34,10 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 
   if (!conversation) {
     return Response.json({ error: "Conversation not found" }, { status: 404 });
+  }
+
+  if (markRead) {
+    await updateConversation(conversation.id, { set: { lastReadAt: new Date() } });
   }
 
   const originalConversation =
@@ -123,6 +130,31 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
     ),
     isEscalated: !originalConversation.assignedToAI,
   });
+});
+
+export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params } }, { session }) => {
+  const { slug } = await params;
+
+  let baseCondition;
+  if (session.isAnonymous && session.anonymousSessionId) {
+    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
+  } else if (session.email) {
+    baseCondition = eq(conversations.emailFrom, session.email);
+  } else {
+    return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
+  }
+
+  const conversation = await db.query.conversations.findFirst({
+    where: and(eq(conversations.slug, slug), baseCondition),
+  });
+
+  if (!conversation) {
+    return Response.json({ error: "Conversation not found" }, { status: 404 });
+  }
+
+  await updateConversation(conversation.id, { set: { lastReadAt: new Date() } });
+
+  return Response.json({ success: true });
 });
 
 const getUserAnnotation = async (userId: string) => {
