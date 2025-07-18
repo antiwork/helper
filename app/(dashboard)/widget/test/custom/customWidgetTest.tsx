@@ -205,10 +205,10 @@ const ChatWidget = ({ conversationSlug, newTicketMessage }: { conversationSlug: 
   });
 
   useEffect(() => {
-    if (conversation?.messages.length === 0 && newTicketMessage) {
+    if (conversation?.messages.length === 0 && messages.length === 0 && newTicketMessage) {
       append({ role: "user", content: newTicketMessage });
     }
-  }, [conversation, newTicketMessage, append]);
+  }, [conversation, newTicketMessage, messages, append]);
 
   return (
     <div className="flex flex-col h-full">
