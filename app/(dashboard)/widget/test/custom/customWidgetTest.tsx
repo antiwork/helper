@@ -37,7 +37,6 @@ export const CustomWidgetTest = () => {
       <div className="flex-1 overflow-y-auto">
         <ConversationTable
           conversations={conversations}
-          selectedSlug={null}
           onSelectConversation={(slug) => {
             window.location.href = `/widget/test/custom/${slug}`;
           }}
@@ -49,7 +48,6 @@ export const CustomWidgetTest = () => {
 
 const ConversationTable = ({
   conversations,
-  selectedSlug,
   onSelectConversation,
 }: {
   conversations: {
@@ -60,7 +58,6 @@ const ConversationTable = ({
     latestMessageCreatedAt: string | null;
     messageCount: number;
   }[];
-  selectedSlug: string | null;
   onSelectConversation: (slug: string) => void;
 }) => {
   return (
