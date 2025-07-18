@@ -23,6 +23,8 @@ const events = {
       "mergeSimilarConversations",
       "publishNewConversationEvent",
       "notifyVipMessage",
+      "buildIssueGroups",
+      "categorizeConversationToIssueGroup",
     ],
   },
   "conversations/email.enqueued": {
@@ -132,6 +134,12 @@ const events = {
       confirmedReplyText: z.string().optional(),
     }),
     jobs: ["handleSlackAgentMessage"],
+  },
+  "issue-groups/status-changed": {
+    data: z.object({
+      conversationId: z.number(),
+    }),
+    jobs: ["handleIssueGroupStatusChange"],
   },
 };
 

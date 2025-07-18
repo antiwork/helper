@@ -20,3 +20,4 @@ export * from "./cache";
 export * from "./jobRuns";
 export * from "./userProfiles";
 export * from "./savedReplies";
+export * from "./issueGroups";

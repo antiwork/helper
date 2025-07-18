@@ -5,3 +5,5 @@ export const conversationChannelId = (conversationSlug: string) => `conversation
 export const publicConversationChannelId = (conversationSlug: string) => `public:conversation-${conversationSlug}`;
 
 export const dashboardChannelId = () => `dashboard`;
+
+export const issueGroupsChannelId = () => `issue-groups`;

@@ -2,6 +2,7 @@ import { autoAssignConversation } from "./autoAssignConversation";
 import { closeInactiveConversations, closeInactiveConversationsForMailbox } from "./autoCloseInactiveConversations";
 import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversations";
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
+import { categorizeConversationToIssueGroup } from "./categorizeConversationToIssueGroup";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
 import { checkConversationResolution } from "./checkConversationResolution";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
@@ -15,6 +16,7 @@ import { generateFilePreview } from "./generateFilePreview";
 import { generateMailboxWeeklyReport, generateWeeklyReports } from "./generateWeeklyReports";
 import { handleAutoResponse } from "./handleAutoResponse";
 import { handleGmailWebhookEvent } from "./handleGmailWebhookEvent";
+import { handleIssueGroupStatusChange } from "./handleIssueGroupStatusChange";
 import { handleSlackAgentMessage } from "./handleSlackAgentMessage";
 import { importGmailThreads } from "./importGmailThreads";
 import { importRecentGmailThreads } from "./importRecentGmailThreads";
@@ -54,8 +56,10 @@ export const eventJobs = {
   closeInactiveConversations,
   closeInactiveConversationsForMailbox,
   autoAssignConversation,
+  categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
+  handleIssueGroupStatusChange,
 };
 
 export const cronJobs = {

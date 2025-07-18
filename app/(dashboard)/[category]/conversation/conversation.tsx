@@ -370,6 +370,9 @@ const MergedContent = () => {
 
 const ConversationContent = () => {
   const { conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
+  const utils = api.useUtils();
+  const { input } = useConversationsListInput();
+
   useRealtimeEvent(conversationChannelId(conversationSlug), "conversation.updated", (event) => {
     utils.mailbox.conversations.get.setData({ conversationSlug }, (data) => (data ? { ...data, ...event.data } : null));
   });
@@ -385,10 +388,6 @@ const ConversationContent = () => {
     });
     scrollToBottom({ animation: "smooth" });
   });
-
-  const { input } = useConversationsListInput();
-
-  const utils = api.useUtils();
   const conversationListInfo = utils.mailbox.conversations.list
     .getData(input)
     ?.conversations.find((c) => c.slug === conversationSlug);
@@ -411,7 +410,8 @@ const ConversationContent = () => {
 
   const { isAboveSm } = useBreakpoint("sm");
 
-  const defaultSize = Number(localStorage.getItem("conversationHeightRange") ?? 65);
+  const defaultSize =
+    typeof window !== "undefined" ? Number(localStorage.getItem("conversationHeightRange") ?? 65) : 65;
 
   const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
 
@@ -423,7 +423,9 @@ const ConversationContent = () => {
             <ResizablePanel
               defaultSize={defaultSize}
               onResize={(size) => {
-                localStorage.setItem("conversationHeightRange", Math.floor(size).toString());
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("conversationHeightRange", Math.floor(size).toString());
+                }
 
                 const scrollElement = scrollRef.current;
                 if (scrollElement) {

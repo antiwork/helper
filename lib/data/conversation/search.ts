@@ -115,6 +115,11 @@ export const searchConversations = async (
     ...(filters.markedAsSpam
       ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam, MARKED_AS_SPAM_BY_AGENT_MESSAGE) }
       : {}),
+    ...(filters.issueGroupId
+      ? {
+          issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
+        }
+      : {}),
   };
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];

@@ -11,6 +11,7 @@ import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
+import { issueGroupsRouter } from "./issueGroups";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
@@ -116,6 +117,7 @@ export const mailboxRouter = {
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
   savedReplies: savedRepliesRouter,
+  issueGroups: issueGroupsRouter,
 
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {
