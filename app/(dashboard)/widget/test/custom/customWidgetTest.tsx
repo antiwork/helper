@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useChat, useConversations, useCreateConversation } from "@helperai/react";
+import { useState } from "react";
+import { useConversations, useCreateConversation } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,7 @@ import { cn } from "@/lib/utils";
 
 export const CustomWidgetTest = () => {
   const { conversations, loading, error } = useConversations();
-  const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
-  const [newTicketMessage, setNewTicketMessage] = useState("");
 
   if (loading) {
     return <div className="p-4">Loading conversations...</div>;
@@ -24,41 +22,26 @@ export const CustomWidgetTest = () => {
   }
 
   return (
-    <div className="flex h-screen">
-      <div className="w-1/2 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Support</h1>
-          <NewTicketModal
-            open={showNewTicketModal}
-            onOpenChange={setShowNewTicketModal}
-            onTicketCreated={(slug, message) => {
-              setSelectedConversationSlug(slug);
-              setNewTicketMessage(message);
-              setShowNewTicketModal(false);
-            }}
-          />
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <ConversationTable
-            conversations={conversations}
-            selectedSlug={selectedConversationSlug}
-            onSelectConversation={(slug) => {
-              setSelectedConversationSlug(slug);
-              setNewTicketMessage("");
-            }}
-          />
-        </div>
+    <div className="flex h-screen flex-col">
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Support</h1>
+        <NewTicketModal
+          open={showNewTicketModal}
+          onOpenChange={setShowNewTicketModal}
+          onTicketCreated={(slug) => {
+            window.location.href = `/widget/test/custom/${slug}`;
+          }}
+        />
       </div>
 
-      <div className="w-1/2 flex flex-col">
-        {selectedConversationSlug ? (
-          <ChatWidget conversationSlug={selectedConversationSlug} newTicketMessage={newTicketMessage} />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Select a conversation to view details
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto">
+        <ConversationTable
+          conversations={conversations}
+          selectedSlug={null}
+          onSelectConversation={(slug) => {
+            window.location.href = `/widget/test/custom/${slug}`;
+          }}
+        />
       </div>
     </div>
   );
@@ -92,8 +75,7 @@ const ConversationTable = ({
         <div
           key={conversation.slug}
           className={cn(
-            "grid grid-cols-3 gap-4 p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors",
-            selectedSlug === conversation.slug && "bg-amber-50 dark:bg-white/5 border-l-4 border-l-amber-400",
+            "grid grid-cols-3 gap-4 p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
           )}
           onClick={() => onSelectConversation(conversation.slug)}
         >
@@ -123,7 +105,7 @@ const NewTicketModal = ({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTicketCreated: (slug: string, message: string) => void;
+  onTicketCreated: (slug: string) => void;
 }) => {
   const { createConversation, loading } = useCreateConversation();
   const [subject, setSubject] = useState("");
@@ -137,7 +119,7 @@ const NewTicketModal = ({
         subject: subject.trim(),
         isPrompt: true,
       });
-      onTicketCreated(result.conversationSlug, message);
+      onTicketCreated(result.conversationSlug);
       setSubject("");
       setMessage("");
     } catch (error) {
@@ -186,70 +168,5 @@ const NewTicketModal = ({
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
-
-const ChatWidget = ({ conversationSlug, newTicketMessage }: { conversationSlug: string; newTicketMessage: string }) => {
-  const { messages, input, handleInputChange, handleSubmit, append, conversation } = useChat(conversationSlug, {
-    tools: {
-      getProductStatus: {
-        description: "Get the status of a Gumroad product",
-        parameters: {
-          productId: { type: "string", description: "The ID of the Gumroad product" },
-        },
-        execute: ({ productId }) => {
-          return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
-        },
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (conversation?.messages.length === 0 && messages.length === 0 && newTicketMessage) {
-      append({ role: "user", content: newTicketMessage });
-    }
-  }, [conversation, newTicketMessage, messages, append]);
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
-        <h2 className="font-semibold">{conversation?.subject}</h2>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="flex flex-col gap-4">
-          {messages.map((message) => (
-            <div
-              className={cn(
-                "rounded-lg p-3 max-w-[80%]",
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground ml-auto"
-                  : "bg-secondary text-secondary-foreground",
-              )}
-              key={message.id}
-            >
-              {message.content ? message.content : JSON.stringify(message)}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type your message..."
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-          <Button onClick={handleSubmit}>Send</Button>
-        </div>
-      </div>
-    </div>
   );
 };
