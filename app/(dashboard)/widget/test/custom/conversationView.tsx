@@ -1,9 +1,9 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useChat } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {

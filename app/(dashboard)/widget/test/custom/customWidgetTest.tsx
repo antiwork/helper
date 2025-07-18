@@ -72,7 +72,7 @@ const ConversationTable = ({
         <div
           key={conversation.slug}
           className={cn(
-            "grid grid-cols-3 gap-4 p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
+            "grid grid-cols-3 gap-4 p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors",
           )}
           onClick={() => onSelectConversation(conversation.slug)}
         >
