@@ -11,7 +11,7 @@ import { getBasicProfileById } from "@/lib/data/user";
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
   const url = new URL(request.url);
-  const markRead = url.searchParams.get('markRead') !== 'false';
+  const markRead = url.searchParams.get("markRead") !== "false";
 
   let baseCondition;
   if (session.isAnonymous && session.anonymousSessionId) {
