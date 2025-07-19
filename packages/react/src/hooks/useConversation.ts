@@ -1,7 +1,7 @@
 "use client";
 
-import { Message } from "@helperai/client";
 import { useCallback, useEffect, useState } from "react";
+import { Message } from "@helperai/client";
 import { useHelperContext } from "../context/HelperContext";
 
 export interface AttachmentAnnotation {
