@@ -67,6 +67,8 @@ class HelperWidget {
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
   private renderedContactForms: Set<HTMLElement> = new Set();
+  private resizeHandler: (() => void) | null = null;
+  private messageHandler: ((event: MessageEvent) => void) | null = null;
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
@@ -292,7 +294,7 @@ class HelperWidget {
     this.setupMutationObserver();
 
     let resizeTimeout: NodeJS.Timeout;
-    window.addEventListener("resize", () => {
+    const resizeHandler = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         const isSmallScreen = window.innerWidth < 640;
@@ -311,9 +313,9 @@ class HelperWidget {
           },
         });
       }, 100);
-    });
+    };
 
-    window.addEventListener("message", async (event: MessageEvent) => {
+    const messageHandler = async (event: MessageEvent) => {
       // Handle messages from our iframe
       if (event.data && event.data.type === this.messageType) {
         const { action, requestId, content } = event.data.payload || {};
@@ -426,7 +428,13 @@ class HelperWidget {
           }
         }
       }
-    });
+    };
+
+    this.resizeHandler = resizeHandler;
+    this.messageHandler = messageHandler;
+
+    window.addEventListener("resize", resizeHandler);
+    window.addEventListener("message", messageHandler);
   }
 
   private onIframeReady(): void {
@@ -743,6 +751,8 @@ class HelperWidget {
       document.body.removeChild(this.loadingOverlay);
     }
 
+    this.messageQueue = [];
+
     this.hideAllNotifications();
     this.guideManager.destroy();
 
@@ -766,6 +776,15 @@ class HelperWidget {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+
+    if (this.resizeHandler) {
+      window.removeEventListener("resize", this.resizeHandler);
+      this.resizeHandler = null;
+    }
+    if (this.messageHandler) {
+      window.removeEventListener("message", this.messageHandler);
+      this.messageHandler = null;
     }
   }
 

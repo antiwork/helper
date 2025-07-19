@@ -750,6 +750,13 @@
       "when": 1752225813165,
       "tag": "0106_rare_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1752877788090,
+      "tag": "0107_illegal_wallop",
+      "breakpoints": true
     }
   ]
 }
