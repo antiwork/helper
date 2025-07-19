@@ -98,6 +98,10 @@ describe("PATCH /api/chat/conversation/[slug]", () => {
 
     const request = new Request("https://example.com/api/chat/conversation/test-slug", {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ markRead: true }),
     });
 
     const response = await PATCH(request, {
@@ -130,6 +134,10 @@ describe("PATCH /api/chat/conversation/[slug]", () => {
 
     const request = new Request("https://example.com/api/chat/conversation/test-slug", {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ markRead: true }),
     });
 
     const response = await PATCH(request, {
@@ -156,6 +164,10 @@ describe("PATCH /api/chat/conversation/[slug]", () => {
 
     const request = new Request("https://example.com/api/chat/conversation/non-existent-slug", {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ markRead: true }),
     });
 
     const response = await PATCH(request, {
@@ -176,6 +188,10 @@ describe("PATCH /api/chat/conversation/[slug]", () => {
 
     const request = new Request("https://example.com/api/chat/conversation/test-slug", {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ markRead: true }),
     });
 
     const response = await PATCH(request, {
@@ -185,5 +201,32 @@ describe("PATCH /api/chat/conversation/[slug]", () => {
 
     expect(response.status).toBe(401);
     expect(result.error).toBe("Not authorized - Invalid session");
+  });
+
+  it("should return 400 when markRead parameter is missing", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const testEmail = "test@example.com";
+    const { conversation } = await conversationFactory.create({
+      emailFrom: testEmail,
+    });
+
+    mockSession = { isAnonymous: false, email: testEmail };
+    mockMailbox = mailbox;
+
+    const request = new Request("https://example.com/api/chat/conversation/test-slug", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    const response = await PATCH(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(result.error).toBe("markRead parameter is required");
   });
 });
