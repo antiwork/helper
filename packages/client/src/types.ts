@@ -51,5 +51,7 @@ export interface UseConversationsResult {
 }
 
 export interface UseConversationResult {
+  subject: string | null;
   messages: Message[];
+  isEscalated: boolean;
 }

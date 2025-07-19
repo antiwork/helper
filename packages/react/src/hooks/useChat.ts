@@ -1,9 +1,10 @@
 "use client";
 
-import { Message, useChat as useAIChat } from "@ai-sdk/react";
-import { useEffect, useState } from "react";
+import { useChat as useAIChat } from "@ai-sdk/react";
+import { useEffect } from "react";
 import { HelperTool } from "../components/HelperProvider";
 import { useHelperContext } from "../context/HelperContext";
+import { Conversation, useConversation } from "./useConversation";
 
 export const useChat = (
   conversationSlug: string,
@@ -11,13 +12,8 @@ export const useChat = (
     tools?: Record<string, HelperTool>;
     aiChat?: Partial<Omit<Parameters<typeof useAIChat>[0], "onToolCall" | "experimental_prepareRequestBody" | "fetch">>;
   },
-): {
-  messages: Message[];
-  send: (message: string) => void;
-  aiChat: ReturnType<typeof useAIChat>;
-} => {
+): ReturnType<typeof useAIChat> & { conversation: Conversation | null } => {
   const { getToken } = useHelperContext();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const aiChat = useAIChat({
     maxSteps: 3,
@@ -67,20 +63,16 @@ export const useChat = (
     ...options?.aiChat,
   });
 
-  // Wait a tick before submitting so that the input state is updated
+  const { conversation } = useConversation(conversationSlug);
+
   useEffect(() => {
-    if (isSubmitting) {
-      setIsSubmitting(false);
-      aiChat.handleSubmit();
+    if (conversation) {
+      aiChat.setMessages(conversation.messages);
     }
-  }, [isSubmitting]);
+  }, [conversation]);
 
   return {
-    messages: aiChat.messages,
-    send: (message: string) => {
-      aiChat.setInput(message);
-      setIsSubmitting(true);
-    },
-    aiChat,
+    ...aiChat,
+    conversation,
   };
 };

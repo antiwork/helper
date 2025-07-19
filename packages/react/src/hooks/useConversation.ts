@@ -1,11 +1,30 @@
 "use client";
 
+import { Message } from "@ai-sdk/react";
 import { useCallback, useEffect, useState } from "react";
-import { Message } from "@helperai/client";
 import { useHelperContext } from "../context/HelperContext";
 
-interface UseConversationResult {
+export interface AttachmentAnnotation {
+  attachment: {
+    name: string;
+    url: string;
+  };
+}
+
+export interface UserAnnotation {
+  user: {
+    name: string;
+  };
+}
+
+export interface Conversation {
+  subject: string | null;
   messages: Message[];
+  isEscalated: boolean;
+}
+
+interface UseConversationResult {
+  conversation: Conversation | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -13,7 +32,7 @@ interface UseConversationResult {
 
 export function useConversation(conversationSlug: string): UseConversationResult {
   const { client } = useHelperContext();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +48,7 @@ export function useConversation(conversationSlug: string): UseConversationResult
       setError(null);
 
       const data = await client.conversations.get(conversationSlug);
-      setMessages(data.messages || []);
+      setConversation(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch conversation");
     } finally {
@@ -42,7 +61,7 @@ export function useConversation(conversationSlug: string): UseConversationResult
   }, [fetchConversation]);
 
   return {
-    messages,
+    conversation,
     loading,
     error,
     refetch: fetchConversation,
