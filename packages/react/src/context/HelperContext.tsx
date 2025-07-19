@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, ReactNode, useContext, useMemo, useRef } from "react";
-import { HelperClient, CreateSessionParams } from "@helperai/client";
+import { CreateSessionParams, HelperClient } from "@helperai/client";
 
 interface HelperContextValue {
   host: string;

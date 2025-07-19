@@ -1,24 +1,21 @@
 import {
-  CreateSessionParams,
-  CreateSessionResult,
   CreateConversationParams,
   CreateConversationResult,
+  CreateSessionParams,
+  CreateSessionResult,
   PatchConversationParams,
   PatchConversationResult,
-  UseConversationsResult,
   UseConversationResult,
+  UseConversationsResult,
 } from "./types";
 
 export class HelperClient {
   constructor(
     private host: string,
-    private getToken: () => Promise<string>
+    private getToken: () => Promise<string>,
   ) {}
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = await this.getToken();
     const response = await fetch(`${this.host}${endpoint}`, {
       ...options,
@@ -56,8 +53,7 @@ export class HelperClient {
   };
 
   conversations = {
-    list: (): Promise<UseConversationsResult> =>
-      this.request<UseConversationsResult>("/api/chat/conversations"),
+    list: (): Promise<UseConversationsResult> => this.request<UseConversationsResult>("/api/chat/conversations"),
 
     get: (slug: string): Promise<UseConversationResult> =>
       this.request<UseConversationResult>(`/api/chat/conversation/${slug}`),
