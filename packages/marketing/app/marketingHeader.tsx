@@ -7,11 +7,8 @@ import { useEffect, useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-type MarketingHeaderProps = {
-  bgColor?: string;
-};
 
-export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
+export function MarketingHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -26,12 +23,20 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
   return (
     <TooltipProvider delayDuration={0}>
       <header
-        className={cn("fixed top-0 z-50 pb-2 w-full transition-all duration-300", isScrolled ? "pt-2" : "pt-4")}
-        style={{ backgroundColor: bgColor }}
+        className={cn(
+          "fixed top-0 z-50 pb-2 w-full transition-all duration-300",
+          isScrolled ? "pt-2" : "pt-4",
+          "bg-[#2B0808] dark:bg-background/80 dark:backdrop-blur-sm dark:border-b dark:border-border"
+        )}
       >
         <div className="container mx-auto px-4 flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <Image src="/logo-white.svg" alt="Helper" width={120} height={32} />
+            <Image 
+              src="/logo-white.svg" 
+              alt="Helper" 
+              width={120} 
+              height={32}
+            />
           </Link>
           <div className="flex items-center gap-2 md:gap-4">
             <Tooltip>
@@ -42,7 +47,7 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
                   rel="noopener noreferrer"
                   className="flex items-center group"
                 >
-                  <span className="inline-flex items-center justify-center w-9 h-9 transition-colors duration-200 group-hover:text-amber-400 group-focus:text-amber-400">
+                  <span className="inline-flex items-center justify-center w-9 h-9 text-white dark:text-foreground transition-colors duration-200 group-hover:text-amber-400 dark:group-hover:text-bright group-focus:text-amber-400 dark:group-focus:text-bright">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
                         fillRule="evenodd"
@@ -61,7 +66,7 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link href="/docs" className="flex items-center group">
-                  <span className="inline-flex items-center justify-center w-9 h-9 transition-colors duration-200 group-hover:text-amber-400 group-focus:text-amber-400">
+                  <span className="inline-flex items-center justify-center w-9 h-9 text-white dark:text-foreground transition-colors duration-200 group-hover:text-amber-400 dark:group-hover:text-bright group-focus:text-amber-400 dark:group-focus:text-bright">
                     <BookOpen className="h-6 w-6" />
                   </span>
                 </Link>
