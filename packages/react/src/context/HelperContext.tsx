@@ -1,11 +1,9 @@
 "use client";
 
-import React, { createContext, ReactNode, useContext, useMemo, useRef } from "react";
+import React, { createContext, ReactNode, useContext, useMemo } from "react";
 import { CreateSessionParams, HelperClient } from "@helperai/client";
 
 interface HelperContextValue {
-  host: string;
-  getToken: () => Promise<string>;
   client: HelperClient;
 }
 
@@ -16,27 +14,8 @@ export interface HelperContextProviderProps extends CreateSessionParams {
   host: string;
 }
 
-export function HelperContextProvider({ children, host, ...params }: HelperContextProviderProps) {
-  const tokenRef = useRef<string | null>(null);
-
-  const value: HelperContextValue = useMemo(() => {
-    const getToken = async (): Promise<string> => {
-      if (!tokenRef.current) {
-        const client = new HelperClient(host, () => Promise.resolve(""));
-        const { token: newToken } = await client.sessions.create(params);
-        tokenRef.current = newToken;
-      }
-      return tokenRef.current!;
-    };
-
-    const client = new HelperClient(host, getToken);
-
-    return {
-      host,
-      getToken,
-      client,
-    };
-  }, [host, params]);
+export function HelperContextProvider({ children, ...params }: HelperContextProviderProps) {
+  const value: HelperContextValue = useMemo(() => ({ client: new HelperClient(params) }), [params]);
 
   return <HelperContext.Provider value={value}>{children}</HelperContext.Provider>;
 }

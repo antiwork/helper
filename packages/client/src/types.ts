@@ -1,3 +1,15 @@
+export type HelperTool<Args = any, Result = any> = {
+  description?: string;
+  parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
+} & (
+  | {
+      execute: (params: Args) => Promise<Result> | Result;
+    }
+  | {
+      url: string;
+    }
+);
+
 export interface Conversation {
   slug: string;
   subject: string;

@@ -16,7 +16,7 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
         parameters: {
           productId: { type: "string", description: "The ID of the Gumroad product" },
         },
-        execute: ({ productId }) => {
+        execute: ({ productId }: { productId: string }) => {
           return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
         },
       },
