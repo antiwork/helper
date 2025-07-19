@@ -35,9 +35,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Ensure Playwright browsers are installed
-        run: pnpm run with-test-env playwright install --with-deps chromium
-
       - name: Run fail-fast on changed Playwright tests
         if: github.event_name == 'pull_request'
         run: ./scripts/e2e.sh "playwright test --only-changed=$GITHUB_BASE_REF"
