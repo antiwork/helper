@@ -1,12 +1,14 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useChat } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
+  const router = useRouter();
   const { messages, input, handleInputChange, handleSubmit, conversation } = useChat(conversationSlug, {
     tools: {
       getProductStatus: {
@@ -24,13 +26,7 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
   return (
     <div className="flex flex-col h-screen">
       <div className="p-4 border-b border-border flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            window.location.href = "/widget/test/custom";
-          }}
-        >
+        <Button variant="ghost" size="sm" onClick={() => router.push("/widget/test/custom")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to conversations
         </Button>

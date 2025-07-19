@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useConversations, useCreateConversation } from "@helperai/react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 export const CustomWidgetTest = () => {
   const { conversations, loading, error } = useConversations();
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
+  const router = useRouter();
 
   if (loading) {
     return <div className="p-4">Loading conversations...</div>;
@@ -37,9 +39,7 @@ export const CustomWidgetTest = () => {
       <div className="flex-1 overflow-y-auto">
         <ConversationTable
           conversations={conversations}
-          onSelectConversation={(slug) => {
-            window.location.href = `/widget/test/custom/${slug}`;
-          }}
+          onSelectConversation={(slug) => router.push(`/widget/test/custom/${slug}`)}
         />
       </div>
     </div>
