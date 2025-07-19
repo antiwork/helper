@@ -1,16 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Conversation } from "@helperai/client";
 import { useHelperContext } from "../context/HelperContext";
-
-interface Conversation {
-  slug: string;
-  subject: string;
-  createdAt: string;
-  latestMessage: string | null;
-  latestMessageCreatedAt: string | null;
-  messageCount: number;
-}
 
 interface UseConversationsResult {
   conversations: Conversation[];
@@ -20,42 +12,24 @@ interface UseConversationsResult {
 }
 
 export function useConversations(): UseConversationsResult {
-  const { host, getToken } = useHelperContext();
+  const { client } = useHelperContext();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
-    const token = await getToken();
-
-    if (!token) {
-      setError("No authentication token provided");
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${host}/api/chat/conversations`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch conversations: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await client.conversations.list();
       setConversations(data.conversations || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch conversations");
     } finally {
       setLoading(false);
     }
-  }, [host, getToken]);
+  }, [client]);
 
   useEffect(() => {
     fetchConversations();

@@ -1,10 +1,8 @@
 "use client";
 
-import { Message } from "@ai-sdk/react";
 import { useCallback, useEffect, useState } from "react";
+import { Message } from "@helperai/client";
 import { useHelperContext } from "../context/HelperContext";
-
-// TODO: Make this return custom types rather than forcing everything into the Message interface
 
 export interface AttachmentAnnotation {
   attachment: {
@@ -33,20 +31,12 @@ interface UseConversationResult {
 }
 
 export function useConversation(conversationSlug: string): UseConversationResult {
-  const { host, getToken } = useHelperContext();
+  const { client } = useHelperContext();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchConversation = useCallback(async () => {
-    const token = await getToken();
-
-    if (!token) {
-      setError("No authentication token provided");
-      setLoading(false);
-      return;
-    }
-
     if (!conversationSlug) {
       setError("No conversation slug provided");
       setLoading(false);
@@ -57,24 +47,14 @@ export function useConversation(conversationSlug: string): UseConversationResult
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${host}/api/chat/conversation/${conversationSlug}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch conversation: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await client.conversations.get(conversationSlug);
       setConversation(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch conversation");
     } finally {
       setLoading(false);
     }
-  }, [host, getToken, conversationSlug]);
+  }, [client, conversationSlug]);
 
   useEffect(() => {
     fetchConversation();

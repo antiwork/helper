@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "outDir": "dist",
     "declaration": true,
     "declarationDir": "dist/types",
@@ -11,7 +11,16 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node", "vitest"]
+    "types": ["node", "vitest"],
+    "baseUrl": ".",
+    "paths": {
+      "@helperai/client": ["../client/src"]
+    },
+    "isolatedModules": true,
+    "allowJs": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true
   },
-  "include": ["src", "tsup.config.ts"]
+  "include": ["src", "tsup.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }
