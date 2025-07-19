@@ -42,6 +42,9 @@
     "react": ">=18",
     "react-dom": ">=18"
   },
+  "dependencies": {
+    "@helperai/client": "workspace:*"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
