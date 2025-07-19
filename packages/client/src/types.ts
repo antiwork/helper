@@ -10,7 +10,7 @@ export interface Conversation {
 export interface Message {
   id: string;
   content: string;
-  role: string;
+  role: "data" | "system" | "user" | "assistant";
 }
 
 export interface CreateSessionParams {
