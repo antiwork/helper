@@ -41,19 +41,23 @@ echo "📍 Current directory: $(pwd)"
 echo "🔍 Checking for .env.test.local..."
 
 # Ensure local environment variables are sourced
-if [ ! -f ".env.test.local" ]; then
-    echo "⚠️ .env.test.local not found. Please create it from .env.local.sample."
+if [ ! -f ".env.test" ]; then
+    echo "⚠️ .env.test not found. Please create it from .env.local.sample."
     echo "📁 Files in current directory:"
     ls -la .env* 2>/dev/null || echo "No .env files found"
     exit 1
-else
-    echo "✅ .env.test.local found"
 fi
+
+echo "✅ .env.test found"
+
+echo "CI is set to $CI"
 
 # Source the environment file to get SUPABASE_PROJECT_ID
 set -o allexport
 source .env.test
-source .env.test.local
+if [ "$CI" != "true" ] && [ -f ".env.test.local" ]; then
+  source .env.test.local
+fi
 set +o allexport
 
 # Check for existing Supabase containers and clean them up if found
