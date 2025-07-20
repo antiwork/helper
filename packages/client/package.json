@@ -35,5 +35,8 @@
     "@types/node": "^22.15.3",
     "tsup": "^8.3.6",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "zod": "^3.24.3"
   }
 }

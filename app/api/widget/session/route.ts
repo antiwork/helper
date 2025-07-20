@@ -1,24 +1,9 @@
-import { z } from "zod";
 import { db } from "@/db/client";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
 import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { createWidgetSession, getEmailHash } from "@/lib/widgetSession";
+import { CreateSessionResult, sessionParamsSchema } from "@/packages/client/dist";
 import { corsOptions, corsResponse } from "../utils";
-
-const requestSchema = z.object({
-  email: z.string().email().optional(),
-  emailHash: z.string().min(1).optional(),
-  timestamp: z.number().int().positive().optional(),
-  customerMetadata: z
-    .object({
-      value: z.number().nullish(),
-      name: z.string().nullish(),
-      links: z.record(z.string()).nullish(),
-    })
-    .nullish(),
-  experimentalReadPage: z.boolean().nullish(),
-  currentToken: z.string().nullish(),
-});
 
 // 1 hour
 const CLOCK_SKEW_TOLERANCE_MS = 60 * 60 * 1000;
@@ -29,13 +14,13 @@ export function OPTIONS() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const result = requestSchema.safeParse(body);
+  const result = sessionParamsSchema.safeParse(body);
 
   if (!result.success) {
     return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
 
-  const { email, emailHash, timestamp, customerMetadata, experimentalReadPage, currentToken } = result.data;
+  const { email, emailHash, timestamp, customerMetadata, currentToken } = result.data;
 
   const mailboxRecord = await db.query.mailboxes.findFirst({
     columns: {
@@ -98,11 +83,14 @@ export async function POST(request: Request) {
     notifications = await fetchAndUpdateUnsentNotifications(platformCustomer);
   }
 
-  return corsResponse({
+  // TODO: update result type and remove unnecesary fields
+  return corsResponse<
+    CreateSessionResult & { valid: true; showWidget: boolean; notifications: any; experimentalReadPage?: boolean }
+  >({
     valid: true,
     token,
     showWidget,
     notifications,
-    experimentalReadPage,
+    experimentalReadPage: body.experimentalReadPage,
   });
 }

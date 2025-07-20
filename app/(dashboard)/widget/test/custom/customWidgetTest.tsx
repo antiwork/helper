@@ -55,7 +55,7 @@ const ConversationTable = ({
     subject: string;
     createdAt: string;
     latestMessage: string | null;
-    latestMessageCreatedAt: string | null;
+    latestMessageAt: string | null;
     messageCount: number;
   }[];
   onSelectConversation: (slug: string) => void;
@@ -79,8 +79,8 @@ const ConversationTable = ({
           <div className="font-medium truncate">{conversation.subject || "No subject"}</div>
           <div className="text-sm text-muted-foreground">{conversation.messageCount}</div>
           <div className="text-sm text-muted-foreground">
-            {conversation.latestMessageCreatedAt
-              ? new Date(conversation.latestMessageCreatedAt).toLocaleDateString()
+            {conversation.latestMessageAt
+              ? new Date(conversation.latestMessageAt).toLocaleDateString()
               : new Date(conversation.createdAt).toLocaleDateString()}
           </div>
         </div>

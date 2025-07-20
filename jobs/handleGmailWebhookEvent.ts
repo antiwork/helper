@@ -172,7 +172,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
   // Next.js API route handlers will lowercase header keys (e.g. "Authorization" -> "authorization"), but not Inngest.
   // For consistency across all potential invocations of this function, we can lowercase everything here.
   const normalizedHeaders = Object.fromEntries(
-    Object.entries(z.record(z.string()).parse(headers)).map(([key, value]) => [key.toLowerCase(), value]),
+    Object.entries(z.record(z.string(), z.string()).parse(headers)).map(([key, value]) => [key.toLowerCase(), value]),
   );
   const data = await authorizeGmailRequest(
     GmailWebhookBodySchema.parse(body),

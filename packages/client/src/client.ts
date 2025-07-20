@@ -1,20 +1,20 @@
 import {
+  ConversationResult,
+  ConversationsResult,
   CreateConversationParams,
   CreateConversationResult,
-  CreateSessionParams,
   CreateSessionResult,
   HelperTool,
-  PatchConversationParams,
-  PatchConversationResult,
-  UseConversationResult,
-  UseConversationsResult,
+  SessionParams,
+  UpdateConversationParams,
+  UpdateConversationResult,
 } from "./types";
 
 export class HelperClient {
   public readonly host: string;
-  private sessionParams: CreateSessionParams;
+  private sessionParams: SessionParams;
 
-  constructor({ host, ...sessionParams }: CreateSessionParams & { host: string }) {
+  constructor({ host, ...sessionParams }: SessionParams & { host: string }) {
     this.sessionParams = sessionParams;
     this.host = host;
   }
@@ -51,7 +51,7 @@ export class HelperClient {
   }
 
   readonly sessions = {
-    create: async (params: CreateSessionParams): Promise<CreateSessionResult> => {
+    create: async (params: SessionParams): Promise<CreateSessionResult> => {
       const response = await fetch(`${this.host}/api/widget/session`, {
         method: "POST",
         headers: {
@@ -70,10 +70,10 @@ export class HelperClient {
   };
 
   readonly conversations = {
-    list: (): Promise<UseConversationsResult> => this.request<UseConversationsResult>("/api/chat/conversations"),
+    list: (): Promise<ConversationsResult> => this.request<ConversationsResult>("/api/chat/conversations"),
 
-    get: (slug: string): Promise<UseConversationResult> =>
-      this.request<UseConversationResult>(`/api/chat/conversation/${slug}`),
+    get: (slug: string): Promise<ConversationResult> =>
+      this.request<ConversationResult>(`/api/chat/conversation/${slug}`),
 
     create: (params: CreateConversationParams = {}): Promise<CreateConversationResult> =>
       this.request<CreateConversationResult>("/api/chat/conversation", {
@@ -81,8 +81,8 @@ export class HelperClient {
         body: JSON.stringify(params),
       }),
 
-    update: (slug: string, params: PatchConversationParams): Promise<PatchConversationResult> =>
-      this.request<PatchConversationResult>(`/api/chat/conversation/${slug}`, {
+    update: (slug: string, params: UpdateConversationParams): Promise<UpdateConversationResult> =>
+      this.request<UpdateConversationResult>(`/api/chat/conversation/${slug}`, {
         method: "PATCH",
         body: JSON.stringify(params),
       }),

@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { CreateSessionParams, CreateSessionResult } from "@helperai/client";
+import { CreateSessionResult, SessionParams } from "@helperai/client";
 import { useHelperContext } from "../context/HelperContext";
 
 interface UseCreateSessionResult {
-  createSession: (params: CreateSessionParams) => Promise<CreateSessionResult>;
+  createSession: (params: SessionParams) => Promise<CreateSessionResult>;
   loading: boolean;
   error: string | null;
 }
@@ -16,7 +16,7 @@ export function useCreateSession(): UseCreateSessionResult {
   const [error, setError] = useState<string | null>(null);
 
   const createSessionCallback = useCallback(
-    async (params: CreateSessionParams) => {
+    async (params: SessionParams) => {
       try {
         setLoading(true);
         setError(null);

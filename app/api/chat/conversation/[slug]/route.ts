@@ -1,12 +1,14 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
-import { withWidgetAuth } from "@/app/api/widget/utils";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { getFirstName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
 import { getFileUrl } from "@/lib/data/files";
 import { getBasicProfileById } from "@/lib/data/user";
+import { ConversationResult, updateConversationParamsSchema, UpdateConversationResult } from "@/packages/client/dist";
 
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
@@ -62,7 +64,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 
   const allAttachments = await Promise.all(
     attachments.map(async (a) => ({
-      messageId: a.messageId?.toString(),
+      messageId: assertDefined(a.messageId).toString(),
       name: a.name,
       presignedUrl: await getFileUrl(a),
     })),
@@ -71,7 +73,10 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   const formattedMessages = await Promise.all(
     conversation.messages.map(async (message) => ({
       id: message.id.toString(),
-      role: message.role === "staff" || message.role === "ai_assistant" ? "assistant" : message.role,
+      role:
+        message.role === "staff" || message.role === "ai_assistant" || message.role === "tool"
+          ? ("assistant" as const)
+          : message.role,
       content: message.cleanedUpText || htmlToText(message.body ?? "", { wordwrap: false }),
       createdAt: message.createdAt.toISOString(),
       reactionType: message.reactionType,
@@ -100,7 +105,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 
   const guideSessionMessages = activeGuideSessions.map((session) => ({
     id: `guide_session_${session.id}`,
-    role: "assistant",
+    role: "assistant" as const,
     content: "",
     parts: [
       {
@@ -125,7 +130,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
-  return Response.json({
+  return corsResponse<ConversationResult>({
     subject: conversation.subject,
     messages: allMessages,
     // We don't want to include staff-uploaded attachments in the AI messages, but we need to show them in the UI
@@ -137,9 +142,9 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
 
-  const body = await request.json();
-  if (!body.markRead) {
-    return Response.json({ error: "markRead parameter is required" }, { status: 400 });
+  const { error } = updateConversationParamsSchema.safeParse(await request.json());
+  if (error) {
+    return corsResponse({ error: "markRead parameter is required" }, { status: 400 });
   }
 
   const whereCondition = conversationMatcher(slug, session);
@@ -148,12 +153,12 @@ export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params
   const conversation = await db.query.conversations.findFirst({ columns: { id: true }, where: whereCondition });
 
   if (!conversation) {
-    return Response.json({ error: "Conversation not found" }, { status: 404 });
+    return corsResponse({ error: "Conversation not found" }, { status: 404 });
   }
 
   await updateConversation(conversation.id, { set: { lastReadAt: new Date() } });
 
-  return Response.json({ success: true });
+  return corsResponse<UpdateConversationResult>({ success: true });
 });
 
 const getUserAnnotation = async (userId: string | null) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, ReactNode, useContext, useMemo } from "react";
-import { CreateSessionParams, HelperClient } from "@helperai/client";
+import { HelperClient, SessionParams } from "@helperai/client";
 
 interface HelperContextValue {
   client: HelperClient;
@@ -9,7 +9,7 @@ interface HelperContextValue {
 
 const HelperContext = createContext<HelperContextValue | null>(null);
 
-export interface HelperContextProviderProps extends CreateSessionParams {
+export interface HelperContextProviderProps extends SessionParams {
   children: ReactNode;
   host: string;
 }

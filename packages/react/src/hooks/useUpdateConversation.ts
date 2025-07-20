@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { PatchConversationParams, PatchConversationResult } from "@helperai/client";
+import { UpdateConversationParams, UpdateConversationResult } from "@helperai/client";
 import { useHelperContext } from "../context/HelperContext";
 
 interface UseUpdateConversationResult {
-  patchConversation: (slug: string, params: PatchConversationParams) => Promise<PatchConversationResult>;
+  patchConversation: (slug: string, params: UpdateConversationParams) => Promise<UpdateConversationResult>;
   loading: boolean;
   error: string | null;
 }
@@ -16,7 +16,7 @@ export function useUpdateConversation(): UseUpdateConversationResult {
   const [error, setError] = useState<string | null>(null);
 
   const patchConversation = useCallback(
-    async (slug: string, params: PatchConversationParams) => {
+    async (slug: string, params: UpdateConversationParams) => {
       if (!slug) {
         throw new Error("Conversation slug is required");
       }

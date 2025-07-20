@@ -20,7 +20,7 @@ export function createWidgetSession(
     showWidget,
     currentToken,
   }: {
-    email?: string;
+    email?: string | null;
     showWidget: boolean;
     currentToken?: string | null;
   },
