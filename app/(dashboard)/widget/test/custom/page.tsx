@@ -1,6 +1,6 @@
-import { HelperClient, SessionParams } from "@helperai/client";
+import { SessionParams } from "@helperai/client";
 import { generateHelperAuth, type HelperWidgetConfig } from "@helperai/react";
-import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
+import { CustomWidgetTest, CustomWidgetProvider } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
 import { getBaseUrl } from "@/components/constants";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,9 @@ export default async function WidgetTest({
     ...config,
   };
 
-  const client = new HelperClient(sessionParams);
-
-  return <CustomWidgetTest client={client} />;
+  return (
+    <CustomWidgetProvider sessionParams={sessionParams}>
+      <CustomWidgetTest />
+    </CustomWidgetProvider>
+  );
 }

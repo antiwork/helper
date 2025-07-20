@@ -3,7 +3,6 @@ export { HelperProvider, type HelperProviderProps } from "./components/HelperPro
 export { useHelper } from "./hooks/useHelper";
 
 export { useHelperContext } from "./context/HelperContext";
-export { useChat } from "./hooks/useChat";
 
 export * from "./server/helper-auth";
 export * from "./types";

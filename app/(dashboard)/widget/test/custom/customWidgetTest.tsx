@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { Conversation, HelperClient } from "@helperai/client";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { HelperClient, Conversation, SessionParams } from "@helperai/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 
-interface CustomWidgetTestProps {
-  client: HelperClient;
+const CustomWidgetContext = createContext<{ client: HelperClient } | null>(null);
+
+const useCustomWidgetContext = () => {
+  const context = useContext(CustomWidgetContext);
+  if (!context) {
+    throw new Error("useCustomWidgetContext must be used within CustomWidgetProvider");
+  }
+  return context;
+};
+
+interface CustomWidgetProviderProps {
+  sessionParams: SessionParams & { host: string };
+  children: React.ReactNode;
 }
 
-export const CustomWidgetTest = ({ client }: CustomWidgetTestProps) => {
+export const CustomWidgetProvider = ({ sessionParams, children }: CustomWidgetProviderProps) => {
+  const [client] = useState(() => new HelperClient(sessionParams));
+
+  return (
+    <CustomWidgetContext.Provider value={{ client }}>
+      {children}
+    </CustomWidgetContext.Provider>
+  );
+};
+
+export const CustomWidgetTest = () => {
+  const { client } = useCustomWidgetContext();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

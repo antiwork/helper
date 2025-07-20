@@ -47,25 +47,36 @@ function App() {
 }
 ```
 
-### Using API Hooks
+### Using Direct Client Calls
 
 ```tsx
-import React, { useState } from "react";
-import { useChat } from "@helperai/react";
+import React, { useState, useEffect } from "react";
+import { HelperClient } from "@helperai/client";
 
 function ChatComponent() {
   const [conversationSlug, setConversationSlug] = useState<string>("");
-  const { messages, send } = useChat(conversationSlug);
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  
+  // Create client instance with session params
+  const client = new HelperClient(sessionParams);
 
   const startChat = async () => {
-    const { conversationSlug: newSlug } = await createConversation();
-    setConversationSlug(newSlug);
-    send("Hello!");
+    const result = await client.conversations.create({ subject: "New chat" });
+    setConversationSlug(result.conversationSlug);
   };
+
+  useEffect(() => {
+    if (conversationSlug) {
+      client.conversations.get(conversationSlug).then(conv => {
+        setMessages(conv.messages);
+      });
+    }
+  }, [conversationSlug]);
 
   return (
     <div>
-      <button onClick={startChat}>Start Chat</button>
+      <button onClick={startChat}>Start chat</button>
       {conversations.map((conv) => (
         <div key={conv.slug}>{conv.subject}</div>
       ))}
@@ -110,37 +121,22 @@ Provides global state management for Helper functionality, supporting both widge
 
 ### Hooks
 
-#### `useConversation(conversationSlug: string)`
-
-Fetches messages for a specific conversation.
+For chat functionality, use the `@helperai/client` package directly:
 
 ```tsx
-const {
-  messages, // Message[]
-  loading, // boolean
-  error, // string | null
-  refetch, // () => void
-} = useConversation(conversationSlug);
+import { HelperClient } from "@helperai/client";
+
+const client = new HelperClient(sessionParams);
+
+// Get conversation
+const conversation = await client.conversations.get(conversationSlug);
+
+// List conversations  
+const { conversations } = await client.conversations.list();
+
+// Create conversation
+const result = await client.conversations.create({ subject: "Help needed" });
 ```
-
-````
-
-#### `useChat(conversationSlug: string)`
-
-Provides AI chat functionality for a specific conversation using the AI SDK.
-
-```tsx
-const {
-  messages, // Message[] - Array of conversation messages
-  send, // (message: string) => void - Send a message
-  aiChat, // ReturnType<typeof useAIChat> - Direct access to AI SDK chat
-} = useChat(conversationSlug);
-
-// Usage
-const conversationSlug = "my-conversation";
-const { messages, send } = useChat(conversationSlug);
-send("Hello, how can you help me?");
-````
 
 #### `useHelperContext()`
 
@@ -247,7 +243,10 @@ export default function DashboardPage() {
 ```tsx
 function ChatComponent() {
   const [conversationSlug, setConversationSlug] = useState<string>("");
-  const { messages, send } = useChat(conversationSlug);
+  const [conversations, setConversations] = useState([]);
+  
+  // Use HelperClient directly
+  const client = new HelperClient(sessionParams);
 
   if (!conversationSlug) return <div>Select a conversation</div>;
 
