@@ -27,6 +27,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch all branches
+        run: git fetch --all
+
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
