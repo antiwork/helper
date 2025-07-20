@@ -67,6 +67,12 @@ _The app will start with placeholder values for other services - you can follow 
 pnpm install
 ```
 
+### Generate the SSL certificates
+
+```sh
+pnpm generate-ssl-certificates
+```
+
 ### Seed the database with sample data
 
 ```sh
