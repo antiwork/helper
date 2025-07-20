@@ -44,6 +44,9 @@ jobs:
           restore-keys: |
             playwright-browsers-${{ runner.os }}-
 
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Install Playwright Browsers
         run: pnpm playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
