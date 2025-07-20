@@ -1,4 +1,4 @@
-import * as z from "zod/mini";
+import { z } from "zod";
 
 export type HelperTool<Args = any, Result = any> = {
   description?: string;
@@ -16,8 +16,8 @@ export const conversationSchema = z.object({
   slug: z.string(),
   subject: z.string(),
   createdAt: z.string(),
-  latestMessage: z.nullable(z.string()),
-  latestMessageAt: z.nullable(z.iso.datetime()),
+  latestMessage: z.string().nullable(),
+  latestMessageAt: z.string().datetime().nullable(),
   messageCount: z.number(),
 });
 export type Conversation = z.infer<typeof conversationSchema>;
@@ -30,17 +30,17 @@ export const messageSchema = z.object({
 export type Message = z.infer<typeof messageSchema>;
 
 export const sessionParamsSchema = z.object({
-  email: z.nullish(z.string()),
-  emailHash: z.nullish(z.string()),
-  timestamp: z.nullish(z.number()),
-  customerMetadata: z.nullish(
-    z.object({
-      name: z.nullish(z.string()),
-      value: z.nullish(z.number()),
-      links: z.nullish(z.record(z.string(), z.string())),
-    }),
-  ),
-  currentToken: z.nullish(z.string()),
+  email: z.string().nullish(),
+  emailHash: z.string().nullish(),
+  timestamp: z.number().nullish(),
+  customerMetadata: z
+    .object({
+      name: z.string().nullish(),
+      value: z.number().nullish(),
+      links: z.record(z.string(), z.string()).nullish(),
+    })
+    .nullish(),
+  currentToken: z.string().nullish(),
 });
 export type SessionParams = z.infer<typeof sessionParamsSchema>;
 
@@ -50,8 +50,8 @@ export const createSessionResultSchema = z.object({
 export type CreateSessionResult = z.infer<typeof createSessionResultSchema>;
 
 export const createConversationParamsSchema = z.object({
-  isPrompt: z.nullish(z.boolean()),
-  subject: z.nullish(z.string()),
+  isPrompt: z.boolean().nullish(),
+  subject: z.string().nullish(),
 });
 export type CreateConversationParams = z.infer<typeof createConversationParamsSchema>;
 
@@ -77,13 +77,13 @@ export const conversationsResultSchema = z.object({
 export type ConversationsResult = z.infer<typeof conversationsResultSchema>;
 
 export const conversationResultSchema = z.object({
-  subject: z.nullable(z.string()),
+  subject: z.string().nullable(),
   messages: z.array(messageSchema),
   allAttachments: z.array(
     z.object({
       messageId: z.string(),
       name: z.string(),
-      presignedUrl: z.nullable(z.string()),
+      presignedUrl: z.string().nullable(),
     }),
   ),
   isEscalated: z.boolean(),
