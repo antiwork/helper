@@ -1,4 +1,5 @@
-import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
+import { HelperClient, SessionParams } from "@helperai/client";
+import { generateHelperAuth, type HelperWidgetConfig } from "@helperai/react";
 import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
 import { getBaseUrl } from "@/components/constants";
 
@@ -30,9 +31,12 @@ export default async function WidgetTest({
         },
   };
 
-  return (
-    <HelperProvider host="https://helperai.dev" {...config}>
-      <CustomWidgetTest />
-    </HelperProvider>
-  );
+  const sessionParams: SessionParams & { host: string } = {
+    host: "https://helperai.dev",
+    ...config,
+  };
+
+  const client = new HelperClient(sessionParams);
+
+  return <CustomWidgetTest client={client} />;
 }
