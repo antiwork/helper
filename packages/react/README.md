@@ -123,7 +123,7 @@ const {
 } = useConversation(conversationSlug);
 ```
 
-```
+````
 
 #### `useChat(conversationSlug: string)`
 
@@ -140,7 +140,7 @@ const {
 const conversationSlug = "my-conversation";
 const { messages, send } = useChat(conversationSlug);
 send("Hello, how can you help me?");
-```
+````
 
 #### `useHelperContext()`
 
