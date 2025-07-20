@@ -51,11 +51,9 @@ function App() {
 
 ```tsx
 import React, { useState } from "react";
-import { useChat, useConversations, useCreateConversation } from "@helperai/react";
+import { useChat } from "@helperai/react";
 
 function ChatComponent() {
-  const { conversations, loading } = useConversations();
-  const { createConversation } = useCreateConversation();
   const [conversationSlug, setConversationSlug] = useState<string>("");
   const { messages, send } = useChat(conversationSlug);
 
@@ -112,19 +110,6 @@ Provides global state management for Helper functionality, supporting both widge
 
 ### Hooks
 
-#### `useConversations()`
-
-Fetches and manages a list of all conversations.
-
-```tsx
-const {
-  conversations, // Conversation[]
-  loading, // boolean
-  error, // string | null
-  refetch, // () => void
-} = useConversations();
-```
-
 #### `useConversation(conversationSlug: string)`
 
 Fetches messages for a specific conversation.
@@ -138,19 +123,6 @@ const {
 } = useConversation(conversationSlug);
 ```
 
-#### `useCreateConversation()`
-
-Creates new conversations.
-
-```tsx
-const {
-  createConversation, // (params?: CreateConversationParams) => Promise<CreateConversationResult>
-  loading, // boolean
-  error, // string | null
-} = useCreateConversation();
-
-// Usage
-const { conversationSlug } = await createConversation({ isPrompt: false });
 ```
 
 #### `useChat(conversationSlug: string)`
@@ -274,10 +246,10 @@ export default function DashboardPage() {
 
 ```tsx
 function ChatComponent() {
-  const { conversations, loading, error, refetch } = useConversations();
+  const [conversationSlug, setConversationSlug] = useState<string>("");
+  const { messages, send } = useChat(conversationSlug);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={error} onRetry={refetch} />;
+  if (!conversationSlug) return <div>Select a conversation</div>;
 
   return <ConversationsList conversations={conversations} />;
 }
