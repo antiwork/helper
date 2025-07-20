@@ -27,20 +27,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch all branches
-        run: git fetch --all
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
-
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
           cache: "pnpm"
@@ -50,12 +40,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-browsers-${{ runner.os }}-v1
           restore-keys: |
-            playwright-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install
+            playwright-browsers-${{ runner.os }}-
 
       - name: Install Playwright Browsers
         run: pnpm playwright install --with-deps chromium
@@ -63,7 +50,7 @@ jobs:
 
       - name: Run fail-fast on changed Playwright tests
         if: github.event_name == 'pull_request'
-        run: ./scripts/e2e.sh "playwright test --only-changed=$GITHUB_BASE_REF"
+        run: ./scripts/e2e.sh "playwright test --only-changed=origin/${{ github.base_ref }}"
 
       - name: Run full Playwright suite
         run: ./scripts/e2e.sh
