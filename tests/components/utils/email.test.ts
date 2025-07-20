@@ -51,8 +51,7 @@ describe("parseEmailList", () => {
       expect(result.error.name).toBe("ZodError");
       expect(result.error.issues).toHaveLength(1);
       expect(result.error.issues[0]).toMatchObject({
-        code: "invalid_format",
-        format: "email",
+        code: "invalid_string",
         message: '"invalid-email"',
         path: [0],
       });
@@ -68,8 +67,7 @@ describe("parseEmailList", () => {
       expect(result.error.name).toBe("ZodError");
       expect(result.error.issues).toHaveLength(1);
       expect(result.error.issues[0]).toMatchObject({
-        code: "invalid_format",
-        format: "email",
+        code: "invalid_string",
         message: '"invalid-email"',
         path: [1],
       });
