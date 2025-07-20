@@ -7,7 +7,8 @@ import { GET } from "@/app/api/chat/conversations/route";
 let mockSession: any;
 let mockMailbox: any;
 
-vi.mock("@/app/api/widget/utils", () => ({
+vi.mock("@/app/api/widget/utils", async (importOriginal) => ({
+  ...(await importOriginal()),
   withWidgetAuth: vi.fn((handler) => (request: Request, _context: any) => {
     return handler({ request }, { session: mockSession, mailbox: mockMailbox });
   }),
