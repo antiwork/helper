@@ -38,7 +38,7 @@ import {
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
-import { createAndUploadFile, getFileUrl } from "@/lib/data/files";
+import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
@@ -87,13 +87,23 @@ const loadScreenshotAttachments = async (messages: (typeof conversationMessages.
       messages.filter((m) => (m.metadata as MessageMetadata)?.includesScreenshot).map((m) => m.id),
     ),
   });
-  const attachmentsWithUrls = await Promise.all(
+
+  const attachmentsWithData = await Promise.all(
     attachments.map(async (a) => {
-      const url = await getFileUrl(a);
-      return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
+      try {
+        const bytes = await downloadFile(a);
+        const base64 = Buffer.from(bytes).toString("base64");
+        const url = `data:${a.mimetype};base64,${base64}`;
+        return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
+      } catch {
+        // Fallback to signed URL if download fails
+        const url = await getFileUrl(a);
+        return { messageId: a.messageId, name: a.name, contentType: a.mimetype, url };
+      }
     }),
   );
-  return attachmentsWithUrls.filter((a): a is { messageId: number; name: string; contentType: string; url: string } =>
+
+  return attachmentsWithData.filter((a): a is { messageId: number; name: string; contentType: string; url: string } =>
     Boolean(a.url),
   );
 };

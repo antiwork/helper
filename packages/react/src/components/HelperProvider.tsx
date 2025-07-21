@@ -3,18 +3,6 @@ import { HelperContextProvider } from "../context/HelperContext";
 import type { HelperWidgetConfig } from "../types";
 import { ClientHelperProvider } from "./ClientHelperProvider";
 
-export type HelperTool = {
-  description?: string;
-  parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
-} & (
-  | {
-      execute: (params: Record<string, unknown>) => Promise<unknown> | unknown;
-    }
-  | {
-      url: string;
-    }
-);
-
 /**
  * Props for the HelperProvider component
  * @typedef {Object} HelperProviderProps

@@ -821,7 +821,11 @@ class HelperWidget {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to take screenshot:", error);
-      this.sendMessageToEmbed({ action: "SCREENSHOT", content: null });
+      this.sendMessageToEmbed({
+        action: "SCREENSHOT",
+        content: null,
+        error: error instanceof Error ? error.message : "Screenshot capture failed",
+      });
     }
   }
 

@@ -3,7 +3,8 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
 import { searchConversations } from "@/lib/data/conversation/search";
-import { withWidgetAuth } from "../../widget/utils";
+import { ConversationsResult } from "@/packages/client/dist";
+import { corsResponse, withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
@@ -62,7 +63,7 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
     messageCount: messageCounts.find((m) => m.conversationId === conv.id)?.count || 0,
   }));
 
-  return Response.json({
+  return corsResponse<ConversationsResult>({
     conversations,
     nextCursor,
   });

@@ -18,7 +18,8 @@ vi.mock("@/lib/realtime/publish", () => ({
 let mockSession: any;
 let mockMailbox: any;
 
-vi.mock("@/app/api/widget/utils", () => ({
+vi.mock("@/app/api/widget/utils", async (importOriginal) => ({
+  ...(await importOriginal()),
   withWidgetAuth: vi.fn((handler) => (request: Request, context: any) => {
     return handler({ request, context }, { session: mockSession, mailbox: mockMailbox });
   }),

@@ -19,8 +19,9 @@ export function corsOptions(method: "POST" | "PATCH" = "POST") {
   });
 }
 
-export function corsResponse(
-  data: unknown,
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+export function corsResponse<Data = unknown>(
+  data: Data,
   init?: Omit<ResponseInit, "headers"> & { headers?: Record<string, string> },
   method: "POST" | "PATCH" = "POST",
 ) {

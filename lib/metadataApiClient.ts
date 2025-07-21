@@ -81,7 +81,7 @@ const responseSchema = z.object({
       metadata: z.object({
         name: z.string().optional().nullable(),
         value: z.number().optional().nullable(),
-        links: z.record(z.string()).optional().nullable(),
+        links: z.record(z.string(), z.string()).optional().nullable(),
       }),
     })
     .refine((data) => {

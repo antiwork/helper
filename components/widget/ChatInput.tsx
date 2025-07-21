@@ -1,6 +1,8 @@
+import { isMacOS } from "@tiptap/core";
 import { Camera, Mic, Paperclip, X } from "lucide-react";
 import * as motion from "motion/react-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,7 +76,23 @@ export default function ChatInput({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
-  const { screenshot, setScreenshot } = useScreenshotStore();
+  const { screenshot, setScreenshot, screenshotState, setScreenshotState } = useScreenshotStore();
+
+  // Handle keyboard shortcut for screenshot checkbox
+  useHotkeys(
+    "mod+shift+s",
+    (e) => {
+      e.preventDefault();
+      if (showScreenshot) {
+        setIncludeScreenshot(!includeScreenshot);
+      }
+    },
+    {
+      enabled: showScreenshot,
+      enableOnFormTags: ["INPUT", "TEXTAREA", "SELECT"],
+    },
+    [showScreenshot, includeScreenshot],
+  );
 
   const pendingAttachmentsRef = useRef<File[]>([]);
   const objectUrlsRef = useRef<Map<string, string>>(new Map());
@@ -123,26 +141,42 @@ export default function ChatInput({
     if (!input) {
       setShowScreenshot(false);
       setIncludeScreenshot(false);
+      setScreenshotState({ state: "initial" });
       setSelectedFiles([]);
     } else if (SCREENSHOT_KEYWORDS.some((keyword) => input.toLowerCase().includes(keyword))) {
       setShowScreenshot(true);
     }
-  }, [input]);
+  }, [input, setScreenshotState]);
 
   useEffect(() => {
-    if (screenshot?.response) {
-      const pendingAttachments = pendingAttachmentsRef.current;
-      pendingAttachmentsRef.current = [];
+    if (screenshot) {
+      if (screenshot.response) {
+        // Screenshot captured successfully
+        setScreenshotState({ state: "captured", response: screenshot.response });
 
-      handleSubmit(screenshot.response, pendingAttachments.length > 0 ? pendingAttachments : undefined);
-      setScreenshot(null);
+        const pendingAttachments = pendingAttachmentsRef.current;
+        pendingAttachmentsRef.current = [];
 
-      // Clean up all object URLs when clearing files
-      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      objectUrlsRef.current.clear();
-      setSelectedFiles([]);
+        handleSubmit(screenshot.response, pendingAttachments.length > 0 ? pendingAttachments : undefined);
+        setScreenshot(null);
+        setIncludeScreenshot(false);
+
+        // Clean up all object URLs when clearing files
+        objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+        objectUrlsRef.current.clear();
+        setSelectedFiles([]);
+      } else {
+        // Screenshot failed (response is null)
+        setScreenshotState({
+          state: "error",
+          error: "Failed to capture screenshot. Sending message without screenshot.",
+        });
+        setIncludeScreenshot(false);
+        handleSubmit();
+        setScreenshot(null);
+      }
     }
-  }, [screenshot, handleSubmit]);
+  }, [screenshot, handleSubmit, setScreenshot, setScreenshotState]);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -254,9 +288,20 @@ export default function ChatInput({
       closeWidget();
       return;
     }
+
     if (includeScreenshot) {
-      pendingAttachmentsRef.current = [...selectedFiles];
-      sendScreenshot();
+      try {
+        setScreenshotState({ state: "capturing" });
+        pendingAttachmentsRef.current = [...selectedFiles];
+        sendScreenshot();
+      } catch (error) {
+        captureExceptionAndLog(error);
+        setScreenshotState({
+          state: "error",
+          error: "Failed to capture screenshot. Sending message without screenshot.",
+        });
+        handleSubmit(undefined, selectedFiles.length > 0 ? selectedFiles : undefined);
+      }
     } else {
       handleSubmit(undefined, selectedFiles.length > 0 ? selectedFiles : undefined);
 
@@ -358,7 +403,10 @@ export default function ChatInput({
                 </Tooltip>
               </TooltipProvider>
             )}
-            <ShadowHoverButton isLoading={isLoading} isGumroadTheme={isGumroadTheme} />
+            <ShadowHoverButton
+              isLoading={isLoading || screenshotState.state === "capturing"}
+              isGumroadTheme={isGumroadTheme}
+            />
           </div>
         </div>
         {fileError && (
@@ -421,21 +469,34 @@ export default function ChatInput({
               stiffness: 600,
               damping: 30,
             }}
-            className="flex items-center gap-2"
+            className="flex flex-col gap-2"
           >
-            <Checkbox
-              id="screenshot"
-              checked={includeScreenshot}
-              onCheckedChange={(e) => setIncludeScreenshot(e === true)}
-              className="border-muted-foreground data-[state=checked]:bg-black data-[state=checked]:text-white"
-            />
-            <label
-              htmlFor="screenshot"
-              className="cursor-pointer flex items-center gap-2 text-sm text-muted-foreground"
-            >
-              <Camera className="w-4 h-4" />
-              Include a screenshot for better support?
-            </label>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="screenshot"
+                data-testid="screenshot-checkbox"
+                checked={includeScreenshot}
+                onCheckedChange={(e) => {
+                  setIncludeScreenshot(e === true);
+                  if (!e) setScreenshotState({ state: "initial" });
+                }}
+                className="border-muted-foreground data-[state=checked]:bg-black data-[state=checked]:text-white"
+                disabled={screenshotState.state === "capturing"}
+              />
+              <label
+                htmlFor="screenshot"
+                className="cursor-pointer flex items-center gap-2 text-sm text-muted-foreground"
+              >
+                <Camera className="w-4 h-4" />
+                {screenshotState.state === "capturing"
+                  ? "Capturing screenshot..."
+                  : "Include a screenshot for better support?"}
+                {isMacOS() && <span className="text-xs opacity-60 ml-1">(⌘⇧S)</span>}
+              </label>
+            </div>
+            {screenshotState.state === "error" && (
+              <div className="text-xs text-red-600 ml-6">{screenshotState.error}</div>
+            )}
           </motion.div>
         )}
       </form>

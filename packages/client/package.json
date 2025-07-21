@@ -1,0 +1,42 @@
+{
+  "name": "@helperai/client",
+  "version": "0.1.0",
+  "description": "Helper API client for integrating customer support features",
+  "keywords": [
+    "helper",
+    "api",
+    "client",
+    "sdk"
+  ],
+  "author": "Helper (https://helper.ai)",
+  "license": "MIT",
+  "homepage": "https://helper.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antiwork/helper.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "pnpm build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsup": "^8.3.6",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "zod": "^3.24.3"
+  }
+}

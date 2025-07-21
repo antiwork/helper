@@ -116,7 +116,7 @@ export default function Page() {
         const { conversationSlug } = content;
         onSelectConversation(conversationSlug);
       } else if (action === "SCREENSHOT") {
-        setScreenshot({ response: content });
+        setScreenshot({ response: content || null });
       }
     };
 

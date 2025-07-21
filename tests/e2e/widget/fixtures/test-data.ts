@@ -14,7 +14,7 @@ export const testData = {
     widgetIframe: "#helper-widget-iframe",
     chatInput: 'textarea[placeholder="Ask a question..."]',
     sendButton: 'button[type="submit"]',
-    screenshotCheckbox: 'input[type="checkbox"]',
+    screenshotCheckbox: '[data-testid="screenshot-checkbox"]',
     messagesList: '[data-testid="messages-list"]',
     message: '[data-testid="message"]',
     aiMessage: '[data-testid="message"][data-message-role="assistant"]',
