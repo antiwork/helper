@@ -1,93 +1,120 @@
 #!/bin/bash
 
-# Helper AI - Playwright E2E Testing Setup Script
-# This script sets up everything needed for E2E testing
+# Helper - E2E Testing Environment Setup Script
+# This script sets up everything needed for E2E testing including Supabase, database migrations, and Playwright
 
 set -e
 
-echo "🎭 Setting up Playwright E2E Testing for Helper AI"
-echo "=================================================="
+echo "🎭 Setting up E2E Testing Environment for Helper"
+echo "================================================"
 
 # Check if we're in the right directory
 if [ ! -f "package.json" ]; then
-    echo "❌ Error: Please run this script from the root of the Helper AI project"
+    echo "❌ Error: Please run this script from the root of the Helper project"
     exit 1
 fi
 
+echo "Current directory: $(pwd)"
+
+# Stop any previously running instances to ensure a clean slate
+echo "🛑 Ensuring no Supabase services are running..."
+pnpm run with-test-env pnpm supabase stop --no-backup 2>/dev/null || true
+
+# Ensure test environment files exist
+if [ ! -f ".env.test" ]; then
+    echo "⚠️ .env.test not found. Please create it from .env.local.sample."
+    echo "📁 Files in current directory:"
+    ls -la .env* 2>/dev/null || echo "No .env files found"
+    exit 1
+fi
+
+echo "✅ .env.test found"
+
+# Create .env.test.local by copying .env.test (always create/update it)
+if [ "$CI" != "true" ]; then
+    echo "📝 Creating/updating .env.test.local from .env.test..."
+    cp .env.test .env.test.local
+    echo "✅ Created .env.test.local - you can customize it with local values if needed"
+fi
+
+# Source the environment files to get SUPABASE_PROJECT_ID
+echo "🔧 Loading environment variables..."
+set -o allexport
+source .env.test
+if [ "$CI" != "true" ] && [ -f ".env.test.local" ]; then
+  source .env.test.local
+fi
+set +o allexport
+
+CI="${CI:-false}"
+echo "CI is set to $CI"
+
+# Check for existing Supabase containers and clean them up if found
+echo "🔍 Checking for existing Supabase containers for project ${SUPABASE_PROJECT_ID}..."
+EXISTING_CONTAINERS=$(docker ps -a -q --filter "name=${SUPABASE_PROJECT_ID}" 2>/dev/null || true)
+if [ ! -z "$EXISTING_CONTAINERS" ]; then
+    echo "🧹 Found existing Supabase containers for project ${SUPABASE_PROJECT_ID}, cleaning up..."
+    echo "🛑 Stopping containers..."
+    docker stop $EXISTING_CONTAINERS || true
+    echo "🗑️ Removing containers..."
+    docker rm $EXISTING_CONTAINERS || true
+    echo "✅ Existing containers cleaned up"
+else
+    echo "✅ No existing Supabase containers found for project ${SUPABASE_PROJECT_ID}"
+fi
+
+# Start Supabase services
+echo "🎉 Starting Supabase services..."
+pnpm run with-test-env pnpm supabase start
+
+# Additional wait for Auth service to be fully ready
+echo "⏳ Waiting for Auth service to initialize..."
+sleep 5
+
+echo "🔄 Resetting database..."
+pnpm run with-test-env pnpm supabase db reset
+
+# Apply database migrations to the test database
+echo "📦 Applying database migrations..."
+pnpm run with-test-env drizzle-kit migrate --config ./db/drizzle.config.ts
+
+# Seed the database with test data
+echo "🌱 Seeding the database..."
+pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
+
+echo "📦 Building packages..."
+pnpm run-on-packages build
+
+# Install and setup Playwright
 echo "📦 Installing Playwright and dependencies..."
 pnpm install
 
 echo "🎭 Installing Playwright browsers..."
-pnpm exec playwright install --with-deps
+pnpm run with-test-env playwright install --with-deps chromium
 
-echo "🔧 Setting up test environment..."
-
-# Create .env.test.local if it doesn't exist
-if [ ! -f ".env.test.local" ]; then
-    echo "📝 Creating .env.test.local file..."
-    cat > .env.test.local << EOF
-# E2E Testing Environment Variables
-TEST_USER_EMAIL=test@example.com
-TEST_OTP=123456
-TEST_API_KEY=test-api-key
-
-# Add your other environment variables here
-EOF
-    echo "✅ Created .env.test.local - please update with your actual values"
-else
-    echo "✅ .env.test.local already exists"
-fi
-
-# Create test directories if they don't exist
-echo "📁 Creating test directories..."
-mkdir -p tests/e2e/.auth
-mkdir -p tests/e2e/screenshots
-mkdir -p playwright-report
-mkdir -p test-results
-
-echo "🔒 Setting up authentication state directory..."
-chmod 755 tests/e2e/.auth
-
-echo "🚀 Starting local services..."
-echo "   📊 Starting Supabase (if not already running)..."
-pnpm services:start
-
-echo "⏳ Waiting for services to be ready..."
-sleep 5
-
-echo "🧪 Running a quick test to verify setup..."
-if pnpm test:e2e --grep="should display login form" > /dev/null 2>&1; then
-    echo "✅ Test setup successful!"
-else
-    echo "⚠️  Initial test failed - this might be expected if your app isn't fully set up yet"
-fi
+# Run auth setup for Playwright
+echo "🔐 Setting up authentication for tests..."
+pnpm run with-test-env playwright test tests/e2e/setup/auth.setup.ts --project=setup
 
 echo ""
-echo "🎉 Playwright E2E Testing Setup Complete!"
+echo "🎉 E2E Testing Environment Setup Complete!"
 echo ""
 echo "📋 Next Steps:"
-echo "   1. Make sure your local development environment is running:"
-echo "      • Helper AI app at https://helperai.dev"
-echo "      • Supabase database"
-echo "      • All required services"
+echo "   1. Run your tests using:"
+echo "      ./scripts/e2e.sh                   # Run all tests"
+echo "      ./scripts/e2e.sh playwright test tests/e2e/widget/widget-screenshot.spec.ts  # Interactive test runner"
 echo ""
-echo "   2. Update your .env.test.local file with correct test credentials"
-echo ""
-echo "   3. Run your first test:"
-echo "      pnpm test:e2e"
-echo ""
-echo "   4. Explore the test suite:"
-echo "      pnpm test:e2e:ui    # Interactive test runner"
-echo "      pnpm test:e2e:debug # Debug mode"
+echo "   2. Or use pnpm commands directly:"
+echo "      pnpm test:e2e                      # Run all tests"
+echo "      pnpm test:e2e:debug                # Debug mode"
 echo ""
 echo "📖 Documentation:"
 echo "   • Test documentation: tests/e2e/README.md"
 echo "   • Playwright docs: https://playwright.dev/"
 echo ""
 echo "🐛 Troubleshooting:"
-echo "   • Check that helperai.dev resolves correctly"
-echo "   • Verify SSL certificates are valid"
-echo "   • Ensure all services are running"
+echo "   • Verify all services are running"
 echo "   • Check test credentials in .env.test.local"
+echo "   • Ensure Docker is running for Supabase"
 echo ""
 echo "Happy testing! 🚀" 

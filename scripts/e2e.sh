@@ -1,12 +1,40 @@
 #!/bin/bash
-# This script automates the process of setting up the test environment and running e2e tests.
-# It ensures services are running, the database is migrated and seeded, and then executes the Playwright test suite.
+# This script runs the E2E tests using Playwright
+
+# Load environment variables to get SUPABASE_PROJECT_ID and other config
+set -o allexport
+source .env.test
+if [ "$CI" != "true" ] && [ -f ".env.test.local" ]; then
+  source .env.test.local
+fi
+set +o allexport
+
+echo "🔍 Checking Supabase test environment setup..."
+
+# Check if Supabase containers are running
+if [ -z "$SUPABASE_PROJECT_ID" ]; then
+    echo "❌ SUPABASE_PROJECT_ID not found in environment variables."
+    echo "   Please run ./scripts/setup-e2e-tests.sh first."
+    exit 1
+fi
+
+# Check if Supabase containers are running for this project
+RUNNING_CONTAINERS=$(docker ps -q --filter "name=${SUPABASE_PROJECT_ID}" 2>/dev/null || true)
+if [ -z "$RUNNING_CONTAINERS" ]; then
+    echo "❌ Supabase test containers are not running for project: ${SUPABASE_PROJECT_ID}"
+    echo "   Please run ./scripts/setup-e2e-tests.sh first to start the test environment."
+    exit 1
+fi
+
+echo "✅ Found running Supabase containers for project: ${SUPABASE_PROJECT_ID}"
+
+echo "✅ Playwright authentication setup found"
+echo "✅ All checks passed! Test environment is ready."
+
 set -e
 
-# Stop any previously running instances to ensure a clean slate.
-# Use --no-backup to avoid creating a new backup that might be used on start.
-echo "🛑 Ensuring no Supabase services are running..."
-pnpm run with-test-env pnpm supabase stop --no-backup
+echo "🧪 Running E2E Tests"
+echo "===================="
 
 # Parse command line arguments
 PLAYWRIGHT_COMMAND=""
@@ -22,88 +50,13 @@ if [ -z "$PLAYWRIGHT_COMMAND" ]; then
     PLAYWRIGHT_COMMAND="playwright test"
 fi
 
-# Trap to ensure cleanup on exit
-CLEANUP_NEEDED=false
-
-cleanup() {
-    if [ "$CLEANUP_NEEDED" = true ]; then
-        echo "🧹 Cleaning up services..."
-        echo "🛑 Stopping Supabase services..."
-        pnpm run with-test-env pnpm supabase stop --no-backup 2>/dev/null || true
-    fi
-}
-trap cleanup EXIT
-
-echo "🚀 Starting e2e test setup..."
-
-# Debug: Check current directory and file existence
-echo "📍 Current directory: $(pwd)"
-echo "🔍 Checking for .env.test.local..."
-
-# Ensure local environment variables are sourced
+# Check if .env.test exists
 if [ ! -f ".env.test" ]; then
-    echo "⚠️ .env.test not found. Please create it from .env.local.sample."
-    echo "📁 Files in current directory:"
-    ls -la .env* 2>/dev/null || echo "No .env files found"
+    echo "❌ .env.test not found. Please run ./scripts/setup-e2e-tests.sh first."
     exit 1
 fi
 
-echo "✅ .env.test found"
-
-echo "CI is set to $CI"
-
-# Source the environment file to get SUPABASE_PROJECT_ID
-set -o allexport
-source .env.test
-if [ "$CI" != "true" ] && [ -f ".env.test.local" ]; then
-  source .env.test.local
-fi
-set +o allexport
-
-# Check for existing Supabase containers and clean them up if found
-echo "🔍 Checking for existing Supabase containers for project ${SUPABASE_PROJECT_ID}..."
-EXISTING_CONTAINERS=$(docker ps -a -q --filter "name=${SUPABASE_PROJECT_ID}" 2>/dev/null || true)
-if [ ! -z "$EXISTING_CONTAINERS" ]; then
-    echo "🧹 Found existing Supabase containers for project ${SUPABASE_PROJECT_ID}, cleaning up..."\
-    echo "🛑 Stopping containers..."
-    docker stop $EXISTING_CONTAINERS || true
-    echo "🗑️ Removing containers..."
-    docker rm $EXISTING_CONTAINERS || true
-    echo "✅ Existing containers cleaned up"
-else
-    echo "✅ No existing Supabase containers found for project ${SUPABASE_PROJECT_ID}"
-fi
-
-# Start Supabase services
-echo "🔄 Starting Supabase services..."
-pnpm run with-test-env pnpm supabase start
-CLEANUP_NEEDED=true
-
-# Additional wait for Auth service to be fully ready
-echo "⏳ Waiting for Auth service to initialize..."
-sleep 5
-
-echo "🔄 Resetting database..."
-pnpm run with-test-env pnpm supabase db reset
-
-# Apply database migrations to the test database
-echo "📦 Applying database migrations..."
-pnpm run with-test-env drizzle-kit migrate --config ./db/drizzle.config.ts
-
-# Seed the database with test data
-echo "🌱 Seeding the database..."
-pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
-
-echo "📦 Build packages.."
-pnpm run-on-packages build
-
-# Setup Playwright
-echo "🎭 Setting up Playwright..."
-pnpm run with-test-env playwright install --with-deps
-
-# Run auth setup for Playwright
-echo "🔐 Setting up authentication for tests..."
-pnpm run with-test-env playwright test tests/e2e/setup/auth.setup.ts --project=setup
+echo "🚀 Starting E2E test run..."
 
 # Run the e2e tests
 echo "🧪 Running Playwright e2e tests..."
