@@ -22,7 +22,7 @@ fi
 RUNNING_CONTAINERS=$(docker ps -q --filter "name=${SUPABASE_PROJECT_ID}" 2>/dev/null || true)
 if [ -z "$RUNNING_CONTAINERS" ]; then
     echo "❌ Supabase test containers are not running for project: ${SUPABASE_PROJECT_ID}"
-    echo "   Please run ./scripts/setup-e2e-tests.sh first to start the test environment."
+    echo "   Please run ./scripts/setup-e2e-tests.sh or pnpm:test:e2e:setup first to start the test environment."
     exit 1
 fi
 

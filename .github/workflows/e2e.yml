@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, test-preview]
+    branches: [main]
 
 permissions:
   contents: read
@@ -15,12 +15,11 @@ concurrency:
 
 jobs:
   e2e:
-    # runs-on: ubicloud-standard-2
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     timeout-minutes: 60
     env:
       CI: true
-      OPENAI_API_KEY: sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
