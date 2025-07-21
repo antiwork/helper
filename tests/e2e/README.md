@@ -46,6 +46,7 @@ The `./scripts/setup-e2e-tests.sh` script handles:
 - Docker (for Supabase containers)
 - Node.js and pnpm
 - `.env.test` or `.env.test.local` file
+- `HELPER_HOST` – override widget host (defaults to `https://helperai.dev`)
 
 ## 🔍 Debugging
 
