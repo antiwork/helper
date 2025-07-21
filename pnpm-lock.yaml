@@ -624,10 +624,6 @@ importers:
         version: 5.8.3
 
   packages/react:
-    dependencies:
-      '@helperai/client':
-        specifier: workspace:*
-        version: link:../client
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3
