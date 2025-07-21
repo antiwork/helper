@@ -26,13 +26,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
           cache: "pnpm"
+
+      - uses: pnpm/action-setup@v4
 
       - name: Cache Playwright browsers
         id: playwright-cache
