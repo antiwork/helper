@@ -1,3 +1,5 @@
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { listenToRealtimeEvent } from "./realtime";
 import {
   ConversationResult,
   ConversationsResult,
@@ -21,12 +23,21 @@ export class HelperClient {
 
   private token: string | null = null;
   private getToken = async (): Promise<string> => {
-    if (!this.token) {
-      const { token } = await this.sessions.create(this.sessionParams);
-      this.token = token;
-    }
-    return this.token;
+    if (!this.token) await this.createSession();
+    return this.token!;
   };
+
+  private supabase: SupabaseClient | null = null;
+  private getSupabase = async (): Promise<SupabaseClient> => {
+    if (!this.supabase) await this.createSession();
+    return this.supabase!;
+  };
+
+  private async createSession() {
+    const { token, supabaseUrl, supabaseAnonKey } = await this.sessions.create(this.sessionParams);
+    this.token = token;
+    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+  }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = await this.getToken();
@@ -134,7 +145,61 @@ export class HelperClient {
     }),
     listen: (
       conversationSlug: string,
-      { onMessage, onTyping }: { onMessage: (message: Message) => void; onTyping: (isTyping: boolean) => void },
-    ) => {},
+      {
+        onHumanReply,
+        onTyping,
+      }: {
+        onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+        onTyping?: (isTyping: boolean) => void;
+      },
+    ) => {
+      const promise = this.getSupabase().then((supabase) => {
+        let agentTypingTimeout: NodeJS.Timeout | null = null;
+
+        const unlistenAgentTyping = listenToRealtimeEvent(
+          supabase,
+          `public:conversation-${conversationSlug}`,
+          "agent-typing",
+          () => {
+            onTyping?.(true);
+            if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
+            agentTypingTimeout = setTimeout(() => onTyping?.(false), 10000);
+          },
+        );
+
+        const unlistenAgentReply = listenToRealtimeEvent(
+          supabase,
+          `public:conversation-${conversationSlug}`,
+          "agent-reply",
+          (event) => {
+            onTyping?.(false);
+            onHumanReply?.({
+              id: `staff_${Date.now()}`,
+              content: event.data.message,
+              role: "assistant",
+            });
+            if (conversationSlug && this.token) {
+              fetch(`/api/chat/conversation/${conversationSlug}`, {
+                method: "PATCH",
+                body: JSON.stringify({ markRead: true }),
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${this.token}`,
+                },
+              });
+            }
+          },
+        );
+
+        return () => {
+          unlistenAgentTyping();
+          unlistenAgentReply();
+        };
+      });
+
+      return () => {
+        promise.then((unlisten) => unlisten());
+      };
+    },
   };
 }

@@ -40,7 +40,8 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
 
 const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
   const { client } = useHelperClientContext();
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
+  const [isTyping, setIsTyping] = useState(false);
+  const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
     ...client.chat.handler({
       conversation,
       tools: {
@@ -56,6 +57,18 @@ const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
       },
     }),
   });
+
+  useEffect(() => {
+    const unlisten = client.chat.listen(conversation.slug, {
+      onHumanReply: (message) => {
+        setMessages((prev) => [...prev, message]);
+      },
+      onTyping: (isTyping) => {
+        setIsTyping(isTyping);
+      },
+    });
+    return () => unlisten();
+  }, [conversation.slug, client]);
 
   return (
     <>
@@ -74,6 +87,7 @@ const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
               {message.content ? message.content : JSON.stringify(message)}
             </div>
           ))}
+          {isTyping && <div className="animate-pulse">An agent is typing...</div>}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { db } from "@/db/client";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
 import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
+import { env } from "@/lib/env";
 import { createWidgetSession, getEmailHash } from "@/lib/widgetSession";
 import { CreateSessionResult, sessionParamsSchema } from "@/packages/client/dist";
 import { corsOptions, corsResponse } from "../utils";
@@ -89,6 +90,8 @@ export async function POST(request: Request) {
   >({
     valid: true,
     token,
+    supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     showWidget,
     notifications,
     experimentalReadPage: body.experimentalReadPage,

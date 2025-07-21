@@ -46,6 +46,8 @@ export type SessionParams = z.infer<typeof sessionParamsSchema>;
 
 export const createSessionResultSchema = z.object({
   token: z.string(),
+  supabaseUrl: z.string(),
+  supabaseAnonKey: z.string(),
 });
 export type CreateSessionResult = z.infer<typeof createSessionResultSchema>;
 

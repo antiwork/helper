@@ -512,8 +512,14 @@ importers:
 
   packages/client:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.49
+        version: 2.49.4
+      superjson:
+        specifier: ^2.2
+        version: 2.2.1
       zod:
-        specifier: ^3.24.3
+        specifier: ^3.24
         version: 3.25.76
     devDependencies:
       '@types/node':
