@@ -89,7 +89,8 @@ export class HelperClient {
   };
 
   readonly chat = {
-    handler: ({ conversationSlug, tools }: { conversationSlug: string; tools: Record<string, HelperTool> }) => ({
+    handler: ({ conversation, tools }: { conversation: ConversationResult; tools: Record<string, HelperTool> }) => ({
+      initialMessages: conversation.messages,
       fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
         const token = await this.getToken();
         return fetch(`${this.host}/api/chat`, {
@@ -111,7 +112,7 @@ export class HelperClient {
       }) => ({
         id,
         message: messages[messages.length - 1],
-        conversationSlug,
+        conversationSlug: conversation.slug,
         tools: Object.entries(tools).map(([name, tool]) => ({
           name,
           description: tool.description,
@@ -131,5 +132,9 @@ export class HelperClient {
         return tool.execute(toolCall.args);
       },
     }),
+    listen: (
+      conversationSlug: string,
+      { onMessage, onTyping }: { onMessage: (message: Message) => void; onTyping: (isTyping: boolean) => void },
+    ) => {},
   };
 }

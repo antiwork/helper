@@ -131,6 +131,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   );
 
   return corsResponse<ConversationResult>({
+    slug: conversation.slug,
     subject: conversation.subject,
     messages: allMessages,
     // We don't want to include staff-uploaded attachments in the AI messages, but we need to show them in the UI

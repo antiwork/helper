@@ -77,6 +77,7 @@ export const conversationsResultSchema = z.object({
 export type ConversationsResult = z.infer<typeof conversationsResultSchema>;
 
 export const conversationResultSchema = z.object({
+  slug: z.string(),
   subject: z.string().nullable(),
   messages: z.array(messageSchema),
   allAttachments: z.array(

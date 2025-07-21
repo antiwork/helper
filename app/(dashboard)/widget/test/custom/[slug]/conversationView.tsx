@@ -15,28 +15,10 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
   const [conversation, setConversation] = useState<ConversationResult | null>(null);
   const { client } = useHelperClientContext();
 
-  const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
-    ...client.chat.handler({
-      conversationSlug,
-      tools: {
-        getProductStatus: {
-          description: "Get the status of a Gumroad product",
-          parameters: {
-            productId: { type: "string", description: "The ID of the Gumroad product" },
-          },
-          execute: ({ productId }: { productId: string }) => {
-            return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
-          },
-        },
-      },
-    }),
-  });
-
   useEffect(() => {
     const fetchConversation = async () => {
       const conversation = await client.conversations.get(conversationSlug);
       setConversation(conversation);
-      setMessages(conversation.messages);
     };
     fetchConversation();
   }, [conversationSlug]);
@@ -51,6 +33,32 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
         <h2 className="font-semibold">{conversation?.subject || "Conversation"}</h2>
       </div>
 
+      {conversation && <ChatView conversation={conversation} />}
+    </div>
+  );
+};
+
+const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
+  const { client } = useHelperClientContext();
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    ...client.chat.handler({
+      conversation,
+      tools: {
+        getProductStatus: {
+          description: "Get the status of a Gumroad product",
+          parameters: {
+            productId: { type: "string", description: "The ID of the Gumroad product" },
+          },
+          execute: ({ productId }: { productId: string }) => {
+            return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
+          },
+        },
+      },
+    }),
+  });
+
+  return (
+    <>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col gap-4">
           {messages.map((message) => (
@@ -85,6 +93,6 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
           <Button onClick={handleSubmit}>Send</Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
