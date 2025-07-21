@@ -96,10 +96,6 @@ pnpm install
 echo "🎭 Installing Playwright browsers..."
 pnpm run with-test-env playwright install --with-deps chromium
 
-# Run auth setup for Playwright
-echo "🔐 Setting up authentication for tests..."
-pnpm run with-test-env playwright test tests/e2e/setup/auth.setup.ts --project=setup
-
 echo ""
 echo "🎉 E2E Testing Environment Setup Complete!"
 echo ""
