@@ -1,6 +1,7 @@
 import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
 import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
 import { getBaseUrl } from "@/components/constants";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== "https://helperai.dev") {
+  if (getBaseUrl() !== env.HELPER_HOST) {
     return <div>Only available in development</div>;
   }
 
@@ -31,7 +32,7 @@ export default async function WidgetTest({
   };
 
   return (
-    <HelperProvider host="https://helperai.dev" {...config}>
+    <HelperProvider host={env.HELPER_HOST} {...config}>
       <CustomWidgetTest />
     </HelperProvider>
   );

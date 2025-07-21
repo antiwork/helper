@@ -10,7 +10,7 @@ export const getBaseUrl = () => {
 };
 
 export const getMarketingSiteUrl = () => {
-  if (getBaseUrl() === "https://helperai.dev") {
+  if (getBaseUrl() === env.HELPER_HOST) {
     return "http://localhost:3011";
   }
   return "https://helper.ai";

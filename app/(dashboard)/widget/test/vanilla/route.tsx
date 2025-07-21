@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
 
 export const GET = () => {
+  const helperHost = env.HELPER_HOST;
   const html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Widget Test</title>
-    <script src="https://helperai.dev/widget/sdk.js" data-mailbox="gumroad" async></script>
+    <script src="${helperHost}/widget/sdk.js" data-mailbox="gumroad" async></script>
   </head>
   <body style="margin: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; height: 100vh">
     <h1 style="margin-top: auto">Widget Test</h1>

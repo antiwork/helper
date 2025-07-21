@@ -1,6 +1,7 @@
 import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
 import { ConversationView } from "@/app/(dashboard)/widget/test/custom/conversationView";
 import { getBaseUrl } from "@/components/constants";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function ConversationPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== "https://helperai.dev") {
+  if (getBaseUrl() !== env.HELPER_HOST) {
     return <div>Only available in development</div>;
   }
 
@@ -34,7 +35,7 @@ export default async function ConversationPage({
   };
 
   return (
-    <HelperProvider host="https://helperai.dev" {...config}>
+    <HelperProvider host={env.HELPER_HOST} {...config}>
       <ConversationView conversationSlug={slug} />
     </HelperProvider>
   );
