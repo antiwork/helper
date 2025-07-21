@@ -3,9 +3,6 @@ import { env } from "@/lib/env";
 
 export const GET = () => {
   const helperHost = env.HELPER_HOST;
-  if (!helperHost) {
-    throw new Error("HELPER_HOST environment variable is required");
-  }
   const html = `<!doctype html>
 <html lang="en">
   <head>
