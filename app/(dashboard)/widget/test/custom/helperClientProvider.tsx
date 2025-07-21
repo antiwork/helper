@@ -8,7 +8,7 @@ const HelperClientContext = createContext<{ client: HelperClient } | null>(null)
 export const useHelperClientContext = () => {
   const context = useContext(HelperClientContext);
   if (!context) {
-    throw new Error("useCustomWidgetContext must be used within CustomWidgetProvider");
+    throw new Error("useHelperClientContext must be used within HelperClientProvider");
   }
   return context;
 };

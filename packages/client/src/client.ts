@@ -83,8 +83,8 @@ export class HelperClient {
   readonly conversations = {
     list: (): Promise<ConversationsResult> => this.request<ConversationsResult>("/api/chat/conversations"),
 
-    get: (slug: string): Promise<ConversationResult> =>
-      this.request<ConversationResult>(`/api/chat/conversation/${slug}`),
+    get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationResult> =>
+      this.request<ConversationResult>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
 
     create: (params: CreateConversationParams = {}): Promise<CreateConversationResult> =>
       this.request<CreateConversationResult>("/api/chat/conversation", {
@@ -100,7 +100,13 @@ export class HelperClient {
   };
 
   readonly chat = {
-    handler: ({ conversation, tools }: { conversation: ConversationResult; tools: Record<string, HelperTool> }) => ({
+    handler: ({
+      conversation,
+      tools = {},
+    }: {
+      conversation: ConversationResult;
+      tools?: Record<string, HelperTool>;
+    }) => ({
       initialMessages: conversation.messages,
       fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
         const token = await this.getToken();
@@ -178,16 +184,7 @@ export class HelperClient {
               content: event.data.message,
               role: "assistant",
             });
-            if (conversationSlug && this.token) {
-              fetch(`/api/chat/conversation/${conversationSlug}`, {
-                method: "PATCH",
-                body: JSON.stringify({ markRead: true }),
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${this.token}`,
-                },
-              });
-            }
+            this.conversations.update(conversationSlug, { markRead: true });
           },
         );
 
