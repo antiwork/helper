@@ -30,11 +30,15 @@ fi
 
 echo "✅ .env.test found"
 
-# Create .env.test.local by copying .env.test (always create/update it)
+# Create .env.test.local by copying .env.test only if it doesn't exist
 if [ "$CI" != "true" ]; then
-    echo "📝 Creating/updating .env.test.local from .env.test..."
-    cp .env.test .env.test.local
-    echo "✅ Created .env.test.local - you can customize it with local values if needed"
+    if [ ! -f ".env.test.local" ]; then
+        echo "📝 Creating .env.test.local from .env.test..."
+        cp .env.test .env.test.local
+        echo "✅ Created .env.test.local - you can customize it with local values if needed"
+    else
+        echo "✅ .env.test.local already exists"
+    fi
 fi
 
 # Source the environment files to get SUPABASE_PROJECT_ID
