@@ -1,5 +1,6 @@
-import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
-import { ConversationView } from "@/app/(dashboard)/widget/test/custom/conversationView";
+import { ConversationView } from "@/app/(dashboard)/widget/test/custom/[slug]/conversationView";
+import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
+import { HelperClientProvider } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { getBaseUrl } from "@/components/constants";
 
 export const dynamic = "force-dynamic";
@@ -15,27 +16,12 @@ export default async function ConversationPage({
     return <div>Only available in development</div>;
   }
 
+  const session = generateSession(await searchParams);
   const { slug } = await params;
-  const { email, isVip, anonymous } = await searchParams;
-
-  const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
-
-  const config: HelperWidgetConfig = {
-    ...helperAuth,
-    customerMetadata: anonymous
-      ? null
-      : {
-          name: "John Doe",
-          value: isVip ? 1000_00 : 100,
-          links: {
-            "Billing Portal": "https://example.com",
-          },
-        },
-  };
 
   return (
-    <HelperProvider host="https://helperai.dev" {...config}>
+    <HelperClientProvider host="https://helperai.dev" session={session}>
       <ConversationView conversationSlug={slug} />
-    </HelperProvider>
+    </HelperClientProvider>
   );
 }

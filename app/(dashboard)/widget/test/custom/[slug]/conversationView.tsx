@@ -1,27 +1,45 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useChat } from "@helperai/react";
+import { useEffect, useState } from "react";
+import { ConversationResult } from "@helperai/client";
+import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
   const router = useRouter();
-  const { messages, input, handleInputChange, handleSubmit, conversation } = useChat(conversationSlug, {
-    tools: {
-      getProductStatus: {
-        description: "Get the status of a Gumroad product",
-        parameters: {
-          productId: { type: "string", description: "The ID of the Gumroad product" },
-        },
-        execute: ({ productId }: { productId: string }) => {
-          return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
+  const [conversation, setConversation] = useState<ConversationResult | null>(null);
+  const { client } = useHelperClientContext();
+
+  const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
+    ...client.chat.handler({
+      conversationSlug,
+      tools: {
+        getProductStatus: {
+          description: "Get the status of a Gumroad product",
+          parameters: {
+            productId: { type: "string", description: "The ID of the Gumroad product" },
+          },
+          execute: ({ productId }: { productId: string }) => {
+            return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
+          },
         },
       },
-    },
+    }),
   });
+
+  useEffect(() => {
+    const fetchConversation = async () => {
+      const conversation = await client.conversations.get(conversationSlug);
+      setConversation(conversation);
+      setMessages(conversation.messages);
+    };
+    fetchConversation();
+  }, [conversationSlug]);
 
   return (
     <div className="flex flex-col h-screen">

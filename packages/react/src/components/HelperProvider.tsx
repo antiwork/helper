@@ -1,5 +1,4 @@
 import React from "react";
-import { HelperContextProvider } from "../context/HelperContext";
 import type { HelperWidgetConfig } from "../types";
 import { ClientHelperProvider } from "./ClientHelperProvider";
 
@@ -26,9 +25,9 @@ export type HelperProviderProps = HelperWidgetConfig & {
  */
 export function HelperProvider({ children, host, ...props }: HelperProviderProps) {
   return (
-    <HelperContextProvider host={host} {...props}>
+    <>
       <ClientHelperProvider host={host} {...props} />
       {children}
-    </HelperContextProvider>
+    </>
   );
 }
