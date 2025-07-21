@@ -47,47 +47,6 @@ function App() {
 }
 ```
 
-### Using Direct Client Calls
-
-```tsx
-import React, { useState, useEffect } from "react";
-import { HelperClient } from "@helperai/client";
-
-function ChatComponent() {
-  const [conversationSlug, setConversationSlug] = useState<string>("");
-  const [conversations, setConversations] = useState([]);
-  const [messages, setMessages] = useState([]);
-  
-  // Create client instance with session params
-  const client = new HelperClient(sessionParams);
-
-  const startChat = async () => {
-    const result = await client.conversations.create({ subject: "New chat" });
-    setConversationSlug(result.conversationSlug);
-  };
-
-  useEffect(() => {
-    if (conversationSlug) {
-      client.conversations.get(conversationSlug).then(conv => {
-        setMessages(conv.messages);
-      });
-    }
-  }, [conversationSlug]);
-
-  return (
-    <div>
-      <button onClick={startChat}>Start chat</button>
-      {conversations.map((conv) => (
-        <div key={conv.slug}>{conv.subject}</div>
-      ))}
-      {messages.map((msg) => (
-        <div key={msg.id}>{msg.content}</div>
-      ))}
-    </div>
-  );
-}
-```
-
 ## API Reference
 
 ### Core Provider
@@ -120,23 +79,6 @@ Provides global state management for Helper functionality, supporting both widge
 ```
 
 ### Hooks
-
-For chat functionality, use the `@helperai/client` package directly:
-
-```tsx
-import { HelperClient } from "@helperai/client";
-
-const client = new HelperClient(sessionParams);
-
-// Get conversation
-const conversation = await client.conversations.get(conversationSlug);
-
-// List conversations  
-const { conversations } = await client.conversations.list();
-
-// Create conversation
-const result = await client.conversations.create({ subject: "Help needed" });
-```
 
 #### `useHelperContext()`
 
@@ -237,22 +179,6 @@ export default function DashboardPage() {
 - Initialize Helper only after user authentication
 - Implement proper cache invalidation strategies
 - Use framework-specific optimizations when available
-
-### Error Handling
-
-```tsx
-function ChatComponent() {
-  const [conversationSlug, setConversationSlug] = useState<string>("");
-  const [conversations, setConversations] = useState([]);
-  
-  // Use HelperClient directly
-  const client = new HelperClient(sessionParams);
-
-  if (!conversationSlug) return <div>Select a conversation</div>;
-
-  return <ConversationsList conversations={conversations} />;
-}
-```
 
 ## Troubleshooting
 
