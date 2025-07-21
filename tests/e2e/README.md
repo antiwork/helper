@@ -5,56 +5,66 @@ Playwright e2e tests for the Helper application.
 ## 🚀 Quick Start
 
 ```bash
-# 1. Install dependencies
-pnpm install
-pnpm exec playwright install
+# 1. One-time setup (sets up Supabase, database, auth, and Playwright)
+./scripts/setup-e2e-tests.sh
 
-# 2. Generate auth state (once per developer)
-pnpm exec playwright test tests/e2e/setup/auth.setup.ts --project=setup
-
-# 3. Run tests
-pnpm test:e2e
+# 2. Run tests
+./scripts/e2e.sh
 ```
 
 ## 🧪 Running Tests
 
 ```bash
-# All tests (headless)
-pnpm test:e2e
+# All tests (recommended)
+./scripts/e2e.sh
 
-# With visible browser (development)
-pnpm test:e2e:headed
-
-# Interactive mode
-pnpm test:e2e:ui
+# Specific test
+./scripts/e2e.sh playwright test tests/e2e/widget/widget-screenshot.spec.ts
 
 # Debug mode
+./scripts/e2e.sh playwright test --debug
+
+# Or use pnpm directly (after setup)
+pnpm test:e2e
 pnpm test:e2e:debug
+pnpm test:e2e:headed
 ```
 
-## 🔧 Prerequisites
+## 🔧 Setup Details
 
-- Local Helper app running at `https://helperai.dev`
-- Supabase running locally
-- Test account: `support@gumroad.com`
+The `./scripts/setup-e2e-tests.sh` script handles:
+
+- Environment file creation (`.env.test.local`)
+- Supabase container management and startup
+- Database migrations and seeding
+- Package building
+- Playwright browser installation
+- Authentication state generation
+
+## 🔍 Environment Requirements
+
+- Docker (for Supabase containers)
+- Node.js and pnpm
+- `.env.test` or `.env.test.local` file
 
 ## 🔍 Debugging
 
 ### When Tests Fail
 
-1. **Regenerate auth state**:
+1. **Re-run full setup**:
 
 ```bash
-pnpm exec playwright test tests/e2e/setup/auth.setup.ts --project=setup
+./scripts/setup-e2e-tests.sh
 ```
 
-2. **Run in debug mode**:
+1. **Check environment**:
 
 ```bash
-pnpm test:e2e:debug
+# The e2e.sh script validates the setup automatically
+./scripts/e2e.sh playwright test --debug
 ```
 
-3. **View test report**:
+1. **View test report**:
 
 ```bash
 pnpm exec playwright show-report
@@ -62,10 +72,10 @@ pnpm exec playwright show-report
 
 ### Common Issues
 
-- **Auth expired**: Re-run auth setup
-- **SSL errors**: Check helperai.dev SSL certificates
-- **Timeouts**: Verify all services are running
-- **Element not found**: UI may have changed, update selectors
+- **"Supabase containers not running"**: Run `./scripts/setup-e2e-tests.sh`
+- **"Auth setup not found"**: Setup script handles auth state automatically
+- **Database issues**: Setup script resets and seeds the database
+- **Container conflicts**: Setup script cleans up existing containers
 
 ## 📁 Structure
 
@@ -74,9 +84,30 @@ pnpm exec playwright show-report
 - `setup/` - Authentication state generation
 - `utils/` - Page objects and test helpers
 
-## 🎯 Notes
+## 🎯 CI/CD
 
-- Tests use real DOM selectors (not test IDs)
-- Authentication state is cached locally (`.auth/` directory)
+The GitHub Actions workflow:
+
+- **Pull Requests**: Runs only changed tests for fast feedback
+- **Main branch**: Runs full test suite for complete coverage
+- **Setup**: Automatically handled by the CI workflow
+
+## 🛠️ Development Workflow
+
+```bash
+# Initial setup (once)
+./scripts/setup-e2e-tests.sh
+
+# Daily development
+./scripts/e2e.sh                    # Run all tests
+./scripts/e2e.sh playwright test --debug              # debug mode
+./scripts/e2e.sh playwright test specific.spec.ts  # Run specific test
+```
+
+## 📝 Notes
+
+- Tests use the Supabase test environment (isolated from production)
+- Database is reset and seeded on each setup run
+- Authentication state is managed automatically
 - Screenshots and videos saved on test failures
-- Designed for local development environment
+- Setup script creates `.env.test.local` from `.env.test`
