@@ -3,9 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
 import { ConversationResult } from "@helperai/client";
-import { useHelperClientContext } from "./helperClientProvider";
+import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -15,11 +14,10 @@ import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
 import { useNewConversation } from "@/components/widget/useNewConversation";
 import { useWidgetView, View } from "@/components/widget/useWidgetView";
-import { publicConversationChannelId } from "@/lib/realtime/channels";
-import { DISABLED, useRealtimeEvent } from "@/lib/realtime/hooks";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { sendConversationUpdate } from "@/lib/widget/messages";
 import { GuideInstructions } from "@/types/guide";
+import { useHelperClientContext } from "./helperClientProvider";
 
 type Props = {
   token: string | null;
@@ -79,7 +77,7 @@ export default function Conversation({
     if (!selectedConversationSlug) return;
 
     const unlisten = client.chat.listen(selectedConversationSlug, {
-      onHumanReply: (message) => {
+      onHumanReply: (message: any) => {
         setIsAgentTyping(false);
         if (agentTypingTimeoutRef.current) {
           clearTimeout(agentTypingTimeoutRef.current);
@@ -97,7 +95,7 @@ export default function Conversation({
           },
         ]);
       },
-      onTyping: (isTyping) => {
+      onTyping: (isTyping: boolean) => {
         setIsAgentTyping(isTyping);
         if (isTyping) {
           if (agentTypingTimeoutRef.current) {
