@@ -77,7 +77,7 @@ describe("runAIQuery", () => {
       messages,
       mailbox,
       queryType: "response_generator",
-      model: "gpt-4o",
+      model: "o4-mini-2025-04-16",
       system: "Custom system prompt",
       temperature: 0.5,
       maxTokens: 1000,
@@ -87,7 +87,7 @@ describe("runAIQuery", () => {
       functionId: undefined,
       system: "Custom system prompt",
       messages,
-      model: "gpt-4o",
+      model: "o4-mini-2025-04-16",
       temperature: 0.5,
       maxTokens: 1000,
       maxSteps: undefined,
@@ -100,7 +100,7 @@ describe("runAIQuery", () => {
   it("tracks AI usage event after successful completion", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const queryType = "response_generator";
-    const model = "gpt-4o";
+    const model = "o4-mini-2025-04-16";
 
     vi.mocked(core.generateCompletion).mockResolvedValueOnce({
       text: "Test response",
@@ -194,7 +194,7 @@ describe("runAIObjectQuery", () => {
   it("calls generateStructuredObject with correct parameters and returns the object", async () => {
     const { mailbox } = await userFactory.createRootUser();
     const queryType = "conversation_summary";
-    const model = "gpt-4o";
+    const model = "o4-mini-2025-04-16";
 
     vi.mocked(core.generateStructuredObject).mockResolvedValueOnce({
       object: { name: "John Doe", age: 30 },

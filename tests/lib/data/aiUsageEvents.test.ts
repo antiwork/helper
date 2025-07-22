@@ -27,7 +27,7 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: 100,
       outputTokensCount: 50,
       cachedTokensCount: 0,
-      cost: "0.0007500",
+      cost: "0.0003300",
     });
   });
 
@@ -56,7 +56,7 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: usage.promptTokens,
       outputTokensCount: usage.completionTokens,
       cachedTokensCount: usage.cachedTokens,
-      cost: "0.0006750",
+      cost: "0.0002805",
     });
   });
 
@@ -84,7 +84,7 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: usage.promptTokens,
       outputTokensCount: usage.completionTokens,
       cachedTokensCount: usage.cachedTokens,
-      cost: "0.0000825",
+      cost: "0.0005775",
     });
   });
 
@@ -96,14 +96,14 @@ describe("trackAIUsageEvent", () => {
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
-        expectedCost: "0.0004500",
+        expectedCost: "0.0033000",
       },
       {
         model: "o4-mini-2025-04-16" as const,
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
-        expectedCost: "0.0075000",
+        expectedCost: "0.0033000",
       },
     ];
 
