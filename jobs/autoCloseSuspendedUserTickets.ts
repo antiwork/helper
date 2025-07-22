@@ -112,7 +112,7 @@ async function checkUserSuspensionStatus(email: string): Promise<boolean> {
 
     const data = await response.json();
     return data.success && data.status === "Suspended";
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
