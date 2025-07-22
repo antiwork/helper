@@ -1,27 +1,27 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useChat } from "@helperai/react";
+import { useEffect, useState } from "react";
+import { ConversationResult } from "@helperai/client";
+import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
   const router = useRouter();
-  const { messages, input, handleInputChange, handleSubmit, conversation } = useChat(conversationSlug, {
-    tools: {
-      getProductStatus: {
-        description: "Get the status of a Gumroad product",
-        parameters: {
-          productId: { type: "string", description: "The ID of the Gumroad product" },
-        },
-        execute: ({ productId }: { productId: string }) => {
-          return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
-        },
-      },
-    },
-  });
+  const [conversation, setConversation] = useState<ConversationResult | null>(null);
+  const { client } = useHelperClientContext();
+
+  useEffect(() => {
+    const fetchConversation = async () => {
+      const conversation = await client.conversations.get(conversationSlug);
+      setConversation(conversation);
+    };
+    fetchConversation();
+  }, [conversationSlug]);
 
   return (
     <div className="flex flex-col h-screen">
@@ -33,6 +33,45 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
         <h2 className="font-semibold">{conversation?.subject || "Conversation"}</h2>
       </div>
 
+      {conversation && <ChatView conversation={conversation} />}
+    </div>
+  );
+};
+
+const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
+  const { client } = useHelperClientContext();
+  const [isTyping, setIsTyping] = useState(false);
+  const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
+    ...client.chat.handler({
+      conversation,
+      tools: {
+        getProductStatus: {
+          description: "Get the status of a Gumroad product",
+          parameters: {
+            productId: { type: "string", description: "The ID of the Gumroad product" },
+          },
+          execute: ({ productId }: { productId: string }) => {
+            return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
+          },
+        },
+      },
+    }),
+  });
+
+  useEffect(() => {
+    const unlisten = client.chat.listen(conversation.slug, {
+      onHumanReply: (message) => {
+        setMessages((prev) => [...prev, message]);
+      },
+      onTyping: (isTyping) => {
+        setIsTyping(isTyping);
+      },
+    });
+    return () => unlisten();
+  }, [conversation.slug, client]);
+
+  return (
+    <>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col gap-4">
           {messages.map((message) => (
@@ -48,6 +87,7 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
               {message.content ? message.content : JSON.stringify(message)}
             </div>
           ))}
+          {isTyping && <div className="animate-pulse">An agent is typing...</div>}
         </div>
       </div>
 
@@ -67,6 +107,6 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
           <Button onClick={handleSubmit}>Send</Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };

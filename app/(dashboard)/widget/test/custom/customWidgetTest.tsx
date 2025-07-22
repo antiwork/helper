@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useConversations, useCreateConversation } from "@helperai/react";
+import { useCallback, useEffect, useState } from "react";
+import { Conversation, HelperClient } from "@helperai/client";
+import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,9 +12,29 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 
 export const CustomWidgetTest = () => {
-  const { conversations, loading, error } = useConversations();
+  const { client } = useHelperClientContext();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const router = useRouter();
+
+  const fetchConversations = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await client.conversations.list();
+      setConversations(data.conversations || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch conversations");
+    } finally {
+      setLoading(false);
+    }
+  }, [client]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   if (loading) {
     return <div className="p-4">Loading conversations...</div>;
@@ -28,6 +49,7 @@ export const CustomWidgetTest = () => {
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h1 className="text-xl font-semibold">Support</h1>
         <NewTicketModal
+          client={client}
           open={showNewTicketModal}
           onOpenChange={setShowNewTicketModal}
           onTicketCreated={(slug) => {
@@ -96,15 +118,17 @@ const ConversationTable = ({
 };
 
 const NewTicketModal = ({
+  client,
   open,
   onOpenChange,
   onTicketCreated,
 }: {
+  client: HelperClient;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTicketCreated: (slug: string) => void;
 }) => {
-  const { createConversation, loading } = useCreateConversation();
+  const [loading, setLoading] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
@@ -112,7 +136,8 @@ const NewTicketModal = ({
     if (!subject.trim()) return;
 
     try {
-      const result = await createConversation({
+      setLoading(true);
+      const result = await client.conversations.create({
         subject: subject.trim(),
         isPrompt: true,
       });
@@ -121,6 +146,8 @@ const NewTicketModal = ({
       setMessage("");
     } catch (error) {
       captureExceptionAndLog(error);
+    } finally {
+      setLoading(false);
     }
   };
 

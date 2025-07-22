@@ -46,6 +46,8 @@ export type SessionParams = z.infer<typeof sessionParamsSchema>;
 
 export const createSessionResultSchema = z.object({
   token: z.string(),
+  supabaseUrl: z.string(),
+  supabaseAnonKey: z.string(),
 });
 export type CreateSessionResult = z.infer<typeof createSessionResultSchema>;
 
@@ -77,6 +79,7 @@ export const conversationsResultSchema = z.object({
 export type ConversationsResult = z.infer<typeof conversationsResultSchema>;
 
 export const conversationResultSchema = z.object({
+  slug: z.string(),
   subject: z.string().nullable(),
   messages: z.array(messageSchema),
   allAttachments: z.array(
