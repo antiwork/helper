@@ -34,7 +34,6 @@ export class SavedRepliesPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    // Page elements
     this.pageTitle = page.locator('h1:has-text("Saved replies")');
     this.searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
     this.newReplyButton = page.locator('button:has-text("New saved reply")');
@@ -44,10 +43,8 @@ export class SavedRepliesPage extends BasePage {
     this.emptyState = page.locator('text="No saved replies yet"');
     this.emptyStateText = page.locator('text="No saved replies found matching your search"');
 
-    // Add floating action button selector - any fixed positioned button
     this.floatingAddButton = page.locator("button.fixed");
 
-    // Dialog elements
     this.createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
     this.editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
     this.deleteDialog = page.locator('[role="dialog"]:has-text("Are you sure you want to delete")');
@@ -61,20 +58,16 @@ export class SavedRepliesPage extends BasePage {
     this.deleteButton = page.locator('button:has-text("Delete"):not(:has-text("saved reply"))');
     this.confirmDeleteButton = page.locator('[role="dialog"] button:has-text("Yes")');
 
-    // Card elements
     this.cardTitle = page.locator('[data-testid="saved-reply-card"] .text-lg');
     this.cardContent = page.locator('[data-testid="saved-reply-card"] .text-muted-foreground');
     this.cardUsageCount = page.locator('[data-testid="saved-reply-card"] text*="Used"');
     this.copyButton = page.locator('[data-testid="copy-button"]');
   }
 
-  // Navigation
   async navigateToSavedReplies() {
     await this.goto(`/saved-replies`);
     await this.waitForPageLoad();
   }
-
-  // Expectations
   async expectPageVisible() {
     await expect(this.pageTitle).toBeVisible();
   }
@@ -84,14 +77,11 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async expectNewReplyButtonVisible() {
-    // Check if we have saved replies or empty state
     const hasReplies = (await this.savedReplyCards.count()) > 0;
 
     if (hasReplies) {
-      // When replies exist, expect floating action button
       await expect(this.floatingAddButton).toBeVisible();
     } else {
-      // When no replies, expect "Create one" button
       await expect(this.createOneButton).toBeVisible();
     }
   }
@@ -124,7 +114,6 @@ export class SavedRepliesPage extends BasePage {
     await expect(this.deleteDialog).toContainText("Are you sure you want to delete");
   }
 
-  // Actions
   async clickNewReplyButton() {
     await this.newReplyButton.click();
   }
@@ -139,28 +128,22 @@ export class SavedRepliesPage extends BasePage {
 
   async searchSavedReplies(searchTerm: string) {
     await this.searchInput.fill(searchTerm);
-    // Wait for debounced search (300ms + buffer) and API response
     await this.page.waitForTimeout(500);
 
-    // Wait for any loading states to complete
     try {
       await this.page.waitForLoadState("networkidle", { timeout: 3000 });
     } catch {
-      // Continue if networkidle times out
     }
 
-    // Extra wait for React re-renders to stabilize
     await this.page.waitForTimeout(200);
   }
 
   async clearSearch() {
     await this.searchInput.clear();
-    // Wait for debounced clear operation and re-render
     await this.page.waitForTimeout(500);
     try {
       await this.page.waitForLoadState("networkidle", { timeout: 3000 });
     } catch {
-      // Continue if networkidle times out
     }
     await this.page.waitForTimeout(200);
   }
@@ -172,11 +155,9 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async clickSaveButton() {
-    // Look for Add button in create mode or Update button in edit mode
     const addBtn = this.page.locator('button:has-text("Add")');
     const updateBtn = this.page.locator('button:has-text("Update")');
 
-    // Wait for either button to be visible before proceeding
     await Promise.race([
       addBtn.waitFor({ state: "visible", timeout: 5000 }),
       updateBtn.waitFor({ state: "visible", timeout: 5000 }),
@@ -192,9 +173,7 @@ export class SavedRepliesPage extends BasePage {
       throw new Error("Neither Add nor Update button found");
     }
 
-    // Wait for the dialog to close by waiting for it to not be visible
     await this.createDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {
-      // If create dialog is not found, try waiting for edit dialog to close
       return this.editDialog.waitFor({ state: "hidden", timeout: 5000 });
     });
   }
@@ -232,9 +211,7 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async waitForToast(message: string) {
-    // Toast messages appear in ToastTitle components - make this optional to avoid test failures
     try {
-      // Try multiple possible toast selectors
       const toastSelectors = [
         `[role="alert"]:has-text("${message}")`,
         `[data-testid="toast"]:has-text("${message}")`,
@@ -249,16 +226,13 @@ export class SavedRepliesPage extends BasePage {
           toastFound = true;
           break;
         } catch {
-          // Try next selector
         }
       }
 
       if (!toastFound) {
-        // Final attempt with a more general approach
         await this.page.waitForSelector(`text="${message}"`, { timeout: 1000 });
       }
     } catch (error) {
-      // Toast not found - this is acceptable, continue with test
       console.log(`Toast message "${message}" not found, continuing...`);
     }
   }
@@ -276,8 +250,6 @@ export class SavedRepliesPage extends BasePage {
       if (fabVisible) {
         await this.clickFloatingAddButton();
       } else {
-        // Track both buttons because UI shows different add buttons based on state:
-        // "Create one" appears in empty state, floating button appears when replies exist
         try {
           await Promise.race([
             this.createOneButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "createOne"),
@@ -309,7 +281,6 @@ export class SavedRepliesPage extends BasePage {
     await this.savedReplyCards.nth(index).click();
     await this.expectEditDialogVisible();
 
-    // Clear existing content
     await this.nameInput.clear();
     await this.contentEditor.click();
     await this.contentEditor.clear();

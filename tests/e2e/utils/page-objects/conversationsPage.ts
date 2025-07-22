@@ -2,11 +2,7 @@ import { expect } from "@playwright/test";
 import { debugWait } from "../test-helpers";
 import { BasePage } from "./basePage";
 
-/**
- * ConversationsPage - Page object for Helper conversations interactions
- */
 export class ConversationsPage extends BasePage {
-  // Real selectors that actually exist in the application
   private readonly searchInput = 'input[placeholder="Search conversations"]';
   private readonly openFilter = 'button:has-text("open")';
   private readonly gumroadButton = 'button:has-text("Gumroad")';
@@ -36,7 +32,6 @@ export class ConversationsPage extends BasePage {
     const searchBox = this.page.locator(this.searchInput);
     await expect(searchBox).toBeVisible();
     await searchBox.fill(query);
-    // Enter key is optional - many search boxes auto-search
     await this.page.keyboard.press("Enter");
   }
 
@@ -52,11 +47,10 @@ export class ConversationsPage extends BasePage {
 
   async clickOpenFilter() {
     await this.page.locator(this.openFilter).click();
-    await debugWait(this.page, 1000); // Allow for filter response
+    await debugWait(this.page, 1000);
   }
 
   async expectAccountInfo() {
-    // Use .first() to handle multiple matches as discovered in working tests
     await expect(this.page.locator(this.gumroadButton).first()).toBeVisible();
     await expect(this.page.locator(this.supportEmailButton).first()).toBeVisible();
   }
@@ -67,12 +61,11 @@ export class ConversationsPage extends BasePage {
   }
 
   async handleSelectAll() {
-    // Check if there are any conversations first
     const conversationLinks = this.page.locator(this.conversationLinks);
     const conversationCount = await conversationLinks.count();
 
     if (conversationCount === 0) {
-      return false; // No conversations, select all should not be available
+      return false;
     }
 
     const selectAllCount = await this.page.locator(this.selectAllButton).count();
@@ -86,12 +79,11 @@ export class ConversationsPage extends BasePage {
   }
 
   async expectSelectAllButtonExists(): Promise<boolean> {
-    // Check if conversations exist first
     const conversationLinks = this.page.locator(this.conversationLinks);
     const conversationCount = await conversationLinks.count();
 
     if (conversationCount === 0) {
-      return false; // No conversations, select all should not exist
+      return false;
     }
 
     const count = await this.page.locator(this.selectAllButton).count();
@@ -122,7 +114,6 @@ export class ConversationsPage extends BasePage {
     const searchBox = this.page.locator(this.searchInput);
     await searchBox.focus();
 
-    // Verify focus landed correctly
     const focusedPlaceholder = await this.page.evaluate(() => document.activeElement?.getAttribute("placeholder"));
 
     return focusedPlaceholder === "Search conversations";
@@ -136,13 +127,10 @@ export class ConversationsPage extends BasePage {
     expect(this.page.url()).toContain(fragment);
   }
 
-  // Generic conversation list methods (these would need real selectors when we find them)
   getConversationCount(): number {
-    // This would need real conversation item selectors
     return 0;
   }
 
   selectConversation(index = 0) {
-    // This would need real conversation item selectors
   }
 }
