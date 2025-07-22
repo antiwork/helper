@@ -1,8 +1,8 @@
-import { Locator, Page } from "@playwright/test";
+import { FrameLocator, Locator, Page } from "@playwright/test";
 
 export class WidgetPage {
   readonly page: Page;
-  readonly widgetFrame: Locator;
+  readonly widgetFrame: FrameLocator;
   readonly chatInput: Locator;
   readonly sendButton: Locator;
   readonly screenshotCheckbox: Locator;
@@ -12,7 +12,7 @@ export class WidgetPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.widgetFrame = page.frameLocator("iframe").first();
+    this.widgetFrame = page.locator("iframe").first().contentFrame();
     this.chatInput = this.widgetFrame
       .locator('textarea, input[type="text"], input:not([type]), [contenteditable="true"]')
       .first();
@@ -67,7 +67,10 @@ export class WidgetPage {
           state: "visible",
           timeout: 10000,
         });
-      } catch {}
+      } catch {
+        // If still no interactive elements, the widget might have a different structure
+        // Continue anyway as some tests might not need input
+      }
     }
   }
 

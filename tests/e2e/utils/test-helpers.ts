@@ -62,6 +62,7 @@ export async function simulateSlowNetwork(page: Page) {
       latency: 100,
     });
   } catch (error) {
+    // Fallback for non-Chromium browsers: use route delays
     await page.route("**/*", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       await route.continue();

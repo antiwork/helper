@@ -126,10 +126,4 @@ export class ConversationsPage extends BasePage {
   expectUrlContains(fragment: string) {
     expect(this.page.url()).toContain(fragment);
   }
-
-  getConversationCount(): number {
-    return 0;
-  }
-
-  selectConversation(index = 0) {}
 }

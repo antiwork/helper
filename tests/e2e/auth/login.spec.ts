@@ -40,7 +40,9 @@ test.describe("Working Authentication", () => {
           }
 
           await debugWait(page, 2000);
-        } catch (error) {}
+        } catch (error) {
+          // OTP filling failed, checking if we can proceed anyway
+        }
       }
     }
 
@@ -54,6 +56,8 @@ test.describe("Working Authentication", () => {
 
       await takeDebugScreenshot(page, "successful-login.png");
     } else {
+      // Still on login page - this is expected in a test environment without proper OTP setup
+      // Verify we at least got to the OTP step (shows the process is working)
       const otpInputs = page.locator("[data-input-otp-slot]");
       const hasOtpForm = (await otpInputs.count()) > 0;
 
@@ -118,13 +122,6 @@ test.describe("Working Authentication", () => {
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible({ timeout: 15000 });
     } else {
-      const otpInputs = page.locator("[data-input-otp-slot]");
-      const hasOtpForm = (await otpInputs.count()) > 0;
-
-      if (hasOtpForm) {
-      } else {
-      }
-
       await expect(page.locator("#email")).toBeVisible();
     }
 
