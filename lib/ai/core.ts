@@ -14,8 +14,8 @@ export const O4_MINI_MODEL = "o4-mini-2025-04-16";
 export const GPT_4_1_MINI_MODEL = "gpt-4.1-mini";
 
 export type AvailableModel =
-  | typeof GPT_4O_MINI_MODEL
   | typeof O4_MINI_MODEL
+  | typeof GPT_4O_MINI_MODEL
   | typeof _GPT_4O_MODEL
   | typeof GPT_4_1_MINI_MODEL
   | typeof GPT_4_1_MODEL;

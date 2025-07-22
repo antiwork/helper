@@ -19,7 +19,7 @@ import {
   mailboxes,
 } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
-import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
+import { O4_MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, finishFileUpload, generateKey, uploadFile } from "@/lib/data/files";
@@ -56,7 +56,7 @@ const isThankYouOrAutoResponse = async (
         temperature: 0,
         messages: [{ role: "user", content: emailContent }],
         queryType: "email_auto_ignore",
-        model: GPT_4O_MINI_MODEL,
+        model: O4_MINI_MODEL,
         functionId: "email-auto-ignore-detector",
         maxTokens: 10,
       })

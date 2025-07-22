@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { conversationEvents, conversationMessages } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
 import { loadPreviousMessages } from "@/lib/ai/chat";
-import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
+import { O4_MINI_MODEL } from "@/lib/ai/core";
 import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 
 const RESOLUTION_CHECK_PROMPT = `You are analyzing a customer service conversation to determine if the customer's issue was addressed.
@@ -28,7 +28,7 @@ const checkAIBasedResolution = async (conversationId: number, mailbox: Mailbox) 
       })),
       mailbox,
       queryType: "check_resolution",
-      model: GPT_4O_MINI_MODEL,
+      model: O4_MINI_MODEL,
       system: RESOLUTION_CHECK_PROMPT,
       temperature: 0.1,
       maxTokens: 100,
