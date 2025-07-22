@@ -1,4 +1,4 @@
-import { Bot, Check, ChevronDown } from "lucide-react";
+import { Bot, Check, ChevronDown, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -43,7 +43,16 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     email: null,
   };
 
+  const unassignedItem = {
+    id: null,
+    displayName: "Unassigned",
+    email: null,
+  };
+
   const allItems = [
+    ...(!searchTerm || unassignedItem.displayName.toLowerCase().includes(searchTerm.toLowerCase())
+      ? [unassignedItem]
+      : []),
     ...(aiOption && (!searchTerm || aiItem.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
       ? [aiItem]
       : []),
@@ -116,7 +125,11 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                 >
                   <Check className={`mr-2 h-4 w-4 ${selectedMember?.id === item.id ? "opacity-100" : "opacity-0"}`} />
                   <span className="flex items-center gap-1 min-w-0">
-                    {item.id === "ai" ? <Bot className="h-4 w-4 flex-shrink-0" /> : null}
+                    {item.id === "ai" ? (
+                      <Bot className="h-4 w-4 flex-shrink-0" />
+                    ) : item.id === null ? (
+                      <User className="h-4 w-4 flex-shrink-0" />
+                    ) : null}
                     <span className="flex-1 min-w-0 truncate">
                       {item.displayName || item.email}
                       {item.id === user?.id && " (You)"}
