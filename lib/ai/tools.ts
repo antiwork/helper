@@ -91,8 +91,6 @@ const setUserEmail = async (conversationId: number, email: string) => {
 };
 
 const generateKnowledgeBaseAnswer = async (conversationId: number, question: string, answer: string, reasoning: string) => {
-  const conversation = assertDefined(await getConversationById(conversationId));
-  
   const suggestedContent = `**${question}**\n\n${answer}`;
   
   const faq = await db.insert(faqs).values({
