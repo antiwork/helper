@@ -27,7 +27,7 @@ export const HelperClientProvider = ({ host, session, children }: HelperClientPr
     }
     try {
       return new HelperClient({ host, ...session });
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   });
