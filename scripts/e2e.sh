@@ -1,6 +1,12 @@
 #!/bin/bash
 # This script runs the E2E tests using Playwright
 
+# Check if .env.test exists before attempting to source it
+if [ ! -f ".env.test" ]; then
+    echo "❌ .env.test not found. Please run ./scripts/setup-e2e-tests.sh first."
+    exit 1
+fi
+
 # Load environment variables to get SUPABASE_PROJECT_ID and other config
 set -o allexport
 source .env.test
@@ -33,7 +39,6 @@ echo "✅ All checks passed! Test environment is ready."
 
 set -e
 
-echo "🧪 Running E2E Tests"
 echo "===================="
 
 # Parse command line arguments
@@ -48,12 +53,6 @@ done
 # If no arguments provided, default to basic playwright test
 if [ -z "$PLAYWRIGHT_COMMAND" ]; then
     PLAYWRIGHT_COMMAND="playwright test"
-fi
-
-# Check if .env.test exists
-if [ ! -f ".env.test" ]; then
-    echo "❌ .env.test not found. Please run ./scripts/setup-e2e-tests.sh first."
-    exit 1
 fi
 
 echo "🚀 Starting E2E test run..."
