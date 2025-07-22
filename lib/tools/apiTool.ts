@@ -9,7 +9,7 @@ import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
-import { cleanUpTextForAI, O4_MINI_MODEL, isWithinTokenLimit } from "../ai/core";
+import { cleanUpTextForAI, isWithinTokenLimit, O4_MINI_MODEL } from "../ai/core";
 import type { Conversation } from "../data/conversation";
 
 export class ToolApiError extends Error {
