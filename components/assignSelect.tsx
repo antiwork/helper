@@ -1,4 +1,4 @@
-import { Bot, Check, ChevronDown, User } from "lucide-react";
+import { Bot, Check, ChevronDown, UserMinus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -98,7 +98,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
     }
   };
 
-  const selectedDisplayName = selectedMember?.displayName || selectedMember?.email || "Anyone";
+  const selectedDisplayName = selectedMember?.displayName || selectedMember?.email || "Unassigned";
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -128,7 +128,7 @@ export const AssignSelect = ({ selectedUserId, onChange, aiOption, aiOptionSelec
                     {item.id === "ai" ? (
                       <Bot className="h-4 w-4 flex-shrink-0" />
                     ) : item.id === null ? (
-                      <User className="h-4 w-4 flex-shrink-0" />
+                      <UserMinus className="h-4 w-4 flex-shrink-0" />
                     ) : null}
                     <span className="flex-1 min-w-0 truncate">
                       {item.displayName || item.email}
