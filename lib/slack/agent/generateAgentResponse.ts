@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, DRAFT_STATUSES, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { runAIQuery } from "@/lib/ai";
+import { O4_MINI_MODEL } from "@/lib/ai/core";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
@@ -400,7 +401,7 @@ export const generateAgentResponse = async (
   const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
-    model: "o4-mini-2025-04-16",
+    model: O4_MINI_MODEL,
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
 You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat or explicitly mention another mailbox by name to access others.
