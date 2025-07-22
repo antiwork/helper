@@ -6,8 +6,14 @@ import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { env } from "@/lib/env";
 
 const SUSPENSION_KEYWORDS = [
-  "suspended", "suspension", "delete account", "delete my account", 
-  "data deletion", "remove my data", "personal information", "gdpr"
+  "suspended",
+  "suspension",
+  "delete account",
+  "delete my account",
+  "data deletion",
+  "remove my data",
+  "personal information",
+  "gdpr",
 ];
 
 type SuspendedUserReport = {
@@ -24,10 +30,7 @@ export async function closeSuspendedUserTickets(): Promise<SuspendedUserReport> 
   };
 
   const openConversations = await db.query.conversations.findMany({
-    where: and(
-      eq(conversations.status, "open"),
-      isNull(conversations.mergedIntoId)
-    ),
+    where: and(eq(conversations.status, "open"), isNull(conversations.mergedIntoId)),
     columns: {
       id: true,
       slug: true,
@@ -72,18 +75,15 @@ async function checkForSuspensionKeywords(conversationId: number): Promise<boole
     where: and(
       eq(conversationMessages.conversationId, conversationId),
       isNull(conversationMessages.deletedAt),
-      or(
-        eq(conversationMessages.role, "user"),
-        eq(conversationMessages.role, "staff")
-      )
+      or(eq(conversationMessages.role, "user"), eq(conversationMessages.role, "staff")),
     ),
   });
 
   for (const message of messages) {
     const text = await ensureCleanedUpText(message);
     const lowerText = text.toLowerCase();
-    
-    if (SUSPENSION_KEYWORDS.some(keyword => lowerText.includes(keyword.toLowerCase()))) {
+
+    if (SUSPENSION_KEYWORDS.some((keyword) => lowerText.includes(keyword.toLowerCase()))) {
       return true;
     }
   }
@@ -98,10 +98,10 @@ async function checkUserSuspensionStatus(email: string): Promise<boolean> {
 
   try {
     const response = await fetch(`${env.GUMROAD_API_URL}/api/internal/helper/user_suspension_info`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.GUMROAD_API_TOKEN}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.GUMROAD_API_TOKEN}`,
       },
       body: JSON.stringify({ email }),
     });
