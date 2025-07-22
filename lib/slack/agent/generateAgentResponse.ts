@@ -2,10 +2,12 @@ import { CoreMessage, Tool, tool } from "ai";
 import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, DRAFT_STATUSES, userProfiles } from "@/db/schema";
+import { conversationMessages, conversations, DRAFT_STATUSES, faqs, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
@@ -340,6 +342,40 @@ export const generateAgentResponse = async (
         } catch (error) {
           captureExceptionAndLog(error);
           return { error: "Failed to search website pages" };
+        }
+      },
+    }),
+    generateKnowledgeBaseAnswer: tool({
+      description:
+        "Generate a knowledge base answer based on the current conversation context and suggest it for addition to the knowledge base",
+      parameters: z.object({
+        question: z.string().describe("The question or topic this knowledge base entry should address"),
+        answer: z.string().describe("The comprehensive answer or information to be added to the knowledge base"),
+        reasoning: z.string().describe("Why this information should be added to the knowledge base"),
+      }),
+      execute: async ({ question, answer, reasoning }) => {
+        showStatus(`Creating knowledge base suggestion...`, {
+          toolName: "generateKnowledgeBaseAnswer",
+          parameters: { question, answer, reasoning },
+        });
+        try {
+          const suggestedContent = `**${question}**\n\n${answer}`;
+
+          const faq = await db
+            .insert(faqs)
+            .values({
+              content: suggestedContent,
+              suggested: true,
+              enabled: false,
+            })
+            .returning()
+            .then(takeUniqueOrThrow);
+
+          await triggerEvent("faqs/embedding.create", { faqId: faq.id });
+
+          return `I've suggested adding this information to the knowledge base:\n\n**Question:** ${question}\n\n**Answer:** ${answer}\n\n**Reasoning:** ${reasoning}\n\nPlease review and approve this suggestion in the knowledge bank settings, where you can also edit the content if needed.`;
+        } catch (_error) {
+          return { error: "Failed to create knowledge base suggestion" };
         }
       },
     }),
