@@ -1,8 +1,8 @@
 import { waitUntil } from "@vercel/functions";
 import { tool, type Tool } from "ai";
 import { z } from "zod";
-import { assertDefined } from "@/components/utils/assert";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { faqs } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
@@ -90,14 +90,23 @@ const setUserEmail = async (conversationId: number, email: string) => {
   return "Your email has been set. You can now request human support if needed.";
 };
 
-const generateKnowledgeBaseAnswer = async (conversationId: number, question: string, answer: string, reasoning: string) => {
+const generateKnowledgeBaseAnswer = async (
+  _conversationId: number,
+  question: string,
+  answer: string,
+  reasoning: string,
+) => {
   const suggestedContent = `**${question}**\n\n${answer}`;
-  
-  const faq = await db.insert(faqs).values({
-    content: suggestedContent,
-    suggested: true,
-    enabled: false,
-  }).returning().then(takeUniqueOrThrow);
+
+  const faq = await db
+    .insert(faqs)
+    .values({
+      content: suggestedContent,
+      suggested: true,
+      enabled: false,
+    })
+    .returning()
+    .then(takeUniqueOrThrow);
 
   await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
@@ -131,13 +140,15 @@ export const buildTools = async (
       execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query)),
     }),
     generate_knowledge_base_answer: tool({
-      description: "Generate a knowledge base answer based on the current conversation context and suggest it for addition to the knowledge base",
+      description:
+        "Generate a knowledge base answer based on the current conversation context and suggest it for addition to the knowledge base",
       parameters: z.object({
         question: z.string().describe("The question or topic this knowledge base entry should address"),
         answer: z.string().describe("The comprehensive answer or information to be added to the knowledge base"),
         reasoning: z.string().describe("Why this information should be added to the knowledge base"),
       }),
-      execute: ({ question, answer, reasoning }) => reasoningMiddleware(generateKnowledgeBaseAnswer(conversationId, question, answer, reasoning)),
+      execute: ({ question, answer, reasoning }) =>
+        reasoningMiddleware(generateKnowledgeBaseAnswer(conversationId, question, answer, reasoning)),
     }),
   };
 
