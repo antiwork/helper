@@ -6,7 +6,7 @@ import { useState } from "react";
 const prompt = (host: string) => {
   const actualHost = host.includes("//") ? host : `https://${host || "your-helper-instance.com"}`;
   return `
-Create a comprehensive customer support portal application using the \`@helperai/client\` SDK. The portal should allow customers to view their support tickets, create new ones, and engage in real-time conversations with AI agents.
+Add a comprehensive customer support portal to this app using the \`@helperai/client\` SDK. The portal should allow customers to view their support tickets, create new ones, and engage in real-time conversations with AI agents.
 
 IMPORTANT:
 - These instructions are for React and Next.js, so adapt them as required for the current framework.
@@ -22,14 +22,14 @@ Install the following with npm/pnpm/yarn/etc: \`@helperai/client @helperai/react
 ## 2. Helper provider
 
 Create a global state provider (e.g. React context) that:
-- Imports the HelperClient from \`@helperai/client\`
-- Takes \`session\` as a prop
+- Imports \`HelperClient\` and \`SessionParams\` from \`@helperai/client\`
+- Takes \`session: SessionParams\` as a prop
 - Creates a memoized HelperClient instance with arguments: \`{ host: "${actualHost}", ...session }\`
 - Exports a custom hook \`useHelperClient()\` for accessing the client
 
 ## 3. Session management
 
-Create a \`createHelperSession\` helper function that calls \`generateHelperAuth\` from \`@helperai/react\` like this:
+Separately, create a *server-side* \`createHelperSession\` helper function that calls \`generateHelperAuth\` from \`@helperai/react\` like this:
 
 \`\`\`tsx
 return await generateHelperAuth({
