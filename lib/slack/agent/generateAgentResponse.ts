@@ -400,7 +400,7 @@ export const generateAgentResponse = async (
   const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
-    model: "gpt-4o-mini",
+    model: "o4-mini",
     system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
 
 You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat or explicitly mention another mailbox by name to access others.

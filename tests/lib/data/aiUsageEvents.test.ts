@@ -9,7 +9,7 @@ import { trackAIUsageEvent } from "@/lib/data/aiUsageEvents";
 describe("trackAIUsageEvent", () => {
   it("tracks AI usage event with provided mailbox", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const model = "gpt-4o-mini";
+    const model = "o4-mini";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 100,
@@ -33,7 +33,7 @@ describe("trackAIUsageEvent", () => {
 
   it("tracks AI usage event with cached tokens", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const model = "gpt-4o-mini";
+    const model = "o4-mini";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 100,
@@ -62,7 +62,7 @@ describe("trackAIUsageEvent", () => {
 
   it("uses placeholder mailbox when mailbox is not provided", async () => {
     await mailboxFactory.create();
-    const model = "gpt-4o-mini";
+    const model = "o4-mini";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 200,
@@ -92,14 +92,14 @@ describe("trackAIUsageEvent", () => {
     const { mailbox } = await userFactory.createRootUser();
     const testCases = [
       {
-        model: "gpt-4o-mini" as const,
+        model: "o4-mini" as const,
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
         expectedCost: "0.0004500",
       },
       {
-        model: "gpt-4o-mini" as const,
+        model: "o4-mini" as const,
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,

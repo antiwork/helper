@@ -10,16 +10,18 @@ import { cacheFor } from "@/lib/cache";
 const _GPT_4O_MODEL = "gpt-4o";
 export const GPT_4_1_MODEL = "gpt-4.1";
 export const GPT_4O_MINI_MODEL = "gpt-4o-mini";
+export const O4_MINI_MODEL = "o4-mini";
 export const GPT_4_1_MINI_MODEL = "gpt-4.1-mini";
 
 export type AvailableModel =
   | typeof GPT_4O_MINI_MODEL
+  | typeof O4_MINI_MODEL
   | typeof _GPT_4O_MODEL
   | typeof GPT_4_1_MINI_MODEL
   | typeof GPT_4_1_MODEL;
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
-export const COMPLETION_MODEL = GPT_4O_MINI_MODEL;
+export const COMPLETION_MODEL = O4_MINI_MODEL;
 
 export const generateEmbedding = async (
   value: string,

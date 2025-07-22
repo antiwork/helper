@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { encode } from "gpt-tokenizer/model/gpt-4o-mini";
+import { encode } from "gpt-tokenizer/model/gpt-4o";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
