@@ -3,7 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ReadPageToolConfig } from "@helperai/sdk";
+import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
+import { ConversationResult } from "@helperai/client";
+import { useHelperClientContext } from "./helperClientProvider";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -53,60 +55,69 @@ export default function Conversation({
   const [isEscalated, setIsEscalated] = useState(false);
   const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
+  const [helperConversation, setHelperConversation] = useState<ConversationResult | null>(null);
+  const { client } = useHelperClientContext();
 
   const [isAgentTyping, setIsAgentTyping] = useState(false);
   const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  useRealtimeEvent(
-    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
-    "agent-typing",
-    () => {
-      setIsAgentTyping(true);
+  useEffect(() => {
+    const fetchConversation = async () => {
+      if (!selectedConversationSlug || !token) return;
+      try {
+        const conversationData = await client.conversations.get(selectedConversationSlug);
+        setHelperConversation(conversationData);
+        setIsEscalated(conversationData.isEscalated);
+      } catch (error) {
+        captureExceptionAndLog(error);
+      }
+    };
+    fetchConversation();
+  }, [selectedConversationSlug, client, token]);
 
-      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
-      agentTypingTimeoutRef.current = setTimeout(() => setIsAgentTyping(false), 10000);
-    },
-  );
+  useEffect(() => {
+    if (!selectedConversationSlug) return;
+
+    const unlisten = client.chat.listen(selectedConversationSlug, {
+      onHumanReply: (message) => {
+        setIsAgentTyping(false);
+        if (agentTypingTimeoutRef.current) {
+          clearTimeout(agentTypingTimeoutRef.current);
+        }
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: message.id,
+            role: message.role,
+            content: message.content,
+            createdAt: new Date(),
+            reactionType: null,
+            reactionFeedback: null,
+            reactionCreatedAt: null,
+          },
+        ]);
+      },
+      onTyping: (isTyping) => {
+        setIsAgentTyping(isTyping);
+        if (isTyping) {
+          if (agentTypingTimeoutRef.current) {
+            clearTimeout(agentTypingTimeoutRef.current);
+          }
+          agentTypingTimeoutRef.current = setTimeout(() => {
+            setIsAgentTyping(false);
+          }, 10000);
+        }
+      },
+    });
+
+    return () => unlisten();
+  }, [selectedConversationSlug, client]);
 
   useEffect(() => {
     return () => {
       if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
     };
   }, []);
-
-  useRealtimeEvent(
-    selectedConversationSlug ? publicConversationChannelId(selectedConversationSlug) : DISABLED,
-    "agent-reply",
-    (event) => {
-      setIsAgentTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `staff_${Date.now()}`,
-          role: "assistant",
-          content: event.data.message,
-          createdAt: new Date(event.data.timestamp),
-          reactionType: null,
-          reactionFeedback: null,
-          reactionCreatedAt: null,
-          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
-        },
-      ]);
-
-      if (selectedConversationSlug && token) {
-        fetch(`/api/chat/conversation/${selectedConversationSlug}`, {
-          method: "PATCH",
-          body: JSON.stringify({ markRead: true }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }).catch((error) => {
-          captureExceptionAndLog(error);
-        });
-      }
-    },
-  );
 
   useEffect(() => {
     if (conversationSlug) {
@@ -126,50 +137,82 @@ export default function Conversation({
     status,
     stop,
     addToolResult,
-  } = useChat({
-    maxSteps: 3,
-    generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
-    onToolCall({ toolCall }) {
-      if (readPageTool && toolCall.toolName === readPageTool.toolName) {
-        return readPageTool.pageContent || readPageTool.pageHTML;
-      }
+  } = useChat(
+    helperConversation
+      ? {
+          ...client.chat.handler({
+            conversation: helperConversation,
+            tools: {},
+          }),
+          maxSteps: 3,
+          generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
+          onToolCall({ toolCall }) {
+            if (readPageTool && toolCall.toolName === readPageTool.toolName) {
+              return readPageTool.pageContent || readPageTool.pageHTML;
+            }
 
-      if (toolCall.toolName === "request_human_support") {
-        setIsEscalated(true);
-      }
-    },
-    experimental_prepareRequestBody({ messages, id, requestBody }) {
-      const lastMessage = messages[messages.length - 1];
-      const isToolResult = lastMessage?.parts?.some(
-        (part) => part.type === "tool-invocation" && part.toolInvocation.state === "result",
-      );
+            if (toolCall.toolName === "request_human_support") {
+              setIsEscalated(true);
+            }
+          },
+          onError: (error) => {
+            captureExceptionAndLog(error);
 
-      return {
-        id,
-        readPageTool,
-        guideEnabled,
-        message: lastMessage,
-        conversationSlug,
-        isToolResult,
-        ...requestBody,
-      };
-    },
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    onError: (error) => {
-      captureExceptionAndLog(error);
+            setMessages((messages) => [
+              ...messages,
+              {
+                id: `error_${Date.now()}`,
+                role: "system",
+                content: "Sorry, there was an error processing your request. Please try again.",
+              },
+            ]);
+          },
+        }
+      : {
+          maxSteps: 3,
+          generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
+          onToolCall({ toolCall }) {
+            if (readPageTool && toolCall.toolName === readPageTool.toolName) {
+              return readPageTool.pageContent || readPageTool.pageHTML;
+            }
 
-      setMessages((messages) => [
-        ...messages,
-        {
-          id: `error_${Date.now()}`,
-          role: "system",
-          content: "Sorry, there was an error processing your request. Please try again.",
+            if (toolCall.toolName === "request_human_support") {
+              setIsEscalated(true);
+            }
+          },
+          experimental_prepareRequestBody({ messages, id, requestBody }) {
+            const lastMessage = messages[messages.length - 1];
+            const isToolResult = lastMessage?.parts?.some(
+              (part) => part.type === "tool-invocation" && part.toolInvocation.state === "result",
+            );
+
+            return {
+              id,
+              readPageTool,
+              guideEnabled,
+              message: lastMessage,
+              conversationSlug,
+              isToolResult,
+              ...requestBody,
+            };
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          onError: (error) => {
+            captureExceptionAndLog(error);
+
+            setMessages((messages) => [
+              ...messages,
+              {
+                id: `error_${Date.now()}`,
+                role: "system",
+                content: "Sorry, there was an error processing your request. Please try again.",
+              },
+            ]);
+          },
         },
-      ]);
-    },
-  });
+  );
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {

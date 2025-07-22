@@ -2,6 +2,8 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ConversationResult } from "@helperai/client";
+import { useHelperClientContext } from "./helperClientProvider";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import {
@@ -54,9 +56,11 @@ export default function HelpingHand({
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
+  const [guideConversation, setGuideConversation] = useState<ConversationResult | null>(null);
   const lastSerializedStepsRef = useRef<string>(JSON.stringify([]));
   const sessionIdRef = useRef<string | null>(null);
   const stepsRef = useRef<Step[]>([]);
+  const { client } = useHelperClientContext();
 
   useEffect(() => {
     sessionIdRef.current = guideSessionId;
@@ -77,7 +81,7 @@ export default function HelpingHand({
     if (!guideSessionId || !token) return;
 
     try {
-      await fetch("/api/guide/update", {
+      const response = await fetch("/api/guide/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,6 +89,9 @@ export default function HelpingHand({
         },
         body: JSON.stringify({ sessionId: guideSessionId, steps: updatedSteps }),
       });
+      if (!response.ok) {
+        throw new Error("Failed to update guide steps");
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to update guide steps:", error);
@@ -101,32 +108,77 @@ export default function HelpingHand({
     };
   }, []);
 
-  const { append, addToolResult } = useChat({
-    api: "/api/guide/action",
-    maxSteps: 10,
-    generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
-    onToolCall({ toolCall }) {
-      const params = toolCall.args as Record<string, any>;
-
-      if (params.action) {
-        handleAction(params.action, toolCall.toolCallId, params.current_state);
+  useEffect(() => {
+    if (!conversationSlug) return;
+    
+    const fetchGuideConversation = async () => {
+      try {
+        const conversation = await client.conversations.get(conversationSlug);
+        setGuideConversation(conversation);
+      } catch (error) {
+        captureExceptionAndLog(error);
       }
+    };
+    
+    fetchGuideConversation();
+  }, [conversationSlug, client]);
 
-      if (params.current_state) {
-        const completedSteps = params.current_state.completed_steps || [];
-        const newSteps = stepsRef.current.map((step, index) => ({
-          ...step,
-          completed: completedSteps.includes(index + 1),
-        }));
+  const { append, addToolResult } = useChat(
+    guideConversation
+      ? {
+          ...client.chat.handler({
+            conversation: guideConversation,
+            tools: {},
+          }),
+          api: "/api/guide/action",
+          maxSteps: 10,
+          generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
+          onToolCall({ toolCall }) {
+            const params = toolCall.args as Record<string, any>;
 
-        setSteps(newSteps);
-      }
-    },
-    experimental_prepareRequestBody: prepareRequestBody,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+            if (params.action) {
+              handleAction(params.action, toolCall.toolCallId, params.current_state);
+            }
+
+            if (params.current_state) {
+              const completedSteps = params.current_state.completed_steps || [];
+              const newSteps = stepsRef.current.map((step, index) => ({
+                ...step,
+                completed: completedSteps.includes(index + 1),
+              }));
+
+              setSteps(newSteps);
+            }
+          },
+          experimental_prepareRequestBody: prepareRequestBody,
+        }
+      : {
+          api: "/api/guide/action",
+          maxSteps: 10,
+          generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
+          onToolCall({ toolCall }) {
+            const params = toolCall.args as Record<string, any>;
+
+            if (params.action) {
+              handleAction(params.action, toolCall.toolCallId, params.current_state);
+            }
+
+            if (params.current_state) {
+              const completedSteps = params.current_state.completed_steps || [];
+              const newSteps = stepsRef.current.map((step, index) => ({
+                ...step,
+                completed: completedSteps.includes(index + 1),
+              }));
+
+              setSteps(newSteps);
+            }
+          },
+          experimental_prepareRequestBody: prepareRequestBody,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+  );
 
   const trackToolResult = (actionToolCallId: string, result: string) => {
     if (toolResultCount >= 10) {
@@ -248,7 +300,7 @@ export default function HelpingHand({
 
       const data = await response.json();
       setGuideSessionId(data.sessionId);
-      sessionIdRef.current = data.sessionId; // Immediately update ref
+      sessionIdRef.current = data.sessionId;
       const steps = data.steps.map((step: string) => ({
         description: step,
         completed: false,

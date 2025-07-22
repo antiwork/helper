@@ -9,6 +9,7 @@ import { MESSAGE_TYPE, RESUME_GUIDE } from "@helperai/sdk";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
 import Header, { WidgetHeaderConfig } from "@/components/widget/Header";
+import { HelperClientProvider } from "@/components/widget/helperClientProvider";
 import { useReadPageTool } from "@/components/widget/hooks/useReadPageTool";
 import PreviousConversations from "@/components/widget/PreviousConversations";
 import PromptDetailsModal from "@/components/widget/PromptDetailsModal";
@@ -136,65 +137,78 @@ export default function Page() {
 
   const headerTitle = currentView === "previous" ? "History" : (config.title ?? defaultTitle ?? "Support");
 
+  const helperClientSession = {
+    token,
+    email: config.email,
+    emailHash: config.emailHash,
+    timestamp: config.timestamp,
+    customerMetadata: config.customerMetadata,
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div
-        className={cx("light flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
-          "bg-gumroad-bg": isGumroadTheme,
-          "bg-background": !isGumroadTheme,
-        })}
+      <HelperClientProvider
+        host={typeof window !== "undefined" ? window.location.origin : ""}
+        session={helperClientSession}
       >
-        <Header
-          config={config}
-          onShowPreviousConversations={onShowPreviousConversations}
-          onNewConversation={memoizedHandleNewConversation}
-          title={headerTitle}
-        />
-        <div className="relative flex-1 overflow-hidden">
-          {showingPromptInfo && (
-            <PromptDetailsModal
-              onClose={() => togglePromptInfo()}
-              allMessages={showingPromptInfo.allMessages}
-              message={showingPromptInfo.message}
-              promptInfo={showingPromptInfo.promptInfo}
-            />
-          )}
-          <LazyMotion features={domAnimation}>
-            <m.div
-              className="absolute inset-0 flex"
-              animate={currentView === "previous" ? "previous" : "chat"}
-              variants={{ previous: { x: 0 }, chat: { x: "-100%" } }}
-              transition={{ type: "tween", duration: 0.3 }}
-            >
-              <div className="shrink-0 w-full h-full">
-                <div className="h-full overflow-y-auto p-4">
-                  {currentView === "previous" && hasLoadedHistory && (
-                    <PreviousConversations
-                      token={token}
-                      onSelectConversation={onSelectConversation}
-                      isAnonymous={isAnonymous}
-                    />
-                  )}
+        <div
+          className={cx("light flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
+            "bg-gumroad-bg": isGumroadTheme,
+            "bg-background": !isGumroadTheme,
+          })}
+        >
+          <Header
+            config={config}
+            onShowPreviousConversations={onShowPreviousConversations}
+            onNewConversation={memoizedHandleNewConversation}
+            title={headerTitle}
+          />
+          <div className="relative flex-1 overflow-hidden">
+            {showingPromptInfo && (
+              <PromptDetailsModal
+                onClose={() => togglePromptInfo()}
+                allMessages={showingPromptInfo.allMessages}
+                message={showingPromptInfo.message}
+                promptInfo={showingPromptInfo.promptInfo}
+              />
+            )}
+            <LazyMotion features={domAnimation}>
+              <m.div
+                className="absolute inset-0 flex"
+                animate={currentView === "previous" ? "previous" : "chat"}
+                variants={{ previous: { x: 0 }, chat: { x: "-100%" } }}
+                transition={{ type: "tween", duration: 0.3 }}
+              >
+                <div className="shrink-0 w-full h-full">
+                  <div className="h-full overflow-y-auto p-4">
+                    {currentView === "previous" && hasLoadedHistory && (
+                      <PreviousConversations
+                        token={token}
+                        onSelectConversation={onSelectConversation}
+                        isAnonymous={isAnonymous}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="shrink-0 w-full h-full flex flex-col">
-                <Conversation
-                  token={token}
-                  currentView={currentView}
-                  readPageTool={readPageToolCall}
-                  isGumroadTheme={isGumroadTheme}
-                  isNewConversation={isNewConversation}
-                  selectedConversationSlug={selectedConversationSlug}
-                  onLoadFailed={memoizedHandleNewConversation}
-                  guideEnabled={config.enableGuide ?? false}
-                  resumeGuide={resumeGuide}
-                />
-              </div>
-            </m.div>
-          </LazyMotion>
+                <div className="shrink-0 w-full h-full flex flex-col">
+                  <Conversation
+                    token={token}
+                    currentView={currentView}
+                    readPageTool={readPageToolCall}
+                    isGumroadTheme={isGumroadTheme}
+                    isNewConversation={isNewConversation}
+                    selectedConversationSlug={selectedConversationSlug}
+                    onLoadFailed={memoizedHandleNewConversation}
+                    guideEnabled={config.enableGuide ?? false}
+                    resumeGuide={resumeGuide}
+                  />
+                </div>
+              </m.div>
+            </LazyMotion>
+          </div>
         </div>
-      </div>
+      </HelperClientProvider>
     </QueryClientProvider>
   );
 }
