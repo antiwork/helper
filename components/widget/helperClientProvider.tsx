@@ -1,9 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState } from "react";
-
-type HelperClient = any;
-type SessionParams = any;
+import { HelperClient, SessionParams } from "@helperai/client";
 
 const HelperClientContext = createContext<{ client: HelperClient | null } | null>(null);
 

@@ -2,7 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
-type ConversationResult = any;
+import { ConversationResult } from "@helperai/client";
 import { useHelperClientContext } from "./helperClientProvider";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -110,7 +110,7 @@ export default function HelpingHand({
 
   useEffect(() => {
     if (!conversationSlug || !client) return;
-    
+
     const fetchGuideConversation = async () => {
       try {
         const conversation = await client.conversations.get(conversationSlug);
@@ -119,7 +119,7 @@ export default function HelpingHand({
         captureExceptionAndLog(error);
       }
     };
-    
+
     fetchGuideConversation();
   }, [conversationSlug, client]);
 
