@@ -1,8 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { HelperClient, SessionParams } from "@helperai/client";
-import React from "react";
 
 const HelperClientContext = createContext<{ client: HelperClient } | null>(null);
 

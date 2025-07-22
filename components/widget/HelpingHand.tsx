@@ -3,7 +3,6 @@ import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ConversationResult } from "@helperai/client";
-import { useHelperClientContext } from "./helperClientProvider";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import {
@@ -16,6 +15,7 @@ import {
 } from "@/lib/widget/messages";
 import { GuideInstructions, Step } from "@/types/guide";
 import { AISteps } from "./ai-steps";
+import { useHelperClientContext } from "./helperClientProvider";
 
 type Status = "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
 
@@ -110,7 +110,7 @@ export default function HelpingHand({
 
   useEffect(() => {
     if (!conversationSlug) return;
-    
+
     const fetchGuideConversation = async () => {
       try {
         const conversation = await client.conversations.get(conversationSlug);
@@ -119,7 +119,7 @@ export default function HelpingHand({
         captureExceptionAndLog(error);
       }
     };
-    
+
     fetchGuideConversation();
   }, [conversationSlug, client]);
 
