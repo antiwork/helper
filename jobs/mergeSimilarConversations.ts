@@ -124,7 +124,7 @@ Should the current conversation be merged into any of the others? If so, which o
       mergeIntoId: z.number().nullable(),
       reason: z.string(),
     }),
-    model: "o4-mini",
+    model: "o4-mini-2025-04-16",
     system: systemMessage,
     temperature: 0.0,
     maxTokens: 500,
