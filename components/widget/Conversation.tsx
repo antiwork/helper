@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ConversationResult } from "@helperai/client";
+type ConversationResult = any;
 import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
@@ -61,7 +61,7 @@ export default function Conversation({
 
   useEffect(() => {
     const fetchConversation = async () => {
-      if (!selectedConversationSlug || !token) return;
+      if (!selectedConversationSlug || !token || !client) return;
       try {
         const conversationData = await client.conversations.get(selectedConversationSlug);
         setHelperConversation(conversationData);
@@ -74,7 +74,7 @@ export default function Conversation({
   }, [selectedConversationSlug, client, token]);
 
   useEffect(() => {
-    if (!selectedConversationSlug) return;
+    if (!selectedConversationSlug || !client) return;
 
     const unlisten = client.chat.listen(selectedConversationSlug, {
       onHumanReply: (message: any) => {

@@ -31,6 +31,26 @@ beforeAll(() => {
     return {};
   });
 
+  vi.mock("@helperai/client", () => {
+    return {
+      HelperClient: class MockHelperClient {
+        constructor() {}
+        conversations = {
+          get: vi.fn().mockResolvedValue(null),
+          list: vi.fn().mockResolvedValue([]),
+          create: vi.fn().mockResolvedValue({}),
+          update: vi.fn().mockResolvedValue({}),
+        };
+        chat = {
+          handler: vi.fn().mockReturnValue({}),
+          listen: vi.fn().mockReturnValue(() => {}),
+        };
+      },
+      ConversationResult: {},
+      SessionParams: {},
+    };
+  });
+
   vi.mock("react", async (importOriginal) => {
     const testCache = <T extends (...args: unknown[]) => unknown>(func: T) => func;
     const originalModule = await importOriginal<typeof import("react")>();

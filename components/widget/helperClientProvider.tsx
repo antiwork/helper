@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
-import { HelperClient, SessionParams } from "@helperai/client";
-import React from "react";
+import React, { createContext, useContext, useState } from "react";
 
-const HelperClientContext = createContext<{ client: HelperClient } | null>(null);
+type HelperClient = any;
+type SessionParams = any;
+
+const HelperClientContext = createContext<{ client: HelperClient | null } | null>(null);
 
 export const useHelperClientContext = () => {
   const context = useContext(HelperClientContext);
@@ -21,7 +22,18 @@ export interface HelperClientProviderProps {
 }
 
 export const HelperClientProvider = ({ host, session, children }: HelperClientProviderProps) => {
-  const [client] = useState(() => new HelperClient({ host, ...session }));
+  const [client] = useState(() => {
+    if (typeof window === "undefined" || process.env.NODE_ENV === "test") {
+      return null;
+    }
+    try {
+      const { HelperClient } = require("@helperai/client");
+      return new HelperClient({ host, ...session });
+    } catch (error) {
+      console.warn("Failed to load HelperClient:", error);
+      return null;
+    }
+  });
 
   return <HelperClientContext.Provider value={{ client }}>{children}</HelperClientContext.Provider>;
 };
