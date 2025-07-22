@@ -9,7 +9,7 @@ import { trackAIUsageEvent } from "@/lib/data/aiUsageEvents";
 describe("trackAIUsageEvent", () => {
   it("tracks AI usage event with provided mailbox", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const model = "gpt-4o";
+    const model = "gpt-4o-mini";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 100,
@@ -33,7 +33,7 @@ describe("trackAIUsageEvent", () => {
 
   it("tracks AI usage event with cached tokens", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const model = "gpt-4o";
+    const model = "gpt-4o-mini";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 100,
@@ -99,7 +99,7 @@ describe("trackAIUsageEvent", () => {
         expectedCost: "0.0004500",
       },
       {
-        model: "gpt-4o" as const,
+        model: "gpt-4o-mini" as const,
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
