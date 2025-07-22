@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-type ConversationResult = any;
+import { ConversationResult } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
@@ -136,7 +136,7 @@ export default function Conversation({
     stop,
     addToolResult,
   } = useChat(
-    helperConversation
+    helperConversation && client
       ? {
           ...client.chat.handler({
             conversation: helperConversation,

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react";
 import { HelperClient, SessionParams } from "@helperai/client";
+import { env } from "@/lib/env";
 
 const HelperClientContext = createContext<{ client: HelperClient | null } | null>(null);
 
@@ -21,14 +22,12 @@ export interface HelperClientProviderProps {
 
 export const HelperClientProvider = ({ host, session, children }: HelperClientProviderProps) => {
   const [client] = useState(() => {
-    if (typeof window === "undefined" || process.env.NODE_ENV === "test") {
+    if (typeof window === "undefined" || env.NODE_ENV === "test") {
       return null;
     }
     try {
-      const { HelperClient } = require("@helperai/client");
       return new HelperClient({ host, ...session });
     } catch (error) {
-      console.warn("Failed to load HelperClient:", error);
       return null;
     }
   });

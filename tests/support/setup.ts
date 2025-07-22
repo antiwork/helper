@@ -34,7 +34,6 @@ beforeAll(() => {
   vi.mock("@helperai/client", () => {
     return {
       HelperClient: class MockHelperClient {
-        constructor() {}
         conversations = {
           get: vi.fn().mockResolvedValue(null),
           list: vi.fn().mockResolvedValue([]),
