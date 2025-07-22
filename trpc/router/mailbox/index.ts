@@ -132,4 +132,12 @@ export const mailboxRouter = {
       message: "Auto-close job triggered successfully",
     };
   }),
+  autoCloseSuspendedUsers: mailboxProcedure.mutation(async ({ ctx }) => {
+    await triggerEvent("conversations/auto-close-suspended-users", {});
+
+    return {
+      success: true,
+      message: "Auto-close suspended users job triggered successfully",
+    };
+  }),
 } satisfies TRPCRouterRecord;

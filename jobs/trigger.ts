@@ -114,6 +114,10 @@ const events = {
     data: z.object({}),
     jobs: ["closeInactiveConversations"],
   },
+  "conversations/auto-close-suspended-users": {
+    data: z.object({}),
+    jobs: ["closeSuspendedUserTickets"],
+  },
   "conversations/auto-close.process-mailbox": {
     data: z.object({}),
     jobs: ["closeInactiveConversationsForMailbox"],

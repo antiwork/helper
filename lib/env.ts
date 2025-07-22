@@ -84,6 +84,9 @@ export const env = createEnv({
     APPLE_PRIVATE_KEY: z.string().min(1).optional(),
     APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
 
+    GUMROAD_API_URL: z.string().url().optional(),
+    GUMROAD_API_TOKEN: z.string().min(1).optional(),
+
     // Optional configuration
 
     // Allow automatic signups from specific domains (e.g. your company's email domain)

@@ -1,5 +1,6 @@
 import { autoAssignConversation } from "./autoAssignConversation";
 import { closeInactiveConversations, closeInactiveConversationsForMailbox } from "./autoCloseInactiveConversations";
+import { closeSuspendedUserTickets } from "./autoCloseSuspendedUserTickets";
 import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversations";
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
@@ -53,6 +54,7 @@ export const eventJobs = {
   suggestKnowledgeBankChanges,
   closeInactiveConversations,
   closeInactiveConversationsForMailbox,
+  closeSuspendedUserTickets,
   autoAssignConversation,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
@@ -63,6 +65,7 @@ export const cronJobs = {
   "0 * * * *": {
     cleanupDanglingFiles,
     closeInactiveConversations,
+    closeSuspendedUserTickets,
   },
   "0 14 * * 1-5": {
     checkAssignedTicketResponseTimes,
