@@ -40,8 +40,7 @@ test.describe("Working Authentication", () => {
           }
 
           await debugWait(page, 2000);
-        } catch (error) {
-        }
+        } catch (error) {}
       }
     }
 

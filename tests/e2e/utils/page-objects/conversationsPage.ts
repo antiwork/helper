@@ -131,6 +131,5 @@ export class ConversationsPage extends BasePage {
     return 0;
   }
 
-  selectConversation(index = 0) {
-  }
+  selectConversation(index = 0) {}
 }

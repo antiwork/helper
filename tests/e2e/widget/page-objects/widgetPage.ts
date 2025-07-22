@@ -67,8 +67,7 @@ export class WidgetPage {
           state: "visible",
           timeout: 10000,
         });
-      } catch {
-      }
+      } catch {}
     }
   }
 

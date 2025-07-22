@@ -132,8 +132,7 @@ export class SavedRepliesPage extends BasePage {
 
     try {
       await this.page.waitForLoadState("networkidle", { timeout: 3000 });
-    } catch {
-    }
+    } catch {}
 
     await this.page.waitForTimeout(200);
   }
@@ -143,8 +142,7 @@ export class SavedRepliesPage extends BasePage {
     await this.page.waitForTimeout(500);
     try {
       await this.page.waitForLoadState("networkidle", { timeout: 3000 });
-    } catch {
-    }
+    } catch {}
     await this.page.waitForTimeout(200);
   }
 
@@ -225,8 +223,7 @@ export class SavedRepliesPage extends BasePage {
           await this.page.locator(selector).waitFor({ state: "visible", timeout: 2000 });
           toastFound = true;
           break;
-        } catch {
-        }
+        } catch {}
       }
 
       if (!toastFound) {
