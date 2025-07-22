@@ -132,7 +132,7 @@ export const mailboxRouter = {
       message: "Auto-close job triggered successfully",
     };
   }),
-  autoCloseSuspendedUsers: mailboxProcedure.mutation(async ({ ctx }) => {
+  autoCloseSuspendedUsers: mailboxProcedure.mutation(async () => {
     await triggerEvent("conversations/auto-close-suspended-users", {});
 
     return {

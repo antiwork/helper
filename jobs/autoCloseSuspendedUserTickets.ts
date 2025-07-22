@@ -93,7 +93,6 @@ async function checkForSuspensionKeywords(conversationId: number): Promise<boole
 
 async function checkUserSuspensionStatus(email: string): Promise<boolean> {
   if (!env.GUMROAD_API_URL || !env.GUMROAD_API_TOKEN) {
-    console.warn("Gumroad API not configured, skipping suspension check");
     return false;
   }
 
@@ -108,14 +107,12 @@ async function checkUserSuspensionStatus(email: string): Promise<boolean> {
     });
 
     if (!response.ok) {
-      console.error(`Gumroad API error: ${response.status} ${response.statusText}`);
       return false;
     }
 
     const data = await response.json();
     return data.success && data.status === "Suspended";
   } catch (error) {
-    console.error("Error checking user suspension status:", error);
     return false;
   }
 }
