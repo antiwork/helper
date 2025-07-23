@@ -9,7 +9,7 @@ import { trackAIUsageEvent } from "@/lib/data/aiUsageEvents";
 describe("trackAIUsageEvent", () => {
   it("tracks AI usage event with provided mailbox", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const model = "gpt-4o";
+    const model = "o4-mini-2025-04-16";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 100,
@@ -27,13 +27,13 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: 100,
       outputTokensCount: 50,
       cachedTokensCount: 0,
-      cost: "0.0007500",
+      cost: "0.0003300",
     });
   });
 
   it("tracks AI usage event with cached tokens", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const model = "gpt-4o";
+    const model = "o4-mini-2025-04-16";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 100,
@@ -56,13 +56,13 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: usage.promptTokens,
       outputTokensCount: usage.completionTokens,
       cachedTokensCount: usage.cachedTokens,
-      cost: "0.0006750",
+      cost: "0.0002805",
     });
   });
 
   it("uses placeholder mailbox when mailbox is not provided", async () => {
     await mailboxFactory.create();
-    const model = "gpt-4o-mini";
+    const model = "o4-mini-2025-04-16";
     const queryType = "response_generator";
     const usage = {
       promptTokens: 200,
@@ -84,7 +84,7 @@ describe("trackAIUsageEvent", () => {
       inputTokensCount: usage.promptTokens,
       outputTokensCount: usage.completionTokens,
       cachedTokensCount: usage.cachedTokens,
-      cost: "0.0000825",
+      cost: "0.0005775",
     });
   });
 
@@ -92,18 +92,18 @@ describe("trackAIUsageEvent", () => {
     const { mailbox } = await userFactory.createRootUser();
     const testCases = [
       {
-        model: "gpt-4o-mini" as const,
+        model: "o4-mini-2025-04-16" as const,
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
-        expectedCost: "0.0004500",
+        expectedCost: "0.0033000",
       },
       {
-        model: "gpt-4o" as const,
+        model: "o4-mini-2025-04-16" as const,
         inputTokens: 1000,
         outputTokens: 500,
         cachedTokens: 0,
-        expectedCost: "0.0075000",
+        expectedCost: "0.0033000",
       },
     ];
 

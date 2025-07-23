@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
+import { O4_MINI_MODEL } from "@/lib/ai/core";
 import { getMailbox } from "@/lib/data/mailbox";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -124,7 +125,7 @@ Should the current conversation be merged into any of the others? If so, which o
       mergeIntoId: z.number().nullable(),
       reason: z.string(),
     }),
-    model: "gpt-4o",
+    model: O4_MINI_MODEL,
     system: systemMessage,
     temperature: 0.0,
     maxTokens: 500,
