@@ -447,7 +447,8 @@ export const generateAgentResponse = async (
         answer: z.string().describe("The comprehensive answer or information to be added to the knowledge base"),
         reasoning: z.string().describe("Why this information should be added to the knowledge base"),
       }),
-      execute: ({ question, answer, reasoning }) => {
+      // eslint-disable-next-line require-await
+      execute: async ({ question, answer, reasoning }) => {
         showStatus(`Confirming knowledge base answer...`, {
           toolName: "confirmKnowledgeBaseAnswer",
           parameters: { question, answer, reasoning },
