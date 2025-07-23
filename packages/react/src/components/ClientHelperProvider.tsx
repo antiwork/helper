@@ -10,8 +10,21 @@ type ClientHelperProviderProps = HelperWidgetConfig & {
 
 export function ClientHelperProvider({ host, onError, ...props }: ClientHelperProviderProps) {
   useEffect(() => {
+    const scriptSrc = `${host}/widget/sdk.js`;
+    const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
+
+    if (existingScript) {
+      console.warn(
+        "Helper widget script already exists. You may have multiple HelperProvider components - please remove all but one.",
+      );
+      if (window.HelperWidget) {
+        window.HelperWidget.init(props);
+      }
+      return;
+    }
+
     const script = document.createElement("script");
-    script.src = `${host}/widget/sdk.js`;
+    script.src = scriptSrc;
     script.async = true;
     script.dataset.delayInit = "true";
 

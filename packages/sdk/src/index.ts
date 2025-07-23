@@ -879,10 +879,14 @@ class HelperWidget {
   }
 
   public static async init(config: HelperWidgetConfig): Promise<HelperWidget> {
-    if (!HelperWidget.instance) {
-      HelperWidget.instance = new HelperWidget(config);
-      await HelperWidget.instance.setup();
+    if (HelperWidget.instance) {
+      console.warn(
+        "HelperWidget.init: Destroying existing instance. If this is intentional, please call HelperWidget.destroy() before calling HelperWidget.init()",
+      );
+      HelperWidget.destroy();
     }
+    HelperWidget.instance = new HelperWidget(config);
+    await HelperWidget.instance.setup();
     return HelperWidget.instance;
   }
 
