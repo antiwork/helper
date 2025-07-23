@@ -20,7 +20,6 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
-import { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
@@ -43,9 +42,10 @@ import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
+import { createHmacDigest } from "@/lib/metadataApiClient";
+import { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
-import { createHmacDigest } from "@/lib/metadataApiClient";
 
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
