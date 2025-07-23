@@ -1,4 +1,4 @@
-import { generateHelperAuth } from "@helperai/react";
+import { generateHelperAuth } from "@helperai/react/auth";
 
 export const generateSession = ({
   email,

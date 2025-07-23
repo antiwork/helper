@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
+import { HelperProvider, type HelperWidgetConfig } from "@helperai/react";
+import { generateHelperAuth } from "@helperai/react/auth";
 import { getBaseUrl } from "@/components/constants";
 import { AppLayout } from "./appLayout";
 import { WidgetButtons } from "./widgetButtons";
