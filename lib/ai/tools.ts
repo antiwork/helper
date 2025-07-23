@@ -45,12 +45,7 @@ const updateCustomerMetadata = async (email: string) => {
   }
 };
 
-const requestHumanSupport = async (
-  conversationId: number,
-  email: string | null,
-  reason: string,
-  newEmail?: string | null,
-) => {
+const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
   const conversation = assertDefined(await getConversationById(conversationId));
 
   if (newEmail) {
@@ -150,7 +145,7 @@ export const buildTools = async (
             "Escalation reasons must include specific details about the issue. Simply stating a human is needed without context is not acceptable, even if the user stated several times or said it's urgent.",
           ),
         email: email
-          ? z.string().nullable()
+          ? z.string().optional()
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>

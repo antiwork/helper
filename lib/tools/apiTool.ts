@@ -304,7 +304,7 @@ const buildParameterSchema = (
         return acc;
       }
       const zodType = (z[param.type as keyof typeof z] as any)().describe(param.description || param.name);
-      acc[param.name] = param.required ? zodType : zodType.nullable();
+      acc[param.name] = param.required ? zodType : zodType.optional();
       return acc;
     }, {}),
   );
