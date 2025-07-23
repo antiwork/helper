@@ -65,11 +65,11 @@ export const seedDatabase = async () => {
 
     const users = await Promise.all(
       env.INITIAL_USER_EMAILS.map(async (email) => {
-        const existingUser = existingUsers.find(user => user.email === email);
+        const existingUser = existingUsers.find((user) => user.email === email);
 
         if (existingUser) {
-            console.log(`User ${email} already exists, skipping creation.`);
-            return existingUser;
+          console.log(`User ${email} already exists, skipping creation.`);
+          return existingUser;
         }
 
         const { data, error } = await supabase.auth.admin.createUser({
