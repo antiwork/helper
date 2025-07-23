@@ -37,11 +37,19 @@ export const generateAgentResponse = async (
   slackUserId: string | null,
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
   confirmedReplyText?: string | null,
+  confirmedKnowledgeBaseAnswer?: string | null,
 ) => {
   if (confirmedReplyText) {
     messages.push({
       role: "user",
       content: `Reply to the ticket with the following message, then take any other requested actions: ${confirmedReplyText}`,
+    });
+  }
+
+  if (confirmedKnowledgeBaseAnswer) {
+    messages.push({
+      role: "user",
+      content: `Save the following content to the knowledge base: ${confirmedKnowledgeBaseAnswer}`,
     });
   }
 
@@ -345,40 +353,6 @@ export const generateAgentResponse = async (
         }
       },
     }),
-    generateKnowledgeBaseAnswer: tool({
-      description:
-        "Generate a knowledge base answer based on the current conversation context and suggest it for addition to the knowledge base",
-      parameters: z.object({
-        question: z.string().describe("The question or topic this knowledge base entry should address"),
-        answer: z.string().describe("The comprehensive answer or information to be added to the knowledge base"),
-        reasoning: z.string().describe("Why this information should be added to the knowledge base"),
-      }),
-      execute: async ({ question, answer, reasoning }) => {
-        showStatus(`Creating knowledge base suggestion...`, {
-          toolName: "generateKnowledgeBaseAnswer",
-          parameters: { question, answer, reasoning },
-        });
-        try {
-          const suggestedContent = `**${question}**\n\n${answer}`;
-
-          const faq = await db
-            .insert(faqs)
-            .values({
-              content: suggestedContent,
-              suggested: true,
-              enabled: false,
-            })
-            .returning()
-            .then(takeUniqueOrThrow);
-
-          await triggerEvent("faqs/embedding.create", { faqId: faq.id });
-
-          return `I've suggested adding this information to the knowledge base:\n\n**Question:** ${question}\n\n**Answer:** ${answer}\n\n**Reasoning:** ${reasoning}\n\nPlease review and approve this suggestion in the knowledge bank settings, where you can also edit the content if needed.`;
-        } catch (_error) {
-          return { error: "Failed to create knowledge base suggestion" };
-        }
-      },
-    }),
   };
 
   if (confirmedReplyText) {
@@ -428,6 +402,64 @@ export const generateAgentResponse = async (
     });
   }
 
+  if (confirmedKnowledgeBaseAnswer) {
+    tools.saveKnowledgeBaseAnswer = tool({
+      description: "Save the confirmed knowledge base answer.",
+      parameters: z.object({
+        question: z.string(),
+        answer: z.string(),
+        reasoning: z.string(),
+      }),
+      execute: async ({ question, answer }) => {
+        showStatus(`Saving knowledge base answer...`, {
+          toolName: "saveKnowledgeBaseAnswer",
+          parameters: { question, answer },
+        });
+        try {
+          const content = `**${question}**\n\n${answer}`;
+          const faq = await db
+            .insert(faqs)
+            .values({
+              content,
+              suggested: true,
+              enabled: false,
+            })
+            .returning()
+            .then(takeUniqueOrThrow);
+
+          await triggerEvent("faqs/embedding.create", { faqId: faq.id });
+
+          return {
+            message:
+              "Knowledge base answer saved and submitted for review. You can edit and approve it in the knowledge bank settings.",
+          };
+        } catch (_error) {
+          return { error: "Failed to save knowledge base answer" };
+        }
+      },
+    });
+  } else {
+    tools.confirmKnowledgeBaseAnswer = tool({
+      description:
+        "Generate and confirm a knowledge base answer based on the current conversation context before adding it to the knowledge base",
+      parameters: z.object({
+        question: z.string().describe("The question or topic this knowledge base entry should address"),
+        answer: z.string().describe("The comprehensive answer or information to be added to the knowledge base"),
+        reasoning: z.string().describe("Why this information should be added to the knowledge base"),
+      }),
+      execute: ({ question, answer, reasoning }) => {
+        showStatus(`Confirming knowledge base answer...`, {
+          toolName: "confirmKnowledgeBaseAnswer",
+          parameters: { question, answer, reasoning },
+        });
+        return {
+          message:
+            "Confirmation needed before adding to knowledge base. DON'T TAKE ANY FURTHER ACTION and don't include the content in the response.",
+        };
+      },
+    });
+  }
+
   const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
   const userPrompt = user
     ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
@@ -471,9 +503,14 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     ?.flatMap((step) => step.toolCalls ?? [])
     .find((call) => call.toolName === "confirmReplyText");
 
+  const confirmKnowledgeBaseAnswer = result.steps
+    ?.flatMap((step) => step.toolCalls ?? [])
+    .find((call) => call.toolName === "confirmKnowledgeBaseAnswer");
+
   return {
     text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
     confirmReplyText,
+    confirmKnowledgeBaseAnswer,
   };
 };
 

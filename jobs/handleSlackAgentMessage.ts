@@ -15,11 +15,13 @@ export const handleSlackAgentMessage = async ({
   statusMessageTs,
   agentThreadId,
   confirmedReplyText,
+  confirmedKnowledgeBaseAnswer,
 }: {
   slackUserId: string | null;
   statusMessageTs: string;
   agentThreadId: number;
   confirmedReplyText?: string;
+  confirmedKnowledgeBaseAnswer?: string;
 }) => {
   const agentThread = assertDefinedOrRaiseNonRetriableError(
     await db.query.agentThreads.findFirst({
@@ -70,12 +72,13 @@ export const handleSlackAgentMessage = async ({
     }
   };
 
-  const { text, confirmReplyText } = await generateAgentResponse(
+  const { text, confirmReplyText, confirmKnowledgeBaseAnswer } = await generateAgentResponse(
     messages,
     mailbox,
     slackUserId,
     showStatus,
     confirmedReplyText,
+    confirmedKnowledgeBaseAnswer,
   );
 
   const assistantMessage = await db
@@ -173,6 +176,106 @@ export const handleSlackAgentMessage = async ({
         agentThreadId: agentThread.id,
         role: "assistant",
         content: `Confirming reply text: ${confirmReplyText.args.proposedMessage}`,
+        slackChannel: agentThread.slackChannel,
+        messageTs: ts,
+      });
+    }
+  }
+
+  if (confirmKnowledgeBaseAnswer) {
+    const { ts } = await client.chat.postMessage({
+      channel: agentThread.slackChannel,
+      thread_ts: agentThread.threadTs,
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "*Question:*",
+          },
+        },
+        {
+          type: "input",
+          block_id: "proposed_question",
+          element: {
+            type: "plain_text_input",
+            multiline: false,
+            action_id: "proposed_question",
+            initial_value: confirmKnowledgeBaseAnswer.args.question,
+          },
+          label: {
+            type: "plain_text",
+            text: "Question:",
+          },
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "*Answer:*",
+          },
+        },
+        {
+          type: "input",
+          block_id: "proposed_answer",
+          element: {
+            type: "plain_text_input",
+            multiline: true,
+            action_id: "proposed_answer",
+            initial_value: confirmKnowledgeBaseAnswer.args.answer,
+          },
+          label: {
+            type: "plain_text",
+            text: "Answer:",
+          },
+        },
+        {
+          type: "input",
+          block_id: "proposed_reasoning",
+          element: {
+            type: "plain_text_input",
+            multiline: true,
+            action_id: "proposed_reasoning",
+            initial_value: confirmKnowledgeBaseAnswer.args.reasoning,
+          },
+          label: {
+            type: "plain_text",
+            text: "Reasoning:",
+          },
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "Confirm knowledge base answer",
+                emoji: true,
+              },
+              value: "confirm",
+              style: "primary",
+              action_id: "confirm",
+            },
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "Cancel",
+              },
+              value: "cancel",
+              action_id: "cancel",
+            },
+          ],
+        },
+      ],
+    });
+
+    if (ts) {
+      await db.insert(agentMessages).values({
+        agentThreadId: agentThread.id,
+        role: "assistant",
+        content: `Confirming knowledge base answer: ${confirmKnowledgeBaseAnswer.args.question}`,
         slackChannel: agentThread.slackChannel,
         messageTs: ts,
       });
