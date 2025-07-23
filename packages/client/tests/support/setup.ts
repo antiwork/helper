@@ -1,4 +1,3 @@
 import { vi } from "vitest";
 
-export default function setup() {
-}
+export default function setup() {}

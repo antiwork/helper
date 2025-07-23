@@ -1,2 +1,1 @@
-export default function globalSetup() {
-}
+export default function globalSetup() {}
