@@ -30,6 +30,18 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
   "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/cjs/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/esm/server.mjs",
+      "require": "./dist/cjs/server.js",
+      "types": "./dist/cjs/server.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "dev": "pnpm build --watch",
