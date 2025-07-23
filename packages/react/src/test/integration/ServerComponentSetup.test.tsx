@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HelperProvider } from "../../components/HelperProvider";
-import { generateHelperAuth } from "../../server/helper-auth";
+import { generateHelperAuth } from "@helperai/client/auth";
 import { cleanupTestEnv, mockHelperWidget, setupTestEnv } from "../utils";
 
 // Mock client component

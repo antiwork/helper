@@ -1,2 +1,2 @@
-export default function setup() {
+export default function globalSetup() {
 }
