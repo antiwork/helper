@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { generateHelperAuth } from "./helper-auth";
+import { generateHelperAuth } from "../src/auth/helper-auth";
 
 describe("helper-auth", () => {
   const originalEnv = process.env;

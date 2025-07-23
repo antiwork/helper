@@ -32,14 +32,14 @@
   "types": "./dist/cjs/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/cjs/index.d.ts",
       "import": "./dist/esm/index.mjs",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/cjs/index.d.ts"
+      "require": "./dist/cjs/index.js"
     },
     "./auth": {
+      "types": "./dist/cjs/auth.d.ts",
       "import": "./dist/esm/auth.mjs",
-      "require": "./dist/cjs/auth.js",
-      "types": "./dist/cjs/auth.d.ts"
+      "require": "./dist/cjs/auth.js"
     }
   },
   "scripts": {
