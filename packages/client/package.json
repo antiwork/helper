@@ -32,10 +32,10 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./server": {
-      "import": "./dist/server.mjs",
-      "require": "./dist/server.js",
-      "types": "./dist/server.d.ts"
+    "./auth": {
+      "import": "./dist/auth.mjs",
+      "require": "./dist/auth.js",
+      "types": "./dist/auth.d.ts"
     }
   },
   "scripts": {

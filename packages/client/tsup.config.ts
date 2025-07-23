@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: {
     index: "src/index.ts",
-    server: "src/server/index.ts"
+    auth: "src/auth/index.ts"
   },
   format: ["cjs", "esm"],
   dts: true,

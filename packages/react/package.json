@@ -36,10 +36,10 @@
       "require": "./dist/cjs/index.js",
       "types": "./dist/cjs/index.d.ts"
     },
-    "./server": {
-      "import": "./dist/esm/server.mjs",
-      "require": "./dist/cjs/server.js",
-      "types": "./dist/cjs/server.d.ts"
+    "./auth": {
+      "import": "./dist/esm/auth.mjs",
+      "require": "./dist/cjs/auth.js",
+      "types": "./dist/cjs/auth.d.ts"
     }
   },
   "scripts": {
