@@ -20,7 +20,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
-import { ReadPageToolConfig } from "@helperai/sdk";
+import { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
@@ -45,6 +45,7 @@ import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { createHmacDigest } from "@/lib/metadataApiClient";
 
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
@@ -372,7 +373,7 @@ export const generateAIResponse = async ({
 
   if (clientProvidedTools) {
     clientProvidedTools.forEach((tool) => {
-      tools[tool.name] = {
+      const toolDefinition: any = {
         description: tool.description,
         parameters: z.object(
           Object.fromEntries(
@@ -389,6 +390,15 @@ export const generateAIResponse = async ({
           ),
         ),
       };
+
+      if (tool.serverRequestUrl) {
+        toolDefinition.execute = async (params: Record<string, any>) => {
+          const result = await callClientProvidedToolServer(tool, email, params, mailbox);
+          return JSON.stringify(result);
+        };
+      }
+
+      tools[tool.name] = toolDefinition;
     });
   }
 
@@ -560,6 +570,50 @@ export interface ClientProvidedTool {
   parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
   serverRequestUrl?: string;
 }
+
+const callClientProvidedToolServer = async (
+  tool: ClientProvidedTool,
+  email: string | null,
+  parameters: Record<string, any>,
+  mailbox: Mailbox,
+) => {
+  if (!tool.serverRequestUrl) {
+    throw new Error("Tool does not have a server request URL");
+  }
+
+  const requestBody = { email, parameters };
+  const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
+  const hmacSignature = hmacDigest.toString("base64");
+
+  try {
+    const response = await fetch(tool.serverRequestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${hmacSignature}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Server returned ${response.status}: ${response.statusText}`,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+};
 
 export const respondWithAI = async ({
   conversation,
