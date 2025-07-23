@@ -20,6 +20,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
+import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
 import type { Tool as HelperTool } from "@/db/schema/tools";
@@ -43,7 +44,6 @@ import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustom
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
 import { createHmacDigest } from "@/lib/metadataApiClient";
-import { ReadPageToolConfig } from "@/packages/sdk/src/utils";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -373,7 +373,7 @@ export const generateAIResponse = async ({
 
   if (clientProvidedTools) {
     clientProvidedTools.forEach((tool) => {
-      const toolDefinition: any = {
+      const toolDefinition: Tool = {
         description: tool.description,
         parameters: z.object(
           Object.fromEntries(
@@ -393,7 +393,7 @@ export const generateAIResponse = async ({
 
       if (tool.serverRequestUrl) {
         toolDefinition.execute = async (params: Record<string, any>) => {
-          const result = await callClientProvidedToolServer(tool, email, params, mailbox);
+          const result = await callToolEndpoint(tool, email, params, mailbox);
           return JSON.stringify(result);
         };
       }
@@ -571,7 +571,7 @@ export interface ClientProvidedTool {
   serverRequestUrl?: string;
 }
 
-const callClientProvidedToolServer = async (
+const callToolEndpoint = async (
   tool: ClientProvidedTool,
   email: string | null,
   parameters: Record<string, any>,
