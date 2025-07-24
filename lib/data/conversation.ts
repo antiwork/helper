@@ -234,6 +234,7 @@ export const serializeConversationWithMessages = async (
       ? {
           name: platformCustomer.name,
           value: platformCustomer.value ? parseFloat(platformCustomer.value) : null,
+          context: platformCustomer.context,
           links: platformCustomer.links,
           isVip: platformCustomer.isVip,
         }

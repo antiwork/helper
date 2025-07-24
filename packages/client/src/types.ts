@@ -37,6 +37,7 @@ export const sessionParamsSchema = z.object({
     .object({
       name: z.string().nullish(),
       value: z.number().nullish(),
+      context: z.string().nullish(),
       links: z.record(z.string(), z.string()).nullish(),
     })
     .nullish(),
