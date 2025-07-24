@@ -6,7 +6,7 @@ import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { upsertPlatformCustomer, getPlatformCustomer } from "@/lib/data/platformCustomer";
+import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
@@ -16,13 +16,15 @@ const fetchUserInformation = async (email: string) => {
   try {
     const metadata = await fetchMetadata(email);
     const platformCustomer = await getPlatformCustomer(email);
-    
+
     let result = metadata?.prompt || "";
-    
+
     if (platformCustomer?.context) {
-      result += result ? `\n\nCustomer Context: ${platformCustomer.context}` : `Customer Context: ${platformCustomer.context}`;
+      result += result
+        ? `\n\nCustomer Context: ${platformCustomer.context}`
+        : `Customer Context: ${platformCustomer.context}`;
     }
-    
+
     return result || "No user information available";
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
