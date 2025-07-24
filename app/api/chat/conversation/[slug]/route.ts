@@ -1,14 +1,13 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { getFirstName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
 import { getFileUrl } from "@/lib/data/files";
 import { getBasicProfileById } from "@/lib/data/user";
-import { ConversationResult, updateConversationParamsSchema, UpdateConversationResult } from "@/packages/client/dist";
+import { ConversationDetails, updateConversationParamsSchema, UpdateConversationResult } from "@/packages/client/dist";
 
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
@@ -62,80 +61,55 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
     (session) => !session.events.some((event) => event.type === "completed"),
   );
 
-  const allAttachments = await Promise.all(
-    attachments.map(async (a) => ({
-      messageId: assertDefined(a.messageId).toString(),
-      name: a.name,
-      presignedUrl: await getFileUrl(a),
-    })),
-  );
+  const formatAttachments = async (attachments: (typeof files.$inferSelect)[]) => {
+    return (
+      await Promise.all(
+        attachments.map(async (attachment) => {
+          const url = await getFileUrl(attachment);
+          return url
+            ? [
+                {
+                  name: attachment.name,
+                  url,
+                  contentType: attachment.mimetype,
+                },
+              ]
+            : [];
+        }),
+      )
+    ).flat();
+  };
 
   const formattedMessages = await Promise.all(
-    conversation.messages.map(async (message) => ({
-      id: message.id.toString(),
-      role:
-        message.role === "staff" || message.role === "ai_assistant" || message.role === "tool"
-          ? ("assistant" as const)
-          : message.role,
-      content: message.cleanedUpText || htmlToText(message.body ?? "", { wordwrap: false }),
-      createdAt: message.createdAt.toISOString(),
-      reactionType: message.reactionType,
-      reactionFeedback: message.reactionFeedback,
-      annotations: [
-        ...(await getUserAnnotation(message.userId)),
-        ...allAttachments
-          .filter((a) => a.messageId === message.id.toString())
-          .map((a) => ({ attachment: { name: a.name, url: a.presignedUrl } })),
-      ],
-      experimental_attachments:
+    conversation.messages.map(async (message) => {
+      const messageAttachments = await formatAttachments(attachments.filter((a) => a.messageId === message.id));
+      const hasPublicAttachments =
         (message.metadata as MessageMetadata)?.hasAttachments ||
-        (message.metadata as MessageMetadata)?.includesScreenshot
-          ? await Promise.all(
-              attachments
-                .filter((a) => a.messageId === message.id)
-                .map(async (a) => ({
-                  name: a.name,
-                  url: await getFileUrl(a),
-                  contentType: a.mimetype,
-                })),
-            )
-          : [],
-    })),
+        (message.metadata as MessageMetadata)?.includesScreenshot;
+      return {
+        id: message.id.toString(),
+        role: message.role === "ai_assistant" || message.role === "tool" ? ("assistant" as const) : message.role,
+        content: message.cleanedUpText || htmlToText(message.body ?? "", { wordwrap: false }),
+        createdAt: message.createdAt.toISOString(),
+        reactionType: message.reactionType,
+        reactionFeedback: message.reactionFeedback,
+        staffName: await getStaffName(message.userId),
+        publicAttachments: hasPublicAttachments ? messageAttachments : [],
+        privateAttachments: hasPublicAttachments ? [] : messageAttachments,
+      };
+    }),
   );
 
-  const guideSessionMessages = activeGuideSessions.map((session) => ({
-    id: `guide_session_${session.id}`,
-    role: "assistant" as const,
-    content: "",
-    parts: [
-      {
-        type: "tool-invocation",
-        toolInvocation: {
-          toolName: "guide_user",
-          toolCallId: `guide_session_${session.id}`,
-          state: "call",
-          args: {
-            pendingResume: true,
-            sessionId: session.uuid,
-            title: session.title,
-            instructions: session.instructions,
-          },
-        },
-      },
-    ],
-    createdAt: session.createdAt.toISOString(),
-  }));
-
-  const allMessages = [...formattedMessages, ...guideSessionMessages].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
-
-  return corsResponse<ConversationResult>({
+  return corsResponse<ConversationDetails>({
     slug: conversation.slug,
     subject: conversation.subject,
-    messages: allMessages,
-    // We don't want to include staff-uploaded attachments in the AI messages, but we need to show them in the UI
-    allAttachments,
+    messages: formattedMessages,
+    experimental_guideSessions: activeGuideSessions.map((session) => ({
+      uuid: session.uuid,
+      title: session.title,
+      instructions: session.instructions,
+      createdAt: session.createdAt.toISOString(),
+    })),
     isEscalated: !originalConversation.assignedToAI,
   });
 });
@@ -162,10 +136,10 @@ export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params
   return corsResponse<UpdateConversationResult>({ success: true });
 });
 
-const getUserAnnotation = async (userId: string | null) => {
-  if (!userId) return [];
+const getStaffName = async (userId: string | null) => {
+  if (!userId) return null;
   const user = await getBasicProfileById(userId);
-  return user ? [{ user: { name: user.displayName ? getFirstName(user) : undefined } }] : [];
+  return user ? getFirstName(user) : null;
 };
 
 const conversationMatcher = (slug: string, session: any) => {

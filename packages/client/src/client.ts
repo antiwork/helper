@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { listenToRealtimeEvent } from "./realtime";
 import {
-  ConversationResult,
+  ConversationDetails,
   ConversationsResult,
   CreateConversationParams,
   CreateConversationResult,
@@ -83,8 +83,8 @@ export class HelperClient {
   readonly conversations = {
     list: (): Promise<ConversationsResult> => this.request<ConversationsResult>("/api/chat/conversations"),
 
-    get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationResult> =>
-      this.request<ConversationResult>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
+    get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationDetails> =>
+      this.request<ConversationDetails>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
 
     create: (params: CreateConversationParams = {}): Promise<CreateConversationResult> =>
       this.request<CreateConversationResult>("/api/chat/conversation", {
@@ -104,51 +104,61 @@ export class HelperClient {
       conversation,
       tools = {},
     }: {
-      conversation: ConversationResult;
+      conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
-    }) => ({
-      initialMessages: conversation.messages,
-      fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
-        const token = await this.getToken();
-        return fetch(`${this.host}/api/chat`, {
-          ...init,
-          headers: {
-            ...init?.headers,
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      },
-      experimental_prepareRequestBody: ({
-        messages,
-        id,
-        requestBody,
-      }: {
-        messages: any[];
-        id: string;
-        requestBody?: object;
-      }) => ({
-        id,
-        message: messages[messages.length - 1],
-        conversationSlug: conversation.slug,
-        tools: Object.entries(tools).map(([name, tool]) => ({
-          name,
-          description: tool.description,
-          parameters: tool.parameters,
-          serverRequestUrl: "url" in tool ? tool.url : undefined,
-        })),
-        requestBody,
-      }),
-      onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
-        const tool = tools[toolCall.toolName];
-        if (!tool) {
-          throw new Error(`Tool ${toolCall.toolName} not found`);
-        }
-        if (!("execute" in tool)) {
-          throw new Error(`Tool ${toolCall.toolName} is not executable on the client`);
-        }
-        return tool.execute(toolCall.args);
-      },
-    }),
+    }) => {
+      const formattedMessages = conversation.messages.map((message) => ({
+        id: message.id,
+        content: message.content,
+        role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
+        createdAt: new Date(message.createdAt),
+        original: message,
+      }));
+
+      return {
+        initialMessages: conversation.messages,
+        fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
+          const token = await this.getToken();
+          return fetch(`${this.host}/api/chat`, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        },
+        experimental_prepareRequestBody: ({
+          messages,
+          id,
+          requestBody,
+        }: {
+          messages: any[];
+          id: string;
+          requestBody?: object;
+        }) => ({
+          id,
+          message: messages[messages.length - 1],
+          conversationSlug: conversation.slug,
+          tools: Object.entries(tools).map(([name, tool]) => ({
+            name,
+            description: tool.description,
+            parameters: tool.parameters,
+            serverRequestUrl: "url" in tool ? tool.url : undefined,
+          })),
+          requestBody,
+        }),
+        onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
+          const tool = tools[toolCall.toolName];
+          if (!tool) {
+            throw new Error(`Tool ${toolCall.toolName} not found`);
+          }
+          if (!("execute" in tool)) {
+            throw new Error(`Tool ${toolCall.toolName} is not executable on the client`);
+          }
+          return tool.execute(toolCall.args);
+        },
+      };
+    },
     listen: (
       conversationSlug: string,
       {
