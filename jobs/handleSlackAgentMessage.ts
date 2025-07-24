@@ -15,13 +15,13 @@ export const handleSlackAgentMessage = async ({
   statusMessageTs,
   agentThreadId,
   confirmedReplyText,
-  confirmedKnowledgeBaseAnswer,
+  confirmedKnowledgeBaseEntry,
 }: {
   slackUserId: string | null;
   statusMessageTs: string;
   agentThreadId: number;
-  confirmedReplyText?: string;
-  confirmedKnowledgeBaseAnswer?: string;
+  confirmedReplyText?: string | null;
+  confirmedKnowledgeBaseEntry?: string | null;
 }) => {
   const agentThread = assertDefinedOrRaiseNonRetriableError(
     await db.query.agentThreads.findFirst({
@@ -72,13 +72,13 @@ export const handleSlackAgentMessage = async ({
     }
   };
 
-  const { text, confirmReplyText, confirmKnowledgeBaseAnswer } = await generateAgentResponse(
+  const { text, confirmReplyText, confirmKnowledgeBaseEntry } = await generateAgentResponse(
     messages,
     mailbox,
     slackUserId,
     showStatus,
     confirmedReplyText,
-    confirmedKnowledgeBaseAnswer,
+    confirmedKnowledgeBaseEntry,
   );
 
   const assistantMessage = await db
@@ -182,65 +182,23 @@ export const handleSlackAgentMessage = async ({
     }
   }
 
-  if (confirmKnowledgeBaseAnswer) {
+  if (confirmKnowledgeBaseEntry) {
     const { ts } = await client.chat.postMessage({
       channel: agentThread.slackChannel,
       thread_ts: agentThread.threadTs,
       blocks: [
         {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "*Question:*",
-          },
-        },
-        {
           type: "input",
-          block_id: "proposed_question",
-          element: {
-            type: "plain_text_input",
-            multiline: false,
-            action_id: "proposed_question",
-            initial_value: confirmKnowledgeBaseAnswer.args.question,
-          },
-          label: {
-            type: "plain_text",
-            text: "Question:",
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "*Answer:*",
-          },
-        },
-        {
-          type: "input",
-          block_id: "proposed_answer",
+          block_id: "proposed_entry",
           element: {
             type: "plain_text_input",
             multiline: true,
-            action_id: "proposed_answer",
-            initial_value: confirmKnowledgeBaseAnswer.args.answer,
+            action_id: "proposed_entry",
+            initial_value: confirmKnowledgeBaseEntry.args.entry,
           },
           label: {
             type: "plain_text",
-            text: "Answer:",
-          },
-        },
-        {
-          type: "input",
-          block_id: "proposed_reasoning",
-          element: {
-            type: "plain_text_input",
-            multiline: true,
-            action_id: "proposed_reasoning",
-            initial_value: confirmKnowledgeBaseAnswer.args.reasoning,
-          },
-          label: {
-            type: "plain_text",
-            text: "Reasoning:",
+            text: "Entry:",
           },
         },
         {
@@ -250,7 +208,7 @@ export const handleSlackAgentMessage = async ({
               type: "button",
               text: {
                 type: "plain_text",
-                text: "Confirm knowledge base answer",
+                text: "Save entry",
                 emoji: true,
               },
               value: "confirm",
@@ -275,7 +233,7 @@ export const handleSlackAgentMessage = async ({
       await db.insert(agentMessages).values({
         agentThreadId: agentThread.id,
         role: "assistant",
-        content: `Confirming knowledge base answer: ${confirmKnowledgeBaseAnswer.args.question}`,
+        content: `Confirming knowledge base entry: ${confirmKnowledgeBaseEntry.args.entry}`,
         slackChannel: agentThread.slackChannel,
         messageTs: ts,
       });

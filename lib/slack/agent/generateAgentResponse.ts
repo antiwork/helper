@@ -37,7 +37,7 @@ export const generateAgentResponse = async (
   slackUserId: string | null,
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
   confirmedReplyText?: string | null,
-  confirmedKnowledgeBaseAnswer?: string | null,
+  confirmedKnowledgeBaseEntry?: string | null,
 ) => {
   if (confirmedReplyText) {
     messages.push({
@@ -46,10 +46,10 @@ export const generateAgentResponse = async (
     });
   }
 
-  if (confirmedKnowledgeBaseAnswer) {
+  if (confirmedKnowledgeBaseEntry) {
     messages.push({
       role: "user",
-      content: `Save the following content to the knowledge base: ${confirmedKnowledgeBaseAnswer}`,
+      content: `Save the following content to the knowledge base:\n\n${confirmedKnowledgeBaseEntry}`,
     });
   }
 
@@ -402,27 +402,24 @@ export const generateAgentResponse = async (
     });
   }
 
-  if (confirmedKnowledgeBaseAnswer) {
-    tools.saveKnowledgeBaseAnswer = tool({
-      description: "Save the confirmed knowledge base answer.",
+  if (confirmedKnowledgeBaseEntry) {
+    tools.saveKnowledgeBaseEntry = tool({
+      description: "Save the confirmed knowledge base entry.",
       parameters: z.object({
-        question: z.string(),
-        answer: z.string(),
+        entry: z.string(),
         reasoning: z.string(),
       }),
-      execute: async ({ question, answer }) => {
-        showStatus(`Saving knowledge base answer...`, {
-          toolName: "saveKnowledgeBaseAnswer",
-          parameters: { question, answer },
+      execute: async ({ entry, reasoning }) => {
+        showStatus(`Saving knowledge base entry...`, {
+          toolName: "saveKnowledgeBaseEntry",
+          parameters: { entry, reasoning },
         });
         try {
-          const content = `**${question}**\n\n${answer}`;
           const faq = await db
             .insert(faqs)
             .values({
-              content,
-              suggested: true,
-              enabled: false,
+              content: entry,
+              enabled: true,
             })
             .returning()
             .then(takeUniqueOrThrow);
@@ -430,28 +427,26 @@ export const generateAgentResponse = async (
           await triggerEvent("faqs/embedding.create", { faqId: faq.id });
 
           return {
-            message:
-              "Knowledge base answer saved and submitted for review. You can edit and approve it in the knowledge bank settings.",
+            message: "Knowledge base entry saved.",
           };
         } catch (_error) {
-          return { error: "Failed to save knowledge base answer" };
+          return { error: "Failed to save knowledge base entry" };
         }
       },
     });
   } else {
-    tools.confirmKnowledgeBaseAnswer = tool({
+    tools.confirmKnowledgeBaseEntry = tool({
       description:
-        "Generate and confirm a knowledge base answer based on the current conversation context before adding it to the knowledge base",
+        "Generate and confirm a knowledge base entry based on the current conversation context before adding it to the knowledge base",
       parameters: z.object({
-        question: z.string().describe("The question or topic this knowledge base entry should address"),
-        answer: z.string().describe("The comprehensive answer or information to be added to the knowledge base"),
+        entry: z.string().describe("The complete entry content to be added to the knowledge base"),
         reasoning: z.string().describe("Why this information should be added to the knowledge base"),
       }),
       // eslint-disable-next-line require-await
-      execute: async ({ question, answer, reasoning }) => {
-        showStatus(`Confirming knowledge base answer...`, {
-          toolName: "confirmKnowledgeBaseAnswer",
-          parameters: { question, answer, reasoning },
+      execute: async ({ entry, reasoning }) => {
+        showStatus(`Confirming knowledge base entry...`, {
+          toolName: "confirmKnowledgeBaseEntry",
+          parameters: { entry, reasoning },
         });
         return {
           message:
@@ -504,14 +499,14 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     ?.flatMap((step) => step.toolCalls ?? [])
     .find((call) => call.toolName === "confirmReplyText");
 
-  const confirmKnowledgeBaseAnswer = result.steps
+  const confirmKnowledgeBaseEntry = result.steps
     ?.flatMap((step) => step.toolCalls ?? [])
-    .find((call) => call.toolName === "confirmKnowledgeBaseAnswer");
+    .find((call) => call.toolName === "confirmKnowledgeBaseEntry");
 
   return {
     text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
     confirmReplyText,
-    confirmKnowledgeBaseAnswer,
+    confirmKnowledgeBaseEntry,
   };
 };
 
