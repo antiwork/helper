@@ -392,10 +392,8 @@ export const generateAIResponse = async ({
       };
 
       if (tool.serverRequestUrl) {
-        toolDefinition.execute = async (params: Record<string, any>) => {
-          const result = await callToolEndpoint(tool, email, params, mailbox);
-          return JSON.stringify(result);
-        };
+        toolDefinition.execute = async (params: Record<string, any>) =>
+          await callToolEndpoint(tool, email, params, mailbox);
       }
 
       tools[tool.name] = toolDefinition;
@@ -596,9 +594,14 @@ const callToolEndpoint = async (
     });
 
     if (!response.ok) {
+      let error = `Server returned ${response.status}: ${response.statusText}`;
+      try {
+        const data = await response.json();
+        if (data.error) error = data.error;
+      } catch {}
       return {
         success: false,
-        error: `Server returned ${response.status}: ${response.statusText}`,
+        error,
       };
     }
 
