@@ -11,6 +11,7 @@ export type HelperWidgetConfig = {
     name?: string | null;
     value?: number | null;
     links?: Record<string, string> | null;
+    context?: string | null;
   } | null;
   iconColor?: string | null;
   experimentalReadPage?: boolean;

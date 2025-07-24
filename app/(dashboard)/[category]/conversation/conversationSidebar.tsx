@@ -170,6 +170,13 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
               {label}
             </a>
           ))}
+
+          {conversation.customerMetadata?.context && (
+            <div className="col-start-2 mt-2 text-sm text-muted-foreground">
+              <div className="font-medium mb-1">Context</div>
+              <div className="text-xs">{conversation.customerMetadata.context}</div>
+            </div>
+          )}
         </div>
       </div>
 
