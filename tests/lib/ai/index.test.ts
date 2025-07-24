@@ -58,7 +58,7 @@ describe("runAIQuery", () => {
     expect(core.generateCompletion).toHaveBeenCalledWith({
       functionId: undefined,
       messages,
-      model: core.O4_MINI_MODEL,
+      model: core.GPT_4_1_MODEL,
       temperature: 0,
       maxTokens: 500,
       maxSteps: undefined,

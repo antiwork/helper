@@ -43,6 +43,7 @@ import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
+import { createHmacDigest } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -372,7 +373,7 @@ export const generateAIResponse = async ({
 
   if (clientProvidedTools) {
     clientProvidedTools.forEach((tool) => {
-      tools[tool.name] = {
+      const toolDefinition: Tool = {
         description: tool.description,
         parameters: z.object(
           Object.fromEntries(
@@ -389,6 +390,13 @@ export const generateAIResponse = async ({
           ),
         ),
       };
+
+      if (tool.serverRequestUrl) {
+        toolDefinition.execute = async (params: Record<string, any>) =>
+          await callToolEndpoint(tool, email, params, mailbox);
+      }
+
+      tools[tool.name] = toolDefinition;
     });
   }
 
@@ -560,6 +568,55 @@ export interface ClientProvidedTool {
   parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
   serverRequestUrl?: string;
 }
+
+const callToolEndpoint = async (
+  tool: ClientProvidedTool,
+  email: string | null,
+  parameters: Record<string, any>,
+  mailbox: Mailbox,
+) => {
+  if (!tool.serverRequestUrl) {
+    throw new Error("Tool does not have a server request URL");
+  }
+
+  const requestBody = { email, parameters };
+  const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
+  const hmacSignature = hmacDigest.toString("base64");
+
+  try {
+    const response = await fetch(tool.serverRequestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${hmacSignature}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      let error = `Server returned ${response.status}: ${response.statusText}`;
+      try {
+        const data = await response.json();
+        if (data.error) error = data.error;
+      } catch {}
+      return {
+        success: false,
+        error,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+};
 
 export const respondWithAI = async ({
   conversation,

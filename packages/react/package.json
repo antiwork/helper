@@ -30,6 +30,18 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
   "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.js"
+    },
+    "./auth": {
+      "types": "./dist/cjs/auth.d.ts",
+      "import": "./dist/esm/auth.mjs",
+      "require": "./dist/cjs/auth.js"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "dev": "pnpm build --watch",
@@ -41,6 +53,9 @@
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
+  },
+  "dependencies": {
+    "@helperai/client": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
