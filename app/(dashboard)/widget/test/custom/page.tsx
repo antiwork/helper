@@ -2,6 +2,7 @@ import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWid
 import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
 import { HelperClientProvider } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { getBaseUrl } from "@/components/constants";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +11,12 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== "https://helperai.dev") {
+  if (getBaseUrl() !== env.HELPER_HOST) {
     return <div>Only available in development</div>;
   }
 
   return (
-    <HelperClientProvider host="https://helperai.dev" session={generateSession(await searchParams)}>
+    <HelperClientProvider host={env.HELPER_HOST} session={generateSession(await searchParams)}>
       <CustomWidgetTest />
     </HelperClientProvider>
   );

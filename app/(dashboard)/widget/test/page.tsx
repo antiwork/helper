@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HelperProvider, type HelperWidgetConfig } from "@helperai/react";
 import { generateHelperAuth } from "@helperai/react/auth";
 import { getBaseUrl } from "@/components/constants";
+import { env } from "@/lib/env";
 import { AppLayout } from "./appLayout";
 import { WidgetButtons } from "./widgetButtons";
 
@@ -12,7 +13,7 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== "https://helperai.dev") {
+  if (getBaseUrl() !== env.HELPER_HOST) {
     return <div>Only available in development</div>;
   }
 
@@ -43,7 +44,7 @@ export default async function WidgetTest({
   };
 
   return (
-    <HelperProvider host="https://helperai.dev" {...config}>
+    <HelperProvider host={env.HELPER_HOST} {...config}>
       <div className="flex min-h-screen flex-col items-center bg-white p-4">
         <div className="my-auto w-full max-w-6xl rounded-lg bg-background p-6 shadow-md">
           <WidgetButtons />

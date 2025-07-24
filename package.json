@@ -34,6 +34,7 @@
     "test": "pnpm run-on-packages test && pnpm test:unit",
     "test:unit": "pnpm run with-dev-env vitest",
     "test:watch": "pnpm test:unit --watch",
+    "test:e2e:setup": "bash scripts/setup-e2e-tests.sh",
     "test:e2e": "bash scripts/e2e.sh playwright test",
     "test:e2e:debug": "bash scripts/e2e.sh playwright test --debug",
     "test:e2e:headed": "bash scripts/e2e.sh playwright test --headed",

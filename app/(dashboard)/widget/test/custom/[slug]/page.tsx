@@ -2,6 +2,7 @@ import { ConversationView } from "@/app/(dashboard)/widget/test/custom/[slug]/co
 import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
 import { HelperClientProvider } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { getBaseUrl } from "@/components/constants";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export default async function ConversationPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== "https://helperai.dev") {
+  if (getBaseUrl() !== env.HELPER_HOST) {
     return <div>Only available in development</div>;
   }
 
@@ -20,7 +21,7 @@ export default async function ConversationPage({
   const { slug } = await params;
 
   return (
-    <HelperClientProvider host="https://helperai.dev" session={session}>
+    <HelperClientProvider host={env.HELPER_HOST} session={session}>
       <ConversationView conversationSlug={slug} />
     </HelperClientProvider>
   );

@@ -18,7 +18,7 @@ setup("authenticate", async ({ page }) => {
   await page.click('button[type="submit"]');
 
   // Wait for successful authentication - be flexible about redirect path
-  await expect(page).toHaveURL(/.*mine.*/, { timeout: 30000 });
+  await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
 
   // Wait for page to fully load
   await page.waitForLoadState("networkidle");

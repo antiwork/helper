@@ -60,6 +60,9 @@ export const env = createEnv({
     ),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
+    // Helper host URL configuration - overrides automatic detection
+    HELPER_HOST: z.string().url().optional().default("https://helperai.dev"),
+
     // Other optional integrations
 
     // Slack OAuth client credentials from https://api.slack.com/apps
