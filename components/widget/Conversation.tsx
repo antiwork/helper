@@ -253,7 +253,7 @@ export default function Conversation({
               url: attachment.url,
             })),
             annotations: [
-              ...(message.staffName ? [{ user: { name: message.staffName } }] : []),
+              ...(message.staffName ? [{ user: { firstName: message.staffName } }] : []),
               ...message.publicAttachments.map((attachment) => ({
                 attachment: { name: attachment.name, url: attachment.url },
               })),

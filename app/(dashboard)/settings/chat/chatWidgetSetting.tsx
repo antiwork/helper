@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { mailboxes } from "@/db/schema";
+import { HelperProvider } from "@/packages/react/dist/cjs/components/HelperProvider";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
 import SectionWrapper, { SwitchSectionWrapper } from "../sectionWrapper";
@@ -274,63 +275,66 @@ ${NODE_HMAC_SAMPLE_CODE}
   `.trim();
 
   return (
-    <div className="space-y-6">
-      <SectionWrapper
-        className="max-w-3xl space-y-4"
-        title="Widget Installation"
-        description={
-          <a
-            href={`${getMarketingSiteUrl()}/docs/widget/01-overview`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline flex items-center gap-1"
-          >
-            Documentation
-            <ExternalLink className="size-4" />
-          </a>
-        }
-      >
-        <Tabs defaultValue="vanilla" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="vanilla">HTML/JavaScript</TabsTrigger>
-            <TabsTrigger value="react">React/Next.js</TabsTrigger>
-          </TabsList>
+    <HelperProvider host={typeof window !== "undefined" ? window.location.origin : ""} showToggleButton>
+      <div className="space-y-6">
+        <SectionWrapper
+          className="max-w-3xl space-y-4"
+          title="Widget Installation"
+          description={
+            <a
+              href={`${getMarketingSiteUrl()}/docs/widget/01-overview`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline flex items-center gap-1"
+            >
+              Documentation
+              <ExternalLink className="size-4" />
+            </a>
+          }
+        >
+          <Tabs defaultValue="vanilla" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="vanilla">HTML/JavaScript</TabsTrigger>
+              <TabsTrigger value="react">React/Next.js</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="vanilla" className="space-y-4">
-            <h3 className="flex items-center justify-between text-lg font-semibold">
-              Get started
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      variant="subtle"
-                      onClick={() => {
-                        navigator.clipboard.writeText(plainJSPrompt);
-                        setIsCopied(true);
-                        setTimeout(() => setIsCopied(false), 2000);
-                      }}
-                    >
-                      <Sparkles className="size-4 text-bright mr-2" />
-                      {isCopied ? "Copied!" : "Copy AI agent prompt"}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Paste into Cursor, Copilot or other AI coding agents</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </h3>
-            <p className="text-sm">Copy and paste this code into your website:</p>
-            <CodeBlock code={WIDGET_SAMPLE_CODE} language="html" />
-            <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
-            <Accordion type="multiple" className="w-full">
-              <AccordionItem value="customize">
-                <AccordionTrigger className="[&[data-state=open]]:font-semibold">Customize the widget</AccordionTrigger>
-                <AccordionContent className="space-y-4">
-                  <p className="text-sm">
-                    Customize the widget by adding a <code>helperWidgetConfig</code> object <strong>above</strong> the
-                    widget script tag.
-                  </p>
-                  <CodeBlock
-                    code={`
+            <TabsContent value="vanilla" className="space-y-4">
+              <h3 className="flex items-center justify-between text-lg font-semibold">
+                Get started
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="subtle"
+                        onClick={() => {
+                          navigator.clipboard.writeText(plainJSPrompt);
+                          setIsCopied(true);
+                          setTimeout(() => setIsCopied(false), 2000);
+                        }}
+                      >
+                        <Sparkles className="size-4 text-bright mr-2" />
+                        {isCopied ? "Copied!" : "Copy AI agent prompt"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Paste into Cursor, Copilot or other AI coding agents</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </h3>
+              <p className="text-sm">Copy and paste this code into your website:</p>
+              <CodeBlock code={WIDGET_SAMPLE_CODE} language="html" />
+              <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
+              <Accordion type="multiple" className="w-full">
+                <AccordionItem value="customize">
+                  <AccordionTrigger className="[&[data-state=open]]:font-semibold">
+                    Customize the widget
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <p className="text-sm">
+                      Customize the widget by adding a <code>helperWidgetConfig</code> object <strong>above</strong> the
+                      widget script tag.
+                    </p>
+                    <CodeBlock
+                      code={`
 <script>
   window.helperWidgetConfig = {
     title: "My Helper Widget",
@@ -339,64 +343,64 @@ ${NODE_HMAC_SAMPLE_CODE}
 <!-- The script you added earlier -->
 ${WIDGET_SAMPLE_CODE}
                     `.trim()}
-                    language="html"
-                  />
-                  <p className="text-sm">Supported options:</p>
-                  <ul className="text-sm list-disc pl-5 space-y-2">
-                    <li>
-                      <code>title</code> - The title of the widget.
-                    </li>
-                    <li>
-                      <code>iconColor</code> - A custom color for the widget icon.
-                    </li>
-                    <li>
-                      <code>showToggleButton</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
-                      <code>true</code> to show the button or <code>false</code> to hide the button.
-                    </li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="contextual">
-                <AccordionTrigger className="[&[data-state=open]]:font-semibold">
-                  Add contextual help buttons
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <p className="text-sm">
-                      Use the <span className="rounded-md bg-muted p-1 font-mono text-xs">data-helper-prompt</span>{" "}
-                      attribute to open the chat widget with a specific prompt:
-                    </p>
-                    <CodeBlock
-                      code="<button data-helper-prompt='How do I change my plan?'>Get help with plans</button>"
                       language="html"
                     />
-                    <p className="text-sm">
-                      Or toggle the chat widget with the{" "}
-                      <span className="rounded-md bg-muted p-1 font-mono text-xs">data-helper-toggle</span> attribute:
-                    </p>
-                    <CodeBlock code="<button data-helper-toggle>Open chat</button>" language="html" />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                    <p className="text-sm">Supported options:</p>
+                    <ul className="text-sm list-disc pl-5 space-y-2">
+                      <li>
+                        <code>title</code> - The title of the widget.
+                      </li>
+                      <li>
+                        <code>iconColor</code> - A custom color for the widget icon.
+                      </li>
+                      <li>
+                        <code>showToggleButton</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
+                        <code>true</code> to show the button or <code>false</code> to hide the button.
+                      </li>
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="authenticate">
-                <AccordionTrigger className="[&[data-state=open]]:font-semibold">
-                  Authenticate your users
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <p className="text-sm">
-                      First, you'll need to generate an HMAC hash on your server using the secret below:
-                    </p>
-                    <WidgetHMACSecret hmacSecret={mailbox.widgetHMACSecret} />
-                    <p className="text-sm">Sample code to generate HMAC secret (Node.js)</p>
-                    <CodeBlock code={NODE_HMAC_SAMPLE_CODE} language="javascript" />
-                    <p className="text-sm">
-                      Then add the generated hash, customer email, and timestamp to your widget config:
-                    </p>
-                    <CodeBlock
-                      code={`
+                <AccordionItem value="contextual">
+                  <AccordionTrigger className="[&[data-state=open]]:font-semibold">
+                    Add contextual help buttons
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <p className="text-sm">
+                        Use the <span className="rounded-md bg-muted p-1 font-mono text-xs">data-helper-prompt</span>{" "}
+                        attribute to open the chat widget with a specific prompt:
+                      </p>
+                      <CodeBlock
+                        code="<button data-helper-prompt='How do I change my plan?'>Get help with plans</button>"
+                        language="html"
+                      />
+                      <p className="text-sm">
+                        Or toggle the chat widget with the{" "}
+                        <span className="rounded-md bg-muted p-1 font-mono text-xs">data-helper-toggle</span> attribute:
+                      </p>
+                      <CodeBlock code="<button data-helper-toggle>Open chat</button>" language="html" />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="authenticate">
+                  <AccordionTrigger className="[&[data-state=open]]:font-semibold">
+                    Authenticate your users
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <p className="text-sm">
+                        First, you'll need to generate an HMAC hash on your server using the secret below:
+                      </p>
+                      <WidgetHMACSecret hmacSecret={mailbox.widgetHMACSecret} />
+                      <p className="text-sm">Sample code to generate HMAC secret (Node.js)</p>
+                      <CodeBlock code={NODE_HMAC_SAMPLE_CODE} language="javascript" />
+                      <p className="text-sm">
+                        Then add the generated hash, customer email, and timestamp to your widget config:
+                      </p>
+                      <CodeBlock
+                        code={`
 <script>
   window.helperWidgetConfig = {
     // ... any existing config ...
@@ -408,13 +412,13 @@ ${WIDGET_SAMPLE_CODE}
 <!-- The script you added earlier -->
 ${WIDGET_SAMPLE_CODE}
                       `.trim()}
-                      language="html"
-                    />
-                    <p className="text-sm">
-                      Optionally, you can add metadata to give Helper more context about the customer:
-                    </p>
-                    <CodeBlock
-                      code={`
+                        language="html"
+                      />
+                      <p className="text-sm">
+                        Optionally, you can add metadata to give Helper more context about the customer:
+                      </p>
+                      <CodeBlock
+                        code={`
 <script>
   window.helperWidgetConfig = {
     // ... existing config ...
@@ -430,42 +434,42 @@ ${WIDGET_SAMPLE_CODE}
 <!-- The script you added earlier -->
 ${WIDGET_SAMPLE_CODE}
                       `.trim()}
-                      language="html"
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </TabsContent>
+                        language="html"
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </TabsContent>
 
-          <TabsContent value="react" className="space-y-4">
-            <h3 className="flex items-center justify-between text-lg font-semibold">
-              Get started
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      variant="subtle"
-                      onClick={() => {
-                        navigator.clipboard.writeText(reactPrompt);
-                        setIsCopied(true);
-                        setTimeout(() => setIsCopied(false), 2000);
-                      }}
-                    >
-                      <Sparkles className="size-4 text-bright mr-2" />
-                      {isCopied ? "Copied!" : "Copy AI agent prompt"}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Paste into Cursor, Copilot or other AI coding agents</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </h3>
-            <p className="text-sm">Install the React package:</p>
-            <CodeBlock code="npm install @helperai/react" language="bash" />
+            <TabsContent value="react" className="space-y-4">
+              <h3 className="flex items-center justify-between text-lg font-semibold">
+                Get started
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="subtle"
+                        onClick={() => {
+                          navigator.clipboard.writeText(reactPrompt);
+                          setIsCopied(true);
+                          setTimeout(() => setIsCopied(false), 2000);
+                        }}
+                      >
+                        <Sparkles className="size-4 text-bright mr-2" />
+                        {isCopied ? "Copied!" : "Copy AI agent prompt"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Paste into Cursor, Copilot or other AI coding agents</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </h3>
+              <p className="text-sm">Install the React package:</p>
+              <CodeBlock code="npm install @helperai/react" language="bash" />
 
-            <p className="text-sm">Then add the provider at the root of your app:</p>
-            <CodeBlock
-              code={`// app/layout.tsx or similar
+              <p className="text-sm">Then add the provider at the root of your app:</p>
+              <CodeBlock
+                code={`// app/layout.tsx or similar
 import { HelperProvider } from '@helperai/react';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -479,19 +483,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </html>
   );
 }`}
-              language="typescript"
-            />
+                language="typescript"
+              />
 
-            <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
-            <Accordion type="multiple" className="w-full">
-              <AccordionItem value="customize">
-                <AccordionTrigger className="[&[data-state=open]]:font-semibold">Customize the widget</AccordionTrigger>
-                <AccordionContent className="space-y-4">
-                  <p className="text-sm">
-                    Customize the widget by adding props to the <code>HelperProvider</code>.
-                  </p>
-                  <CodeBlock
-                    code={`
+              <h3 className="mt-8 text-lg font-semibold">Optional: Next steps</h3>
+              <Accordion type="multiple" className="w-full">
+                <AccordionItem value="customize">
+                  <AccordionTrigger className="[&[data-state=open]]:font-semibold">
+                    Customize the widget
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <p className="text-sm">
+                      Customize the widget by adding props to the <code>HelperProvider</code>.
+                    </p>
+                    <CodeBlock
+                      code={`
 <HelperProvider
   host="${getBaseUrl()}"
   title="My Helper Widget"
@@ -500,35 +506,35 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   {children}
 </HelperProvider>
                     `.trim()}
-                    language="html"
-                  />
-                  <p className="text-sm">Supported options:</p>
-                  <ul className="text-sm list-disc pl-5 space-y-2">
-                    <li>
-                      <code>title</code> - The title of the widget.
-                    </li>
-                    <li>
-                      <code>iconColor</code> - A custom color for the widget icon.
-                    </li>
-                    <li>
-                      <code>showToggleButton</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
-                      <code>true</code> to show the button or <code>false</code> to hide the button.
-                    </li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
+                      language="html"
+                    />
+                    <p className="text-sm">Supported options:</p>
+                    <ul className="text-sm list-disc pl-5 space-y-2">
+                      <li>
+                        <code>title</code> - The title of the widget.
+                      </li>
+                      <li>
+                        <code>iconColor</code> - A custom color for the widget icon.
+                      </li>
+                      <li>
+                        <code>showToggleButton</code> - Override the "Chat Icon Visibility" setting. Set to{" "}
+                        <code>true</code> to show the button or <code>false</code> to hide the button.
+                      </li>
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="contextual">
-                <AccordionTrigger className="[&[data-state=open]]:font-semibold">
-                  Add contextual help buttons
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <p className="text-sm">
-                      Use the <code>useHelper</code> hook to add contextual help buttons:
-                    </p>
-                    <CodeBlock
-                      code={`import { useHelper } from '@helperai/react';
+                <AccordionItem value="contextual">
+                  <AccordionTrigger className="[&[data-state=open]]:font-semibold">
+                    Add contextual help buttons
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <p className="text-sm">
+                        Use the <code>useHelper</code> hook to add contextual help buttons:
+                      </p>
+                      <CodeBlock
+                        code={`import { useHelper } from '@helperai/react';
 
 export function SupportButton() {
   const { show, sendPrompt } = useHelper();
@@ -548,30 +554,31 @@ export function SupportButton() {
     </div>
   );
 }`}
-                      language="typescript"
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                        language="typescript"
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <AccordionItem value="authenticate">
-                <AccordionTrigger className="[&[data-state=open]]:font-semibold">
-                  Authenticate your users
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <p className="text-sm">
-                      First, add your Helper authentication credentials to your environment variables. For local
-                      development, add these to your environment file, and for production add them to your deployment
-                      environment:
-                    </p>
-                    <CodeBlock code={`HELPER_HMAC_SECRET=${mailbox.widgetHMACSecret}`} language="bash" />
-                    <p className="text-sm">
-                      Then call <code>generateHelperAuth</code> in your root layout and pass the result to the{" "}
-                      <code>HelperProvider</code>. Refer to the HTML/JavaScript guide if your backend is not in Node.js.
-                    </p>
-                    <CodeBlock
-                      code={`// app/layout.tsx or similar
+                <AccordionItem value="authenticate">
+                  <AccordionTrigger className="[&[data-state=open]]:font-semibold">
+                    Authenticate your users
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <p className="text-sm">
+                        First, add your Helper authentication credentials to your environment variables. For local
+                        development, add these to your environment file, and for production add them to your deployment
+                        environment:
+                      </p>
+                      <CodeBlock code={`HELPER_HMAC_SECRET=${mailbox.widgetHMACSecret}`} language="bash" />
+                      <p className="text-sm">
+                        Then call <code>generateHelperAuth</code> in your root layout and pass the result to the{" "}
+                        <code>HelperProvider</code>. Refer to the HTML/JavaScript guide if your backend is not in
+                        Node.js.
+                      </p>
+                      <CodeBlock
+                        code={`// app/layout.tsx or similar
 import { HelperProvider, generateHelperAuth } from '@helperai/react';
 
 export default async function RootLayout({
@@ -598,106 +605,107 @@ export default async function RootLayout({
     </html>
   );
 }`}
-                      language="typescript"
+                        language="typescript"
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </TabsContent>
+          </Tabs>
+        </SectionWrapper>
+        <div className="relative">
+          <div className="absolute top-2 right-4 z-10">
+            <SavingIndicator state={chatVisibilitySaving.state} />
+          </div>
+          <SwitchSectionWrapper
+            title="Chat Icon Visibility"
+            description="Choose when your customers can see the chat widget on your website or app"
+            initialSwitchChecked={mode !== "off"}
+            onSwitchChange={handleSwitchChange}
+          >
+            {mode !== "off" && (
+              <div className="space-y-4">
+                <div className="flex flex-col space-y-2">
+                  <Label>Show chat icon for</Label>
+                  <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
+                    <SelectTrigger className="w-[350px]">
+                      <SelectValue placeholder="Select when to show chat icon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="always">All customers</SelectItem>
+                      <SelectItem value="revenue_based">Customers with value greater than</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {mode === "revenue_based" && (
+                  <div className="flex items-center space-x-4">
+                    <Input
+                      id="min-value"
+                      type="number"
+                      value={minValue}
+                      onChange={(e) => setMinValue(e.target.value)}
+                      className="max-w-[200px]"
+                      min="0"
+                      step="1"
                     />
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </TabsContent>
-        </Tabs>
-      </SectionWrapper>
-      <div className="relative">
-        <div className="absolute top-2 right-4 z-10">
-          <SavingIndicator state={chatVisibilitySaving.state} />
-        </div>
-        <SwitchSectionWrapper
-          title="Chat Icon Visibility"
-          description="Choose when your customers can see the chat widget on your website or app"
-          initialSwitchChecked={mode !== "off"}
-          onSwitchChange={handleSwitchChange}
-        >
-          {mode !== "off" && (
-            <div className="space-y-4">
-              <div className="flex flex-col space-y-2">
-                <Label>Show chat icon for</Label>
-                <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
-                  <SelectTrigger className="w-[350px]">
-                    <SelectValue placeholder="Select when to show chat icon" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="always">All customers</SelectItem>
-                    <SelectItem value="revenue_based">Customers with value greater than</SelectItem>
-                  </SelectContent>
-                </Select>
+                )}
               </div>
+            )}
+          </SwitchSectionWrapper>
+        </div>
 
-              {mode === "revenue_based" && (
-                <div className="flex items-center space-x-4">
-                  <Input
-                    id="min-value"
-                    type="number"
-                    value={minValue}
-                    onChange={(e) => setMinValue(e.target.value)}
-                    className="max-w-[200px]"
-                    min="0"
-                    step="1"
-                  />
-                </div>
-              )}
+        <div className="relative">
+          <div className="absolute top-2 right-4 z-10">
+            <SavingIndicator state={hostUrlSaving.state} />
+          </div>
+          <SectionWrapper
+            title="Chat widget host URL"
+            description="The URL where your chat widget is installed. If set, customers will be able to continue email conversations in the chat widget."
+          >
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="widgetHost">Host URL</Label>
+              <Input
+                id="widgetHost"
+                type="url"
+                value={widgetHost}
+                onChange={(e) => setWidgetHost(e.target.value)}
+                placeholder="https://example.com"
+                className="max-w-[350px]"
+              />
             </div>
-          )}
-        </SwitchSectionWrapper>
-      </div>
-
-      <div className="relative">
-        <div className="absolute top-2 right-4 z-10">
-          <SavingIndicator state={hostUrlSaving.state} />
+          </SectionWrapper>
         </div>
-        <SectionWrapper
-          title="Chat widget host URL"
-          description="The URL where your chat widget is installed. If set, customers will be able to continue email conversations in the chat widget."
-        >
-          <div className="flex flex-col space-y-2">
-            <Label htmlFor="widgetHost">Host URL</Label>
-            <Input
-              id="widgetHost"
-              type="url"
-              value={widgetHost}
-              onChange={(e) => setWidgetHost(e.target.value)}
-              placeholder="https://example.com"
-              className="max-w-[350px]"
-            />
+
+        <div className="relative">
+          <div className="absolute top-2 right-4 z-10">
+            <SavingIndicator state={emailResponseSaving.state} />
           </div>
-        </SectionWrapper>
-      </div>
-
-      <div className="relative">
-        <div className="absolute top-2 right-4 z-10">
-          <SavingIndicator state={emailResponseSaving.state} />
+          <SectionWrapper
+            title="Respond to email inquiries with chat"
+            description="Automatically respond to emails as if the customer was using the chat widget."
+          >
+            <div className="space-y-4">
+              <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="off">Off</TabsTrigger>
+                  <TabsTrigger value="draft">Draft</TabsTrigger>
+                  <TabsTrigger value="reply">Reply</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </SectionWrapper>
         </div>
-        <SectionWrapper
-          title="Respond to email inquiries with chat"
-          description="Automatically respond to emails as if the customer was using the chat widget."
-        >
-          <div className="space-y-4">
-            <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="off">Off</TabsTrigger>
-                <TabsTrigger value="draft">Draft</TabsTrigger>
-                <TabsTrigger value="reply">Reply</TabsTrigger>
-              </TabsList>
-            </Tabs>
+
+        {showChatWidget && (
+          <div className="fixed bottom-8 right-24 bg-primary text-primary-foreground px-3 py-1.5 rounded-md">
+            Try it out →
           </div>
-        </SectionWrapper>
+        )}
       </div>
-
-      {showChatWidget && (
-        <div className="fixed bottom-8 right-24 bg-primary text-primary-foreground px-3 py-1.5 rounded-md">
-          Try it out →
-        </div>
-      )}
-    </div>
+    </HelperProvider>
   );
 };
 
