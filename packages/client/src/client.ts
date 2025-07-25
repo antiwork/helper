@@ -7,10 +7,20 @@ import {
   CreateConversationResult,
   CreateSessionResult,
   HelperTool,
+  Message,
   SessionParams,
   UpdateConversationParams,
   UpdateConversationResult,
 } from "./types";
+
+type AIMessageCompat = {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+  experimental_attachments: { name?: string; contentType?: string; url: string }[];
+  annotations: any[];
+};
 
 export class HelperClient {
   public readonly host: string;
@@ -112,11 +122,43 @@ export class HelperClient {
         content: message.content,
         role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
         createdAt: new Date(message.createdAt),
-        original: message,
+        experimental_attachments: message.publicAttachments.map((attachment) => ({
+          name: attachment.name ?? undefined,
+          contentType: attachment.contentType ?? undefined,
+          url: attachment.url,
+        })),
+        annotations: [{ original: message }],
       }));
 
+      const guideMessages = conversation.experimental_guideSessions.map((session) => ({
+        id: `guide_session_${session.uuid}`,
+        role: "assistant" as const,
+        content: "",
+        parts: [
+          {
+            type: "tool-invocation",
+            toolInvocation: {
+              toolName: "guide_user",
+              toolCallId: `guide_session_${session.uuid}`,
+              state: "call",
+              args: {
+                pendingResume: true,
+                sessionId: session.uuid,
+                title: session.title,
+                instructions: session.instructions,
+              },
+            },
+          },
+        ],
+        createdAt: new Date(session.createdAt),
+      }));
+
+      const allMessages = [...formattedMessages, ...guideMessages].toSorted(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+
       return {
-        initialMessages: conversation.messages,
+        initialMessages: allMessages,
         fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
           const token = await this.getToken();
           return fetch(`${this.host}/api/chat`, {
@@ -208,5 +250,25 @@ export class HelperClient {
         promise.then((unlisten) => unlisten());
       };
     },
+    message: (aiMessage: AIMessageCompat): Message => {
+      const original = aiMessage.annotations.find((annotation) => annotation.original)?.original;
+      if (original) return original;
+      return {
+        id: aiMessage.id,
+        role: aiMessage.role === "user" ? "user" : "assistant",
+        content: aiMessage.content,
+        createdAt: new Date(aiMessage.createdAt ?? Date.now()).toISOString(),
+        staffName: null,
+        reactionType: null,
+        reactionFeedback: null,
+        publicAttachments: aiMessage.experimental_attachments.map((attachment) => ({
+          name: attachment.name ?? null,
+          contentType: attachment.contentType ?? null,
+          url: attachment.url,
+        })),
+        privateAttachments: [],
+      };
+    },
+    messages: (aiMessages: AIMessageCompat[]) => aiMessages.map(this.chat.message),
   };
 }

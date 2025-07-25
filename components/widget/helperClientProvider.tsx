@@ -1,10 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { HelperClient, SessionParams } from "@helperai/client";
-import { env } from "@/lib/env";
 
-const HelperClientContext = createContext<{ client: HelperClient | null } | null>(null);
+const HelperClientContext = createContext<{ client: HelperClient } | null>(null);
 
 export const useHelperClientContext = () => {
   const context = useContext(HelperClientContext);
@@ -21,16 +20,6 @@ export interface HelperClientProviderProps {
 }
 
 export const HelperClientProvider = ({ host, session, children }: HelperClientProviderProps) => {
-  const [client] = useState(() => {
-    if (typeof window === "undefined" || env.NODE_ENV === "test") {
-      return null;
-    }
-    try {
-      return new HelperClient({ host, ...session });
-    } catch (_error) {
-      return null;
-    }
-  });
-
+  const client = useMemo(() => new HelperClient({ host, ...session }), [host, session]);
   return <HelperClientContext.Provider value={{ client }}>{children}</HelperClientContext.Provider>;
 };

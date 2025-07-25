@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { ConversationResult } from "@helperai/client";
+import { ConversationDetails } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
@@ -53,7 +53,7 @@ export default function Conversation({
   const [isEscalated, setIsEscalated] = useState(false);
   const [isProvidingDetails, setIsProvidingDetails] = useState(false);
   const { setIsNewConversation } = useWidgetView();
-  const [helperConversation, setHelperConversation] = useState<ConversationResult | null>(null);
+  const [helperConversation, setHelperConversation] = useState<ConversationDetails | null>(null);
   const { client } = useHelperClientContext();
 
   const [isAgentTyping, setIsAgentTyping] = useState(false);

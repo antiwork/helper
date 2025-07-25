@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import cx from "classnames";
 import { jwtDecode } from "jwt-decode";
 import { domAnimation, LazyMotion, m } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MESSAGE_TYPE, RESUME_GUIDE } from "@helperai/sdk";
 import Conversation from "@/components/widget/Conversation";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
@@ -131,19 +131,22 @@ export default function Page() {
 
   const isAnonymous = !config?.email;
 
+  const headerTitle = currentView === "previous" ? "History" : (config?.title ?? defaultTitle ?? "Support");
+
+  const helperClientSession = useMemo(
+    () => ({
+      token,
+      email: config?.email,
+      emailHash: config?.emailHash,
+      timestamp: config?.timestamp,
+      customerMetadata: config?.customerMetadata,
+    }),
+    [token, config?.email, config?.emailHash, config?.timestamp, config?.customerMetadata],
+  );
+
   if (!config || !token) {
     return <div />;
   }
-
-  const headerTitle = currentView === "previous" ? "History" : (config.title ?? defaultTitle ?? "Support");
-
-  const helperClientSession = {
-    token,
-    email: config.email,
-    emailHash: config.emailHash,
-    timestamp: config.timestamp,
-    customerMetadata: config.customerMetadata,
-  };
 
   return (
     <QueryClientProvider client={queryClient}>

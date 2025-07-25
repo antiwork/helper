@@ -32,16 +32,16 @@ export const messageSchema = z.object({
   createdAt: z.string().datetime(),
   publicAttachments: z.array(
     z.object({
-      name: z.string(),
-      contentType: z.string(),
-      url: z.string().nullable(),
+      name: z.string().nullable(),
+      contentType: z.string().nullable(),
+      url: z.string(),
     }),
   ),
   privateAttachments: z.array(
     z.object({
-      name: z.string(),
-      contentType: z.string(),
-      url: z.string().nullable(),
+      name: z.string().nullable(),
+      contentType: z.string().nullable(),
+      url: z.string(),
     }),
   ),
 });

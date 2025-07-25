@@ -2,8 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage } from "ai";
 import cx from "classnames";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ConversationResult } from "@helperai/client";
-import { useHelperClientContext } from "./helperClientProvider";
+import { ConversationDetails } from "@helperai/client";
 import { GUIDE_INITIAL_PROMPT } from "@/lib/ai/constants";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import {
@@ -16,6 +15,7 @@ import {
 } from "@/lib/widget/messages";
 import { GuideInstructions, Step } from "@/types/guide";
 import { AISteps } from "./ai-steps";
+import { useHelperClientContext } from "./helperClientProvider";
 
 type Status = "initializing" | "running" | "error" | "done" | "cancelled" | "pending-resume";
 
@@ -56,7 +56,7 @@ export default function HelpingHand({
   const [steps, setSteps] = useState<Step[]>([]);
   const [toolResultCount, setToolResultCount] = useState(0);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
-  const [guideConversation, setGuideConversation] = useState<ConversationResult | null>(null);
+  const [guideConversation, setGuideConversation] = useState<ConversationDetails | null>(null);
   const lastSerializedStepsRef = useRef<string>(JSON.stringify([]));
   const sessionIdRef = useRef<string | null>(null);
   const stepsRef = useRef<Step[]>([]);
