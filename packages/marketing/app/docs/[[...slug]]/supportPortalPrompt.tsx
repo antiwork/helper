@@ -36,7 +36,7 @@ return await generateHelperAuth({
 Create a page that:
 - Calls the \`createHelperSession\` helper function on the server side
 - Imports \`HelperClient\` from \`@helperai/client\`
-- Renders a *client-side* component that creates a memoized \`HelperClient\` instance with arguments: \`{ host: "${actualHost}", ...session }\`, where \`session\` is the result of the \`createHelperSession\` call
+- Renders a *client-side* component that memoizes \`new HelperClient({ host: "${actualHost}", ...session })\`, where \`session\` is the result of the \`createHelperSession\` call
 
 ## 4. Conversations component
 
