@@ -84,12 +84,12 @@ export default function Conversation({
         {
           id: `staff_${Date.now()}`,
           role: "assistant",
-          content: event.data.message,
-          createdAt: new Date(event.data.timestamp),
+          content: event.data.content,
+          createdAt: new Date(event.data.createdAt),
           reactionType: null,
           reactionFeedback: null,
           reactionCreatedAt: null,
-          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
+          annotations: event.data.staffName ? [{ user: { firstName: event.data.staffName } }] : undefined,
         },
       ]);
 
