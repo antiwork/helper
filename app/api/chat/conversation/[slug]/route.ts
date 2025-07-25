@@ -74,6 +74,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
         createdAt: message.createdAt.toISOString(),
         reactionType: message.reactionType,
         reactionFeedback: message.reactionFeedback,
+        reactionCreatedAt: message.reactionCreatedAt?.toISOString() ?? null,
         staffName: await getStaffName(message.userId),
         publicAttachments: hasPublicAttachments ? messageAttachments : [],
         privateAttachments: hasPublicAttachments ? [] : messageAttachments,

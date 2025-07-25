@@ -258,6 +258,7 @@ export class HelperClient {
         staffName: null,
         reactionType: null,
         reactionFeedback: null,
+        reactionCreatedAt: null,
         publicAttachments: aiMessage.experimental_attachments.map((attachment) => ({
           name: attachment.name ?? null,
           contentType: attachment.contentType ?? null,

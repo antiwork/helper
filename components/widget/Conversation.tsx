@@ -1,8 +1,8 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
-import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { ConversationDetails } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
@@ -202,35 +202,73 @@ export default function Conversation({
         onLoadFailed();
         return null;
       }
-      const data = await response.json();
+      const data: ConversationDetails = await response.json();
       if (data.messages) {
         if (data.isEscalated) {
           setIsEscalated(true);
         }
 
-        const guideMessage = data.messages.find((message: any) =>
-          message.parts?.some(
-            (part: any) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
-          ),
-        );
+        const guideMessage = data.experimental_guideSessions?.at(-1);
 
         if (guideMessage) {
-          setMessages([...messages, { ...guideMessage, createdAt: new Date(guideMessage.createdAt) }]);
+          setMessages([
+            ...messages,
+            {
+              id: `guide_session_${guideMessage.uuid}`,
+              role: "assistant" as const,
+              content: "",
+              parts: [
+                {
+                  type: "tool-invocation",
+                  toolInvocation: {
+                    toolName: "guide_user",
+                    toolCallId: `guide_session_${guideMessage.uuid}`,
+                    state: "call",
+                    args: {
+                      pendingResume: true,
+                      sessionId: guideMessage.uuid,
+                      title: guideMessage.title,
+                      instructions: guideMessage.instructions,
+                    },
+                  },
+                },
+              ],
+              createdAt: new Date(guideMessage.createdAt),
+            },
+          ]);
         }
 
         return {
-          messages: data.messages.map((message: any) => ({
+          messages: data.messages.map((message) => ({
             id: message.id,
-            role: message.role as Message["role"],
             content: message.content,
+            role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
             createdAt: new Date(message.createdAt),
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
-            annotations: message.annotations,
-            parts: message.parts,
-            experimental_attachments: message.experimental_attachments,
+            reactionCreatedAt: message.reactionCreatedAt,
+            experimental_attachments: message.publicAttachments.map((attachment) => ({
+              name: attachment.name ?? undefined,
+              contentType: attachment.contentType ?? undefined,
+              url: attachment.url,
+            })),
+            annotations: [
+              ...(message.staffName ? [{ user: { name: message.staffName } }] : []),
+              ...message.publicAttachments.map((attachment) => ({
+                attachment: { name: attachment.name, url: attachment.url },
+              })),
+              ...message.privateAttachments.map((attachment) => ({
+                attachment: { name: attachment.name, url: attachment.url },
+              })),
+            ],
           })),
-          allAttachments: data.allAttachments,
+          allAttachments: data.messages.flatMap((message) =>
+            message.privateAttachments.map((attachment) => ({
+              messageId: message.id,
+              name: attachment.name ?? "",
+              presignedUrl: attachment.url,
+            })),
+          ),
           isEscalated: data.isEscalated,
         };
       }

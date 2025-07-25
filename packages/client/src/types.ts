@@ -29,6 +29,7 @@ export const messageSchema = z.object({
   staffName: z.string().nullable(),
   reactionType: z.enum(["thumbs-up", "thumbs-down"]).nullable(),
   reactionFeedback: z.string().nullable(),
+  reactionCreatedAt: z.string().datetime().nullable(),
   createdAt: z.string().datetime(),
   publicAttachments: z.array(
     z.object({
