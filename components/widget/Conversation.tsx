@@ -1,14 +1,10 @@
 import { useChat } from "@ai-sdk/react";
-import { useQuery } from "@tanstack/react-query";
-import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ConversationDetails } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk/dist/types/utils";
-import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
 import { eventBus, messageQueue } from "@/components/widget/eventBus";
-import type { MessageWithReaction } from "@/components/widget/Message";
 import MessagesList from "@/components/widget/MessagesList";
 import MessagesSkeleton from "@/components/widget/MessagesSkeleton";
 import SupportButtons from "@/components/widget/SupportButtons";
@@ -22,7 +18,6 @@ import { useHelperClientContext } from "./helperClientProvider";
 type Props = {
   token: string | null;
   isGumroadTheme: boolean;
-  isNewConversation?: boolean;
   selectedConversationSlug?: string | null;
   readPageTool?: ReadPageToolConfig | null;
   onLoadFailed: () => void;
@@ -40,7 +35,6 @@ export type Attachment = {
 export default function Conversation({
   token,
   isGumroadTheme,
-  isNewConversation = false,
   selectedConversationSlug,
   readPageTool,
   onLoadFailed,
@@ -49,22 +43,18 @@ export default function Conversation({
   currentView,
 }: Props) {
   const { conversationSlug, setConversationSlug, createConversation } = useNewConversation(token);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isEscalated, setIsEscalated] = useState(false);
   const [isProvidingDetails, setIsProvidingDetails] = useState(false);
-  const { setIsNewConversation } = useWidgetView();
-  const [helperConversation, setHelperConversation] = useState<ConversationDetails | null>(null);
+  const { isNewConversation, setIsNewConversation } = useWidgetView();
+  const [conversation, setConversation] = useState<ConversationDetails | null>(null);
   const { client } = useHelperClientContext();
-
-  const [isAgentTyping, setIsAgentTyping] = useState(false);
-  const agentTypingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     const fetchConversation = async () => {
       if (!selectedConversationSlug || !token || !client) return;
       try {
         const conversationData = await client.conversations.get(selectedConversationSlug);
-        setHelperConversation(conversationData);
+        setConversation(conversationData);
         setIsEscalated(conversationData.isEscalated);
       } catch (error) {
         captureExceptionAndLog(error);
@@ -74,215 +64,16 @@ export default function Conversation({
   }, [selectedConversationSlug, client, token]);
 
   useEffect(() => {
-    if (!selectedConversationSlug || !client) return;
-
-    const unlisten = client.chat.listen(selectedConversationSlug, {
-      onHumanReply: (message: any) => {
-        setIsAgentTyping(false);
-        if (agentTypingTimeoutRef.current) {
-          clearTimeout(agentTypingTimeoutRef.current);
-        }
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: message.id,
-            role: message.role,
-            content: message.content,
-            createdAt: new Date(),
-            reactionType: null,
-            reactionFeedback: null,
-            reactionCreatedAt: null,
-          },
-        ]);
-      },
-      onTyping: (isTyping: boolean) => {
-        setIsAgentTyping(isTyping);
-        if (isTyping) {
-          if (agentTypingTimeoutRef.current) {
-            clearTimeout(agentTypingTimeoutRef.current);
-          }
-          agentTypingTimeoutRef.current = setTimeout(() => {
-            setIsAgentTyping(false);
-          }, 10000);
-        }
-      },
-    });
-
-    return () => unlisten();
-  }, [selectedConversationSlug, client]);
-
-  useEffect(() => {
-    return () => {
-      if (agentTypingTimeoutRef.current) clearTimeout(agentTypingTimeoutRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
     if (conversationSlug) {
       sendConversationUpdate(conversationSlug);
     }
   }, [conversationSlug]);
-
-  const {
-    data,
-    setData,
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit: handleAISubmit,
-    append,
-    setMessages,
-    status,
-    stop,
-    addToolResult,
-  } = useChat(
-    helperConversation && client
-      ? {
-          ...client.chat.handler({
-            conversation: helperConversation,
-            tools: {},
-          }),
-          maxSteps: 3,
-          generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
-          onToolCall({ toolCall }) {
-            if (readPageTool && toolCall.toolName === readPageTool.toolName) {
-              return readPageTool.pageContent || readPageTool.pageHTML;
-            }
-
-            if (toolCall.toolName === "request_human_support") {
-              setIsEscalated(true);
-            }
-          },
-          onError: (error) => {
-            captureExceptionAndLog(error);
-
-            setMessages((messages) => [
-              ...messages,
-              {
-                id: `error_${Date.now()}`,
-                role: "system",
-                content: "Sorry, there was an error processing your request. Please try again.",
-              },
-            ]);
-          },
-        }
-      : {
-          maxSteps: 3,
-          generateId: () => `client_${Math.random().toString(36).slice(-6)}`,
-          onToolCall({ toolCall }) {
-            if (readPageTool && toolCall.toolName === readPageTool.toolName) {
-              return readPageTool.pageContent || readPageTool.pageHTML;
-            }
-
-            if (toolCall.toolName === "request_human_support") {
-              setIsEscalated(true);
-            }
-          },
-          experimental_prepareRequestBody({ messages, id, requestBody }) {
-            const lastMessage = messages[messages.length - 1];
-            const isToolResult = lastMessage?.parts?.some(
-              (part) => part.type === "tool-invocation" && part.toolInvocation.state === "result",
-            );
-
-            return {
-              id,
-              readPageTool,
-              guideEnabled,
-              message: lastMessage,
-              conversationSlug,
-              isToolResult,
-              ...requestBody,
-            };
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          onError: (error) => {
-            captureExceptionAndLog(error);
-
-            setMessages((messages) => [
-              ...messages,
-              {
-                id: `error_${Date.now()}`,
-                role: "system",
-                content: "Sorry, there was an error processing your request. Please try again.",
-              },
-            ]);
-          },
-        },
-  );
 
   useEffect(() => {
     if (selectedConversationSlug && !isNewConversation) {
       setConversationSlug(selectedConversationSlug);
     }
   }, [selectedConversationSlug, isNewConversation, setConversationSlug]);
-
-  const isLoading = status === "streaming" || status === "submitted";
-  const lastAIMessage = messages?.findLast((msg) => msg.role === "assistant");
-
-  const { data: conversation, isLoading: isLoadingConversation } = useQuery<{
-    messages: MessageWithReaction[];
-    allAttachments: Attachment[];
-    isEscalated: boolean;
-  } | null>({
-    queryKey: ["conversation", conversationSlug],
-    refetchOnWindowFocus: false,
-    queryFn: async () => {
-      const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        const text = await response.text().catch(() => null);
-        captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.status}`), {
-          extra: { conversationSlug, text },
-        });
-        onLoadFailed();
-        return null;
-      }
-      const data = await response.json();
-      if (data.messages) {
-        if (data.isEscalated) {
-          setIsEscalated(true);
-        }
-
-        const guideMessage = data.messages.find((message: any) =>
-          message.parts?.some(
-            (part: any) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
-          ),
-        );
-
-        if (guideMessage) {
-          setMessages([...messages, { ...guideMessage, createdAt: new Date(guideMessage.createdAt) }]);
-        }
-
-        return {
-          messages: data.messages.map((message: any) => ({
-            id: message.id,
-            role: message.role as Message["role"],
-            content: message.content,
-            createdAt: new Date(message.createdAt),
-            reactionType: message.reactionType,
-            reactionFeedback: message.reactionFeedback,
-            annotations: message.annotations,
-            parts: message.parts,
-            experimental_attachments: message.experimental_attachments,
-          })),
-          allAttachments: data.allAttachments,
-          isEscalated: data.isEscalated,
-        };
-      }
-      return null;
-    },
-    enabled: !!conversationSlug && !!token && !isNewConversation,
-  });
-
-  const conversationMessages = conversation?.messages.filter((message) =>
-    messages[0]?.createdAt ? assertDefined(message.createdAt) < messages[0]?.createdAt : true,
-  );
 
   useEffect(() => {
     if (status === "ready" || isNewConversation) {
@@ -297,6 +88,131 @@ export default function Conversation({
       setIsEscalated(false);
     }
   }, [isNewConversation, setMessages, setConversationSlug]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const handleDataChange = async (message: unknown) => {
+      const slug = await createConversation({ isPrompt: true });
+      setMessages([]);
+      setConversationSlug(slug);
+      setIsEscalated(false);
+      append({ role: "user", content: message as string }, { body: { conversationSlug: slug } });
+    };
+
+    // Process queued messages first
+    messageQueue.forEach((message) => handleDataChange(message));
+    messageQueue.length = 0; // Clear the queue
+    eventBus.on("PROMPT", handleDataChange);
+
+    return () => {
+      eventBus.off("PROMPT", handleDataChange);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    setIsProvidingDetails(false);
+  }, [lastAIMessage]);
+
+  if (currentView !== "chat") return null;
+
+  if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
+    return <MessagesSkeleton />;
+  }
+
+  return <ChatView conversation={conversation} readPageTool={readPageTool} />;
+}
+
+const ChatView = ({
+  conversation,
+  readPageTool,
+}: {
+  conversation: ConversationDetails;
+  readPageTool: ReadPageToolConfig | null;
+}) => {
+  const { client } = useHelperClientContext();
+  const [isAgentTyping, setIsAgentTyping] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const chatHandler = client.chat.handler({
+    conversation,
+    tools: {},
+  });
+
+  const {
+    data,
+    setData,
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit: handleAISubmit,
+    append,
+    setMessages,
+    status,
+    stop,
+    addToolResult,
+  } = useChat({
+    ...chatHandler,
+    maxSteps: 3,
+    onToolCall({ toolCall }) {
+      if (readPageTool && toolCall.toolName === readPageTool.toolName) {
+        return readPageTool.pageContent || readPageTool.pageHTML;
+      }
+
+      if (toolCall.toolName === "request_human_support") {
+        setIsEscalated(true);
+        return;
+      }
+
+      chatHandler.onToolCall({ toolCall });
+    },
+    onError: (error) => {
+      captureExceptionAndLog(error);
+
+      setMessages((messages) => [
+        ...messages,
+        {
+          id: `error_${Date.now()}`,
+          role: "system",
+          content: "Sorry, there was an error processing your request. Please try again.",
+        },
+      ]);
+    },
+  });
+
+  useEffect(() => {
+    const unlisten = client.chat.listen(conversation.slug, {
+      onHumanReply: (message) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: message.id,
+            role: message.role,
+            content: message.content,
+            createdAt: new Date(),
+            reactionType: null,
+            reactionFeedback: null,
+            reactionCreatedAt: null,
+          },
+        ]);
+      },
+      onTyping: (isTyping) => {
+        setIsAgentTyping(isTyping);
+      },
+    });
+
+    return () => unlisten();
+  }, [conversation.slug, client]);
+
+  const handleTalkToTeamClick = () => {
+    setIsEscalated(true);
+    append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
+  };
+
+  const handleAddDetailsClick = () => {
+    inputRef.current?.focus();
+    setIsProvidingDetails(true);
+  };
 
   const handleSubmit = async (screenshotData?: string, attachments?: File[]) => {
     if (!input.trim() && !screenshotData && (!attachments || attachments.length === 0)) return;
@@ -361,54 +277,15 @@ export default function Conversation({
     }
   };
 
-  useEffect(() => {
-    if (!token) return;
-
-    const handleDataChange = async (message: unknown) => {
-      const slug = await createConversation({ isPrompt: true });
-      setMessages([]);
-      setConversationSlug(slug);
-      setIsEscalated(false);
-      append({ role: "user", content: message as string }, { body: { conversationSlug: slug } });
-    };
-
-    // Process queued messages first
-    messageQueue.forEach((message) => handleDataChange(message));
-    messageQueue.length = 0; // Clear the queue
-    eventBus.on("PROMPT", handleDataChange);
-
-    return () => {
-      eventBus.off("PROMPT", handleDataChange);
-    };
-  }, [token]);
-
-  useEffect(() => {
-    setIsProvidingDetails(false);
-  }, [lastAIMessage]);
-
-  const handleTalkToTeamClick = () => {
-    setIsEscalated(true);
-    append({ role: "user", content: "I need to talk to a human" }, { body: { conversationSlug } });
-  };
-
-  const handleAddDetailsClick = () => {
-    inputRef.current?.focus();
-    setIsProvidingDetails(true);
-  };
-
-  if (currentView !== "chat") return null;
-
-  if (isLoadingConversation && !isNewConversation && selectedConversationSlug) {
-    return <MessagesSkeleton />;
-  }
+  const isLoading = status === "streaming" || status === "submitted";
+  const lastAIMessage = messages?.findLast((msg) => msg.role === "assistant");
 
   return (
     <>
       <MessagesList
         data={data ?? null}
-        messages={[...(conversationMessages ?? []), ...(messages as MessageWithReaction[])]}
-        allAttachments={conversation?.allAttachments ?? []}
-        conversationSlug={conversationSlug}
+        messages={client.chat.messages(messages)}
+        conversationSlug={conversation.slug}
         isGumroadTheme={isGumroadTheme}
         token={token}
         stopChat={stop}
@@ -449,4 +326,4 @@ export default function Conversation({
       />
     </>
   );
-}
+};

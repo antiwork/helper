@@ -33,6 +33,25 @@ export const getFileUrl = async (file: typeof files.$inferSelect, { preview = fa
   }
 };
 
+export const formatAttachments = async (attachments: (typeof files.$inferSelect)[]) => {
+  return (
+    await Promise.all(
+      attachments.map(async (attachment) => {
+        const url = await getFileUrl(attachment);
+        return url
+          ? [
+              {
+                name: attachment.name,
+                url,
+                contentType: attachment.mimetype,
+              },
+            ]
+          : [];
+      }),
+    )
+  ).flat();
+};
+
 export const downloadFile = async (file: typeof files.$inferSelect) => {
   const supabase = createAdminClient();
   if (file.isPublic) {

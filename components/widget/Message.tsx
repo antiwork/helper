@@ -1,8 +1,8 @@
 import type { JSONValue, Message } from "ai";
 import cx from "classnames";
 import { Paperclip } from "lucide-react";
+import { Message as HelperMessage } from "@helperai/client";
 import HumanizedTime from "@/components/humanizedTime";
-import { Attachment } from "@/components/widget/Conversation";
 import MessageElement from "@/components/widget/MessageElement";
 import { useWidgetView } from "@/components/widget/useWidgetView";
 import { PromptInfo } from "@/lib/ai/promptInfo";
@@ -16,12 +16,11 @@ export type MessageWithReaction = Message & {
 };
 
 type Props = {
-  message: MessageWithReaction;
-  allMessages: Message[];
+  message: HelperMessage;
+  allMessages: HelperMessage[];
   conversationSlug: string | null;
   token: string | null;
   data: JSONValue[] | null;
-  attachments: Attachment[];
   color: "primary" | "gumroad-pink";
   hideReasoning?: boolean;
 };
@@ -33,16 +32,9 @@ export default function Message({
   token,
   data,
   color,
-  attachments,
   hideReasoning = false,
 }: Props) {
   const { togglePromptInfo } = useWidgetView();
-  const idFromAnnotation =
-    message.annotations?.find(
-      (annotation): annotation is { id: string | number } =>
-        typeof annotation === "object" && annotation !== null && "id" in annotation,
-    )?.id ?? null;
-  const persistedId = idFromAnnotation ?? (!message.id.startsWith("client_") ? message.id : null);
 
   const promptInfo =
     message.annotations?.find(
@@ -74,11 +66,6 @@ export default function Message({
     }
   }
 
-  const userAnnotation = message.annotations?.find(
-    (annotation): annotation is { user: { firstName: string } } =>
-      typeof annotation === "object" && annotation !== null && "user" in annotation,
-  );
-
   if (!conversationSlug || (!message.content && !reasoningStarted)) {
     return null;
   }
@@ -98,13 +85,11 @@ export default function Message({
           "border border-black bg-background text-foreground": message.role !== USER_ROLE,
         })}
       >
-        {userAnnotation ? (
-          <div className="p-4 pb-0 flex items-center text-gray-500 text-xs font-bold">
-            {userAnnotation.user.firstName}
-          </div>
+        {message.staffName ? (
+          <div className="p-4 pb-0 flex items-center text-gray-500 text-xs font-bold">{message.staffName}</div>
         ) : null}
         <MessageElement
-          messageId={persistedId?.toString()}
+          messageId={message.id}
           conversationSlug={conversationSlug}
           message={message}
           reasoning={reasoning}
@@ -112,7 +97,7 @@ export default function Message({
           token={token}
           color={color}
         />
-        {message.experimental_attachments?.map((attachment) => (
+        {message.publicAttachments.map((attachment) => (
           <div key={attachment.url} className="p-4 pt-0">
             <button
               type="button"
@@ -136,18 +121,18 @@ export default function Message({
               <img
                 className="w-full rounded-lg hover:opacity-90 transition-opacity"
                 src={attachment.url}
-                alt={attachment.name}
+                alt={attachment.name ?? undefined}
               />
             </button>
           </div>
         ))}
-        {!message.experimental_attachments?.length && attachments.length > 0 && (
+        {message.privateAttachments.length > 0 && (
           <div className="p-4 pt-0 flex flex-col gap-2">
-            {attachments.map((attachment) => (
+            {message.privateAttachments.map((attachment) => (
               <a
                 key={attachment.name}
                 className="flex items-center gap-2"
-                href={attachment.presignedUrl}
+                href={attachment.url}
                 target="_blank"
                 download
               >
@@ -159,8 +144,11 @@ export default function Message({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400" title={message.createdAt ? message.createdAt.toLocaleString() : ""}>
-          {message.createdAt ? <HumanizedTime time={message.createdAt.toISOString()} /> : null}
+        <span
+          className="text-xs text-gray-400"
+          title={message.createdAt ? new Date(message.createdAt).toLocaleString() : ""}
+        >
+          {message.createdAt ? <HumanizedTime time={message.createdAt} /> : null}
         </span>
         {promptInfo && (
           <>

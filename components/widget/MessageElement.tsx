@@ -1,8 +1,8 @@
 import { formatDuration } from "date-fns";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Message as HelperMessage } from "@helperai/client";
 import MessageMarkdown from "@/components/messageMarkdown";
-import type { MessageWithReaction } from "@/components/widget/Message";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 type Reasoning = {
@@ -20,7 +20,7 @@ export default function MessageElement({
   color,
 }: {
   messageId: string | undefined;
-  message: MessageWithReaction;
+  message: HelperMessage;
   reasoning: Reasoning | null;
   hideReasoning: boolean;
   token: string | null;

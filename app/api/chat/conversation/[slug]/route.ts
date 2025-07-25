@@ -5,7 +5,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
 import { getFirstName } from "@/lib/auth/authUtils";
 import { updateConversation } from "@/lib/data/conversation";
-import { getFileUrl } from "@/lib/data/files";
+import { formatAttachments } from "@/lib/data/files";
 import { getBasicProfileById } from "@/lib/data/user";
 import { ConversationDetails, updateConversationParamsSchema, UpdateConversationResult } from "@/packages/client/dist";
 
@@ -60,25 +60,6 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   const activeGuideSessions = incompleteGuideSessions.filter(
     (session) => !session.events.some((event) => event.type === "completed"),
   );
-
-  const formatAttachments = async (attachments: (typeof files.$inferSelect)[]) => {
-    return (
-      await Promise.all(
-        attachments.map(async (attachment) => {
-          const url = await getFileUrl(attachment);
-          return url
-            ? [
-                {
-                  name: attachment.name,
-                  url,
-                  contentType: attachment.mimetype,
-                },
-              ]
-            : [];
-        }),
-      )
-    ).flat();
-  };
 
   const formattedMessages = await Promise.all(
     conversation.messages.map(async (message) => {

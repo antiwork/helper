@@ -17,7 +17,7 @@ type AIMessageCompat = {
   id: string;
   role: string;
   content: string;
-  createdAt: string;
+  createdAt: Date;
   experimental_attachments: { name?: string; contentType?: string; url: string }[];
   annotations: any[];
 };
@@ -117,18 +117,7 @@ export class HelperClient {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
     }) => {
-      const formattedMessages = conversation.messages.map((message) => ({
-        id: message.id,
-        content: message.content,
-        role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
-        createdAt: new Date(message.createdAt),
-        experimental_attachments: message.publicAttachments.map((attachment) => ({
-          name: attachment.name ?? undefined,
-          contentType: attachment.contentType ?? undefined,
-          url: attachment.url,
-        })),
-        annotations: [{ original: message }],
-      }));
+      const formattedMessages = conversation.messages.map(formatMessage);
 
       const guideMessages = conversation.experimental_guideSessions.map((session) => ({
         id: `guide_session_${session.uuid}`,
@@ -253,8 +242,16 @@ export class HelperClient {
     message: (aiMessage: AIMessageCompat): Message => {
       const original = aiMessage.annotations.find((annotation) => annotation.original)?.original;
       if (original) return original;
+
+      const idFromAnnotation =
+        aiMessage.annotations?.find(
+          (annotation): annotation is { id: string | number } =>
+            typeof annotation === "object" && annotation !== null && "id" in annotation,
+        )?.id ?? null;
+      const persistedId = idFromAnnotation ? `${idFromAnnotation}` : aiMessage.id;
+
       return {
-        id: aiMessage.id,
+        id: persistedId,
         role: aiMessage.role === "user" ? "user" : "assistant",
         content: aiMessage.content,
         createdAt: new Date(aiMessage.createdAt ?? Date.now()).toISOString(),
@@ -272,3 +269,16 @@ export class HelperClient {
     messages: (aiMessages: AIMessageCompat[]) => aiMessages.map(this.chat.message),
   };
 }
+
+const formatMessage = (message: Message): AIMessageCompat => ({
+  id: message.id,
+  content: message.content,
+  role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
+  createdAt: new Date(message.createdAt),
+  experimental_attachments: message.publicAttachments.map((attachment) => ({
+    name: attachment.name ?? undefined,
+    contentType: attachment.contentType ?? undefined,
+    url: attachment.url,
+  })),
+  annotations: [{ original: message }],
+});

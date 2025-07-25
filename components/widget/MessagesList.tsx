@@ -1,17 +1,16 @@
 import { JSONValue } from "ai";
 import { Fragment } from "react";
 import { useStickToBottom } from "use-stick-to-bottom";
-import { Attachment } from "@/components/widget/Conversation";
+import { Message as HelperMessage } from "@helperai/client";
 import HelpingHand from "@/components/widget/HelpingHand";
-import Message, { MessageWithReaction } from "@/components/widget/Message";
+import Message from "@/components/widget/Message";
 import { cn } from "@/lib/utils";
 import { GuideInstructions } from "@/types/guide";
 import LoadingMessage from "./LoadingMessage";
 
 type Props = {
   data: JSONValue[] | null;
-  messages: MessageWithReaction[];
-  allAttachments: Attachment[];
+  messages: HelperMessage[];
   conversationSlug: string | null;
   isGumroadTheme: boolean;
   token: string | null;
@@ -25,7 +24,6 @@ export default function MessagesList({
   data,
   messages,
   conversationSlug,
-  allAttachments,
   isGumroadTheme,
   token,
   stopChat,
@@ -109,7 +107,6 @@ export default function MessagesList({
               key={`${message.id || index}-message`}
               message={message}
               allMessages={messages}
-              attachments={allAttachments.filter((a) => a.messageId === message.id)}
               conversationSlug={conversationSlug}
               token={token}
               data={index === messages.length - 1 ? data : null}
