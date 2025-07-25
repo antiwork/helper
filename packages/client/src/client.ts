@@ -1,16 +1,26 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { listenToRealtimeEvent } from "./realtime";
 import {
-  ConversationResult,
+  ConversationDetails,
   ConversationsResult,
   CreateConversationParams,
   CreateConversationResult,
   CreateSessionResult,
   HelperTool,
+  Message,
   SessionParams,
   UpdateConversationParams,
   UpdateConversationResult,
 } from "./types";
+
+type AIMessageCompat = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: Date;
+  experimental_attachments: { name?: string; contentType?: string; url: string }[];
+  annotations: any[];
+};
 
 export class HelperClient {
   public readonly host: string;
@@ -83,8 +93,8 @@ export class HelperClient {
   readonly conversations = {
     list: (): Promise<ConversationsResult> => this.request<ConversationsResult>("/api/chat/conversations"),
 
-    get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationResult> =>
-      this.request<ConversationResult>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
+    get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationDetails> =>
+      this.request<ConversationDetails>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
 
     create: (params: CreateConversationParams = {}): Promise<CreateConversationResult> =>
       this.request<CreateConversationResult>("/api/chat/conversation", {
@@ -104,51 +114,82 @@ export class HelperClient {
       conversation,
       tools = {},
     }: {
-      conversation: ConversationResult;
+      conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
-    }) => ({
-      initialMessages: conversation.messages,
-      fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
-        const token = await this.getToken();
-        return fetch(`${this.host}/api/chat`, {
-          ...init,
-          headers: {
-            ...init?.headers,
-            Authorization: `Bearer ${token}`,
+    }) => {
+      const formattedMessages = conversation.messages.map(formatMessage);
+
+      const guideMessages = conversation.experimental_guideSessions.map((session) => ({
+        id: `guide_session_${session.uuid}`,
+        role: "assistant" as const,
+        content: "",
+        parts: [
+          {
+            type: "tool-invocation" as const,
+            toolInvocation: {
+              toolName: "guide_user",
+              toolCallId: `guide_session_${session.uuid}`,
+              state: "call" as const,
+              args: {
+                pendingResume: true,
+                sessionId: session.uuid,
+                title: session.title,
+                instructions: session.instructions,
+              },
+            },
           },
-        });
-      },
-      experimental_prepareRequestBody: ({
-        messages,
-        id,
-        requestBody,
-      }: {
-        messages: any[];
-        id: string;
-        requestBody?: object;
-      }) => ({
-        id,
-        message: messages[messages.length - 1],
-        conversationSlug: conversation.slug,
-        tools: Object.entries(tools).map(([name, tool]) => ({
-          name,
-          description: tool.description,
-          parameters: tool.parameters,
-          serverRequestUrl: "url" in tool ? tool.url : undefined,
-        })),
-        requestBody,
-      }),
-      onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
-        const tool = tools[toolCall.toolName];
-        if (!tool) {
-          throw new Error(`Tool ${toolCall.toolName} not found`);
-        }
-        if (!("execute" in tool)) {
-          throw new Error(`Tool ${toolCall.toolName} is not executable on the client`);
-        }
-        return tool.execute(toolCall.args);
-      },
-    }),
+        ],
+        createdAt: new Date(session.createdAt),
+      }));
+
+      const allMessages = [...formattedMessages, ...guideMessages].toSorted(
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+      );
+
+      return {
+        initialMessages: allMessages,
+        fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
+          const token = await this.getToken();
+          return fetch(`${this.host}/api/chat`, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        },
+        experimental_prepareRequestBody: ({
+          messages,
+          id,
+          requestBody,
+        }: {
+          messages: any[];
+          id: string;
+          requestBody?: object;
+        }) => ({
+          id,
+          message: messages[messages.length - 1],
+          conversationSlug: conversation.slug,
+          tools: Object.entries(tools).map(([name, tool]) => ({
+            name,
+            description: tool.description,
+            parameters: tool.parameters,
+            serverRequestUrl: "url" in tool ? tool.url : undefined,
+          })),
+          requestBody,
+        }),
+        onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
+          const tool = tools[toolCall.toolName];
+          if (!tool) {
+            throw new Error(`Tool ${toolCall.toolName} not found`);
+          }
+          if (!("execute" in tool)) {
+            throw new Error(`Tool ${toolCall.toolName} is not executable on the client`);
+          }
+          return tool.execute(toolCall.args);
+        },
+      };
+    },
     listen: (
       conversationSlug: string,
       {
@@ -198,5 +239,46 @@ export class HelperClient {
         promise.then((unlisten) => unlisten());
       };
     },
+    message: (aiMessage: AIMessageCompat): Message => {
+      const original = aiMessage.annotations.find((annotation) => annotation.original)?.original;
+      if (original) return original;
+
+      const idFromAnnotation =
+        aiMessage.annotations?.find(
+          (annotation): annotation is { id: string | number } =>
+            typeof annotation === "object" && annotation !== null && "id" in annotation,
+        )?.id ?? null;
+      const persistedId = idFromAnnotation ? `${idFromAnnotation}` : aiMessage.id;
+
+      return {
+        id: persistedId,
+        role: aiMessage.role === "user" ? "user" : "assistant",
+        content: aiMessage.content,
+        createdAt: new Date(aiMessage.createdAt ?? Date.now()).toISOString(),
+        staffName: null,
+        reactionType: null,
+        reactionFeedback: null,
+        publicAttachments: aiMessage.experimental_attachments.map((attachment) => ({
+          name: attachment.name ?? null,
+          contentType: attachment.contentType ?? null,
+          url: attachment.url,
+        })),
+        privateAttachments: [],
+      };
+    },
+    messages: (aiMessages: AIMessageCompat[]) => aiMessages.map(this.chat.message),
   };
 }
+
+const formatMessage = (message: Message): AIMessageCompat => ({
+  id: message.id,
+  content: message.content,
+  role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
+  createdAt: new Date(message.createdAt),
+  experimental_attachments: message.publicAttachments.map((attachment) => ({
+    name: attachment.name ?? undefined,
+    contentType: attachment.contentType ?? undefined,
+    url: attachment.url,
+  })),
+  annotations: [{ original: message }],
+});

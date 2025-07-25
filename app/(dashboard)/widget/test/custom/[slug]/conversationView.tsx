@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ConversationResult } from "@helperai/client";
+import { ConversationDetails } from "@helperai/client";
 import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
   const router = useRouter();
-  const [conversation, setConversation] = useState<ConversationResult | null>(null);
+  const [conversation, setConversation] = useState<ConversationDetails | null>(null);
   const { client } = useHelperClientContext();
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
   );
 };
 
-const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
+const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
   const { client } = useHelperClientContext();
   const [isTyping, setIsTyping] = useState(false);
   const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
