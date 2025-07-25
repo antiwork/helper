@@ -268,6 +268,7 @@ export const MessageActions = () => {
         createdAt: new Date().toISOString(),
         reactionType: null,
         reactionFeedback: null,
+        reactionCreatedAt: null,
         publicAttachments: [],
         privateAttachments: attachments,
       } satisfies Message);
