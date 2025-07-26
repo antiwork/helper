@@ -52,10 +52,7 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
             .where(
               and(
                 eq(conversationMessages.conversationId, conversations.id),
-                or(
-                  isNull(conversations.lastReadAt),
-                  gt(conversationMessages.createdAt, conversations.lastReadAt)
-                ),
+                or(isNull(conversations.lastReadAt), gt(conversationMessages.createdAt, conversations.lastReadAt)),
               ),
             ),
         ),
