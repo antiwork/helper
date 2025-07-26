@@ -67,16 +67,15 @@ describe("GET /api/chat/conversations/unread", () => {
     mockMailbox = mailbox;
 
     const { conversation } = await conversationFactory.create({
-      mailboxId: mailbox.id,
+      unused_mailboxId: mailbox.id,
       anonymousSessionId,
       lastReadAt: null,
     });
 
-    await conversationMessagesFactory.create({
-      conversationId: conversation.id,
+    await conversationMessagesFactory.create(conversation.id, {
       createdAt: new Date(),
       role: "user",
-      content: "Test message",
+      body: "Test message",
     });
 
     const request = new Request("https://example.com/api/chat/conversations/unread");

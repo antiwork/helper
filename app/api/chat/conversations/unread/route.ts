@@ -25,7 +25,7 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   }
 
   const parsedParams = customerSearchSchema.safeParse({
-    status: searchParams.status,
+    ...searchParams,
     limit: searchParams.limit ? parseInt(searchParams.limit) : 1000,
   });
 
