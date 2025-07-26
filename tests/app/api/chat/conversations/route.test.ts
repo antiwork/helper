@@ -40,9 +40,12 @@ describe("GET /api/chat/conversations", () => {
       mockSession = { isAnonymous: true, anonymousSessionId };
       mockMailbox = mailbox;
 
-      // Create test conversation with anonymous session
       const { conversation } = await conversationFactory.create({
         anonymousSessionId,
+      });
+
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "user",
       });
 
       const response = await GET(request, { params: Promise.resolve({}) });
@@ -60,8 +63,12 @@ describe("GET /api/chat/conversations", () => {
       mockSession = { isAnonymous: false, email: testEmail };
       mockMailbox = mailbox;
 
-      // Create test conversation with email
       const { conversation } = await conversationFactory.create({
+        emailFrom: testEmail,
+      });
+
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "user",
         emailFrom: testEmail,
       });
 
@@ -88,7 +95,6 @@ describe("GET /api/chat/conversations", () => {
     it("should parse status parameter as array", async () => {
       const request = new Request("https://example.com/api/chat/conversations?status=open,closed");
 
-      // Create conversations with different statuses
       const { conversation: openConv } = await conversationFactory.create({
         status: "open",
         emailFrom: testEmail,
@@ -97,8 +103,21 @@ describe("GET /api/chat/conversations", () => {
         status: "closed",
         emailFrom: testEmail,
       });
-      await conversationFactory.create({
+      const { conversation: spamConv } = await conversationFactory.create({
         status: "spam",
+        emailFrom: testEmail,
+      });
+
+      await conversationMessagesFactory.create(openConv.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(closedConv.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(spamConv.id, {
+        role: "user",
         emailFrom: testEmail,
       });
 
@@ -115,10 +134,22 @@ describe("GET /api/chat/conversations", () => {
     it("should parse limit parameter", async () => {
       const request = new Request("https://example.com/api/chat/conversations?limit=2");
 
-      // Create 3 conversations but limit should return only 2
-      await conversationFactory.create({ emailFrom: testEmail });
-      await conversationFactory.create({ emailFrom: testEmail });
-      await conversationFactory.create({ emailFrom: testEmail });
+      const { conversation: conv1 } = await conversationFactory.create({ emailFrom: testEmail });
+      const { conversation: conv2 } = await conversationFactory.create({ emailFrom: testEmail });
+      const { conversation: conv3 } = await conversationFactory.create({ emailFrom: testEmail });
+
+      await conversationMessagesFactory.create(conv1.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(conv2.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(conv3.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
 
       const response = await GET(request, { params: Promise.resolve({}) });
       const result = await response.json();
@@ -164,6 +195,15 @@ describe("GET /api/chat/conversations", () => {
         emailFrom: testEmail,
       });
 
+      await conversationMessagesFactory.create(conv1.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(conv2.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+
       const response = await GET(request, { params: Promise.resolve({}) });
       const result = await response.json();
 
@@ -178,7 +218,7 @@ describe("GET /api/chat/conversations", () => {
       expect(conv1Result.slug).toBe(conv1.slug);
       expect(conv2Result.slug).toBe(conv2.slug);
       expect(conv1Result.createdAt).toBeDefined();
-      expect(conv1Result.messageCount).toBe(0);
+      expect(conv1Result.messageCount).toBe(1);
     });
 
     it("should handle search with multiple parameters", async () => {
@@ -186,24 +226,36 @@ describe("GET /api/chat/conversations", () => {
         "https://example.com/api/chat/conversations?createdAfter=2025-01-01T00:00:00.000Z&status=open&limit=5",
       );
 
-      // Create conversations with "test" in subject
       const { conversation: matchingConv } = await conversationFactory.create({
         subject: "This is a test conversation",
         status: "open",
         emailFrom: testEmail,
         createdAt: new Date("2025-01-02T00:00:00.000Z"),
       });
-      await conversationFactory.create({
+      const { conversation: dateConv } = await conversationFactory.create({
         subject: "This does not match",
         status: "open",
         emailFrom: testEmail,
         createdAt: new Date("2025-01-01T00:00:00.000Z"),
       });
-      await conversationFactory.create({
+      const { conversation: statusConv } = await conversationFactory.create({
         subject: "Another test but closed",
         status: "closed",
         emailFrom: testEmail,
         createdAt: new Date("2025-01-02T00:00:00.000Z"),
+      });
+
+      await conversationMessagesFactory.create(matchingConv.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(dateConv.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(statusConv.id, {
+        role: "user",
+        emailFrom: testEmail,
       });
 
       const response = await GET(request, { params: Promise.resolve({}) });
@@ -219,21 +271,30 @@ describe("GET /api/chat/conversations", () => {
       const anonymousSessionId = "anon456";
       mockSession = { isAnonymous: true, anonymousSessionId };
 
-      // Create conversations with anonymous session
       const { conversation: matchingConv } = await conversationFactory.create({
         subject: "I need help with my account",
         status: "closed",
         anonymousSessionId,
       });
-      await conversationFactory.create({
+      const { conversation: openConv } = await conversationFactory.create({
         subject: "Help me please",
         status: "open",
         anonymousSessionId,
       });
-      await conversationFactory.create({
+      const { conversation: differentSessionConv } = await conversationFactory.create({
         subject: "I need help",
         status: "closed",
         anonymousSessionId: "different-session",
+      });
+
+      await conversationMessagesFactory.create(matchingConv.id, {
+        role: "user",
+      });
+      await conversationMessagesFactory.create(openConv.id, {
+        role: "user",
+      });
+      await conversationMessagesFactory.create(differentSessionConv.id, {
+        role: "user",
       });
 
       const response = await GET(request, { params: Promise.resolve({}) });
@@ -242,6 +303,31 @@ describe("GET /api/chat/conversations", () => {
       expect(response.status).toBe(200);
       expect(result.conversations).toHaveLength(1);
       expect(result.conversations[0].slug).toBe(matchingConv.slug);
+    });
+
+    it("should not return conversations without messages", async () => {
+      const request = new Request("https://example.com/api/chat/conversations");
+
+      const { conversation: convWithMessage } = await conversationFactory.create({
+        subject: "Conversation with message",
+        emailFrom: testEmail,
+      });
+      const { conversation: _convWithoutMessage } = await conversationFactory.create({
+        subject: "Conversation without message",
+        emailFrom: testEmail,
+      });
+
+      await conversationMessagesFactory.create(convWithMessage.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+
+      const response = await GET(request, { params: Promise.resolve({}) });
+      const result = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(result.conversations).toHaveLength(1);
+      expect(result.conversations[0].slug).toBe(convWithMessage.slug);
     });
   });
 
@@ -259,9 +345,17 @@ describe("GET /api/chat/conversations", () => {
     it("should use default page size of 20", async () => {
       const request = new Request("https://example.com/api/chat/conversations");
 
-      // Create fewer than 20 conversations
-      await conversationFactory.create({ emailFrom: testEmail });
-      await conversationFactory.create({ emailFrom: testEmail });
+      const { conversation: conv1 } = await conversationFactory.create({ emailFrom: testEmail });
+      const { conversation: conv2 } = await conversationFactory.create({ emailFrom: testEmail });
+
+      await conversationMessagesFactory.create(conv1.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
+      await conversationMessagesFactory.create(conv2.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
 
       const response = await GET(request, { params: Promise.resolve({}) });
       const result = await response.json();
@@ -273,14 +367,17 @@ describe("GET /api/chat/conversations", () => {
     it("should handle cursor parameter", async () => {
       const request = new Request("https://example.com/api/chat/conversations?cursor=cursor-123");
 
-      // Create a conversation
-      await conversationFactory.create({ emailFrom: testEmail });
+      const { conversation } = await conversationFactory.create({ emailFrom: testEmail });
+
+      await conversationMessagesFactory.create(conversation.id, {
+        role: "user",
+        emailFrom: testEmail,
+      });
 
       const response = await GET(request, { params: Promise.resolve({}) });
       const result = await response.json();
 
       expect(response.status).toBe(200);
-      // The cursor functionality is handled by the search function
       expect(result.nextCursor).toBeDefined();
     });
   });
