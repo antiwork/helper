@@ -30,6 +30,7 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   });
 
   if (!parsedParams.success) {
+    console.error('Validation failed:', JSON.stringify(parsedParams.error.issues, null, 2));
     return Response.json({ error: "Invalid search parameters", details: parsedParams.error.issues }, { status: 400 });
   }
 
