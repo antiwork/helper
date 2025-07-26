@@ -94,7 +94,8 @@ export class HelperClient {
   readonly conversations = {
     list: (): Promise<ConversationsResult> => this.request<ConversationsResult>("/api/chat/conversations"),
 
-    unread: (): Promise<UnreadConversationsCountResult> => this.request<UnreadConversationsCountResult>("/api/chat/conversations/unread"),
+    unread: (): Promise<UnreadConversationsCountResult> =>
+      this.request<UnreadConversationsCountResult>("/api/chat/conversations/unread"),
 
     get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationDetails> =>
       this.request<ConversationDetails>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
