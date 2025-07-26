@@ -1,9 +1,9 @@
-import { and, count, exists, gt, inArray, eq } from "drizzle-orm";
+import { and, count, eq, exists, gt, inArray } from "drizzle-orm";
+import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
 import { searchConversations } from "@/lib/data/conversation/search";
-import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const url = new URL(request.url);
