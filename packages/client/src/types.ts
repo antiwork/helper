@@ -112,3 +112,8 @@ export const conversationListSchema = z.object({
   nextCursor: z.nullable(z.string()),
 });
 export type ConversationsResult = z.infer<typeof conversationListSchema>;
+
+export const unreadConversationsCountSchema = z.object({
+  count: z.number(),
+});
+export type UnreadConversationsCountResult = z.infer<typeof unreadConversationsCountSchema>;

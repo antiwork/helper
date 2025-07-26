@@ -5,18 +5,15 @@ import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSche
 import { searchConversations } from "@/lib/data/conversation/search";
 import { ConversationsResult } from "@/packages/client/dist";
 import { corsResponse, withWidgetAuth } from "../../widget/utils";
+import { getCustomerFilterForSearch } from "@/lib/auth/customerFilter";
 
 const PAGE_SIZE = 20;
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const url = new URL(request.url);
 
-  let customerFilter;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    customerFilter = { anonymousSessionId: session.anonymousSessionId };
-  } else if (session.email) {
-    customerFilter = { customer: [session.email] };
-  } else {
+  const customerFilter = getCustomerFilterForSearch(session);
+  if (!customerFilter) {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
 
