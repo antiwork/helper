@@ -26,11 +26,10 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
 
   const parsedParams = customerSearchSchema.safeParse({
     ...searchParams,
-    limit: searchParams.limit ? parseInt(searchParams.limit) : 1000,
+    limit: searchParams.limit ? parseInt(searchParams.limit) : 100,
   });
 
   if (!parsedParams.success) {
-    console.error('Validation failed:', JSON.stringify(parsedParams.error.issues, null, 2));
     return Response.json({ error: "Invalid search parameters", details: parsedParams.error.issues }, { status: 400 });
   }
 
