@@ -3,14 +3,11 @@ import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { UnreadConversationsCountResult } from "@/packages/client";
+import { getCustomerFilter } from "@/lib/auth/customerFilter";
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  let customerFilter;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    customerFilter = eq(conversations.anonymousSessionId, session.anonymousSessionId);
-  } else if (session.email) {
-    customerFilter = eq(conversations.customer, session.email);
-  } else {
+  const customerFilter = getCustomerFilter(session);
+  if (!customerFilter) {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
 

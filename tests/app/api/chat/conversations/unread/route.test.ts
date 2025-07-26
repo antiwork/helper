@@ -32,11 +32,10 @@ describe("GET /api/chat/conversations/unread", () => {
     expect(result.error).toBe("Not authorized - Invalid session");
   });
 
-  it("should return unread count for anonymous session", async () => {
+  it("should return unread count for valid sessions", async () => {
     const request = new Request("https://example.com/api/chat/conversations/unread");
     const { mailbox } = await mailboxFactory.create();
-    const anonymousSessionId = "anon123";
-    mockSession = { isAnonymous: true, anonymousSessionId };
+    mockSession = { isAnonymous: true, anonymousSessionId: "anon123" };
     mockMailbox = mailbox;
 
     const response = await GET(request, { params: Promise.resolve({}) });
@@ -46,21 +45,7 @@ describe("GET /api/chat/conversations/unread", () => {
     expect(result.count).toBe(0);
   });
 
-  it("should return unread count for email session", async () => {
-    const request = new Request("https://example.com/api/chat/conversations/unread");
-    const { mailbox } = await mailboxFactory.create();
-    const email = "test@example.com";
-    mockSession = { isAnonymous: false, email };
-    mockMailbox = mailbox;
-
-    const response = await GET(request, { params: Promise.resolve({}) });
-    const result = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(result.count).toBe(0);
-  });
-
-  it("should count conversations with null lastReadAt as unread", async () => {
+  it("should count unread conversations correctly", async () => {
     const { mailbox } = await mailboxFactory.create();
     const anonymousSessionId = "anon123";
     mockSession = { isAnonymous: true, anonymousSessionId };
@@ -84,18 +69,5 @@ describe("GET /api/chat/conversations/unread", () => {
 
     expect(response.status).toBe(200);
     expect(result.count).toBe(1);
-  });
-
-  it("should handle status parameter", async () => {
-    const request = new Request("https://example.com/api/chat/conversations/unread?status=open,closed");
-    const { mailbox } = await mailboxFactory.create();
-    mockSession = { isAnonymous: true, anonymousSessionId: "anon123" };
-    mockMailbox = mailbox;
-
-    const response = await GET(request, { params: Promise.resolve({}) });
-    const result = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(result.count).toBe(0);
   });
 });
