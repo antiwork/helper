@@ -6,6 +6,7 @@ import { AssigneeFilter } from "./filters/assigneeFilter";
 import { CustomerFilter } from "./filters/customerFilter";
 import { DateFilter } from "./filters/dateFilter";
 import { EventFilter } from "./filters/eventFilter";
+import { IssueGroupFilter } from "./filters/issueGroupFilter";
 import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
@@ -21,6 +22,7 @@ interface FilterValues {
   isPrompt: boolean | undefined;
   reactionType: "thumbs-up" | "thumbs-down" | null;
   events: ("request_human_support" | "resolved_by_ai")[];
+  issueGroupId: number | null;
 }
 
 interface ConversationFiltersProps {
@@ -43,6 +45,7 @@ export const useConversationFilters = () => {
     isPrompt: searchParams.isPrompt ?? undefined,
     reactionType: searchParams.reactionType ?? null,
     events: searchParams.events ?? [],
+    issueGroupId: searchParams.issueGroupId ?? null,
   });
 
   const activeFilterCount = useMemo(() => {
@@ -55,6 +58,7 @@ export const useConversationFilters = () => {
     if (filterValues.isPrompt !== undefined) count++;
     if (filterValues.reactionType !== null) count++;
     if (filterValues.events.length > 0) count++;
+    if (filterValues.issueGroupId !== null) count++;
     return count;
   }, [filterValues]);
 
@@ -73,6 +77,7 @@ export const useConversationFilters = () => {
       isPrompt: searchParams.isPrompt ?? undefined,
       reactionType: searchParams.reactionType ?? null,
       events: searchParams.events ?? [],
+      issueGroupId: searchParams.issueGroupId ?? null,
     });
   }, [searchParams]);
 
@@ -92,6 +97,7 @@ export const useConversationFilters = () => {
       isPrompt: null,
       reactionType: null,
       events: null,
+      issueGroupId: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
   };
@@ -138,6 +144,10 @@ export const ConversationFilters = ({
       />
       <EventFilter selectedEvents={filterValues.events} onChange={(events) => onUpdateFilter({ events })} />
       <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => onUpdateFilter({ isPrompt })} />
+      <IssueGroupFilter
+        issueGroupId={filterValues.issueGroupId}
+        onChange={(issueGroupId) => onUpdateFilter({ issueGroupId })}
+      />
       {activeFilterCount > 0 && (
         <Button data-testid="clear-filters-button" variant="ghost" onClick={onClearFilters}>
           Clear filters

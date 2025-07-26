@@ -6,6 +6,7 @@ import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationEvents } from "./conversationEvents";
 import { conversationMessages } from "./conversationMessages";
+import { issueGroups } from "./issueGroups";
 import { platformCustomers } from "./platformCustomers";
 
 export const conversations = pgTable(
@@ -39,6 +40,7 @@ export const conversations = pgTable(
     assignedToAI: boolean().notNull().default(false),
     mergedIntoId: bigint({ mode: "number" }),
     anonymousSessionId: text(),
+    issueGroupId: bigint("issue_group_id", { mode: "number" }),
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }
@@ -66,6 +68,7 @@ export const conversations = pgTable(
     unique("conversations_conversation_slug_key").on(table.slug),
     index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
+    index("conversations_issue_group_id_idx").on(table.issueGroupId),
     index("conversations_conversation_status_last_user_email_created_at_idx")
       .on(table.status, table.lastUserEmailCreatedAt.desc().nullsLast())
       .where(isNull(table.mergedIntoId)),
@@ -83,6 +86,10 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platformCustomers.email],
   }),
   events: many(conversationEvents),
+  issueGroup: one(issueGroups, {
+    fields: [conversations.issueGroupId],
+    references: [issueGroups.id],
+  }),
   mergedInto: one(conversations, {
     fields: [conversations.mergedIntoId],
     references: [conversations.id],

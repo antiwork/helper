@@ -10,4 +10,5 @@ export const publicConversationChannelId = (conversationSlug: string) => ({
   private: false,
 });
 
+export const issueGroupsChannelId = () => `issue-groups`;
 export const dashboardChannelId = () => ({ name: `dashboard`, private: true });

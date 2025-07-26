@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
+import { BookOpen, Layers, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
 import { useParams } from "next/navigation";
 import Loading from "@/app/(dashboard)/loading";
 import { FileUploadProvider } from "@/components/fileUploadContext";
@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { api } from "@/trpc/react";
 import ChatWidgetSetting from "../chat/chatWidgetSetting";
+import CommonIssuesSetting from "../common-issues/commonIssuesSetting";
 import AutoCloseSetting from "../customers/autoCloseSetting";
 import CustomerSetting from "../customers/customerSetting";
 import ConnectSupportEmail from "../integrations/connectSupportEmail";
@@ -21,7 +22,7 @@ import MetadataEndpointSetting from "../tools/metadataEndpointSetting";
 import ToolSetting from "../tools/toolSetting";
 
 export default function TabsPage() {
-  const params = useParams<{ mailbox_slug: string; tab: string }>();
+  const params = useParams<{ tab: string }>();
   const { data: mailbox, error } = api.mailbox.get.useQuery();
   useDocumentTitle("Settings");
 
@@ -40,6 +41,12 @@ export default function TabsPage() {
       id: "team",
       icon: Users,
       content: <TeamSetting />,
+    },
+    {
+      label: "Common Issues",
+      id: "common-issues",
+      icon: Layers,
+      content: <CommonIssuesSetting />,
     },
     {
       label: "Customers",

@@ -23,6 +23,7 @@ const events = {
       "mergeSimilarConversations",
       "publishNewConversationEvent",
       "notifyVipMessage",
+      "categorizeConversationToIssueGroup",
     ],
   },
   "conversations/email.enqueued": {
