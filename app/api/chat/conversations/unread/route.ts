@@ -1,9 +1,10 @@
-import { and, count, eq, exists, gt, inArray } from "drizzle-orm";
+import { and, count, eq, exists, gt, inArray, isNull, or } from "drizzle-orm";
 import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
 import { searchConversations } from "@/lib/data/conversation/search";
+import { UnreadConversationsCountResult } from "@/packages/client/src/types";
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const url = new URL(request.url);
@@ -24,8 +25,8 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   }
 
   const parsedParams = customerSearchSchema.safeParse({
-    ...searchParams,
-    limit: 1000,
+    status: searchParams.status,
+    limit: searchParams.limit ? parseInt(searchParams.limit) : 1000,
   });
 
   if (!parsedParams.success) {
@@ -51,14 +52,17 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
             .where(
               and(
                 eq(conversationMessages.conversationId, conversations.id),
-                gt(conversationMessages.createdAt, conversations.lastReadAt),
+                or(
+                  isNull(conversations.lastReadAt),
+                  gt(conversationMessages.createdAt, conversations.lastReadAt)
+                ),
               ),
             ),
         ),
       ),
     );
 
-  return corsResponse({
+  return corsResponse<UnreadConversationsCountResult>({
     count: unreadCount[0]?.count ?? 0,
   });
 });
