@@ -156,7 +156,7 @@ describe("GET /api/chat/conversations/unread", () => {
       const request = new Request("https://example.com/api/chat/conversations/unread");
 
       const lastReadTime = new Date("2025-01-02T12:00:00.000Z");
-      
+
       const { conversation: unreadConv1 } = await conversationFactory.create({
         emailFrom: testEmail,
         lastReadAt: lastReadTime,
