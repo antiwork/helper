@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ConversationDetails } from "@helperai/client";
 import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { Button } from "@/components/ui/button";
@@ -30,15 +30,20 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to conversations
         </Button>
-        <h2 className="font-semibold">{conversation?.subject || "Conversation"}</h2>
+        <h2 className="font-semibold">{conversation?.subject || "Chat"}</h2>
       </div>
-
-      {conversation && <ChatView conversation={conversation} />}
+      {conversation && <ChatView conversation={conversation} setConversation={setConversation} />}
     </div>
   );
 };
 
-const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
+const ChatView = ({
+  conversation,
+  setConversation,
+}: {
+  conversation: ConversationDetails;
+  setConversation: Dispatch<SetStateAction<ConversationDetails | null>>;
+}) => {
   const { client } = useHelperClientContext();
   const [isTyping, setIsTyping] = useState(false);
   const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
@@ -59,7 +64,10 @@ const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
   });
 
   useEffect(() => {
-    const unlisten = client.chat.listen(conversation.slug, {
+    const unlisten = client.conversations.listen(conversation.slug, {
+      onSubjectChanged: (subject) => {
+        setConversation((conversation) => (conversation ? { ...conversation, subject } : null));
+      },
       onHumanReply: (message) => {
         setMessages((prev) => [...prev, message]);
       },

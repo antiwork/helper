@@ -107,6 +107,68 @@ export class HelperClient {
         method: "PATCH",
         body: JSON.stringify(params),
       }),
+
+    listen: (
+      conversationSlug: string,
+      {
+        onHumanReply,
+        onTyping,
+        onSubjectChanged,
+      }: {
+        onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+        onTyping?: (isTyping: boolean) => void;
+        onSubjectChanged?: (subject: string) => void;
+      },
+    ) => {
+      const promise = this.getSupabase().then((supabase) => {
+        let agentTypingTimeout: NodeJS.Timeout | null = null;
+
+        const unlistenAgentTyping = listenToRealtimeEvent(
+          supabase,
+          `public:conversation-${conversationSlug}`,
+          "agent-typing",
+          () => {
+            onTyping?.(true);
+            if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
+            agentTypingTimeout = setTimeout(() => onTyping?.(false), 10000);
+          },
+        );
+
+        const unlistenAgentReply = listenToRealtimeEvent(
+          supabase,
+          `public:conversation-${conversationSlug}`,
+          "agent-reply",
+          (event) => {
+            onTyping?.(false);
+            onHumanReply?.({
+              id: `staff_${Date.now()}`,
+              content: event.data.message,
+              role: "assistant",
+            });
+            this.conversations.update(conversationSlug, { markRead: true });
+          },
+        );
+
+        const unlistenConversationSubject = listenToRealtimeEvent(
+          supabase,
+          `public:conversation-${conversationSlug}`,
+          "conversation-subject",
+          (event) => {
+            onSubjectChanged?.(event.data.subject);
+          },
+        );
+
+        return () => {
+          unlistenAgentTyping();
+          unlistenAgentReply();
+          unlistenConversationSubject();
+        };
+      });
+
+      return () => {
+        promise.then((unlisten) => unlisten());
+      };
+    },
   };
 
   readonly chat = {
@@ -188,55 +250,6 @@ export class HelperClient {
           }
           return tool.execute(toolCall.args);
         },
-      };
-    },
-    listen: (
-      conversationSlug: string,
-      {
-        onHumanReply,
-        onTyping,
-      }: {
-        onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
-        onTyping?: (isTyping: boolean) => void;
-      },
-    ) => {
-      const promise = this.getSupabase().then((supabase) => {
-        let agentTypingTimeout: NodeJS.Timeout | null = null;
-
-        const unlistenAgentTyping = listenToRealtimeEvent(
-          supabase,
-          `public:conversation-${conversationSlug}`,
-          "agent-typing",
-          () => {
-            onTyping?.(true);
-            if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
-            agentTypingTimeout = setTimeout(() => onTyping?.(false), 10000);
-          },
-        );
-
-        const unlistenAgentReply = listenToRealtimeEvent(
-          supabase,
-          `public:conversation-${conversationSlug}`,
-          "agent-reply",
-          (event) => {
-            onTyping?.(false);
-            onHumanReply?.({
-              id: `staff_${Date.now()}`,
-              content: event.data.message,
-              role: "assistant",
-            });
-            this.conversations.update(conversationSlug, { markRead: true });
-          },
-        );
-
-        return () => {
-          unlistenAgentTyping();
-          unlistenAgentReply();
-        };
-      });
-
-      return () => {
-        promise.then((unlisten) => unlisten());
       };
     },
     message: (aiMessage: AIMessageCompat): Message => {
