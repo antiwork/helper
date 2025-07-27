@@ -48,19 +48,37 @@ After creating the HelperClient instance, render a conversations component with 
 - When the selected slug is not null, it should instead render a conversation detail component which:
   - Fetches the conversation details using the \`client.conversations.get()\` method
   - Displays the conversation subject as the page heading
-  - Renders a child component when the details have been loaded which:
+  - Renders a child \`HelperChat\` component when the details have been loaded which:
     - Takes the loaded conversation details as a prop
-    - Calls \`const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat(...)\` from the Vercel AI SDK, passing in the result of \`client.chat.handler({ conversation })\`
-    - Displays the content of the chat messages using \`messages.map(({ content, role, staffName, createdAt }) => ...)\`
+    - Calls \`const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({ ...client.chat.handler({ conversation }) })\` from the Vercel AI SDK
+    - Displays the content of the chat messages using \`client.chat.messages(messages).map(({ content, role, staffName, createdAt }) => ...)\`
     - Displays an input field to add a new message to the conversation as described in the Vercel AI SDK docs (i.e. controlled using \`input\`, \`handleInputChange\`, and \`handleSubmit\`)
 
-## 5. New ticket button
+## 5. Real-time updates
+
+In the conversation details view after the \`useChat\` hook, add a \`useEffect\` hook that calls \`client.conversations.listen\` similar to this:
+
+\`\`\`tsx
+useEffect(() => {
+  const unlisten = client.conversations.listen(conversation.slug, {
+    onSubjectChanged: (subject) => {
+      setConversation((conversation) => (conversation ? { ...conversation, subject } : null));
+    },
+    onHumanReply: (message) => {
+      setMessages((prev) => [...prev, message]);
+    },
+  });
+  return () => unlisten();
+}, [conversation.slug, client]);
+\`\`\`
+
+## 6. New ticket button
 
 - Above the conversation list, add a new ticket button which:
   - Uses the \`client.conversations.create()\` method to create a new conversation
   - Sets the \`selectedConversationSlug\` state variable to the new conversation's slug
 
-## 6. Final steps
+## 7. Final steps
 
 - Tell me the route of the conversation list page you created
 - Tell me how to add the Helper HMAC secret configuration (note: the secret itself is available at ${actualHost}/settings/in-app-chat under "Authenticate your users")

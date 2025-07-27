@@ -5,9 +5,11 @@ import { conversationMessages } from "@/db/schema";
 import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
 import { searchConversations } from "@/lib/data/conversation/search";
 import { ConversationsResult } from "@/packages/client/dist";
-import { corsResponse, withWidgetAuth } from "../../widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
+
+export const OPTIONS = corsOptions("GET");
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const url = new URL(request.url);

@@ -1,6 +1,6 @@
 {
   "name": "@helperai/client",
-  "version": "0.1.1",
+  "version": "0.2.4",
   "description": "Helper API client for integrating customer support features",
   "keywords": [
     "helper",
@@ -43,7 +43,8 @@
     "dev": "pnpm build --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

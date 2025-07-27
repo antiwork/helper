@@ -16,11 +16,11 @@ import {
 
 type AIMessageCompat = {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system" | "data";
   content: string;
-  createdAt: Date;
-  experimental_attachments: { name?: string; contentType?: string; url: string }[];
-  annotations: any[];
+  createdAt?: Date;
+  experimental_attachments?: { name?: string; contentType?: string; url: string }[];
+  annotations?: any[] | undefined;
 };
 
 export class HelperClient {
@@ -209,7 +209,7 @@ export class HelperClient {
       }));
 
       const allMessages = [...formattedMessages, ...guideMessages].toSorted(
-        (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+        (a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0),
       );
 
       return {
@@ -257,7 +257,7 @@ export class HelperClient {
       };
     },
     message: (aiMessage: AIMessageCompat): Message => {
-      const original = aiMessage.annotations.find((annotation) => annotation.original)?.original;
+      const original = aiMessage.annotations?.find((annotation) => annotation.original)?.original;
       if (original) return original;
 
       const idFromAnnotation =
@@ -276,7 +276,7 @@ export class HelperClient {
         reactionType: null,
         reactionFeedback: null,
         reactionCreatedAt: null,
-        publicAttachments: aiMessage.experimental_attachments.map((attachment) => ({
+        publicAttachments: (aiMessage.experimental_attachments ?? []).map((attachment) => ({
           name: attachment.name ?? null,
           contentType: attachment.contentType ?? null,
           url: attachment.url,

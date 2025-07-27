@@ -48,9 +48,7 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
   return conversation;
 };
 
-export function OPTIONS() {
-  return corsOptions();
-}
+export const OPTIONS = corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();

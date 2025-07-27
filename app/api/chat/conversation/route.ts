@@ -9,9 +9,7 @@ import { createConversationParamsSchema } from "@/packages/client/dist";
 const VIP_INITIAL_STATUS = "open";
 const DEFAULT_INITIAL_STATUS = "closed";
 
-export function OPTIONS() {
-  return corsOptions();
-}
+export const OPTIONS = corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const parsedParams = createConversationParamsSchema.safeParse(await request.json());

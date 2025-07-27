@@ -1,9 +1,11 @@
 import { and, count, eq, exists, gt, isNull, or } from "drizzle-orm";
 import { UnreadConversationsCountResult } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
-import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
+
+export const OPTIONS = corsOptions("GET");
 
 export const GET = withWidgetAuth(async (_, { session }) => {
   const customerFilter = getCustomerFilter(session);
