@@ -9,7 +9,7 @@ import { corsOptions, corsResponse, withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
-export const OPTIONS = corsOptions("GET");
+export const OPTIONS = () => corsOptions("GET");
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const url = new URL(request.url);

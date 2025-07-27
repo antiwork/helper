@@ -9,7 +9,7 @@ import { formatAttachments } from "@/lib/data/files";
 import { getBasicProfileById } from "@/lib/data/user";
 import { ConversationDetails, updateConversationParamsSchema, UpdateConversationResult } from "@/packages/client/dist";
 
-export const OPTIONS = corsOptions("GET", "PATCH");
+export const OPTIONS = () => corsOptions("GET", "PATCH");
 
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;

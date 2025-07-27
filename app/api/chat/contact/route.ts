@@ -12,7 +12,7 @@ const requestSchema = z.object({
   message: z.string().min(1),
 });
 
-export const OPTIONS = corsOptions("POST");
+export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
   const body = await request.json();

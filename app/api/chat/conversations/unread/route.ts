@@ -5,7 +5,7 @@ import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/util
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 
-export const OPTIONS = corsOptions("GET");
+export const OPTIONS = () => corsOptions("GET");
 
 export const GET = withWidgetAuth(async (_, { session }) => {
   const customerFilter = getCustomerFilter(session);

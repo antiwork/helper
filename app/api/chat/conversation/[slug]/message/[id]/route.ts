@@ -11,7 +11,7 @@ import { getMailbox } from "@/lib/data/mailbox";
 import { dashboardChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
-export const OPTIONS = corsOptions("POST");
+export const OPTIONS = () => corsOptions("POST");
 
 const MessageReactionSchema = z.discriminatedUnion("type", [
   z.object({
