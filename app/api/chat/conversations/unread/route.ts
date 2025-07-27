@@ -1,11 +1,11 @@
 import { and, count, eq, exists, gt, isNull, or } from "drizzle-orm";
+import { UnreadConversationsCountResult } from "@helperai/client";
+import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
-import { UnreadConversationsCountResult } from "@/packages/client";
-import { getCustomerFilter } from "@/lib/auth/customerFilter";
 
-export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
+export const GET = withWidgetAuth(async (_, { session }) => {
   const customerFilter = getCustomerFilter(session);
   if (!customerFilter) {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
@@ -16,7 +16,6 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
     .from(conversations)
     .where(
       and(
-        eq(conversations.mailboxId, mailbox.id),
         customerFilter,
         exists(
           db
