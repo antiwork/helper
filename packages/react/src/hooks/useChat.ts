@@ -27,7 +27,7 @@ export const useChat = ({
   isLoading: boolean;
   error: Error | undefined;
 } => {
-  const client = useHelperClient();
+  const { client } = useHelperClient();
   const [agentTyping, setAgentTyping] = useState(false);
 
   const chatHandler = useMemo(() => client.chat.handler({ conversation, tools }), [client, conversation, tools]);

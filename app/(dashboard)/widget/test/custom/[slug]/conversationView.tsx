@@ -13,14 +13,7 @@ import { useConversation } from "@/packages/react/src/hooks/useConversations";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
   const router = useRouter();
-  const {
-    data: conversation,
-    isLoading,
-    error,
-  } = useConversation(conversationSlug, {
-    markRead: true,
-    enableRealtime: true,
-  });
+  const { data: conversation, isLoading, error } = useConversation(conversationSlug);
 
   if (isLoading) {
     return <div className="p-4">Loading conversation...</div>;
@@ -53,7 +46,7 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
 };
 
 const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
-  const client = useHelperClient();
+  const { client } = useHelperClient();
   const [isTyping, setIsTyping] = useState(false);
   const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
     ...client.chat.handler({

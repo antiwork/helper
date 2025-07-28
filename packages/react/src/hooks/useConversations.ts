@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import { useMutation, UseMutationOptions, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { useEffect } from "react";
 import type {
   ConversationDetails,
@@ -12,7 +12,7 @@ import type {
 import { useHelperClient } from "../components/helperClientProvider";
 
 export const useConversations = (queryOptions?: Partial<UseQueryOptions<ConversationsResult>>) => {
-  const client = useHelperClient();
+  const { client } = useHelperClient();
   return useQuery({
     queryKey: ["conversations"],
     queryFn: () => client.conversations.list(),
@@ -25,8 +25,7 @@ export const useConversation = (
   options?: { markRead?: boolean; enableRealtime?: boolean },
   queryOptions?: Partial<UseQueryOptions<ConversationDetails>>,
 ) => {
-  const client = useHelperClient();
-  const queryClient = useQueryClient();
+  const { client, queryClient } = useHelperClient();
 
   useEffect(() => {
     if (options?.enableRealtime === false) return;
@@ -43,18 +42,25 @@ export const useConversation = (
     return unlisten;
   }, [slug, options?.enableRealtime]);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["conversation", slug],
     queryFn: () => client.conversations.get(slug, options),
     enabled: !!slug,
     ...queryOptions,
   });
+
+  useEffect(() => {
+    if (query.data && options?.markRead !== false)
+      queryClient.invalidateQueries({ queryKey: ["conversations", "unread"] });
+  }, [query.data, options?.markRead]);
+
+  return query;
 };
 
 export const useUnreadConversationsCount = (
   queryOptions?: Partial<UseQueryOptions<UnreadConversationsCountResult>>,
 ) => {
-  const client = useHelperClient();
+  const { client } = useHelperClient();
   return useQuery({
     queryKey: ["conversations", "unread"],
     queryFn: () => client.conversations.unread(),
@@ -65,8 +71,7 @@ export const useUnreadConversationsCount = (
 export const useCreateConversation = (
   mutationOptions?: Partial<UseMutationOptions<any, Error, CreateConversationParams>>,
 ) => {
-  const client = useHelperClient();
-  const queryClient = useQueryClient();
+  const { client, queryClient } = useHelperClient();
 
   return useMutation({
     mutationFn: (params: CreateConversationParams = {}) => client.conversations.create(params),
@@ -81,8 +86,7 @@ export const useCreateConversation = (
 export const useUpdateConversation = (
   mutationOptions?: Partial<UseMutationOptions<any, Error, { slug: string; params: UpdateConversationParams }>>,
 ) => {
-  const client = useHelperClient();
-  const queryClient = useQueryClient();
+  const { client, queryClient } = useHelperClient();
 
   return useMutation({
     mutationFn: ({ slug, params }: { slug: string; params: UpdateConversationParams }) =>

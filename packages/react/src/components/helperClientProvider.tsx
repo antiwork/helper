@@ -4,14 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { createContext, ReactNode, useContext, useMemo, useState } from "react";
 import { HelperClient, SessionParams } from "@helperai/client";
 
-const HelperClientContext = createContext<{ client: HelperClient } | null>(null);
+const HelperClientContext = createContext<{ client: HelperClient; queryClient: QueryClient } | null>(null);
 
 export const useHelperClient = () => {
   const context = useContext(HelperClientContext);
   if (!context) {
     throw new Error("useHelperClient must be used within HelperClientProvider");
   }
-  return context.client;
+  return context;
 };
 
 export interface HelperClientProviderProps {
@@ -27,7 +27,9 @@ export const HelperClientProvider = ({ host, session, children, queryClient }: H
 
   return (
     <QueryClientProvider client={queryClient || defaultQueryClient}>
-      <HelperClientContext.Provider value={{ client }}>{children}</HelperClientContext.Provider>
+      <HelperClientContext.Provider value={{ client, queryClient: queryClient || defaultQueryClient }}>
+        {children}
+      </HelperClientContext.Provider>
     </QueryClientProvider>
   );
 };

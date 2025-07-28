@@ -5,7 +5,7 @@ import type { SessionParams } from "@helperai/client";
 import { useHelperClient } from "../components/helperClientProvider";
 
 export const useCreateSession = (mutationOptions?: Partial<UseMutationOptions<any, Error, SessionParams>>) => {
-  const client = useHelperClient();
+  const { client } = useHelperClient();
 
   return useMutation({
     mutationFn: (params: SessionParams) => client.sessions.create(params),
