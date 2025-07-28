@@ -51,14 +51,17 @@
     "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
+    "@ai-sdk/react": ">=0.0.0",
     "react": ">=18",
-    "react-dom": ">=18",
-    "@ai-sdk/react": ">=0.0.0"
+    "react-dom": ">=18"
   },
   "dependencies": {
     "@helperai/client": "workspace:*",
     "@tanstack/react-query": "^5.0.0",
-    "react-markdown": "^9.0.0"
+    "react-markdown": "^9.1.0",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

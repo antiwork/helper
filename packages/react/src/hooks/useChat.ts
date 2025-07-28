@@ -8,11 +8,13 @@ import { useHelperClient } from "../components/helperClientProvider";
 export interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
+  onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
 }
 
 export const useChat = ({
   conversation,
   tools = {},
+  onHumanReply,
 }: UseChatProps): {
   messages: any[];
   setMessages: (messages: any[]) => void;
@@ -36,7 +38,9 @@ export const useChat = ({
 
   useEffect(() => {
     const unlisten = client.conversations.listen(conversation.slug, {
-      onHumanReply: (message: any) => {},
+      onHumanReply: (message: { id: string; content: string; role: "assistant" }) => {
+        onHumanReply?.(message);
+      },
       onTyping: (isTyping: boolean) => {
         setAgentTyping(isTyping);
       },
@@ -44,7 +48,7 @@ export const useChat = ({
     });
 
     return unlisten;
-  }, [conversation, tools, client]);
+  }, [conversation, tools, client, onHumanReply]);
 
   return {
     messages: client.chat.messages(messages),
