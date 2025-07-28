@@ -5,11 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ConversationDetails } from "@helperai/client";
+import { useConversation, useHelperClient } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useHelperClient } from "@/packages/react/src/components/helperClientProvider";
-import { useConversation } from "@/packages/react/src/hooks/useConversations";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
   const router = useRouter();

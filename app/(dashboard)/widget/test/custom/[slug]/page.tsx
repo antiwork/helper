@@ -1,7 +1,7 @@
+import { HelperClientProvider } from "@helperai/react";
 import { ConversationView } from "@/app/(dashboard)/widget/test/custom/[slug]/conversationView";
 import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
 import { getBaseUrl } from "@/components/constants";
-import { HelperClientProvider } from "@/packages/react/src/components/helperClientProvider";
 
 export const dynamic = "force-dynamic";
 

@@ -50,7 +50,7 @@ export const useChat = ({
     });
 
     return unlisten;
-  }, [conversation, client, setMessages]);
+  }, [enableRealtime, conversation, client, setMessages]);
 
   return {
     messages: client.chat.messages(messages),

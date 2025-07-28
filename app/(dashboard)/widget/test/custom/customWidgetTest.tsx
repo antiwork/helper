@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useConversations, useCreateConversation } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
-import { useConversations, useCreateConversation } from "@/packages/react/src/hooks/useConversations";
 
 export const CustomWidgetTest = () => {
   const { data: conversationsData, isLoading: loading, error } = useConversations();

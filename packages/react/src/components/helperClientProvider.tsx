@@ -22,7 +22,7 @@ export interface HelperClientProviderProps {
 }
 
 export const HelperClientProvider = ({ host, session, children, queryClient }: HelperClientProviderProps) => {
-  const client = useMemo(() => new HelperClient({ host, ...session }), [host, session]);
+  const client = useMemo(() => new HelperClient({ host, ...session }), [host, JSON.stringify(session)]);
   const [defaultQueryClient] = useState(() => new QueryClient());
 
   return (

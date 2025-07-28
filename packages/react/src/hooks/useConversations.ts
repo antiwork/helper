@@ -40,7 +40,7 @@ export const useConversation = (
     });
 
     return unlisten;
-  }, [slug, options?.enableRealtime]);
+  }, [client, queryClient, slug, options?.enableRealtime]);
 
   const query = useQuery({
     queryKey: ["conversation", slug],
@@ -52,7 +52,7 @@ export const useConversation = (
   useEffect(() => {
     if (query.data && options?.markRead !== false)
       queryClient.invalidateQueries({ queryKey: ["conversations", "unread"] });
-  }, [query.data, options?.markRead]);
+  }, [queryClient, query.data, options?.markRead]);
 
   return query;
 };

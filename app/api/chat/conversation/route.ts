@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
+import { createConversationParamsSchema } from "@helperai/client";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { CHAT_CONVERSATION_SUBJECT, createConversation } from "@/lib/data/conversation";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
-import { createConversationParamsSchema } from "@/packages/client/dist";
 
 const VIP_INITIAL_STATUS = "open";
 const DEFAULT_INITIAL_STATUS = "closed";
