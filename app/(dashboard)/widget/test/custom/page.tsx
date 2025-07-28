@@ -1,7 +1,7 @@
 import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
 import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
-import { HelperClientProvider } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { getBaseUrl } from "@/components/constants";
+import { HelperClientProvider } from "@/packages/react/src/components/helperClientProvider";
 
 export const dynamic = "force-dynamic";
 
