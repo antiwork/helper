@@ -1,10 +1,7 @@
 "use client";
 
 import React from "react";
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import { Pluggable } from "unified";
+import ReactMarkdown, { Options } from "react-markdown";
 
 const rehypeAddWbrAfterSlash = () => {
   return (tree: any) => {
@@ -67,6 +64,7 @@ const findParent = (tree: any, target: any): any => {
 const remarkAutolink = () => {
   return (tree: any) => {
     const urlRegex = /https?:\/\/[^\s<>]+/g;
+    const nodesToReplace: { node: any; newChildren: any[] }[] = [];
 
     const visit = (node: any) => {
       if (node.type === "text" && typeof node.value === "string") {
@@ -102,13 +100,7 @@ const remarkAutolink = () => {
             });
           }
 
-          const parent = findParent(tree, node);
-          if (parent && parent.children) {
-            const index = parent.children.indexOf(node);
-            if (index !== -1) {
-              parent.children.splice(index, 1, ...newChildren);
-            }
-          }
+          nodesToReplace.push({ node, newChildren });
         }
       }
 
@@ -118,47 +110,39 @@ const remarkAutolink = () => {
     };
 
     visit(tree);
-    return tree;
-  };
-};
 
-const createSanitizeSchema = () => {
-  return {
-    ...defaultSchema,
-    tagNames: [...(defaultSchema.tagNames || []), "wbr"],
-    attributes: {
-      ...defaultSchema.attributes,
-      "*": [...(defaultSchema.attributes?.["*"] || []), "className"],
-    },
+    nodesToReplace.forEach(({ node, newChildren }) => {
+      const parent = findParent(tree, node);
+      if (parent && parent.children) {
+        const index = parent.children.indexOf(node);
+        if (index !== -1) {
+          parent.children.splice(index, 1, ...newChildren);
+        }
+      }
+    });
+
+    return tree;
   };
 };
 
 interface MessageContentProps {
   message: { content: string };
   className?: string;
-  components?: any;
+  options?: Options;
   allowHtml?: boolean;
 }
 
 export const MessageContent = ({
   message,
-  className = "prose prose-sm max-w-none",
-  components,
-  allowHtml = true,
+  className,
+  options: { remarkPlugins, rehypePlugins, components, ...options } = {},
 }: MessageContentProps) => {
-  const sanitizeSchema = createSanitizeSchema();
-  const rehypePlugins: Pluggable[] = [rehypeAddWbrAfterSlash];
-
-  if (allowHtml) {
-    rehypePlugins.unshift(rehypeRaw);
-    rehypePlugins.push([rehypeSanitize, sanitizeSchema]);
-  }
-
   return (
     <ReactMarkdown
+      {...options}
       className={className}
-      remarkPlugins={[remarkAutolink]}
-      rehypePlugins={rehypePlugins}
+      remarkPlugins={[...(remarkPlugins || []), remarkAutolink]}
+      rehypePlugins={[...(rehypePlugins || []), rehypeAddWbrAfterSlash]}
       components={{
         a: ({ children, ...props }: any) => (
           <a target="_blank" rel="noopener noreferrer" {...props}>
