@@ -48,7 +48,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "@ai-sdk/react": ">=0.0.0",
