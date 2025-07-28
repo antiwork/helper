@@ -1,20 +1,22 @@
 "use client";
 
 import { useChat as useAIChat } from "@ai-sdk/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ConversationDetails, HelperTool } from "@helperai/client";
 import { useHelperClient } from "../components/helperClientProvider";
 
 export interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
-  onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+  enableRealtime?: boolean;
+  ai?: Parameters<typeof useAIChat>[0];
 }
 
 export const useChat = ({
   conversation,
   tools = {},
-  onHumanReply,
+  enableRealtime = true,
+  ai: aiOptions,
 }: UseChatProps): {
   messages: any[];
   setMessages: (messages: any[]) => void;
@@ -32,27 +34,27 @@ export const useChat = ({
 
   const { messages, setMessages, ...rest } = useAIChat({
     ...chatHandler,
+    ...aiOptions,
   });
 
-  const stableSetMessages = useCallback(setMessages, [setMessages]);
-
   useEffect(() => {
+    if (enableRealtime === false) return;
+
     const unlisten = client.conversations.listen(conversation.slug, {
       onHumanReply: (message: { id: string; content: string; role: "assistant" }) => {
-        onHumanReply?.(message);
+        setMessages((prev) => [...prev, message]);
       },
       onTyping: (isTyping: boolean) => {
         setAgentTyping(isTyping);
       },
-      onSubjectChanged: () => {},
     });
 
     return unlisten;
-  }, [conversation, tools, client, onHumanReply]);
+  }, [conversation, client, setMessages]);
 
   return {
     messages: client.chat.messages(messages),
-    setMessages: stableSetMessages,
+    setMessages,
     agentTyping,
     ...rest,
   };

@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanupTestEnv, createTestConfig, mockHelperWidget, setupTestEnv } from "../test/utils";
-import { HelperProvider } from "./HelperProvider";
+import { HelperWidgetProvider } from "./helperWidgetProvider";
 
 describe("HelperProvider", () => {
   beforeEach(() => {
@@ -16,9 +16,9 @@ describe("HelperProvider", () => {
 
   it("renders children", () => {
     render(
-      <HelperProvider host="https://helper.ai" {...createTestConfig()}>
+      <HelperWidgetProvider host="https://helper.ai" {...createTestConfig()}>
         <div data-testid="child">Child content</div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     expect(screen.getByTestId("child")).toBeInTheDocument();
@@ -26,9 +26,9 @@ describe("HelperProvider", () => {
 
   it("injects Helper script", () => {
     render(
-      <HelperProvider host="https://helper.ai" {...createTestConfig()}>
+      <HelperWidgetProvider host="https://helper.ai" {...createTestConfig()}>
         <div>Child content</div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     const script = document.querySelector('script[src="https://helper.ai/widget/sdk.js"]');
@@ -38,9 +38,9 @@ describe("HelperProvider", () => {
   it("initializes Helper widget with correct config", () => {
     const config = createTestConfig();
     render(
-      <HelperProvider host="https://helper.ai" {...config}>
+      <HelperWidgetProvider host="https://helper.ai" {...config}>
         <div>Child content</div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     const script = document.querySelector("script");
@@ -54,9 +54,9 @@ describe("HelperProvider", () => {
 
   it("cleans up script on unmount", () => {
     const { unmount } = render(
-      <HelperProvider host="https://helper.ai" {...createTestConfig()}>
+      <HelperWidgetProvider host="https://helper.ai" {...createTestConfig()}>
         <div>Child content</div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     const script = document.querySelector('script[src="https://helper.ai/widget/sdk.js"]');

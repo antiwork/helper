@@ -3,12 +3,12 @@
 import { useEffect } from "react";
 import type { HelperWidgetConfig } from "../types";
 
-type ClientHelperProviderProps = HelperWidgetConfig & {
+export type HelperWidgetScriptProps = HelperWidgetConfig & {
   host: string;
   onError?: (error: Error) => void;
 };
 
-export function ClientHelperProvider({ host, onError, ...props }: ClientHelperProviderProps) {
+export function HelperWidgetScript({ host, onError, ...props }: HelperWidgetScriptProps) {
   useEffect(() => {
     const scriptSrc = `${host}/widget/sdk.js`;
     const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);

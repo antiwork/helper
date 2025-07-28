@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { generateHelperAuth } from "@helperai/client/auth";
-import { HelperProvider } from "../../components/HelperProvider";
+import { HelperWidgetProvider } from "../../components/helperWidgetProvider";
 import { cleanupTestEnv, mockHelperWidget, setupTestEnv } from "../utils";
 
 // Mock client component
@@ -31,9 +31,9 @@ describe("Server Component Integration", () => {
     };
 
     render(
-      <HelperProvider host="https://helper.ai" {...mockConfig}>
+      <HelperWidgetProvider host="https://helper.ai" {...mockConfig}>
         <div data-testid="server-content">Server Content</div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     expect(screen.getByTestId("server-content")).toBeInTheDocument();
@@ -47,9 +47,9 @@ describe("Server Component Integration", () => {
     };
 
     render(
-      <HelperProvider host="https://helper.ai" {...mockConfig}>
+      <HelperWidgetProvider host="https://helper.ai" {...mockConfig}>
         <div>Test Content</div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     const script = document.querySelector("script");
@@ -68,11 +68,11 @@ describe("Server Component Integration", () => {
     };
 
     render(
-      <HelperProvider host="https://helper.ai" {...mockConfig}>
+      <HelperWidgetProvider host="https://helper.ai" {...mockConfig}>
         <div data-testid="server-content">
           <ClientComponent />
         </div>
-      </HelperProvider>,
+      </HelperWidgetProvider>,
     );
 
     expect(screen.getByTestId("server-content")).toBeInTheDocument();

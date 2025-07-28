@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type {
   ConversationDetails,
   ConversationsResult,
@@ -21,10 +22,27 @@ export const useConversations = (queryOptions?: Partial<UseQueryOptions<Conversa
 
 export const useConversation = (
   slug: string,
-  options?: { markRead?: boolean },
+  options?: { markRead?: boolean; enableRealtime?: boolean },
   queryOptions?: Partial<UseQueryOptions<ConversationDetails>>,
 ) => {
   const client = useHelperClient();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (options?.enableRealtime === false) return;
+
+    const unlisten = client.conversations.listen(slug, {
+      onSubjectChanged: (subject) => {
+        queryClient.setQueryData(["conversation", slug], (old: ConversationDetails | undefined) => {
+          if (!old) return old;
+          return { ...old, subject };
+        });
+      },
+    });
+
+    return unlisten;
+  }, [slug, options?.enableRealtime]);
+
   return useQuery({
     queryKey: ["conversation", slug],
     queryFn: () => client.conversations.get(slug, options),

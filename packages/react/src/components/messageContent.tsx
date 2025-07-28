@@ -134,14 +134,14 @@ const createSanitizeSchema = () => {
 };
 
 interface MessageContentProps {
-  children: string | null;
+  message: { content: string };
   className?: string;
   components?: any;
   allowHtml?: boolean;
 }
 
 export const MessageContent = ({
-  children,
+  message,
   className = "prose prose-sm max-w-none",
   components,
   allowHtml = true,
@@ -168,7 +168,7 @@ export const MessageContent = ({
         ...components,
       }}
     >
-      {children}
+      {message.content}
     </ReactMarkdown>
   );
 };

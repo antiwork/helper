@@ -1,4 +1,4 @@
-export { HelperProvider, type HelperProviderProps } from "./components/HelperProvider";
+export { HelperWidgetScript, type HelperWidgetScriptProps } from "./components/helperWidgetScript";
 export {
   HelperClientProvider,
   type HelperClientProviderProps,
