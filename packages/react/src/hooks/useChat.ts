@@ -1,16 +1,19 @@
 "use client";
 
 import { useChat as useAIChat } from "@ai-sdk/react";
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useHelperClient } from "../components/helperClientProvider";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ConversationDetails, HelperTool } from "@helperai/client";
+import { useHelperClient } from "../components/helperClientProvider";
 
 export interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
 }
 
-export const useChat = ({ conversation, tools = {} }: UseChatProps): {
+export const useChat = ({
+  conversation,
+  tools = {},
+}: UseChatProps): {
   messages: any[];
   setMessages: (messages: any[]) => void;
   agentTyping: boolean;
@@ -22,32 +25,27 @@ export const useChat = ({ conversation, tools = {} }: UseChatProps): {
 } => {
   const client = useHelperClient();
   const [agentTyping, setAgentTyping] = useState(false);
-  
-  const chatHandler = useMemo(() => 
-    client.chat.handler({ conversation, tools }), 
-    [client, conversation, tools]
-  );
-  
+
+  const chatHandler = useMemo(() => client.chat.handler({ conversation, tools }), [client, conversation, tools]);
+
   const { messages, setMessages, ...rest } = useAIChat({
     ...chatHandler,
   });
 
   const stableSetMessages = useCallback(setMessages, [setMessages]);
-  
+
   useEffect(() => {
     const unlisten = client.conversations.listen(conversation.slug, {
-      onHumanReply: (message: any) => {
-      },
+      onHumanReply: (message: any) => {},
       onTyping: (isTyping: boolean) => {
         setAgentTyping(isTyping);
       },
-      onSubjectChanged: () => {
-      },
+      onSubjectChanged: () => {},
     });
-    
+
     return unlisten;
   }, [conversation, tools, client]);
-  
+
   return {
     messages: client.chat.messages(messages),
     setMessages: stableSetMessages,

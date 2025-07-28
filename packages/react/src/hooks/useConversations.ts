@@ -1,14 +1,14 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useHelperClient } from "../components/helperClientProvider";
-import type { 
-  ConversationsResult, 
-  ConversationDetails, 
-  CreateConversationParams, 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+  ConversationDetails,
+  ConversationsResult,
+  CreateConversationParams,
+  UnreadConversationsCountResult,
   UpdateConversationParams,
-  UnreadConversationsCountResult 
 } from "@helperai/client";
+import { useHelperClient } from "../components/helperClientProvider";
 
 export const useConversations = () => {
   const client = useHelperClient();
@@ -38,10 +38,9 @@ export const useUnreadConversationsCount = () => {
 export const useCreateConversation = () => {
   const client = useHelperClient();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (params: CreateConversationParams = {}) => 
-      client.conversations.create(params),
+    mutationFn: (params: CreateConversationParams = {}) => client.conversations.create(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
@@ -51,7 +50,7 @@ export const useCreateConversation = () => {
 export const useUpdateConversation = () => {
   const client = useHelperClient();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ slug, params }: { slug: string; params: UpdateConversationParams }) =>
       client.conversations.update(slug, params),

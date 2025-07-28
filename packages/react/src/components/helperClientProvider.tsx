@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useMemo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React, { createContext, ReactNode, useContext, useMemo, useState } from "react";
 import { HelperClient, SessionParams } from "@helperai/client";
 
 const HelperClientContext = createContext<{ client: HelperClient } | null>(null);
@@ -21,20 +21,13 @@ export interface HelperClientProviderProps {
   queryClient?: QueryClient;
 }
 
-export const HelperClientProvider = ({ 
-  host, 
-  session, 
-  children, 
-  queryClient 
-}: HelperClientProviderProps) => {
+export const HelperClientProvider = ({ host, session, children, queryClient }: HelperClientProviderProps) => {
   const client = useMemo(() => new HelperClient({ host, ...session }), [host, session]);
   const [defaultQueryClient] = useState(() => new QueryClient());
-  
+
   return (
     <QueryClientProvider client={queryClient || defaultQueryClient}>
-      <HelperClientContext.Provider value={{ client }}>
-        {children}
-      </HelperClientContext.Provider>
+      <HelperClientContext.Provider value={{ client }}>{children}</HelperClientContext.Provider>
     </QueryClientProvider>
   );
 };
