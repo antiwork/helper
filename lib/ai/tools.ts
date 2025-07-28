@@ -15,7 +15,11 @@ import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 const fetchUserInformation = async (email: string) => {
   try {
     const metadata = await fetchMetadata(email);
-    return metadata?.prompt;
+    if (!metadata) return undefined;
+    const { prompt, metadata: customerMetadata } = metadata;
+    return customerMetadata?.context
+      ? `${prompt}\n\n${customerMetadata.context}`
+      : prompt;
   } catch (error) {
     captureExceptionAndLogIfDevelopment(error, {
       extra: { email },

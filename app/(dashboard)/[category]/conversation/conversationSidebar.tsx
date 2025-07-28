@@ -158,6 +158,12 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
             </CopyToClipboard>
           )}
 
+          {conversation.customerMetadata?.context && (
+            <div className="col-start-2 text-muted-foreground break-words">
+              {conversation.customerMetadata.context}
+            </div>
+          )}
+
           {Object.entries(conversation.customerMetadata?.links ?? {}).map(([label, url], idx) => (
             <a
               key={idx}

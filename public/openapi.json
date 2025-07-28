@@ -47,7 +47,8 @@
                       "links": {
                         "Profile": "https://example.com/users/john",
                         "Orders": "https://example.com/users/john/orders"
-                      }
+                      },
+                      "context": "VIP customer from London"
                     },
                     "currentURL": "https://example.com/products"
                   }
@@ -371,6 +372,11 @@
                   "Profile": "https://example.com/users/john",
                   "Orders": "https://example.com/users/john/orders"
                 }
+              },
+              "context": {
+                "type": "string",
+                "nullable": true,
+                "description": "Additional context about the customer"
               }
             }
           },

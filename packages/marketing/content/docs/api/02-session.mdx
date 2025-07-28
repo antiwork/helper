@@ -28,6 +28,7 @@ Creates a new session and returns a token that can be used for authentication in
 | `customerMetadata.value` | number | No          | Numeric value representing the customer's worth/revenue.                          |
 | `customerMetadata.name`  | string | No          | Name of the customer.                                                             |
 | `customerMetadata.links` | object | No          | Key-value pairs of links related to the customer.                                 |
+| `customerMetadata.context` | string | No          | Additional context about the customer. |
 | `currentURL`             | string | Yes         | The current URL where the chat is being initiated.                                |
 
 ### Example Request Body
@@ -43,7 +44,8 @@ Creates a new session and returns a token that can be used for authentication in
     "links": {
       "Profile": "https://example.com/users/john",
       "Orders": "https://example.com/users/john/orders"
-    }
+    },
+    "context": "VIP customer from London"
   },
   "currentURL": "https://example.com/products"
 }

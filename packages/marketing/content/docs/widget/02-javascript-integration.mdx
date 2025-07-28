@@ -52,6 +52,7 @@ The `helperWidgetConfig` object accepts the following options:
 | `metadata.value`   | number  | No       | Revenue value of the customer                    |
 | `metadata.name`    | string  | No       | Name of the customer                             |
 | `metadata.links`   | object  | No       | Key-value pairs of links related to the customer |
+| `metadata.context` | string  | No       | Additional context about the customer |
 
 \* Required only if you want to authenticate users
 
@@ -119,6 +120,7 @@ Optionally, you can add metadata to give Helper more context about the customer:
       links: {
         Profile: "https://example.com/profile", // Optional: Links to show in Helper alongside conversations from this customer
       },
+      context: "VIP customer from London",
     },
   };
 </script>

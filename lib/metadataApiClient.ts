@@ -82,6 +82,7 @@ const responseSchema = z.object({
         name: z.string().optional().nullable(),
         value: z.number().optional().nullable(),
         links: z.record(z.string(), z.string()).optional().nullable(),
+        context: z.string().optional().nullable(),
       }),
     })
     .refine((data) => {

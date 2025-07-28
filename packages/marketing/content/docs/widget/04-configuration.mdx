@@ -37,6 +37,7 @@ You can pass additional customer information to Helper through metadata:
 | `value` | number | Revenue value of the customer                    |
 | `name`  | string | Name of the customer                             |
 | `links` | object | Key-value pairs of links related to the customer |
+| `context` | string | Additional context about the customer |
 
 Example metadata configuration:
 
@@ -48,7 +49,8 @@ metadata: {
     "Profile": "https://example.com/users/jane",
     "Billing": "https://example.com/users/jane/billing",
     "Orders": "https://example.com/users/jane/orders"
-  }
+  },
+  context: "VIP customer from London"
 }
 ```
 

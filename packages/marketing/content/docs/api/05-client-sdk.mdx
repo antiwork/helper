@@ -56,6 +56,7 @@ The client constructor accepts the following parameters:
 | `customerMetadata.name`  | `string` | ❌       | The customer's name to show in the Helper UI                                |
 | `customerMetadata.value` | `number` | ❌       | The customer's value on your platform (e.g. revenue) to be used for sorting |
 | `customerMetadata.links` | `object` | ❌       | Any links (e.g. to internal systems) to show in the Helper UI               |
+| `customerMetadata.context` | `string` | ❌       | Additional context about the customer to use in AI prompts |
 
 <Callout type="info">
   The client automatically handles session creation and token management. As long as you generate the initial
@@ -450,6 +451,7 @@ interface SessionParams {
     name?: string | null;
     value?: number | null;
     links?: Record<string, string> | null;
+    context?: string | null;
   } | null;
   currentToken?: string | null;
 }

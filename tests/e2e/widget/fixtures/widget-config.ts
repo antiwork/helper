@@ -9,6 +9,7 @@ export const widgetConfigs = {
       name: "Authenticated User",
       value: null,
       links: null,
+      context: "VIP customer",
     },
   },
   withCustomData: {
@@ -21,6 +22,7 @@ export const widgetConfigs = {
         plan: "premium",
         role: "admin",
       },
+      context: "Custom data context",
     },
   },
 };

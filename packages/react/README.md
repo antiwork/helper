@@ -65,6 +65,7 @@ Provides global state management for Helper functionality, supporting both widge
     name: "John Doe",
     value: 1000,
     links: { Profile: "https://example.com/profile" },
+    context: "VIP customer from London",
   }}
   tools={{
     searchKnowledge: {

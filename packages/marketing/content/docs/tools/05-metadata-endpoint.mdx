@@ -36,7 +36,8 @@ Your server must return a JSON response in this format:
         // Optional: Links to show alongside conversations
         "Profile": "https://example.com/profile",
         "Orders": "https://example.com/orders"
-      }
+      },
+      "context": "VIP customer from London"
     }
   }
 }
@@ -49,6 +50,7 @@ Your server must return a JSON response in this format:
 | `user_info.metadata.name`  | string  | No       | Name of the customer.                                                                                           |
 | `user_info.metadata.value` | number  | No       | Numeric value representing the customer's worth/revenue. Enables sorting conversations by the customer's value. |
 | `user_info.metadata.links` | object  | No       | Key-value pairs of links to display in the sidebar, for agents to quickly access other backend apps.            |
+| `user_info.metadata.context` | string  | No       | Additional context about the customer used in AI prompts. |
 
 ## Optional: HMAC Authentication
 
