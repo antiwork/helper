@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import { useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import type {
   ConversationDetails,
   ConversationsResult,
@@ -20,9 +20,9 @@ export const useConversations = (queryOptions?: Partial<UseQueryOptions<Conversa
 };
 
 export const useConversation = (
-  slug: string, 
+  slug: string,
   options?: { markRead?: boolean },
-  queryOptions?: Partial<UseQueryOptions<ConversationDetails>>
+  queryOptions?: Partial<UseQueryOptions<ConversationDetails>>,
 ) => {
   const client = useHelperClient();
   return useQuery({
@@ -33,7 +33,9 @@ export const useConversation = (
   });
 };
 
-export const useUnreadConversationsCount = (queryOptions?: Partial<UseQueryOptions<UnreadConversationsCountResult>>) => {
+export const useUnreadConversationsCount = (
+  queryOptions?: Partial<UseQueryOptions<UnreadConversationsCountResult>>,
+) => {
   const client = useHelperClient();
   return useQuery({
     queryKey: ["conversations", "unread"],
@@ -42,7 +44,9 @@ export const useUnreadConversationsCount = (queryOptions?: Partial<UseQueryOptio
   });
 };
 
-export const useCreateConversation = (mutationOptions?: Partial<UseMutationOptions<any, Error, CreateConversationParams>>) => {
+export const useCreateConversation = (
+  mutationOptions?: Partial<UseMutationOptions<any, Error, CreateConversationParams>>,
+) => {
   const client = useHelperClient();
   const queryClient = useQueryClient();
 
@@ -56,7 +60,9 @@ export const useCreateConversation = (mutationOptions?: Partial<UseMutationOptio
   });
 };
 
-export const useUpdateConversation = (mutationOptions?: Partial<UseMutationOptions<any, Error, { slug: string; params: UpdateConversationParams }>>) => {
+export const useUpdateConversation = (
+  mutationOptions?: Partial<UseMutationOptions<any, Error, { slug: string; params: UpdateConversationParams }>>,
+) => {
   const client = useHelperClient();
   const queryClient = useQueryClient();
 

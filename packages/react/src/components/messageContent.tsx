@@ -140,11 +140,11 @@ interface MessageContentProps {
   allowHtml?: boolean;
 }
 
-export const MessageContent = ({ 
-  children, 
-  className = "prose prose-sm max-w-none", 
-  components, 
-  allowHtml = true 
+export const MessageContent = ({
+  children,
+  className = "prose prose-sm max-w-none",
+  components,
+  allowHtml = true,
 }: MessageContentProps) => {
   const sanitizeSchema = createSanitizeSchema();
   const rehypePlugins: Pluggable[] = [rehypeAddWbrAfterSlash];
