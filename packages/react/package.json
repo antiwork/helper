@@ -52,10 +52,13 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "@ai-sdk/react": ">=0.0.0"
   },
   "dependencies": {
-    "@helperai/client": "workspace:*"
+    "@helperai/client": "workspace:*",
+    "@tanstack/react-query": "^5.0.0",
+    "react-markdown": "^9.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
