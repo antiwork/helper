@@ -128,13 +128,14 @@ const authData = generateHelperAuth({
 
 ```tsx
 // app/layout.tsx
-import { HelperProvider } from "@helperai/react";
+import { HelperWidgetScript } from "@helperai/react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <HelperProvider host={process.env.NEXT_PUBLIC_HELPER_HOST!}>{children}</HelperProvider>
+        <HelperWidgetScript host={process.env.NEXT_PUBLIC_HELPER_HOST!} />
+        {children}
       </body>
     </html>
   );

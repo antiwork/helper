@@ -1,64 +1,45 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { Conversation } from "@helperai/client";
-import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
+import { useConversations, useCreateConversation } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cn } from "@/lib/utils";
 
 export const CustomWidgetTest = () => {
-  const { client } = useHelperClientContext();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: conversationsData, isLoading: loading, error } = useConversations();
+  const createConversation = useCreateConversation();
   const router = useRouter();
+
+  const conversations = conversationsData?.conversations || [];
 
   const handleCreate = async () => {
     try {
-      setCreating(true);
-      const result = await client.conversations.create();
+      const result = await createConversation.mutateAsync({});
       router.push(`/widget/test/custom/${result.conversationSlug}`);
     } catch (error) {
       captureExceptionAndLog(error);
-    } finally {
-      setCreating(false);
     }
   };
-
-  const fetchConversations = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await client.conversations.list();
-      setConversations(data.conversations || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch conversations");
-    } finally {
-      setLoading(false);
-    }
-  }, [client]);
-
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
 
   if (loading) {
     return <div className="p-4">Loading conversations...</div>;
   }
 
   if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>;
+    return (
+      <div className="p-4 text-red-500">
+        Error: {error instanceof Error ? error.message : "Failed to fetch conversations"}
+      </div>
+    );
   }
 
   return (
     <div className="flex h-screen flex-col">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h1 className="text-xl font-semibold">Support</h1>
-        <Button onClick={handleCreate} disabled={creating}>
-          {creating ? "Creating..." : "+ New ticket"}
+        <Button onClick={handleCreate} disabled={createConversation.isPending}>
+          {createConversation.isPending ? "Creating..." : "+ New ticket"}
         </Button>
       </div>
 

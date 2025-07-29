@@ -1,10 +1,10 @@
 import { and, count, inArray } from "drizzle-orm";
+import { ConversationsResult } from "@helperai/client";
 import { getCustomerFilterForSearch } from "@/app/api/chat/customerFilter";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
 import { searchConversations } from "@/lib/data/conversation/search";
-import { ConversationsResult } from "@/packages/client/dist";
 import { corsOptions, corsResponse, withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;

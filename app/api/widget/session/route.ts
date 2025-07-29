@@ -1,9 +1,9 @@
+import { CreateSessionResult, sessionParamsSchema } from "@helperai/client";
 import { db } from "@/db/client";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
 import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { env } from "@/lib/env";
 import { createWidgetSession, getEmailHash } from "@/lib/widgetSession";
-import { CreateSessionResult, sessionParamsSchema } from "@/packages/client/dist";
 import { corsOptions, corsResponse } from "../utils";
 
 // 1 hour
